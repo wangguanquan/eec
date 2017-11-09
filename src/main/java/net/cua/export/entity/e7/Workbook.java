@@ -143,7 +143,7 @@ public class Workbook {
 //        return this;
 //    }
 
-    public Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
+    public synchronized Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -157,13 +157,11 @@ public class Workbook {
         }
         sheet.setPs(ps);
         sheets[_size] = sheet;
-        synchronized (this) {
-            size++;
-        }
+        size++;
         return sheet;
     }
 
-    public Sheet addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
+    public synchronized Sheet addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -179,29 +177,26 @@ public class Workbook {
         sheet.setPs(ps);
         sheets[_size] = sheet;
 
-        synchronized (this) {
-            size++;
-        }
+        size++;
         return sheet;
     }
 
-    public void insertSheet(int index, Sheet sheet) {
+    public synchronized Sheet insertSheet(int index, Sheet sheet) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
         }
 
-        synchronized (this) {
-            if (sheets[index] == null) {
-                sheets[index] = sheet;
-            } else {
-                for ( ; _size >= index; ) {
-                    sheets[_size] = sheets[--_size];
-                }
-                sheets[index] = sheet;
+        if (sheets[index] != null) {
+            for ( ; _size >= index; ) {
+                sheets[_size] = sheets[--_size];
+                sheets[_size].setId(sheets[_size].getId() + 1);
             }
-            size++;
         }
+        sheets[index] = sheet;
+        sheet.setId(index + 1);
+        size++;
+        return sheet;
     }
 
     public void writeXML(File root) {
@@ -223,7 +218,7 @@ public class Workbook {
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             titleParts.add(sheets[i].getName());
-            addRel(new Relationship("worksheets/sheet" + sheets[i].getId() + ".xml", Const.Relationship.SHEET));
+            addRel(new Relationship("worksheets/sheet" + sheets[i].getId() + Const.Suffix.XML, Const.Relationship.SHEET));
         }
         app.setTitlePards(titleParts);
 
@@ -301,7 +296,7 @@ public class Workbook {
 
         // TODO write sheet content type
         for (int i = 0; i < size; i++) {
-            contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + sheets[i].getId() + ".xml"));
+            contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + sheets[i].getId() + Const.Suffix.XML));
         } // END
 
 
@@ -371,7 +366,7 @@ public class Workbook {
      * @throws IOException
      */
     public static File createWaterMark(String watermark) throws IOException {
-        File outputFile = File.createTempFile("warterMark", "png");
+        File outputFile = File.createTempFile("waterMark", "png");
         int width = 510; // 水印图片的宽度
         int height = 300; // 水印图片的高度 因为设置其他的高度会有黑线，所以拉高高度
 
@@ -469,6 +464,6 @@ public class Workbook {
         rootElement.addElement("calcPr").addAttribute("calcId", "124519");
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.getPath() + "/" + rootName + Const.Suffix.XML); // write to desk
+        FileUtil.writeToDisk(doc, root.getPath() + File.separatorChar + rootName + Const.Suffix.XML); // write to desk
     }
 }

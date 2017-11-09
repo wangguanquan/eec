@@ -73,9 +73,9 @@ public class RelManager {
             _rels.mkdirs();
         }
         if (name == null || name.isEmpty()) {
-            name = ".rels";
+            name = Const.Suffix.RELATION;
         } else {
-            name = name + ".rels";
+            name = name + Const.Suffix.RELATION;
         }
 
         TopNS topNS = this.getClass().getAnnotation(TopNS.class);
@@ -98,13 +98,9 @@ public class RelManager {
                 }
                 ele.addAttribute(StringUtil.uppFirstKey(field.getName()), oo.toString());
             }
-//            ele.addAttribute("Id", rel.getId())
-//                    .addAttribute("Type", rel.getType())
-//                    .addAttribute("Target", rel.getTarget())
-//                    ;
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, _rels.getPath() + "/" + name); // write to desk
+        FileUtil.writeToDisk(doc, _rels.getPath() + File.separatorChar + name); // write to desk
     }
 
 }

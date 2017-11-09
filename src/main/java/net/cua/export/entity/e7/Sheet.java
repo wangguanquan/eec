@@ -219,15 +219,15 @@ public abstract class Sheet {
                 style = Styles.defaultDoubleStyle();
                 switch (type) {
                     case 0: // 正常显示数字
-                        break;
-                    case 1: // 百分比显示
-                        style= Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_DOUBLE;
-                        break;
-                    case 2: // 显示人民币
-                        style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_DOUBLE;
-                        break;
-                    default:
-                }
+                    break;
+                case 1: // 百分比显示
+                    style= Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_DOUBLE;
+                    break;
+                case 2: // 显示人民币
+                    style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_DOUBLE;
+                    break;
+                default:
+            }
             } else {
                 style = 0;
             }
@@ -289,7 +289,7 @@ public abstract class Sheet {
             o = null;
         }
         headColumns = null;
-    }
+}
 
     public void addRel(Relationship rel) {
         relManager.add(rel);
@@ -335,7 +335,7 @@ public abstract class Sheet {
         bw.write("\">");
 
         // Dimension
-        // TODO StatementSheet while get total size write the end cell address
+        // Reset dimension at final
         bw.write("<dimension ref=\"A1\"/>");
 
         // SheetViews default value
@@ -408,12 +408,6 @@ public abstract class Sheet {
         // End target --sheetData
         bw.write("</sheetData>");
 
-//        // Dimension
-//        bw.write("<dimension ref=\"A1:");
-//        int n = headColumns.length;
-//        bw.write(int2Col(n));
-//        bw.writeInt(rows.get());
-//        bw.write("\"/>");
 
         // TODO If autoSize ...
 
@@ -445,7 +439,7 @@ public abstract class Sheet {
      * @param bw
      */
     protected void writeRow(ResultSet rs, ExtBufferedWriter bw, SharedStrings sst, Styles styles) throws IOException, SQLException {
-        // 行番号
+        // Row number
         int r = ++rows;
         final int len = headColumns.length;
         bw.write("<row r=\"");
@@ -770,7 +764,7 @@ public abstract class Sheet {
                     Object o = hc.processor.conversion(n);
                     Class<?> clazz = o.getClass();
                     if (clazz == String.class) {
-                        logger.info(Arrays.toString(styles.unpackStyle(hc.cellStyle)) + " " + o);
+                        logger.info(Arrays.toString(Styles.unpack(hc.cellStyle)) + " " + o);
                         if (hc.cellStyle == Styles.defaultIntStyle()) {
                             style = hc.getCellStyle(String.class);
                             styleIndex = styles.of(style);
@@ -1011,7 +1005,7 @@ public abstract class Sheet {
 
     }
 
-        private final char[][] cache_col = {{'A'}, {'A', 'A'}, {'A', 'A', 'A'}};
+    private final char[][] cache_col = {{'A'}, {'A', 'A'}, {'A', 'A', 'A'}};
     protected char[] int2Col(int n) {
         char[] c;
         if (n <= 26) {

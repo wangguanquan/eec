@@ -74,9 +74,11 @@ public class StatementSheet extends Sheet {
         }
 
         File sheetFile = new File(parent, name);
+        ResultSet rs = null;
+        int sub = 0;
         // write date
-        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8));
-            ResultSet rs = ps.executeQuery()) {
+        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+            rs = ps.executeQuery();
             // Write header
             writeBefore(bw);
             if (rs.next()) {
@@ -87,19 +89,32 @@ public class StatementSheet extends Sheet {
                 if (getAutoSize() == 1) {
                     do {
                         // TODO row > max rows
-                        if (rows > Const.Limit.MAX_ROWS_ON_SHEET) {
+                        // 这里会丢数据
+                        if (rows >= Const.Limit.MAX_ROWS_ON_SHEET) {
+                            // TODO insert sub sheet
 
+                            sub++;
+                            break;
                         }
                         writeRowAutoSize(rs, bw, sst, styles);
                     } while (rs.next());
                 } else {
                     do {
-                        if (rows > Const.Limit.MAX_ROWS_ON_SHEET) {
+                        // Paging
+                        if (rows >= Const.Limit.MAX_ROWS_ON_SHEET) {
+                            // TODO insert sub sheet
 
+                            sub++;
+                            break;
                         }
                         writeRow(rs, bw, sst, styles);
                     } while (rs.next());
                 }
+
+//                // Rename self sheet
+//                if (sub == 1) {
+//                    this.name += "(1)";
+//                }
             }
 
             // Write foot
@@ -121,7 +136,15 @@ public class StatementSheet extends Sheet {
         if (getAutoSize() == 1 || resize) {
             autoColumnSize(sheetFile);
         }
-    }
 
+        if (sub == 1) {
+            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns);
+            rss.setName(this.name + " (" + (sub + 1) + ")");
+            rss.setRs(rs);
+            rss.setCopySheet(true);
+            Sheet subSheet = workbook.insertSheet(id, rss);
+            subSheet.writeTo(root);
+        }
+    }
 
 }

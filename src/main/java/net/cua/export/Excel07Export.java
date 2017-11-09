@@ -56,9 +56,6 @@ public class Excel07Export {
             FileUtil.rmRf(file, removeSelf);
         }
 
-//        String path = file.getPath() + "/xl";
-
-
         Sheet[] sheets = workbook.getSheets();
         int n;
         for (int i = 0; i < sheets.length; i++) {
@@ -84,7 +81,7 @@ public class Excel07Export {
         // 最先做水印, 写各sheet时需要使用
         workbook.madeMark(xl);
 
-        // 写各worksheet数字
+        // 写各worksheet内容
         Arrays.asList(sheets).stream().forEach(e -> {
             e.writeTo(file);
             e.close();

@@ -42,7 +42,8 @@ public class Const {
     public static final class Limit {
         public static final int
                 // 每个worksheet页最大行
-                MAX_ROWS_ON_SHEET = 1048576
+//                MAX_ROWS_ON_SHEET = 1048576
+        MAX_ROWS_ON_SHEET = 100
                 // 每个worksheet页最大列
                 , MAX_COLUMNS_ON_SHEET = 16384
                 // 单个cell最多包含多少字符
@@ -55,6 +56,7 @@ public class Const {
     public static final class Suffix {
         public static final String EXCEL_07 = ".xlsx", EXCEL_03 = ".xls";
         public static final String XML = ".xml";
+        public static final String RELATION = ".rels";
     }
 
 

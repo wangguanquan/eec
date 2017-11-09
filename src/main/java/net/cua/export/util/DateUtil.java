@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.Date;
 
 /**
+ * For Excel
  * Created by wanggq on 2017/9/21.
  */
 public class DateUtil {
@@ -66,7 +67,7 @@ public class DateUtil {
     public static int toDateValue(Date date) {
         int n;
         if (date instanceof java.sql.Date) {
-            n = (int) LocalDate.parse(dateFormat.get().format(date)).toEpochDay() + DAYS_1900_TO_1970;
+            n = (int) LocalDate.parse(toDateString(date)).toEpochDay() + DAYS_1900_TO_1970;
         } else if (date instanceof java.util.Date) {
             n = (int) date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() + DAYS_1900_TO_1970;
         } else {

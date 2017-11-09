@@ -33,14 +33,6 @@ public class Styles {
     private TIntIntHashMap map;
     private Document document;
 
-//    private static class Holder { // 每个workbook一个实例
-//        private static final Styles INSTANCE = new Styles();
-//    }
-//
-//    public static final Styles getInstance() {
-//        return Holder.INSTANCE;
-//    }
-
     Styles() {
         map = new TIntIntHashMap();
     }
@@ -53,7 +45,7 @@ public class Styles {
      */
     public int of(int s) {
         if (s == 0) return s;
-        int n = map.get(s); // not found return 0(default style)
+        int n = map.get(s);
         if (n == 0) {
             n = addStyle(s);
             map.put(s, n);
@@ -62,7 +54,7 @@ public class Styles {
     }
 
     String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"};
-    static final int[] move_left = {24, 18, 12, 6, 3, 0};
+    private static final int[] move_left = {24, 18, 12, 6, 3, 0};
 
     public Styles load(InputStream is) {
         map.put(0, 0);
@@ -110,14 +102,14 @@ public class Styles {
         return this;
     }
 
-    public int[] unpackStyle(int style) {
+    public static int[] unpack(int style) {
         int[] styles = new int[6];
-        styles[0] = style >>> move_left[0];
-        styles[1] = style << 8 >>> move_left[1] + 8;
-        styles[2] = style << 14 >>> move_left[2] + 14;
-        styles[3] = style << 20 >>> move_left[3] + 20;
-        styles[4] = style << 26 >>> move_left[4] + 26;
-        styles[5] = style << 29 >>> move_left[5] + 29;
+        styles[0] = style       >>>  move_left[0];
+        styles[1] = style <<  8 >>> (move_left[1] + 8);
+        styles[2] = style << 14 >>> (move_left[2] + 14);
+        styles[3] = style << 20 >>> (move_left[3] + 20);
+        styles[4] = style << 26 >>> (move_left[4] + 26);
+        styles[5] = style << 29 >>> (move_left[5] + 29);
         return styles;
     }
 
@@ -128,7 +120,7 @@ public class Styles {
         int[] keys = map.keys(), values = map.values();
         for (int i = 0; i < keys.length; i++) {
             int k = keys[indexOf(values, i)];
-            int[] styles = unpackStyle(k);
+            int[] styles = unpack(k);
 //            System.out.println(styles[0] + "   " + styles[1] + "   " + styles[2] + "   " + styles[3] + "   " + styles[4] + "   " + styles[5]);
             buf.append("<xf numFmtId=\"").append(styles[0]).append("\"")
                     .append(" fontId=\"").append(styles[1]).append("\"")
@@ -165,7 +157,7 @@ public class Styles {
 
     private synchronized int addStyle(int s) {
         if (document == null) return 0;
-        int[] styles = unpackStyle(s);
+        int[] styles = unpack(s);
 //        System.out.println(styles[0] + "   " + styles[1] + "   " + styles[2] + "   " + styles[3] + "   " + styles[4] + "   " + styles[5]);
         Element root = document.getRootElement();
         Element cellXfs = root.element("cellXfs");
@@ -219,7 +211,7 @@ public class Styles {
         return -1;
     }
 
-    ////////////////////////clear style//////////////////////////////
+    ////////////////////////clear style///////////////////////////////
     public static int clearNumfmt(int style) {
         return style & (-1 >>> 32 - move_left[0]);
     }
@@ -244,8 +236,7 @@ public class Styles {
         return style & ~(-1 >>> 32 - (move_left[4] - move_left[5]));
     }
 
-    ///////////////////default style///////////////////
-
+    ////////////////////////default style/////////////////////////////
     public static int defaultStringStyle() {
         return Styles.Fonts.BLACK_GB2312_WRYH_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.LEFT;
     }
@@ -262,6 +253,12 @@ public class Styles {
         return Styles.NumFmts.PADDING_DOUBLE | Styles.Fonts.BLACK_ASCII_CONSOLAS_11 | Styles.Borders.THIN_BLACK | Styles.Horizontals.RIGHT;
     }
 
+    ////////////////////////reset style/////////////////////////////
+    public static int reset(int style) {
+        // TODO ---------------
+        int[] sub = unpack(style);
+        return style;
+    }
 
     public static final class NumFmts {
         public static final int GENERAL = 0 // General
@@ -342,7 +339,9 @@ public class Styles {
     }
 
     public static final class Horizontals {
-        public static final int GENERAL = 0 // General Horizontal Alignment( Text data is left-aligned. Numbers, dates, and times are right-aligned.Boolean types are centered)
+        // General Horizontal Alignment( Text data is left-aligned. Numbers
+        // , dates, and times are right-aligned.Boolean types are centered)
+        public static final int GENERAL = 0
                 , LEFT = 1 // Left Horizontal Alignment
                 , RIGHT = 2 // Right Horizontal Alignment
                 , CENTER = 3 // Centered Horizontal Alignment

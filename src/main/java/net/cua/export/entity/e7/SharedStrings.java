@@ -144,7 +144,7 @@ public class SharedStrings {
         }
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.getPath() + "/" + StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML)); // write to desk
+        FileUtil.writeToDisk(doc, root.getPath() + File.separatorChar + StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML)); // write to desk
 
         // destroy
         destroy();
