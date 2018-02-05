@@ -1,9 +1,11 @@
 package net.cua.export.entity.e7;
 
+import java.io.Serializable;
+
 /**
  * Created by wanggq on 2017/9/30.
  */
-public class Relationship {
+public class Relationship implements Serializable, Cloneable {
     private String target;
     private String type;
     private String id;
@@ -12,7 +14,6 @@ public class Relationship {
     public Relationship(String target, String type) {
         this.target = target;
         this.type = type;
-//        this.id = id;
     }
 
     public String getTarget() {
@@ -37,5 +38,19 @@ public class Relationship {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public Relationship clone() {
+        Relationship r;
+        try {
+            r = (Relationship) super.clone();
+        } catch (CloneNotSupportedException e) {
+            r = new Relationship();
+            r.id = id;
+            r.target = target;
+            r.type = type;
+        }
+        return r;
     }
 }

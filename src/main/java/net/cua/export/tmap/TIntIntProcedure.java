@@ -21,9 +21,6 @@
 package net.cua.export.tmap;
 
 /**
- * Created by wanggq on 2017/9/5.
- */
-/**
  * Interface for procedures that take two parameters of type int and int.
  */
 public interface TIntIntProcedure {

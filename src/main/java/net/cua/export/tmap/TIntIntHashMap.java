@@ -20,9 +20,6 @@
 
 package net.cua.export.tmap;
 
-/**
- * Created by wanggq on 2017/9/5.
- */
 
 import java.util.Arrays;
 

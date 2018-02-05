@@ -1,33 +1,24 @@
 package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
+import net.cua.export.entity.WaterMark;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
 import net.cua.export.manager.docProps.App;
 import net.cua.export.manager.docProps.Core;
 import net.cua.export.processor.ParamProcessor;
-import net.cua.export.util.DateUtil;
 import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
 import org.dom4j.*;
 
-import javax.imageio.ImageIO;
-import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by wanggq on 2017/9/26.
@@ -37,8 +28,8 @@ import java.util.List;
 public class Workbook {
     private String name;
     private Sheet[] sheets;
-    private String waterMark;
-    private volatile int size;
+    private WaterMark waterMark;
+    private int size;
     private Connection con;
     private RelManager relManager;
     private boolean autoSize;
@@ -58,7 +49,6 @@ public class Workbook {
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
-//        this.waterMark = DateUtil.getToday() + " " + creator;
         sheets = new Sheet[3]; // 默认建3个sheet页
         relManager = new RelManager();
 
@@ -83,11 +73,11 @@ public class Workbook {
         this.sheets = sheets.clone();
     }
 
-    public String getWaterMark() {
+    public WaterMark getWaterMark() {
         return waterMark;
     }
 
-    public void setWaterMark(String waterMark) {
+    public void setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
     }
 
@@ -122,28 +112,86 @@ public class Workbook {
 
     public void setCreator(String creator) {
         this.creator = creator;
-//        this.waterMark = DateUtil.getToday() + " " + creator;
     }
 
-//    public Workbook addSheet(Sheet sheet) {
-//        if (size >= sheets.length) {
-//            sheets = Arrays.copyOf(sheets, size + 1);
+    public Workbook addSheet(Sheet sheet) {
+        int _size = size;
+        if (_size > sheets.length) {
+            sheets = Arrays.copyOf(sheets, _size + 1);
+        }
+        sheets[_size] = sheet;
+        size++;
+        return this;
+    }
+
+//    public Workbook addSheet(String name, List<Map<?, ?>> data, Sheet.HeadColumn ... headColumns) {
+//        int _size = size;
+//        if (_size > sheets.length) {
+//            sheets = Arrays.copyOf(sheets, _size + 1);
 //        }
-//        sheets[size++] = sheet;
-//        return this;
-//    }
-//
-//    public Workbook addSheet(String name, Sheet.HeadColumn ... headColumns) {
-//        if (size > sheets.length) {
-//            sheets = Arrays.copyOf(sheets, size + 1);
-//        }
-//        Sheet sheet = new Sheet(name, headColumns);
-//        sheets[size++] = sheet;
-//
+//        ListMapSheet sheet = new ListMapSheet(this, name, headColumns);
+//        sheet.setData(data);
+//        sheets[_size] = sheet;
+//        size++;
 //        return this;
 //    }
 
-    public synchronized Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
+    public Workbook addSheet(String name, List<?> data, Sheet.HeadColumn ... headColumns) {
+        int _size = size;
+        Object o;
+        if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
+            if (_size > sheets.length) {
+                sheets = Arrays.copyOf(sheets, _size + 1);
+            }
+            sheets[_size] = new EmptySheet(this, name, headColumns);
+            return this;
+        }
+
+        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
+        if (len % limit > 0) {
+            page++;
+        }
+        if (_size + page > sheets.length) {
+            sheets = Arrays.copyOf(sheets, _size + page);
+        }
+        // 提前分页
+        for (int i = 0, n; i < page; i++) {
+            Sheet sheet;
+            List<?> subList = data.subList(i * limit, (n = (i + 1) * limit) < len ? n : len);
+            if (o instanceof Map) {
+                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, headColumns).setData((List<Map<String, ?>>) subList);
+            } else {
+                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, headColumns).setData(subList);
+            }
+            sheets[_size + i] = sheet;
+        }
+        size += page;
+        return this;
+    }
+
+    public Object getFirst(List<?> data) {
+        Object first = data.get(0);
+        if (first != null) return first;
+        int i = 1;
+        do {
+            first = data.get(i++);
+        } while (first == null);
+        return first;
+    }
+
+    public Workbook addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
+        int _size = size;
+        if (_size > sheets.length) {
+            sheets = Arrays.copyOf(sheets, _size + 1);
+        }
+        ResultSetSheet sheet = new ResultSetSheet(this, name, headColumns);
+        sheet.setRs(rs);
+        sheets[_size] = sheet;
+        size++;
+        return this;
+    }
+
+    public Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -161,7 +209,7 @@ public class Workbook {
         return sheet;
     }
 
-    public synchronized Sheet addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
+    public Sheet addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -181,15 +229,15 @@ public class Workbook {
         return sheet;
     }
 
-    public synchronized Sheet insertSheet(int index, Sheet sheet) {
+    public Sheet insertSheet(int index, Sheet sheet) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
         }
 
         if (sheets[index] != null) {
-            for ( ; _size >= index; ) {
-                sheets[_size] = sheets[--_size];
+            for ( ; _size > index; _size--) {
+                sheets[_size] = sheets[_size - 1];
                 sheets[_size].setId(sheets[_size].getId() + 1);
             }
         }
@@ -199,9 +247,23 @@ public class Workbook {
         return sheet;
     }
 
-    public void writeXML(File root) {
-        // 水印
-//        madeMark(root);
+    public Workbook remove(int index) {
+        if (index < 0 || index >= size) {
+            return this;
+        }
+        if (index == size - 1) {
+            sheets[index] = null;
+        } else {
+            for ( ; index < size - 1; index++) {
+                sheets[index] = sheets[index + 1];
+                sheets[index].setId(sheets[index].getId() - 1);
+            }
+        }
+        size--;
+        return this;
+    }
+
+    public void writeXML(Path root) throws IOException {
 
         // Content type
         ContentType contentType = new ContentType();
@@ -213,7 +275,7 @@ public class Workbook {
 
         // docProps
         App app = new App();
-        app.setCompany("蜗牛数字有限公司");
+        app.setCompany("guanquan.wang@yandex.com");
 
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -241,10 +303,6 @@ public class Workbook {
             core.setCreator("guanquan.wang@yandex.com");
         }
         core.setTitle(name);
-//        core.setDescription("this is a test file");
-
-//        core.setVersion("1.0");
-//        core.setCategory("九阴; 手游; 点击");
 
         core.setModified(new Date());
 
@@ -261,18 +319,16 @@ public class Workbook {
         }
 
 
-//        File xl = new File(file, "xl");
-//        if (!xl.exists()) {
-//            xl.mkdirs();
-//        }
-
-        // theme
-        File themeP = new File(root, "theme");
-        if (!themeP.exists()) {
-            themeP.mkdirs();
+        Path themeP = Paths.get(root.toString(), "theme");
+        if (!Files.exists(themeP)) {
+            Files.createDirectory(themeP);
         }
-
-        FileUtil.copyFile(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), new File(themeP, "theme1.xml"));
+        try {
+            Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), Paths.get(themeP.toString(), "theme1.xml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//        FileUtil.copyFile(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), new File(themeP, "theme1.xml"));
         addRel(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
 
@@ -283,131 +339,76 @@ public class Workbook {
 
         addRel(new Relationship("sharedStrings.xml", Const.Relationship.SHARED_STRING));
 
-        boolean hasWaterMark = StringUtil.isNotEmpty(waterMark);
+        if (waterMark != null) {
+            contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
+        }
         for (int i = 0; i < size; i++) {
-            if (StringUtil.isNotEmpty(sheets[i].getWaterMark())) {
-                hasWaterMark = true;
-                break;
+            WaterMark wm = sheets[i].getWaterMark();
+            if (wm != null) {
+                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
             }
         }
-        if (hasWaterMark) {
-            contentType.add(new ContentType.Default(Const.ContentType.PNG, "png"));
-        }
 
-        // TODO write sheet content type
         for (int i = 0; i < size; i++) {
             contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + sheets[i].getId() + Const.Suffix.XML));
         } // END
 
 
         // write content type
-        contentType.wirte(root.getParentFile());
+        contentType.write(root.getParent());
 
         // Relationship
-        try {
-            relManager.write(root, StringUtil.lowFirstKey(this.getClass().getSimpleName()) + Const.Suffix.XML);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        relManager.write(root, StringUtil.lowFirstKey(this.getClass().getSimpleName()) + Const.Suffix.XML);
 
         // workbook.xml
         writeSelf(root);
 
         // styles
-        styles.writeTo(new File(root, "styles.xml"));
+        styles.writeTo(Paths.get(root.toString(), "styles.xml"));
 
         // share string
         sst.write(root);
     }
 
-    public void madeMark(File parent) {
+    public void madeMark(Path parent) {
         Relationship supRel = null;
-        if (waterMark != null && !waterMark.isEmpty()) {
+        int n = 1;
+        if (waterMark != null) {
             try {
-                File temp = createWaterMark(waterMark);
-                File descFile = new File(parent, "media");
-                if (!descFile.exists()) {
-                    descFile.mkdirs();
+                Path media = Paths.get(parent.toString(), "media");
+                if (!Files.exists(media)) {
+                    Files.createDirectory(media);
                 }
-                File picture = new File(descFile, "image1.png");
-                FileUtil.copyFile(temp, picture);
-                supRel = new Relationship("../media/" + picture.getName(), Const.Relationship.IMAGE);
+                Path image = Paths.get(media.toString(), "image" + n++ + waterMark.getSuffix());
+
+                Files.copy(waterMark.get(), image);
+                supRel = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
             } catch(IOException e) {
                 e.printStackTrace();
             }
         }
-        String wm;
+        WaterMark wm;
         for (int i = 0; i < size; i++) {
-            if (StringUtil.isNotEmpty(wm = sheets[i].getWaterMark())) {
+            if ((wm = sheets[i].getWaterMark()) != null) {
                 try {
-                    File temp = createWaterMark(wm);
-                    File descFile = new File(parent, "media");
-                    if (!descFile.exists()) {
-                        descFile.mkdirs();
+                    Path media = Paths.get(parent.toString(), "media");
+                    if (!Files.exists(media)) {
+                        Files.createDirectory(media);
                     }
-                    File picture = new File(descFile, "image1.png");
-                    FileUtil.copyFile(temp, picture);
-                    sheets[i].addRel(new Relationship("../media/" + picture.getName(), Const.Relationship.IMAGE));
+                    Path image = Paths.get(media.toString(), "image" + n++ + wm.getSuffix());
+                    Files.copy(wm.get(), image);
+                    sheets[i].addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
-            } else if (StringUtil.isNotEmpty(waterMark)) {
+            } else if (waterMark != null) {
                 sheets[i].setWaterMark(waterMark);
                 sheets[i].addRel(supRel);
             }
         }
     }
 
-    /**
-     * 生成水印图片
-     *
-     * @param watermark
-     * @return
-     * @throws IOException
-     */
-    public static File createWaterMark(String watermark) throws IOException {
-        File outputFile = File.createTempFile("waterMark", "png");
-        int width = 510; // 水印图片的宽度
-        int height = 300; // 水印图片的高度 因为设置其他的高度会有黑线，所以拉高高度
-
-        // 获取bufferedImage对象
-        BufferedImage bi = new BufferedImage(width, height,
-                BufferedImage.TYPE_INT_RGB);
-        // 处理背景色，设置为 白色
-        int minx = bi.getMinX();
-        int miny = bi.getMinY();
-        for (int i = minx; i < width; i++) {
-            for (int j = miny; j < height; j++) {
-                bi.setRGB(i, j, 0xffffff);
-            }
-        }
-
-        // 获取Graphics2d对象
-        Graphics2D g2d = bi.createGraphics();
-        // 设置字体颜色为灰色
-        g2d.setColor(new Color(240, 240, 240));
-        // 设置图片的属性
-        g2d.setStroke(new BasicStroke(1));
-        // 设置字体
-        g2d.setFont(new java.awt.Font("华文细黑", java.awt.Font.ITALIC, 50));
-        // 设置字体倾斜度
-        g2d.rotate(Math.toRadians(-10));
-
-        // 写入水印文字 原定高度过小，所以累计写水印，增加高度
-        for (int i = 1; i < 10; i++) {
-            g2d.drawString(watermark, 0, 60 * i);
-        }
-        // 设置透明度
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
-        // 释放对象
-        g2d.dispose();
-        ImageIO.write(bi, "png", outputFile);
-
-        return outputFile;
-    }
-
-
-    protected void writeSelf(File root) {
+    protected void writeSelf(Path root) {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
@@ -464,6 +465,8 @@ public class Workbook {
         rootElement.addElement("calcPr").addAttribute("calcId", "124519");
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.getPath() + File.separatorChar + rootName + Const.Suffix.XML); // write to desk
+        FileUtil.writeToDisk(doc, Paths.get(root.toString(), rootName + Const.Suffix.XML)); // write to desk
     }
+
+
 }

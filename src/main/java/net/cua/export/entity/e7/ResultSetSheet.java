@@ -1,7 +1,10 @@
 package net.cua.export.entity.e7;
 
+import net.cua.export.entity.WaterMark;
 import net.cua.export.manager.Const;
+import net.cua.export.manager.RelManager;
 import net.cua.export.util.ExtBufferedWriter;
+import net.cua.export.util.StringUtil;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -9,6 +12,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -28,21 +34,28 @@ public class ResultSetSheet extends Sheet {
         super(workbook, name, headColumns);
     }
 
-    public ResultSetSheet(Workbook workbook, String name, String waterMark, HeadColumn[] headColumns) {
+    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
         super(workbook, name, waterMark, headColumns);
+    }
+
+    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns, ResultSet rs, RelManager relManager) {
+        super(workbook, name, waterMark, headColumns);
+        this.rs = rs;
+        this.relManager = relManager.clone();
     }
 
     public void setRs(ResultSet rs) {
         this.rs = rs;
     }
 
-    public void setCopySheet(boolean copySheet) {
+    public ResultSetSheet setCopySheet(boolean copySheet) {
         this.copySheet = copySheet;
+        return this;
     }
 
     @Override
     public void close() {
-        super.close();
+//        super.close();
         if (rs != null) {
             try {
                 rs.close();
@@ -53,119 +66,73 @@ public class ResultSetSheet extends Sheet {
     }
 
     @Override
-    public void writeTo(File root) {
-        logger.info(getName());
-
-        File xl = new File(root, "xl");
-        if (!xl.exists() && !xl.mkdirs()) {
-            // TODO echo error
-            return;
-        }
-
-        File parent = new File(xl, "worksheets");
-        if (!parent.exists() && !parent.mkdir()) {
-            // TODO echo error
-            return;
+    public void writeTo(Path xl) throws IOException {
+        Path worksheets = Paths.get(xl.toString(), "worksheets");
+        if (!Files.exists(worksheets)) {
+            Files.createDirectory(worksheets);
         }
         String name = getFileName();
+        logger.info(getName() + " | " + name);
 
-        // relationship
-        try {
-            relManager.write(parent, name);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        for (int i = 0; i < headColumns.length; i++) {
+            if (StringUtil.isEmpty(headColumns[i].getName())) {
+                headColumns[i].setName(String.valueOf(i));
+            }
         }
 
-        File sheetFile = new File(parent, name);
-
+        boolean paging = false;
+        File sheetFile = Paths.get(worksheets.toString(), name).toFile();
         // write date
-        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8));) {
+        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
             // Write header
             writeBefore(bw);
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
             // Main data
             if (rs != null && rs.next()) {
-                // Shared string
-                SharedStrings sst = workbook.getSst();
-                Styles styles = workbook.getStyles();
-                int sub;
-                if (!copySheet) {
-                    sub = 0;
-                } else {
-                    sub = Integer.parseInt(this.name.substring(this.name.lastIndexOf('(') + 1, this.name.lastIndexOf(')')));
-//                    if (sub > 1) {
-//                        sub--;
-//                    }
-                }
+
                 // Write sheet data
                 if (getAutoSize() == 1) {
                     do {
-                        // TODO row > max rows
-                        if (rows > Const.Limit.MAX_ROWS_ON_SHEET) {
-                            // TODO insert sub sheet
-                            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns);
-                            String sheetName = this.name;
-                            if (copySheet) {
-                                sheetName = sheetName.substring(0, sheetName.lastIndexOf('(') - 1);
-                            }
-                            rss.setName(sheetName + " (" + (sub + 1) + ")");
-                            rss.setRs(rs);
-                            rss.setCopySheet(true);
-                            if (sub > 0) {
-                                sub--;
-                            }
-                            Sheet subSheet = workbook.insertSheet(id, rss);
-                            subSheet.writeTo(root);
+                        // row >= max rows
+                        if (rows >= limit) {
+                            paging = !paging;
+                            writeRowAutoSize(rs, bw);
                             break;
                         }
-                        writeRowAutoSize(rs, bw, sst, styles);
+                        writeRowAutoSize(rs, bw);
                     } while (rs.next());
                 } else {
                     do {
                         // Paging
-                        if (rows > Const.Limit.MAX_ROWS_ON_SHEET) {
-                            // TODO insert sub sheet
-                            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns);
-                            String sheetName = this.name;
-                            if (copySheet) {
-                                sheetName = sheetName.substring(0, sheetName.lastIndexOf('(') - 1);
-                            }
-                            rss.setName(sheetName + " (" + (sub + 1) + ")");
-                            rss.setRs(rs);
-                            rss.setCopySheet(true);
-                            if (sub > 0) {
-                                sub--;
-                            }
-                            Sheet subSheet = workbook.insertSheet(id, rss);
-                            subSheet.writeTo(root);
+                        if (rows >= limit) {
+                            paging = !paging;
+                            writeRow(rs, bw);
                             break;
                         }
-                        writeRow(rs, bw, sst, styles);
+                        writeRow(rs, bw);
                     } while (rs.next());
                 }
-
-//                if (sub > 1) {
-//                    this.name += "(1)";
-//                }
-//                if (getAutoSize() == 1) {
-//                    do {
-//                        writeRowAutoSize(rs, bw, sst, styles);
-//                    } while (rs.next());
-//                } else {
-//                    do {
-//                        writeRow(rs, bw, sst, styles);
-//                    } while (rs.next());
-//                }
             }
 
             // Write foot
             writeAfter(bw);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-//            close();
-            // TODO close ResultSet
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
+                close();
+            }
+        }
+
+        // Delete empty copy sheet
+        if (copySheet && rows == 1) {
+            logger.info("Delete empty copy sheet");
+            workbook.remove(id - 1);
+            sheetFile.delete();
+            return;
         }
 
         // resize columns
@@ -179,6 +146,31 @@ public class ResultSetSheet extends Sheet {
         if (getAutoSize() == 1 || resize) {
             autoColumnSize(sheetFile);
         }
+
+        // relationship
+        relManager.write(worksheets, name);
+
+        if (paging) {
+            int sub;
+            if (!copySheet) {
+                sub = 0;
+            } else {
+                sub = Integer.parseInt(this.name.substring(this.name.lastIndexOf('(') + 1, this.name.lastIndexOf(')')));
+            }
+            String sheetName = this.name;
+            if (copySheet) {
+                sheetName = sheetName.substring(0, sheetName.lastIndexOf('(') - 1);
+            }
+
+            ResultSetSheet rss = clone();
+            rss.name = sheetName + " (" + (sub + 1) + ")";
+            workbook.insertSheet(id, rss);
+            rss.writeTo(xl);
+        }
+
     }
 
+    public ResultSetSheet clone() {
+        return new ResultSetSheet(workbook, name, waterMark, headColumns, rs, relManager).setCopySheet(true);
+    }
 }

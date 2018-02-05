@@ -10,6 +10,9 @@ import org.dom4j.Element;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,17 +20,17 @@ import java.util.List;
  * Created by wanggq on 2017/9/30.
  */
 @TopNS(prefix = "", value = "Relationships", uri = "http://schemas.openxmlformats.org/package/2006/relationships")
-public class RelManager {
+public class RelManager implements Serializable {
     List<Relationship> relationships;
 
-    public void add(Relationship rel) {
+    public synchronized void add(Relationship rel) {
         if (relationships == null) {
             relationships = new ArrayList<>();
         }
         int n = indexOf(rel.getTarget());
         if (n > -1) { // 替换
             rel.setId("rId" + (n + 1));
-            relationships.add(n, rel);
+            relationships.set(n, rel);
         } else { // 追加
             rel.setId("rId" + (relationships.size() + 1));
             relationships.add(rel);
@@ -63,19 +66,20 @@ public class RelManager {
         return null;
     }
 
-    public void write(File parent, String name) throws IllegalAccessException {
+    public void write(Path parent, String name) throws IOException {
         if (relationships == null || relationships.isEmpty()) {
             return;
         }
 
-        File _rels = new File(parent, "_rels");
-        if (!_rels.exists()) {
-            _rels.mkdirs();
+        Path rels = Paths.get(parent.toString(), "_rels");
+        if (!Files.exists(rels)) {
+            Files.createDirectory(rels);
         }
+
         if (name == null || name.isEmpty()) {
             name = Const.Suffix.RELATION;
         } else {
-            name = name + Const.Suffix.RELATION;
+            name += Const.Suffix.RELATION;
         }
 
         TopNS topNS = this.getClass().getAnnotation(TopNS.class);
@@ -90,7 +94,12 @@ public class RelManager {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true);
-                Object oo = field.get(rel);
+                Object oo = null;
+                try {
+                    oo = field.get(rel);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
                 if (oo == null) continue;
                 Class _clazz = field.getType();
                 if (_clazz == this.getClass()) {
@@ -100,7 +109,26 @@ public class RelManager {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, _rels.getPath() + File.separatorChar + name); // write to desk
+        FileUtil.writeToDisk(doc, Paths.get(rels.toString(), name)); // write to desk
     }
 
+    @Override
+    public RelManager clone() {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(this);
+
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            return (RelManager) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            RelManager rm = new RelManager();
+            if (relationships != null) {
+                for (Relationship r : relationships) {
+                    rm.add(r.clone());
+                }
+            }
+            return rm;
+        }
+    }
 }

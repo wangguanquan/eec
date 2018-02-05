@@ -5,15 +5,12 @@ import net.cua.export.annotation.NS;
 import net.cua.export.annotation.TopNS;
 import net.cua.export.util.DateUtil;
 import net.cua.export.util.FileUtil;
-import net.cua.export.util.StringUtil;
 import org.dom4j.*;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
-import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -65,7 +62,7 @@ public class XmlEntity {
         toXML(rootElement, this);
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, path); // write to desk
+        FileUtil.writeToDisk(doc, Paths.get(path)); // write to desk
     }
 
     public void toXML(Element doc, Object o) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -74,9 +71,9 @@ public class XmlEntity {
             field.setAccessible(true);
             Object oo = field.get(o);
             // TODO skip null value
-            if (oo == null) {
-                continue;
-            }
+//            if (oo == null) {
+//                continue;
+//            }
             Class<?> clazz = field.getType();
             if (clazz == this.getClass()) {
                 continue;

@@ -44,7 +44,7 @@ public class App extends XmlEntity {
         }
     }
 
-    private class HeadingPairs {
+    private static class HeadingPairs {
         @NS(value = "vt", contentUse = true)
         @Attr(name = {"baseType", "size"}, value = {"variant", "#size#"})
         List<NameValue> vector;

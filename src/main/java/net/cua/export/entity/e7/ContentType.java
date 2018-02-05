@@ -9,21 +9,22 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * Created by wanggq on 2017/10/10.
  */
 @TopNS(prefix = "", value = "Types", uri = "http://schemas.openxmlformats.org/package/2006/content-types")
 public class ContentType {
-    private List<? super Type> list;
+    private Set<? super Type> set;
     private RelManager relManager;
 
     public ContentType() {
-        list = new ArrayList<>();
+        set = new HashSet<>();
         relManager = new RelManager();
     }
 
@@ -58,6 +59,17 @@ public class ContentType {
         public void setExtension(String extension) {
             this.extension = extension;
         }
+
+        @java.lang.Override
+        public int hashCode() {
+            return extension.hashCode();
+        }
+
+        @java.lang.Override
+        public boolean equals(Object o) {
+            if (o == null || !(o instanceof Default)) return false;
+            return this == o || extension.equals(((Default)o).extension);
+        }
     }
 
     public static class Override extends Type {
@@ -75,27 +87,33 @@ public class ContentType {
         public void setPartName(String partName) {
             this.partName = partName;
         }
+        @java.lang.Override
+        public int hashCode() {
+            return partName.hashCode();
+        }
+
+        @java.lang.Override
+        public boolean equals(Object o) {
+            if (o == null || !(o instanceof Override)) return false;
+            return this == o || partName.equals(((Override)o).partName);
+        }
     }
 
     public void add(Type type) {
-        list.add(type);
+        set.add(type);
     }
 
-    public void wirte(File root) {
+    public void write(Path root) throws IOException {
         // relationship
-        try {
-            relManager.write(root, null);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        relManager.write(root, null);
         // write self
         TopNS topNS = this.getClass().getAnnotation(TopNS.class);
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = factory.createElement(topNS.value(), topNS.uri()[0]);
 
-        for (int i = 0, size = list.size(); i < size; i++) {
-            Object o = list.get(i);
+        for (Iterator<? super Type> it = set.iterator(); it.hasNext(); ) {
+            Object o = it.next();
             Class<?> clazz = o.getClass();
             Element ele = rootElement.addElement(clazz.getSimpleName());
             Field[] fields = clazz.getDeclaredFields()
@@ -121,7 +139,7 @@ public class ContentType {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.getPath() + "/[Content_Types].xml"); // write to desk
+        FileUtil.writeToDisk(doc, Paths.get(root.toString(), "/[Content_Types].xml")); // write to desk
     }
 
 

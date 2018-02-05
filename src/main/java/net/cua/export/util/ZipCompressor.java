@@ -65,8 +65,10 @@ public class ZipCompressor {
                 String basedir = "";
 
                 File[] files = file.listFiles();
-                for (File f : files) {
-                    compress(f, out, basedir);
+                if (files != null) {
+                    for (File f : files) {
+                        compress(f, out, basedir);
+                    }
                 }
                 out.close();
             } catch (Exception e) {
@@ -96,8 +98,8 @@ public class ZipCompressor {
 
     /** 压缩一个目录 */
     private void compressDirectory(File dir, ZipOutputStream out, String basedir) {
-
         File[] files = dir.listFiles();
+        if (files == null) return;
         for (int i = 0; i < files.length; i++) {
             /* 递归 */
             compress(files[i], out, basedir + dir.getName() + File.separatorChar);

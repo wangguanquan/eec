@@ -21,10 +21,6 @@
 package net.cua.export.tmap;
 
 /**
- * Created by wanggq on 2017/9/5.
- */
-
-/**
         * Base class for hashtables that use open addressing to resolve
         * collisions.
         *

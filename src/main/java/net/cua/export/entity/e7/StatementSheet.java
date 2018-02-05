@@ -1,13 +1,19 @@
 package net.cua.export.entity.e7;
 
+import net.cua.export.entity.WaterMark;
 import net.cua.export.manager.Const;
 import net.cua.export.util.ExtBufferedWriter;
+import net.cua.export.util.StringUtil;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
@@ -22,7 +28,7 @@ public class StatementSheet extends Sheet {
         super(workbook, name, headColumns);
     }
 
-    public StatementSheet(Workbook workbook, String name, String waterMark, HeadColumn[] headColumns) {
+    public StatementSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
         super(workbook, name, waterMark, headColumns);
     }
 
@@ -36,7 +42,7 @@ public class StatementSheet extends Sheet {
 
     @Override
     public void close() {
-        super.close();
+//        super.close();
         if (ps != null) {
             try {
                 ps.close();
@@ -47,33 +53,30 @@ public class StatementSheet extends Sheet {
     }
 
     @Override
-    public void writeTo(File root) {
-        logger.info(getName());
-
-        File xl = new File(root, "xl");
-        if (!xl.exists() && !xl.mkdirs()) {
-            // TODO echo error
-            return;
-        }
-
-        File parent = new File(xl, "worksheets");
-        if (!parent.exists() && !parent.mkdir()) {
-            // TODO echo error
-            return;
+    public void writeTo(Path xl) throws IOException {
+        Path worksheets = Paths.get(xl.toString(), "worksheets");
+        if (!Files.exists(worksheets)) {
+            Files.createDirectory(worksheets);
         }
         String name = getFileName();
+        logger.info(getName() + " | " + name);
 
         // TODO 1.判断各sheet抽出的数据量大小
         // TODO 2.如果量大则抽取类型为String的列判断重复率
 
-        // relationship
+        int i = 0;
         try {
-            relManager.write(parent, name);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            ResultSetMetaData metaData = ps.getMetaData();
+            for ( ; i < headColumns.length; i++) {
+                if (StringUtil.isEmpty(headColumns[i].getName())) {
+                    headColumns[i].setName(metaData.getColumnName(i));
+                }
+            }
+        } catch (SQLException e) {
+            headColumns[i].setName(String.valueOf(i));
         }
 
-        File sheetFile = new File(parent, name);
+        File sheetFile = Paths.get(worksheets.toString(), name).toFile();
         ResultSet rs = null;
         int sub = 0;
         // write date
@@ -81,48 +84,48 @@ public class StatementSheet extends Sheet {
             rs = ps.executeQuery();
             // Write header
             writeBefore(bw);
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
             if (rs.next()) {
-                // Shared string
-                SharedStrings sst = workbook.getSst();
-                Styles styles = workbook.getStyles();
                 // Write sheet data
                 if (getAutoSize() == 1) {
                     do {
-                        // TODO row > max rows
-                        // 这里会丢数据
-                        if (rows >= Const.Limit.MAX_ROWS_ON_SHEET) {
-                            // TODO insert sub sheet
-
+                        // Paging
+                        if (rows >= limit) {
+                            writeRowAutoSize(rs, bw);
                             sub++;
                             break;
                         }
-                        writeRowAutoSize(rs, bw, sst, styles);
+                        writeRowAutoSize(rs, bw);
                     } while (rs.next());
                 } else {
                     do {
                         // Paging
-                        if (rows >= Const.Limit.MAX_ROWS_ON_SHEET) {
-                            // TODO insert sub sheet
-
+                        if (rows >= limit) {
+                            writeRow(rs, bw);
                             sub++;
                             break;
                         }
-                        writeRow(rs, bw, sst, styles);
+                        writeRow(rs, bw);
                     } while (rs.next());
                 }
-
-//                // Rename self sheet
-//                if (sub == 1) {
-//                    this.name += "(1)";
-//                }
             }
 
             // Write foot
             writeAfter(bw);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                close();
+            }
         }
 
         // resize columns
@@ -137,14 +140,18 @@ public class StatementSheet extends Sheet {
             autoColumnSize(sheetFile);
         }
 
+        // relationship
+        relManager.write(worksheets, name);
+
         if (sub == 1) {
-            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns);
-            rss.setName(this.name + " (" + (sub + 1) + ")");
-            rss.setRs(rs);
+            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns, rs, relManager.clone());
+            rss.setName(this.name + " (" + (sub) + ")");
             rss.setCopySheet(true);
             Sheet subSheet = workbook.insertSheet(id, rss);
-            subSheet.writeTo(root);
+            subSheet.writeTo(xl);
         }
+
+        close();
     }
 
 }

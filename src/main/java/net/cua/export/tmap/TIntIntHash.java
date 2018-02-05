@@ -20,9 +20,6 @@
 
 package net.cua.export.tmap;
 
-/**
- * Created by wanggq on 2017/9/5.
- */
 abstract public class TIntIntHash extends TPrimitiveHash {
 
     /** the set of ints */

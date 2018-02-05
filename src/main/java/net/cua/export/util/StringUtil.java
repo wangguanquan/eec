@@ -21,7 +21,7 @@ public class StringUtil {
             }
         } else {
             for (int i = 0; i < array.length; i++) {
-                if (v == array[i]) {
+                if (array[i] == null) {
                     return i;
                 }
             }

@@ -12,7 +12,10 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -57,7 +60,7 @@ public class Styles {
     private static final int[] move_left = {24, 18, 12, 6, 3, 0};
 
     public Styles load(InputStream is) {
-        map.put(0, 0);
+        map.put(0, 0); // General
         map.put(1, 1);
         SAXReader reader = new SAXReader();
         try {
@@ -91,12 +94,10 @@ public class Styles {
                     } else {
                         v = Horizontals.valueOf(attrValue);
                     }
-//                    System.out.print(v + "   ");
-                    c |= (v << move_left[i]);
+                    c |= v << move_left[i];
                 }
             }
 
-//            System.out.println(c + " : " + (n - 1));
             map.put(c, n - 1);
         }
         return this;
@@ -111,6 +112,16 @@ public class Styles {
         styles[4] = style << 26 >>> (move_left[4] + 26);
         styles[5] = style << 29 >>> (move_left[5] + 29);
         return styles;
+    }
+
+    public static int pack(int[] styles) {
+        return styles[0]    << move_left[0]
+                | styles[1] << move_left[1]
+                | styles[2] << move_left[2]
+                | styles[3] << move_left[3]
+                | styles[4] << move_left[4]
+                | styles[5] << move_left[5]
+                ;
     }
 
     @Override
@@ -155,13 +166,18 @@ public class Styles {
         return buf.toString();
     }
 
+    /**
+     * add style in document
+     * @param s style
+     * @return style index in styles array.
+     */
     private synchronized int addStyle(int s) {
         if (document == null) return 0;
         int[] styles = unpack(s);
 //        System.out.println(styles[0] + "   " + styles[1] + "   " + styles[2] + "   " + styles[3] + "   " + styles[4] + "   " + styles[5]);
         Element root = document.getRootElement();
         Element cellXfs = root.element("cellXfs");
-        int count = Integer.valueOf(cellXfs.attributeValue("count"));
+        int count = Integer.parseInt(cellXfs.attributeValue("count"));
         int n = cellXfs.elements().size();
         Element newXf = cellXfs.addElement("xf");
         newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
@@ -194,11 +210,11 @@ public class Styles {
         return n;
     }
 
-    public void writeTo(File styleFile) {
+    public void writeTo(Path styleFile) throws IOException {
         if (document != null) {
-            FileUtil.writeToDisk(document, styleFile.getPath());
+            FileUtil.writeToDisk(document, styleFile);
         } else {
-            FileUtil.copyFile(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
+            Files.copy(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
         }
     }
 
@@ -237,6 +253,9 @@ public class Styles {
     }
 
     ////////////////////////default style/////////////////////////////
+    public static int defaultCharStyle() {
+        return Styles.Fonts.BLACK_GB2312_WRYH_11| Styles.Borders.THIN_BLACK| Horizontals.CENTER_CONTINUOUS;
+    }
     public static int defaultStringStyle() {
         return Styles.Fonts.BLACK_GB2312_WRYH_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.LEFT;
     }
@@ -254,12 +273,22 @@ public class Styles {
     }
 
     ////////////////////////reset style/////////////////////////////
-    public static int reset(int style) {
-        // TODO ---------------
-        int[] sub = unpack(style);
-        return style;
+    public static int reset(int style, int newStyle) {
+        int[] sub = unpack(style), nsub = unpack(newStyle);
+        for (int i = 0; i < sub.length; i++) {
+            if (nsub[i] > 0) {
+                sub[i] = nsub[i];
+            }
+        }
+        return pack(sub);
     }
 
+    /**
+     * https://support.office.com/en-us/article/number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68
+     * Number format codes
+     *
+     * <POSITIVE>;<NEGATIVE>;<ZERO>;<TEXT>
+     */
     public static final class NumFmts {
         public static final int GENERAL = 0 // General
                 , INT = 1 << move_left[0] // 0

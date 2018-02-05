@@ -21,9 +21,6 @@
 package net.cua.export.tmap;
 
 /**
- * Created by wanggq on 2017/9/5.
- */
-/**
  * The base class for hashtables of primitive values.  Since there is
  * no notion of object equality for primitives, it isn't possible to
  * use a `REMOVED' object to track deletions in an open-addressed table.

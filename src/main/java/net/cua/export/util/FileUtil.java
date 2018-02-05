@@ -9,6 +9,8 @@ import org.dom4j.io.XMLWriter;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -17,8 +19,8 @@ import java.util.List;
 /**
  * 文件操作工具类
  *
- * @author Sun Xiaochen
- * @since 2008-2-1
+ * @author wanggq
+ * @since 2017-9-10
  */
 
 public class FileUtil {
@@ -39,7 +41,7 @@ public class FileUtil {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                logger.error("close FileInputStream fail", e);
+                logger.error("close InputStream fail.", e);
             }
         }
     }
@@ -54,7 +56,7 @@ public class FileUtil {
             try {
                 outputStream.close();
             } catch (IOException e) {
-                logger.error("close FileInputStream fail", e);
+                logger.error("close OutputStream fail.", e);
             }
         }
     }
@@ -69,7 +71,7 @@ public class FileUtil {
             try {
                 br.close();
             } catch (IOException e) {
-                logger.error("close BufferedReader fail", e);
+                logger.error("close Reader fail.", e);
             }
         }
     }
@@ -84,7 +86,8 @@ public class FileUtil {
             try {
                 bw.close();
             } catch (IOException e) {
-                logger.error("close BufferedWriter fail", e);
+                logger.error("close Writer fail." +
+                        "", e);
             }
         }
     }
@@ -106,7 +109,7 @@ public class FileUtil {
         if (file.exists()) {
             boolean boo = file.delete();
             if (!boo) {
-                logger.error("删除文件[" + file.getPath() + "]失败.");
+                logger.error("Delete file [" + file.getPath() + "] fail.");
             }
         }
     }
@@ -119,14 +122,19 @@ public class FileUtil {
     public static void rmRf(File root, boolean rmSelf) {
         File temp = root;
         if (root.isDirectory()) {
+            File[] subFiles = root.listFiles();
+            if (subFiles == null) return;
             List<File> files = new ArrayList<>();
             int index = 0;
             do {
-                files.addAll(Arrays.asList(root.listFiles()));
+                files.addAll(Arrays.asList(subFiles));
                 for (; index < files.size(); index++) {
                     if (files.get(index).isDirectory()) {
-                        root = files.get(index++);
-                        break;
+                        root = files.get(index);
+                        subFiles = root.listFiles();
+                        if (subFiles != null) {
+                            files.addAll(Arrays.asList(subFiles));
+                        }
                     }
                 }
             } while (index < files.size());
@@ -252,16 +260,23 @@ public class FileUtil {
         logger.info("复制结束.");
     }
 
-    public static void writeToDisk(Document doc, String path) {
-        File file = new File(path);
-        if (!file.getParentFile().exists()) {
-            boolean mp = file.getParentFile().mkdirs();
-            if (!mp) {
-                System.out.println("Create " + file.getParent() + " error.");
-                return;
+    public static void writeToDisk(Document doc, Path path) {
+//        File file = new File(path);
+//        if (!file.getParentFile().exists()) {
+//            boolean mp = file.getParentFile().mkdirs();
+//            if (!mp) {
+//                System.out.println("Create " + file.getParent() + " error.");
+//                return;
+//            }
+//        }
+        if (!Files.exists(path.getParent())) {
+            try {
+                Files.createDirectories(path.getParent());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        try (FileOutputStream fos = new FileOutputStream(path)) {
+        try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
             //write the created document to an arbitrary file
 
             OutputFormat outformat = OutputFormat.createPrettyPrint();
