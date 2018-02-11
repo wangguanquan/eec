@@ -20,8 +20,6 @@ import java.sql.SQLException;
  * Created by wanggq on 2017/9/26.
  */
 public class StatementSheet extends Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     private PreparedStatement ps;
 
     public StatementSheet(Workbook workbook, String name, HeadColumn[] headColumns) {
@@ -59,7 +57,7 @@ public class StatementSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.info(getName() + " | " + name);
+//        logger.info(getName() + " | " + name);
 
         // TODO 1.判断各sheet抽出的数据量大小
         // TODO 2.如果量大则抽取类型为String的列判断重复率
@@ -84,7 +82,7 @@ public class StatementSheet extends Sheet {
             rs = ps.executeQuery();
             // Write header
             writeBefore(bw);
-            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - rows; // exclude header rows
             if (rs.next()) {
                 // Write sheet data
                 if (getAutoSize() == 1) {
@@ -114,11 +112,11 @@ public class StatementSheet extends Sheet {
             writeAfter(bw);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
         } finally {
-            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
                 try {
                     rs.close();
                 } catch (SQLException e) {

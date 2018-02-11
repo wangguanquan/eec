@@ -22,7 +22,6 @@ import java.util.Map;
  * Created by wanggq at 2018-01-26 14:46
  */
 public class ListMapSheet extends Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     List<Map<String, ?>> data;
 
     public ListMapSheet(Workbook workbook) {
@@ -37,6 +36,12 @@ public class ListMapSheet extends Sheet {
         super(workbook, name, waterMark, headColumns);
     }
 
+    @Override
+    public void close() {
+        data.clear();
+        data = null;
+    }
+
     public ListMapSheet setData(final List<Map<String, ?>> data) {
         this.data = data;
         return this;
@@ -49,7 +54,7 @@ public class ListMapSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.info(getName() + " | " + name);
+//        logger.info(getName() + " | " + name);
 
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
         for (int i = 0; i < headColumns.length; i++) {
@@ -59,7 +64,6 @@ public class ListMapSheet extends Sheet {
             }
             if (hc.getClazz() == null) {
                 hc.setClazz(first.get(hc.getKey()).getClass());
-                logger.info("Type of " + hc.getKey() + " is " + hc.getClazz());
             }
         }
 
@@ -85,7 +89,7 @@ public class ListMapSheet extends Sheet {
             writeAfter(bw);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
         }
 
         // resize columns

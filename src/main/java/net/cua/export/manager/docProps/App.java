@@ -5,11 +5,8 @@ import net.cua.export.annotation.Attr;
 import net.cua.export.annotation.NS;
 import net.cua.export.annotation.TopNS;
 import net.cua.export.entity.NameValue;
-import net.cua.export.entity.XmlEntity;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -93,13 +90,4 @@ public class App extends XmlEntity {
         this.appVersion = appVersion;
     }
 
-//    public static void main(String[] args) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-//        App app = new App();
-//        app.company = "蜗牛数字有限公司";
-//
-//        app.titlesOfParts = app.new TitlesOfParts();
-//        app.titlesOfParts.setVector(Arrays.asList("服务器列表", "测试", "IP统计", "Sheet1"));
-//
-//        app.writeTo("f:/app.xml");
-//    }
 }

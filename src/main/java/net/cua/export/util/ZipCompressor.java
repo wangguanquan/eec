@@ -29,16 +29,13 @@ public class ZipCompressor {
     public File compress(String srcPathName) {
         File file = new File(srcPathName);
         if (!file.exists())
-            throw new RuntimeException(srcPathName + "不存在！");
+            throw new RuntimeException(srcPathName + " not exists.");
         ZipOutputStream out = null;
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
-            CheckedOutputStream cos = new CheckedOutputStream(fileOutputStream, new CRC32());
-            out = new ZipOutputStream(cos);
+            out = new ZipOutputStream(new CheckedOutputStream(new FileOutputStream(zipFile), new CRC32()));
             String basedir = "";
             compress(file, out, basedir);
-            out.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
             if (out != null) {
@@ -59,9 +56,7 @@ public class ZipCompressor {
         if (file.isDirectory()) {
             ZipOutputStream out = null;
             try {
-                FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
-                CheckedOutputStream cos = new CheckedOutputStream(fileOutputStream, new CRC32());
-                out = new ZipOutputStream(cos);
+                out = new ZipOutputStream(new CheckedOutputStream(new FileOutputStream(zipFile), new CRC32()));
                 String basedir = "";
 
                 File[] files = file.listFiles();
@@ -70,8 +65,7 @@ public class ZipCompressor {
                         compress(f, out, basedir);
                     }
                 }
-                out.close();
-            } catch (Exception e) {
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
                 if (out != null) {
@@ -118,15 +112,13 @@ public class ZipCompressor {
             while ((count = bis.read(data, 0, BUFFER)) != -1) {
                 out.write(data, 0, count);
             }
-            bis.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
             if (bis != null) {
                 try {
                     bis.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }

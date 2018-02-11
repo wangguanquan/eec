@@ -22,7 +22,6 @@ import java.sql.SQLException;
  * Created by wanggq on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     private ResultSet rs;
     private boolean copySheet;
 
@@ -86,7 +85,7 @@ public class ResultSetSheet extends Sheet {
         try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
             // Write header
             writeBefore(bw);
-            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - rows; // exclude header rows
             // Main data
             if (rs != null && rs.next()) {
 
@@ -118,11 +117,11 @@ public class ResultSetSheet extends Sheet {
             writeAfter(bw);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
         } finally {
-            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
                 close();
             }
         }

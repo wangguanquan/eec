@@ -11,6 +11,8 @@ public class Const {
     public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     public static final String EXCEL_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
     public static final Charset UTF_8 = Charset.forName("UTF-8");
+    public static final String lineSeparator = java.security.AccessController.doPrivileged(
+            new sun.security.action.GetPropertyAction("line.separator"));
 
     public static final class Relationship {
         public static final String
@@ -49,8 +51,8 @@ public class Const {
     public static final class Limit {
         public static final int
                 // 每个worksheet页最大行
-//                MAX_ROWS_ON_SHEET = 1_048_576
-        MAX_ROWS_ON_SHEET = 65_536
+                MAX_ROWS_ON_SHEET_07 = 1_048_576
+                , MAX_ROWS_ON_SHEET_03 = 65_536
                 // 每个worksheet页最大列
                 , MAX_COLUMNS_ON_SHEET = 16_384
                 // 单个cell最多包含多少字符
@@ -64,6 +66,7 @@ public class Const {
         public static final String EXCEL_07 = ".xlsx", EXCEL_03 = ".xls";
         public static final String XML = ".xml";
         public static final String RELATION = ".rels";
+        public static final String PNG = ".png";
     }
 
 }

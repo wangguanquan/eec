@@ -2,6 +2,7 @@ package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
 import net.cua.export.entity.WaterMark;
+import net.cua.export.entity.e7.style.*;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
 import net.cua.export.processor.IntConversionProcessor;
@@ -13,10 +14,8 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,7 +30,7 @@ import static net.cua.export.util.DateUtil.toDateValue;
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    protected Logger logger = Logger.getLogger(this.getClass().getName());
     protected Workbook workbook;
 
     protected String name;
@@ -43,6 +42,8 @@ public abstract class Sheet {
     private double width = 20;
     private int headInfoLen, baseInfoLen;
     protected int rows;
+
+    private int headStyle;
 
     public int getId() {
         return id;
@@ -60,6 +61,9 @@ public abstract class Sheet {
         this.workbook = workbook;
         this.name = name;
         this.headColumns = headColumns;
+        for (HeadColumn hc : this.headColumns) {
+            hc.sst = workbook.getStyles();
+        }
         relManager = new RelManager();
     }
 
@@ -67,6 +71,9 @@ public abstract class Sheet {
         this.workbook = workbook;
         this.name = name;
         this.headColumns = headColumns;
+        for (HeadColumn hc : this.headColumns) {
+            hc.sst = workbook.getStyles();
+        }
         this.waterMark = waterMark;
         relManager = new RelManager();
     }
@@ -85,6 +92,7 @@ public abstract class Sheet {
         private int cellStyle = -1; // 未设定
         private double width;
         private Object o;
+        private Styles sst;
 
         public void setO(Object o) {
             this.o = o;
@@ -222,12 +230,58 @@ public abstract class Sheet {
             this.cellStyle = cellStyle;
             return this;
         }
+        public HeadColumn setCellStyle(Font font, int horizontal) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | Styles.Verticals.CENTER
+                            | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(Font font, Border border, int horizontal) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | Styles.Verticals.CENTER
+                            | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(Font font, Fill fill, Border border, int horizontal) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | (fill != null ? sst.addFill(fill) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | Styles.Verticals.CENTER
+                            | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
+            this.cellStyle =  sst.of(
+                            (font != null ? sst.addFont(font) : 0)
+                            | (fill != null ? sst.addFill(fill) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | vertical
+                            | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
+            this.cellStyle =  sst.of(
+                    (numFmt != null ? sst.addNumFmt(numFmt) : 0)
+                            | (font != null ? sst.addFont(font) : 0)
+                            | (fill != null ? sst.addFill(fill) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | vertical
+                            | horizontal);
+            return this;
+        }
 
         public HeadColumn setShare(boolean share) {
             this.share = share;
             return this;
         }
-
 
         protected int getCellStyle(Class clazz) {
             int style;
@@ -245,13 +299,13 @@ public abstract class Sheet {
                     ) {
                 style = Styles.defaultIntStyle();
                 switch (type) {
-                    case 1: // 百分比显示
+                    case TYPE_PARENTAGE: // 百分比显示
                         style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_INT;
                         break;
-                    case 2: // 显示人民币
+                    case TYPE_RMB: // 显示人民币
                         style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_INT;
                         break;
-                    case 0: // 正常显示数字
+                    case TYPE_NOMAL: // 正常显示数字
                         break;
                     default:
                 }
@@ -260,13 +314,13 @@ public abstract class Sheet {
                     ) {
                 style = Styles.defaultDoubleStyle();
                 switch (type) {
-                    case 1: // 百分比显示
+                    case TYPE_PARENTAGE: // 百分比显示
                         style= Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_DOUBLE;
                         break;
-                    case 2: // 显示人民币
+                    case TYPE_RMB: // 显示人民币
                         style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_DOUBLE;
                         break;
-                    case 0: // 正常显示数字
+                    case TYPE_NOMAL: // 正常显示数字
                         break;
                 default:
                 }
@@ -330,12 +384,10 @@ public abstract class Sheet {
         this.waterMark = waterMark;
     }
 
-    public void close() {
-//        for (HeadColumn o : headColumns) {
-//            o = null;
-//        }
-//        headColumns = null;
-    }
+    /**
+     * abstract method close
+     */
+    public abstract void close();
 
     public void addRel(Relationship rel) {
         relManager.add(rel);
@@ -344,9 +396,8 @@ public abstract class Sheet {
     public abstract void writeTo(Path xl) throws IOException;
 
     protected String getFileName() {
-        return "sheet" + id + ".xml";
+        return "sheet" + id + Const.Suffix.XML;
     }
-
 
     /**
      * 写worksheet头部
@@ -355,8 +406,7 @@ public abstract class Sheet {
     protected void writeBefore(ExtBufferedWriter bw) throws IOException {
         StringBuilder buf = new StringBuilder(Const.EXCEL_XML_DECLARATION);
         // Declaration
-        buf.append(java.security.AccessController.doPrivileged(
-                new sun.security.action.GetPropertyAction("line.separator"))); // new line
+        buf.append(Const.lineSeparator); // new line
         // Root node
         if (getClass().isAnnotationPresent(TopNS.class)) {
             TopNS topNS = getClass().getAnnotation(TopNS.class);
@@ -422,13 +472,36 @@ public abstract class Sheet {
         bw.write("</row>");
     }
 
-    int defaultHeadStyle() {
-        return workbook.getStyles().of(
-                Styles.Fonts.WHITE_GB2312_WRYH_11_B
-                | Styles.Fills.FF666699
-                | Styles.Borders.THIN_BLACK
-                | Styles.Verticals.CENTER
-                | Styles.Horizontals.CENTER);
+    public Sheet setHeadStyle(Font font, Fill fill, Border border) {
+        return setHeadStyle(null, font, fill, border, Styles.Verticals.CENTER, Styles.Horizontals.CENTER);
+    }
+
+    public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
+        return setHeadStyle(null, font, fill, border, vertical, horizontal);
+    }
+
+    public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
+        Styles styles = workbook.getStyles();
+        headStyle = styles.of(
+                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
+                        | (font != null ? styles.addFont(font) : 0)
+                        | (fill != null ? styles.addFill(fill) : 0)
+                        | (border != null ? styles.addBorder(border) : 0)
+                        | vertical
+                        | horizontal);
+        return this;
+    }
+
+    private int defaultHeadStyle() {
+        if (headStyle == 0) {
+            headStyle = workbook.getStyles().of(
+                    Styles.Fonts.WHITE_GB2312_WRYH_11_B
+                            | Styles.Fills.FF666699
+                            | Styles.Borders.THIN_BLACK
+                            | Styles.Verticals.CENTER
+                            | Styles.Horizontals.CENTER);
+        }
+        return headStyle;
     }
 
     /**

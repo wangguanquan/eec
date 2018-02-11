@@ -2,6 +2,7 @@ package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
 import net.cua.export.entity.WaterMark;
+import net.cua.export.entity.e7.style.Styles;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
 import net.cua.export.manager.docProps.App;
@@ -124,18 +125,6 @@ public class Workbook {
         return this;
     }
 
-//    public Workbook addSheet(String name, List<Map<?, ?>> data, Sheet.HeadColumn ... headColumns) {
-//        int _size = size;
-//        if (_size > sheets.length) {
-//            sheets = Arrays.copyOf(sheets, _size + 1);
-//        }
-//        ListMapSheet sheet = new ListMapSheet(this, name, headColumns);
-//        sheet.setData(data);
-//        sheets[_size] = sheet;
-//        size++;
-//        return this;
-//    }
-
     public Workbook addSheet(String name, List<?> data, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         Object o;
@@ -147,7 +136,7 @@ public class Workbook {
             return this;
         }
 
-        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
+        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - 1, page = len / limit;
         if (len % limit > 0) {
             page++;
         }
@@ -179,7 +168,7 @@ public class Workbook {
         return first;
     }
 
-    public Workbook addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
+    public Sheet addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size > sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -188,7 +177,7 @@ public class Workbook {
         sheet.setRs(rs);
         sheets[_size] = sheet;
         size++;
-        return this;
+        return sheet;
     }
 
     public Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
@@ -261,6 +250,21 @@ public class Workbook {
         }
         size--;
         return this;
+    }
+
+    public Sheet getSheetAt(int index) {
+        if (index < 0 || index >= size)
+            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
+        return sheets[index];
+    }
+
+    public Sheet getSheet(String sheetName) {
+        for (Sheet sheet : sheets) {
+            if (sheet.getName().equals(sheetName)) {
+                return sheet;
+            }
+        }
+        return null;
     }
 
     public void writeXML(Path root) throws IOException {
@@ -408,7 +412,7 @@ public class Workbook {
         }
     }
 
-    protected void writeSelf(Path root) {
+    protected void writeSelf(Path root) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;

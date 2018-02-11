@@ -14,6 +14,8 @@ import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 
 /**
+ * https://msdn.microsoft.com/library
+ * https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
  * Created by wanggq at 2017/9/26.
  */
 public class Excelx {
@@ -123,7 +125,7 @@ public class Excelx {
         File zipFile = new ZipCompressor(root.toString()).compressSubs(root.toFile());
         // Delete source files
         boolean delSelf = true;
-        FileUtil.rmRf(root.toFile(), delSelf);
+//        FileUtil.rmRf(root.toFile(), delSelf);
 
         return zipFile.toPath();
     }

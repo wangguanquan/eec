@@ -24,7 +24,6 @@ import java.util.List;
  * Created by wanggq at 2018-01-26 14:48
  */
 public class ListObjectSheet<T> extends Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
     private List<T> data;
 
     public ListObjectSheet(Workbook workbook) {
@@ -37,6 +36,12 @@ public class ListObjectSheet<T> extends Sheet {
 
     public ListObjectSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
         super(workbook, name, waterMark, headColumns);
+    }
+
+    @Override
+    public void close() {
+        data.clear();
+        data = null;
     }
 
     public ListObjectSheet<T> setData(final List<T> data) {

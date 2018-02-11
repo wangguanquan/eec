@@ -8,6 +8,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
@@ -53,7 +54,7 @@ public class SharedStrings {
         return n.intValue();
     }
 
-    public void write(Path root) {
+    public void write(Path root) throws IOException {
         TopNS topNS = getClass().getAnnotation(TopNS.class);
 
         DocumentFactory factory = DocumentFactory.getInstance();

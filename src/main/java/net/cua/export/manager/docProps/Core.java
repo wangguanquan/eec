@@ -4,9 +4,7 @@ package net.cua.export.manager.docProps;
 import net.cua.export.annotation.Attr;
 import net.cua.export.annotation.NS;
 import net.cua.export.annotation.TopNS;
-import net.cua.export.entity.XmlEntity;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
 /**
@@ -87,18 +85,4 @@ public class Core extends XmlEntity {
         this.modified = modified;
     }
 
-//    public static void main(String[] args) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-//        Core core = new Core();
-//        core.creator = "wanggq";
-//        core.title = "九阴手游点击";
-//        core.description = "this is a test file";
-//
-//        core.version = "1.0";
-//        core.category = "九阴; 手游; 点击";
-//
-//        core.created = new Date();
-//        core.modified = new Date();
-//
-//        core.writeTo("f:/core.xml");
-//    }
 }

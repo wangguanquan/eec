@@ -1,12 +1,14 @@
-package net.cua.export.entity;
+package net.cua.export.manager.docProps;
 
 import net.cua.export.annotation.Attr;
 import net.cua.export.annotation.NS;
 import net.cua.export.annotation.TopNS;
+import net.cua.export.entity.NameValue;
 import net.cua.export.util.DateUtil;
 import net.cua.export.util.FileUtil;
 import org.dom4j.*;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,7 +28,7 @@ public class XmlEntity {
 
     String[] prefixs, uris;
 
-    public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;

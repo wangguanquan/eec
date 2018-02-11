@@ -120,7 +120,7 @@ public class WaterMark {
     public String getSuffix() {
         String suffix = null;
         if (temp) {
-            suffix = ".png";
+            suffix = Const.Suffix.PNG;
         } else if (imagePath != null) {
             String name = imagePath.getFileName().toString();
             int n;
@@ -128,7 +128,7 @@ public class WaterMark {
                 suffix = name.substring(n);
             }
         }
-        return suffix != null ? suffix : ".png";
+        return suffix != null ? suffix : Const.Suffix.PNG;
     }
 
     public String getContentType() {
@@ -139,7 +139,7 @@ public class WaterMark {
                 try {
                     return f.get(null).toString();
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    ; // Empty
                 }
             }
         }

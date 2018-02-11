@@ -29,13 +29,18 @@ public class EmptySheet extends Sheet {
     }
 
     @Override
+    public void close() {
+        ;
+    }
+
+    @Override
     public void writeTo(Path xl) throws IOException {
         Path worksheets = Paths.get(xl.toString(), "worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.info(getName() + " | " + name);
+//        logger.info(getName() + " | " + name);
 
 
         File sheetFile = Paths.get(worksheets.toString(), name).toFile();

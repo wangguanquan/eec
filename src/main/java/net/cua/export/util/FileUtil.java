@@ -26,7 +26,6 @@ import java.util.List;
 public class FileUtil {
     static Logger logger = Logger.getLogger(FileUtil.class);
 
-    // 限制实例化
     private FileUtil() {
     }
 
@@ -223,7 +222,6 @@ public class FileUtil {
             }
         }
 
-        logger.info("开始扫描文件...");
         String ss[] = src.list();
         if (ss == null) return;
         List<File> files = new ArrayList<>();
@@ -260,20 +258,12 @@ public class FileUtil {
         logger.info("复制结束.");
     }
 
-    public static void writeToDisk(Document doc, Path path) {
-//        File file = new File(path);
-//        if (!file.getParentFile().exists()) {
-//            boolean mp = file.getParentFile().mkdirs();
-//            if (!mp) {
-//                System.out.println("Create " + file.getParent() + " error.");
-//                return;
-//            }
-//        }
+    public static void writeToDisk(Document doc, Path path) throws IOException {
         if (!Files.exists(path.getParent())) {
             try {
                 Files.createDirectories(path.getParent());
             } catch (IOException e) {
-                e.printStackTrace();
+                throw e;
             }
         }
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
@@ -284,15 +274,8 @@ public class FileUtil {
             writer.write(doc);
             writer.flush();
             writer.close();
-        } catch (FileNotFoundException e) {
-            // catch exception
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            // catch exception
-            e.printStackTrace();
         } catch (IOException e) {
-            // catch exception
-            e.printStackTrace();
+            throw e;
         }
     }
 }
