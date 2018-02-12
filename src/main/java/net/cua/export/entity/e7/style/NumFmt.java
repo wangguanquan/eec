@@ -24,7 +24,7 @@ import org.dom4j.Element;
  you must include the ending semicolon for the section that you skip.
  *
  * https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4
- * Created by wanggq at 2018-02-06 08:51
+ * Created by guanquan.wang at 2018-02-06 08:51
  */
 public class NumFmt {
     private String code;

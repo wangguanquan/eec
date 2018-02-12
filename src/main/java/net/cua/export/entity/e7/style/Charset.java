@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-08 17:05
+ * Created by guanquan.wang at 2018-02-08 17:05
  */
 public class Charset {
     public static final int ANSI = 0x00

@@ -9,7 +9,7 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
- * Created by wanggq at 2018-02-02 16:51
+ * Created by guanquan.wang at 2018-02-02 16:51
  */
 public class Font {
     private int style;

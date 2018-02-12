@@ -3,7 +3,7 @@ package net.cua.export.entity.e7;
 import java.io.Serializable;
 
 /**
- * Created by wanggq on 2017/9/30.
+ * Created by guanquan.wang on 2017/9/30.
  */
 public class Relationship implements Serializable, Cloneable {
     private String target;

@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-08 13:53
+ * Created by guanquan.wang at 2018-02-08 13:53
  */
 public class BorderParseException extends RuntimeException {
     public BorderParseException(String message) {

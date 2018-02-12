@@ -7,7 +7,7 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
- * Created by wanggq at 2018-02-06 08:55
+ * Created by guanquan.wang at 2018-02-06 08:55
  */
 public class Border {
 

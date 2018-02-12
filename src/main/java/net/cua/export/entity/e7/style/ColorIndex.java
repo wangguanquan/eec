@@ -4,7 +4,7 @@ import java.awt.*;
 
 /**
  * Reference: resources/ColorIndex.html
- * Created by wanggq at 2018-02-06 14:40
+ * Created by guanquan.wang at 2018-02-06 14:40
  */
 public class ColorIndex {
     static final int[] colors = {

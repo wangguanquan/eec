@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-09 14:25
+ * Created by guanquan.wang at 2018-02-09 14:25
  */
 public class ColorParseException extends RuntimeException {
     public ColorParseException(String message) {

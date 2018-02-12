@@ -9,7 +9,7 @@ import java.util.Date;
 
 /**
  * For Excel
- * Created by wanggq on 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
     static final int DAYS_1900_TO_1970 = ~(int)LocalDate.of(1900, 1, 1).toEpochDay() + 3;

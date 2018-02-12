@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-05 16:10
+ * Created by guanquan.wang at 2018-02-05 16:10
  */
 public class FontParseException extends RuntimeException {
     public FontParseException(String message) {

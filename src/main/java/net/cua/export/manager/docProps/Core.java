@@ -8,7 +8,7 @@ import net.cua.export.annotation.TopNS;
 import java.util.Date;
 
 /**
- * Created by wanggq on 2017/9/18.
+ * Created by guanquan.wang on 2017/9/18.
  */
 @TopNS(prefix = {"dc", "cp", "dcterms"}
         , uri = {"http://purl.org/dc/elements/1.1/"

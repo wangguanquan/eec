@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 /**
- * Created by wanggq on 2017/10/17.
+ * Created by guanquan.wang on 2017/10/17.
  */
 public class TestTrove4j {
     @Test

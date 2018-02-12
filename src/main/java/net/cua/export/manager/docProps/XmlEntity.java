@@ -22,7 +22,7 @@ import static net.cua.export.util.StringUtil.indexOf;
 import static net.cua.export.util.StringUtil.uppFirstKey;
 
 /**
- * Created by wanggq on 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 public class XmlEntity {
 

@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  *
- * Created by wanggq on 2017/10/10.
+ * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings {

@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.nio.file.*;
 
 /**
- * Created by wanggq at 2018-01-26 15:23
+ * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
     private Path imagePath;

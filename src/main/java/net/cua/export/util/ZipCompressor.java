@@ -1,7 +1,7 @@
 package net.cua.export.util;
 
 /**
- * Created by wanggq on 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 import java.io.*;
 import java.util.zip.CRC32;

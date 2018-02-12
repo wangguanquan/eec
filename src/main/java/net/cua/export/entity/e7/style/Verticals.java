@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-11 14:59
+ * Created by guanquan.wang at 2018-02-11 14:59
  */
 public class Verticals {
     public static final int CENTER = 0 // Align Center

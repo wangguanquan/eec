@@ -16,7 +16,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 /**
  * https://msdn.microsoft.com/library
  * https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
- * Created by wanggq at 2017/9/26.
+ * Created by guanquan.wang at 2017/9/26.
  */
 public class Excelx {
     private static Logger logger = Logger.getLogger(Excelx.class.getName());

@@ -17,7 +17,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
- * Created by wanggq on 2017/9/26.
+ * Created by guanquan.wang on 2017/9/26.
  */
 public class StatementSheet extends Sheet {
     private PreparedStatement ps;

@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * 文件操作工具类
  *
- * @author wanggq
+ * @author guanquan.wang
  * @since 2017-9-10
  */
 

@@ -1,7 +1,7 @@
 package net.cua.export.entity.e7.style;
 
 /**
- * Created by wanggq at 2018-02-11 15:02
+ * Created by guanquan.wang at 2018-02-11 15:02
  */
 public class Horizontals {
     // General Horizontal Alignment( Text data is left-aligned. Numbers

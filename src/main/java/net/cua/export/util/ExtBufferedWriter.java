@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Created by wanggq on 2017/10/11.
+ * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
     private static int defaultCharBufferSize = 8192;

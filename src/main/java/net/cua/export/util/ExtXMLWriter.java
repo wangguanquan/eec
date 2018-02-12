@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Created by wanggq on 2017/10/11.
+ * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtXMLWriter extends XMLWriter {
 

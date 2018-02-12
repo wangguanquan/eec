@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by wanggq on 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
         , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")

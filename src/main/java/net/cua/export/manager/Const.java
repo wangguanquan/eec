@@ -3,7 +3,7 @@ package net.cua.export.manager;
 import java.nio.charset.Charset;
 
 /**
- * Created by wanggq on 2017/9/30.
+ * Created by guanquan.wang on 2017/9/30.
  */
 public class Const {
 

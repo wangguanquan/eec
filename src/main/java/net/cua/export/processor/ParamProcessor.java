@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 /**
  * 设置SQL参数用
- * @author wanggq
+ * @author guanquan.wang
  */
 @FunctionalInterface
 public interface ParamProcessor {

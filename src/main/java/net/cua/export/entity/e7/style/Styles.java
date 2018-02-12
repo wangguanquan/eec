@@ -24,7 +24,7 @@ import java.util.List;
  * 20~26位 border
  * 26~29位 vertical
  * 29~32位 horizontal
- * Created by wanggq on 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles {

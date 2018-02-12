@@ -19,7 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Created by wanggq on 2017/9/27.
+ * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
     private ResultSet rs;

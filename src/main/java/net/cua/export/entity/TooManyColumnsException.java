@@ -3,7 +3,7 @@ package net.cua.export.entity;
 import net.cua.export.manager.Const;
 
 /**
- * Created by wanggq on 2017/10/19.
+ * Created by guanquan.wang on 2017/10/19.
  */
 public class TooManyColumnsException extends Exception {
 
