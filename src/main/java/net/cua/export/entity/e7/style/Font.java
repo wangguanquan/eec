@@ -20,16 +20,17 @@ public class Font {
     private int charset;
     private int family;
 
-    public Font() {}
+    private Font() {}
 
-    public Font(int size, String name) {
-        this(Style.normal, size, name, null);
-    }
-    public Font(int size, String name, Color color) {
-        this(Style.normal, size, name, color);
+    public Font(String name, int size) {
+        this(name, size, Style.normal, null);
     }
 
-    public Font(int style, int size, String name, Color color) {
+    public Font(String name, int size, Color color) {
+        this(name, size, Style.normal, color);
+    }
+
+    public Font(String name, int size, int style, Color color) {
         this.style = style;
         this.size = size;
         this.name = name;
@@ -44,7 +45,7 @@ public class Font {
      * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
      * @return
      */
-    public static Font valueOf(@NotNull String fontString) throws FontParseException {
+    public static Font parse(@NotNull String fontString) throws FontParseException {
         if (fontString.isEmpty()) {
             throw new NullPointerException("Font string empty");
         }
@@ -300,8 +301,8 @@ public class Font {
             Font other = (Font) o;
             return other.style == style
                     && other.size == size
-                    && other.color.getRGB() == color.getRGB()
-                    && other.name.equals(name);
+                    && other.color != null ? other.color.equals(color) : other.color == color
+                    && other.name != null ? other.name.equals(name) : other.name == name;
         }
         return false;
     }

@@ -3,6 +3,7 @@ package net.cua.export.entity.e7;
 import net.cua.export.annotation.TopNS;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.entity.e7.style.*;
+import net.cua.export.entity.e7.style.Font;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
 import net.cua.export.processor.IntConversionProcessor;
@@ -20,6 +21,8 @@ import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static net.cua.export.util.DateUtil.toDateTimeValue;
@@ -79,9 +82,9 @@ public abstract class Sheet {
     }
 
     public static class HeadColumn {
-        public static final int TYPE_NOMAL = 0
+        public static final int TYPE_NORMAL = 0
                 , TYPE_PARENTAGE = 1 // 百分比
-                , TYPE_RMB = 2; // 的民币
+                , TYPE_RMB = 2; // 人民币
         private String key; // Map的主键,object的属性名
         private String name; // 列名
         private Class clazz;     // 列类型
@@ -230,11 +233,47 @@ public abstract class Sheet {
             this.cellStyle = cellStyle;
             return this;
         }
+
+        int getDefaultHorizontal() {
+            int horizontal;
+            if (clazz == int.class || clazz == Integer.class
+                    || clazz == short.class || clazz == Short.class
+                    || clazz == byte.class || clazz == Byte.class
+                    || clazz == long.class || clazz == Long.class
+                    ) {
+                horizontal = Horizontals.RIGHT;
+            } else if (clazz == Date.class || clazz == Timestamp.class
+                    || clazz == LocalDate.class || clazz == LocalDateTime.class
+                    || clazz == char.class || clazz == Character.class) {
+                horizontal = Horizontals.CENTER;
+            } else {
+                horizontal = Horizontals.LEFT;
+            }
+            return horizontal;
+        }
+
+        public HeadColumn setCellStyle(Font font) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | Verticals.CENTER
+                            | getDefaultHorizontal());
+            return this;
+        }
+
         public HeadColumn setCellStyle(Font font, int horizontal) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
-                            | Styles.Verticals.CENTER
+                            | Verticals.CENTER
                             | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(Font font, Border border) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | Verticals.CENTER
+                            | getDefaultHorizontal());
             return this;
         }
 
@@ -242,8 +281,18 @@ public abstract class Sheet {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | (border != null ? sst.addBorder(border) : 0)
-                            | Styles.Verticals.CENTER
+                            | Verticals.CENTER
                             | horizontal);
+            return this;
+        }
+
+        public HeadColumn setCellStyle(Font font, Fill fill, Border border) {
+            this.cellStyle =  sst.of(
+                    (font != null ? sst.addFont(font) : 0)
+                            | (fill != null ? sst.addFill(fill) : 0)
+                            | (border != null ? sst.addBorder(border) : 0)
+                            | Verticals.CENTER
+                            | getDefaultHorizontal());
             return this;
         }
 
@@ -252,7 +301,7 @@ public abstract class Sheet {
                     (font != null ? sst.addFont(font) : 0)
                             | (fill != null ? sst.addFill(fill) : 0)
                             | (border != null ? sst.addBorder(border) : 0)
-                            | Styles.Verticals.CENTER
+                            | Verticals.CENTER
                             | horizontal);
             return this;
         }
@@ -286,48 +335,48 @@ public abstract class Sheet {
         protected int getCellStyle(Class clazz) {
             int style;
             if (clazz == String.class) {
-                style = Styles.defaultStringStyle();
+                style = Styles.defaultStringBorderStyle();
             } else if (clazz == java.sql.Date.class
                     || clazz == java.util.Date.class) {
-                style = Styles.defaultDateStyle();
+                style = Styles.defaultDateBorderStyle();
             } else if (clazz == java.sql.Timestamp.class) {
-                style = Styles.defaultTimestampStyle();
+                style = Styles.defaultTimestampBorderStyle();
             } else if (clazz == int.class || clazz == Integer.class
                     || clazz == long.class || clazz == Long.class
                     || clazz == byte.class || clazz == Byte.class
                     || clazz == short.class || clazz == Short.class
                     ) {
-                style = Styles.defaultIntStyle();
+                style = Styles.defaultIntBorderStyle();
                 switch (type) {
                     case TYPE_PARENTAGE: // 百分比显示
-                        style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_INT;
+                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("0%_);[Red]\\(0%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_INT;
+                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("¥0_);[Red]\\(¥0\\)"));
                         break;
-                    case TYPE_NOMAL: // 正常显示数字
+                    case TYPE_NORMAL: // 正常显示数字
                         break;
                     default:
                 }
             } else if (clazz == double.class || clazz == Double.class
                     || clazz == float.class || clazz == Float.class
                     ) {
-                style = Styles.defaultDoubleStyle();
+                style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
                     case TYPE_PARENTAGE: // 百分比显示
-                        style= Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_PERCENTAGE_DOUBLE;
+                        style= Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("0.00%_);[Red]\\(0.00%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | Styles.NumFmts.PADDING_YEN_DOUBLE;
+                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("¥0.00_);[Red]\\(¥0.00\\)"));
                         break;
-                    case TYPE_NOMAL: // 正常显示数字
+                    case TYPE_NORMAL: // 正常显示数字
                         break;
                 default:
                 }
             } else if (clazz == boolean.class || clazz == Boolean.class
                     || clazz == char.class || clazz == Character.class
                     ) {
-                style = Styles.clearHorizontal(Styles.defaultStringStyle()) | Styles.Horizontals.CENTER;
+                style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else {
                 style = 0; // Auto-style
             }
@@ -473,7 +522,7 @@ public abstract class Sheet {
     }
 
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
-        return setHeadStyle(null, font, fill, border, Styles.Verticals.CENTER, Styles.Horizontals.CENTER);
+        return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
     }
 
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
@@ -494,12 +543,12 @@ public abstract class Sheet {
 
     private int defaultHeadStyle() {
         if (headStyle == 0) {
-            headStyle = workbook.getStyles().of(
-                    Styles.Fonts.WHITE_GB2312_WRYH_11_B
-                            | Styles.Fills.FF666699
-                            | Styles.Borders.THIN_BLACK
-                            | Styles.Verticals.CENTER
-                            | Styles.Horizontals.CENTER);
+            Styles styles = workbook.getStyles();
+            headStyle = styles.of(styles.addFont(Font.parse("bold 11 微软雅黑 white"))
+                            | styles.addFill(Fill.parse("solid #666699"))
+                            | styles.addBorder(Border.parse("thin black"))
+                            | Verticals.CENTER
+                            | Horizontals.CENTER);
         }
         return headStyle;
     }
@@ -509,15 +558,6 @@ public abstract class Sheet {
      * @param bw
      */
     protected void writeAfter(ExtBufferedWriter bw) throws IOException {
-//        SharedStrings sst = workbook.getSst();
-//        int c = 0;
-//        for (HeadColumn hc : headColumns) {
-//            if (hc.clazz == String.class && hc.isShare()) {
-//                c++;
-//            }
-//        }
-//        sst.addCount(c * (rows - 1));
-
         // End target --sheetData
         bw.write("</sheetData>");
 
@@ -541,8 +581,6 @@ public abstract class Sheet {
             bw.write("</worksheet>");
         }
     }
-
-
 
     /**
      * 写行数据
@@ -799,7 +837,7 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(n);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntStyle();
+                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntBorderStyle();
                 if (clazz == String.class) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
@@ -815,7 +853,7 @@ public abstract class Sheet {
                 }
                 else if (clazz == char.class || clazz == Character.class) {
                     if (blockOrDefault) {
-                        hc.cellStyle = Styles.defaultCharStyle();
+                        hc.cellStyle = Styles.defaultCharBorderStyle();
                     }
                     char c = ((Character) o).charValue();
                     writeChar0(bw, c, column, n);
@@ -873,7 +911,7 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(n);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntStyle();
+                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntBorderStyle();
                 if (clazz == String.class) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
@@ -890,7 +928,7 @@ public abstract class Sheet {
                 }
                 else if (clazz == char.class || clazz == Character.class) {
                     if (blockOrDefault) {
-                        hc.cellStyle = Styles.defaultCharStyle();
+                        hc.cellStyle = Styles.defaultCharBorderStyle();
                     }
                     char c = ((Character) o).charValue();
                     writeChar0(bw, c, column, n);
@@ -948,7 +986,7 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(c);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharStyle();
+                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharBorderStyle();
                 if (clazz == String.class) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
@@ -1025,7 +1063,7 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(c);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharStyle();
+                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharBorderStyle();
                 if (clazz == String.class) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);

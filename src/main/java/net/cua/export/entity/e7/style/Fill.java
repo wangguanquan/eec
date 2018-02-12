@@ -4,33 +4,32 @@ package net.cua.export.entity.e7.style;
 import net.cua.export.util.StringUtil;
 import org.dom4j.Element;
 
-import java.awt.*;
+import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
  * Created by wanggq at 2018-02-06 08:55
  */
 public class Fill {
-//    public final static short     NO_FILL             = 0  ;
-//    public final static short     SOLID_FILL          = 1  ;
-//    public final static short     FINE_DOTS           = 2  ;
-//    public final static short     ALT_BARS            = 3  ;
-//    public final static short     SPARSE_DOTS         = 4  ;
-//    public final static short     THICK_HORZ_BANDS    = 5  ;
-//    public final static short     THICK_VERT_BANDS    = 6  ;
-//    public final static short     THICK_BACKWARD_DIAG = 7  ;
-//    public final static short     THICK_FORWARD_DIAG  = 8  ;
-//    public final static short     BIG_SPOTS           = 9  ;
-//    public final static short     BRICKS              = 10 ;
-//    public final static short     THIN_HORZ_BANDS     = 11 ;
-//    public final static short     THIN_VERT_BANDS     = 12 ;
-//    public final static short     THIN_BACKWARD_DIAG  = 13 ;
-//    public final static short     THIN_FORWARD_DIAG   = 14 ;
-//    public final static short     SQUARES             = 15 ;
-//    public final static short     DIAMONDS            = 16 ;
-
     private PatternType patternType;
     private Color bgColor, fgColor;
+
+    public Fill(PatternType patternType, Color bgColor, Color fgColor) {
+        this.patternType = patternType;
+        this.bgColor = bgColor;
+        this.fgColor = fgColor;
+    }
+
+    public Fill(PatternType patternType, Color bgColor) {
+        this.patternType = patternType;
+        this.bgColor = bgColor;
+    }
+
+    public Fill(PatternType patternType) {
+        this.patternType = patternType;
+    }
+
+    public Fill() {}
 
     public PatternType getPatternType() {
         return patternType;
@@ -56,10 +55,27 @@ public class Fill {
         this.fgColor = fgColor;
     }
 
+    public int hashCode() {
+        int hash = 0;
+        if (patternType != null) {
+            hash += patternType.ordinal() << 24;
+        }
+        int c = 0;
+        if (bgColor != null) {
+            c += bgColor.hashCode();
+        }
+        if (fgColor != null) {
+            c += fgColor.hashCode();
+        }
+        return hash + (c << 8 >>> 8);
+    }
+
     public boolean equals(Object o) {
         if (o instanceof Fill) {
             Fill other = (Fill) o;
-            return other.patternType == patternType && other.bgColor == bgColor && other.fgColor == fgColor;
+            return (other.patternType == this.patternType)
+                    && (other.bgColor != null ? other.bgColor.equals(bgColor) : other.bgColor == bgColor)
+                    && (other.fgColor != null ? other.fgColor.equals(fgColor) : other.fgColor == fgColor);
         }
         return false;
     }
@@ -110,8 +126,8 @@ public class Fill {
     }
 
     public Element toDom4j(Element root) {
-        if (patternType == null || patternType == PatternType.none) {
-            return null;
+        if (patternType == null) {
+            patternType = PatternType.solid;
         }
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         Element patternFill = element.addElement("patternFill").addAttribute("patternType", patternType.name());

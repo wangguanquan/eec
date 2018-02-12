@@ -54,8 +54,8 @@ public class Workbook {
         relManager = new RelManager();
 
         sst = new SharedStrings();
-        // Load styles
-        styles = new Styles().load(getClass().getClassLoader().getResourceAsStream("template/styles.xml"));
+        // create styles
+        styles = Styles.create();
     }
 
     public String getName() {
@@ -89,10 +89,6 @@ public class Workbook {
     public void setCon(Connection con) {
         this.con = con;
     }
-
-//    public int getSheetSize() {
-//        return size;
-//    }
 
     public Workbook setAutoSize(boolean autoSize) {
         this.autoSize = autoSize;

@@ -11,8 +11,8 @@ public class Charset {
             , SYMBOL = 0x02
             , SHIFTJIS = 0x80
             , HANGUL = 0x81
-            , GB2312 = 0x86
-            , CHINESEBIG5 = 0x88
+            , GB2312 = 0x86 // 简体
+            , CHINESEBIG5 = 0x88 // 繁体
             , GREEK = 0xA1
             , TURKISH = 0xA2
             , HEBREW = 0xB1

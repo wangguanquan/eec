@@ -28,7 +28,7 @@ import org.dom4j.Element;
  */
 public class NumFmt {
     private String code;
-    private int id;
+    private int id = -1;
     private NumFmt(){}
 
     public NumFmt(String code) {
@@ -63,16 +63,20 @@ public class NumFmt {
 
     @Override
     public int hashCode() {
-        return code.hashCode();
+        return code != null ? code.hashCode() : 0;
     }
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof NumFmt) && ((NumFmt) o).code.equals(code);
+        if (o instanceof NumFmt) {
+            NumFmt other = (NumFmt) o;
+            return other.code != null ? other.code.equals(code) : other.code == code;
+        }
+        return false;
     }
 
     public Element toDom4j(Element root) {
-        if (StringUtil.isEmpty(code)) return root;
+        if (StringUtil.isEmpty(code)) return root; // 内置format不用重复输出
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
                 .addAttribute("formatCode", code)
                 .addAttribute("numFmtId", String.valueOf(id));

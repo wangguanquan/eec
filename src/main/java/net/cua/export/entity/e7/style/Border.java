@@ -3,7 +3,7 @@ package net.cua.export.entity.e7.style;
 import net.cua.export.util.StringUtil;
 import org.dom4j.Element;
 
-import java.awt.*;
+import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
@@ -19,22 +19,22 @@ public class Border {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
     }
 
-    public Border setTopBorder(BorderStyle style) {
+    public Border setBorderTop(BorderStyle style) {
         borders[2] = new SubBorder(style, defaultColor);
         return this;
     }
 
-    public Border setRightBorder(BorderStyle style) {
+    public Border setBorderRight(BorderStyle style) {
         borders[1] = new SubBorder(style, defaultColor);
         return this;
     }
 
-    public Border setBottomBorder(BorderStyle style) {
+    public Border setBorderBottom(BorderStyle style) {
         borders[3] = new SubBorder(style, defaultColor);
         return this;
     }
 
-    public Border setLeftBorder(BorderStyle style) {
+    public Border setBorderLeft(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
         return this;
     }
@@ -44,33 +44,41 @@ public class Border {
         return this;
     }
 
+    public Border setBorder(BorderStyle style) {
+        borders[0] = new SubBorder(style, defaultColor);
+        borders[1] = borders[0];
+        borders[2] = borders[0];
+        borders[3] = borders[0];
+        return this;
+    }
+
     public Border setDiagonalUp(BorderStyle style) {
         borders[5] = new SubBorder(style, defaultColor);
         return this;
     }
 
-    public Border setDiagonalX(BorderStyle style) {
+    public Border setDiagonal(BorderStyle style) {
         borders[4] = new SubBorder(style, defaultColor);
         borders[5] = borders[4];
         return this;
     }
 
-    public Border setTopBorder(BorderStyle style, Color color) {
+    public Border setBorderTop(BorderStyle style, Color color) {
         borders[2] = new SubBorder(style, color);
         return this;
     }
 
-    public Border setRightBorder(BorderStyle style, Color color) {
+    public Border setBorderRight(BorderStyle style, Color color) {
         borders[1] = new SubBorder(style, color);
         return this;
     }
 
-    public Border setBottomBorder(BorderStyle style, Color color) {
+    public Border setBorderBottom(BorderStyle style, Color color) {
         borders[3] = new SubBorder(style, color);
         return this;
     }
 
-    public Border setLeftBorder(BorderStyle style, Color color) {
+    public Border setBorderLeft(BorderStyle style, Color color) {
         borders[0] = new SubBorder(style, color);
         return this;
     }
@@ -85,9 +93,17 @@ public class Border {
         return this;
     }
 
-    public Border setDiagonalX(BorderStyle style, Color color) {
+    public Border setDiagonal(BorderStyle style, Color color) {
         borders[4] = new SubBorder(style, color);
         borders[5] = borders[4];
+        return this;
+    }
+
+    public Border setBorder(BorderStyle style, Color color) {
+        borders[0] = new SubBorder(style, color);
+        borders[1] = borders[0];
+        borders[2] = borders[0];
+        borders[3] = borders[0];
         return this;
     }
 
@@ -195,7 +211,7 @@ public class Border {
 
         public int hashCode() {
             int hash = color.hashCode();
-            return (style.hashCode() << 24) | (hash << 8 >>> 8);
+            return (style.ordinal() << 24) | (hash << 8 >>> 8);
         }
 
         public boolean equals(Object o) {

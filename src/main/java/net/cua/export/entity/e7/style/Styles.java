@@ -5,19 +5,15 @@ import net.cua.export.manager.Const;
 import net.cua.export.tmap.TIntIntHashMap;
 import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
-import org.dom4j.Attribute;
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
+import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -41,7 +37,7 @@ public class Styles {
     List<Fill> fills;
     List<Border> borders;
 
-    public Styles() {
+    private Styles() {
         map = new TIntIntHashMap();
     }
 
@@ -52,7 +48,7 @@ public class Styles {
      * @return
      */
     public int of(int s) {
-        if (s == 0) return s;
+//        if (s == 0) return s;
         int n = map.get(s);
         if (n == 0) {
             n = addStyle(s);
@@ -61,59 +57,134 @@ public class Styles {
         return n;
     }
 
-    String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"};
-    private static final int[] move_left = {24, 18, 12, 6, 3, 0};
+    static final int INDEX_NUMBER_FORMAT = 24;
+    static final int INDEX_FONT = 18;
+    static final int INDEX_FILL = 12;
+    static final int INDEX_BORDER = 6;
+    static final int INDEX_VERTICAL = 3;
+    static final int INDEX_HORIZONTAL = 0;
 
-    public Styles load(InputStream is) {
-        map.put(0, 0); // General
-        map.put(1, 1);
-        SAXReader reader = new SAXReader();
-        try {
-            document = reader.read(is);
-        } catch (DocumentException e) {
-            e.printStackTrace();
-            // TODO read style file fail.
-            return this;
-        }
-        Element root = document.getRootElement();
-        // load number format
-        numFmts = NumFmts.load(root.element("numFmts"));
-        // load font
-        fonts = Fonts.load(root.element("fonts"));
-        // load fill
-        fills = Fills.load(root.element("fills"));
-        // load border
-        borders = Borders.load(root.element("borders"));
-        Element cellXfs = root.element("cellXfs");
-        Iterator<Element> elementIterator = cellXfs.elementIterator();
-        int n = 0;
-        while (elementIterator.hasNext()) {
-            Element xf = elementIterator.next();
-            if (++n <= 2) continue;
-            Element alignment = xf.element("alignment");
-            int c = 0;
-            for (int i = 0; i < attrNames.length; i++) {
-                Attribute attr = xf.attribute(attrNames[i]);
-                if (attr == null && alignment != null) {
-                    attr = alignment.attribute(attrNames[i]);
-                }
-                if (attr != null) {
-                    String attrValue = attr.getValue();
-                    int v;
-                    if (i < 4) {
-                        v = Integer.parseInt(attrValue);
-                    } else if (i == 4) {
-                        v = Verticals.valueOf(attrValue);
-                    } else {
-                        v = Horizontals.valueOf(attrValue);
-                    }
-                    c |= v << move_left[i];
-                }
-            }
+//    public Styles load(InputStream is) {
+//        map.put(0, 0); // General
+//        map.put(1, 1);
+//        SAXReader reader = new SAXReader();
+//        try {
+//            document = reader.read(is);
+//        } catch (DocumentException e) {
+//            // read style file fail.
+//            readFail();
+//            return this;
+//        }
+//        Element root = document.getRootElement();
+//        // load number format
+//        numFmts = NumFmts.load(root.element("numFmts"));
+//        // load font
+//        fonts = Fonts.load(root.element("fonts"));
+//        // load fill
+//        fills = Fills.load(root.element("fills"));
+//        // load border
+//        borders = Borders.load(root.element("borders"));
+//        Element cellXfs = root.element("cellXfs");
+//        Iterator<Element> elementIterator = cellXfs.elementIterator();
+//        int n = 0;
+//        while (elementIterator.hasNext()) {
+//            Element xf = elementIterator.next();
+//            if (++n <= 2) continue;
+//            Element alignment = xf.element("alignment");
+//            int c = 0;
+//            for (int i = 0; i < attrNames.length; i++) {
+//                Attribute attr = xf.attribute(attrNames[i]);
+//                if (attr == null && alignment != null) {
+//                    attr = alignment.attribute(attrNames[i]);
+//                }
+//                if (attr != null) {
+//                    String attrValue = attr.getValue();
+//                    int v;
+//                    if (i < 4) {
+//                        v = Integer.parseInt(attrValue);
+//                    } else if (i == 4) {
+//                        v = Verticals.valueOf(attrValue);
+//                    } else {
+//                        v = Horizontals.valueOf(attrValue);
+//                    }
+//                    c |= v << move_left[i];
+//                }
+//            }
+//
+//            map.put(c, n - 1);
+//        }
+//        return this;
+//    }
 
-            map.put(c, n - 1);
+    /**
+     * create general style
+     * @return
+     */
+    public static final Styles create() {
+        Styles self = new Styles();
+
+        DocumentFactory factory = DocumentFactory.getInstance();
+        TopNS ns = self.getClass().getAnnotation(TopNS.class);
+        Element rootElement;
+        if (ns != null) {
+            rootElement = factory.createElement(ns.value(), ns.uri()[0]);
+        } else {
+            rootElement = factory.createElement("styleSheet", Const.SCHEMA_MAIN);
         }
-        return this;
+        // number format
+        rootElement.addElement("numFmts").addAttribute("count", "0");
+        // font
+        rootElement.addElement("fonts").addAttribute("count", "0");
+        // fill
+        rootElement.addElement("fills").addAttribute("count", "0");
+        // border
+        rootElement.addElement("borders").addAttribute("count", "0");
+        // cellStyleXfs
+        Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
+        cellStyleXfs.addElement("xf")   // General style
+                .addAttribute("borderId", "0")
+                .addAttribute("fillId", "0")
+                .addAttribute("fontId" ,"0")
+                .addAttribute("numFmtId", "0")
+                .addElement("alignment")
+                .addAttribute("vertical", "center");
+        // cellStyles
+        Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
+        cellStyles.addElement("cellStyle")
+                .addAttribute("builtinId", "0")
+                .addAttribute("name", "常规") // I18N
+                .addAttribute("xfId", "0");
+
+        self.document = factory.createDocument(rootElement);
+
+        self.numFmts = new ArrayList<>();
+        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
+        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
+
+        self.fonts = new ArrayList<>();
+        Font font1 = new Font("宋体", 9, Color.black);  // en
+        font1.setFamily(2);
+        font1.setScheme("minor");
+        self.addFont(font1);
+
+        Font font2 = new Font("宋体", 11); // cn
+        font2.setFamily(3);
+        font2.setScheme("minor");
+        font2.setCharset(Charset.GB2312);
+        self.addFont(font2);
+
+        self.fills = new ArrayList<>();
+        self.addFill(new Fill(PatternType.none));
+        self.addFill(new Fill(PatternType.gray125));
+
+        self.borders = new ArrayList<>();
+        self.addBorder(Border.parse("none"));
+        self.addBorder(Border.parse("thin black"));
+
+        // cellXfs
+        self.of(0); // General
+
+        return self;
     }
 
     /**
@@ -122,23 +193,35 @@ public class Styles {
      * @return
      */
     public synchronized final int addNumFmt(NumFmt numFmt) {
-        int i = numFmts.indexOf(numFmt);
-        if (i <= -1) {
-            int id;
-            if (numFmts.isEmpty()) {
-                id = 176; // customer id
-            } else {
-                id = numFmts.get(numFmts.size() - 1).getId();
+        // check and search default code
+        if (numFmt.getId() < 0) {
+            if (StringUtil.isEmpty(numFmt.getCode())) {
+                throw new NullPointerException("NumFmt code");
             }
-            numFmt.setId(id);
-            numFmts.add(numFmt);
-            i = numFmts.size() - 1;
+            int index = DefaultNumFmt.indexOf(numFmt.getCode());
+            if (index > -1) { // default code
+                numFmt.setId(index);
+            } else {
+                int i = numFmts.indexOf(numFmt);
+                if (i <= -1) {
+                    int id;
+                    if (numFmts.isEmpty()) {
+                        id = 176; // customer id
+                    } else {
+                        id = numFmts.get(numFmts.size() - 1).getId() + 1;
+                    }
+                    numFmt.setId(id);
+                    numFmts.add(numFmt);
 
-            Element element = document.getRootElement().element("numFmts");
-            element.attribute("count").setValue(String.valueOf(numFmts.size()));
-            numFmt.toDom4j(element);
+                    Element element = document.getRootElement().element("numFmts");
+                    element.attribute("count").setValue(String.valueOf(numFmts.size()));
+                    numFmt.toDom4j(element);
+                } else {
+                    numFmt.setId(numFmts.get(i).getId());
+                }
+            }
         }
-        return numFmts.get(i).getId() << move_left[0];
+        return numFmt.getId() << INDEX_NUMBER_FORMAT;
     }
 
     /**
@@ -147,6 +230,9 @@ public class Styles {
      * @return
      */
     public synchronized final int addFont(Font font) {
+        if (StringUtil.isEmpty(font.getName())) {
+            throw new FontParseException("Font name not support.");
+        }
         int i = fonts.indexOf(font);
         if (i <= -1) {
             fonts.add(font);
@@ -156,7 +242,7 @@ public class Styles {
             element.attribute("count").setValue(String.valueOf(fonts.size()));
             font.toDom4j(element);
         }
-        return i << move_left[1];
+        return i << INDEX_FONT;
     }
 
     /**
@@ -173,7 +259,7 @@ public class Styles {
             element.attribute("count").setValue(String.valueOf(fills.size()));
             fill.toDom4j(element);
         }
-        return i << move_left[2];
+        return i << INDEX_FILL;
     }
 
     /**
@@ -190,70 +276,28 @@ public class Styles {
             element.attribute("count").setValue(String.valueOf(borders.size()));
             border.toDom4j(element);
         }
-        return i << move_left[3];
+        return i << INDEX_BORDER;
     }
 
     public static int[] unpack(int style) {
         int[] styles = new int[6];
-        styles[0] = style       >>>  move_left[0];
-        styles[1] = style <<  8 >>> (move_left[1] + 8);
-        styles[2] = style << 14 >>> (move_left[2] + 14);
-        styles[3] = style << 20 >>> (move_left[3] + 20);
-        styles[4] = style << 26 >>> (move_left[4] + 26);
-        styles[5] = style << 29 >>> (move_left[5] + 29);
+        styles[0] = style       >>>  INDEX_NUMBER_FORMAT;
+        styles[1] = style <<  8 >>> (INDEX_FONT + 8);
+        styles[2] = style << 14 >>> (INDEX_FILL + 14);
+        styles[3] = style << 20 >>> (INDEX_BORDER + 20);
+        styles[4] = style << 26 >>> (INDEX_VERTICAL + 26);
+        styles[5] = style << 29 >>> (INDEX_HORIZONTAL + 29);
         return styles;
     }
 
     public static int pack(int[] styles) {
-        return styles[0]    << move_left[0]
-                | styles[1] << move_left[1]
-                | styles[2] << move_left[2]
-                | styles[3] << move_left[3]
-                | styles[4] << move_left[4]
-                | styles[5] << move_left[5]
+        return styles[0]    << INDEX_NUMBER_FORMAT
+                | styles[1] << INDEX_FONT
+                | styles[2] << INDEX_FILL
+                | styles[3] << INDEX_BORDER
+                | styles[4] << INDEX_VERTICAL
+                | styles[5] << INDEX_HORIZONTAL
                 ;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("<cellXfs count=\"").append(map.size()).append("\">\n");
-        int[] keys = map.keys(), values = map.values();
-        for (int i = 0; i < keys.length; i++) {
-            int k = keys[indexOf(values, i)];
-            int[] styles = unpack(k);
-//            System.out.println(styles[0] + "   " + styles[1] + "   " + styles[2] + "   " + styles[3] + "   " + styles[4] + "   " + styles[5]);
-            buf.append("<xf numFmtId=\"").append(styles[0]).append("\"")
-                    .append(" fontId=\"").append(styles[1]).append("\"")
-                    .append(" fillId=\"").append(styles[2]).append("\"")
-                    .append(" borderId=\"").append(styles[3]).append("\"")
-            ;
-            if (styles[0] > 0) {
-                buf.append(" applyNumberFormat=\"1\"");
-            }
-            if (styles[1] > 0) {
-                buf.append(" applyFont=\"1\"");
-            }
-            if (styles[2] > 0) {
-                buf.append(" applyFill=\"1\"");
-            }
-            if (styles[3] > 0) {
-                buf.append(" applyBorder=\"1\"");
-            }
-            if ((styles[4] | styles[5]) > 0) {
-                buf.append(" applyAlignment=\"1\"");
-            }
-
-            buf.append(">\n   <alignment vertical=\"").append(Verticals.of(styles[4])).append("\"");
-            if (styles[5] > 0) {
-                int horizontal = styles[5];
-                if (k == 1) horizontal = 3;
-                buf.append(" horizontal=\"").append(Horizontals.of(horizontal)).append("\"");
-            }
-            buf.append(" />\n</xf>\n");
-        }
-        buf.append("</cellXfs>");
-        return buf.toString();
     }
 
     /**
@@ -262,12 +306,19 @@ public class Styles {
      * @return style index in styles array.
      */
     private synchronized int addStyle(int s) {
-        if (document == null) return 0;
         int[] styles = unpack(s);
-//        System.out.println(styles[0] + "   " + styles[1] + "   " + styles[2] + "   " + styles[3] + "   " + styles[4] + "   " + styles[5]);
         Element root = document.getRootElement();
         Element cellXfs = root.element("cellXfs");
-        int count = Integer.parseInt(cellXfs.attributeValue("count"));
+        int count;
+        if (cellXfs == null) {
+            cellXfs = root.addElement("cellXfs").addAttribute("count", "0");
+            count = 0;
+        } else {
+            count = Integer.parseInt(cellXfs.attributeValue("count"));
+        }
+
+        String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
+                ,"applyNumberFormat","applyFont","applyFill","applyBorder","applyAlignment"};
         int n = cellXfs.elements().size();
         Element newXf = cellXfs.addElement("xf");
         newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
@@ -276,20 +327,21 @@ public class Styles {
                 .addAttribute(attrNames[3], String.valueOf(styles[3]))
                 .addAttribute("xfId", "0")
         ;
+        int start = 6;
         if (styles[0] > 0) {
-            newXf.addAttribute("applyNumberFormat", "1");
+            newXf.addAttribute(attrNames[start], "1");
         }
         if (styles[1] > 0) {
-            newXf.addAttribute("applyFont", "1");
+            newXf.addAttribute(attrNames[start + 1], "1");
         }
         if (styles[2] > 0) {
-            newXf.addAttribute("applyFill", "1");
+            newXf.addAttribute(attrNames[start + 2], "1");
         }
         if (styles[3] > 0) {
-            newXf.addAttribute("applyBorder", "1");
+            newXf.addAttribute(attrNames[start + 3], "1");
         }
         if ((styles[4] | styles[5]) > 0) {
-            newXf.addAttribute("applyAlignment", "1");
+            newXf.addAttribute(attrNames[start + 4], "1");
         }
 
         Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals.of(styles[4]));
@@ -301,7 +353,7 @@ public class Styles {
     }
 
     public void writeTo(Path styleFile) throws IOException {
-        if (document != null) {
+        if (document != null) { // Not null
             FileUtil.writeToDisk(document, styleFile);
         } else {
             Files.copy(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
@@ -319,47 +371,27 @@ public class Styles {
 
     ////////////////////////clear style///////////////////////////////
     public static int clearNumfmt(int style) {
-        return style & (-1 >>> 32 - move_left[0]);
+        return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
     }
 
     public static int clearFont(int style) {
-        return style & ~((-1 >>> 32 - (move_left[0] - move_left[1])) << move_left[1]);
+        return style & ~((-1 >>> 32 - (INDEX_NUMBER_FORMAT - INDEX_FONT)) << INDEX_FONT);
     }
 
     public static int clearFill(int style) {
-        return style & ~((-1 >>> 32 - (move_left[1] - move_left[2])) << move_left[2]);
+        return style & ~((-1 >>> 32 - (INDEX_FONT - INDEX_FILL)) << INDEX_FILL);
     }
 
     public static int clearBorder(int style) {
-        return style & ~((-1 >>> 32 - (move_left[2] - move_left[3])) << move_left[3]);
+        return style & ~((-1 >>> 32 - (INDEX_FILL - INDEX_BORDER)) << INDEX_BORDER);
     }
 
     public static int clearVertical(int style) {
-        return style & ~((-1 >>> 32 - (move_left[3] - move_left[4])) << move_left[4]);
+        return style & ~((-1 >>> 32 - (INDEX_BORDER - INDEX_VERTICAL)) << INDEX_VERTICAL);
     }
 
     public static int clearHorizontal(int style) {
-        return style & ~(-1 >>> 32 - (move_left[4] - move_left[5]));
-    }
-
-    ////////////////////////default style/////////////////////////////
-    public static int defaultCharStyle() {
-        return Styles.Fonts.BLACK_GB2312_WRYH_11| Styles.Borders.THIN_BLACK| Horizontals.CENTER_CONTINUOUS;
-    }
-    public static int defaultStringStyle() {
-        return Styles.Fonts.BLACK_GB2312_WRYH_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.LEFT;
-    }
-    public static int defaultIntStyle() {
-        return Styles.NumFmts.PADDING_INT|Styles.Fonts.BLACK_ASCII_CONSOLAS_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.RIGHT;
-    }
-    public static int defaultDateStyle() {
-        return Styles.NumFmts.DATE|Styles.Fonts.BLACK_ASCII_CONSOLAS_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.CENTER_CONTINUOUS;
-    }
-    public static int defaultTimestampStyle() {
-        return Styles.NumFmts.DATE_TIME| Styles.Fonts.BLACK_ASCII_CONSOLAS_11| Styles.Borders.THIN_BLACK| Styles.Horizontals.CENTER_CONTINUOUS;
-    }
-    public static int defaultDoubleStyle() {
-        return Styles.NumFmts.PADDING_DOUBLE | Styles.Fonts.BLACK_ASCII_CONSOLAS_11 | Styles.Borders.THIN_BLACK | Styles.Horizontals.RIGHT;
+        return style & ~(-1 >>> 32 - (INDEX_VERTICAL - INDEX_HORIZONTAL));
     }
 
     ////////////////////////reset style/////////////////////////////
@@ -373,241 +405,43 @@ public class Styles {
         return pack(sub);
     }
 
-    /////////////////////////////static inner class////////////////////////////////////
-
-    public static final class NumFmts {
-        public static final int GENERAL = 0 // General
-                , INT = 1 << move_left[0] // 0
-                , DOUBLE = 2 << move_left[0] // 0.00
-
-                , MARK_INT = 3 << move_left[0] // #,##0
-                , MARK_DOUBLE = 4 << move_left[0] // #,##0.00
-
-                , PERCENTAGE_INT = 9 << move_left[0] // 0%
-                , PERCENTAGE_DOUBLE = 10 << move_left[0] // 0.00%
-
-                , PADDING_MARK_INT = 38 << move_left[0] // #,##0_);[Red](#,##0)
-                , PADDING_MARK_DOUBLE = 178 << move_left[0] // #,##0.00_);[Red](#,##0.00)
-
-                , DOUBLE_3 = 179 << move_left[0] // 0.000
-                , PADDING_DOUBLE_3 = 180 << move_left[0] // 0.000_);[Red](0.000)
-
-                , PADDING_PERCENTAGE_INT = 188 << move_left[0] // 0%_);[Red](0%) 百分比默认样式
-                , PADDING_PERCENTAGE_DOUBLE = 181 << move_left[0] // 0.00%_);[Red](0.00%) 百分比默认样式
-
-                , PADDING_INT = 176 << move_left[0] // 0_);[Red](0) 整数默认样式
-                , PADDING_DOUBLE = 177 << move_left[0] // 0.00_);[Red](0.00) 小数默认样式
-
-                , YEN_INT =  182 << move_left[0] // ¥0
-                , YEN_DOUBLE = 183 << move_left[0] // ¥0.00
-
-                , PADDING_YEN_INT = 184 << move_left[0] // ¥0_);[Red](¥0)
-                , PADDING_YEN_DOUBLE =  185 << move_left[0] // ¥0.00_);[Red](¥0.00) 货币默认样式
-
-                , DATE = 186 << move_left[0] // yyyy-mm-dd  date默认样式
-                , DATE_TIME = 187 << move_left[0] // yyyy-mm-dd hh:mm:ss timestamp默认样式
-                ;
-
-        /**
-         * load number format from style xml
-         * @param ele
-         */
-        private static final List<NumFmt> load(Element ele) {
-            Iterator<Element> iterator = ele.elementIterator();
-            List<NumFmt> numFmts = new ArrayList<>();
-            while (iterator.hasNext()) {
-                Element e = iterator.next();
-                NumFmt numFmt = new NumFmt(e.attributeValue("formatCode"));
-                numFmt.setId(Integer.parseInt(e.attributeValue("numFmtId")));
-                numFmts.add(numFmt);
-            }
-            return numFmts;
-        }
+    ////////////////////////default border style/////////////////////////////
+    public static int defaultCharBorderStyle() {
+        return (1 << INDEX_BORDER) | Horizontals.CENTER_CONTINUOUS;
+    }
+    public static int defaultStringBorderStyle() {
+        return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.LEFT;
+    }
+    public static int defaultIntBorderStyle() {
+        return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
+    }
+    public static int defaultDateBorderStyle() {
+        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+    }
+    public static int defaultTimestampBorderStyle() {
+        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+    }
+    public static int defaultDoubleBorderStyle() {
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
-    public static class Fonts {
-        public static final int BLACK_ASCII_SONG_11 = 0 // black|ascii|宋体|11
-                , BLACK_GB2312_SONG_9 = 1 << move_left[1] // black|gb2312|宋体|8
-                , WHITE_GB2312_WRYH_11_B = 2 << move_left[1] // white|gb2312|微软雅黑|11|加粗 列表头默认字体
-                , BLACK_ASCII_CONSOLAS_11 = 3 << move_left[1] // 正文数字默认字体
-                , BLACK_GB2312_WRYH_11 = 4 << move_left[1] // 正文汉字默认
-                , RED_ASCII_CONSOLAS_11 = 5 << move_left[1] // 正文数字标红字体
-                , RED_ASCII_CONSOLAS_11_B = 6 << move_left[1] // 正文数字标红加粗
-                , BLACK_ASCII_CONSOLAS_11_I = 7 << move_left[1] // 数字斜体
-                ;
-
-        /**
-         * load font from style xml
-         * @param ele
-         */
-        private static final List<Font> load(Element ele) {
-            Iterator<Element> iterator = ele.elementIterator();
-            List<Font> fonts = new ArrayList<>();
-            while (iterator.hasNext()) {
-                Element e = iterator.next();
-                String sz = e.element("sz").attributeValue("val")
-                        , name = e.element("name").attributeValue("val");
-                Element element = e.element("color");
-                Color color = null;
-                if (element != null) {
-                    if (element.attribute("indexed") != null) {
-                        color = new Color(ColorIndex.get(Integer.parseInt(element.attributeValue("indexed"))));
-                    } else {
-                        color = Color.decode("#" + element.attributeValue("rgb").substring(2));
-                    }
-                }
-                Font font = new Font(Integer.parseInt(sz), name, color);
-                if (e.element("i") != null) {
-                    font.italic();
-                }
-                if (e.element("b") != null) {
-                    font.bold();
-                }
-                if (e.element("u") != null) {
-                    font.underLine();
-                }
-
-                if ((element = e.element("charset")) != null) {
-                    font.setCharset(Integer.parseInt(element.attributeValue("val")));
-                }
-                if ((element = e.element("family")) != null) {
-                    font.setFamily(Integer.parseInt(element.attributeValue("val")));
-                }
-                fonts.add(font);
-            }
-            return fonts;
-        }
-
-
+    ////////////////////////default style/////////////////////////////
+    public static int defaultCharStyle() {
+        return Horizontals.CENTER_CONTINUOUS;
     }
-
-
-    public static class Fills {
-        public static final int NONE = 0 // 无填充
-                , GRAY125 = 1 << move_left[2]
-                , FF666699 = 2 << move_left[2] // 列表头背景色
-                , RED = 3 << move_left[2] // 红色背景色
-                , YELLOW = 4 << move_left[2] // 黄色北景色
-                ;
-
-        /**
-         * load fills from style xml
-         * @param ele
-         */
-        private static final List<Fill> load(Element ele) {
-            Iterator<Element> iterator = ele.elementIterator();
-            List<Fill> fills = new ArrayList<>();
-            while (iterator.hasNext()) {
-                Element e = iterator.next();
-                Element patternFill = e.element("patternFill");
-                Fill fill = new Fill();
-                fill.setPatternType(PatternType.valueOf(patternFill.attributeValue("patternType")));
-                Element colorEle;
-                if ((colorEle = patternFill.element("fgColor")) != null) {
-                    Color color;
-                    if (colorEle.attribute("indexed") != null) {
-                        color = new Color(ColorIndex.get(Integer.parseInt(colorEle.attributeValue("indexed"))));
-                    } else {
-                        color = Color.decode("#" + colorEle.attributeValue("rgb").substring(2));
-                    }
-                    fill.setFgColor(color);
-                }
-                if ((colorEle = patternFill.element("bgColor")) != null) {
-                    Color color;
-                    if (colorEle.attribute("indexed") != null) {
-                        color = new Color(ColorIndex.get(Integer.parseInt(colorEle.attributeValue("indexed"))));
-                    } else {
-                        color = Color.decode("#" + colorEle.attributeValue("rgb").substring(2));
-                    }
-                    fill.setBgColor(color);
-                }
-                fills.add(fill);
-            }
-            return fills;
-        }
+    public static int defaultStringStyle() {
+        return (1 << INDEX_FONT) | Horizontals.LEFT;
     }
-
-    public static class Borders {
-        public static final int NONE = 0 // 无边框
-                , THIN_BLACK = 1 << move_left[3] // 黑色连续边框
-                ;
-
-        /**
-         * load border from style xml
-         * @param ele
-         */
-        private static final List<Border> load(Element ele) {
-            Iterator<Element> iterator = ele.elementIterator();
-            List<Border> borders = new ArrayList<>();
-            while (iterator.hasNext()) {
-                Element e = iterator.next();
-                Border border = new Border();
-                for (int i = 0; i < Border.direction.length; i++) {
-                    Element dir = e.element(Border.direction[i]);
-                    if (dir.attribute("style") != null) {
-                        BorderStyle style = BorderStyle.getByName(dir.attributeValue("style"));
-                        Element colorEle = dir.element("color");
-                        if (colorEle != null) {
-                            Color color;
-                            if (colorEle.attribute("indexed") != null) {
-                                color = new Color(ColorIndex.get(Integer.parseInt(colorEle.attributeValue("indexed"))));
-                            } else {
-                                color = Color.decode("#" + colorEle.attributeValue("rgb").substring(2));
-                            }
-                            border.setBorder(i, style, color);
-                        } else {
-                            border.setBorder(i, style);
-                        }
-                    }
-                }
-                boolean down = e.attribute("diagonalDown") != null
-                        , up = e.attribute("diagonalUp") != null;
-                if (!down) border.delBorder(4);
-                if (!up) border.delBorder(5);
-                borders.add(border);
-            }
-            return borders;
-        }
+    public static int defaultIntStyle() {
+        return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
     }
-
-    public static final class Verticals {
-        public static final int CENTER = 0 // Align Center
-                , BOTTOM = 1 << move_left[4] // Align Bottom
-                , TOP = 2 << move_left[4]   // Align Top
-                , BOTH = 3 << move_left[4] // Vertical Justification
-                ;
-
-        private static final String[] _names = {"center", "bottom", "top", "both"};
-        public static int valueOf(String name) {
-            return StringUtil.indexOf(_names, name);
-        }
-
-        public static String of(int n) {
-            return _names[n];
-        }
+    public static int defaultDateStyle() {
+        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
     }
-
-    public static final class Horizontals {
-        // General Horizontal Alignment( Text data is left-aligned. Numbers
-        // , dates, and times are right-aligned.Boolean types are centered)
-        public static final int GENERAL = 0
-                , LEFT = 1 // Left Horizontal Alignment
-                , RIGHT = 2 // Right Horizontal Alignment
-                , CENTER = 3 // Centered Horizontal Alignment
-                , CENTER_CONTINUOUS = 4 // (Center Continuous Horizontal Alignment
-                , FILL = 5 // Fill
-                , JUSTIFY = 6 // Justify
-                , DISTRIBUTED = 7 // Distributed Horizontal Alignment
-                ;
-
-        private static final String[] _names = {"general" ,"left" ,"right" ,"center" ,"centerContinuous" ,"fill" ,"justify" ,"distributed"};
-        public static int valueOf(String name) {
-            return StringUtil.indexOf(_names, name);
-        }
-
-        public static String of(int n) {
-            return _names[n];
-        }
+    public static int defaultTimestampStyle() {
+        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
     }
-
+    public static int defaultDoubleStyle() {
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
+    }
 }
