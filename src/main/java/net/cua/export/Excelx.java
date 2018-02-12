@@ -125,7 +125,7 @@ public class Excelx {
         File zipFile = new ZipCompressor(root.toString()).compressSubs(root.toFile());
         // Delete source files
         boolean delSelf = true;
-//        FileUtil.rmRf(root.toFile(), delSelf);
+        FileUtil.rmRf(root.toFile(), delSelf);
 
         return zipFile.toPath();
     }
