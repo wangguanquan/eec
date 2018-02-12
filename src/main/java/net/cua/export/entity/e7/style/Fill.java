@@ -29,6 +29,11 @@ public class Fill {
         this.patternType = patternType;
     }
 
+    public Fill(Color bgColor) {
+        this.bgColor = bgColor;
+        this.patternType = PatternType.solid;
+    }
+
     public Fill() {}
 
     public PatternType getPatternType() {

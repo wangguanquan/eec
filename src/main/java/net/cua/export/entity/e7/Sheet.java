@@ -709,10 +709,10 @@ public abstract class Sheet {
     }
 
     protected int getStyleIndex(HeadColumn hc, Object o) {
-        int style = hc.getCellStyle(), styleIndex = workbook.getStyles().of(style);
+        int style = hc.getCellStyle(), styleIndex = hc.sst.of(style);
         if (hc.styleProcessor != null) {
-            style = hc.styleProcessor.build(o, style);
-            styleIndex = workbook.getStyles().of(style);
+            style = hc.styleProcessor.build(o, style, hc.sst);
+            styleIndex = hc.sst.of(style);
         }
         return styleIndex;
     }
