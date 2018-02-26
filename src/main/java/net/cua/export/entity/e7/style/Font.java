@@ -238,7 +238,7 @@ public class Font {
             }
         }
         // name
-        buf.append("    <name val=\"").append(family).append("\"/>").append(Const.lineSeparator);
+        buf.append("    <name val=\"").append(name).append("\"/>").append(Const.lineSeparator);
         // family
 //        DECORATIVE  装饰
 //        MODERN   现代
@@ -301,8 +301,8 @@ public class Font {
             Font other = (Font) o;
             return other.style == style
                     && other.size == size
-                    && other.color != null ? other.color.equals(color) : other.color == color
-                    && other.name != null ? other.name.equals(name) : other.name == name;
+                    && (other.color != null ? other.color.equals(color) : other.color == color)
+                    && (other.name != null ? other.name.equals(name) : other.name == name);
         }
         return false;
     }

@@ -5,7 +5,6 @@ import net.cua.export.annotation.NotExport;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.util.ExtBufferedWriter;
 import net.cua.export.util.StringUtil;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,7 +14,6 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +49,7 @@ public class ListObjectSheet<T> extends Sheet {
 
     @Override
     public void writeTo(Path xl) throws IOException {
-        Path worksheets = Paths.get(xl.toString(), "worksheets");
+        Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
         }
@@ -61,7 +59,7 @@ public class ListObjectSheet<T> extends Sheet {
         // create header columns
         init();
 
-        File sheetFile = Paths.get(worksheets.toString(), name).toFile();
+        File sheetFile = worksheets.resolve(name).toFile();
 
         // write date
         try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
@@ -127,6 +125,9 @@ public class ListObjectSheet<T> extends Sheet {
             }
             headColumns = new HeadColumn[list.size()];
             list.toArray(headColumns);
+            for (int i = 0; i < headColumns.length; i++) {
+                headColumns[i].setSst(workbook.getStyles());
+            }
         } else {
             for (HeadColumn hc : headColumns) {
                 try {

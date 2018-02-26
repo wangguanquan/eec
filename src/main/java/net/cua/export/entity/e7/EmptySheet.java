@@ -1,7 +1,6 @@
 package net.cua.export.entity.e7;
 
 import net.cua.export.entity.WaterMark;
-import net.cua.export.manager.Const;
 import net.cua.export.util.ExtBufferedWriter;
 import org.apache.log4j.Logger;
 
@@ -12,7 +11,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Created by guanquan.wang at 2018-01-29 16:05
@@ -35,7 +33,7 @@ public class EmptySheet extends Sheet {
 
     @Override
     public void writeTo(Path xl) throws IOException {
-        Path worksheets = Paths.get(xl.toString(), "worksheets");
+        Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
         }
@@ -43,7 +41,7 @@ public class EmptySheet extends Sheet {
 //        logger.info(getName() + " | " + name);
 
 
-        File sheetFile = Paths.get(worksheets.toString(), name).toFile();
+        File sheetFile = worksheets.resolve(name).toFile();
 
         // write date
         try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {

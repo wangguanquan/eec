@@ -1,12 +1,11 @@
 package net.cua.export;
 
 import net.cua.export.entity.TooManyColumnsException;
+import net.cua.export.entity.e7.*;
 import net.cua.export.manager.Const;
-import net.cua.export.entity.e7.Sheet;
-import net.cua.export.entity.e7.Workbook;
 import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
-import net.cua.export.util.ZipCompressor;
+import net.cua.export.util.ZipUtil;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -50,10 +49,25 @@ public class Excelx {
         } catch (TooManyColumnsException e) {
             logger.error(e);
         }
+
+        reMarkPath(zip, rootPath, workbook.getName());
+    }
+
+    protected static void reMarkPath(Path zip, Path path) throws IOException {
+        String str = path.toString(), name;
+        if (str.endsWith(Const.Suffix.EXCEL_07)) {
+            name = str.substring(str.lastIndexOf(Const.lineSeparator) + 1);
+        } else {
+            name = "新建文件";
+        }
+        reMarkPath(zip, path, name);
+    }
+
+    protected static void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
         // 如果文件存在则在文件名后加下标
-        Path o = Paths.get(rootPath.toString(), workbook.getName() + Const.Suffix.EXCEL_07);
+        Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
         if (Files.exists(o)) {
-            final String fname = workbook.getName();
+            final String fname = fileName;
             Path parent = o.getParent();
             if (parent != null && Files.exists(parent)) {
                 String[] os = parent.toFile().list((dir, name) ->
@@ -71,7 +85,7 @@ public class Excelx {
                 } else {
                     new_name = fname + Const.Suffix.EXCEL_07;
                 }
-                o = Paths.get(parent.toString(), new_name);
+                o = parent.resolve(new_name);
             } else {
                 // Rename to xlsx
                 Files.move(zip, o, StandardCopyOption.REPLACE_EXISTING);
@@ -90,7 +104,7 @@ public class Excelx {
         Path root = Files.createTempDirectory("eec+"
                 , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
 
-        Path xl = Files.createDirectory(Paths.get(root.toString(), "xl"));
+        Path xl = Files.createDirectory(root.resolve("xl"));
         Sheet[] sheets = workbook.getSheets();
         int n;
         for (int i = 0; i < sheets.length; i++) {
@@ -121,12 +135,49 @@ public class Excelx {
         workbook.writeXML(xl);
         if (workbook.getWaterMark() != null && workbook.getWaterMark().delete()); // Delete template image
 
-        // zip
-        File zipFile = new ZipCompressor(root.toString()).compressSubs(root.toFile());
+        // Zip compress
+        boolean compressRoot = false;
+        Path zipFile = ZipUtil.zip(root, compressRoot, root);
+
         // Delete source files
         boolean delSelf = true;
         FileUtil.rmRf(root.toFile(), delSelf);
 
-        return zipFile.toPath();
+        return zipFile;
+    }
+
+    /**
+     * 按template模版定义的格式输出
+     * @param stream template流
+     * @param o 替换内容 javabean or map
+     * @param rootPath 存储路径
+     */
+    public static Path createByTemplateTo(InputStream stream, Object o, Path rootPath) throws IOException {
+        Path zip = template(stream, o);
+        reMarkPath(zip, rootPath);
+        return rootPath;
+    }
+
+    protected static Path template(InputStream stream, Object o) throws IOException {
+        // Store template stream as zip file
+        Path temp = Files.createTempDirectory("eec+"
+                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        ZipUtil.unzip(stream, temp);
+
+        // Bind data
+        EmbedTemplate bt = new EmbedTemplate(temp);
+        if (bt.check()) { // Check files
+            bt.bind(o);
+        }
+
+        // Zip compress
+        boolean compressRoot = false;
+        Path zipFile = ZipUtil.zip(temp, compressRoot, temp);
+
+        // Delete source files
+        boolean delSelf = true;
+        FileUtil.rmRf(temp.toFile(), delSelf);
+
+        return zipFile;
     }
 }

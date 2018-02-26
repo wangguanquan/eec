@@ -10,7 +10,6 @@ import org.dom4j.Element;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -66,7 +65,7 @@ public class SharedStrings {
         elements.forEach((k,v) -> rootElement.addElement("si").addElement("t").setText(k));
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, Paths.get(root.toString(), StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk
+        FileUtil.writeToDisk(doc, root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk
 
         // destroy
         destroy();

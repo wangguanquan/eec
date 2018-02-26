@@ -12,7 +12,6 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +70,7 @@ public class RelManager implements Serializable {
             return;
         }
 
-        Path rels = Paths.get(parent.toString(), "_rels");
+        Path rels = parent.resolve("_rels");
         if (!Files.exists(rels)) {
             Files.createDirectory(rels);
         }
@@ -109,7 +108,7 @@ public class RelManager implements Serializable {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, Paths.get(rels.toString(), name)); // write to desk
+        FileUtil.writeToDisk(doc, rels.resolve(name)); // write to desk
     }
 
     @Override

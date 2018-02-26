@@ -319,12 +319,12 @@ public class Workbook {
         }
 
 
-        Path themeP = Paths.get(root.toString(), "theme");
+        Path themeP = root.resolve("theme");
         if (!Files.exists(themeP)) {
             Files.createDirectory(themeP);
         }
         try {
-            Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), Paths.get(themeP.toString(), "theme1.xml"));
+            Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), themeP.resolve("theme1.xml"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -364,7 +364,7 @@ public class Workbook {
         writeSelf(root);
 
         // styles
-        styles.writeTo(Paths.get(root.toString(), "styles.xml"));
+        styles.writeTo(root.resolve("styles.xml"));
 
         // share string
         sst.write(root);
@@ -375,11 +375,11 @@ public class Workbook {
         int n = 1;
         if (waterMark != null) {
             try {
-                Path media = Paths.get(parent.toString(), "media");
+                Path media = parent.resolve("media");
                 if (!Files.exists(media)) {
                     Files.createDirectory(media);
                 }
-                Path image = Paths.get(media.toString(), "image" + n++ + waterMark.getSuffix());
+                Path image = media.resolve("image" + n++ + waterMark.getSuffix());
 
                 Files.copy(waterMark.get(), image);
                 supRel = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
@@ -391,11 +391,11 @@ public class Workbook {
         for (int i = 0; i < size; i++) {
             if ((wm = sheets[i].getWaterMark()) != null) {
                 try {
-                    Path media = Paths.get(parent.toString(), "media");
+                    Path media = parent.resolve("media");
                     if (!Files.exists(media)) {
                         Files.createDirectory(media);
                     }
-                    Path image = Paths.get(media.toString(), "image" + n++ + wm.getSuffix());
+                    Path image = media.resolve("image" + n++ + wm.getSuffix());
                     Files.copy(wm.get(), image);
                     sheets[i].addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
                 } catch(IOException e) {
@@ -465,7 +465,7 @@ public class Workbook {
         rootElement.addElement("calcPr").addAttribute("calcId", "124519");
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, Paths.get(root.toString(), rootName + Const.Suffix.XML)); // write to desk
+        FileUtil.writeToDisk(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
 

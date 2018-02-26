@@ -269,8 +269,28 @@ public class FileUtil {
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
             //write the created document to an arbitrary file
 
-            OutputFormat outformat = OutputFormat.createPrettyPrint();
-            XMLWriter writer = new ExtXMLWriter(fos, outformat);
+            OutputFormat format = OutputFormat.createPrettyPrint();
+            XMLWriter writer = new ExtXMLWriter(fos, format);
+            writer.write(doc);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            throw e;
+        }
+    }
+
+    public static void writeToDiskNoFormat(Document doc, Path path) throws IOException {
+        if (!Files.exists(path.getParent())) {
+            try {
+                Files.createDirectories(path.getParent());
+            } catch (IOException e) {
+                throw e;
+            }
+        }
+        try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
+            //write the created document to an arbitrary file
+
+            XMLWriter writer = new ExtXMLWriter(fos);
             writer.write(doc);
             writer.flush();
             writer.close();

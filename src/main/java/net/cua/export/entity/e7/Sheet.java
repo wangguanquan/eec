@@ -64,8 +64,8 @@ public abstract class Sheet {
         this.workbook = workbook;
         this.name = name;
         this.headColumns = headColumns;
-        for (HeadColumn hc : this.headColumns) {
-            hc.sst = workbook.getStyles();
+        for (int i = 0; i < headColumns.length; i++) {
+            headColumns[i].sst = workbook.getStyles();
         }
         relManager = new RelManager();
     }
@@ -74,8 +74,8 @@ public abstract class Sheet {
         this.workbook = workbook;
         this.name = name;
         this.headColumns = headColumns;
-        for (HeadColumn hc : this.headColumns) {
-            hc.sst = workbook.getStyles();
+        for (int i = 0; i < headColumns.length; i++) {
+            headColumns[i].sst = workbook.getStyles();
         }
         this.waterMark = waterMark;
         relManager = new RelManager();
@@ -121,6 +121,9 @@ public abstract class Sheet {
             return o;
         }
 
+        protected void setSst(Styles styles) {
+            this.sst = styles;
+        }
         public HeadColumn() {}
         public HeadColumn(String name, Class clazz) {
             this(name, clazz, false);
@@ -423,6 +426,9 @@ public abstract class Sheet {
 
     public void setHeadColumns(final HeadColumn[] headColumns) {
         this.headColumns = headColumns.clone();
+        for (int i = 0; i < headColumns.length; i++) {
+            headColumns[i].sst = workbook.getStyles();
+        }
     }
 
     public WaterMark getWaterMark() {
@@ -541,6 +547,11 @@ public abstract class Sheet {
         return this;
     }
 
+    public Sheet setHeadStyle(int style) {
+        headStyle = style;
+        return this;
+    }
+
     private int defaultHeadStyle() {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
@@ -600,7 +611,8 @@ public abstract class Sheet {
         for (int i = 0; i < len; i++) {
             HeadColumn hc = headColumns[i];
 
-            // t n=numeric (default), s=string, b=boolean
+            // t n=numeric (default), s=string, b=boolean, str=function string
+            // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
             if (hc.clazz == String.class) {
                 String s = rs.getString(i + 1);
                 writeString(bw, s, i);
@@ -662,7 +674,8 @@ public abstract class Sheet {
 
         for (int i = 0; i < len; i++) {
             HeadColumn hc = headColumns[i];
-            // t n=numeric (default), s=string, b=boolean
+            // t n=numeric (default), s=string, b=boolean, str=function string
+            // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
             if (hc.clazz == String.class) {
                 String s = rs.getString(i + 1);
                 writeStringAutoSize(bw, s, i);

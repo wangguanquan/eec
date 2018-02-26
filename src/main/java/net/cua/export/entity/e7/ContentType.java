@@ -8,11 +8,9 @@ import org.dom4j.Document;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -32,7 +30,7 @@ public class ContentType {
         relManager.add(rel);
     }
 
-    private static class Type {
+    static abstract class Type {
         protected String contentType;
 
         public String getContentType() {
@@ -42,6 +40,8 @@ public class ContentType {
         public void setContentType(String contentType) {
             this.contentType = contentType;
         }
+
+        public abstract String getKey();
     }
 
     public static class Default extends Type {
@@ -70,6 +70,11 @@ public class ContentType {
             if (o == null || !(o instanceof Default)) return false;
             return this == o || extension.equals(((Default)o).extension);
         }
+
+        @java.lang.Override
+        public String getKey() {
+            return extension;
+        }
     }
 
     public static class Override extends Type {
@@ -96,6 +101,11 @@ public class ContentType {
         public boolean equals(Object o) {
             if (o == null || !(o instanceof Override)) return false;
             return this == o || partName.equals(((Override)o).partName);
+        }
+
+        @java.lang.Override
+        public String getKey() {
+            return partName;
         }
     }
 
@@ -139,7 +149,7 @@ public class ContentType {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, Paths.get(root.toString(), "/[Content_Types].xml")); // write to desk
+        FileUtil.writeToDisk(doc, root.resolve("[Content_Types].xml")); // write to desk
     }
 
 
