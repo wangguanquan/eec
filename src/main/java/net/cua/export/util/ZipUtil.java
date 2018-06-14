@@ -17,10 +17,27 @@ public class ZipUtil {
     static final int BUFFER = 8192;
     public static final String suffix = ".zip";
 
+    /**
+     * zip files exclude root path
+     * command: zip destPath srcPath1 srcPath2 ...
+     * @param destPath
+     * @param srcPath
+     * @return
+     * @throws IOException
+     */
     public static Path zip(Path destPath, Path ... srcPath) throws IOException {
         return zip(destPath, true, srcPath);
     }
 
+    /**
+     * zip files include root path
+     * command: zip destPath srcPath1 srcPath2 ...
+     * @param destPath
+     * @param compressRoot
+     * @param srcPath
+     * @return
+     * @throws IOException
+     */
     public static Path zip(Path destPath, boolean compressRoot, Path ... srcPath) throws IOException {
         if (!destPath.toString().endsWith(suffix)) {
             destPath = Paths.get(destPath.toString() + suffix);
@@ -80,6 +97,13 @@ public class ZipUtil {
         return destPath;
     }
 
+    /**
+     * unzip file to descPath
+     * @param stream
+     * @param destPath
+     * @return
+     * @throws IOException
+     */
     public static Path unzip(InputStream stream, Path destPath) throws IOException {
         if (!Files.isDirectory(destPath)) {
             Files.createDirectories(destPath);

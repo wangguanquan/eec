@@ -9,7 +9,7 @@ public class Charset {
             // , it is a constant akin to NULL that means
             // "show characters in whatever charsets are available."
             , SYMBOL = 0x02
-            , SHIFTJIS = 0x80
+            , SHIFTJIS = 0x80 // 日文
             , HANGUL = 0x81
             , GB2312 = 0x86 // 简体
             , CHINESEBIG5 = 0x88 // 繁体

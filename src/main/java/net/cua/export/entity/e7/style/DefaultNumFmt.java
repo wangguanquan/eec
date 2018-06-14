@@ -1,6 +1,5 @@
 package net.cua.export.entity.e7.style;
 
-import net.cua.export.manager.Const;
 import net.cua.export.util.StringUtil;
 
 import java.io.BufferedReader;
@@ -89,7 +88,7 @@ public class DefaultNumFmt {
                 final int length = i;
                 data[i] = list.stream()
                         .filter(o -> o.code.length() == length)
-                        .sorted(Comparator.comparingInt(o -> o.id))
+                        .sorted(Comparator.comparingInt(NumFmt::getId))
                         .toArray(NumFmt[]::new);
 
                 if (data[i].length == 0) { // Undo empty array
