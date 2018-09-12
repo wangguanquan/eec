@@ -1,18 +1,26 @@
 package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
+import net.cua.export.entity.TooManyColumnsException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.entity.e7.style.Styles;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
 import net.cua.export.manager.docProps.App;
 import net.cua.export.manager.docProps.Core;
+import net.cua.export.processor.DownProcessor;
 import net.cua.export.processor.ParamProcessor;
 import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
+import net.cua.export.util.ZipUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.*;
 import java.sql.Connection;
@@ -27,6 +35,7 @@ import java.util.*;
 @TopNS(prefix = {"", "r"}, value = "workbook"
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
+    Logger logger = LogManager.getLogger(getClass());
     private String name;
     private Sheet[] sheets;
     private WaterMark waterMark;
@@ -468,5 +477,150 @@ public class Workbook {
         FileUtil.writeToDisk(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
+    protected Path createTempZip() throws IOException, TooManyColumnsException {
+        Path root = FileUtil.mktmp("eec+");
 
+        Path xl = Files.createDirectory(root.resolve("xl"));
+        Sheet[] sheets = getSheets();
+        int n;
+        for (int i = 0; i < sheets.length; i++) {
+            Sheet sheet = sheets[i];
+            if ((n = sheet.getHeadColumns().length) > Const.Limit.MAX_COLUMNS_ON_SHEET) {
+                throw new TooManyColumnsException(n);
+            }
+            if (sheet.getAutoSize() == 0) {
+                if (isAutoSize()) {
+                    sheet.autoSize();
+                } else {
+                    sheet.fixSize();
+                }
+            }
+            sheet.setId(i + 1);
+        }
+
+        // 最先做水印, 写各sheet时需要使用
+        madeMark(xl);
+
+        // 写各worksheet内容
+        for (Sheet e : sheets) {
+            e.writeTo(xl);
+            if (e.getWaterMark() != null && e.getWaterMark().delete()) ; // Delete template image
+        }
+
+        // Write SharedString, Styles and workbook.xml
+        writeXML(xl);
+        if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
+
+        // Zip compress
+        boolean compressRoot = false;
+        Path zipFile = ZipUtil.zip(root, compressRoot, root);
+
+        // Delete source files
+        boolean delSelf = true;
+        FileUtil.rm_rf(root.toFile(), delSelf);
+
+        return zipFile;
+    }
+
+    protected static void reMarkPath(Path zip, Path path) throws IOException {
+        String str = path.toString(), name;
+        if (str.endsWith(Const.Suffix.EXCEL_07)) {
+            name = str.substring(str.lastIndexOf(Const.lineSeparator) + 1);
+        } else {
+            name = "新建文件";
+        }
+        reMarkPath(zip, path, name);
+    }
+
+    protected static void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
+        // 如果文件存在则在文件名后加下标
+        Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
+        if (Files.exists(o)) {
+            final String fname = fileName;
+            Path parent = o.getParent();
+            if (parent != null && Files.exists(parent)) {
+                String[] os = parent.toFile().list((dir, name) ->
+                        new File(dir, name).isFile()
+                                && name.startsWith(fname)
+                                && name.endsWith(Const.Suffix.EXCEL_07)
+                );
+                String new_name;
+                if (os != null) {
+                    int len = os.length, n;
+                    do {
+                        new_name = fname + " (" + len++ + ")" + Const.Suffix.EXCEL_07;
+                        n = StringUtil.indexOf(os, new_name);
+                    } while (n > -1);
+                } else {
+                    new_name = fname + Const.Suffix.EXCEL_07;
+                }
+                o = parent.resolve(new_name);
+            } else {
+                // Rename to xlsx
+                Files.move(zip, o, StandardCopyOption.REPLACE_EXISTING);
+                return;
+            }
+        }
+        // Rename to xlsx
+        Files.move(zip, o);
+    }
+
+    //////////////////////////Print Out/////////////////////////////
+    public void writeTo(Path path) throws IOException {
+        if (!Files.isDirectory(path)) {
+            writeTo(path.toFile());
+            return;
+        }
+        if (!Files.exists(path)) {
+            FileUtil.mkdir(path);
+        }
+
+        Path zip = null;
+        try {
+            zip = createTempZip();
+        } catch (TooManyColumnsException e) {
+            logger.error(e);
+        }
+
+        reMarkPath(zip, path, getName());
+    }
+
+    public void writeTo(OutputStream os) throws IOException {
+        try {
+            Files.copy(createTempZip(), os);
+        } catch (TooManyColumnsException e) {
+            logger.error(e);
+        }
+    }
+
+    public void writeTo(File file) throws IOException {
+        try {
+            FileUtil.cp(createTempZip(), file);
+        } catch (TooManyColumnsException e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * return excel path
+     * @return
+     */
+    public void then(DownProcessor processor) throws IOException, TooManyColumnsException {
+        Path zip;
+        try {
+            zip = createTempZip();
+        } catch (TooManyColumnsException|IOException e) {
+            logger.error(e);
+            throw e;
+        }
+        processor.build(zip);
+    }
+
+    public Workbook withTemplate(InputStream is) {
+        return this;
+    }
+
+    public Workbook withTemplate(InputStream is, Object o) {
+        return this;
+    }
 }

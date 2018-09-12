@@ -6,11 +6,11 @@ import net.cua.export.manager.Const;
 import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
 import net.cua.export.util.ZipUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.*;
-import java.nio.file.attribute.PosixFilePermissions;
 
 /**
  * https://msdn.microsoft.com/library
@@ -18,8 +18,7 @@ import java.nio.file.attribute.PosixFilePermissions;
  * Created by guanquan.wang at 2017/9/26.
  */
 public class Excelx {
-    private static Logger logger = Logger.getLogger(Excelx.class.getName());
-
+    static Logger logger = LogManager.getLogger(Excelx.class);
     public static File create(Workbook workbook) throws IOException {
         try {
             return createTempZip(workbook).toFile();
@@ -40,7 +39,7 @@ public class Excelx {
 
     public static void createTo(Workbook workbook, Path rootPath) throws IOException {
         if (!Files.exists(rootPath)) {
-            Files.createDirectories(rootPath);
+            FileUtil.mkdir(rootPath);
         }
 
         Path zip = null;
@@ -101,8 +100,7 @@ public class Excelx {
     }
 
     protected static Path createTempZip(Workbook workbook) throws IOException, TooManyColumnsException {
-        Path root = Files.createTempDirectory("eec+"
-                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        Path root = FileUtil.mktmp("eec+");
 
         Path xl = Files.createDirectory(root.resolve("xl"));
         Sheet[] sheets = workbook.getSheets();
@@ -141,7 +139,7 @@ public class Excelx {
 
         // Delete source files
         boolean delSelf = true;
-        FileUtil.rmRf(root.toFile(), delSelf);
+        FileUtil.rm_rf(root.toFile(), delSelf);
 
         return zipFile;
     }
@@ -160,8 +158,7 @@ public class Excelx {
 
     protected static Path template(InputStream stream, Object o) throws IOException {
         // Store template stream as zip file
-        Path temp = Files.createTempDirectory("eec+"
-                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        Path temp = FileUtil.mktmp("eec+");
         ZipUtil.unzip(stream, temp);
 
         // Bind data
@@ -176,7 +173,7 @@ public class Excelx {
 
         // Delete source files
         boolean delSelf = true;
-        FileUtil.rmRf(temp.toFile(), delSelf);
+        FileUtil.rm_rf(temp.toFile(), delSelf);
 
         return zipFile;
     }

@@ -2,7 +2,8 @@ package net.cua.export.entity.e7;
 
 import net.cua.export.manager.Const;
 import net.cua.export.util.FileUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -19,7 +20,7 @@ import java.util.*;
  * Created by guanquan.wang at 2018-02-26 13:45
  */
 public abstract class AbstractTemplate {
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
+    Logger logger = LogManager.getLogger(getClass());
     static final String inlineStr = "inlineStr";
 
     Path zipPath;
