@@ -46,9 +46,7 @@ public class Border {
 
     public Border setBorder(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
-        borders[1] = borders[0];
-        borders[2] = borders[0];
-        borders[3] = borders[0];
+        borders[1] = borders[2] = borders[3] = borders[0];
         return this;
     }
 

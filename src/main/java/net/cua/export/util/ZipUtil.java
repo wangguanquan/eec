@@ -10,7 +10,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.*;
 
 public class ZipUtil {
@@ -49,10 +51,12 @@ public class ZipUtil {
         int[] array = new int[srcPath.length];
         for (Path src : srcPath) {
             if (Files.isDirectory(src)) {
-                Files.list(src).forEach(path -> paths.add(path));
+                paths.addAll(Arrays.stream(src.toFile().listFiles()).map(File::toPath).collect(Collectors.toList()));
                 while (i < paths.size()) {
                     if (Files.isDirectory(paths.get(i))) {
-                        Files.list(paths.get(i)).forEach(path -> paths.add(path));
+                        paths.addAll(Arrays.stream(paths.get(i).toFile().listFiles()).map(File::toPath).collect(Collectors.toList()));
+                        // @FIX JDK BUG. => Files.list stream do not close resource
+//                        paths.addAll(Files.list(paths.get(i)).collect(Collectors.toList()));
                     }
                     i++;
                 }

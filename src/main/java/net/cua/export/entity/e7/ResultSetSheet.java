@@ -168,6 +168,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     public ResultSetSheet clone() {
-        return new ResultSetSheet(workbook, name, waterMark, headColumns, rs, relManager).setCopySheet(true);
+        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, headColumns, rs, relManager).setCopySheet(true);
+        if (getAutoSize() == 1) {
+            rss.autoSize();
+        }
+        return rss;
     }
 }

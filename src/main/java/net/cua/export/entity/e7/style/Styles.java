@@ -152,7 +152,7 @@ public class Styles {
         Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
         cellStyles.addElement("cellStyle")
                 .addAttribute("builtinId", "0")
-                .addAttribute("name", "常规") // I18N
+                .addAttribute("name", "常规") // TODO I18N
                 .addAttribute("xfId", "0");
 
         self.document = factory.createDocument(rootElement);

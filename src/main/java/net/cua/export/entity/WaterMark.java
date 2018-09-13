@@ -80,7 +80,7 @@ public class WaterMark {
         // 获取Graphics2d对象
         Graphics2D g2d = bi.createGraphics();
         // 设置字体颜色为灰色
-        g2d.setColor(new Color(240, 240, 240));
+        g2d.setColor(new Color(200, 200, 200));
         // 设置图片的属性
         g2d.setStroke(new BasicStroke(1));
         // 设置字体

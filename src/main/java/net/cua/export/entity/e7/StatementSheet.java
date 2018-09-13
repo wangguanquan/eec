@@ -115,6 +115,7 @@ public class StatementSheet extends Sheet {
             logger.error(e);
         } finally {
             if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
+                if (rs != null)
                 try {
                     rs.close();
                 } catch (SQLException e) {
@@ -132,7 +133,8 @@ public class StatementSheet extends Sheet {
                 break;
             }
         }
-        if (getAutoSize() == 1 || resize) {
+        boolean autoSize;
+        if (autoSize = (getAutoSize() == 1 || resize)) {
             autoColumnSize(sheetFile);
         }
 
@@ -143,6 +145,7 @@ public class StatementSheet extends Sheet {
             ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns, rs, relManager.clone());
             rss.setName(this.name + " (" + (sub) + ")");
             rss.setCopySheet(true);
+            if (autoSize) rss.autoSize();
             Sheet subSheet = workbook.insertSheet(id, rss);
             subSheet.writeTo(xl);
         }

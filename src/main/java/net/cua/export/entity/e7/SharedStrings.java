@@ -10,7 +10,7 @@ import org.dom4j.Element;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,7 +25,7 @@ public class SharedStrings {
     private static final int MAX_CACHE_SIZE = 8192;
 
     SharedStrings() {
-        elements = new LinkedHashMap<>();
+        elements = new HashMap<>();
     }
 
     ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
@@ -36,7 +36,7 @@ public class SharedStrings {
     }
 
     /**
-     * 每个sheet采用one by one的方式输出，暂不考虑并发
+     * TODO 每个sheet采用one by one的方式输出，暂不考虑并发
      * @param key
      * @return
      */
