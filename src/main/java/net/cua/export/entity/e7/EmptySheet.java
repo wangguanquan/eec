@@ -2,7 +2,6 @@ package net.cua.export.entity.e7;
 
 import net.cua.export.entity.WaterMark;
 import net.cua.export.util.ExtBufferedWriter;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,8 +15,6 @@ import java.nio.file.Path;
  * Created by guanquan.wang at 2018-01-29 16:05
  */
 public class EmptySheet extends Sheet {
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     public EmptySheet(Workbook workbook, String name, HeadColumn ... headColumns) {
         super(workbook, name, headColumns);
     }

@@ -10,7 +10,8 @@ import net.cua.export.processor.IntConversionProcessor;
 import net.cua.export.processor.StyleProcessor;
 import net.cua.export.util.ExtBufferedWriter;
 import net.cua.export.util.StringUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -33,7 +34,7 @@ import static net.cua.export.util.DateUtil.toDateValue;
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet {
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
+    Logger logger = LogManager.getLogger(getClass());
     protected Workbook workbook;
 
     protected String name;

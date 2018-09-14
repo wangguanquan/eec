@@ -1,8 +1,8 @@
 package net.cua.export.util;
 
-
 import com.sun.istack.internal.NotNull;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
@@ -11,6 +11,8 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -24,7 +26,7 @@ import java.util.List;
  */
 
 public class FileUtil {
-    static Logger logger = Logger.getLogger(FileUtil.class);
+    static Logger logger = LogManager.getLogger(FileUtil.class);
 
     private FileUtil() {
     }
@@ -85,12 +87,13 @@ public class FileUtil {
             try {
                 bw.close();
             } catch (IOException e) {
-                logger.error("close Writer fail." +
-                        "", e);
+                logger.error("close Writer fail.", e);
             }
         }
     }
-
+    public static void rm(Path path){
+        rm(path.toFile());
+    }
     /**
      * 如果文件存在删除文件
      *
@@ -108,17 +111,19 @@ public class FileUtil {
         if (file.exists()) {
             boolean boo = file.delete();
             if (!boo) {
-                logger.error("Delete file [" + file.getPath() + "] fail.");
+                logger.error("Delete file [{}] fail.", file.getPath());
             }
         }
     }
-
+    public static void rm_rf(Path root) {
+        rm_rf(root.toFile(), true);
+    }
     /**
      * Remove file and sub files
      * @param root
      * @param rmSelf Remove self if true
      */
-    public static void rmRf(File root, boolean rmSelf) {
+    public static void rm_rf(File root, boolean rmSelf) {
         File temp = root;
         if (root.isDirectory()) {
             File[] subFiles = root.listFiles();
@@ -147,6 +152,16 @@ public class FileUtil {
         }
     }
 
+    public static void cp(@NotNull Path srcFile, @NotNull Path descPath) {
+        cp(srcFile.toFile(), descPath.toFile());
+    }
+    public static void cp(@NotNull File srcFile, @NotNull Path descPath) {
+        cp(srcFile, descPath.toFile());
+    }
+
+    public static void cp(@NotNull Path srcPath, @NotNull File descFile) {
+        cp(srcPath.toFile(), descFile);
+    }
 
     /**
      * 复制单个文件
@@ -154,12 +169,12 @@ public class FileUtil {
      * @param srcFile  源文件
      * @param descFile 目标文件
      */
-    public static void copyFile(@NotNull File srcFile, @NotNull File descFile) {
+    public static void cp(@NotNull File srcFile, @NotNull File descFile) {
         if (srcFile.length() == 0l) {
             try {
                 boolean boo = descFile.createNewFile();
                 if (!boo)
-                    logger.error("Copy file from [" + srcFile.getPath() + "] to [" + descFile.getPath() + "] failed...");
+                    logger.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
                 return;
             } catch (IOException e) {
             }
@@ -171,7 +186,7 @@ public class FileUtil {
 
             inChannel.transferTo(0, inChannel.size(), outChannel);
         } catch (IOException e) {
-            logger.error("Copy file from [" + srcFile.getPath() + "] to [" + descFile.getPath() + "] failed...");
+            logger.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
         } finally {
             if (inChannel != null) {
                 try {
@@ -188,17 +203,32 @@ public class FileUtil {
         }
     }
 
-    public static void copyFile(@NotNull InputStream is, @NotNull File descFile) {
-        try (BufferedInputStream bis = new BufferedInputStream(is);
-             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(descFile))) {
-            byte[] bytes = new byte[2048];
-            int len;
-            while ((len = bis.read(bytes)) > 0) {
-                bos.write(bytes, 0, len);
-            }
+    public static void cp(@NotNull InputStream is, @NotNull File descFile) {
+        cp(is, descFile.toPath());
+    }
+
+    public static void cp(@NotNull InputStream is, @NotNull Path descFile) {
+        try {
+            Files.copy(is, descFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            logger.error("Copy file to [" + descFile.getPath() + "] failed...");
+            logger.error("Copy file to [{}] failed...", descFile);
         }
+    }
+
+    public static void cp_R(String srcPath, String descPath, boolean moveSubFolder) {
+        copyFolder(srcPath, descPath, moveSubFolder);
+    }
+
+    public static void cp_R(Path srcPath, Path descPath, boolean moveSubFolder) {
+        copyFolder(srcPath.toString(), descPath.toString(), moveSubFolder);
+    }
+
+    public static void cp_R(String srcPath, String descPath) {
+        copyFolder(srcPath, descPath, true);
+    }
+
+    public static void cp_R(Path srcPath, Path descPath) {
+        copyFolder(srcPath.toString(), descPath.toString(), true);
     }
 
     /**
@@ -240,7 +270,7 @@ public class FileUtil {
                 File f = folders.pollLast(), df = new File(desc, f.getPath().substring(src_path_len));
                 // 1.1 扫描的同时为目标文件夹创建目录
                 if (!df.exists() && !df.mkdir()) {
-                    logger.warn("创建子文件夹[" + df.getPath() + "]失败跳过.");
+                    logger.debug("创建子文件夹[{}]失败跳过.", df.getPath());
                     continue;
                 }
                 File[] fs = f.listFiles();
@@ -252,10 +282,36 @@ public class FileUtil {
                 }
             }
         }
-        logger.info("扫描完成. 共计[" + files.size() + "]个文件. 开始复制文件...");
+        logger.debug("扫描完成. 共计[{}]个文件. 开始复制文件...", files.size());
         // 2. 复制文件
-        files.parallelStream().forEach(f -> copyFile(f, new File(descPath + f.getPath().substring(src_path_len))));
-        logger.info("复制结束.");
+        files.parallelStream().forEach(f -> cp(f, new File(descPath + f.getPath().substring(src_path_len))));
+        logger.debug("复制结束.");
+    }
+
+    public static Path mkdir(Path destPath) throws IOException {
+        Path path;
+        if (isWindows()) {
+            path = Files.createDirectories(destPath);
+        } else {
+            path = Files.createDirectories(destPath
+                    , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        }
+        return path;
+    }
+
+    public static Path mktmp(String prefix) throws IOException {
+        Path path;
+        if (isWindows()) {
+            path = Files.createTempDirectory(prefix);
+        } else {
+            path = Files.createTempDirectory(prefix
+                    , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        }
+        return path;
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name").toUpperCase().startsWith("WINDOWS");
     }
 
     public static void writeToDisk(Document doc, Path path) throws IOException {

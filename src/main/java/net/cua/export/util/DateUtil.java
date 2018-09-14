@@ -34,7 +34,7 @@ public class DateUtil {
         return dateFormat.get().format(date);
     }
 
-    public static String getToday() {
+    public static String today() {
         return LocalDate.now().toString();
     }
 
