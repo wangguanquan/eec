@@ -223,10 +223,11 @@ public class TestExportEntity {
 
 1. excel文件增加导出scripts功能
 2. list data with template
-3. 对excel文件设置密码
+3. 对excel文件设置密码 (AES-128 encrypted)
 4. 多线程支持，多个sheet数据同时写
 5. share多线程支持
 6. 异常出理
+7. 单元格隐藏 -
 
 ## BUG
 

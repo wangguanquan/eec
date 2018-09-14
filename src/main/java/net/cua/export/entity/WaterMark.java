@@ -1,6 +1,8 @@
 package net.cua.export.entity;
 
 import net.cua.export.manager.Const;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -14,28 +16,21 @@ import java.nio.file.*;
  * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
+    private Logger logger = LogManager.getLogger(getClass());
     private Path imagePath;
     private boolean temp;
 
     public WaterMark(String word) { // 文字水印
-        try {
-            imagePath = createWaterMark(word);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        imagePath = createWaterMark(word);
     }
 
     public WaterMark(Path imagePath) {  // 图片水印（路径）
         this.imagePath = imagePath;
     }
 
-    public WaterMark(InputStream inputStream) { // 图片水印（流）
-        try {
-            imagePath = createTemp();
-            Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public WaterMark(InputStream inputStream) throws IOException { // 图片水印（流）
+        imagePath = createTemp();
+        Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     public Path get() {
@@ -50,7 +45,7 @@ public class WaterMark {
         return new WaterMark(path);
     }
 
-    public static WaterMark of(InputStream is) {
+    public static WaterMark of(InputStream is) throws IOException {
         return new WaterMark(is);
     }
 
@@ -61,44 +56,48 @@ public class WaterMark {
      * @return
      * @throws IOException
      */
-    public Path createWaterMark(String watermark) throws IOException {
-        Path temp = createTemp();
-        int width = 510; // 水印图片的宽度
-        int height = 300; // 水印图片的高度 因为设置其他的高度会有黑线，所以拉高高度
+    public Path createWaterMark(String watermark) {
+        try {
+            Path temp = createTemp();
+            int width = 510; // 水印图片的宽度
+            int height = 300; // 水印图片的高度 因为设置其他的高度会有黑线，所以拉高高度
 
-        // 获取bufferedImage对象
-        BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        // 处理背景色，设置为 白色
-        int minx = bi.getMinX();
-        int miny = bi.getMinY();
-        for (int i = minx; i < width; i++) {
-            for (int j = miny; j < height; j++) {
-                bi.setRGB(i, j, 0xffffff);
+            // 获取bufferedImage对象
+            BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            // 处理背景色，设置为 白色
+            int minx = bi.getMinX();
+            int miny = bi.getMinY();
+            for (int i = minx; i < width; i++) {
+                for (int j = miny; j < height; j++) {
+                    bi.setRGB(i, j, 0xffffff);
+                }
             }
+
+            // 获取Graphics2d对象
+            Graphics2D g2d = bi.createGraphics();
+            // 设置字体颜色为灰色
+            g2d.setColor(new Color(200, 200, 200));
+            // 设置图片的属性
+            g2d.setStroke(new BasicStroke(1));
+            // 设置字体
+            g2d.setFont(new java.awt.Font("华文细黑", java.awt.Font.ITALIC, 50));
+            // 设置字体倾斜度
+            g2d.rotate(Math.toRadians(-10));
+
+            // 写入水印文字 原定高度过小，所以累计写水印，增加高度
+            for (int i = 1; i < 10; i++) {
+                g2d.drawString(watermark, 0, 60 * i);
+            }
+            // 设置透明度
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+            // 释放对象
+            g2d.dispose();
+            ImageIO.write(bi, "png", temp.toFile());
+            return temp;
+        } catch (IOException e) {
+            logger.error("", e);
         }
-
-        // 获取Graphics2d对象
-        Graphics2D g2d = bi.createGraphics();
-        // 设置字体颜色为灰色
-        g2d.setColor(new Color(200, 200, 200));
-        // 设置图片的属性
-        g2d.setStroke(new BasicStroke(1));
-        // 设置字体
-        g2d.setFont(new java.awt.Font("华文细黑", java.awt.Font.ITALIC, 50));
-        // 设置字体倾斜度
-        g2d.rotate(Math.toRadians(-10));
-
-        // 写入水印文字 原定高度过小，所以累计写水印，增加高度
-        for (int i = 1; i < 10; i++) {
-            g2d.drawString(watermark, 0, 60 * i);
-        }
-        // 设置透明度
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
-        // 释放对象
-        g2d.dispose();
-        ImageIO.write(bi, "png", temp.toFile());
-
-        return temp;
+        return null;
     }
 
     private Path createTemp() throws IOException {

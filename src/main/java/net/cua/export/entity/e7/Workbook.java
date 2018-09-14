@@ -1,6 +1,7 @@
 package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
+import net.cua.export.entity.ExportException;
 import net.cua.export.entity.TooManyColumnsException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.entity.e7.style.Styles;
@@ -30,12 +31,14 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
+ * https://poi.apache.org/encryption.html encrypted
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
     Logger logger = LogManager.getLogger(getClass());
+
     private String name;
     private Sheet[] sheets;
     private WaterMark waterMark;
@@ -43,7 +46,7 @@ public class Workbook {
     private Connection con;
     private RelManager relManager;
     private boolean autoSize;
-    private String creator;
+    private String creator, company;
 
     private SharedStrings sst; // 共享字符区
     private Styles styles; // 共享样式
@@ -120,6 +123,10 @@ public class Workbook {
         this.creator = creator;
     }
 
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
     public Workbook addSheet(Sheet sheet) {
         int _size = size;
         if (_size > sheets.length) {
@@ -173,7 +180,7 @@ public class Workbook {
         return first;
     }
 
-    public Sheet addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
+    public Workbook addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size > sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -182,10 +189,10 @@ public class Workbook {
         sheet.setRs(rs);
         sheets[_size] = sheet;
         size++;
-        return sheet;
+        return this;
     }
 
-    public Sheet addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
+    public Workbook addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -200,10 +207,10 @@ public class Workbook {
         sheet.setPs(ps);
         sheets[_size] = sheet;
         size++;
-        return sheet;
+        return this;
     }
 
-    public Sheet addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
+    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -220,10 +227,10 @@ public class Workbook {
         sheets[_size] = sheet;
 
         size++;
-        return sheet;
+        return this;
     }
 
-    public Sheet insertSheet(int index, Sheet sheet) {
+    public Workbook insertSheet(int index, Sheet sheet) {
         int _size = size;
         if (_size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + 1);
@@ -238,7 +245,7 @@ public class Workbook {
         sheets[index] = sheet;
         sheet.setId(index + 1);
         size++;
-        return sheet;
+        return this;
     }
 
     public Workbook remove(int index) {
@@ -272,7 +279,7 @@ public class Workbook {
         return null;
     }
 
-    public void writeXML(Path root) throws IOException {
+    public void writeXML(Path root) throws IOException, ExportException {
 
         // Content type
         ContentType contentType = new ContentType();
@@ -284,7 +291,11 @@ public class Workbook {
 
         // docProps
         App app = new App();
-        app.setCompany("guanquan.wang@yandex.com");
+        if (StringUtil.isNotEmpty(company)) {
+            app.setCompany(company);
+        } else {
+            app.setCompany("guanquan.wang@yandex.com");
+        }
 
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -297,12 +308,8 @@ public class Workbook {
             app.writeTo(root.getParent() + "/docProps/app.xml");
             contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
             contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new ExportException(e);
         }
 
         Core core = new Core();
@@ -319,14 +326,9 @@ public class Workbook {
             core.writeTo(root.getParent() + "/docProps/core.xml");
             contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
             contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new ExportException(e);
         }
-
 
         Path themeP = root.resolve("theme");
         if (!Files.exists(themeP)) {
@@ -379,37 +381,29 @@ public class Workbook {
         sst.write(root);
     }
 
-    public void madeMark(Path parent) {
+    public void madeMark(Path parent) throws IOException {
         Relationship supRel = null;
         int n = 1;
         if (waterMark != null) {
-            try {
-                Path media = parent.resolve("media");
-                if (!Files.exists(media)) {
-                    Files.createDirectory(media);
-                }
-                Path image = media.resolve("image" + n++ + waterMark.getSuffix());
-
-                Files.copy(waterMark.get(), image);
-                supRel = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
-            } catch(IOException e) {
-                e.printStackTrace();
+            Path media = parent.resolve("media");
+            if (!Files.exists(media)) {
+                Files.createDirectory(media);
             }
+            Path image = media.resolve("image" + n++ + waterMark.getSuffix());
+
+            Files.copy(waterMark.get(), image);
+            supRel = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
         }
         WaterMark wm;
         for (int i = 0; i < size; i++) {
             if ((wm = sheets[i].getWaterMark()) != null) {
-                try {
-                    Path media = parent.resolve("media");
-                    if (!Files.exists(media)) {
-                        Files.createDirectory(media);
-                    }
-                    Path image = media.resolve("image" + n++ + wm.getSuffix());
-                    Files.copy(wm.get(), image);
-                    sheets[i].addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
-                } catch(IOException e) {
-                    e.printStackTrace();
+                Path media = parent.resolve("media");
+                if (!Files.exists(media)) {
+                    Files.createDirectory(media);
                 }
+                Path image = media.resolve("image" + n++ + wm.getSuffix());
+                Files.copy(wm.get(), image);
+                sheets[i].addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
             } else if (waterMark != null) {
                 sheets[i].setWaterMark(waterMark);
                 sheets[i].addRel(supRel);
@@ -464,6 +458,9 @@ public class Workbook {
             Element st = sheetEle.addElement(StringUtil.lowFirstKey(sheetInfo.getClass().getSuperclass().getSimpleName()))
                     .addAttribute("sheetId", String.valueOf(i + 1))
                     .addAttribute("name", sheetInfo.getName());
+            if (sheetInfo.isHidden()) {
+                st.addAttribute("state", "hidden");
+            }
             Relationship rs = relManager.getByTarget("worksheets/sheet" + (i + 1) + Const.Suffix.XML);
             if (rs != null) {
                 st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
@@ -477,10 +474,7 @@ public class Workbook {
         FileUtil.writeToDisk(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
-    protected Path createTempZip() throws IOException, TooManyColumnsException {
-        Path root = FileUtil.mktmp("eec+");
-
-        Path xl = Files.createDirectory(root.resolve("xl"));
+    protected Path createTemp() throws IOException, ExportException {
         Sheet[] sheets = getSheets();
         int n;
         for (int i = 0; i < sheets.length; i++) {
@@ -498,28 +492,38 @@ public class Workbook {
             sheet.setId(i + 1);
         }
 
-        // 最先做水印, 写各sheet时需要使用
-        madeMark(xl);
+        Path root = null;
+        try {
+            root = FileUtil.mktmp("eec+");
+            logger.info(root);
 
-        // 写各worksheet内容
-        for (Sheet e : sheets) {
-            e.writeTo(xl);
-            if (e.getWaterMark() != null && e.getWaterMark().delete()) ; // Delete template image
+            Path xl = Files.createDirectory(root.resolve("xl"));
+            // 最先做水印, 写各sheet时需要使用
+            madeMark(xl);
+
+            // 写各worksheet内容
+            for (Sheet e : sheets) {
+                e.writeTo(xl);
+                if (e.getWaterMark() != null && e.getWaterMark().delete()) ; // Delete template image
+            }
+
+            // Write SharedString, Styles and workbook.xml
+            writeXML(xl);
+            if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
+
+            // Zip compress
+            boolean compressRoot = false;
+            Path zipFile = ZipUtil.zip(root, compressRoot, root);
+
+            // TODO Delete source files
+//        boolean delSelf = true;
+//        FileUtil.rm_rf(root.toFile(), delSelf);
+            return zipFile;
+        } catch (IOException | ExportException e) {
+            // remove temp path
+            if (root != null) FileUtil.rm_rf(root);
+            throw e;
         }
-
-        // Write SharedString, Styles and workbook.xml
-        writeXML(xl);
-        if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
-
-        // Zip compress
-        boolean compressRoot = false;
-        Path zipFile = ZipUtil.zip(root, compressRoot, root);
-
-        // Delete source files
-        boolean delSelf = true;
-        FileUtil.rm_rf(root.toFile(), delSelf);
-
-        return zipFile;
     }
 
     protected static void reMarkPath(Path zip, Path path) throws IOException {
@@ -566,7 +570,7 @@ public class Workbook {
     }
 
     //////////////////////////Print Out/////////////////////////////
-    public void writeTo(Path path) throws IOException {
+    public void writeTo(Path path) throws IOException, ExportException {
         if (!Files.isDirectory(path)) {
             writeTo(path.toFile());
             return;
@@ -575,52 +579,64 @@ public class Workbook {
             FileUtil.mkdir(path);
         }
 
-        Path zip = null;
-        try {
-            zip = createTempZip();
-        } catch (TooManyColumnsException e) {
-            logger.error(e);
-        }
+        Path zip = is == null ? createTemp() : template();
 
         reMarkPath(zip, path, getName());
     }
 
-    public void writeTo(OutputStream os) throws IOException {
-        try {
-            Files.copy(createTempZip(), os);
-        } catch (TooManyColumnsException e) {
-            logger.error(e);
-        }
+    public void writeTo(OutputStream os) throws IOException, ExportException {
+        Path zip = is == null ? createTemp() : template();
+        Files.copy(zip, os);
     }
 
-    public void writeTo(File file) throws IOException {
-        try {
-            FileUtil.cp(createTempZip(), file);
-        } catch (TooManyColumnsException e) {
-            logger.error(e);
-        }
+    public void writeTo(File file) throws IOException, ExportException {
+        Path zip = is == null ? createTemp() : template();
+        FileUtil.cp(zip, file);
     }
 
     /**
      * return excel path
      * @return
      */
-    public void then(DownProcessor processor) throws IOException, TooManyColumnsException {
-        Path zip;
-        try {
-            zip = createTempZip();
-        } catch (TooManyColumnsException|IOException e) {
-            logger.error(e);
-            throw e;
-        }
+    public void create(DownProcessor processor) throws IOException, ExportException {
+        Path zip = createTemp();
         processor.build(zip);
     }
 
+
+    /////////////////////////////////Template///////////////////////////////////
+    InputStream is;
+    Object o;
     public Workbook withTemplate(InputStream is) {
+        this.is = is;
         return this;
     }
 
     public Workbook withTemplate(InputStream is, Object o) {
+        this.is = is;
+        this.o = o;
         return this;
+    }
+
+    protected Path template() throws IOException {
+        // Store template stream as zip file
+        Path temp = FileUtil.mktmp("eec+");
+        ZipUtil.unzip(is, temp);
+
+        // Bind data
+        EmbedTemplate bt = new EmbedTemplate(temp);
+        if (bt.check()) { // Check files
+            bt.bind(o);
+        }
+
+        // Zip compress
+        boolean compressRoot = false;
+        Path zipFile = ZipUtil.zip(temp, compressRoot, temp);
+
+        // Delete source files
+        boolean delSelf = true;
+        FileUtil.rm_rf(temp.toFile(), delSelf);
+
+        return zipFile;
     }
 }

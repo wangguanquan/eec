@@ -1,5 +1,6 @@
 package net.cua.export.entity.e7;
 
+import net.cua.export.entity.ExportException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.manager.Const;
 import net.cua.export.util.ExtBufferedWriter;
@@ -49,7 +50,7 @@ public class StatementSheet extends Sheet {
     }
 
     @Override
-    public void writeTo(Path xl) throws IOException {
+    public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
@@ -109,17 +110,16 @@ public class StatementSheet extends Sheet {
             // Write foot
             writeAfter(bw);
 
-        } catch (IOException e) {
-            throw e;
         } catch (SQLException e) {
-            logger.error(e);
+            throw new ExportException(e);
         } finally {
             if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
-                if (rs != null)
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (SQLException e) {
+                        throw new ExportException(e);
+                    }
                 }
                 close();
             }
@@ -146,8 +146,8 @@ public class StatementSheet extends Sheet {
             rss.setName(this.name + " (" + (sub) + ")");
             rss.setCopySheet(true);
             if (autoSize) rss.autoSize();
-            Sheet subSheet = workbook.insertSheet(id, rss);
-            subSheet.writeTo(xl);
+            workbook.insertSheet(id, rss);
+            rss.writeTo(xl);
         }
 
         close();

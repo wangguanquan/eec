@@ -5,7 +5,7 @@ import net.cua.export.manager.Const;
 /**
  * Created by guanquan.wang on 2017/10/19.
  */
-public class TooManyColumnsException extends Exception {
+public class TooManyColumnsException extends ExportException {
 
     public TooManyColumnsException() {
         super();

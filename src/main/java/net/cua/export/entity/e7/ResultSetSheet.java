@@ -1,5 +1,6 @@
 package net.cua.export.entity.e7;
 
+import net.cua.export.entity.ExportException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.manager.Const;
 import net.cua.export.manager.RelManager;
@@ -63,7 +64,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     @Override
-    public void writeTo(Path xl) throws IOException {
+    public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
@@ -114,10 +115,8 @@ public class ResultSetSheet extends Sheet {
             // Write foot
             writeAfter(bw);
 
-        } catch (IOException e) {
-            throw e;
         } catch (SQLException e) {
-            logger.error(e);
+            throw new ExportException(e);
         } finally {
             if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
                 close();

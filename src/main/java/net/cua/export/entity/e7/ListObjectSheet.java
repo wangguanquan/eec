@@ -2,6 +2,7 @@ package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.DisplayName;
 import net.cua.export.annotation.NotExport;
+import net.cua.export.entity.ExportException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.util.ExtBufferedWriter;
 import net.cua.export.util.StringUtil;
@@ -48,7 +49,7 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     @Override
-    public void writeTo(Path xl) throws IOException {
+    public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
             Files.createDirectory(worksheets);
@@ -80,10 +81,8 @@ public class ListObjectSheet<T> extends Sheet {
             // Write foot
             writeAfter(bw);
 
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            throw new ExportException(e);
         }
 
         // resize columns

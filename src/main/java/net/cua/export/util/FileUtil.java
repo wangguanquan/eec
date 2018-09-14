@@ -8,6 +8,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import java.io.*;
+import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,6 +89,20 @@ public class FileUtil {
                 bw.close();
             } catch (IOException e) {
                 logger.error("close Writer fail.", e);
+            }
+        }
+    }
+    /**
+     * 关闭Channel
+     *
+     * @param channel 通道
+     */
+    public static void close(Channel channel) {
+        if (channel != null) {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                logger.error("close Channel fail.", e);
             }
         }
     }

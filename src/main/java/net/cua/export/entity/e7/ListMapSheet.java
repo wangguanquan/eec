@@ -86,8 +86,6 @@ public class ListMapSheet extends Sheet {
             // Write foot
             writeAfter(bw);
 
-        } catch (IOException e) {
-            throw e;
         }
 
         // resize columns

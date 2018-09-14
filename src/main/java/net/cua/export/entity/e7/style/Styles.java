@@ -48,7 +48,6 @@ public class Styles {
      * @return
      */
     public int of(int s) {
-//        if (s == 0) return s;
         int n = map.get(s);
         if (n == 0) {
             n = addStyle(s);
@@ -63,58 +62,6 @@ public class Styles {
     static final int INDEX_BORDER = 6;
     static final int INDEX_VERTICAL = 3;
     static final int INDEX_HORIZONTAL = 0;
-
-//    public Styles load(InputStream is) {
-//        map.put(0, 0); // General
-//        map.put(1, 1);
-//        SAXReader reader = new SAXReader();
-//        try {
-//            document = reader.read(is);
-//        } catch (DocumentException e) {
-//            // read style file fail.
-//            readFail();
-//            return this;
-//        }
-//        Element root = document.getRootElement();
-//        // load number format
-//        numFmts = NumFmts.load(root.element("numFmts"));
-//        // load font
-//        fonts = Fonts.load(root.element("fonts"));
-//        // load fill
-//        fills = Fills.load(root.element("fills"));
-//        // load border
-//        borders = Borders.load(root.element("borders"));
-//        Element cellXfs = root.element("cellXfs");
-//        Iterator<Element> elementIterator = cellXfs.elementIterator();
-//        int n = 0;
-//        while (elementIterator.hasNext()) {
-//            Element xf = elementIterator.next();
-//            if (++n <= 2) continue;
-//            Element alignment = xf.element("alignment");
-//            int c = 0;
-//            for (int i = 0; i < attrNames.length; i++) {
-//                Attribute attr = xf.attribute(attrNames[i]);
-//                if (attr == null && alignment != null) {
-//                    attr = alignment.attribute(attrNames[i]);
-//                }
-//                if (attr != null) {
-//                    String attrValue = attr.getValue();
-//                    int v;
-//                    if (i < 4) {
-//                        v = Integer.parseInt(attrValue);
-//                    } else if (i == 4) {
-//                        v = Verticals.valueOf(attrValue);
-//                    } else {
-//                        v = Horizontals.valueOf(attrValue);
-//                    }
-//                    c |= v << move_left[i];
-//                }
-//            }
-//
-//            map.put(c, n - 1);
-//        }
-//        return this;
-//    }
 
     /**
      * create general style

@@ -1,6 +1,7 @@
 package net.cua.export.entity.e7;
 
 import net.cua.export.annotation.TopNS;
+import net.cua.export.entity.ExportException;
 import net.cua.export.entity.WaterMark;
 import net.cua.export.entity.e7.style.*;
 import net.cua.export.entity.e7.style.Font;
@@ -9,6 +10,7 @@ import net.cua.export.manager.RelManager;
 import net.cua.export.processor.IntConversionProcessor;
 import net.cua.export.processor.StyleProcessor;
 import net.cua.export.util.ExtBufferedWriter;
+import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,6 +48,7 @@ public abstract class Sheet {
     private double width = 20;
     private int headInfoLen, baseInfoLen;
     protected int rows;
+    private boolean hidden;
 
     private int headStyle;
 
@@ -440,6 +443,14 @@ public abstract class Sheet {
         this.waterMark = waterMark;
     }
 
+    public boolean isHidden() {
+        return hidden;
+    }
+    public Sheet hidden() {
+        // TODO sheet hidden
+        this.hidden = true;
+        return this;
+    }
     /**
      * abstract method close
      */
@@ -449,7 +460,7 @@ public abstract class Sheet {
         relManager.add(rel);
     }
 
-    public abstract void writeTo(Path xl) throws IOException;
+    public abstract void writeTo(Path xl) throws IOException, ExportException;
 
     protected String getFileName() {
         return "sheet" + id + Const.Suffix.XML;
@@ -1275,14 +1286,8 @@ public abstract class Sheet {
             Files.move(sheet.toPath(), temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
 
-        FileChannel inChannel = null, outChannel = null;
-        FileInputStream fis = null;
-        FileOutputStream fos = null;
-        try {
-            fis = new FileInputStream(temp);
-            fos = new FileOutputStream(sheet);
-            inChannel = fis.getChannel();
-            outChannel = fos.getChannel();
+        try (FileChannel inChannel = new FileInputStream(temp).getChannel();
+             FileChannel outChannel = new FileOutputStream(sheet).getChannel()) {
 
             inChannel.transferTo(0, headInfoLen, outChannel);
             ByteBuffer buffer = ByteBuffer.allocate(baseInfoLen);
@@ -1376,36 +1381,8 @@ public abstract class Sheet {
             inChannel.transferTo(start, inChannel.size() - start, outChannel);
 
         } catch (IOException e) {
-            logger.error(e);
+            throw e;
         } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (inChannel != null) {
-                try {
-                    inChannel.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (outChannel != null) {
-                try {
-                    outChannel.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
             boolean delete = temp.delete();
             if (!delete) {
                 logger.error("Delete temp file failed.");
@@ -1416,10 +1393,10 @@ public abstract class Sheet {
     private ThreadLocal<char[][]> cache = ThreadLocal.withInitial(() -> new char[][] {{65}, {65, 65}, {65, 65, 65}});
     protected char[] int2Col(int n) {
         char[][] cache_col = cache.get();
-        char[] c;
+        char[] c; char A = 'A';
         if (n <= 26) {
             c = cache_col[0];
-            c[0] = (char) (n - 1 + 'A');
+            c[0] = (char) (n - 1 + A);
         } else if (n <= 702) {
             int t = n / 26, w = n % 26;
             if (w == 0) {
@@ -1427,8 +1404,8 @@ public abstract class Sheet {
                 w = 26;
             }
             c = cache_col[1];
-            c[0] = (char) (t - 1 + 'A');
-            c[1] = (char) (w - 1 + 'A');
+            c[0] = (char) (t - 1 + A);
+            c[1] = (char) (w - 1 + A);
         } else {
             int t = n / 26, tt = t / 26, w = n % 26;
             if (w == 0) {
@@ -1436,9 +1413,9 @@ public abstract class Sheet {
                 w = 26;
             }
             c = cache_col[2];
-            c[0] = (char) (tt - 1 + 'A');
-            c[1] = (char) (t - 27 + 'A');
-            c[2] = (char) (w - 1 + 'A');
+            c[0] = (char) (tt - 1 + A);
+            c[1] = (char) (t - 27 + A);
+            c[2] = (char) (w - 1 + A);
         }
         return c;
     }
