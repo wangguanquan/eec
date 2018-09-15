@@ -29,12 +29,12 @@ public class ListObjectSheet<T> extends Sheet {
         super(workbook);
     }
 
-    public ListObjectSheet(Workbook workbook, String name, HeadColumn[] headColumns) {
-        super(workbook, name, headColumns);
+    public ListObjectSheet(Workbook workbook, String name, Column[] columns) {
+        super(workbook, name, columns);
     }
 
-    public ListObjectSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
-        super(workbook, name, waterMark, headColumns);
+    public ListObjectSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
+        super(workbook, name, waterMark, columns);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class ListObjectSheet<T> extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for (HeadColumn hc : headColumns) {
+        for (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;
@@ -105,9 +105,9 @@ public class ListObjectSheet<T> extends Sheet {
     private static final String[] exclude = {"serialVersionUID", "this$0"};
     protected void init() throws IOException {
         Object o = workbook.getFirst(data);
-        if (headColumns == null || headColumns.length == 0) {
+        if (columns == null || columns.length == 0) {
             Field[] fields = o.getClass().getDeclaredFields();
-            List<HeadColumn> list = new ArrayList<>(fields.length);
+            List<Column> list = new ArrayList<>(fields.length);
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 String gs = field.toGenericString();
@@ -117,18 +117,18 @@ public class ListObjectSheet<T> extends Sheet {
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
                 if (dn != null && StringUtil.isNotEmpty(dn.value())) {
-                    list.add(new HeadColumn(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
+                    list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
                 } else {
-                    list.add(new HeadColumn(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
+                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
                 }
             }
-            headColumns = new HeadColumn[list.size()];
-            list.toArray(headColumns);
-            for (int i = 0; i < headColumns.length; i++) {
-                headColumns[i].setSst(workbook.getStyles());
+            columns = new Column[list.size()];
+            list.toArray(columns);
+            for (int i = 0; i < columns.length; i++) {
+                columns[i].setSst(workbook.getStyles());
             }
         } else {
-            for (HeadColumn hc : headColumns) {
+            for (Column hc : columns) {
                 try {
                     if (hc.getClazz() == null) {
                         Field field = o.getClass().getDeclaredField(hc.getKey());
@@ -163,7 +163,7 @@ public class ListObjectSheet<T> extends Sheet {
             return;
         }
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -174,7 +174,7 @@ public class ListObjectSheet<T> extends Sheet {
         Object e;
         Class<?> clazz = o.getClass();
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
             try {
                 field = clazz.getDeclaredField(hc.getKey());
                 field.setAccessible(true);
@@ -245,7 +245,7 @@ public class ListObjectSheet<T> extends Sheet {
         }
         // Row number
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -256,7 +256,7 @@ public class ListObjectSheet<T> extends Sheet {
         Object e;
         Class<?> clazz = o.getClass();
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
             try {
                 field = clazz.getDeclaredField(hc.getKey());
                 field.setAccessible(true);

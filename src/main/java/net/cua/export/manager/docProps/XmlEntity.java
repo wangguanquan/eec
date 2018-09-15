@@ -115,9 +115,9 @@ public class XmlEntity {
                             doc.add(ans);
                             for (int i = 0, len; i < names.length; i++) {
                                 if (values[i].charAt(0) == '#' && values[i].charAt(len = values[i].length() - 1) == '#') {
-                                    Method m = oo.getClass().getMethod(values[i].substring(1, len), null);
+                                    Method m = oo.getClass().getMethod(values[i].substring(1, len));
                                     m.setAccessible(true);
-                                    Object vo = m.invoke(oo, null);
+                                    Object vo = m.invoke(oo);
                                     element.addAttribute(QName.get(names[i], ans), vo.toString());
                                 } else {
                                     element.addAttribute(QName.get(names[i], ans), values[i]);
@@ -126,9 +126,9 @@ public class XmlEntity {
                         } else {
                             for (int i = 0, len; i < names.length; i++) {
                                 if (values[i].charAt(0) == '#' && values[i].charAt(len = values[i].length() - 1) == '#') {
-                                    Method m = oo.getClass().getMethod(values[i].substring(1, len), null);
+                                    Method m = oo.getClass().getMethod(values[i].substring(1, len));
                                     m.setAccessible(true);
-                                    Object vo = m.invoke(oo, null);
+                                    Object vo = m.invoke(oo);
                                     element.addAttribute(names[i], vo.toString());
                                 } else {
                                     element.addAttribute(names[i], values[i]);
@@ -170,7 +170,7 @@ public class XmlEntity {
                             doc.add(ans);
                             for (int i = 0, len; i < names.length; i++) {
                                 if (values[i].charAt(0) == '#' && values[i].charAt(len = values[i].length() - 1) == '#') {
-                                    Object vo = oo.getClass().getMethod(values[i].substring(1, len), null).invoke(oo, null);
+                                    Object vo = oo.getClass().getMethod(values[i].substring(1, len)).invoke(oo);
                                     element.addAttribute(QName.get(names[i], ans), vo.toString());
                                 } else {
                                     element.addAttribute(QName.get(names[i], ans), values[i]);
@@ -271,9 +271,9 @@ public class XmlEntity {
         }
     }
 
-    private boolean isDeclarClass(Class clazz) {
-        Class[] declareClasses = getClass().getDeclaredClasses();
-        for (Class c : declareClasses) {
+    private boolean isDeclarClass(Class<?> clazz) {
+        Class<?>[] declareClasses = getClass().getDeclaredClasses();
+        for (Class<?> c : declareClasses) {
             if (c == clazz) {
                 return true;
             }

@@ -28,16 +28,16 @@ public class ResultSetSheet extends Sheet {
         super(workbook);
     }
 
-    public ResultSetSheet(Workbook workbook, String name, HeadColumn[] headColumns) {
-        super(workbook, name, headColumns);
+    public ResultSetSheet(Workbook workbook, String name, Column[] columns) {
+        super(workbook, name, columns);
     }
 
-    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
-        super(workbook, name, waterMark, headColumns);
+    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
+        super(workbook, name, waterMark, columns);
     }
 
-    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns, ResultSet rs, RelManager relManager) {
-        super(workbook, name, waterMark, headColumns);
+    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns, ResultSet rs, RelManager relManager) {
+        super(workbook, name, waterMark, columns);
         this.rs = rs;
         this.relManager = relManager.clone();
     }
@@ -72,9 +72,9 @@ public class ResultSetSheet extends Sheet {
         String name = getFileName();
         logger.info(getName() + " | " + name);
 
-        for (int i = 0; i < headColumns.length; i++) {
-            if (StringUtil.isEmpty(headColumns[i].getName())) {
-                headColumns[i].setName(String.valueOf(i));
+        for (int i = 0; i < columns.length; i++) {
+            if (StringUtil.isEmpty(columns[i].getName())) {
+                columns[i].setName(String.valueOf(i));
             }
         }
 
@@ -133,7 +133,7 @@ public class ResultSetSheet extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for  (HeadColumn hc : headColumns) {
+        for  (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;
@@ -167,7 +167,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     public ResultSetSheet clone() {
-        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, headColumns, rs, relManager).setCopySheet(true);
+        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns, rs, relManager).setCopySheet(true);
         if (getAutoSize() == 1) {
             rss.autoSize();
         }

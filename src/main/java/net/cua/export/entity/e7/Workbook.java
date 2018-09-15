@@ -128,23 +128,17 @@ public class Workbook {
     }
 
     public Workbook addSheet(Sheet sheet) {
-        int _size = size;
-        if (_size > sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + 1);
-        }
-        sheets[_size] = sheet;
-        size++;
+        ensureCapacityInternal();
+        sheets[size++] = sheet;
         return this;
     }
 
-    public Workbook addSheet(String name, List<?> data, Sheet.HeadColumn ... headColumns) {
+    public Workbook addSheet(String name, List<?> data, Sheet.Column ... columns) {
         int _size = size;
         Object o;
         if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
-            if (_size > sheets.length) {
-                sheets = Arrays.copyOf(sheets, _size + 1);
-            }
-            sheets[_size] = new EmptySheet(this, name, headColumns);
+            ensureCapacityInternal();
+            sheets[_size] = new EmptySheet(this, name, columns);
             return this;
         }
 
@@ -160,9 +154,9 @@ public class Workbook {
             Sheet sheet;
             List<?> subList = data.subList(i * limit, (n = (i + 1) * limit) < len ? n : len);
             if (o instanceof Map) {
-                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, headColumns).setData((List<Map<String, ?>>) subList);
+                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData((List<Map<String, ?>>) subList);
             } else {
-                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, headColumns).setData(subList);
+                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData(subList);
             }
             sheets[_size + i] = sheet;
         }
@@ -180,62 +174,36 @@ public class Workbook {
         return first;
     }
 
-    public Workbook addSheet(String name, ResultSet rs, Sheet.HeadColumn ... headColumns) {
-        int _size = size;
-        if (_size > sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + 1);
-        }
-        ResultSetSheet sheet = new ResultSetSheet(this, name, headColumns);
+    public Workbook addSheet(String name, ResultSet rs, Sheet.Column ... columns) {
+        ensureCapacityInternal();
+        ResultSetSheet sheet = new ResultSetSheet(this, name, columns);
         sheet.setRs(rs);
-        sheets[_size] = sheet;
-        size++;
+        sheets[size++] = sheet;
         return this;
     }
 
-    public Workbook addSheet(String name, String sql, Sheet.HeadColumn ... headColumns) {
-        int _size = size;
-        if (_size >= sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + 1);
-        }
-        StatementSheet sheet = new StatementSheet(this, name, headColumns);
-        PreparedStatement ps = null;
-        try {
-            ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
+        ensureCapacityInternal();
+        StatementSheet sheet = new StatementSheet(this, name, columns);
+        // TODO 提前分页
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         sheet.setPs(ps);
-        sheets[_size] = sheet;
-        size++;
+        sheets[size++] = sheet;
         return this;
     }
 
-    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.HeadColumn ... headColumns) {
-        int _size = size;
-        if (_size >= sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + 1);
-        }
-        StatementSheet sheet = new StatementSheet(this, name, headColumns);
-        PreparedStatement ps = null;
-        try {
-            ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            pp.build(ps);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+        ensureCapacityInternal();
+        StatementSheet sheet = new StatementSheet(this, name, columns);
+        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        pp.build(ps);
         sheet.setPs(ps);
-        sheets[_size] = sheet;
-
-        size++;
+        sheets[size++] = sheet;
         return this;
     }
 
     public Workbook insertSheet(int index, Sheet sheet) {
         int _size = size;
-        if (_size >= sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + 1);
-        }
-
         if (sheets[index] != null) {
             for ( ; _size > index; _size--) {
                 sheets[_size] = sheets[_size - 1];
@@ -277,6 +245,12 @@ public class Workbook {
             }
         }
         return null;
+    }
+
+    private void ensureCapacityInternal() {
+        if (size >= sheets.length) {
+            sheets = Arrays.copyOf(sheets, size + 1);
+        }
     }
 
     public void writeXML(Path root) throws IOException, ExportException {
@@ -474,12 +448,13 @@ public class Workbook {
         FileUtil.writeToDisk(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
+    //////////////////////////////////////////////////////
     protected Path createTemp() throws IOException, ExportException {
         Sheet[] sheets = getSheets();
         int n;
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
-            if ((n = sheet.getHeadColumns().length) > Const.Limit.MAX_COLUMNS_ON_SHEET) {
+            if ((n = sheet.getColumns().length) > Const.Limit.MAX_COLUMNS_ON_SHEET) {
                 throw new TooManyColumnsException(n);
             }
             if (sheet.getAutoSize() == 0) {

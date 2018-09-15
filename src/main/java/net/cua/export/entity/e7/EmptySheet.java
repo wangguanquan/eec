@@ -15,12 +15,12 @@ import java.nio.file.Path;
  * Created by guanquan.wang at 2018-01-29 16:05
  */
 public class EmptySheet extends Sheet {
-    public EmptySheet(Workbook workbook, String name, HeadColumn ... headColumns) {
-        super(workbook, name, headColumns);
+    public EmptySheet(Workbook workbook, String name, Column ... columns) {
+        super(workbook, name, columns);
     }
 
-    public EmptySheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn ... headColumns) {
-        super(workbook, name, waterMark, headColumns);
+    public EmptySheet(Workbook workbook, String name, WaterMark waterMark, Column ... columns) {
+        super(workbook, name, waterMark, columns);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class EmptySheet extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for  (HeadColumn hc : headColumns) {
+        for  (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;

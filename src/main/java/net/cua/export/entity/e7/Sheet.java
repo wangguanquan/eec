@@ -40,7 +40,7 @@ public abstract class Sheet {
     protected Workbook workbook;
 
     protected String name;
-    protected HeadColumn[] headColumns;
+    protected Column[] columns;
     protected WaterMark waterMark;
     protected RelManager relManager;
     protected int id;
@@ -64,34 +64,34 @@ public abstract class Sheet {
         this.workbook = workbook;
         relManager = new RelManager();
     }
-    public Sheet(Workbook workbook, String name, final HeadColumn[] headColumns) {
+    public Sheet(Workbook workbook, String name, final Column[] columns) {
         this.workbook = workbook;
         this.name = name;
-        this.headColumns = headColumns;
-        for (int i = 0; i < headColumns.length; i++) {
-            headColumns[i].sst = workbook.getStyles();
+        this.columns = columns;
+        for (int i = 0; i < columns.length; i++) {
+            columns[i].sst = workbook.getStyles();
         }
         relManager = new RelManager();
     }
 
-    public Sheet(Workbook workbook, String name, WaterMark waterMark, final HeadColumn[] headColumns) {
+    public Sheet(Workbook workbook, String name, WaterMark waterMark, final Column[] columns) {
         this.workbook = workbook;
         this.name = name;
-        this.headColumns = headColumns;
-        for (int i = 0; i < headColumns.length; i++) {
-            headColumns[i].sst = workbook.getStyles();
+        this.columns = columns;
+        for (int i = 0; i < columns.length; i++) {
+            columns[i].sst = workbook.getStyles();
         }
         this.waterMark = waterMark;
         relManager = new RelManager();
     }
 
-    public static class HeadColumn {
+    public static class Column {
         public static final int TYPE_NORMAL = 0
                 , TYPE_PARENTAGE = 1 // 百分比
                 , TYPE_RMB = 2; // 人民币
         private String key; // Map的主键,object的属性名
         private String name; // 列名
-        private Class clazz;     // 列类型
+        private Class<?> clazz;     // 列类型
         private boolean share; // 字符串是否共享
         private int type; // 0: 正常显示 1:显示百分比 2:显示人民币
         private IntConversionProcessor processor;
@@ -101,16 +101,18 @@ public abstract class Sheet {
         private Object o;
         private Styles sst;
 
-        public void setO(Object o) {
+        public Column setO(Object o) {
             this.o = o;
+            return this;
         }
 
         public String getKey() {
             return key;
         }
 
-        public void setKey(String key) {
+        public Column setKey(String key) {
             this.key = key;
+            return this;
         }
 
         public IntConversionProcessor getProcessor() {
@@ -128,66 +130,66 @@ public abstract class Sheet {
         protected void setSst(Styles styles) {
             this.sst = styles;
         }
-        public HeadColumn() {}
-        public HeadColumn(String name, Class clazz) {
+        public Column() {}
+        public Column(String name, Class<?> clazz) {
             this(name, clazz, false);
         }
 
-        public HeadColumn(String name, String key) {
+        public Column(String name, String key) {
             this(name, key, false);
         }
-        public HeadColumn(String name, String key, Class<?> clazz) {
+        public Column(String name, String key, Class<?> clazz) {
             this(name, key, false);
             this.clazz = clazz;
         }
-        public HeadColumn(String name, Class clazz, IntConversionProcessor processor) {
+        public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
             this(name, clazz, processor, false);
         }
-        public HeadColumn(String name, String key, IntConversionProcessor processor) {
+        public Column(String name, String key, IntConversionProcessor processor) {
             this(name, key, processor, false);
         }
 
-        public HeadColumn(String name, Class clazz, boolean share) {
+        public Column(String name, Class<?> clazz, boolean share) {
             this.name = name;
             this.clazz = clazz;
             this.share = share;
         }
 
-        public HeadColumn(String name, String key, boolean share) {
+        public Column(String name, String key, boolean share) {
             this.name = name;
             this.key = key;
             this.share = share;
         }
 
-        public HeadColumn(String name, Class clazz, IntConversionProcessor processor, boolean share) {
+        public Column(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
             this(name, clazz, share);
             this.processor = processor;
         }
 
-        public HeadColumn(String name, String key, IntConversionProcessor processor, boolean share) {
+        public Column(String name, String key, IntConversionProcessor processor, boolean share) {
             this(name, key, share);
             this.processor = processor;
         }
 
-        public HeadColumn(String name, Class clazz, int cellStyle) {
+        public Column(String name, Class<?> clazz, int cellStyle) {
             this(name, clazz, cellStyle, false);
         }
 
-        public HeadColumn(String name, String key, int cellStyle) {
+        public Column(String name, String key, int cellStyle) {
             this(name, key, cellStyle, false);
         }
 
-        public HeadColumn(String name, Class clazz, int cellStyle, boolean share) {
+        public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
             this(name, clazz, share);
             this.cellStyle = cellStyle;
         }
 
-        public HeadColumn(String name, String key, int cellStyle, boolean share) {
+        public Column(String name, String key, int cellStyle, boolean share) {
             this(name, key, share);
             this.cellStyle = cellStyle;
         }
 
-        public HeadColumn setWidth(double width) {
+        public Column setWidth(double width) {
             if (width < 0.00000001) {
                 throw new RuntimeException("Width " + width + " less than 0.");
             }
@@ -199,7 +201,7 @@ public abstract class Sheet {
             return share;
         }
 
-        public HeadColumn setType(int type) {
+        public Column setType(int type) {
             this.type = type;
             return this;
         }
@@ -208,26 +210,26 @@ public abstract class Sheet {
             return name;
         }
 
-        public HeadColumn setName(String name) {
+        public Column setName(String name) {
             this.name = name;
             return this;
         }
 
-        public Class getClazz() {
+        public Class<?> getClazz() {
             return clazz;
         }
 
-        public HeadColumn setClazz(Class clazz) {
+        public Column setClazz(Class<?> clazz) {
             this.clazz = clazz;
             return this;
         }
 
-        public HeadColumn setProcessor(IntConversionProcessor processor) {
+        public Column setProcessor(IntConversionProcessor processor) {
             this.processor = processor;
             return this;
         }
 
-        public HeadColumn setStyleProcessor(StyleProcessor styleProcessor) {
+        public Column setStyleProcessor(StyleProcessor styleProcessor) {
             this.styleProcessor = styleProcessor;
             return this;
         }
@@ -236,7 +238,7 @@ public abstract class Sheet {
             return width;
         }
 
-        public HeadColumn setCellStyle(int cellStyle) {
+        public Column setCellStyle(int cellStyle) {
             this.cellStyle = cellStyle;
             return this;
         }
@@ -259,7 +261,7 @@ public abstract class Sheet {
             return horizontal;
         }
 
-        public HeadColumn setCellStyle(Font font) {
+        public Column setCellStyle(Font font) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | Verticals.CENTER
@@ -267,7 +269,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, int horizontal) {
+        public Column setCellStyle(Font font, int horizontal) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | Verticals.CENTER
@@ -275,7 +277,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, Border border) {
+        public Column setCellStyle(Font font, Border border) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | (border != null ? sst.addBorder(border) : 0)
@@ -284,7 +286,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, Border border, int horizontal) {
+        public Column setCellStyle(Font font, Border border, int horizontal) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | (border != null ? sst.addBorder(border) : 0)
@@ -293,7 +295,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, Fill fill, Border border) {
+        public Column setCellStyle(Font font, Fill fill, Border border) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | (fill != null ? sst.addFill(fill) : 0)
@@ -303,7 +305,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, Fill fill, Border border, int horizontal) {
+        public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
             this.cellStyle =  sst.of(
                     (font != null ? sst.addFont(font) : 0)
                             | (fill != null ? sst.addFill(fill) : 0)
@@ -313,7 +315,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
+        public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
             this.cellStyle =  sst.of(
                             (font != null ? sst.addFont(font) : 0)
                             | (fill != null ? sst.addFill(fill) : 0)
@@ -323,7 +325,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
+        public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
             this.cellStyle =  sst.of(
                     (numFmt != null ? sst.addNumFmt(numFmt) : 0)
                             | (font != null ? sst.addFont(font) : 0)
@@ -334,7 +336,7 @@ public abstract class Sheet {
             return this;
         }
 
-        public HeadColumn setShare(boolean share) {
+        public Column setShare(boolean share) {
             this.share = share;
             return this;
         }
@@ -397,19 +399,22 @@ public abstract class Sheet {
         }
     }
 
-    public void autoSize() {
+    public Sheet autoSize() {
         this.autoSize = 1;
+        return this;
     }
 
-    public void fixSize() {
+    public Sheet fixSize() {
         this.autoSize = 2;
+        return this;
     }
 
-    public void fixSize(double width) {
+    public Sheet fixSize(double width) {
         this.autoSize = 2;
-        for (HeadColumn hc : headColumns) {
+        for (Column hc : columns) {
             hc.setWidth(width);
         }
+        return this;
     }
 
     public int getAutoSize() {
@@ -420,34 +425,36 @@ public abstract class Sheet {
         return name;
     }
 
-    public void setName(String name) {
+    public Sheet setName(String name) {
         this.name = name;
+        return this;
     }
 
-    public final HeadColumn[] getHeadColumns() {
-        return headColumns.clone();
+    public final Column[] getColumns() {
+        return columns;
     }
 
-    public void setHeadColumns(final HeadColumn[] headColumns) {
-        this.headColumns = headColumns.clone();
-        for (int i = 0; i < headColumns.length; i++) {
-            headColumns[i].sst = workbook.getStyles();
+    public Sheet setColumns(final Column[] columns) {
+        this.columns = columns.clone();
+        for (int i = 0; i < columns.length; i++) {
+            columns[i].sst = workbook.getStyles();
         }
+        return this;
     }
 
     public WaterMark getWaterMark() {
         return waterMark;
     }
 
-    public void setWaterMark(WaterMark waterMark) {
+    public Sheet setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
+        return this;
     }
 
     public boolean isHidden() {
         return hidden;
     }
     public Sheet hidden() {
-        // TODO sheet hidden
         this.hidden = true;
         return this;
     }
@@ -522,11 +529,11 @@ public abstract class Sheet {
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" customHeight=\"1\" ht=\"18.6\" spans=\"1:"); // spans 指定row开始和结束行
-        bw.writeInt(headColumns.length);
+        bw.writeInt(columns.length);
         bw.write("\">");
 
         int c = 1, defaultStyle = defaultHeadStyle();
-        for (HeadColumn hc : headColumns) {
+        for (Column hc : columns) {
             bw.write("<c r=\"");
             bw.write(int2Col(c++));
             bw.writeInt(r);
@@ -613,7 +620,7 @@ public abstract class Sheet {
     protected void writeRow(ResultSet rs, ExtBufferedWriter bw) throws IOException, SQLException {
         // Row number
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -621,7 +628,7 @@ public abstract class Sheet {
         bw.write("\">");
 
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
 
             // t n=numeric (default), s=string, b=boolean, str=function string
             // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
@@ -677,7 +684,7 @@ public abstract class Sheet {
      */
     protected void writeRowAutoSize(ResultSet rs, ExtBufferedWriter bw) throws IOException, SQLException {
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -685,7 +692,7 @@ public abstract class Sheet {
         bw.write("\">");
 
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
             // t n=numeric (default), s=string, b=boolean, str=function string
             // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
             if (hc.clazz == String.class) {
@@ -733,7 +740,7 @@ public abstract class Sheet {
         bw.write("</row>");
     }
 
-    protected int getStyleIndex(HeadColumn hc, Object o) {
+    protected int getStyleIndex(Column hc, Object o) {
         int style = hc.getCellStyle(), styleIndex = hc.sst.of(style);
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.sst);
@@ -747,7 +754,7 @@ public abstract class Sheet {
     }
 
     private void writeString(ExtBufferedWriter bw, String s, int column, Object o) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         int styleIndex = getStyleIndex(hc, o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
@@ -779,7 +786,7 @@ public abstract class Sheet {
     }
 
     protected void writeStringAutoSize(ExtBufferedWriter bw, String s, int column, Object o) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         int styleIndex = getStyleIndex(hc, o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
@@ -815,7 +822,7 @@ public abstract class Sheet {
     }
 
     protected void writeDate(ExtBufferedWriter bw, Date date, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -837,7 +844,7 @@ public abstract class Sheet {
     }
 
     protected void writeTimestamp(ExtBufferedWriter bw, Timestamp ts, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -855,7 +862,7 @@ public abstract class Sheet {
     }
 
     protected void writeInt(ExtBufferedWriter bw, int n, int column) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         if (hc.processor == null) {
             writeInt0(bw, n, column);
         } else {
@@ -929,7 +936,7 @@ public abstract class Sheet {
     }
 
     protected void writeIntAutoSize(ExtBufferedWriter bw, int n, int column) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         if (hc.processor == null) {
             writeInt0(bw, n, column);
         } else {
@@ -1004,7 +1011,7 @@ public abstract class Sheet {
     }
 
     protected void writeChar(ExtBufferedWriter bw, char c, int column) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         if (hc.processor == null) {
             writeChar0(bw, c, column);
         } else {
@@ -1081,7 +1088,7 @@ public abstract class Sheet {
     }
 
     protected void writeCharAutoSize(ExtBufferedWriter bw, char c, int column) throws IOException {
-        HeadColumn hc = headColumns[column];
+        Column hc = columns[column];
         if (hc.processor == null) {
             writeChar0(bw, c, column);
         } else {
@@ -1160,7 +1167,7 @@ public abstract class Sheet {
     }
 
     private void writeInt0(ExtBufferedWriter bw, int n, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1176,7 +1183,7 @@ public abstract class Sheet {
     }
 
     private void writeChar0(ExtBufferedWriter bw, char c, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1192,7 +1199,7 @@ public abstract class Sheet {
     }
 
     protected void writeLong(ExtBufferedWriter bw, long l, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1208,7 +1215,7 @@ public abstract class Sheet {
     }
 
     protected void writeDouble(ExtBufferedWriter bw, double d, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1224,7 +1231,7 @@ public abstract class Sheet {
     }
 
     protected void writeBoolean(ExtBufferedWriter bw, boolean bool, int column, Object o) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], o);
+        int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1236,7 +1243,7 @@ public abstract class Sheet {
     }
 
     protected void writeNull(ExtBufferedWriter bw, int column) throws IOException {
-        int styleIndex = getStyleIndex(headColumns[column], null);
+        int styleIndex = getStyleIndex(columns[column], null);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
         bw.writeInt(rows);
@@ -1252,7 +1259,7 @@ public abstract class Sheet {
     protected void writeEmptyRow(ExtBufferedWriter bw) throws IOException {
         // Row number
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -1261,7 +1268,7 @@ public abstract class Sheet {
 
         Styles styles = workbook.getStyles();
         for (int i = 1; i <= len; i++) {
-            HeadColumn hc = headColumns[i - 1];
+            Column hc = columns[i - 1];
             bw.write("<c r=\"");
             bw.write(int2Col(i));
             bw.writeInt(r);
@@ -1295,7 +1302,7 @@ public abstract class Sheet {
             buffer.compact();
             byte b;
             if ((b = buffer.get()) == '"') {
-                char[] chars = int2Col(headColumns.length);
+                char[] chars = int2Col(columns.length);
                 String s = ':' + new String(chars) + rows;
                 outChannel.write(ByteBuffer.wrap(s.getBytes(Const.UTF_8)));
             }
@@ -1307,7 +1314,7 @@ public abstract class Sheet {
             StringBuilder buf = new StringBuilder();
             buf.append("<cols>");
             int i = 0;
-            for (HeadColumn hc : headColumns) {
+            for (Column hc : columns) {
                 i++;
                 buf.append("<col customWidth=\"1\" width=\"");
                 if (hc.width > 0.0000001) {

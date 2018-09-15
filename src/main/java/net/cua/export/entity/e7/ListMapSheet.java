@@ -26,12 +26,12 @@ public class ListMapSheet extends Sheet {
         super(workbook);
     }
 
-    public ListMapSheet(Workbook workbook, String name, HeadColumn[] headColumns) {
-        super(workbook, name, headColumns);
+    public ListMapSheet(Workbook workbook, String name, Column[] columns) {
+        super(workbook, name, columns);
     }
 
-    public ListMapSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
-        super(workbook, name, waterMark, headColumns);
+    public ListMapSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
+        super(workbook, name, waterMark, columns);
     }
 
     @Override
@@ -55,8 +55,8 @@ public class ListMapSheet extends Sheet {
 //        logger.info(getName() + " | " + name);
 
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
-        for (int i = 0; i < headColumns.length; i++) {
-            HeadColumn hc = headColumns[i];
+        for (int i = 0; i < columns.length; i++) {
+            Column hc = columns[i];
             if (StringUtil.isEmpty(hc.getKey())) {
                 throw new IOException(getClass() + " 类别必须指定map的key。");
             }
@@ -90,7 +90,7 @@ public class ListMapSheet extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for (HeadColumn hc : headColumns) {
+        for (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;
@@ -119,7 +119,7 @@ public class ListMapSheet extends Sheet {
         }
         // 行番号
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -127,7 +127,7 @@ public class ListMapSheet extends Sheet {
         bw.write("\">");
 
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
             Object o = map.get(hc.getKey());
             if (o != null) {
                 // t n=numeric (default), s=string, b=boolean
@@ -186,7 +186,7 @@ public class ListMapSheet extends Sheet {
         }
         // Row number
         int r = ++rows;
-        final int len = headColumns.length;
+        final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
         bw.write("\" ht=\"16.5\" spans=\"1:");
@@ -194,7 +194,7 @@ public class ListMapSheet extends Sheet {
         bw.write("\">");
 
         for (int i = 0; i < len; i++) {
-            HeadColumn hc = headColumns[i];
+            Column hc = columns[i];
             Object o = map.get(hc.getKey());
             if (o != null) {
                 // t n=numeric (default), s=string, b=boolean

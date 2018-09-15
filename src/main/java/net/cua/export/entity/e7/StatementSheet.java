@@ -21,12 +21,12 @@ import java.sql.SQLException;
 public class StatementSheet extends Sheet {
     private PreparedStatement ps;
 
-    public StatementSheet(Workbook workbook, String name, HeadColumn[] headColumns) {
-        super(workbook, name, headColumns);
+    public StatementSheet(Workbook workbook, String name, Column[] columns) {
+        super(workbook, name, columns);
     }
 
-    public StatementSheet(Workbook workbook, String name, WaterMark waterMark, HeadColumn[] headColumns) {
-        super(workbook, name, waterMark, headColumns);
+    public StatementSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
+        super(workbook, name, waterMark, columns);
     }
 
     public void setPs(PreparedStatement ps) {
@@ -64,13 +64,13 @@ public class StatementSheet extends Sheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
-            for ( ; i < headColumns.length; i++) {
-                if (StringUtil.isEmpty(headColumns[i].getName())) {
-                    headColumns[i].setName(metaData.getColumnName(i));
+            for ( ; i < columns.length; i++) {
+                if (StringUtil.isEmpty(columns[i].getName())) {
+                    columns[i].setName(metaData.getColumnName(i));
                 }
             }
         } catch (SQLException e) {
-            headColumns[i].setName(String.valueOf(i));
+            columns[i].setName(String.valueOf(i));
         }
 
         File sheetFile = worksheets.resolve(name).toFile();
@@ -127,7 +127,7 @@ public class StatementSheet extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for  (HeadColumn hc : headColumns) {
+        for  (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;
@@ -142,7 +142,7 @@ public class StatementSheet extends Sheet {
         relManager.write(worksheets, name);
 
         if (sub == 1) {
-            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, headColumns, rs, relManager.clone());
+            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, columns, rs, relManager.clone());
             rss.setName(this.name + " (" + (sub) + ")");
             rss.setCopySheet(true);
             if (autoSize) rss.autoSize();

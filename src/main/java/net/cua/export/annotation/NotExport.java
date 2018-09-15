@@ -9,4 +9,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface NotExport {
+    /**
+     * describe why not export
+     * @return
+     */
+    String value() default "";
 }
