@@ -130,42 +130,37 @@ public class ListMapSheet extends Sheet {
             Column hc = columns[i];
             Object o = map.get(hc.getKey());
             if (o != null) {
+                Class<?> clazz = hc.getClazz();
                 // t n=numeric (default), s=string, b=boolean
-                if (hc.getClazz() == String.class) {
+                if (isString(clazz)) {
                     String s = o.toString();
                     writeStringAutoSize(bw, s, i);
                 }
-                else if (hc.getClazz() == java.util.Date.class
-                        || hc.getClazz() == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     java.sql.Date date = (Date) o;
                     writeDate(bw, date, i);
                 }
-                else if (hc.getClazz() == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     Timestamp ts = (Timestamp) o;
                     writeTimestamp(bw, ts, i);
                 }
-                else if (hc.getClazz() == int.class || hc.getClazz() == Integer.class
-                        || hc.getClazz() == byte.class || hc.getClazz() == Byte.class
-                        || hc.getClazz() == short.class || hc.getClazz() == Short.class
-                        ) {
-                    int n = ((Integer) o).intValue();
-                    writeIntAutoSize(bw, n, i);
-                }
-                else if (hc.getClazz() == char.class || hc.getClazz() == Character.class) {
+                else if (isChar(clazz)) {
                     char c = ((Character) o).charValue();
                     writeCharAutoSize(bw, c, i);
                 }
-                else if (hc.getClazz() == long.class || hc.getClazz() == Long.class) {
+                else if (isInt(clazz)) {
+                    int n = ((Integer) o).intValue();
+                    writeIntAutoSize(bw, n, i);
+                }
+                else if (isLong(clazz)) {
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, i);
                 }
-                else if (hc.getClazz() == double.class || hc.getClazz() == Double.class
-                        || hc.getClazz() == float.class || hc.getClazz() == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     double d = ((Double) o).doubleValue();
                     writeDouble(bw, d, i);
                 }
-                else if (hc.getClazz() == boolean.class || hc.getClazz() == Boolean.class) {
+                else if (isBool(clazz)) {
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, i);
                 }
@@ -197,42 +192,37 @@ public class ListMapSheet extends Sheet {
             Column hc = columns[i];
             Object o = map.get(hc.getKey());
             if (o != null) {
+                Class<?> clazz = hc.getClazz();
                 // t n=numeric (default), s=string, b=boolean
-                if (hc.getClazz() == String.class) {
+                if (isString(clazz)) {
                     String s = o.toString();
                     writeString(bw, s, i);
                 }
-                else if (hc.getClazz() == java.util.Date.class
-                        || hc.getClazz() == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     java.sql.Date date = (Date) o;
                     writeDate(bw, date, i);
                 }
-                else if (hc.getClazz() == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     Timestamp ts = (Timestamp) o;
                     writeTimestamp(bw, ts, i);
                 }
-                else if (hc.getClazz() == int.class || hc.getClazz() == Integer.class
-                        || hc.getClazz() == byte.class || hc.getClazz() == Byte.class
-                        || hc.getClazz() == short.class || hc.getClazz() == Short.class
-                        ) {
-                    int n = ((Integer) o).intValue();
-                    writeInt(bw, n, i);
-                }
-                else if (hc.getClazz() == char.class || hc.getClazz() == Character.class) {
+                else if (isChar(clazz)) {
                     char c = ((Character) o).charValue();
                     writeChar(bw, c, i);
                 }
-                else if (hc.getClazz() == long.class || hc.getClazz() == Long.class) {
+                else if (isInt(clazz)) {
+                    int n = ((Integer) o).intValue();
+                    writeInt(bw, n, i);
+                }
+                else if (isLong(clazz)) {
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, i);
                 }
-                else if (hc.getClazz() == double.class || hc.getClazz() == Double.class
-                        || hc.getClazz() == float.class || hc.getClazz() == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     double d = ((Double) o).doubleValue();
                     writeDouble(bw, d, i);
                 }
-                else if (hc.getClazz() == boolean.class || hc.getClazz() == Boolean.class) {
+                else if (isBool(clazz)) {
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, i);
                 }

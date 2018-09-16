@@ -65,6 +65,7 @@ public class Styles {
 
     /**
      * create general style
+     *
      * @return
      */
     public static final Styles create() {
@@ -91,7 +92,7 @@ public class Styles {
         cellStyleXfs.addElement("xf")   // General style
                 .addAttribute("borderId", "0")
                 .addAttribute("fillId", "0")
-                .addAttribute("fontId" ,"0")
+                .addAttribute("fontId", "0")
                 .addAttribute("numFmtId", "0")
                 .addElement("alignment")
                 .addAttribute("vertical", "center");
@@ -136,6 +137,7 @@ public class Styles {
 
     /**
      * add number format
+     *
      * @param numFmt
      * @return
      */
@@ -173,6 +175,7 @@ public class Styles {
 
     /**
      * add font
+     *
      * @param font
      * @return
      */
@@ -194,6 +197,7 @@ public class Styles {
 
     /**
      * add fill
+     *
      * @param fill
      * @return
      */
@@ -211,6 +215,7 @@ public class Styles {
 
     /**
      * add border
+     *
      * @param border
      * @return
      */
@@ -228,8 +233,8 @@ public class Styles {
 
     public static int[] unpack(int style) {
         int[] styles = new int[6];
-        styles[0] = style       >>>  INDEX_NUMBER_FORMAT;
-        styles[1] = style <<  8 >>> (INDEX_FONT + 8);
+        styles[0] = style >>> INDEX_NUMBER_FORMAT;
+        styles[1] = style << 8 >>> (INDEX_FONT + 8);
         styles[2] = style << 14 >>> (INDEX_FILL + 14);
         styles[3] = style << 20 >>> (INDEX_BORDER + 20);
         styles[4] = style << 26 >>> (INDEX_VERTICAL + 26);
@@ -238,7 +243,7 @@ public class Styles {
     }
 
     public static int pack(int[] styles) {
-        return styles[0]    << INDEX_NUMBER_FORMAT
+        return styles[0] << INDEX_NUMBER_FORMAT
                 | styles[1] << INDEX_FONT
                 | styles[2] << INDEX_FILL
                 | styles[3] << INDEX_BORDER
@@ -249,6 +254,7 @@ public class Styles {
 
     /**
      * add style in document
+     *
      * @param s style
      * @return style index in styles array.
      */
@@ -265,7 +271,7 @@ public class Styles {
         }
 
         String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
-                ,"applyNumberFormat","applyFont","applyFill","applyBorder","applyAlignment"};
+                , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
         int n = cellXfs.elements().size();
         Element newXf = cellXfs.addElement("xf");
         newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
@@ -295,7 +301,7 @@ public class Styles {
         if (styles[5] > 0) {
             subEle.addAttribute(attrNames[5], Horizontals.of(styles[5]));
         }
-        cellXfs.addAttribute("count", String.valueOf(count+1));
+        cellXfs.addAttribute("count", String.valueOf(count + 1));
         return n;
     }
 
@@ -356,18 +362,23 @@ public class Styles {
     public static int defaultCharBorderStyle() {
         return (1 << INDEX_BORDER) | Horizontals.CENTER_CONTINUOUS;
     }
+
     public static int defaultStringBorderStyle() {
         return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.LEFT;
     }
+
     public static int defaultIntBorderStyle() {
         return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
+
     public static int defaultDateBorderStyle() {
         return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
     }
+
     public static int defaultTimestampBorderStyle() {
         return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
     }
+
     public static int defaultDoubleBorderStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
@@ -376,19 +387,43 @@ public class Styles {
     public static int defaultCharStyle() {
         return Horizontals.CENTER_CONTINUOUS;
     }
+
     public static int defaultStringStyle() {
         return (1 << INDEX_FONT) | Horizontals.LEFT;
     }
+
     public static int defaultIntStyle() {
         return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
     }
+
     public static int defaultDateStyle() {
         return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
     }
+
     public static int defaultTimestampStyle() {
         return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
     }
+
     public static int defaultDoubleStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
+
+
+    ////////////////////////////////To object//////////////////////////////////
+    public NumFmt getNumFmt(int style) {
+        return numFmts.get(style >>> INDEX_NUMBER_FORMAT);
+    }
+    public Fill getFill(int style) {
+        return fills.get(style << 14 >>> (INDEX_FILL + 14));
+    }
+    public Font getFont(int style) {
+        return fonts.get(style << 8 >>> (INDEX_FONT + 8));
+    }
+    public Border getBorder(int style) {
+        return borders.get(style << 20 >>> (INDEX_BORDER + 20));
+    }
+    public int getVertical(int style) {
+        return style <<26>>>(INDEX_VERTICAL +26);
+    }
+
 }

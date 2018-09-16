@@ -32,6 +32,8 @@ import java.util.*;
 
 /**
  * https://poi.apache.org/encryption.html encrypted
+ * https://msdn.microsoft.com/library
+ * https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
@@ -74,32 +76,37 @@ public class Workbook {
         return name;
     }
 
-    public void setName(String name) {
+    public Workbook setName(String name) {
         this.name = name;
+        return this;
     }
 
     public final Sheet[] getSheets() {
         return Arrays.copyOf(sheets, size);
     }
 
-    public void setSheets(final Sheet[] sheets) {
+    public Workbook setSheets(final Sheet[] sheets) {
         this.sheets = sheets.clone();
+        return this;
     }
 
     public WaterMark getWaterMark() {
         return waterMark;
     }
 
-    public void setWaterMark(WaterMark waterMark) {
+    public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
+        return this;
     }
 
-    public void addRel(Relationship rel) {
+    public Workbook addRel(Relationship rel) {
         relManager.add(rel);
+        return this;
     }
 
-    public void setCon(Connection con) {
+    public Workbook setConnection(Connection con) {
         this.con = con;
+        return this;
     }
 
     public Workbook setAutoSize(boolean autoSize) {
@@ -119,12 +126,14 @@ public class Workbook {
         return styles;
     }
 
-    public void setCreator(String creator) {
+    public Workbook setCreator(String creator) {
         this.creator = creator;
+        return this;
     }
 
-    public void setCompany(String company) {
+    public Workbook setCompany(String company) {
         this.company = company;
+        return this;
     }
 
     public Workbook addSheet(Sheet sheet) {
@@ -491,8 +500,8 @@ public class Workbook {
             Path zipFile = ZipUtil.zip(root, compressRoot, root);
 
             // TODO Delete source files
-//        boolean delSelf = true;
-//        FileUtil.rm_rf(root.toFile(), delSelf);
+            boolean delSelf = true;
+            FileUtil.rm_rf(root.toFile(), delSelf);
             return zipFile;
         } catch (IOException | ExportException e) {
             // remove temp path
@@ -553,7 +562,7 @@ public class Workbook {
         if (!Files.exists(path)) {
             FileUtil.mkdir(path);
         }
-
+// TODO delete temp zip file
         Path zip = is == null ? createTemp() : template();
 
         reMarkPath(zip, path, getName());

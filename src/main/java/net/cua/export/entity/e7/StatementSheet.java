@@ -68,6 +68,7 @@ public class StatementSheet extends Sheet {
                 if (StringUtil.isEmpty(columns[i].getName())) {
                     columns[i].setName(metaData.getColumnName(i));
                 }
+                // TODO metaData.getColumnType()
             }
         } catch (SQLException e) {
             columns[i].setName(String.valueOf(i));
@@ -127,7 +128,7 @@ public class StatementSheet extends Sheet {
 
         // resize columns
         boolean resize = false;
-        for  (Column hc : columns) {
+        for (Column hc : columns) {
             if (hc.getWidth() > 0.000001) {
                 resize = true;
                 break;

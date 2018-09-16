@@ -10,7 +10,7 @@ import org.dom4j.Element;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -25,7 +25,7 @@ public class SharedStrings {
     private static final int MAX_CACHE_SIZE = 8192;
 
     SharedStrings() {
-        elements = new HashMap<>();
+        elements = new LinkedHashMap<>();
     }
 
     ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);

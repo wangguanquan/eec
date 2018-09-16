@@ -14,7 +14,7 @@ import java.util.Locale;
 /**
  * Created by guanquan.wang at 2018-02-12 10:11
  */
-public class DefaultNumFmt {
+public final class DefaultNumFmt {
     private static NumFmt[][] data;
 
     static {

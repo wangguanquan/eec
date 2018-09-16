@@ -131,56 +131,63 @@ public class Font {
         return size;
     }
 
-    public void setSize(int size) {
+    public Font setSize(int size) {
         this.size = size;
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Font setName(String name) {
         this.name = name;
+        return this;
     }
 
     public int getFamily() {
         return family;
     }
 
-    public void setFamily(int family) {
+    public Font setFamily(int family) {
         this.family = family;
+        return this;
     }
 
     public Color getColor() {
         return color;
     }
 
-    public void setColor(Color color) {
+    public Font setColor(Color color) {
         this.color = color;
+        return this;
     }
 
     public int getStyle() {
         return style;
     }
 
-    public void setStyle(int style) {
+    public Font setStyle(int style) {
         this.style = style;
+        return this;
     }
 
     public String getScheme() {
         return scheme;
     }
 
-    public void setScheme(String scheme) {
+    public Font setScheme(String scheme) {
         this.scheme = scheme;
+        return this;
     }
 
     public int getCharset() {
         return charset;
     }
 
-    public void setCharset(int charset) {
+    public Font setCharset(int charset) {
         this.charset = charset;
+        return this;
     }
 
     public Font italic() {

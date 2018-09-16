@@ -53,8 +53,6 @@ public class EmptySheet extends Sheet {
             // Write foot
             writeAfter(bw);
 
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             close();
         }

@@ -172,22 +172,22 @@ public class ListObjectSheet<T> extends Sheet {
 
         Field field;
         Object e;
-        Class<?> clazz = o.getClass();
+        Class<?> oclazz = o.getClass();
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
             try {
-                field = clazz.getDeclaredField(hc.getKey());
+                field = oclazz.getDeclaredField(hc.getKey());
                 field.setAccessible(true);
             } catch (NoSuchFieldException e1) {
                 throw new IOException(e1.getCause());
             }
+            Class<?> clazz = hc.getClazz();
             // t n=numeric (default), s=string, b=boolean
-            if (hc.getClazz() == String.class) {
+            if (isString(clazz)) {
                 String s = (e = field.get(o)) != null ? e.toString() : null;
                 writeStringAutoSize(bw, s, i);
             }
-            else if (hc.getClazz() == java.util.Date.class
-                    || hc.getClazz() == java.sql.Date.class) {
+            else if (isDate(clazz)) {
                 e = field.get(o);
                 if (e != null) {
                     java.sql.Date date = (java.sql.Date) e;
@@ -196,7 +196,7 @@ public class ListObjectSheet<T> extends Sheet {
                     writeNull(bw, i);
                 }
             }
-            else if (hc.getClazz() == java.sql.Timestamp.class) {
+            else if (isDateTime(clazz)) {
                 e = field.get(o);
                 if (e != null) {
                     Timestamp ts = (Timestamp) e;
@@ -205,28 +205,23 @@ public class ListObjectSheet<T> extends Sheet {
                     writeNull(bw, i);
                 }
             }
-            else if (hc.getClazz() == int.class || hc.getClazz() == Integer.class
-                    || hc.getClazz() == byte.class || hc.getClazz() == Byte.class
-                    || hc.getClazz() == short.class || hc.getClazz() == Short.class
-                    ) {
-                int n = field.getInt(o);
-                writeIntAutoSize(bw, n, i);
-            }
-            else if (hc.getClazz() == char.class || hc.getClazz() == Character.class) {
+            else if (isChar(clazz)) {
                 char c = field.getChar(o);
                 writeCharAutoSize(bw, c, i);
             }
-            else if (hc.getClazz() == long.class || hc.getClazz() == Long.class) {
+            else if (isInt(clazz)) {
+                int n = field.getInt(o);
+                writeIntAutoSize(bw, n, i);
+            }
+            else if (isLong(clazz)) {
                 long l = field.getLong(o);
                 writeLong(bw, l, i);
             }
-            else if (hc.getClazz() == double.class || hc.getClazz() == Double.class
-                    || hc.getClazz() == float.class || hc.getClazz() == Float.class
-                    ) {
+            else if (isFloat(clazz)) {
                 double d = field.getDouble(o);
                 writeDouble(bw, d, i);
             }
-            else if (hc.getClazz() == boolean.class || hc.getClazz() == Boolean.class) {
+            else if (isBool(clazz)) {
                 boolean bool = field.getBoolean(o);
                 writeBoolean(bw, bool, i);
             }
@@ -254,22 +249,22 @@ public class ListObjectSheet<T> extends Sheet {
 
         Field field;
         Object e;
-        Class<?> clazz = o.getClass();
+        Class<?> oclazz = o.getClass();
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
             try {
-                field = clazz.getDeclaredField(hc.getKey());
+                field = oclazz.getDeclaredField(hc.getKey());
                 field.setAccessible(true);
             } catch (NoSuchFieldException e1) {
                 throw new IOException(e1.getCause());
             }
+            Class<?> clazz = hc.getClazz();
             // t n=numeric (default), s=string, b=boolean
-            if (hc.getClazz() == String.class) {
+            if (isString(clazz)) {
                 String s = (e = field.get(o)) != null ? e.toString() : null;
                 writeString(bw, s, i);
             }
-            else if (hc.getClazz() == java.util.Date.class
-                    || hc.getClazz() == java.sql.Date.class) {
+            else if (isDate(clazz)) {
                 e = field.get(o);
                 if (e != null) {
                     java.sql.Date date = (java.sql.Date) e;
@@ -278,7 +273,7 @@ public class ListObjectSheet<T> extends Sheet {
                     writeNull(bw, i);
                 }
             }
-            else if (hc.getClazz() == java.sql.Timestamp.class) {
+            else if (isDateTime(clazz)) {
                 e = field.get(o);
                 if (e != null) {
                     Timestamp ts = (Timestamp) e;
@@ -287,28 +282,23 @@ public class ListObjectSheet<T> extends Sheet {
                     writeNull(bw, i);
                 }
             }
-            else if (hc.getClazz() == int.class || hc.getClazz() == Integer.class
-                    || hc.getClazz() == byte.class || hc.getClazz() == Byte.class
-                    || hc.getClazz() == short.class || hc.getClazz() == Short.class
-                    ) {
-                int n = field.getInt(o);
-                writeInt(bw, n, i);
-            }
-            else if (hc.getClazz() == char.class || hc.getClazz() == Character.class) {
+            else if (isChar(clazz)) {
                 char c = field.getChar(o);
                 writeChar(bw, c, i);
             }
-            else if (hc.getClazz() == long.class || hc.getClazz() == Long.class) {
+            else if (isInt(clazz)) {
+                int n = field.getInt(o);
+                writeInt(bw, n, i);
+            }
+            else if (isLong(clazz)) {
                 long l = field.getLong(o);
                 writeLong(bw, l, i);
             }
-            else if (hc.getClazz() == double.class || hc.getClazz() == Double.class
-                    || hc.getClazz() == float.class || hc.getClazz() == Float.class
-                    ) {
+            else if (isFloat(clazz)) {
                 double d = field.getDouble(o);
                 writeDouble(bw, d, i);
             }
-            else if (hc.getClazz() == boolean.class || hc.getClazz() == Boolean.class) {
+            else if (isBool(clazz)) {
                 boolean bool = field.getBoolean(o);
                 writeBoolean(bw, bool, i);
             }

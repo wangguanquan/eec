@@ -10,7 +10,6 @@ import net.cua.export.manager.RelManager;
 import net.cua.export.processor.IntConversionProcessor;
 import net.cua.export.processor.StyleProcessor;
 import net.cua.export.util.ExtBufferedWriter;
-import net.cua.export.util.FileUtil;
 import net.cua.export.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,8 +23,6 @@ import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 import static net.cua.export.util.DateUtil.toDateTimeValue;
@@ -69,7 +66,7 @@ public abstract class Sheet {
         this.name = name;
         this.columns = columns;
         for (int i = 0; i < columns.length; i++) {
-            columns[i].sst = workbook.getStyles();
+            columns[i].styles = workbook.getStyles();
         }
         relManager = new RelManager();
     }
@@ -79,7 +76,7 @@ public abstract class Sheet {
         this.name = name;
         this.columns = columns;
         for (int i = 0; i < columns.length; i++) {
-            columns[i].sst = workbook.getStyles();
+            columns[i].styles = workbook.getStyles();
         }
         this.waterMark = waterMark;
         relManager = new RelManager();
@@ -99,7 +96,7 @@ public abstract class Sheet {
         private int cellStyle = -1; // 未设定
         private double width;
         private Object o;
-        private Styles sst;
+        private Styles styles;
 
         public Column setO(Object o) {
             this.o = o;
@@ -128,7 +125,7 @@ public abstract class Sheet {
         }
 
         protected void setSst(Styles styles) {
-            this.sst = styles;
+            this.styles = styles;
         }
         public Column() {}
         public Column(String name, Class<?> clazz) {
@@ -239,22 +236,17 @@ public abstract class Sheet {
         }
 
         public Column setCellStyle(int cellStyle) {
+            // TODO when style not exists
             this.cellStyle = cellStyle;
             return this;
         }
 
-        int getDefaultHorizontal() {
+        int defaultHorizontal() {
             int horizontal;
-            if (clazz == int.class || clazz == Integer.class
-                    || clazz == short.class || clazz == Short.class
-                    || clazz == byte.class || clazz == Byte.class
-                    || clazz == long.class || clazz == Long.class
-                    ) {
-                horizontal = Horizontals.RIGHT;
-            } else if (clazz == Date.class || clazz == Timestamp.class
-                    || clazz == LocalDate.class || clazz == LocalDateTime.class
-                    || clazz == char.class || clazz == Character.class) {
+            if (isDate(clazz) || isDateTime(clazz) || isChar(clazz)) {
                 horizontal = Horizontals.CENTER;
+            } else if (isInt(clazz) || isLong(clazz)) {
+                horizontal = Horizontals.RIGHT;
             } else {
                 horizontal = Horizontals.LEFT;
             }
@@ -262,75 +254,75 @@ public abstract class Sheet {
         }
 
         public Column setCellStyle(Font font) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
                             | Verticals.CENTER
-                            | getDefaultHorizontal());
+                            | defaultHorizontal());
             return this;
         }
 
         public Column setCellStyle(Font font, int horizontal) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
                             | Verticals.CENTER
                             | horizontal);
             return this;
         }
 
         public Column setCellStyle(Font font, Border border) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | Verticals.CENTER
-                            | getDefaultHorizontal());
+                            | defaultHorizontal());
             return this;
         }
 
         public Column setCellStyle(Font font, Border border, int horizontal) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | Verticals.CENTER
                             | horizontal);
             return this;
         }
 
         public Column setCellStyle(Font font, Fill fill, Border border) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
-                            | (fill != null ? sst.addFill(fill) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
+                            | (fill != null ? styles.addFill(fill) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | Verticals.CENTER
-                            | getDefaultHorizontal());
+                            | defaultHorizontal());
             return this;
         }
 
         public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
-            this.cellStyle =  sst.of(
-                    (font != null ? sst.addFont(font) : 0)
-                            | (fill != null ? sst.addFill(fill) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                    (font != null ? styles.addFont(font) : 0)
+                            | (fill != null ? styles.addFill(fill) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | Verticals.CENTER
                             | horizontal);
             return this;
         }
 
         public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-            this.cellStyle =  sst.of(
-                            (font != null ? sst.addFont(font) : 0)
-                            | (fill != null ? sst.addFill(fill) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                            (font != null ? styles.addFont(font) : 0)
+                            | (fill != null ? styles.addFill(fill) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | vertical
                             | horizontal);
             return this;
         }
 
         public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-            this.cellStyle =  sst.of(
-                    (numFmt != null ? sst.addNumFmt(numFmt) : 0)
-                            | (font != null ? sst.addFont(font) : 0)
-                            | (fill != null ? sst.addFill(fill) : 0)
-                            | (border != null ? sst.addBorder(border) : 0)
+            this.cellStyle =  styles.of(
+                    (numFmt != null ? styles.addNumFmt(numFmt) : 0)
+                            | (font != null ? styles.addFont(font) : 0)
+                            | (fill != null ? styles.addFill(fill) : 0)
+                            | (border != null ? styles.addBorder(border) : 0)
                             | vertical
                             | horizontal);
             return this;
@@ -343,48 +335,39 @@ public abstract class Sheet {
 
         protected int getCellStyle(Class clazz) {
             int style;
-            if (clazz == String.class) {
+            if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
-            } else if (clazz == java.sql.Date.class
-                    || clazz == java.util.Date.class) {
+            } else if (isDate(clazz)) {
                 style = Styles.defaultDateBorderStyle();
-            } else if (clazz == java.sql.Timestamp.class) {
+            } else if (isDateTime(clazz)) {
                 style = Styles.defaultTimestampBorderStyle();
-            } else if (clazz == int.class || clazz == Integer.class
-                    || clazz == long.class || clazz == Long.class
-                    || clazz == byte.class || clazz == Byte.class
-                    || clazz == short.class || clazz == Short.class
-                    ) {
+            } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
                     case TYPE_PARENTAGE: // 百分比显示
-                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("0%_);[Red]\\(0%\\)"));
+                        style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("0%_);[Red]\\(0%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("¥0_);[Red]\\(¥0\\)"));
+                        style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("¥0_);[Red]\\(¥0\\)"));
                         break;
                     case TYPE_NORMAL: // 正常显示数字
                         break;
                     default:
                 }
-            } else if (clazz == double.class || clazz == Double.class
-                    || clazz == float.class || clazz == Float.class
-                    ) {
+            } else if (isFloat(clazz)) {
                 style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
                     case TYPE_PARENTAGE: // 百分比显示
-                        style= Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("0.00%_);[Red]\\(0.00%\\)"));
+                        style= Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("0.00%_);[Red]\\(0.00%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | sst.addNumFmt(new NumFmt("¥0.00_);[Red]\\(¥0.00\\)"));
+                        style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("¥0.00_);[Red]\\(¥0.00\\)"));
                         break;
                     case TYPE_NORMAL: // 正常显示数字
                         break;
                 default:
                 }
-            } else if (clazz == boolean.class || clazz == Boolean.class
-                    || clazz == char.class || clazz == Character.class
-                    ) {
+            } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else {
                 style = 0; // Auto-style
@@ -437,7 +420,7 @@ public abstract class Sheet {
     public Sheet setColumns(final Column[] columns) {
         this.columns = columns.clone();
         for (int i = 0; i < columns.length; i++) {
-            columns[i].sst = workbook.getStyles();
+            columns[i].styles = workbook.getStyles();
         }
         return this;
     }
@@ -463,16 +446,97 @@ public abstract class Sheet {
      */
     public abstract void close();
 
-    public void addRel(Relationship rel) {
-        relManager.add(rel);
-    }
-
     public abstract void writeTo(Path xl) throws IOException, ExportException;
+
+    public Sheet addRel(Relationship rel) {
+        relManager.add(rel);
+        return this;
+    }
 
     protected String getFileName() {
         return "sheet" + id + Const.Suffix.XML;
     }
 
+
+    public Sheet setHeadStyle(Font font, Fill fill, Border border) {
+        return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
+    }
+
+    public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
+        return setHeadStyle(null, font, fill, border, vertical, horizontal);
+    }
+
+    public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
+        Styles styles = workbook.getStyles();
+        headStyle = styles.of(
+                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
+                        | (font != null ? styles.addFont(font) : 0)
+                        | (fill != null ? styles.addFill(fill) : 0)
+                        | (border != null ? styles.addBorder(border) : 0)
+                        | vertical
+                        | horizontal);
+        return this;
+    }
+
+    public Sheet setHeadStyle(int style) {
+        headStyle = style;
+        return this;
+    }
+
+    private int defaultHeadStyle() {
+        if (headStyle == 0) {
+            Styles styles = workbook.getStyles();
+            headStyle = styles.of(styles.addFont(Font.parse("bold 11 微软雅黑 white"))
+                    | styles.addFill(Fill.parse("solid #666699"))
+                    | styles.addBorder(Border.parse("thin black"))
+                    | Verticals.CENTER
+                    | Horizontals.CENTER);
+        }
+        return headStyle;
+    }
+
+    static boolean isDate(Class<?> clazz) {
+        return clazz == java.util.Date.class
+                || clazz == java.sql.Date.class
+                || clazz == java.time.LocalDate.class;
+    }
+
+    static boolean isDateTime(Class<?> clazz) {
+        return clazz == java.sql.Timestamp.class
+                || clazz == java.time.LocalDateTime.class;
+    }
+
+    static boolean isInt(Class<?> clazz) {
+        return clazz == int.class || clazz == Integer.class
+                || clazz == char.class || clazz == Character.class
+                || clazz == byte.class || clazz == Byte.class
+                || clazz == short.class || clazz == Short.class;
+    }
+
+    static boolean isLong(Class<?> clazz) {
+        return clazz == long.class || clazz == Long.class;
+    }
+
+    static boolean isFloat(Class<?> clazz) {
+        return clazz == double.class || clazz == Double.class
+                || clazz == float.class || clazz == Float.class;
+    }
+
+    static boolean isBool(Class<?> clazz) {
+        return clazz == boolean.class || clazz == Boolean.class;
+    }
+
+    static boolean isString(Class<?> clazz) {
+        return clazz == String.class || clazz == CharSequence.class;
+    }
+
+    static boolean isChar(Class<?> clazz) {
+        return clazz == char.class || clazz == Character.class;
+    }
+
+    static boolean blockOrDefault(int style) {
+        return style == -1 || style == Styles.defaultIntBorderStyle();
+    }
     /**
      * 写worksheet头部
      * @param bw
@@ -513,7 +577,7 @@ public abstract class Sheet {
         buf.append("/></sheetViews>");
 
         // Default format
-        buf.append("<sheetFormatPr defaultRowHeight=\"13.5\" baseColWidth=\"");
+        buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" baseColWidth=\"");
         buf.append((int)width);
         buf.append("\"/>");
 
@@ -544,43 +608,6 @@ public abstract class Sheet {
             bw.write("</t></is></c>");
         }
         bw.write("</row>");
-    }
-
-    public Sheet setHeadStyle(Font font, Fill fill, Border border) {
-        return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
-    }
-
-    public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-        return setHeadStyle(null, font, fill, border, vertical, horizontal);
-    }
-
-    public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-        Styles styles = workbook.getStyles();
-        headStyle = styles.of(
-                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-                        | (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | vertical
-                        | horizontal);
-        return this;
-    }
-
-    public Sheet setHeadStyle(int style) {
-        headStyle = style;
-        return this;
-    }
-
-    private int defaultHeadStyle() {
-        if (headStyle == 0) {
-            Styles styles = workbook.getStyles();
-            headStyle = styles.of(styles.addFont(Font.parse("bold 11 微软雅黑 white"))
-                            | styles.addFill(Fill.parse("solid #666699"))
-                            | styles.addBorder(Border.parse("thin black"))
-                            | Verticals.CENTER
-                            | Horizontals.CENTER);
-        }
-        return headStyle;
     }
 
     /**
@@ -623,6 +650,7 @@ public abstract class Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
+        // default data row height 16.5
         bw.write("\" ht=\"16.5\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
@@ -632,37 +660,34 @@ public abstract class Sheet {
 
             // t n=numeric (default), s=string, b=boolean, str=function string
             // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
-            if (hc.clazz == String.class) {
+            if (isString(hc.clazz)) {
                 String s = rs.getString(i + 1);
                 writeString(bw, s, i);
             }
-            else if (hc.clazz == java.util.Date.class
-                    || hc.clazz == java.sql.Date.class) {
+            else if (isDate(hc.clazz)) {
                 java.sql.Date date = rs.getDate(i + 1);
                 writeDate(bw, date, i);
             }
-            else if (hc.clazz == java.sql.Timestamp.class) {
+            else if (isDateTime(hc.clazz)) {
                 Timestamp ts = rs.getTimestamp(i + 1);
                 writeTimestamp(bw, ts, i);
             }
-            else if (hc.clazz == int.class || hc.clazz == Integer.class
-                    || hc.clazz == char.class || hc.clazz == Character.class
-                    || hc.clazz == byte.class || hc.clazz == Byte.class
-                    || hc.clazz == short.class || hc.clazz == Short.class
-                    ) {
+//            else if (isChar(hc.clazz)) {
+//                char c = (char) rs.getInt(i + 1);
+//                writeChar(bw, c, i);
+//            }
+            else if (isInt(hc.clazz)) {
                 int n = rs.getInt(i + 1);
                 writeInt(bw, n, i);
             }
-            else if (hc.clazz == long.class || hc.clazz == Long.class) {
+            else if (isLong(hc.clazz)) {
                 long l = rs.getLong(i + 1);
                 writeLong(bw, l, i);
             }
-            else if (hc.clazz == double.class || hc.clazz == Double.class
-                    || hc.clazz == float.class || hc.clazz == Float.class
-                    ) {
+            else if (isFloat(hc.clazz)) {
                 double d = rs.getDouble(i + 1);
                 writeDouble(bw, d, i);
-            } else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+            } else if (isBool(hc.clazz)) {
                 boolean bool = rs.getBoolean(i + 1);
                 writeBoolean(bw, bool, i);
             } else {
@@ -695,37 +720,30 @@ public abstract class Sheet {
             Column hc = columns[i];
             // t n=numeric (default), s=string, b=boolean, str=function string
             // TODO function <f ca="1" or t="shared" ref="O10:O15" si="0" ... si="10"></f>
-            if (hc.clazz == String.class) {
+            if (isString(hc.clazz)) {
                 String s = rs.getString(i + 1);
                 writeStringAutoSize(bw, s, i);
             }
-            else if (hc.clazz == java.util.Date.class
-                    || hc.clazz == java.sql.Date.class) {
+            else if (isDate(hc.clazz)) {
                 java.sql.Date date = rs.getDate(i + 1);
                 writeDate(bw, date, i);
             }
-            else if (hc.clazz == java.sql.Timestamp.class) {
+            else if (isDateTime(hc.clazz)) {
                 Timestamp ts = rs.getTimestamp(i + 1);
                 writeTimestamp(bw, ts, i);
             }
-            else if (hc.clazz == int.class || hc.clazz == Integer.class
-                    || hc.clazz == char.class || hc.clazz == Character.class
-                    || hc.clazz == byte.class || hc.clazz == Byte.class
-                    || hc.clazz == short.class || hc.clazz == Short.class
-                    ) {
+            else if (isInt(hc.clazz)) {
                 int n = rs.getInt(i + 1);
                 writeIntAutoSize(bw, n, i);
             }
-            else if (hc.clazz == long.class || hc.clazz == Long.class) {
+            else if (isLong(hc.clazz)) {
                 long l = rs.getLong(i + 1);
                 writeLong(bw, l, i);
             }
-            else if (hc.clazz == double.class || hc.clazz == Double.class
-                    || hc.clazz == float.class || hc.clazz == Float.class
-                    ) {
+            else if (isFloat(hc.clazz)) {
                 double d = rs.getDouble(i + 1);
                 writeDouble(bw, d, i);
-            } else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+            } else if (isBool(hc.clazz)) {
                 boolean bool = rs.getBoolean(i + 1);
                 writeBoolean(bw, bool, i);
             } else {
@@ -741,10 +759,10 @@ public abstract class Sheet {
     }
 
     protected int getStyleIndex(Column hc, Object o) {
-        int style = hc.getCellStyle(), styleIndex = hc.sst.of(style);
+        int style = hc.getCellStyle(), styleIndex = hc.styles.of(style);
         if (hc.styleProcessor != null) {
-            style = hc.styleProcessor.build(o, style, hc.sst);
-            styleIndex = hc.sst.of(style);
+            style = hc.styleProcessor.build(o, style, hc.styles);
+            styleIndex = hc.styles.of(style);
         }
         return styleIndex;
     }
@@ -869,53 +887,47 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(n);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntBorderStyle();
-                if (clazz == String.class) {
+                boolean blockOrDefault = blockOrDefault(hc.cellStyle);
+                if (isString(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
                     }
                     writeString(bw, o.toString(), column, n);
                 }
-                else if (clazz == int.class || clazz == Integer.class
-                        || clazz == byte.class || clazz == Byte.class
-                        || clazz == short.class || clazz == Short.class
-                        ) {
-                    n = ((Integer) o).intValue();
-                    writeInt0(bw, n, column, n);
-                }
-                else if (clazz == char.class || clazz == Character.class) {
+                else if (isChar(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = Styles.defaultCharBorderStyle();
                     }
                     char c = ((Character) o).charValue();
                     writeChar0(bw, c, column, n);
                 }
-                else if (clazz == long.class || clazz == Long.class) {
+                else if (isInt(clazz)) {
+                    n = ((Integer) o).intValue();
+                    writeInt0(bw, n, column, n);
+                }
+                else if (isLong(clazz)) {
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, column, n);
                 }
-                else if (clazz == java.util.Date.class
-                        || clazz == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.util.Date.class);
                     }
                     writeDate(bw, (Date) o, column, n);
                 }
-                else if (clazz == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.sql.Timestamp.class);
                     }
                     writeTimestamp(bw, (Timestamp) o, column, n);
                 }
-                else if (hc.clazz == double.class || hc.clazz == Double.class
-                        || hc.clazz == float.class || hc.clazz == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(double.class);
                     }
                     writeDouble(bw, ((Double) o).doubleValue(), column, n);
                 }
-                else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+                else if (isBool(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(boolean.class);
                     }
@@ -943,54 +955,47 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(n);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultIntBorderStyle();
-                if (clazz == String.class) {
+                boolean blockOrDefault = blockOrDefault(hc.cellStyle);
+                if (isString(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
                     }
                     writeStringAutoSize(bw, o.toString(), column, n);
                 }
-                else if (clazz == int.class || clazz == Integer.class
-                        || clazz == char.class || clazz == Character.class
-                        || clazz == byte.class || clazz == Byte.class
-                        || clazz == short.class || clazz == Short.class
-                        ) {
-                    int nn = ((Integer) o).intValue();
-                    writeInt0(bw, nn, column, n);
-                }
-                else if (clazz == char.class || clazz == Character.class) {
+                else if (isChar(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = Styles.defaultCharBorderStyle();
                     }
                     char c = ((Character) o).charValue();
                     writeChar0(bw, c, column, n);
                 }
-                else if (clazz == long.class || clazz == Long.class) {
+                else if (isInt(clazz)) {
+                    int nn = ((Integer) o).intValue();
+                    writeInt0(bw, nn, column, n);
+                }
+                else if (isLong(clazz)) {
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, column, n);
                 }
-                else if (clazz == java.util.Date.class
-                        || clazz == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.util.Date.class);
                     }
                     writeDate(bw, (Date) o, column, n);
                 }
-                else if (clazz == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.sql.Timestamp.class);
                     }
                     writeTimestamp(bw, (Timestamp) o, column, n);
                 }
-                else if (hc.clazz == double.class || hc.clazz == Double.class
-                        || hc.clazz == float.class || hc.clazz == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(double.class);
                     }
                     writeDouble(bw, ((Double) o).doubleValue(), column, n);
                 }
-                else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+                else if (isBool(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(boolean.class);
                     }
@@ -1018,56 +1023,50 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(c);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharBorderStyle();
-                if (clazz == String.class) {
+                boolean blockOrDefault = blockOrDefault(hc.cellStyle);
+                if (isString(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
                     }
                     writeString(bw, o.toString(), column, c);
                 }
-                else if (clazz == int.class || clazz == Integer.class
-                        || clazz == byte.class || clazz == Byte.class
-                        || clazz == short.class || clazz == Short.class
-                        ) {
+                else if (isChar(clazz)) {
+                    char cc = ((Character) o).charValue();
+                    writeChar0(bw, cc, column, c);
+                }
+                else if (isInt(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(int.class);
                     }
                     int n = ((Integer) o).intValue();
                     writeInt0(bw, n, column, c);
                 }
-                else if (clazz == char.class || clazz == Character.class) {
-                    char cc = ((Character) o).charValue();
-                    writeChar0(bw, cc, column, c);
-                }
-                else if (clazz == long.class || clazz == Long.class) {
+                else if (isLong(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(long.class);
                     }
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, column, c);
                 }
-                else if (clazz == java.util.Date.class
-                        || clazz == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.util.Date.class);
                     }
                     writeDate(bw, (Date) o, column, c);
                 }
-                else if (clazz == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.sql.Timestamp.class);
                     }
                     writeTimestamp(bw, (Timestamp) o, column, c);
                 }
-                else if (hc.clazz == double.class || hc.clazz == Double.class
-                        || hc.clazz == float.class || hc.clazz == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(double.class);
                     }
                     writeDouble(bw, ((Double) o).doubleValue(), column, c);
                 }
-                else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+                else if (isBool(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(boolean.class);
                     }
@@ -1095,56 +1094,50 @@ public abstract class Sheet {
             Object o = hc.processor.conversion(c);
             if (o != null) {
                 Class<?> clazz = o.getClass();
-                boolean blockOrDefault = hc.cellStyle == -1 || hc.cellStyle == Styles.defaultCharBorderStyle();
-                if (clazz == String.class) {
+                boolean blockOrDefault = blockOrDefault(hc.cellStyle);
+                if (isString(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
                     }
                     writeStringAutoSize(bw, o.toString(), column);
                 }
-                else if (clazz == int.class || clazz == Integer.class
-                        || clazz == byte.class || clazz == Byte.class
-                        || clazz == short.class || clazz == Short.class
-                        ) {
+                else if (isChar(clazz)) {
+                    char cc = ((Character) o).charValue();
+                    writeChar0(bw, cc, column, c);
+                }
+                else if (isInt(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(int.class);
                     }
                     int n = ((Integer) o).intValue();
                     writeInt0(bw, n, column, c);
                 }
-                else if (clazz == char.class || clazz == Character.class) {
-                    char cc = ((Character) o).charValue();
-                    writeChar0(bw, cc, column, c);
-                }
-                else if (clazz == long.class || clazz == Long.class) {
+                else if (isLong(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(long.class);
                     }
                     long l = ((Long) o).longValue();
                     writeLong(bw, l, column);
                 }
-                else if (clazz == java.util.Date.class
-                        || clazz == java.sql.Date.class) {
+                else if (isDate(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.util.Date.class);
                     }
                     writeDate(bw, (Date) o, column);
                 }
-                else if (clazz == java.sql.Timestamp.class) {
+                else if (isDateTime(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.sql.Timestamp.class);
                     }
                     writeTimestamp(bw, (Timestamp) o, column);
                 }
-                else if (hc.clazz == double.class || hc.clazz == Double.class
-                        || hc.clazz == float.class || hc.clazz == Float.class
-                        ) {
+                else if (isFloat(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(double.class);
                     }
                     writeDouble(bw, ((Double) o).doubleValue(), column);
                 }
-                else if (hc.clazz == boolean.class || hc.clazz == Boolean.class) {
+                else if (isBool(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(boolean.class);
                     }
@@ -1327,7 +1320,7 @@ public abstract class Sheet {
                 } else if (autoSize == 1) {
                     int _l = hc.name.getBytes("GB2312").length, len;
                     // TODO 根据字体字号计算文本宽度
-                    if (hc.clazz == String.class) {
+                    if (isString(hc.clazz)) {
                         if (hc.o == null) {
                             len = 0;
                         } else {
@@ -1335,25 +1328,17 @@ public abstract class Sheet {
                         }
 //                        len = hc.o.toString().getBytes("GB2312").length;
                     }
-                    else if (hc.clazz == java.util.Date.class
-                            || hc.clazz == java.sql.Date.class) {
+                    else if (isDate(hc.clazz)) {
                         len = 10;
                     }
                     else if (hc.clazz == java.sql.Timestamp.class) {
                         len = 20;
                     }
-                    else if (hc.clazz == int.class || hc.clazz == Integer.class
-                            || hc.clazz == long.class || hc.clazz == Long.class
-                            || hc.clazz == char.class || hc.clazz == Character.class
-                            || hc.clazz == byte.class || hc.clazz == Byte.class
-                            || hc.clazz == short.class || hc.clazz == Short.class
-                            ) {
+                    else if (isInt(hc.clazz)) {
                         // TODO 根据numFmt计算字符宽度
                         len = hc.type > 0 ? 12 :  11;
                     }
-                    else if (hc.clazz == double.class || hc.clazz == Double.class
-                            || hc.clazz == float.class || hc.clazz == Float.class
-                            ) {
+                    else if (isFloat(hc.clazz)) {
                         // TODO 根据numFmt计算字符宽度
                         if (hc.o == null) {
                             len = 0;

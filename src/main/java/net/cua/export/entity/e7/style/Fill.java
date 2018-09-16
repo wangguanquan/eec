@@ -20,17 +20,17 @@ public class Fill {
         this.fgColor = fgColor;
     }
 
-    public Fill(PatternType patternType, Color bgColor) {
+    public Fill(PatternType patternType, Color fgColor) {
         this.patternType = patternType;
-        this.bgColor = bgColor;
+        this.fgColor = fgColor;
     }
 
     public Fill(PatternType patternType) {
         this.patternType = patternType;
     }
 
-    public Fill(Color bgColor) {
-        this.bgColor = bgColor;
+    public Fill(Color fgColor) {
+        this.fgColor = fgColor;
         this.patternType = PatternType.solid;
     }
 
@@ -40,24 +40,27 @@ public class Fill {
         return patternType;
     }
 
-    public void setPatternType(PatternType patternType) {
+    public Fill setPatternType(PatternType patternType) {
         this.patternType = patternType;
+        return this;
     }
 
     public Color getBgColor() {
         return bgColor;
     }
 
-    public void setBgColor(Color bgColor) {
+    public Fill setBgColor(Color bgColor) {
         this.bgColor = bgColor;
+        return this;
     }
 
     public Color getFgColor() {
         return fgColor;
     }
 
-    public void setFgColor(Color fgColor) {
+    public Fill setFgColor(Color fgColor) {
         this.fgColor = fgColor;
+        return this;
     }
 
     public int hashCode() {
