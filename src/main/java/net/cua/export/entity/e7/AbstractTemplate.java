@@ -128,7 +128,7 @@ public abstract class AbstractTemplate {
         // inner text
         int n2 = bindSheetData();
 
-        logger.info("Search " + (n1 + n2) + " bind words.");
+        logger.debug("Search " + (n1 + n2) + " bind words.");
     }
 
     protected int bindSstData() {

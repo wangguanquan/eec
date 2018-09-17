@@ -70,7 +70,7 @@ public class ResultSetSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.info(getName() + " | " + name);
+        logger.debug(getName() + " | " + name);
 
         for (int i = 0; i < columns.length; i++) {
             if (StringUtil.isEmpty(columns[i].getName())) {
@@ -125,7 +125,7 @@ public class ResultSetSheet extends Sheet {
 
         // Delete empty copy sheet
         if (copySheet && rows == 1) {
-            logger.info("Delete empty copy sheet");
+            logger.debug("Delete empty copy sheet");
             workbook.remove(id - 1);
             sheetFile.delete();
             return;

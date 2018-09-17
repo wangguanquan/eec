@@ -637,6 +637,7 @@ public abstract class Sheet {
         } else {
             bw.write("</worksheet>");
         }
+        logger.debug("sheet: {} write lines: {}", getName(), rows);
     }
 
     /**

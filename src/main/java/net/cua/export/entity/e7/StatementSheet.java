@@ -56,7 +56,7 @@ public class StatementSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-//        logger.info(getName() + " | " + name);
+        logger.debug(getName() + " | " + name);
 
         // TODO 1.判断各sheet抽出的数据量大小
         // TODO 2.如果量大则抽取类型为String的列判断重复率

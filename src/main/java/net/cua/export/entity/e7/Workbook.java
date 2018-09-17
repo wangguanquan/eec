@@ -479,7 +479,7 @@ public class Workbook {
         Path root = null;
         try {
             root = FileUtil.mktmp("eec+");
-            logger.info(root);
+            logger.debug(root);
 
             Path xl = Files.createDirectory(root.resolve("xl"));
             // 最先做水印, 写各sheet时需要使用
@@ -494,12 +494,13 @@ public class Workbook {
             // Write SharedString, Styles and workbook.xml
             writeXML(xl);
             if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
+            logger.debug("write sheets data success");
 
             // Zip compress
             boolean compressRoot = false;
             Path zipFile = ZipUtil.zip(root, compressRoot, root);
 
-            // TODO Delete source files
+            // Delete source files
             boolean delSelf = true;
             FileUtil.rm_rf(root.toFile(), delSelf);
             return zipFile;
@@ -562,7 +563,6 @@ public class Workbook {
         if (!Files.exists(path)) {
             FileUtil.mkdir(path);
         }
-// TODO delete temp zip file
         Path zip = is == null ? createTemp() : template();
 
         reMarkPath(zip, path, getName());

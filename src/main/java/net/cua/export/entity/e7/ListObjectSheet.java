@@ -55,7 +55,7 @@ public class ListObjectSheet<T> extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-//        logger.info(getName() + " | " + name);
+        logger.debug(getName() + " | " + name);
 
         // create header columns
         init();
