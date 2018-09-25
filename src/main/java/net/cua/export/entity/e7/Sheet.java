@@ -47,7 +47,7 @@ public abstract class Sheet {
     protected int rows;
     private boolean hidden;
 
-    private int headStyle;
+    private int headStyle, oddStyle;
 
     public int getId() {
         return id;

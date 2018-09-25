@@ -124,6 +124,7 @@ public class Styles {
         self.fills = new ArrayList<>();
         self.addFill(new Fill(PatternType.none));
         self.addFill(new Fill(PatternType.gray125));
+        self.addFill(Fill.parse("#fcfaf2"));
 
         self.borders = new ArrayList<>();
         self.addBorder(Border.parse("none"));
