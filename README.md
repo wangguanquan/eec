@@ -1,5 +1,12 @@
 # eec介绍
-Excel导出工具类，目前仅支持xlsx格式的表格导出，表格默认有黑色边框可修改。
+
+eec（Excel Export Core）是一个Excel读取和写入工具类，目前仅支持xlsx格式的导入导出，表格默认有黑色边框可修改。
+
+eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，
+它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
+
+## 主要功能
+
 1. 支持Statement, ResultSet数据库导出，导出行数无上限，如果数据量超过单个sheet上限会自动分页。
 2. 支持 对象数组 和 Map数组 导出。
 3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
@@ -7,8 +14,11 @@ Excel导出工具类，目前仅支持xlsx格式的表格导出，表格默认�
 5. 设置单元格隐藏
 6. 设置列宽自动调节
 7. 设置水印（文字，本地＆网络图片）
+8. 使用ExcelReader读取excel，读取结果为java.util.stream.Stream，对内存要求很低。
+9. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
+10. 支持iterator或者stream+lambda操作sheet或行数据
 
-#### 使用方法
+## 使用方法
 导入eec.jar即可使用
 
 ```
@@ -22,12 +32,38 @@ pom.xml添加
 ```
 <dependency>
     <groupId>net.cua</groupId>
-    <artifactId>excel-export</artifactId>
-    <version>1.0</version>
+    <artifactId>eec</artifactId>
+    <version>{eec.version}</version>
 </dependency>
 ```
 
-### 以下是部分功能测试代码，更多使用方法请参考test/各测试类
+eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，使用如下引用
+
+```
+<dependency>
+    <groupId>net.cua</groupId>
+    <artifactId>eec</artifactId>
+    <version>{eec.version}</version>
+    <exclusions>
+        <exclusion>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+## 示例
+### 导出示例，更多使用方法请参考test/各测试类
+
 1. 无参SQL固定宽度导出测试,固定宽度20,也可以使用setWidth(int)来重置列宽
 
 ```
@@ -246,6 +282,73 @@ pom.xml添加
     }
 ```
 
+### 读取示例
+
+1. 使用iterator迭代每行数据
+
+```
+/**
+ * 使用iterator遍历所有行
+ */
+@Test public void t4() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("单Sheet.xlsx"))) {
+        // get first sheet
+        Sheet sheet = reader.sheet(0);
+
+        for (
+            Iterator<Row> ite = sheet.iterator();
+            ite.hasNext();
+            System.out.println(ite.next())
+        );
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+2. 使用流
+
+```
+@Test public void t5() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+3. 将excel读入到数组或List中
+
+```
+/**
+ * read excel to object array
+ */
+@Test public void t6() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("New name.xlsx"))) {
+        Regist[] array = reader.sheets()
+                .flatMap(Sheet::rowsWithOutHeader) // 去掉表头
+                .map(row -> row.to(Regist.class)) // 将每行数据转换为Regist对象
+                .toArray(Regist[]::new);
+        // do...
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤等。
+
+```
+reade.sheets()
+    .flatMap(Sheet::rowWithOutHeader)
+    .map(row -> row.to(Regist.class))
+    .filter(e -> "iOS".equals(e.platform()))
+    .collect(Collectors.toList());
+```
+
+以上代码相当于`select * from 用户注册.xlsx where platform = 'iOS'`
+
 ## TODO LIST
 
 1. excel文件增加导出scripts功能
@@ -253,9 +356,10 @@ pom.xml添加
 3. 对excel文件设置密码 (AES-128 encrypted)
 4. 多线程支持，多个sheet数据同时写
 5. share多线程支持
-6. 异常出理
-7. 单元格隐藏 -
-
-## BUG
-
-1. new Fill无法设置正确的背景
+6. 隔行变色方便阅读
+7. fast zip
+8. 自动列宽要考虑字体样式实现
+9. SharedString增加热词区块提高命中率
+10. 读取sheet对象返回header
+11. string to date
+12. wiki for eec
