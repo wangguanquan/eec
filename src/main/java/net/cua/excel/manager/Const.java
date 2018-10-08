@@ -51,8 +51,8 @@ public class Const {
     public static final class Limit {
         public static final int
                 // 每个worksheet页最大行
-                MAX_ROWS_ON_SHEET_07 = 1_048_576
-                , MAX_ROWS_ON_SHEET_03 = 65_536
+                MAX_ROWS_ON_SHEET_07 = 1_048_576 // 1 << 20
+                , MAX_ROWS_ON_SHEET_03 = 65_536 // 1 << 16
                 // 每个worksheet页最大列
                 , MAX_COLUMNS_ON_SHEET = 16_384
                 // 单个cell最多包含多少字符

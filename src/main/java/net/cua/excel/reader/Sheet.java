@@ -69,8 +69,12 @@ public class Sheet implements AutoCloseable {
         return startRow;
     }
 
+    /**
+     * this.rows()方法第一行就是头部信息，
+     * rowsWithOutHeader()方法会跳过头部信息，此时可以使用此方法获得头部信息。
+     * @return HeaderRow
+     */
     public Row getHeader() {
-        // TODO null able
         return header;
     }
 
@@ -82,8 +86,8 @@ public class Sheet implements AutoCloseable {
     /////////////////////////////////Read sheet file/////////////////////////////////
     private BufferedReader reader;
     private char[] cb; // buffer
-    private int nChar, length, cursor;
-    private boolean eof = false, hasSize;
+    private int nChar, length;
+    private boolean eof = false;
 
     private Row sRow;
 
@@ -113,7 +117,6 @@ public class Sheet implements AutoCloseable {
                         int from = Integer.parseInt(mat.group(1)), to = Integer.parseInt(mat.group(2));
                         this.startRow = from;
                         this.size = to - from;
-                        this.hasSize = true;
                     } else {
                         pat = Pattern.compile("[A-Z]+(\\d+)");
                         mat = pat.matcher(__);
@@ -135,7 +138,6 @@ public class Sheet implements AutoCloseable {
                 }
             }
         }
-
         sRow = new Row(sst); // share row space
 
         return this;
@@ -176,12 +178,6 @@ public class Sheet implements AutoCloseable {
             nChar = 0;
             length += n;
             return nextRow();
-        }
-
-        if (!hasSize) size++;
-        // TODO header row 独立出来
-        if (cursor++ == 0) {
-            return sRow.with(cb, start, nChar - start).asHeader();
         }
 
         // share row
@@ -245,7 +241,7 @@ public class Sheet implements AutoCloseable {
      */
     public Stream<Row> rowsWithOutHeader() {
         if (iter.hasNext()) {
-            iter.next(); // skip first row
+            this.header = iter.next().asHeader(); // skip first row
         }
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                 iter, Spliterator.ORDERED | Spliterator.NONNULL), false);

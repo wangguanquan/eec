@@ -46,7 +46,10 @@ public abstract class Sheet {
     protected int rows;
     private boolean hidden;
 
-    private int headStyle, oddStyle;
+    private int headStyle;
+    protected boolean autoOdd;
+    /* odd row's background color */
+    protected int oddFill;
 
     public int getId() {
         return id;
@@ -343,26 +346,26 @@ public abstract class Sheet {
             } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
+                    case TYPE_NORMAL: // 正常显示数字
+                        break;
                     case TYPE_PARENTAGE: // 百分比显示
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("0%_);[Red]\\(0%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("¥0_);[Red]\\(¥0\\)"));
                         break;
-                    case TYPE_NORMAL: // 正常显示数字
-                        break;
                     default:
                 }
             } else if (isFloat(clazz)) {
                 style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
+                    case TYPE_NORMAL: // 正常显示数字
+                        break;
                     case TYPE_PARENTAGE: // 百分比显示
                         style= Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("0.00%_);[Red]\\(0.00%\\)"));
                         break;
                     case TYPE_RMB: // 显示人民币
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(new NumFmt("¥0.00_);[Red]\\(¥0.00\\)"));
-                        break;
-                    case TYPE_NORMAL: // 正常显示数字
                         break;
                 default:
                 }
@@ -401,6 +404,25 @@ public abstract class Sheet {
 
     public int getAutoSize() {
         return autoSize;
+    }
+
+    /**
+     * 取消隔行变色
+     * @return
+     */
+    public Sheet cancelOddStyle() {
+        this.autoOdd = false;
+        return this;
+    }
+
+    /**
+     * 设置偶数行背景颜色
+     * @param fill
+     * @return
+     */
+    public Sheet setOddFill(Fill fill) {
+        this.oddFill = workbook.getStyles().addFill(fill);
+        return this;
     }
 
     public String getName() {
@@ -759,12 +781,21 @@ public abstract class Sheet {
     }
 
     protected int getStyleIndex(Column hc, Object o) {
-        int style = hc.getCellStyle(), styleIndex = hc.styles.of(style);
+        int style = hc.getCellStyle();
+        // 隔行变色
+        if (autoOdd && isOdd() && !Styles.hasFill(style)) {
+            style |= oddFill;
+        }
+        int styleIndex = hc.styles.of(style);
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
             styleIndex = hc.styles.of(style);
         }
         return styleIndex;
+    }
+
+    protected boolean isOdd() {
+        return (rows & 1) == 1;
     }
 
     protected void writeString(ExtBufferedWriter bw, String s, int column) throws IOException {
@@ -1267,6 +1298,10 @@ public abstract class Sheet {
             bw.writeInt(r);
 
             int style = hc.getCellStyle();
+            // 隔行变色
+            if (autoOdd && isOdd() && !Styles.hasFill(style)) {
+                style |= oddFill;
+            }
             int styleIndex = styles.of(style);
             bw.write("\" s=\"");
             bw.writeInt(styleIndex);

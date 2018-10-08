@@ -356,10 +356,10 @@ reade.sheets()
 3. 对excel文件设置密码 (AES-128 encrypted)
 4. 多线程支持，多个sheet数据同时写
 5. share多线程支持
-6. 隔行变色方便阅读
+6. 隔行变色方便阅读 -
 7. fast zip
 8. 自动列宽要考虑字体样式实现
 9. SharedString增加热词区块提高命中率
-10. 读取sheet对象返回header
-11. string to date
+10. 读取sheet对象返回header -
+11. string to date -
 12. wiki for eec

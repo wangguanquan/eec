@@ -67,6 +67,7 @@ public class DateUtil {
     }
 
     /////////////////////////////number to date//////////////////////////////////
+    // TODO time zone
     public static java.util.Date toDate(int n) {
         if (n < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("Number " + n + " can't convert to java.util.Date");
@@ -83,8 +84,7 @@ public class DateUtil {
     }
 
     public static java.util.Date toDate(String dateStr) {
-        // TODO
-        return null;
+        return new java.util.Date(toTimestamp(dateStr).getTime());
     }
 
     public static java.sql.Time toTime(double d) {
@@ -108,7 +108,10 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(String dateStr) {
-        // TODO
-        return null;
+        // check format string
+        if (dateStr.indexOf('/') == 4) {
+            dateStr = dateStr.replace('/', '-');
+        }
+        return java.sql.Timestamp.valueOf(dateStr);
     }
 }

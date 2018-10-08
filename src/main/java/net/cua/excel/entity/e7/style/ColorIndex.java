@@ -1,6 +1,6 @@
 package net.cua.excel.entity.e7.style;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Reference: resources/ColorIndex.html

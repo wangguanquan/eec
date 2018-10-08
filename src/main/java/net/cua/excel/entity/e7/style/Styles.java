@@ -124,7 +124,6 @@ public class Styles {
         self.fills = new ArrayList<>();
         self.addFill(new Fill(PatternType.none));
         self.addFill(new Fill(PatternType.gray125));
-        self.addFill(Fill.parse("#fcfaf2"));
 
         self.borders = new ArrayList<>();
         self.addBorder(Border.parse("none"));
@@ -409,7 +408,25 @@ public class Styles {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
-
+    ////////////////////////////////Check style////////////////////////////////
+    public static boolean hasNumFmt(int style) {
+        return style >>> INDEX_NUMBER_FORMAT != 0;
+    }
+    public static boolean hasFont(int style) {
+        return style << 8 >>> (INDEX_FONT + 8) != 0;
+    }
+    public static boolean hasFill(int style) {
+        return style << 14 >>> (INDEX_FILL + 14) != 0;
+    }
+    public static boolean hasBorder(int style) {
+        return style << 20 >>> (INDEX_BORDER + 20) != 0;
+    }
+    public static boolean hasVertical(int style) {
+        return style << 26 >>> (INDEX_VERTICAL + 26) != 0;
+    }
+    public static boolean hasHorizontal(int style) {
+        return style << 29 >>> (INDEX_HORIZONTAL + 29) != 0;
+    }
     ////////////////////////////////To object//////////////////////////////////
     public NumFmt getNumFmt(int style) {
         return numFmts.get(style >>> INDEX_NUMBER_FORMAT);

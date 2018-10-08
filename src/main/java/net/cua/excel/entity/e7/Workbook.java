@@ -1,5 +1,7 @@
 package net.cua.excel.entity.e7;
 
+import net.cua.excel.entity.e7.style.Fill;
+import net.cua.excel.entity.e7.style.PatternType;
 import net.cua.excel.manager.Const;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.manager.docProps.App;
@@ -18,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 
 /**
  * https://poi.apache.org/encryption.html encrypted
@@ -47,8 +51,9 @@ public class Workbook {
     private int size;
     private Connection con;
     private RelManager relManager;
-    private boolean autoSize;
+    private boolean autoSize, autoOdd = true;
     private String creator, company;
+    private Fill oddFill;
 
     private SharedStrings sst; // 共享字符区
     private Styles styles; // 共享样式
@@ -133,6 +138,24 @@ public class Workbook {
 
     public Workbook setCompany(String company) {
         this.company = company;
+        return this;
+    }
+
+    /**
+     * 取消隔行变色
+     * @return workbook
+     */
+    public Workbook cancelOddStyle() {
+        this.autoOdd = false;
+        return this;
+    }
+    /**
+     * 设置隔行变色的背景色，默认为#e2edda
+     * @param fill Fill
+     * @return workbook
+     */
+    public Workbook setOddFill(Fill fill) {
+        this.oddFill = fill;
         return this;
     }
 
@@ -472,6 +495,10 @@ public class Workbook {
                 } else {
                     sheet.fixSize();
                 }
+            }
+            if (!sheet.autoOdd) {
+                sheet.autoOdd = this.autoOdd;
+                sheet.oddFill = styles.addFill(oddFill == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : oddFill);
             }
             sheet.setId(i + 1);
         }

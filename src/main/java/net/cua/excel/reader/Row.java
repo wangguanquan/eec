@@ -605,6 +605,9 @@ public class Row {
      * @return
      */
     public <T> T to(Class<T> clazz) {
+        if (hr == null) {
+            throw new UncheckedTypeException("Lost header row info");
+        }
         // reset class info
         if (!hr.is(clazz)) {
             hr.setClass(clazz);
@@ -626,6 +629,9 @@ public class Row {
      * @return
      */
     public <T> T too(Class<T> clazz) {
+        if (hr == null) {
+            throw new UncheckedTypeException("Lost header row info");
+        }
         // reset class info
         if (!hr.is(clazz)) {
             try {
