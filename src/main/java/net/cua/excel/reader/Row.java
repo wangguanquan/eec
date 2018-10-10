@@ -109,40 +109,47 @@ public class Row {
 
     private void parseCells() {
         int index = 0;
-//        if (cells == null) {
-            cursor = searchSpan();
-//        }
+        cursor = searchSpan();
         for (; cb[cursor++] != '>'; );
-        while (index < span && nextCell(cells[index++]) != null);
+        while (index < span && nextCell() != null);
     }
 
-    protected Cell nextCell(Cell cell) {
+    protected Cell nextCell() {
         for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c' || cb[cursor + 2] != ' '); cursor++);
         // end of row
         if (cursor >= to) return null;
-        cursor += 3;
+        cursor += 2;
         // find end of cell
         int e = cursor;
         for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] != ' '); e++);
 
+        Cell cell = null;
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = 'n'; // default
         for (; cb[cursor] != '>'; cursor++) {
+            // cell index
+            if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
+                int a = cursor += 4;
+                for (; cb[cursor] != '"'; cursor++);
+                cell = cells[toCellIndex(a, cursor) - 1];
+            }
+            // cell type
             if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
                 int a = cursor += 4, n;
                 for (; cb[cursor] != '"'; cursor++);
                 if ((n = cursor - a) == 1) {
-                    t = cb[a];
+                    t = cb[a]; // s, n, b
                 } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
                     t = 'f'; // function string
                 } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n' && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
                     t = 'r'; // inlineStr
                 }
-                // other unknown case
-                cursor += n;
+                // -> other unknown case
             }
         }
+
+        if (cell == null) return null;
 
         cell.setT(t);
 
@@ -282,8 +289,22 @@ public class Row {
         return e;
     }
 
+    private int toCellIndex(int a, int b) {
+        int n = 0;
+        for ( ; a <= b; a++) {
+            if (cb[a] <= 'Z' && cb[a] >= 'A') {
+                n = n * 26 + cb[a] - '@';
+            } else if (cb[a] <= 'z' && cb[a] >= 'a') {
+                n = n * 26 + cb[a] - '、';
+            } else break;
+        }
+        return n;
+    }
+
     @Override public String toString() {
         StringJoiner joiner = new StringJoiner(" | ");
+        // show row number
+//        joiner.add(String.valueOf(getRowNumber()));
         for (int i = 0; i < span; i++) {
             Cell c = cells[i];
             switch (c.getT()) {
@@ -738,7 +759,7 @@ public class Row {
                 if (n < 0) {
                     String name = f.getName();
                     n = StringUtil.indexOf(names, name);
-                    if (n == -1 && (n = StringUtil.indexOf(names, StringUtil.toHump(name))) == -1) {
+                    if (n == -1 && (n = StringUtil.indexOf(names, StringUtil.toPascalCase(name))) == -1) {
                         fields[i] = null;
                         continue;
                     }

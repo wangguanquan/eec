@@ -76,6 +76,7 @@ class SharedString {
             parser.parse(is, new DefaultHandler() {
                 boolean open = false;
                 int index = 0, current = index, start = offset, end = start + page_size;
+                StringBuilder buf = new StringBuilder();
                 @Override
                 public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
                     if (index >= start && index < end) open = 't' == qName.charAt(0);
@@ -83,14 +84,15 @@ class SharedString {
 
                 @Override
                 public void characters(char[] ac, int start, int length) throws SAXException {
-                    String value = new String(ac, start, length);
-                    if (open) sharedString[current++] = value;
+                    if (open) buf.append(ac, start, length); // append to cache
                 }
 
                 @Override
                 public void endElement(String uri, String localName, String qName) throws SAXException {
                     if ('t' == qName.charAt(0)) {
                         open = false;
+                        sharedString[current++] = buf.toString();
+                        buf.delete(0, buf.length()); // clear cache
                         index++;
                         if (index > end && max_size > -1) { // break parser
                             throw new BreakParserException();

@@ -51,21 +51,26 @@ public class StringUtil {
     }
 
     /**
-     * convert string to hump string
+     * convert string to pascal case string
      * @param name
      * @return
      */
-    public static String toHump(String name) {
-//        final char[] oldValues = name.toCharArray();
-//        final int len = oldValues.length;
-//        char[] values = new char[len];
-//
-//        char c = oldValues[0];
-//        values[0] = c;
-//        for (int i = 1, j = i, n = len - 1; i < n; i++) {
-//            //
-//        }
-        // TODO
-        return name;
+    public static String toPascalCase(String name) {
+        if (name.indexOf('_') < 0) return name;
+        char[] oldValues = name.toLowerCase().toCharArray();
+        final int len = oldValues.length;
+        int i = 1, idx = i;
+        for (int n = len - 1; i < n; i++) {
+            char c = oldValues[i], cc = oldValues[i + 1];
+            if (c == '_' && cc >= 'a' && cc <= 'z') {
+                oldValues[idx++] = (char) (cc - 32);
+                i++;
+            }
+            else {
+                oldValues[idx++] = c;
+            }
+        }
+        if (i < len) oldValues[idx++] = oldValues[i];
+        return new String(oldValues, 0, idx);
     }
 }

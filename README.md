@@ -363,3 +363,4 @@ reade.sheets()
 10. 读取sheet对象返回header -
 11. string to date -
 12. wiki for eec
+13. 读取colspan/rowspan单元格
