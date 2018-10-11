@@ -61,6 +61,7 @@ class Cell {
     }
 
     void clear() {
+        this.t = '\0';
         this.sv = null;
         this.nv = 0;
         this.dv = 0.0;

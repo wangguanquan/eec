@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.zip.*;
 
 public class ZipUtil {
-    public static final String suffix = ".zip";
+    private static final String suffix = ".zip";
     private ZipUtil() {}
     /**
      * zip files exclude root path
@@ -30,6 +30,18 @@ public class ZipUtil {
     }
 
     /**
+     * zip files exclude root path
+     * command: zip destPath srcPath1 srcPath2 ...
+     * @param destPath
+     * @param srcPath
+     * @return
+     * @throws IOException
+     */
+    public static Path zipExcludeRoot(Path destPath, Path ... srcPath) throws IOException {
+        return zip(destPath, false, srcPath);
+    }
+
+    /**
      * zip files include root path
      * command: zip destPath srcPath1 srcPath2 ...
      * @param destPath
@@ -38,7 +50,7 @@ public class ZipUtil {
      * @return
      * @throws IOException
      */
-    public static Path zip(Path destPath, boolean compressRoot, Path ... srcPath) throws IOException {
+    private static Path zip(Path destPath, boolean compressRoot, Path ... srcPath) throws IOException {
         if (!destPath.toString().endsWith(suffix)) {
             destPath = Paths.get(destPath.toString() + suffix);
         }

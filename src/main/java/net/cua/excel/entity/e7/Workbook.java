@@ -43,7 +43,7 @@ import java.util.List;
 @TopNS(prefix = {"", "r"}, value = "workbook"
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
-    Logger logger = LogManager.getLogger(getClass());
+    private Logger logger = LogManager.getLogger(getClass());
 
     private String name;
     private Sheet[] sheets;
@@ -104,7 +104,7 @@ public class Workbook {
         return this;
     }
 
-    public Workbook addRel(Relationship rel) {
+    private Workbook addRel(Relationship rel) {
         relManager.add(rel);
         return this;
     }
@@ -196,7 +196,7 @@ public class Workbook {
         return this;
     }
 
-    public Object getFirst(List<?> data) {
+    Object getFirst(List<?> data) {
         Object first = data.get(0);
         if (first != null) return first;
         int i = 1;
@@ -285,7 +285,7 @@ public class Workbook {
         }
     }
 
-    public void writeXML(Path root) throws IOException, ExportException {
+    private void writeXML(Path root) throws IOException, ExportException {
 
         // Content type
         ContentType contentType = new ContentType();
@@ -387,7 +387,7 @@ public class Workbook {
         sst.write(root);
     }
 
-    public void madeMark(Path parent) throws IOException {
+    private void madeMark(Path parent) throws IOException {
         Relationship supRel = null;
         int n = 1;
         if (waterMark != null) {
@@ -417,7 +417,7 @@ public class Workbook {
         }
     }
 
-    protected void writeSelf(Path root) throws IOException {
+    private void writeSelf(Path root) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
@@ -524,8 +524,7 @@ public class Workbook {
             logger.debug("write sheets data success");
 
             // Zip compress
-            boolean compressRoot = false;
-            Path zipFile = ZipUtil.zip(root, compressRoot, root);
+            Path zipFile = ZipUtil.zipExcludeRoot(root, root);
 
             // Delete source files
             boolean delSelf = true;
@@ -607,7 +606,6 @@ public class Workbook {
 
     /**
      * return excel path
-     * @return
      */
     public void create(DownProcessor processor) throws IOException, ExportException {
         Path zip = createTemp();
@@ -616,8 +614,8 @@ public class Workbook {
 
 
     /////////////////////////////////Template///////////////////////////////////
-    InputStream is;
-    Object o;
+    private InputStream is;
+    private Object o;
     public Workbook withTemplate(InputStream is) {
         this.is = is;
         return this;
@@ -641,8 +639,7 @@ public class Workbook {
         }
 
         // Zip compress
-        boolean compressRoot = false;
-        Path zipFile = ZipUtil.zip(temp, compressRoot, temp);
+        Path zipFile = ZipUtil.zipExcludeRoot(temp, temp);
 
         // Delete source files
         boolean delSelf = true;
