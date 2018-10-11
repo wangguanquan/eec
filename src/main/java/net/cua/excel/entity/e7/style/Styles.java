@@ -110,7 +110,7 @@ public class Styles {
         self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
 
         self.fonts = new ArrayList<>();
-        Font font1 = new Font("宋体", 9, Color.black);  // en
+        Font font1 = new Font("宋体", 11, Color.black);  // en
         font1.setFamily(2);
         font1.setScheme("minor");
         self.addFont(font1);
