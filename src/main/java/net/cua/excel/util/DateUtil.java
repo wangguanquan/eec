@@ -13,14 +13,14 @@ import java.util.concurrent.TimeUnit;
  * Created by guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
-    static final int DAYS_1900_TO_1970 = ~(int)LocalDate.of(1900, 1, 1).toEpochDay() + 3;
-    static final double SECOND_OF_DAY = (double) 24 * 60 * 60;
+    private static final int DAYS_1900_TO_1970 = ~(int)LocalDate.of(1900, 1, 1).toEpochDay() + 3;
+    private static final double SECOND_OF_DAY = (double) 24 * 60 * 60;
 
-    public static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
+    private static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
             = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"));
-    public static final ThreadLocal<SimpleDateFormat> dateTimeFormat
+    private static final ThreadLocal<SimpleDateFormat> dateTimeFormat
             = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-    public static final ThreadLocal<SimpleDateFormat> dateFormat
+    private static final ThreadLocal<SimpleDateFormat> dateFormat
             = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
 
     public static String toString(Date date) {
@@ -72,7 +72,7 @@ public class DateUtil {
         if (n < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("Number " + n + " can't convert to java.util.Date");
         }
-        return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400).minusMillis(TimeUnit.HOURS.toMillis(8)));
+        return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(TimeUnit.HOURS.toMillis(8)));
     }
 
     public static java.util.Date toDate(double d) {
@@ -80,7 +80,7 @@ public class DateUtil {
             throw new UncheckedTypeException("Number " + d + " can't convert to java.util.Date");
         }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
-        return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400 + m).minusMillis(TimeUnit.HOURS.toMillis(8)));
+        return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(TimeUnit.HOURS.toMillis(8)));
     }
 
     public static java.util.Date toDate(String dateStr) {
@@ -97,14 +97,14 @@ public class DateUtil {
             throw new UncheckedTypeException("Number " + d + " can't convert to java.util.Date");
         }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
-        return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400 + m).minusMillis(TimeUnit.HOURS.toMillis(8)));
+        return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(TimeUnit.HOURS.toMillis(8)));
     }
 
     public static java.sql.Timestamp toTimestamp(int n) {
         if (n < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("Number " + n + " can't convert to java.util.Date");
         }
-        return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400).minusMillis(TimeUnit.HOURS.toMillis(8)));
+        return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(TimeUnit.HOURS.toMillis(8)));
     }
 
     public static java.sql.Timestamp toTimestamp(String dateStr) {

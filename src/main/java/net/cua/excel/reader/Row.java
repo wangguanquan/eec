@@ -486,7 +486,7 @@ public class Row {
                 break;
             case 's':
                 try {
-                    l = Long.valueOf(c.getSv());
+                    l = Long.parseLong(c.getSv());
                 } catch (NumberFormatException e) {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
                 }

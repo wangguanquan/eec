@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /**
  * Created by guanquan.wang on 2017/9/27.
  */
-public class ResultSetSheet extends Sheet {
+public class ResultSetSheet extends Sheet implements Cloneable {
     private ResultSet rs;
     private boolean copySheet;
 
@@ -116,6 +116,7 @@ public class ResultSetSheet extends Sheet {
             writeAfter(bw);
 
         } catch (SQLException e) {
+            close();
             throw new ExportException(e);
         } finally {
             if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {

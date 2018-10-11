@@ -1,6 +1,5 @@
 package net.cua.excel.util;
 
-import com.sun.istack.internal.NotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
@@ -27,7 +26,7 @@ import java.util.List;
  */
 
 public class FileUtil {
-    static Logger logger = LogManager.getLogger(FileUtil.class);
+    private static Logger logger = LogManager.getLogger(FileUtil.class);
 
     private FileUtil() {
     }
@@ -167,14 +166,14 @@ public class FileUtil {
         }
     }
 
-    public static void cp(@NotNull Path srcFile, @NotNull Path descPath) {
+    public static void cp(Path srcFile, Path descPath) {
         cp(srcFile.toFile(), descPath.toFile());
     }
-    public static void cp(@NotNull File srcFile, @NotNull Path descPath) {
+    public static void cp(File srcFile, Path descPath) {
         cp(srcFile, descPath.toFile());
     }
 
-    public static void cp(@NotNull Path srcPath, @NotNull File descFile) {
+    public static void cp(Path srcPath, File descFile) {
         cp(srcPath.toFile(), descFile);
     }
 
@@ -184,7 +183,7 @@ public class FileUtil {
      * @param srcFile  源文件
      * @param descFile 目标文件
      */
-    public static void cp(@NotNull File srcFile, @NotNull File descFile) {
+    public static void cp(File srcFile, File descFile) {
         if (srcFile.length() == 0l) {
             try {
                 boolean boo = descFile.createNewFile();
@@ -218,11 +217,11 @@ public class FileUtil {
         }
     }
 
-    public static void cp(@NotNull InputStream is, @NotNull File descFile) {
+    public static void cp(InputStream is, File descFile) {
         cp(is, descFile.toPath());
     }
 
-    public static void cp(@NotNull InputStream is, @NotNull Path descFile) {
+    public static void cp(InputStream is, Path descFile) {
         try {
             Files.copy(is, descFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {

@@ -64,15 +64,15 @@ public class EmbedTemplate extends AbstractTemplate {
         return buf.toString();
     }
 
-    private final class IntArray {
+    private final static class IntArray {
         private int[] elements;
         private int size;
 
-        public IntArray() {
+        private IntArray() {
             elements = new int[8];
         }
 
-        public int add(int i, int j) {
+        private int add(int i, int j) {
             final int length = elements.length, current = size;
             if (size + 1 >= length) {
                 elements = Arrays.copyOf(elements, length << 1);
@@ -82,15 +82,15 @@ public class EmbedTemplate extends AbstractTemplate {
             return current + 1;
         }
 
-        public int size() {
+        private int size() {
             return size >> 1;
         }
 
-        public boolean isEmpty() {
+        private boolean isEmpty() {
             return size == 0;
         }
 
-        public int[] get(int index) {
+        private int[] get(int index) {
             return new int[]{ elements[index <<= 1], elements[index + 1] };
         }
 

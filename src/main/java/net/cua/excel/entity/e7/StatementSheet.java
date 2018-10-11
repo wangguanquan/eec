@@ -44,7 +44,7 @@ public class StatementSheet extends Sheet {
             try {
                 ps.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.error("Close PreparedStatement error.", e);
             }
         }
     }
@@ -112,6 +112,14 @@ public class StatementSheet extends Sheet {
             writeAfter(bw);
 
         } catch (SQLException e) {
+            close();
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException ex) {
+                    throw new ExportException(ex);
+                }
+            }
             throw new ExportException(e);
         } finally {
             if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {

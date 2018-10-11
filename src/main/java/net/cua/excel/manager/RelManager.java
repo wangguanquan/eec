@@ -19,8 +19,8 @@ import java.util.List;
  * Created by guanquan.wang on 2017/9/30.
  */
 @TopNS(prefix = "", value = "Relationships", uri = "http://schemas.openxmlformats.org/package/2006/relationships")
-public class RelManager implements Serializable {
-    List<Relationship> relationships;
+public class RelManager implements Serializable, Cloneable {
+    private List<Relationship> relationships;
 
     public static RelManager of(Relationship ... relationships) {
         RelManager relManager = new RelManager();

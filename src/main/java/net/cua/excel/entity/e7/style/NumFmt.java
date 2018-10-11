@@ -71,7 +71,7 @@ public class NumFmt {
     public boolean equals(Object o) {
         if (o instanceof NumFmt) {
             NumFmt other = (NumFmt) o;
-            return other.code != null ? other.code.equals(code) : other.code == code;
+            return other.code != null ? other.code.equals(code) : null == code;
         }
         return false;
     }

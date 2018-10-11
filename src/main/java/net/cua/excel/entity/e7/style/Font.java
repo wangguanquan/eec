@@ -1,6 +1,5 @@
 package net.cua.excel.entity.e7.style;
 
-import com.sun.istack.internal.NotNull;
 import net.cua.excel.manager.Const;
 import net.cua.excel.util.StringUtil;
 import org.dom4j.Element;
@@ -45,7 +44,7 @@ public class Font {
      * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
      * @return
      */
-    public static Font parse(@NotNull String fontString) throws FontParseException {
+    public static Font parse(String fontString) throws FontParseException {
         if (fontString.isEmpty()) {
             throw new NullPointerException("Font string empty");
         }
@@ -308,8 +307,8 @@ public class Font {
             Font other = (Font) o;
             return other.style == style
                     && other.size == size
-                    && (other.color != null ? other.color.equals(color) : other.color == color)
-                    && (other.name != null ? other.name.equals(name) : other.name == name);
+                    && (other.color != null ? other.color.equals(color) : null == color)
+                    && (other.name != null ? other.name.equals(name) : null == name);
         }
         return false;
     }
