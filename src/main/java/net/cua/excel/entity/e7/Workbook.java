@@ -1,5 +1,6 @@
 package net.cua.excel.entity.e7;
 
+import net.cua.excel.entity.I18N;
 import net.cua.excel.entity.e7.style.Fill;
 import net.cua.excel.entity.e7.style.PatternType;
 import net.cua.excel.manager.Const;
@@ -13,11 +14,10 @@ import net.cua.excel.entity.TooManyColumnsException;
 import net.cua.excel.entity.WaterMark;
 import net.cua.excel.entity.e7.style.Styles;
 import net.cua.excel.processor.DownProcessor;
+import net.cua.excel.processor.Watch;
 import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 import net.cua.excel.util.ZipUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 
 import java.awt.Color;
@@ -38,12 +38,11 @@ import java.util.List;
  * https://poi.apache.org/encryption.html encrypted
  * https://msdn.microsoft.com/library
  * https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
- * Created by guanquan.wang on 2017/9/26.
+ * Created by guanquan.wang at 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
-    private Logger logger = LogManager.getLogger(getClass());
 
     private String name;
     private Sheet[] sheets;
@@ -54,6 +53,8 @@ public class Workbook {
     private boolean autoSize, autoOdd = true;
     private String creator, company;
     private Fill oddFill;
+    private Watch watch; // 观察者
+    private I18N i18N;
 
     private SharedStrings sst; // 共享字符区
     private Styles styles; // 共享样式
@@ -159,6 +160,11 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 添加sheet
+     * @param sheet Sheet
+     * @return Workbook
+     */
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
         sheets[size++] = sheet;
@@ -277,6 +283,35 @@ public class Workbook {
             }
         }
         return null;
+    }
+
+    /**
+     * 添加观察者
+     * @param watch 观察者
+     * @return Workbook
+     */
+    public Workbook watch(Watch watch) {
+        this.watch = watch;
+        i18N = new I18N();
+        return this;
+    }
+
+    /**
+     * output export info
+     */
+    void what(String code) {
+        if (watch != null) {
+            watch.what(i18N.get(code));
+        }
+    }
+
+    /**
+     * output export info
+     */
+    void what(String code, String ... args) {
+        if (watch != null) {
+            watch.what(i18N.get(code, args));
+        }
     }
 
     private void ensureCapacityInternal() {
@@ -441,7 +476,7 @@ public class Workbook {
             if (hasTopNs) {
                 rootElement = factory.createElement(rootName);
             } else {
-                // TODO echo error message
+                what("9004", "workbook.xml");
                 return;
             }
         }
@@ -502,11 +537,12 @@ public class Workbook {
             }
             sheet.setId(i + 1);
         }
+        what("0001"); // 初始化完成
 
         Path root = null;
         try {
-            root = FileUtil.mktmp("eec+");
-            logger.debug(root);
+            root = FileUtil.mktmp("eec+"); // 创建临时文件
+            what("0002", root.toString());
 
             Path xl = Files.createDirectory(root.resolve("xl"));
             // 最先做水印, 写各sheet时需要使用
@@ -521,14 +557,16 @@ public class Workbook {
             // Write SharedString, Styles and workbook.xml
             writeXML(xl);
             if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
-            logger.debug("write sheets data success");
+            what("0003");
 
             // Zip compress
             Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+            what("0004", zipFile.toString());
 
             // Delete source files
             boolean delSelf = true;
             FileUtil.rm_rf(root.toFile(), delSelf);
+            what("0005");
             return zipFile;
         } catch (IOException | ExportException e) {
             // remove temp path
@@ -537,7 +575,7 @@ public class Workbook {
         }
     }
 
-    protected static void reMarkPath(Path zip, Path path) throws IOException {
+    protected void reMarkPath(Path zip, Path path) throws IOException {
         String str = path.toString(), name;
         if (str.endsWith(Const.Suffix.EXCEL_07)) {
             name = str.substring(str.lastIndexOf(Const.lineSeparator) + 1);
@@ -547,7 +585,7 @@ public class Workbook {
         reMarkPath(zip, path, name);
     }
 
-    protected static void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
+    protected void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
         // 如果文件存在则在文件名后加下标
         Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
         if (Files.exists(o)) {
@@ -578,6 +616,7 @@ public class Workbook {
         }
         // Rename to xlsx
         Files.move(zip, o);
+        what("0006", o.toString());
     }
 
     //////////////////////////Print Out/////////////////////////////
@@ -609,7 +648,7 @@ public class Workbook {
      */
     public void create(DownProcessor processor) throws IOException, ExportException {
         Path zip = createTemp();
-        processor.build(zip);
+        processor.exec(zip);
     }
 
 
@@ -628,22 +667,27 @@ public class Workbook {
     }
 
     protected Path template() throws IOException {
+        what("0007");
         // Store template stream as zip file
         Path temp = FileUtil.mktmp("eec+");
         ZipUtil.unzip(is, temp);
+        what("0008");
 
         // Bind data
-        EmbedTemplate bt = new EmbedTemplate(temp);
+        EmbedTemplate bt = new EmbedTemplate(temp, this);
         if (bt.check()) { // Check files
             bt.bind(o);
         }
+        what("0003");
 
         // Zip compress
         Path zipFile = ZipUtil.zipExcludeRoot(temp, temp);
+        what("0004", zipFile.toString());
 
         // Delete source files
         boolean delSelf = true;
         FileUtil.rm_rf(temp.toFile(), delSelf);
+        what("0005");
 
         return zipFile;
     }

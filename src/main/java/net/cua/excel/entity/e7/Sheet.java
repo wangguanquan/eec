@@ -10,8 +10,6 @@ import net.cua.excel.processor.IntConversionProcessor;
 import net.cua.excel.processor.StyleProcessor;
 import net.cua.excel.util.ExtBufferedWriter;
 import net.cua.excel.util.StringUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -28,11 +26,10 @@ import static net.cua.excel.util.DateUtil.toDateTimeValue;
 import static net.cua.excel.util.DateUtil.toDateValue;
 
 /**
- * Created by guanquan.wang on 2017/9/26.
+ * Created by guanquan.wang at 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet {
-    Logger logger = LogManager.getLogger(getClass());
     protected Workbook workbook;
 
     protected String name;
@@ -658,7 +655,7 @@ public abstract class Sheet {
         } else {
             bw.write("</worksheet>");
         }
-        logger.debug("sheet: {} write lines: {}", getName(), rows);
+        workbook.what("0009", getName(), String.valueOf(rows));
     }
 
     /**
@@ -1412,7 +1409,7 @@ public abstract class Sheet {
         } finally {
             boolean delete = temp.delete();
             if (!delete) {
-                logger.error("Delete temp file failed.");
+                workbook.what("9005", temp.getAbsolutePath());
             }
         }
     }

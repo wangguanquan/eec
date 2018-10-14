@@ -1,7 +1,7 @@
 package net.cua.excel.util;
 
 /**
- * Created by guanquan.wang on 2017/9/30.
+ * Created by guanquan.wang at 2017/9/30.
  */
 public class StringUtil {
     public static boolean isEmpty(String s) {

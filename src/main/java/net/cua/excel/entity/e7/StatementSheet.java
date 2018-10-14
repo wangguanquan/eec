@@ -16,7 +16,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
- * Created by guanquan.wang on 2017/9/26.
+ * Created by guanquan.wang at 2017/9/26.
  */
 public class StatementSheet extends Sheet {
     private PreparedStatement ps;
@@ -44,7 +44,7 @@ public class StatementSheet extends Sheet {
             try {
                 ps.close();
             } catch (SQLException e) {
-                logger.error("Close PreparedStatement error.", e);
+                workbook.what("9006", e.getMessage());
             }
         }
     }
@@ -56,7 +56,7 @@ public class StatementSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.debug(getName() + " | " + name);
+        workbook.what("0010", getName());
 
         // TODO 1.判断各sheet抽出的数据量大小
         // TODO 2.如果量大则抽取类型为String的列判断重复率
@@ -117,7 +117,7 @@ public class StatementSheet extends Sheet {
                 try {
                     rs.close();
                 } catch (SQLException ex) {
-                    throw new ExportException(ex);
+                    workbook.what("9006", ex.getMessage());
                 }
             }
             throw new ExportException(e);
@@ -127,7 +127,7 @@ public class StatementSheet extends Sheet {
                     try {
                         rs.close();
                     } catch (SQLException e) {
-                        throw new ExportException(e);
+                        workbook.what("9006", e.getMessage());
                     }
                 }
                 close();

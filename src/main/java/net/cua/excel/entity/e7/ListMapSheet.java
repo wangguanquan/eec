@@ -52,7 +52,7 @@ public class ListMapSheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.debug(getName() + " | " + name);
+        workbook.what("0010", getName());
 
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
         for (int i = 0; i < columns.length; i++) {

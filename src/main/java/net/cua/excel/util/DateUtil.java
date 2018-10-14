@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * For Excel
- * Created by guanquan.wang on 2017/9/21.
+ * Created by guanquan.wang at 2017/9/21.
  */
 public class DateUtil {
     private static final int DAYS_1900_TO_1970 = ~(int)LocalDate.of(1900, 1, 1).toEpochDay() + 3;

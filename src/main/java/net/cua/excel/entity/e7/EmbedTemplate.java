@@ -8,8 +8,8 @@ import java.util.Arrays;
  */
 public class EmbedTemplate extends AbstractTemplate {
 
-    public EmbedTemplate(Path zipPath) {
-        super(zipPath);
+    public EmbedTemplate(Path zipPath, Workbook wb) {
+        super(zipPath, wb);
     }
 
     @Override

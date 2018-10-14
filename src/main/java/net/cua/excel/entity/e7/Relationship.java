@@ -3,7 +3,7 @@ package net.cua.excel.entity.e7;
 import java.io.Serializable;
 
 /**
- * Created by guanquan.wang on 2017/9/30.
+ * Created by guanquan.wang at 2017/9/30.
  */
 public class Relationship implements Serializable, Cloneable {
     private String target;

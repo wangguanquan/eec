@@ -35,7 +35,7 @@ public class EmptySheet extends Sheet {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.debug(getName() + " | " + name);
+        workbook.what("0010", getName());
 
 
         File sheetFile = worksheets.resolve(name).toFile();

@@ -5,6 +5,7 @@ import net.cua.excel.tmap.TIntIntHashMap;
 import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 import net.cua.excel.annotation.TopNS;
+import net.cua.excel.entity.I18N;
 import org.dom4j.Document;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 每个style由一个int值组成
@@ -24,7 +26,7 @@ import java.util.List;
  * 20~26位 border
  * 26~29位 vertical
  * 29~32位 horizontal
- * Created by guanquan.wang on 2017/10/13.
+ * Created by guanquan.wang at 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles {
@@ -68,7 +70,7 @@ public class Styles {
      *
      * @return
      */
-    public static final Styles create() {
+    public static final Styles create(I18N i18N) {
         Styles self = new Styles();
 
         DocumentFactory factory = DocumentFactory.getInstance();
@@ -100,7 +102,7 @@ public class Styles {
         Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
         cellStyles.addElement("cellStyle")
                 .addAttribute("builtinId", "0")
-                .addAttribute("name", "常规") // TODO I18N
+                .addAttribute("name", i18N.get("general"))
                 .addAttribute("xfId", "0");
 
         self.document = factory.createDocument(rootElement);
@@ -110,16 +112,21 @@ public class Styles {
         self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
 
         self.fonts = new ArrayList<>();
-        Font font1 = new Font("宋体", 11, Color.black);  // en
+        Font font1 = new Font(i18N.get("en-font-family"), 11, Color.black);  // en
         font1.setFamily(2);
         font1.setScheme("minor");
         self.addFont(font1);
 
-        Font font2 = new Font("宋体", 11); // cn
-        font2.setFamily(3);
-        font2.setScheme("minor");
-        font2.setCharset(Charset.GB2312);
-        self.addFont(font2);
+        Locale locale = Locale.getDefault();
+        // 添加中文默认字体
+        if ("zh_CN".equals(locale.getLanguage())) {
+            Font font2 = new Font(i18N.get("cn-font-family"), 11); // cn
+            font2.setFamily(3);
+            font2.setScheme("minor");
+            font2.setCharset(Charset.GB2312);
+            self.addFont(font2);
+        }
+        // TODO other charset
 
         self.fills = new ArrayList<>();
         self.addFill(new Fill(PatternType.none));
@@ -252,6 +259,8 @@ public class Styles {
                 ;
     }
 
+    static final String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
+            , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
     /**
      * add style in document
      *
@@ -270,8 +279,6 @@ public class Styles {
             count = Integer.parseInt(cellXfs.attributeValue("count"));
         }
 
-        String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
-                , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
         int n = cellXfs.elements().size();
         Element newXf = cellXfs.addElement("xf");
         newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))

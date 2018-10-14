@@ -4,8 +4,6 @@ import net.cua.excel.entity.e7.Relationship;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.ZipUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 
@@ -19,11 +17,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
+ * Excel读取工具
  * Create by guanquan.wang at 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
     private ExcelReader() {}
-    static Logger logger = LogManager.getLogger(ExcelReader.class);
     private Path self;
 
     private Sheet[] sheets;
@@ -36,7 +34,6 @@ public class ExcelReader implements AutoCloseable {
         // Store template stream as zip file
         Path temp = FileUtil.mktmp("eec+");
         ZipUtil.unzip(stream, temp);
-        logger.debug("unzip to {} finished.", temp);
 
         // load workbook.xml
         SAXReader reader = new SAXReader();

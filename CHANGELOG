@@ -3,6 +3,8 @@ Version 0.2.1 (2018-10-08)
 1. 增加隔行变色(默认)，可使用cancelOddStyle取消变色，也可使用setOddFill设置颜色。
 2. 修复单元格包含回车符导致读取错位的bug
 3. 修复空单元格（不等于值为null的单元格）读取位置错误的bug
+4. Workbook添加Watch监听Excel生成过程
+5. I18N
 
 Version 0.2.0 (2018-09-30)
 -------------

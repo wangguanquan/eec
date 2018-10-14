@@ -1,9 +1,9 @@
 package net.cua.excel.entity;
 
 /**
- * Created by guanquan.wang on 2017/10/19.
+ * Created by guanquan.wang at 2017/10/19.
  */
-public class ExportException extends Exception {
+public class ExportException extends RuntimeException {
 
     public ExportException() {
         super();

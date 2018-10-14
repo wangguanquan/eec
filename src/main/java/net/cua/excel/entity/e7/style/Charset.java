@@ -10,7 +10,7 @@ public class Charset {
             // "show characters in whatever charsets are available."
             , SYMBOL = 0x02
             , SHIFTJIS = 0x80 // 日文
-            , HANGUL = 0x81
+            , HANGUL = 0x81 // 韩国、朝鲜
             , GB2312 = 0x86 // 简体
             , CHINESEBIG5 = 0x88 // 繁体
             , GREEK = 0xA1

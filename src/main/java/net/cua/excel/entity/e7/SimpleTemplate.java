@@ -7,8 +7,8 @@ import java.nio.file.Path;
  */
 public class SimpleTemplate extends AbstractTemplate {
 
-    public SimpleTemplate(Path zipPath) {
-        super(zipPath);
+    public SimpleTemplate(Path zipPath, Workbook wb) {
+        super(zipPath, wb);
     }
 
     @Override

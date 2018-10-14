@@ -2,8 +2,6 @@ package net.cua.excel.entity.e7;
 
 import net.cua.excel.manager.Const;
 import net.cua.excel.util.FileUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -20,13 +18,14 @@ import java.util.*;
  * Created by guanquan.wang at 2018-02-26 13:45
  */
 public abstract class AbstractTemplate {
-    Logger logger = LogManager.getLogger(getClass());
     static final String inlineStr = "inlineStr";
+    protected Workbook wb;
 
     Path zipPath;
     Map<String, String> map;
-    public AbstractTemplate(Path zipPath) {
+    public AbstractTemplate(Path zipPath, Workbook wb) {
         this.zipPath = zipPath;
+        this.wb = wb;
     }
 
     /**
@@ -41,7 +40,7 @@ public abstract class AbstractTemplate {
         try {
             document = reader.read(Files.newInputStream(contentTypePath));
         } catch (DocumentException | IOException e) {
-            logger.error("[Content_Types].xml load failed.", e);
+            wb.what("9002", "[Content_Types].xml");
             return false;
         }
 
@@ -63,7 +62,7 @@ public abstract class AbstractTemplate {
     protected boolean checkDefault(List<ContentType.Default> list) {
         // Double check
         if (list.isEmpty() || !checkDouble(list)) {
-            logger.warn("Default empty or double properties.");
+            wb.what("9003", "Default");
         }
         return true;
     }
@@ -71,13 +70,13 @@ public abstract class AbstractTemplate {
     protected boolean checkOverride(List<ContentType.Override> list) {
         // Double check
         if (list.isEmpty() || !checkDouble(list)) {
-            logger.warn("Override empty or double properties.");
+            wb.what("9003", "Override");
         }
         // File exists check
         for (ContentType.Override o : list) {
             Path subPath = zipPath.resolve(o.getPartName().substring(1));
             if (!Files.exists(subPath)) {
-                logger.error("FileNotFoundException: " + subPath);
+                wb.what("9004", subPath.toString());
                 return false;
             }
         }
@@ -128,7 +127,7 @@ public abstract class AbstractTemplate {
         // inner text
         int n2 = bindSheetData();
 
-        logger.debug("Search " + (n1 + n2) + " bind words.");
+        wb.what("0099", String.valueOf(n1 + n2));
     }
 
     protected int bindSstData() {
@@ -139,7 +138,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(shareStringPath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            logger.error("shareStrings.xml load failed.", e);
+            wb.what("9002", "shareStrings.xml");
             return 0;
         }
 
@@ -165,7 +164,7 @@ public abstract class AbstractTemplate {
             try {
                 FileUtil.writeToDisk(document, shareStringPath);
             } catch (IOException e) {
-                logger.warn("Rewrite " + shareStringPath + " failed.", e);
+                wb.what("9004", shareStringPath.toString());
                 // Do nothing
             }
         }
@@ -181,7 +180,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(contentTypePath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            logger.error("shareStrings.xml load failed.", e);
+            wb.what("9002", "[Content_Types].xml");
             return 0;
         }
 
@@ -205,7 +204,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(sheetPath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            logger.error("shareStrings.xml load failed.", e);
+            wb.what("9002", sheetPath.toString());
             return 0;
         }
 
@@ -236,7 +235,7 @@ public abstract class AbstractTemplate {
             try {
                 FileUtil.writeToDiskNoFormat(document, sheetPath);
             } catch (IOException e) {
-                logger.warn("Rewrite " + sheetData + " failed.", e);
+                wb.what("9004", sheetData.toString());
                 // Do nothing
             }
         }

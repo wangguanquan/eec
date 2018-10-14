@@ -1,8 +1,6 @@
 package net.cua.excel.entity;
 
 import net.cua.excel.manager.Const;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -16,7 +14,6 @@ import java.nio.file.*;
  * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
-    private Logger logger = LogManager.getLogger(getClass());
     private Path imagePath;
     private boolean temp;
 
@@ -95,9 +92,8 @@ public class WaterMark {
             ImageIO.write(bi, "png", temp.toFile());
             return temp;
         } catch (IOException e) {
-            logger.error("", e);
+            throw new ExportException("水印制作失败", e);
         }
-        return null;
     }
 
     private Path createTemp() throws IOException {

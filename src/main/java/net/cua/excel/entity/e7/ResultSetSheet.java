@@ -18,7 +18,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Created by guanquan.wang on 2017/9/27.
+ * Created by guanquan.wang at 2017/9/27.
  */
 public class ResultSetSheet extends Sheet implements Cloneable {
     private ResultSet rs;
@@ -58,7 +58,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
             try {
                 rs.close();
             } catch (SQLException e) {
-                logger.error(e.getErrorCode(), e);
+                workbook.what("9006", e.getMessage());
             }
         }
     }
@@ -70,7 +70,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
             Files.createDirectory(worksheets);
         }
         String name = getFileName();
-        logger.debug(getName() + " | " + name);
+        workbook.what("0010", getName());
 
         for (int i = 0; i < columns.length; i++) {
             if (StringUtil.isEmpty(columns[i].getName())) {
@@ -126,7 +126,6 @@ public class ResultSetSheet extends Sheet implements Cloneable {
 
         // Delete empty copy sheet
         if (copySheet && rows == 1) {
-            logger.debug("Delete empty copy sheet");
             workbook.remove(id - 1);
             sheetFile.delete();
             return;
