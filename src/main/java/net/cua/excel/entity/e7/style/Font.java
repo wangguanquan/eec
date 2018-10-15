@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 /**
  * Created by guanquan.wang at 2018-02-02 16:51
  */
-public class Font {
+public class Font implements Cloneable {
     private int style;
     private int size;
     private String name;
@@ -305,10 +305,12 @@ public class Font {
     public boolean equals(Object o) {
         if (o instanceof Font) {
             Font other = (Font) o;
-            return other.style == style
+            return other.family == family
+                    && other.style == style
                     && other.size == size
                     && (other.color != null ? other.color.equals(color) : null == color)
-                    && (other.name != null ? other.name.equals(name) : null == name);
+                    && (other.name != null ? other.name.equals(name) : null == name)
+                    ;
         }
         return false;
     }
@@ -344,6 +346,23 @@ public class Font {
             element.addElement("charset").addAttribute("val", String.valueOf(charset));
         }
         return element;
+    }
+
+    @Override public Font clone() {
+        Font other;
+        try {
+            other = (Font) super.clone();
+        } catch (CloneNotSupportedException e) {
+            other = new Font();
+            other.family = family;
+            other.charset = charset;
+            other.name = name;
+            other.scheme = scheme;
+        }
+        if (color != null) {
+            other.color = new Color(color.getRGB());
+        }
+        return other;
     }
 
     // ######################################Static inner class######################################

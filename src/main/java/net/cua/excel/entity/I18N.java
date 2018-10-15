@@ -18,9 +18,9 @@ public class I18N {
         Locale locale = Locale.getDefault();
         pro = new Properties();
         try {
-            InputStream is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", locale.getLanguage()));
+            InputStream is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", locale.toLanguageTag()));
             if (is == null) {
-                is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", "zh_CN"));
+                is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", "zh-CN"));
             }
             if (is != null) {
                 pro.load(new InputStreamReader(is, "UTF-8"));

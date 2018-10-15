@@ -75,6 +75,11 @@ public class Sheet implements AutoCloseable {
      * @return HeaderRow
      */
     public Row getHeader() {
+        if (header == null) {
+            Row row = findRow0();
+            if (row != null)
+                header = row.asHeader();
+        }
         return header;
     }
 
@@ -182,6 +187,54 @@ public class Sheet implements AutoCloseable {
 
         // share row
         return sRow.with(cb, start, nChar - start);
+    }
+
+    protected Row findRow0() {
+        char[] cb = new char[8192];
+        int nChar = 0, length;
+        // reload file
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            loopA:
+            for (; ; ) {
+                length = reader.read(cb);
+                if (length < 11) break;
+                // find index of <sheetData>
+                for (; nChar < length - 11; nChar++) {
+                    if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
+                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
+                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
+                            && cb[nChar + 9] == 'a' && cb[nChar + 10] == '>') {
+                        nChar += 11;
+                        break loopA;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Read header row error.");
+            return null;
+        }
+
+        boolean eof = false;
+        if (eof) return null;
+        boolean endTag = false;
+        int start = nChar;
+        // find end of row tag
+        for (; nChar < length - 6; nChar++) {
+            if (cb[nChar] == '<' && cb[nChar+1] == '/' && cb[nChar+2] == 'r'
+                    && cb[nChar+3] == 'o' && cb[nChar+4] == 'w' && cb[nChar+5] == '>') {
+                nChar += 6;
+                endTag = true;
+                break;
+            }
+        }
+
+        if (!endTag) {
+            // too big
+            return null;
+        }
+
+        // row
+        return new Row(sst).with(cb, start, nChar - start);
     }
 
     /**

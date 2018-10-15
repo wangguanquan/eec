@@ -117,9 +117,9 @@ public class Styles {
         font1.setScheme("minor");
         self.addFont(font1);
 
-        Locale locale = Locale.getDefault();
+        String lang = Locale.getDefault().toLanguageTag();
         // 添加中文默认字体
-        if ("zh_CN".equals(locale.getLanguage())) {
+        if ("zh-CN".equals(lang)) {
             Font font2 = new Font(i18N.get("cn-font-family"), 11); // cn
             font2.setFamily(3);
             font2.setScheme("minor");

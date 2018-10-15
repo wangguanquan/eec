@@ -151,6 +151,14 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
+     * get all sheets
+     * @return
+     */
+    public Sheet[] all() {
+        return sheets;
+    }
+
+    /**
      *
      * @return size of sheets
      */

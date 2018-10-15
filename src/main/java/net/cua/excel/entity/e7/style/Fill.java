@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 /**
  * Created by guanquan.wang at 2018-02-06 08:55
  */
-public class Fill {
+public class Fill implements Cloneable {
     private PatternType patternType;
     private Color bgColor, fgColor;
 
@@ -157,5 +157,22 @@ public class Fill {
             }
         }
         return element;
+    }
+
+    @Override public Fill clone() {
+        Fill other;
+        try {
+            other = (Fill) super.clone();
+        } catch (CloneNotSupportedException e) {
+            other = new Fill();
+            other.patternType = patternType;
+        }
+        if (bgColor != null) {
+            other.bgColor = new Color(bgColor.getRGB());
+        }
+        if (fgColor != null) {
+            other.fgColor = new Color(fgColor.getRGB());
+        }
+        return other;
     }
 }

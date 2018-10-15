@@ -71,7 +71,12 @@ public class StatementSheet extends Sheet {
                 // TODO metaData.getColumnType()
             }
         } catch (SQLException e) {
-            columns[i].setName(String.valueOf(i));
+        }
+
+        for (i = 0 ; i < columns.length; i++) {
+            if (StringUtil.isEmpty(columns[i].getName())) {
+                columns[i].setName(String.valueOf(i));
+            }
         }
 
         File sheetFile = worksheets.resolve(name).toFile();

@@ -74,8 +74,9 @@ public class Workbook {
         relManager = new RelManager();
 
         sst = new SharedStrings();
+        i18N = new I18N();
         // create styles
-        styles = Styles.create();
+        styles = Styles.create(i18N);
     }
 
     public String getName() {
@@ -292,7 +293,6 @@ public class Workbook {
      */
     public Workbook watch(Watch watch) {
         this.watch = watch;
-        i18N = new I18N();
         return this;
     }
 
