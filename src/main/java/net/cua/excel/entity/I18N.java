@@ -44,6 +44,19 @@ public class I18N {
 
     /**
      * get message by code
+     * @param code message code
+     * @param other default value
+     * @return I18N string
+     */
+    public String getOrElse(String code, String other) {
+        if (pro != null) {
+            return pro.getProperty(code);
+        }
+        return other;
+    }
+
+    /**
+     * get message by code
      * @param code code
      * @param args args
      * @return I18N string

@@ -35,9 +35,9 @@ import java.util.*;
 import java.util.List;
 
 /**
- * https://poi.apache.org/encryption.html encrypted
- * https://msdn.microsoft.com/library
- * https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
+ * @link https://poi.apache.org/encryption.html encrypted
+ * @link https://msdn.microsoft.com/library
+ * @link https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
  * Created by guanquan.wang at 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
@@ -59,14 +59,27 @@ public class Workbook {
     private SharedStrings sst; // 共享字符区
     private Styles styles; // 共享样式
 
+    /**
+     * 创建未命名工作簿
+     */
     public Workbook() {
         this(null);
     }
 
+    /**
+     * 创建工作簿
+     * 保存时以此名称为文件名
+     * @param name 名称
+     */
     public Workbook(String name) {
         this(name, null);
     }
 
+    /**
+     * 创建工作簿
+     * @param name 名称
+     * @param creator 作者
+     */
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
@@ -79,28 +92,60 @@ public class Workbook {
         styles = Styles.create(i18N);
     }
 
+    /**
+     * 返回工作簿名称
+     * @return name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 设置工作簿名称
+     * @param name 名称
+     * @return 工作簿
+     */
     public Workbook setName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * 返回所有Sheet页
+     * @return Sheet数组
+     */
     public final Sheet[] getSheets() {
         return Arrays.copyOf(sheets, size);
     }
 
+    /**
+     * 设置Sheet页
+     * @param sheets Sheet数组
+     * @return 工作簿
+     */
     public Workbook setSheets(final Sheet[] sheets) {
         this.sheets = sheets.clone();
         return this;
     }
 
+    /**
+     * 返回水印
+     * <p>标准excel文件中没有水印，所谓水印就是设置图片背景然后平铺以达到效果
+     * ，此水印打印的时候并不会被打印。
+     * </p>
+     * @return 工作簿
+     */
     public WaterMark getWaterMark() {
         return waterMark;
     }
 
+    /**
+     * 设置水印
+     * <p>可使用<code>WaterMark.of()</code>创建水印</p>
+     * @param waterMark 水印
+     * @return 工作簿
+     * @link {WaterMark#of}
+     */
     public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
         return this;
@@ -111,33 +156,63 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 设置数据库连接
+     * <p>工作簿内部不会主动关闭数据库连接，需要外部手动关闭，
+     * 此eec内部产生的Statement和ResultSet会主动关闭</p>
+     * @param con 连接
+     * @return 工作簿
+     */
     public Workbook setConnection(Connection con) {
         this.con = con;
         return this;
     }
 
+    /**
+     * 设置列宽自动调整
+     * @param autoSize boolean value
+     * @return 工作簿
+     */
     public Workbook setAutoSize(boolean autoSize) {
         this.autoSize = autoSize;
         return this;
     }
 
+    /**
+     * 返回列宽是否自动调整
+     * @return boolean value
+     */
     public boolean isAutoSize() {
         return autoSize;
     }
 
-    public SharedStrings getSst() {
+    SharedStrings getSst() {
         return sst;
     }
 
+    /**
+     * 返回所有样式
+     * @return Styles
+     */
     public Styles getStyles() {
         return styles;
     }
 
+    /**
+     * 设置作者
+     * @param creator 作者
+     * @return 工作簿
+     */
     public Workbook setCreator(String creator) {
         this.creator = creator;
         return this;
     }
 
+    /**
+     * 设置公司名
+     * @param company 公司名
+     * @return 工作簿
+     */
     public Workbook setCompany(String company) {
         this.company = company;
         return this;
@@ -145,7 +220,7 @@ public class Workbook {
 
     /**
      * 取消隔行变色
-     * @return workbook
+     * @return 工作簿
      */
     public Workbook cancelOddStyle() {
         this.autoOdd = false;
@@ -153,18 +228,18 @@ public class Workbook {
     }
     /**
      * 设置隔行变色的背景色，默认为#e2edda
-     * @param fill Fill
-     * @return workbook
+     * @param color 偶数行背景色
+     * @return 工作簿
      */
-    public Workbook setOddFill(Fill fill) {
-        this.oddFill = fill;
+    public Workbook setOddColor(Color color) {
+        this.oddFill = new Fill(PatternType.solid, color);
         return this;
     }
 
     /**
-     * 添加sheet
+     * 尾部添加Sheet
      * @param sheet Sheet
-     * @return Workbook
+     * @return 工作簿
      */
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
@@ -172,6 +247,13 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 尾部添加Sheet
+     * @param name 名称
+     * @param data 数据，Map数组/对象数组
+     * @param columns 表头
+     * @return 工作簿
+     */
     public Workbook addSheet(String name, List<?> data, Sheet.Column ... columns) {
         int _size = size;
         Object o;
@@ -213,6 +295,13 @@ public class Workbook {
         return first;
     }
 
+    /**
+     * 尾部添加Sheet
+     * @param name 名称
+     * @param rs ResultSet
+     * @param columns 表头
+     * @return 工作簿
+     */
     public Workbook addSheet(String name, ResultSet rs, Sheet.Column ... columns) {
         ensureCapacityInternal();
         ResultSetSheet sheet = new ResultSetSheet(this, name, columns);
@@ -221,6 +310,14 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 尾部添加Sheet
+     * @param name 名称
+     * @param sql SQL文
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
     public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
@@ -231,6 +328,18 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 尾部添加Sheet
+     * <p>采用jdbc方式设置SQL参数
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * </p>
+     * @param name 名称
+     * @param sql SQL文
+     * @param pp 参数
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
     public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
@@ -241,6 +350,12 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 在指定位置上插入Sheet
+     * @param index 下标从0开始
+     * @param sheet 要插入的Sheet
+     * @return 工作簿
+     */
     public Workbook insertSheet(int index, Sheet sheet) {
         int _size = size;
         if (sheets[index] != null) {
@@ -255,6 +370,11 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 移除指定下标的Sheet
+     * @param index 下标从0开始
+     * @return 工作簿
+     */
     public Workbook remove(int index) {
         if (index < 0 || index >= size) {
             return this;
@@ -271,12 +391,22 @@ public class Workbook {
         return this;
     }
 
+    /**
+     * 返回指定下标的Sheet
+     * @param index 下标从0开始
+     * @return Sheet
+     */
     public Sheet getSheetAt(int index) {
         if (index < 0 || index >= size)
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
         return sheets[index];
     }
 
+    /**
+     * 返回指定名称的Sheet
+     * @param sheetName sheet name
+     * @return Sheet, 未打到时返回null
+     */
     public Sheet getSheet(String sheetName) {
         for (Sheet sheet : sheets) {
             if (sheet.getName().equals(sheetName)) {
@@ -289,7 +419,7 @@ public class Workbook {
     /**
      * 添加观察者
      * @param watch 观察者
-     * @return Workbook
+     * @return 工作簿
      */
     public Workbook watch(Watch watch) {
         this.watch = watch;
@@ -576,12 +706,11 @@ public class Workbook {
     }
 
     protected void reMarkPath(Path zip, Path path) throws IOException {
-        String str = path.toString(), name;
-        if (str.endsWith(Const.Suffix.EXCEL_07)) {
-            name = str.substring(str.lastIndexOf(Const.lineSeparator) + 1);
-        } else {
-            name = "新建文件";
+        String name;
+        if (StringUtil.isEmpty(name = getName())) {
+            name = i18N.getOrElse("no-name-file", "No name");
         }
+
         reMarkPath(zip, path, name);
     }
 
@@ -620,6 +749,16 @@ public class Workbook {
     }
 
     //////////////////////////Print Out/////////////////////////////
+
+    /**
+     * 输出工作簿到指定文件夹下
+     * <p>如果Path是文件夹，则将工作簿保存到该文件夹下，
+     * 如果Path是文件，则将写到该文件下。
+     * </p>
+     * @param path 保存地址
+     * @throws IOException IO异常
+     * @throws ExportException 其它异常
+     */
     public void writeTo(Path path) throws IOException, ExportException {
         if (!Files.isDirectory(path)) {
             writeTo(path.toFile());
@@ -630,21 +769,37 @@ public class Workbook {
         }
         Path zip = is == null ? createTemp() : template();
 
-        reMarkPath(zip, path, getName());
+        reMarkPath(zip, path);
     }
 
+    /**
+     * 输出到指定流
+     * @param os OutputStream
+     * @throws IOException IO异常
+     * @throws ExportException 其它异常
+     */
     public void writeTo(OutputStream os) throws IOException, ExportException {
         Path zip = is == null ? createTemp() : template();
         Files.copy(zip, os);
     }
 
+    /**
+     * 输出到文件
+     * @param file 文件名
+     * @throws IOException IO异常
+     * @throws ExportException 其它异常
+     */
     public void writeTo(File file) throws IOException, ExportException {
         Path zip = is == null ? createTemp() : template();
         FileUtil.cp(zip, file);
     }
 
     /**
-     * return excel path
+     * 执行创建操作，然后再执行DownProcessor
+     * eq;<code>workbook.create(path -> ... temp excel path)</code>
+     * @param processor DownProcessor
+     * @throws IOException IO异常
+     * @throws ExportException 其它异常
      */
     public void create(DownProcessor processor) throws IOException, ExportException {
         Path zip = createTemp();
@@ -655,11 +810,23 @@ public class Workbook {
     /////////////////////////////////Template///////////////////////////////////
     private InputStream is;
     private Object o;
+
+    /**
+     * 设置模版
+     * @param is 从流中读取模版
+     * @return 工作簿
+     */
     public Workbook withTemplate(InputStream is) {
         this.is = is;
         return this;
     }
 
+    /**
+     * 设置模版和绑定对象
+     * @param is 从流中读取模版
+     * @param o 绑定对象
+     * @return 工作簿
+     */
     public Workbook withTemplate(InputStream is, Object o) {
         this.is = is;
         this.o = o;
