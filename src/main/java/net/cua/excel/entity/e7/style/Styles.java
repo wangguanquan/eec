@@ -98,6 +98,8 @@ public class Styles {
                 .addAttribute("numFmtId", "0")
                 .addElement("alignment")
                 .addAttribute("vertical", "center");
+        // cellXfs
+        rootElement.addElement("cellXfs").addAttribute("count", "0");
         // cellStyles
         Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
         cellStyles.addElement("cellStyle")
