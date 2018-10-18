@@ -18,6 +18,8 @@ import net.cua.excel.processor.Watch;
 import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 import net.cua.excel.util.ZipUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 
 import java.awt.Color;
@@ -43,7 +45,7 @@ import java.util.List;
 @TopNS(prefix = {"", "r"}, value = "workbook"
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
-
+    private Logger logger = LogManager.getLogger(getClass());
     private String name;
     private Sheet[] sheets;
     private WaterMark waterMark;
@@ -222,17 +224,17 @@ public class Workbook {
      * 取消隔行变色
      * @return 工作簿
      */
-    public Workbook cancelOddStyle() {
+    public Workbook cancelOddFill() {
         this.autoOdd = false;
         return this;
     }
     /**
      * 设置隔行变色的背景色，默认为#e2edda
-     * @param color 偶数行背景色
+     * @param fill 偶数行背景色
      * @return 工作簿
      */
-    public Workbook setOddColor(Color color) {
-        this.oddFill = new Fill(PatternType.solid, color);
+    public Workbook setOddFill(Fill fill) {
+        this.oddFill = fill;
         return this;
     }
 
@@ -430,8 +432,10 @@ public class Workbook {
      * output export info
      */
     void what(String code) {
+        String msg = i18N.get(code);
+        logger.debug(msg);
         if (watch != null) {
-            watch.what(i18N.get(code));
+            watch.what(msg);
         }
     }
 
@@ -439,8 +443,10 @@ public class Workbook {
      * output export info
      */
     void what(String code, String ... args) {
+        String msg = i18N.get(code, args);
+        logger.debug(msg);
         if (watch != null) {
-            watch.what(i18N.get(code, args));
+            watch.what(msg);
         }
     }
 

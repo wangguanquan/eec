@@ -2,6 +2,7 @@ package net.cua.excel.entity.e7;
 
 import net.cua.excel.entity.ExportException;
 import net.cua.excel.util.ExtBufferedWriter;
+import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 import net.cua.excel.annotation.DisplayName;
 import net.cua.excel.annotation.NotExport;
@@ -52,7 +53,7 @@ public class ListObjectSheet<T> extends Sheet {
     public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
-            Files.createDirectory(worksheets);
+            FileUtil.mkdir(worksheets);
         }
         String name = getFileName();
         workbook.what("0010", getName());

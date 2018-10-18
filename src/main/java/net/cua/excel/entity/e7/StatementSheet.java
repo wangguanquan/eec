@@ -4,6 +4,7 @@ import net.cua.excel.manager.Const;
 import net.cua.excel.entity.ExportException;
 import net.cua.excel.entity.WaterMark;
 import net.cua.excel.util.ExtBufferedWriter;
+import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 
 import java.io.*;
@@ -53,7 +54,7 @@ public class StatementSheet extends Sheet {
     public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
-            Files.createDirectory(worksheets);
+            FileUtil.mkdir(worksheets);
         }
         String name = getFileName();
         workbook.what("0010", getName());
@@ -84,7 +85,9 @@ public class StatementSheet extends Sheet {
         int sub = 0;
         // write date
         try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+            workbook.what("0011");
             rs = ps.executeQuery();
+            workbook.what("0012");
             // Write header
             writeBefore(bw);
             int limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - rows; // exclude header rows
@@ -156,6 +159,7 @@ public class StatementSheet extends Sheet {
         relManager.write(worksheets, name);
 
         if (sub == 1) {
+            workbook.what("0013");
             ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, columns, rs, relManager.clone());
             rss.setName(this.name + " (" + (sub) + ")");
             rss.setCopySheet(true);

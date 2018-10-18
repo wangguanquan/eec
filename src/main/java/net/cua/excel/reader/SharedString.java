@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
+ * 读取sharedString.xml数据
  * Create by guanquan.wang at 2018-09-27 14:28
  */
 class SharedString {
@@ -24,9 +25,13 @@ class SharedString {
     }
 
     SharedString load() throws IOException {
-        // get unique count
-        max_size = uniqueCount();
-        sharedString = max_size < 0 || max_size > page_size ? new String[page_size] : new String[max_size];
+        if (Files.exists(sstPath)) {
+            // get unique count
+            max_size = uniqueCount();
+            sharedString = max_size < 0 || max_size > page_size ? new String[page_size] : new String[max_size];
+        } else {
+            max_size = 0;
+        }
         return this;
     }
 
@@ -69,6 +74,9 @@ class SharedString {
         return -1;
     }
 
+    /**
+     * 采用SAX方式分段加载数据
+     */
     private void loadXml() {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         try (InputStream is = Files.newInputStream(sstPath)) {
@@ -112,5 +120,8 @@ class SharedString {
         }
     }
 
+    /**
+     * 用于中断XML解析过程
+     */
     static class BreakParserException extends RuntimeException { }
 }

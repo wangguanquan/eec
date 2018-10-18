@@ -15,10 +15,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
+ * 对应Excel文件各Sheet页，包含隐藏Sheet页
  * Create by guanquan.wang at 2018-09-22
  */
 public class Sheet implements AutoCloseable {
-    Logger logger = LogManager.getLogger(getClass());
+    private Logger logger = LogManager.getLogger(getClass());
     Sheet() {}
 
     private String name;
@@ -29,26 +30,28 @@ public class Sheet implements AutoCloseable {
     private int startRow = -1; // row index of data
     private Row header;
 
-    public void setName(String name) {
+    void setName(String name) {
         this.name = name;
     }
 
-    public void setPath(Path path) {
+    void setPath(Path path) {
         this.path = path;
     }
 
-    public void setSst(SharedString sst) {
+    void setSst(SharedString sst) {
         this.sst = sst;
     }
 
+    /**
+     * @return sheet名
+     */
     public String getName() {
         return name;
     }
 
-    public Path getPath() {
-        return path;
-    }
-
+    /**
+     * @return sheet位于workbook的位置
+     */
     public int getIndex() {
         return index;
     }
@@ -70,29 +73,46 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * this.rows()方法第一行就是头部信息，
-     * rowsWithOutHeader()方法会跳过头部信息，此时可以使用此方法获得头部信息。
+     * 返回列表头，第一个非空行默认为头部信息
      * @return HeaderRow
      */
     public Row getHeader() {
-        if (header == null) {
+        if (header == null && !heof) {
             Row row = findRow0();
-            if (row != null)
+            if (row != null) {
                 header = row.asHeader();
+                sRow.setHr((Row.HeaderRow) header);
+            }
         }
         return header;
     }
 
+    /**
+     * 绑定对象
+     * @param clazz 对象类型
+     * @return sheet
+     */
+    public Sheet bind(Class<?> clazz) {
+        if (getHeader() != null) {
+            try {
+                ((Row.HeaderRow) header).setClassOnce(clazz);
+            } catch (IllegalAccessException | InstantiationException e) {
+                throw new ExcelReadException(e);
+            }
+        }
+        return this;
+    }
+
     @Override
     public String toString() {
-        return name + " : " + path;
+        return name;
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
     private BufferedReader reader;
     private char[] cb; // buffer
     private int nChar, length;
-    private boolean eof = false;
+    private boolean eof = false, heof = false;
 
     private Row sRow;
 
@@ -115,16 +135,16 @@ public class Sheet implements AutoCloseable {
                 String size = "<dimension ref=\"";
                 int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index+=(size.length()+1)) : -1;
                 if (end > 0) {
-                    String __ = line.substring(index, end);
+                    String l_ = line.substring(index, end);
                     Pattern pat = Pattern.compile("[A-Z]+(\\d+):[A-Z]+(\\d+)");
-                    Matcher mat = pat.matcher(__);
+                    Matcher mat = pat.matcher(l_);
                     if (mat.matches()) {
                         int from = Integer.parseInt(mat.group(1)), to = Integer.parseInt(mat.group(2));
                         this.startRow = from;
                         this.size = to - from;
                     } else {
                         pat = Pattern.compile("[A-Z]+(\\d+)");
-                        mat = pat.matcher(__);
+                        mat = pat.matcher(l_);
                         if (mat.matches()) {
                             this.startRow = Integer.parseInt(mat.group(1));
                         }
@@ -133,17 +153,23 @@ public class Sheet implements AutoCloseable {
                 }
             }
             // find index of <sheetData>
-            for (; nChar < length - 11; nChar++) {
+            for (; nChar < length - 12; nChar++) {
                 if (cb[nChar] == '<' && cb[nChar+1] == 's' && cb[nChar+2] == 'h'
                         && cb[nChar+3] == 'e' && cb[nChar+4] == 'e' && cb[nChar+5] == 't'
                         && cb[nChar+6] == 'D' && cb[nChar+7] == 'a' && cb[nChar+8] == 't'
-                        && cb[nChar+9] == 'a' && cb[nChar+10] == '>') {
+                        && cb[nChar+9] == 'a' && (cb[nChar+10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
                     nChar += 11;
                     break loopA;
                 }
             }
         }
-        sRow = new Row(sst); // share row space
+        // Empty sheet
+        if (cb[nChar] == '>') {
+            nChar++;
+            eof = true;
+        } else {
+            sRow = new Row(sst); // share row space
+        }
 
         return this;
     }
@@ -153,11 +179,17 @@ public class Sheet implements AutoCloseable {
      * @return
      * @throws IOException
      */
-    public Row nextRow() throws IOException {
+    private Row nextRow() throws IOException {
         if (eof) return null;
         boolean endTag = false;
         int start = nChar;
         // find end of row tag
+        for ( ; cb[++nChar] != '>'; );
+        // Empty Row
+        if (cb[nChar++ - 1] == '/') {
+            return sRow.empty(cb, start, nChar - start);
+        }
+        // Not empty
         for (; nChar < length - 6; nChar++) {
             if (cb[nChar] == '<' && cb[nChar+1] == '/' && cb[nChar+2] == 'r'
                     && cb[nChar+3] == 'o' && cb[nChar+4] == 'w' && cb[nChar+5] == '>') {
@@ -194,16 +226,14 @@ public class Sheet implements AutoCloseable {
         int nChar = 0, length;
         // reload file
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            loopA:
-            for (; ; ) {
+            loopA: for ( ; ; ) {
                 length = reader.read(cb);
-                if (length < 11) break;
                 // find index of <sheetData>
-                for (; nChar < length - 11; nChar++) {
+                for (; nChar < length - 12; nChar++) {
                     if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
                             && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
                             && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                            && cb[nChar + 9] == 'a' && cb[nChar + 10] == '>') {
+                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
                         nChar += 11;
                         break loopA;
                     }
@@ -213,18 +243,29 @@ public class Sheet implements AutoCloseable {
             logger.error("Read header row error.");
             return null;
         }
+        boolean eof = cb[nChar] == '>';
+        if (eof) {
+            this.heof = eof;
+            return null;
+        }
 
-        boolean eof = false;
-        if (eof) return null;
-        boolean endTag = false;
-        int start = nChar;
-        // find end of row tag
-        for (; nChar < length - 6; nChar++) {
-            if (cb[nChar] == '<' && cb[nChar+1] == '/' && cb[nChar+2] == 'r'
-                    && cb[nChar+3] == 'o' && cb[nChar+4] == 'w' && cb[nChar+5] == '>') {
-                nChar += 6;
-                endTag = true;
-                break;
+        boolean endTag;
+        int start;
+        // find the first not null row
+        loopB: while (true) {
+            start = nChar;
+            for (; cb[++nChar] != '>' && nChar < length; );
+            // Empty Row
+            if (cb[nChar++ - 1] != '/') {
+                // find end of row tag
+                for (; nChar < length - 6; nChar++) {
+                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
+                            && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
+                        nChar += 6;
+                        endTag = true;
+                        break loopB;
+                    }
+                }
             }
         }
 
@@ -238,12 +279,55 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     *
-     * @return
+     * 迭代每行数据包含头部信息和空行数据
+     * @return 迭代器
      */
     public Iterator<Row> iterator() {
         return iter;
     }
+
+    /**
+     * 迭代数据行，不包含头部信息和空行
+     * @return 迭代器
+     */
+    public Iterator<Row> dataIterator() {
+        if (nIter.hasNext()) {
+            Row row = nIter.next();
+            if (header == null) header = row.asHeader();
+        }
+        return nIter;
+    }
+
+    // iterator data rows
+    private Iterator<Row> nIter = new Iterator<Row>() {
+        Row nextRow = null;
+
+        @Override
+        public boolean hasNext() {
+            if (nextRow != null) {
+                return true;
+            } else {
+                try {
+                    // Skip empty rows
+                    for ( ; (nextRow = nextRow()) != null && nextRow.isEmpty(); );
+                    return nextRow != null;
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+
+        @Override
+        public Row next() {
+            if (nextRow != null || hasNext()) {
+                Row next = nextRow;
+                nextRow = null;
+                return next;
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+    };
 
     // iterator foreach rows
     private Iterator<Row> iter = new Iterator<Row>() {
@@ -287,17 +371,18 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * stream with out header row
+     * stream with out header row and empty rows
      * @return a {@code Stream<Row>} providing the lines of row
      *         described by this {@code Sheet}
      * @since 1.8
      */
-    public Stream<Row> rowsWithOutHeader() {
-        if (iter.hasNext()) {
-            this.header = iter.next().asHeader(); // skip first row
+    public Stream<Row> dataRows() {
+        if (nIter.hasNext()) {
+            Row row = nIter.next();
+            if (header == null) header = row.asHeader();
         }
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-                iter, Spliterator.ORDERED | Spliterator.NONNULL), false);
+                nIter, Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**

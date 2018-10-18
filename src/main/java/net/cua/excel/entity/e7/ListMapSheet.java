@@ -1,6 +1,7 @@
 package net.cua.excel.entity.e7;
 
 import net.cua.excel.util.ExtBufferedWriter;
+import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 import net.cua.excel.entity.WaterMark;
 
@@ -49,7 +50,7 @@ public class ListMapSheet extends Sheet {
     public void writeTo(Path xl) throws IOException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
-            Files.createDirectory(worksheets);
+            FileUtil.mkdir(worksheets);
         }
         String name = getFileName();
         workbook.what("0010", getName());

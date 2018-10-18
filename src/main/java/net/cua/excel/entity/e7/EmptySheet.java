@@ -2,6 +2,7 @@ package net.cua.excel.entity.e7;
 
 import net.cua.excel.util.ExtBufferedWriter;
 import net.cua.excel.entity.WaterMark;
+import net.cua.excel.util.FileUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,7 +33,7 @@ public class EmptySheet extends Sheet {
     public void writeTo(Path xl) throws IOException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
-            Files.createDirectory(worksheets);
+            FileUtil.mkdir(worksheets);
         }
         String name = getFileName();
         workbook.what("0010", getName());

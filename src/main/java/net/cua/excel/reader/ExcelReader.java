@@ -18,6 +18,14 @@ import java.util.stream.StreamSupport;
 
 /**
  * Excel读取工具
+ * 一个流式操作链，使用游标控制，游标只会向前，所以不能反复操作同一个Sheet流。
+ * 同一个Sheet页内部Row对象是内存共享的，所以不要直接将Stream<Row>转为集合类.
+ * 你首先应该考虑使用try-with-resource使用Reader或手动关闭ExcelReader。
+ * <code>
+ *     try (ExcelReader reader = ExcelReader.read(path)) {
+ *         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+ *     } catch (IOException e) {}
+ * </code>
  * Create by guanquan.wang at 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
@@ -26,10 +34,22 @@ public class ExcelReader implements AutoCloseable {
 
     private Sheet[] sheets;
 
+    /**
+     * 实例化Reader
+     * @param path Excel路径
+     * @return ExcelReader
+     * @throws IOException 文件不存在或读取文件失败
+     */
     public static ExcelReader read(Path path) throws IOException {
         return read(Files.newInputStream(path));
     }
 
+    /**
+     * 实例化Reader
+     * @param stream Excel文件流
+     * @return ExcelReader
+     * @throws IOException 读取文件失败
+     */
     public static ExcelReader read(InputStream stream) throws IOException {
         // Store template stream as zip file
         Path temp = FileUtil.mktmp("eec+");
@@ -95,7 +115,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * to streams
-     * @return sheet stream
+     * @return sheet流
      */
     public Stream<Sheet> sheets() {
         Iterator<Sheet> iter = new Iterator<Sheet>() {
@@ -121,8 +141,8 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * get by index
-     * @param index
-     * @return
+     * @param index sheet index of workbook
+     * @return sheet
      */
     public Sheet sheet(int index) {
         try {
@@ -134,8 +154,8 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * get by name
-     * @param sheetName
-     * @return
+     * @param sheetName name
+     * @return null if not found
      */
     public Sheet sheet(String sheetName) {
         try {
@@ -152,15 +172,15 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * get all sheets
-     * @return
+     * @return Sheet Array
      */
     public Sheet[] all() {
         return sheets;
     }
 
     /**
-     *
-     * @return size of sheets
+     * size of sheets
+     * @return int
      */
     public int getSize() {
         return sheets != null ? sheets.length : 0;
@@ -168,7 +188,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * close stream and delete temp files
-     * @throws IOException
+     * @throws IOException when fail close readers
      */
     public void close() throws IOException {
         // close sheet

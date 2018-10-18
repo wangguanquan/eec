@@ -4,6 +4,7 @@ package net.cua.excel.reader;
  * Create by guanquan.wang at 2018-09-22
  */
 class Cell {
+    Cell() {}
     private char t; // type
     // value
     private String sv;

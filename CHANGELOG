@@ -1,14 +1,51 @@
+Version 0.2.3 (2018-10-18)
+-------------
+1. 修复空行（不含任何元素的行&lt;row/&gt;）读取错位的BUG
+2. 修改空Sheet页读取失败的BUG
+3. 读Sheet增加`dataIterator`用以遍历有数据的行
+4. 读Sheet增加`bind`方法来预先绑定对象类型，使用`Row.get()`方法获得实例对象（内存共享）
+
 Version 0.2.1 (2018-10-08)
 -------------
-1. 增加隔行变色(默认)，可使用cancelOddStyle取消变色，也可使用setOddFill设置颜色。
+1. 增加隔行变色(默认)，可使用cancelOddFill取消变色，也可使用setOddFill设置填充。
 2. 修复单元格包含回车符导致读取错位的bug
-3. 修复空单元格（不等于值为null的单元格）读取位置错误的bug
+3. 修复空单元格（不含任何元素的单元格，相当于&lt;c/&gt;）读取位置错误的BUG
 4. Workbook添加Watch监听Excel生成过程
 5. I18N
 
 Version 0.2.0 (2018-09-30)
 -------------
 Add ExcelReader
+
+一个流式操作链，游标只会向前，所以不能反复操作同一个流。
+同一个Sheet页内部Row对象是内存共享的，所以不要直接将Stream<Row>转为集合类，
+如果要转为集合类可以使用Row对象内部的to方法`row -> row.to(class)`转为指定类型对象。
+to方法会将每行数据实例化。
+Row对象内部还包含一个too方法，用法与to方法一样，唯一区别是too方法返回的对象是内存共享的内存中只有一个实例，
+对于不需要转集合类，内存共享是一个好主意。
+> 测试前请创建一个名为Student&Teacher.xlsx的文件，然后建两个Sheet页分别为Student和Teacher，然后添写测试内容（列表）
+
+```
+// 读取Student&Teacher.xlsx并且输出每个Sheet页的数据
+ExcelReader.read(Paths.get("Student&Teacher.xlsx")).sheets().flatMap(Sheet::rows).forEach(System.out::println);
+
+// 读取Student&Teacher.xlsx的Student页并且转为对象数组
+Student[] students = ExcelReader.read(Paths.get("Student&Teacher.xlsx"))
+     .sheet("Student")
+     .dataRows() // 不包含所有空行（不含有任何数据和样式）和第一行数据
+     .map(row -> row.to(Student.class))
+     .toArray(Student[]::new);
+
+// 读取Student&Teacher.xlsx的Teacher页并且找出所有数学教师并保存数据库
+ExcelReader.read(Paths.get("Student&Teacher.xlsx"))
+    .sheet("Teacher")
+    .dataRows()
+    .map(row -> row.too(Teacher.class)) // 这里插库动作是one by one的操作，所以使用too共享对象比较好。
+    .filter(t -> "math".equals(t.getTeach()))
+    .forEach(this::save);
+```
+
+开发过程中你应该使用try-with-resource或手动关闭ExcelReader。
 
 Version 0.1.0
 -------------

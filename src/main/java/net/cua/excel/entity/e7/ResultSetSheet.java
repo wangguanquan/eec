@@ -5,6 +5,7 @@ import net.cua.excel.manager.RelManager;
 import net.cua.excel.entity.ExportException;
 import net.cua.excel.entity.WaterMark;
 import net.cua.excel.util.ExtBufferedWriter;
+import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.StringUtil;
 
 import java.io.File;
@@ -67,7 +68,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
     public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");
         if (!Files.exists(worksheets)) {
-            Files.createDirectory(worksheets);
+            FileUtil.mkdir(worksheets);
         }
         String name = getFileName();
         workbook.what("0010", getName());
@@ -147,6 +148,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
         relManager.write(worksheets, name);
 
         if (paging) {
+            workbook.what("0013");
             int sub;
             if (!copySheet) {
                 sub = 0;

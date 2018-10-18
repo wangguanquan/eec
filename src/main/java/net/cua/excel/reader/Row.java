@@ -14,12 +14,16 @@ import java.util.Date;
 import java.util.StringJoiner;
 
 /**
- *
+ * 行数据，同一个Sheet页内的Row对象内存共享。
+ * 行数据开始列和结束列读取的是span值，你可以使用<code>row.isEmpty()</code>方法测试行数据是否为空节点
+ * 空节点定义为: 没有任何值和样式以及格式化的行. 像这样<code><row r="x"/></code>
+ * 你可以像ResultSet一样通过单元格下标获取数据eq:<code>row.getInt(1) // 获取当前行第2列的数据</code>下标从0开始。
+ * 也可以使用to&amp;too方法将行数据转为对象，前者会实例化每个对象，后者内存共享只会有一个实例,在流式操作中这是一个好主意。
  * Create by guanquan.wang at 2018-09-22
  */
 public class Row {
     Logger logger = LogManager.getLogger(getClass());
-    private int rowNumber = -1, span = -1;
+    private int rowNumber = -1, p2 = -1, p1 = 0;
     private Cell[] cells;
     private SharedString sst;
     private HeaderRow hr;
@@ -36,20 +40,6 @@ public class Row {
         this.sst = sst;
     }
 
-    ///////////////////////////safe///////////////////////
-    Row safeWith(char[] cb, int from, int size) {
-        if (this.cb == null || this.cb.length < cb.length) {
-            this.cb = new char[size];
-        }
-        System.arraycopy(cb, from, this.cb, 0, size);
-        this.from = 0;
-        this.to = size;
-        this.cursor = 0;
-        this.rowNumber = this.span = -1;
-        parseCells();
-        return this;
-    }
-
     /////////////////////////unsafe////////////////////////
     private char[] cb;
     private int from, to;
@@ -61,8 +51,20 @@ public class Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNumber = this.span = -1;
+        this.rowNumber = this.p2 = -1;
         parseCells();
+        return this;
+    }
+
+    /* empty row*/
+    Row empty(char[] cb, int from, int size) {
+//        logger.info(new String(cb, from, size));
+        this.cb = cb;
+        this.from = from;
+        this.to = from + size;
+        this.cursor = from;
+        this.rowNumber = -1;
+        this.p1 = this.p2 = -1;
         return this;
     }
 
@@ -87,32 +89,43 @@ public class Row {
             if (cb[i] == ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
                     && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
                     && cb[i + 6] == '=') {
-                int b;i += 8;
+                i += 8;
+                int b, j = i;
                 for (; cb[i] != '"' && cb[i] != '>'; i++);
                 for (b = i - 1; cb[b] != ':'; b--);
                 if (++b < i) {
-                    span = toInt(b, i);
+                    p2 = toInt(b, i);
+                }
+                if (j < --b) {
+                    p1 = toInt(j, b);
                 }
             }
         }
-        if (cells == null || span > cells.length) {
-            cells = new Cell[span > 0 ? span : 100]; // default array length 100
+        if (cells == null || p2 > cells.length) {
+            cells = new Cell[p2 > 0 ? p2 : 100]; // default array length 100
         }
         // clear and share
-        for (int n = 0; n < span; n++) {
+        for (int n = 0; n < p2; n++) {
             if (cells[n] != null) cells[n].clear();
             else cells[n] = new Cell();
         }
         return i;
     }
 
+    /**
+     * 解析每行数据
+     */
     private void parseCells() {
         int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; );
-        while (index < span && nextCell() != null);
+        while (index < p2 && nextCell() != null);
     }
 
+    /**
+     * 迭代每列数据
+     * @return Cell
+     */
     protected Cell nextCell() {
         for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c' || cb[cursor + 2] != ' '); cursor++);
         // end of row
@@ -282,12 +295,23 @@ public class Row {
         return a;
     }
 
+    /**
+     * function string
+     * @param e
+     * @return
+     */
     private int getF(int e) {
         // undo
         // return end index of row
         return e;
     }
 
+    /**
+     * 26进制转10进制
+     * @param a
+     * @param b
+     * @return
+     */
     private int toCellIndex(int a, int b) {
         int n = 0;
         for ( ; a <= b; a++) {
@@ -300,11 +324,20 @@ public class Row {
         return n;
     }
 
+    /**
+     * 是否为空行，行不带任何字符和格式内容
+     * @return boolean
+     */
+    public boolean isEmpty() {
+        return p1 == -1 && p1 == p2;
+    }
+
     @Override public String toString() {
+        if (isEmpty()) return null;
         StringJoiner joiner = new StringJoiner(" | ");
         // show row number
 //        joiner.add(String.valueOf(getRowNumber()));
-        for (int i = 0; i < span; i++) {
+        for (int i = p1 - 1; i < p2; i++) {
             Cell c = cells[i];
             switch (c.getT()) {
                 case 's':
@@ -342,12 +375,17 @@ public class Row {
         return hr;
     }
 
+    Row setHr(HeaderRow hr) {
+        this.hr = hr;
+        return this;
+    }
+
     //////////////////////////////////////Read Value///////////////////////////////////
     private String outOfBoundsMsg(int index) {
-        return "Index: " + index + ", Size: " + span;
+        return "Index: " + index + ", Size: " + p2;
     }
     protected void rangeCheck(int index) {
-        if (index >= span)
+        if (index >= p2)
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
     }
 
@@ -356,6 +394,11 @@ public class Row {
         return cells[i];
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return boolean
+     */
     public boolean getBoolean(int columnIndex) {
         Cell c = getCell(columnIndex);
         boolean v;
@@ -375,6 +418,11 @@ public class Row {
         return v;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return byte
+     */
     public byte getByte(int columnIndex) {
         Cell c = getCell(columnIndex);
         byte b = 0;
@@ -395,6 +443,11 @@ public class Row {
         return b;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return char
+     */
     public char getChar(int columnIndex) {
         Cell c = getCell(columnIndex);
         char cc = 0;
@@ -421,6 +474,11 @@ public class Row {
         return cc;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return short
+     */
     public short getShort(int columnIndex) {
         Cell c = getCell(columnIndex);
         short s = 0;
@@ -442,6 +500,11 @@ public class Row {
         return s;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return int
+     */
     public int getInt(int columnIndex) {
         Cell c = getCell(columnIndex);
         int n;
@@ -470,6 +533,11 @@ public class Row {
         return n;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return long
+     */
     public long getLong(int columnIndex) {
         Cell c = getCell(columnIndex);
         long l;
@@ -498,6 +566,11 @@ public class Row {
         return l;
     }
 
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return string
+     */
     public String getString(int columnIndex) {
         Cell c = getCell(columnIndex);
         String s;
@@ -519,11 +592,19 @@ public class Row {
         }
         return s;
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return float
+     */
     public float getFloat(int columnIndex) {
         return (float) getDouble(columnIndex);
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return double
+     */
     public double getDouble(int columnIndex) {
         Cell c = getCell(columnIndex);
         double d;
@@ -545,7 +626,11 @@ public class Row {
         }
         return d;
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return BigDecimal
+     */
     public BigDecimal getDecimal(int columnIndex) {
         Cell c = getCell(columnIndex);
         BigDecimal bd;
@@ -561,7 +646,11 @@ public class Row {
         }
         return bd;
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return Date
+     */
     public Date getDate(int columnIndex) {
         Cell c = getCell(columnIndex);
         Date date;
@@ -579,7 +668,11 @@ public class Row {
         }
         return date;
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return java.sql.Timestamp
+     */
     public Timestamp getTimestamp(int columnIndex) {
         Cell c = getCell(columnIndex);
         Timestamp ts;
@@ -597,7 +690,11 @@ public class Row {
         }
         return ts;
     }
-
+    /**
+     * get by index
+     * @param columnIndex cell index
+     * @return java.sql.Time
+     */
     public java.sql.Time getTime(int columnIndex) {
         Cell c = getCell(columnIndex);
         if (c.getT() == 'd') {
@@ -616,6 +713,22 @@ public class Row {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 如果绑定了类型则返回绑定类型否则返回Row
+     * @param <T>
+     * @return
+     */
+    public <T> T get() {
+        if (hr != null && hr.clazz != null) {
+            T t = hr.getT();
+            try {
+                put(t);
+            } catch (IllegalAccessException  e) {
+                throw new UncheckedTypeException("call set method error.", e);
+            }
+            return t;
+        } else return (T) this;
+    }
     /////////////////////////////To object//////////////////////////////////
 
     /**
@@ -673,45 +786,46 @@ public class Row {
         int[] columns = hr.getColumns();
         Field[] fields = hr.getFields();
         Class<?>[] fieldClazz = hr.getFieldClazz();
-        for (int i : columns) {
+        for (int i = 0; i < columns.length; i++) {
+            int c = columns[i];
             if (fieldClazz[i] == String.class) {
-                fields[i].set(t, getString(i));
+                fields[i].set(t, getString(c));
             }
             else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
-                fields[i].setInt(t, getInt(i));
+                fields[i].setInt(t, getInt(c));
             }
             else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
-                fields[i].setLong(t, getLong(i));
+                fields[i].setLong(t, getLong(c));
             }
             else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
-                fields[i].set(t, getDate(i));
+                fields[i].set(t, getDate(c));
             }
             else if (fieldClazz[i] == java.sql.Timestamp.class) {
-                fields[i].set(t, getTimestamp(i));
+                fields[i].set(t, getTimestamp(c));
             }
             else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
-                fields[i].setDouble(t, getDouble(i));
+                fields[i].setDouble(t, getDouble(c));
             }
             else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
-                fields[i].setFloat(t, getFloat(i));
+                fields[i].setFloat(t, getFloat(c));
             }
             else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
-                fields[i].setBoolean(t, getBoolean(i));
+                fields[i].setBoolean(t, getBoolean(c));
             }
             else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
-                fields[i].setChar(t, getChar(i));
+                fields[i].setChar(t, getChar(c));
             }
             else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
-                fields[i].setByte(t, getByte(i));
+                fields[i].setByte(t, getByte(c));
             }
             else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
-                fields[i].setShort(t, getShort(i));
+                fields[i].setShort(t, getShort(c));
             }
         }
     }
 
     ////////////////////////private inner class///////////////////////////////
-    private static final class HeaderRow extends Row {
+    static final class HeaderRow extends Row {
         String[] names;
         Class<?> clazz;
         Field[] fields;
@@ -721,8 +835,8 @@ public class Row {
 
         static final HeaderRow with(Row row) {
             HeaderRow hr = new HeaderRow();
-            hr.names = new String[row.span];
-            for (int i = 0; i < row.span; i++) {
+            hr.names = new String[row.p2];
+            for (int i = row.p1 - 1; i < row.p2; i++) {
                 // header type is string
                 hr.names[i] = row.cells[i].getSv();
             }
@@ -733,6 +847,11 @@ public class Row {
             return this.clazz != null && this.clazz == clazz;
         }
 
+        /**
+         * mapping
+         * @param clazz
+         * @return
+         */
         final HeaderRow setClass(Class<?> clazz) {
             this.clazz = clazz;
             Field[] fields = clazz.getDeclaredFields();
@@ -784,6 +903,13 @@ public class Row {
             return this;
         }
 
+        /**
+         * mapping and instance
+         * @param clazz
+         * @return
+         * @throws IllegalAccessException
+         * @throws InstantiationException
+         */
         final HeaderRow setClassOnce(Class<?> clazz) throws IllegalAccessException, InstantiationException {
             setClass(clazz);
             this.t = clazz.newInstance();
@@ -806,16 +932,17 @@ public class Row {
             return (T) t;
         }
 
-        @Override
-        public <T> T get(int columnIndex) {
+        @Override public <T> T get(int columnIndex) {
             rangeCheck(columnIndex);
             return (T) names[columnIndex];
         }
 
         @Override public String toString() {
             StringJoiner joiner = new StringJoiner(" | ");
-            for (String s : names) {
-                joiner.add(s);
+            int i = 0;
+            for (; names[i++] == null; );
+            for (; i < names.length; i++) {
+                joiner.add(names[i]);
             }
             return joiner.toString();
         }

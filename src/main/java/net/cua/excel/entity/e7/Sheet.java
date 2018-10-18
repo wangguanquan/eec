@@ -340,6 +340,8 @@ public abstract class Sheet {
                 style = Styles.defaultDateBorderStyle();
             } else if (isDateTime(clazz)) {
                 style = Styles.defaultTimestampBorderStyle();
+            } else if (isBool(clazz) || isChar(clazz)) {
+                style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
@@ -366,8 +368,6 @@ public abstract class Sheet {
                         break;
                 default:
                 }
-            } else if (isBool(clazz) || isChar(clazz)) {
-                style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else {
                 style = 0; // Auto-style
             }

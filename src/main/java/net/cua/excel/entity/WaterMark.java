@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.nio.file.*;
 
 /**
+ * 水印
  * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
@@ -34,14 +35,30 @@ public class WaterMark {
         return imagePath;
     }
 
+    /**
+     * 生成文字水印
+     * @param mark
+     * @return
+     */
     public static WaterMark of(String mark) {
         return new WaterMark(mark);
     }
 
+    /**
+     * 本地图片水印
+     * @param path
+     * @return
+     */
     public static WaterMark of(Path path) {
         return new WaterMark(path);
     }
 
+    /**
+     * 流图片水印
+     * @param is
+     * @return
+     * @throws IOException
+     */
     public static WaterMark of(InputStream is) throws IOException {
         return new WaterMark(is);
     }
@@ -112,6 +129,9 @@ public class WaterMark {
         return true;
     }
 
+    /**
+     * @return 获取图片类型
+     */
     public String getSuffix() {
         String suffix = null;
         if (temp) {
@@ -126,6 +146,10 @@ public class WaterMark {
         return suffix != null ? suffix : Const.Suffix.PNG;
     }
 
+    /**
+     * content-type
+     * @return string
+     */
     public String getContentType() {
         String suffix = getSuffix().substring(1).toUpperCase();
         Field[] fields = Const.ContentType.class.getDeclaredFields();
