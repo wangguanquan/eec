@@ -26,6 +26,7 @@ import static net.cua.excel.util.DateUtil.toDateTimeValue;
 import static net.cua.excel.util.DateUtil.toDateValue;
 
 /**
+ * 对应workbook各sheet页
  * Created by guanquan.wang at 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
@@ -37,29 +38,43 @@ public abstract class Sheet {
     protected WaterMark waterMark;
     protected RelManager relManager;
     protected int id;
+    /** 自动列宽 */
     private int autoSize;
+    /** 默认固定宽度 */
     private double width = 20;
     private int headInfoLen, baseInfoLen;
+    /** 记录已写入行数，每写一行该数加1 */
     protected int rows;
+    /** 设置单元格默认隐藏 */
     private boolean hidden;
 
     private int headStyle;
     protected boolean autoOdd;
-    /* odd row's background color */
+    /** odd row's background color */
     protected int oddFill;
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
+    void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * 实例化Sheet
+     * @param workbook workbook
+     */
     public Sheet(Workbook workbook) {
         this.workbook = workbook;
         relManager = new RelManager();
     }
+    /**
+     * 实例化Sheet
+     * @param workbook workbook
+     * @param name sheet名
+     * @param columns 行信息
+     */
     public Sheet(Workbook workbook, String name, final Column[] columns) {
         this.workbook = workbook;
         this.name = name;
@@ -70,6 +85,13 @@ public abstract class Sheet {
         relManager = new RelManager();
     }
 
+    /**
+     * 实例化Sheet
+     * @param workbook workbook
+     * @param name sheet名
+     * @param waterMark 水印
+     * @param columns 行信息
+     */
     public Sheet(Workbook workbook, String name, WaterMark waterMark, final Column[] columns) {
         this.workbook = workbook;
         this.name = name;
@@ -80,16 +102,24 @@ public abstract class Sheet {
         this.waterMark = waterMark;
         relManager = new RelManager();
     }
-
+    /**
+     * 伴生于Sheet用于控制头部样式和缓存列数据类型和转换
+     */
     public static class Column {
         public static final int TYPE_NORMAL = 0
                 , TYPE_PARENTAGE = 1 // 百分比
                 , TYPE_RMB = 2; // 人民币
-        private String key; // Map的主键,object的属性名
-        private String name; // 列名
-        private Class<?> clazz;     // 列类型
-        private boolean share; // 字符串是否共享
-        private int type; // 0: 正常显示 1:显示百分比 2:显示人民币
+        /** Map的主键,object的属性名 */
+        private String key;
+        /** 列头名 */
+        private String name;
+        /** 列类型 */
+        private Class<?> clazz;
+        /** 字符串是否共享 */
+        private boolean share;
+        /** 0: 正常显示 1:显示百分比 2:显示人民币 */
+        private int type;
+        /** int值转换 */
         private IntConversionProcessor processor;
         private StyleProcessor styleProcessor;
         private int cellStyle = -1; // 未设定
@@ -97,26 +127,13 @@ public abstract class Sheet {
         private Object o;
         private Styles styles;
 
-        public Column setO(Object o) {
+        private Column setO(Object o) {
             this.o = o;
             return this;
         }
 
         public String getKey() {
             return key;
-        }
-
-        public Column setKey(String key) {
-            this.key = key;
-            return this;
-        }
-
-        public IntConversionProcessor getProcessor() {
-            return processor;
-        }
-
-        public StyleProcessor getStyleProcessor() {
-            return styleProcessor;
         }
 
         public Object getO() {
@@ -126,7 +143,7 @@ public abstract class Sheet {
         protected void setSst(Styles styles) {
             this.styles = styles;
         }
-        public Column() {}
+        private Column() {}
         public Column(String name, Class<?> clazz) {
             this(name, clazz, false);
         }

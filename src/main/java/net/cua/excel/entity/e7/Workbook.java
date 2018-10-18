@@ -37,6 +37,9 @@ import java.util.*;
 import java.util.List;
 
 /**
+ * 工作簿是Excel的基础单元，一个xlsx文件对应一个工作簿实例
+ * 先设置属性和添加Sheet最后调writeTo方法执行写操作。
+ * writeTo和create是一个终止语句，应该放置在未尾否则设置将不会被反应到最终的Excel文件中。
  * @link https://poi.apache.org/encryption.html encrypted
  * @link https://msdn.microsoft.com/library
  * @link https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
@@ -46,15 +49,16 @@ import java.util.List;
         , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class Workbook {
     private Logger logger = LogManager.getLogger(getClass());
+    /** 工作薄名，最终反应到Excel文件名*/
     private String name;
     private Sheet[] sheets;
-    private WaterMark waterMark;
+    private WaterMark waterMark; // workbook背景，应用于所有sheet页
     private int size;
     private Connection con;
-    private RelManager relManager;
-    private boolean autoSize, autoOdd = true;
-    private String creator, company;
-    private Fill oddFill;
+    private RelManager relManager; // 关联管理
+    private boolean autoSize, autoOdd = true; // 自动列宽，自动隔行变色
+    private String creator, company; // 创建者，公司
+    private Fill oddFill; // 偶数行的填充
     private Watch watch; // 观察者
     private I18N i18N;
 

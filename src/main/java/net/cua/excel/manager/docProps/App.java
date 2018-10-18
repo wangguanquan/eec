@@ -15,7 +15,7 @@ import java.util.List;
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
         , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
 public class App extends XmlEntity {
-    private String application = "Microsoft Excel";
+    private String application = "EEC";
     private int docSecurity;
     private boolean scaleCrop;
     private String manager;
@@ -23,7 +23,7 @@ public class App extends XmlEntity {
     private boolean linksUpToDate;
     private boolean sharedDoc;
     private boolean hyperlinksChanged;
-    private String appVersion = "12.0000";   // excel版本
+    private String appVersion = "0.2.3";   // TODO get pom version
     private TitlesOfParts titlesOfParts;
     private HeadingPairs headingPairs;
 
