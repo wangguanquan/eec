@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
+ * 单元格填充
  * Created by guanquan.wang at 2018-02-06 08:55
  */
 public class Fill implements Cloneable {
@@ -94,7 +95,7 @@ public class Fill implements Cloneable {
      * @param text
      * @return
      */
-    public static final Fill parse(String text) {
+    public static Fill parse(String text) {
         Fill fill = new Fill();
         if (StringUtil.isNotEmpty(text)) {
             String[] values = text.split(" ");
@@ -133,7 +134,7 @@ public class Fill implements Cloneable {
         return fill;
     }
 
-    public Element toDom4j(Element root) {
+    Element toDom4j(Element root) {
         if (patternType == null) {
             patternType = PatternType.solid;
         }

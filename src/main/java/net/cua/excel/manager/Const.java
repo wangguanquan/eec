@@ -3,17 +3,24 @@ package net.cua.excel.manager;
 import java.nio.charset.Charset;
 
 /**
+ * 常量类
  * Created by guanquan.wang at 2017/9/30.
  */
 public class Const {
-
+    /** open xml schema */
     public static final String SCHEMA_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+    /** xml declaration */
     public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    /** excel xml declatation */
     public static final String EXCEL_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
+    /** utf-8 charset */
     public static final Charset UTF_8 = Charset.forName("UTF-8");
-    public static final String lineSeparator = java.security.AccessController.doPrivileged(
-            new sun.security.action.GetPropertyAction("line.separator"));
+    /** "\n" in UNIX systems, "\r\n" in Windows systems. */
+    public static final String lineSeparator = System.lineSeparator();
 
+    /**
+     * Relation
+     */
     public static final class Relationship {
         public static final String
                 IMAGE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
@@ -28,6 +35,9 @@ public class Const {
                 ;
     }
 
+    /**
+     * content-type
+     */
     public static final class ContentType {
         public static final String
                 PNG = "image/png"
@@ -48,25 +58,47 @@ public class Const {
                 ;
     }
 
+    /**
+     * Excel 限制
+     */
     public static final class Limit {
-        public static final int
-                // 每个worksheet页最大行
-                MAX_ROWS_ON_SHEET_07 = 1_048_576 // 1 << 20
-                , MAX_ROWS_ON_SHEET_03 = 65_536 // 1 << 16
-                // 每个worksheet页最大列
-                , MAX_COLUMNS_ON_SHEET = 16_384
-                // 单个cell最多包含多少字符
-                , MAX_CHARACTERS_PER_CELL = 32_767
-                // 单个cell最多包含多少行
-                , MAX_LINE_FEEDS_PER_CELL = 253
-                ;
+        /** Excel07 每个worksheet页最大行 1 << 20 */
+        public static final int MAX_ROWS_ON_SHEET_07 = 1_048_576;
+        /** Excel07 每个worksheet页最大行 1 << 16 */
+        public static final int MAX_ROWS_ON_SHEET_03 = 65_536;
+        /** 每个worksheet页最大列 */
+        public static final int MAX_COLUMNS_ON_SHEET = 16_384;
+        /** 单个cell最多包含多少字符 */
+        public static final int MAX_CHARACTERS_PER_CELL = 32_767;
+        /** 单个cell最多包含多少行 */
+        public static final int MAX_LINE_FEEDS_PER_CELL = 253;
     }
 
+    /**
+     * 文件扩展名
+     */
     public static final class Suffix {
-        public static final String EXCEL_07 = ".xlsx", EXCEL_03 = ".xls";
+        /** Excel 07 */
+        public static final String EXCEL_07 = ".xlsx";
+        /** Excel 03*/
+        public static final String EXCEL_03 = ".xls";
+        /** xml */
         public static final String XML = ".xml";
+        /** relation */
         public static final String RELATION = ".rels";
+        /** png */
         public static final String PNG = ".png";
     }
 
+    /**
+     * 单元格类型
+     */
+    public static final class ColumnType {
+        /** 普通类型 */
+        public static final int NORMAL = 0;
+        /** 百分比类型 */
+        public static final int PARENTAGE = 1;
+        /** 人民币类型 */
+        public static final int RMB = 2;
+    }
 }

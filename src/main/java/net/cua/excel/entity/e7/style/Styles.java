@@ -67,10 +67,9 @@ public class Styles {
 
     /**
      * create general style
-     *
-     * @return
+     * @return Styles
      */
-    public static final Styles create(I18N i18N) {
+    public static Styles create(I18N i18N) {
         Styles self = new Styles();
 
         DocumentFactory factory = DocumentFactory.getInstance();
@@ -121,14 +120,16 @@ public class Styles {
 
         String lang = Locale.getDefault().toLanguageTag();
         // 添加中文默认字体
+        Font font2 = new Font(i18N.get("local-font-family"), 11); // cn
+        font2.setFamily(3);
+        font2.setScheme("minor");
         if ("zh-CN".equals(lang)) {
-            Font font2 = new Font(i18N.get("cn-font-family"), 11); // cn
-            font2.setFamily(3);
-            font2.setScheme("minor");
             font2.setCharset(Charset.GB2312);
-            self.addFont(font2);
+        } else if ("zh-TW".equals(lang)) {
+            font2.setCharset(Charset.CHINESEBIG5);
         }
         // TODO other charset
+        self.addFont(font2);
 
         self.fills = new ArrayList<>();
         self.addFill(new Fill(PatternType.none));
@@ -224,7 +225,6 @@ public class Styles {
 
     /**
      * add border
-     *
      * @param border
      * @return
      */
@@ -240,7 +240,7 @@ public class Styles {
         return i << INDEX_BORDER;
     }
 
-    public static int[] unpack(int style) {
+    private static int[] unpack(int style) {
         int[] styles = new int[6];
         styles[0] = style >>> INDEX_NUMBER_FORMAT;
         styles[1] = style << 8 >>> (INDEX_FONT + 8);
@@ -251,7 +251,7 @@ public class Styles {
         return styles;
     }
 
-    public static int pack(int[] styles) {
+    private static int pack(int[] styles) {
         return styles[0] << INDEX_NUMBER_FORMAT
                 | styles[1] << INDEX_FONT
                 | styles[2] << INDEX_FILL

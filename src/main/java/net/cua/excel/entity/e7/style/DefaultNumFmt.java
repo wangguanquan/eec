@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
+ * load numFmt as default formats
  * Created by guanquan.wang at 2018-02-12 10:11
  */
 public final class DefaultNumFmt {

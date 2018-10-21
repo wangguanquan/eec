@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * 单线种操作流，内部复用buffer
  * Created by guanquan.wang at 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {

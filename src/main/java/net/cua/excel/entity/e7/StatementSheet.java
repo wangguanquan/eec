@@ -30,14 +30,16 @@ public class StatementSheet extends Sheet {
         super(workbook, name, waterMark, columns);
     }
 
+    /**
+     * @param ps PreparedStatement
+     */
     public void setPs(PreparedStatement ps) {
         this.ps = ps;
     }
 
-    public PreparedStatement getPs() {
-        return ps;
-    }
-
+    /**
+     * 关闭外部源
+     */
     @Override
     public void close() {
 //        super.close();
@@ -50,6 +52,12 @@ public class StatementSheet extends Sheet {
         }
     }
 
+    /**
+     * 写数据
+     * @param xl sheet.xml path
+     * @throws IOException
+     * @throws ExportException
+     */
     @Override
     public void writeTo(Path xl) throws IOException, ExportException {
         Path worksheets = xl.resolve("worksheets");

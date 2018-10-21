@@ -164,6 +164,10 @@ public class ListObjectSheet<T> extends Sheet {
             return;
         }
         int r = ++rows;
+        // logging
+        if (r % 1_0000 == 0) {
+            workbook.what("0014", String.valueOf(r));
+        }
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
@@ -241,6 +245,10 @@ public class ListObjectSheet<T> extends Sheet {
         }
         // Row number
         int r = ++rows;
+        // logging
+        if (r % 1_0000 == 0) {
+            workbook.what("0014", String.valueOf(r));
+        }
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);

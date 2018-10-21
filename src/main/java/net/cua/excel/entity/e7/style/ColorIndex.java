@@ -7,7 +7,8 @@ import java.awt.Color;
  * Created by guanquan.wang at 2018-02-06 14:40
  */
 public class ColorIndex {
-    static final int[] colors = {
+    /** color cache */
+    private static final int[] colors = {
             0,         0,         0,         0,         0,         0,         0,         0,
             -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
             -8388608,  -16744448, -16777088, -8355840,  -8388480,  -16744320, -4144960,  -8355712,
@@ -36,6 +37,11 @@ public class ColorIndex {
         return i < colors.length ? i : -1;
     }
 
+    /**
+     * to argb string
+     * @param color color
+     * @return argb string
+     */
     public static String toARGB(Color color) {
         return toARGB(color.getRGB());
     }

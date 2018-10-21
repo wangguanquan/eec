@@ -1,5 +1,8 @@
 package net.cua.excel.entity.e7.style;
 
+/**
+ * 定义边框样式
+ */
 public enum BorderStyle {
     NONE("none"),
     THIN("thin"),    // 细直线
