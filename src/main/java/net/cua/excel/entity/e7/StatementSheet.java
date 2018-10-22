@@ -166,12 +166,14 @@ public class StatementSheet extends Sheet {
         // relationship
         relManager.write(worksheets, name);
 
+        // Paging
         if (sub == 1) {
             workbook.what("0013");
-            ResultSetSheet rss = new ResultSetSheet(workbook, this.name, waterMark, columns, rs, relManager.clone());
-            rss.setName(this.name + " (" + (sub) + ")");
+            ResultSetSheet rss = new ResultSetSheet(workbook, this.name + " (" + (sub) + ")", waterMark, columns, rs, relManager.clone());
             rss.setCopySheet(true);
             if (autoSize) rss.autoSize();
+            rss.autoOdd = this.autoOdd;
+            rss.oddFill = this.oddFill;
             workbook.insertSheet(id, rss);
             rss.writeTo(xl);
         }

@@ -715,10 +715,28 @@ public class Row {
 
     /**
      * 如果绑定了类型则返回绑定类型否则返回Row
-     * @param <T>
-     * @return
+     * @param <T> 指定类型
+     * @return 实例
      */
     public <T> T get() {
+        if (hr != null && hr.clazz != null) {
+            T t;
+            try {
+                t = (T) hr.clazz.newInstance();
+                put(t);
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new UncheckedTypeException(hr.clazz + " new instance error.", e);
+            }
+            return t;
+        } else return (T) this;
+    }
+
+    /**
+     * 如果绑定了类型则返回绑定类型否则返回Row
+     * @param <T> 指定类型
+     * @return 共享实例
+     */
+    public <T> T geet() {
         if (hr != null && hr.clazz != null) {
             T t = hr.getT();
             try {
@@ -932,9 +950,9 @@ public class Row {
             return (T) t;
         }
 
-        @Override public <T> T get(int columnIndex) {
+        @Override public String get(int columnIndex) {
             rangeCheck(columnIndex);
-            return (T) names[columnIndex];
+            return names[columnIndex];
         }
 
         @Override public String toString() {

@@ -363,6 +363,7 @@ public class Workbook {
      * @return 工作簿
      */
     public Workbook insertSheet(int index, Sheet sheet) {
+        ensureCapacityInternal();
         int _size = size;
         if (sheets[index] != null) {
             for ( ; _size > index; _size--) {
@@ -671,8 +672,8 @@ public class Workbook {
                     sheet.fixSize();
                 }
             }
-            if (!sheet.autoOdd) {
-                sheet.autoOdd = this.autoOdd;
+            // 默认隔行变色
+            if (sheet.autoOdd == 0) {
                 sheet.oddFill = styles.addFill(oddFill == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : oddFill);
             }
             sheet.setId(i + 1);

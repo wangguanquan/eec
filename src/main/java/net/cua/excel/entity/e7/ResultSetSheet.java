@@ -168,11 +168,13 @@ public class ResultSetSheet extends Sheet implements Cloneable {
 
     }
 
-    public ResultSetSheet clone() {
+    protected ResultSetSheet clone() {
         ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns, rs, relManager).setCopySheet(true);
         if (getAutoSize() == 1) {
             rss.autoSize();
         }
+        rss.autoOdd = this.autoOdd;
+        rss.oddFill = this.oddFill;
         return rss;
     }
 }

@@ -49,7 +49,8 @@ public abstract class Sheet {
     private boolean hidden;
 
     private int headStyle;
-    protected boolean autoOdd;
+    /** 自动隔行变色 */
+    protected int autoOdd;
     /** odd row's background color */
     protected int oddFill;
 
@@ -674,7 +675,7 @@ public abstract class Sheet {
      * @return worksheet实例
      */
     public Sheet cancelOddStyle() {
-        this.autoOdd = false;
+        this.autoOdd = 1;
         return this;
     }
 
@@ -1165,7 +1166,7 @@ public abstract class Sheet {
     protected int getStyleIndex(Column hc, Object o) {
         int style = hc.getCellStyle();
         // 隔行变色
-        if (autoOdd && isOdd() && !Styles.hasFill(style)) {
+        if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
             style |= oddFill;
         }
         int styleIndex = hc.styles.of(style);
@@ -1685,7 +1686,7 @@ public abstract class Sheet {
 
             int style = hc.getCellStyle();
             // 隔行变色
-            if (autoOdd && isOdd() && !Styles.hasFill(style)) {
+            if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
                 style |= oddFill;
             }
             int styleIndex = styles.of(style);
