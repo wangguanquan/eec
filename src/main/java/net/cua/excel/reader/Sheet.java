@@ -184,7 +184,7 @@ public class Sheet implements AutoCloseable {
         boolean endTag = false;
         int start = nChar;
         // find end of row tag
-        for ( ; cb[++nChar] != '>'; );
+        for ( ; ++nChar < length && cb[nChar] != '>'; );
         // Empty Row
         if (cb[nChar++ - 1] == '/') {
             return sRow.empty(cb, start, nChar - start);

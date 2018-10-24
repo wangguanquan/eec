@@ -1,6 +1,6 @@
 # eec介绍
 
-eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出，表格默认黑色边框可修改。
+eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
 
 与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.Connection`和SQL文，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
 
@@ -15,10 +15,12 @@ eec并不是一个功能全面的excel操作工具类，它功能有限并不能
 5. excel隔行变色
 6. 设置列宽自动调节（功能未完善）
 7. 设置水印（文字，本地＆网络图片）
-8. 支持iterator或者stream+lambda操作sheet或行数据
-9. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
+8. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
+9. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
+10. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
 
 ## 使用方法
+
 导入eec.jar即可使用
 
 ```
@@ -62,6 +64,7 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
 ```
 
 ## 示例
+
 ### 导出示例，更多使用方法请参考test/各测试类
 
 1. 无参SQL固定宽度导出测试,固定宽度20,也可以使用setWidth(int)来重置列宽
@@ -163,19 +166,7 @@ public class TestExportEntity {
 }
 
 @Test public void t3() {
-    // 设置边框
-    Border border = new Border();
-    border.setBorder(BorderStyle.DOTTED, Color.red);
-    border.setBorderBottom(BorderStyle.NONE);
-    // 设置填充
-    Fill fill = new Fill();
-    fill.setPatternType(PatternType.solid);
-    fill.setFgColor(Color.GRAY);
-    fill.setBgColor(Color.decode("#ccff00"));
-    // 设置字体
-    Font font = new Font("Klee", 14, Font.Style.bold, Color.white);
-    font.setCharset(Charset.GB2312); // 字符集
-
+    // test datas
     List<TestExportEntity> objectData = new ArrayList<>();
     int size = random.nextInt(100) + 1;
     String[] proArray = {"LOL", "WOW", "极品飞车", "守望先锋", "怪物世界"};
@@ -193,6 +184,21 @@ public class TestExportEntity {
         e.c = (char) ('A' + random.nextInt(26));
         objectData.add(e);
     }
+    // test datas end
+    
+    // 设置边框
+    Border border = new Border();
+    border.setBorder(BorderStyle.DOTTED, Color.red);
+    border.setBorderBottom(BorderStyle.NONE);
+    // 设置填充
+    Fill fill = new Fill();
+    fill.setPatternType(PatternType.solid);
+    fill.setFgColor(Color.GRAY);
+    fill.setBgColor(Color.decode("#ccff00"));
+    // 设置字体
+    Font font = new Font("Klee", 14, Font.Style.bold, Color.white);
+    font.setCharset(Charset.GB2312); // 字符集
+    
     Workbook wb = new Workbook("对象数组测试", creator)
         .setAutoSize(true) // Auto-size
         .setWaterMark(WaterMark.of("guanquan.wang")) // 设置水印
@@ -205,7 +211,8 @@ public class TestExportEntity {
             , new Sheet.Column("渠道", "channelId", n -> n < 5 ? "自媒体" : "联众", true)
             , new Sheet.Column("注册时间", "registered")
         );
-        wb.getSheet("Object测试").setHeadStyle(font, fill, border); // 改变某个Sheet的头部样式
+    // 改变某个Sheet的头部样式
+    wb.getSheet("Object测试").setHeadStyle(font, fill, border); 
     try {
         wb.writeTo(defaultPath);
     } catch (IOException | ExportException ex) {
@@ -293,7 +300,7 @@ public class TestExportEntity {
 @Test public void t6() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
         Regist[] array = reader.sheets()
-            .flatMap(Sheet::rowsWithOutHeader) // 去掉表头
+            .flatMap(Sheet::dataRows) // 去掉表头和空行
             .map(row -> row.to(Regist.class)) // 将每行数据转换为Regist对象
             .toArray(Regist[]::new);
         // do...
@@ -307,7 +314,7 @@ public class TestExportEntity {
 
 ```
 reade.sheets()
-    .flatMap(Sheet::rowWithOutHeader)
+    .flatMap(Sheet::dataRows)
     .map(row -> row.to(Regist.class))
     .filter(e -> "iOS".equals(e.platform()))
     .collect(Collectors.toList());
@@ -321,13 +328,8 @@ reade.sheets()
 2. list data with template
 3. 对excel文件设置密码 (AES-128 encrypted)
 4. 多线程支持，多个sheet数据同时写
-5. share多线程支持
-6. 隔行变色方便阅读 -
-7. fast zip
-8. 自动列宽要考虑字体样式实现
-9. SharedString增加热词区块提高命中率
-10. 读取sheet对象返回header -
-11. string to date -
-12. wiki for eec
-13. 读取colspan/rowspan单元格
-14. writer html标签转义
+5. 自动列宽要考虑字体样式实现
+6. SharedString增加热词区块提高命中率
+7. wiki for eec
+8. 读取colspan/rowspan单元格
+9. writer html标签转义

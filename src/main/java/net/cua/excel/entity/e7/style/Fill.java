@@ -141,14 +141,6 @@ public class Fill implements Cloneable {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         Element patternFill = element.addElement("patternFill").addAttribute("patternType", patternType.name());
 
-        if (bgColor != null) {
-            int colorIndex = ColorIndex.indexOf(bgColor);
-            if (colorIndex > -1) {
-                patternFill.addElement("bgColor").addAttribute("indexed", String.valueOf(colorIndex));
-            } else {
-                patternFill.addElement("bgColor").addAttribute("rgb", ColorIndex.toARGB(bgColor));
-            }
-        }
         if (fgColor != null) {
             int colorIndex = ColorIndex.indexOf(fgColor);
             if (colorIndex > -1) {
@@ -157,6 +149,15 @@ public class Fill implements Cloneable {
                 patternFill.addElement("fgColor").addAttribute("rgb", ColorIndex.toARGB(fgColor));
             }
         }
+        if (bgColor != null) {
+            int colorIndex = ColorIndex.indexOf(bgColor);
+            if (colorIndex > -1) {
+                patternFill.addElement("bgColor").addAttribute("indexed", String.valueOf(colorIndex));
+            } else {
+                patternFill.addElement("bgColor").addAttribute("rgb", ColorIndex.toARGB(bgColor));
+            }
+        }
+
         return element;
     }
 
