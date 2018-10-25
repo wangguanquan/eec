@@ -21,10 +21,4 @@ public @interface DisplayName {
      * @return
      */
     boolean share() default false;
-
-    /**
-     * skip column when read excel
-     * @return
-     */
-    boolean skip() default false;
 }

@@ -39,6 +39,7 @@ class SharedString {
         if (index < 0 || max_size > -1 && max_size < index) {
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max_size);
         }
+        // TODO add map load fire word
         if (!arrayRange(index)) {
             // reload data
             offset = index / page_size * page_size;
@@ -98,11 +99,12 @@ class SharedString {
                 @Override
                 public void endElement(String uri, String localName, String qName) throws SAXException {
                     if ('t' == qName.charAt(0)) {
-                        open = false;
-                        sharedString[current++] = buf.toString();
-                        buf.delete(0, buf.length()); // clear cache
-                        index++;
-                        if (index > end && max_size > -1) { // break parser
+                        if (open) {
+                            open = false;
+                            sharedString[current++] = buf.toString();
+                            buf.delete(0, buf.length()); // clear cache
+                        }
+                        if (++index > end && max_size > -1) { // break parser
                             throw new BreakParserException();
                         }
                     }

@@ -55,6 +55,9 @@ public class ZipUtil {
         if (!destPath.toString().endsWith(suffix)) {
             destPath = Paths.get(destPath.toString() + suffix);
         }
+        if (!Files.exists(destPath.getParent())) {
+            FileUtil.mkdir(destPath.getParent());
+        }
         ZipOutputStream zos = new ZipOutputStream(new CheckedOutputStream(
                 Files.newOutputStream(destPath, StandardOpenOption.CREATE), new CRC32()));
         List<Path> paths = new ArrayList<>();

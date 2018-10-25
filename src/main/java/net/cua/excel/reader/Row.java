@@ -1,6 +1,7 @@
 package net.cua.excel.reader;
 
 import net.cua.excel.annotation.DisplayName;
+import net.cua.excel.annotation.NotImport;
 import net.cua.excel.util.DateUtil;
 import net.cua.excel.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
@@ -177,7 +178,7 @@ public class Row {
                 }
                 cell.setT('s'); // reset type to string
                 break;
-            case 's': // shared string
+            case 's': // shared string TODO 延迟获取该值
                 a = getV(e);
                 cell.setSv(sst.get(toInt(a, cursor)));
                 break;
@@ -875,24 +876,26 @@ public class Row {
             Field[] fields = clazz.getDeclaredFields();
             int[] index = new int[fields.length];
             int count = 0;
-            for (int i = 0, n = -1; i < fields.length; i++, n = -1) {
+            for (int i = 0, n; i < fields.length; i++) {
                 Field f = fields[i];
+                // skip not import fields
+                NotImport nit = f.getAnnotation(NotImport.class);
+                if (nit != null) {
+                    fields[i] = null;
+                    continue;
+                }
+                // field has display name
                 DisplayName ano = f.getAnnotation(DisplayName.class);
-                if (ano != null) {
-                    if (ano.skip()) {
+                if (ano != null && StringUtil.isNotEmpty(ano.value())) {
+                    n = StringUtil.indexOf(names, ano.value());
+                    if (n == -1) {
+                        logger.warn(clazz + " field [" + ano.value() + "] can't find in header" + Arrays.toString(names));
                         fields[i] = null;
                         continue;
-                    } else if (StringUtil.isNotEmpty(ano.value())) {
-                        n = StringUtil.indexOf(names, ano.value());
-                        if (n == -1) {
-                            logger.warn(clazz + " field [" + ano.value() + "] can't find in header" + Arrays.toString(names));
-                            fields[i] = null;
-                            continue;
-                        }
                     }
                 }
                 // no annotation or annotation value is null
-                if (n < 0) {
+                else {
                     String name = f.getName();
                     n = StringUtil.indexOf(names, name);
                     if (n == -1 && (n = StringUtil.indexOf(names, StringUtil.toPascalCase(name))) == -1) {

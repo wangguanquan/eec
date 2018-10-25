@@ -5,6 +5,7 @@ Version 0.2.3 (2018-10-18)
 3. 读Sheet增加`dataIterator`用以遍历有数据的行
 4. 读Sheet增加`bind`方法来预先绑定对象类型，使用`Row.get()`方法获得实例，使用`Row.geet()`方法获得共享实例对象
 5. 修改分页时某些属性遗漏的BUG
+6. 读取excel时如果要跳过某些列可以使用NotImport注解
 
 Version 0.2.1 (2018-10-08)
 -------------
