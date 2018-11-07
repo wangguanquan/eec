@@ -146,7 +146,7 @@ public class ExcelReader implements AutoCloseable {
      */
     public Sheet sheet(int index) {
         try {
-            return sheets[index].load();
+            return sheets[index].load(); // lazy loading worksheet data
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -161,7 +161,7 @@ public class ExcelReader implements AutoCloseable {
         try {
             for (Sheet t : sheets) {
                 if (sheetName.equals(t.getName())) {
-                    return t.load();
+                    return t.load(); // lazy loading worksheet data
                 }
             }
         } catch (IOException e) {

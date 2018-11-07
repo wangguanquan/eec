@@ -50,7 +50,7 @@ public abstract class Sheet {
 
     private int headStyle;
     /** 自动隔行变色 */
-    protected int autoOdd;
+    protected int autoOdd = -1;
     /** odd row's background color */
     protected int oddFill;
 

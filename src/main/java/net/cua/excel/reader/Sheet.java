@@ -310,6 +310,11 @@ public class Sheet implements AutoCloseable {
                 try {
                     // Skip empty rows
                     for ( ; (nextRow = nextRow()) != null && nextRow.isEmpty(); );
+                    // TODO debug
+//                    if (nextRow == null) {
+//                        System.out.println("total:" + sst.total + ",eden:" +sst.total_eden + ",old:"+sst.total_old + ",hot:" + sst.total_hot);
+//                    }
+                    // TODO -----end----------
                     return nextRow != null;
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
@@ -340,6 +345,11 @@ public class Sheet implements AutoCloseable {
             } else {
                 try {
                     nextRow = nextRow();
+                    // TODO debug
+//                    if (nextRow == null) {
+//                        System.out.println("total:" + sst.total + ",eden:" +sst.total_eden + ",old:"+sst.total_old + ",hot:" + sst.total_hot);
+//                    }
+                    // TODO -----end----------
                     return (nextRow != null);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);

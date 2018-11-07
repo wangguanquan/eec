@@ -34,10 +34,10 @@ public class Styles {
     private TIntIntHashMap map;
     private Document document;
 
-    List<Font> fonts;
-    List<NumFmt> numFmts;
-    List<Fill> fills;
-    List<Border> borders;
+    private List<Font> fonts;
+    private List<NumFmt> numFmts;
+    private List<Fill> fills;
+    private List<Border> borders;
 
     private Styles() {
         map = new TIntIntHashMap();

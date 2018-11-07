@@ -23,7 +23,7 @@ import java.util.StringJoiner;
  * Create by guanquan.wang at 2018-09-22
  */
 public class Row {
-    Logger logger = LogManager.getLogger(getClass());
+    protected Logger logger = LogManager.getLogger(getClass());
     private int rowNumber = -1, p2 = -1, p1 = 0;
     private Cell[] cells;
     private SharedString sst;
@@ -176,11 +176,12 @@ public class Row {
                 } else {
                     cell.setSv(toString(a, cursor));
                 }
-                cell.setT('s'); // reset type to string
+//                cell.setT('s'); // reset type to string
                 break;
-            case 's': // shared string TODO 延迟获取该值
+            case 's': // shared string lazy get
                 a = getV(e);
-                cell.setSv(sst.get(toInt(a, cursor)));
+                cell.setNv(toInt(a, cursor));
+//                cell.setSv(sst.get(toInt(a, cursor)));
                 break;
             case 'b': // boolean value
                 a = getV(e);
@@ -342,6 +343,12 @@ public class Row {
             Cell c = cells[i];
             switch (c.getT()) {
                 case 's':
+                    if (c.getSv() == null) {
+                        c.setSv(sst.get(c.getNv()));
+                    }
+                    joiner.add(c.getSv());
+                    break;
+                case 'r':
                     joiner.add(c.getSv());
                     break;
                 case 'b':
@@ -409,11 +416,18 @@ public class Row {
                 break;
             case 'n':
             case 'd':
-                v = c.getNv() != 0 || c.getDv() == 0.0;
+                v = c.getNv() != 0 || c.getDv() >= 0.000001 || c.getDv() <= -0.000001;
                 break;
             case 's':
-                v = c.getSv() != null;
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
+                v = StringUtil.isNotEmpty(c.getSv());
                 break;
+            case 'r':
+                v = StringUtil.isNotEmpty(c.getSv());
+                break;
+
                 default: v = false;
         }
         return v;
@@ -436,6 +450,7 @@ public class Row {
                 break;
             case 'b':
                 b |= c.getBv() ? 1 : 0;
+                break;
             case 'd':
                 b |= (int) c.getDv();
                 break;
@@ -454,10 +469,20 @@ public class Row {
         char cc = 0;
         switch (c.getT()) {
             case 's':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
                 String s = c.getSv();
                 if (StringUtil.isNotEmpty(s)) {
                     cc |= s.charAt(0);
                 }
+                break;
+            case 'r':
+                s = c.getSv();
+                if (StringUtil.isNotEmpty(s)) {
+                    cc |= s.charAt(0);
+                }
+                break;
             case 'n':
                 cc |= c.getNv();
                 break;
@@ -511,8 +536,8 @@ public class Row {
         int n;
         switch (c.getT()) {
             case 'n':
-              n = c.getNv();
-              break;
+                n = c.getNv();
+                break;
             case 'l':
                 n = (int) c.getLv();
                 break;
@@ -523,12 +548,23 @@ public class Row {
                 n = c.getBv() ? 1 : 0;
                 break;
             case 's':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
                 try {
                     n = Integer.parseInt(c.getSv());
                 } catch (NumberFormatException e) {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to int");
                 }
                 break;
+            case 'r':
+                try {
+                    n = Integer.parseInt(c.getSv());
+                } catch (NumberFormatException e) {
+                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to int");
+                }
+                break;
+
                 default: throw new UncheckedTypeException("unknown type");
         }
         return n;
@@ -553,6 +589,16 @@ public class Row {
                 l = (long) c.getDv();
                 break;
             case 's':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
+                try {
+                    l = Long.parseLong(c.getSv());
+                } catch (NumberFormatException e) {
+                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
+                }
+                break;
+            case 'r':
                 try {
                     l = Long.parseLong(c.getSv());
                 } catch (NumberFormatException e) {
@@ -577,8 +623,16 @@ public class Row {
         String s;
         switch (c.getT()) {
             case 's':
-            case 'l':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
                 s = c.getSv();
+                break;
+            case 'r':
+                s = c.getSv();
+                break;
+            case 'l':
+                s = String.valueOf(c.getLv());
                 break;
             case 'n':
                 s = String.valueOf(c.getNv());
@@ -623,6 +677,14 @@ public class Row {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to double");
                 }
                 break;
+            case 'r':
+                try {
+                    d = Double.valueOf(c.getSv());
+                } catch (NumberFormatException e) {
+                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to double");
+                }
+                break;
+
             default: throw new UncheckedTypeException("unknown type");
         }
         return d;
@@ -663,6 +725,12 @@ public class Row {
                 date = DateUtil.toDate(c.getDv());
                 break;
             case 's':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
+                date = DateUtil.toDate(c.getSv());
+                break;
+            case 'r':
                 date = DateUtil.toDate(c.getSv());
                 break;
                 default: throw new UncheckedTypeException("");
@@ -685,6 +753,12 @@ public class Row {
                 ts = DateUtil.toTimestamp(c.getDv());
                 break;
             case 's':
+                if (c.getSv() == null) {
+                    c.setSv(sst.get(c.getNv()));
+                }
+                ts = DateUtil.toTimestamp(c.getSv());
+                break;
+            case 'r':
                 ts = DateUtil.toTimestamp(c.getSv());
                 break;
             default: throw new UncheckedTypeException("");
@@ -855,9 +929,15 @@ public class Row {
         static final HeaderRow with(Row row) {
             HeaderRow hr = new HeaderRow();
             hr.names = new String[row.p2];
+            Cell c;
             for (int i = row.p1 - 1; i < row.p2; i++) {
+                c = row.cells[i];
                 // header type is string
-                hr.names[i] = row.cells[i].getSv();
+                if (c.getT() == 's') {
+                    hr.names[i] = row.sst.get(c.getNv());
+                } else {
+                    hr.names[i] = c.getSv();
+                }
             }
             return hr;
         }

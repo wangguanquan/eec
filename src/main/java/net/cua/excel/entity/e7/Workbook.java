@@ -56,7 +56,8 @@ public class Workbook {
     private int size;
     private Connection con;
     private RelManager relManager; // 关联管理
-    private boolean autoSize, autoOdd = true; // 自动列宽，自动隔行变色
+    private boolean autoSize; // 自动列宽
+    private int autoOdd = 0; // 自动隔行变色
     private String creator, company; // 创建者，公司
     private Fill oddFill; // 偶数行的填充
     private Watch watch; // 观察者
@@ -229,7 +230,7 @@ public class Workbook {
      * @return 工作簿
      */
     public Workbook cancelOddFill() {
-        this.autoOdd = false;
+        this.autoOdd = 1;
         return this;
     }
     /**
@@ -251,6 +252,16 @@ public class Workbook {
         ensureCapacityInternal();
         sheets[size++] = sheet;
         return this;
+    }
+
+    /**
+     * 尾部添加Sheet，默认名称
+     * @param data 数据，Map数组/对象数组
+     * @param columns 表头
+     * @return 工作簿
+     */
+    public Workbook addSheet(List<?> data, Sheet.Column ... columns) {
+        return addSheet(null, data, columns);
     }
 
     /**
@@ -276,6 +287,9 @@ public class Workbook {
         if (_size + page > sheets.length) {
             sheets = Arrays.copyOf(sheets, _size + page);
         }
+        if (StringUtil.isEmpty(name)) {
+            name = "Sheet";
+        }
         // 提前分页
         for (int i = 0, n; i < page; i++) {
             Sheet sheet;
@@ -300,6 +314,15 @@ public class Workbook {
         } while (first == null);
         return first;
     }
+    /**
+     * 尾部添加Sheet，未命名
+     * @param rs ResultSet
+     * @param columns 表头
+     * @return 工作簿
+     */
+    public Workbook addSheet(ResultSet rs, Sheet.Column ... columns) {
+        return addSheet(null, rs, columns);
+    }
 
     /**
      * 尾部添加Sheet
@@ -315,7 +338,16 @@ public class Workbook {
         sheets[size++] = sheet;
         return this;
     }
-
+    /**
+     * 尾部添加Sheet，未命名
+     * @param sql SQL文
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(String sql, Sheet.Column ... columns) throws SQLException {
+        return addSheet(null, sql, columns);
+    }
     /**
      * 尾部添加Sheet
      * @param name 名称
@@ -333,7 +365,20 @@ public class Workbook {
         sheets[size++] = sheet;
         return this;
     }
-
+    /**
+     * 尾部添加Sheet，未命令名
+     * <p>采用jdbc方式设置SQL参数
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * </p>
+     * @param sql SQL文
+     * @param pp 参数
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+        return addSheet(null, sql, pp, columns);
+    }
     /**
      * 尾部添加Sheet
      * <p>采用jdbc方式设置SQL参数
@@ -672,11 +717,18 @@ public class Workbook {
                     sheet.fixSize();
                 }
             }
+            if (sheet.autoOdd == -1) {
+                sheet.autoOdd = autoOdd;
+            }
             // 默认隔行变色
             if (sheet.autoOdd == 0) {
                 sheet.oddFill = styles.addFill(oddFill == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : oddFill);
             }
             sheet.setId(i + 1);
+            // default worksheet name
+            if (StringUtil.isEmpty(sheet.getName())) {
+                sheet.setName("Sheet" + (i + 1));
+            }
         }
         what("0001"); // 初始化完成
 

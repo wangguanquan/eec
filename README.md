@@ -333,3 +333,5 @@ reade.sheets()
 7. wiki for eec
 8. 读取colspan/rowspan单元格
 9. writer html标签转义
+10. BigDecimal,BigInteger类型支持
+11. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持

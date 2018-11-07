@@ -78,8 +78,6 @@ abstract public class THash {
      */
     protected float _autoCompactionFactor;
 
-//    protected transient boolean _autoCompactTemporaryDisable = false;
-
 
     /**
      * Creates a new <code>THash</code> instance with the default
@@ -151,120 +149,6 @@ abstract public class THash {
     /** @return the current physical capacity of the hash table. */
     abstract public int capacity();
 
-
-//    /**
-//     * Ensure that this hashtable has sufficient capacity to hold
-//     * <tt>desiredCapacity<tt> <b>additional</b> elements without
-//     * requiring a rehash.  This is a tuning method you can call
-//     * before doing a large insert.
-//     *
-//     * @param desiredCapacity an <code>int</code> value
-//     */
-//    public void ensureCapacity( int desiredCapacity ) {
-//        if ( desiredCapacity > ( _maxSize - size() ) ) {
-//            rehash( PrimeFinder.nextPrime( Math.max( size() + 1,
-//                    fastCeil( ( desiredCapacity + size() ) / _loadFactor ) + 1 ) ) );
-//            computeMaxSize( capacity() );
-//        }
-//    }
-//
-//
-//    /**
-//     * Compresses the hashtable to the minimum prime size (as defined
-//     * by PrimeFinder) that will hold all of the elements currently in
-//     * the table.  If you have done a lot of <tt>remove</tt>
-//     * operations and plan to do a lot of queries or insertions or
-//     * iteration, it is a good idea to invoke this method.  Doing so
-//     * will accomplish two things:
-//     * <p/>
-//     * <ol>
-//     * <li> You'll free memory allocated to the table but no
-//     * longer needed because of the remove()s.</li>
-//     * <p/>
-//     * <li> You'll get better query/insert/iterator performance
-//     * because there won't be any <tt>REMOVED</tt> slots to skip
-//     * over when probing for indices in the table.</li>
-//     * </ol>
-//     */
-//    public void compact() {
-//        // need at least one free spot for open addressing
-//        rehash( PrimeFinder.nextPrime( Math.max( _size + 1,
-//                fastCeil( size() / _loadFactor ) + 1 ) ) );
-//        computeMaxSize( capacity() );
-//
-//        // If auto-compaction is enabled, re-determine the compaction interval
-//        if ( _autoCompactionFactor != 0 ) {
-//            computeNextAutoCompactionAmount( size() );
-//        }
-//    }
-//
-//
-//    /**
-//     * The auto-compaction factor controls whether and when a table performs a
-//     * {@link #compact} automatically after a certain number of remove operations.
-//     * If the value is non-zero, the number of removes that need to occur for
-//     * auto-compaction is the size of table at the time of the previous compaction
-//     * (or the initial capacity) multiplied by this factor.
-//     * <p/>
-//     * Setting this value to zero will disable auto-compaction.
-//     *
-//     * @param factor a <tt>float</tt> that indicates the auto-compaction factor
-//     */
-//    public void setAutoCompactionFactor( float factor ) {
-//        if ( factor < 0 ) {
-//            throw new IllegalArgumentException( "Factor must be >= 0: " + factor );
-//        }
-//
-//        _autoCompactionFactor = factor;
-//    }
-//
-//
-//    /**
-//     * @see #setAutoCompactionFactor
-//     *
-//     * @return a <<tt>float</tt> that represents the auto-compaction factor.
-//     */
-//    public float getAutoCompactionFactor() {
-//        return _autoCompactionFactor;
-//    }
-//
-//
-//    /**
-//     * This simply calls {@link #compact compact}.  It is included for
-//     * symmetry with other collection classes.  Note that the name of this
-//     * method is somewhat misleading (which is why we prefer
-//     * <tt>compact</tt>) as the load factor may require capacity above
-//     * and beyond the size of this collection.
-//     *
-//     * @see #compact
-//     */
-//    public final void trimToSize() {
-//        compact();
-//    }
-//
-//
-//    /**
-//     * Delete the record at <tt>index</tt>.  Reduces the size of the
-//     * collection by one.
-//     *
-//     * @param index an <code>int</code> value
-//     */
-//    protected void removeAt( int index ) {
-//        _size--;
-//
-//        // If auto-compaction is enabled, see if we need to compact
-//        if ( _autoCompactionFactor != 0 ) {
-//            _autoCompactRemovesRemaining--;
-//
-//            if ( !_autoCompactTemporaryDisable && _autoCompactRemovesRemaining <= 0 ) {
-//                // Do the compact
-//                // NOTE: this will cause the next compaction interval to be calculated
-//                compact();
-//            }
-//        }
-//    }
-
-
     /** Empties the collection. */
     public void clear() {
         _size = 0;
@@ -297,36 +181,6 @@ abstract public class THash {
      */
     protected abstract void rehash( int newCapacity );
 
-
-//    /**
-//     * Temporarily disables auto-compaction. MUST be followed by calling
-//     * {@link #reenableAutoCompaction}.
-//     */
-//    public void tempDisableAutoCompaction() {
-//        _autoCompactTemporaryDisable = true;
-//    }
-//
-//
-//    /**
-//     * Re-enable auto-compaction after it was disabled via
-//     * {@link #tempDisableAutoCompaction()}.
-//     *
-//     * @param check_for_compaction True if compaction should be performed if needed
-//     *                             before returning. If false, no compaction will be
-//     *                             performed.
-//     */
-//    public void reenableAutoCompaction( boolean check_for_compaction ) {
-//        _autoCompactTemporaryDisable = false;
-//
-//        if ( check_for_compaction && _autoCompactRemovesRemaining <= 0 &&
-//                _autoCompactionFactor != 0 ) {
-//
-//            // Do the compact
-//            // NOTE: this will cause the next compaction interval to be calculated
-//            compact();
-//        }
-//    }
-//
 
     /**
      * Computes the values of maxSize. There will always be at least
@@ -380,40 +234,4 @@ abstract public class THash {
         }
     }
 
-
-//    protected int calculateGrownCapacity() {
-//        return capacity() << 1;
-//    }
-//
-//
-//    public void writeExternal( ObjectOutput out ) throws IOException {
-//        // VERSION
-//        out.writeByte( 0 );
-//
-//        // LOAD FACTOR
-//        out.writeFloat( _loadFactor );
-//
-//        // AUTO COMPACTION LOAD FACTOR
-//        out.writeFloat( _autoCompactionFactor );
-//    }
-//
-//
-//    public void readExternal( ObjectInput in )
-//            throws IOException, ClassNotFoundException {
-//
-//        // VERSION
-//        in.readByte();
-//
-//        // LOAD FACTOR
-//        float old_factor = _loadFactor;
-//        _loadFactor = in.readFloat();
-//
-//        // AUTO COMPACTION LOAD FACTOR
-//        _autoCompactionFactor = in.readFloat();
-//
-//        // If we change the laod factor from the default, re-setup
-//        if ( old_factor != _loadFactor ) {
-//            setUp( (int) Math.ceil( DEFAULT_CAPACITY / _loadFactor ) );
-//        }
-//    }
 }// THash

@@ -22,6 +22,7 @@ package net.cua.excel.tmap;
 
 
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * An open addressed Map implementation for int keys and int values.
@@ -32,7 +33,7 @@ import java.util.Arrays;
  * @version $Id: _K__V_HashMap.template,v 1.1.2.16 2010/03/02 04:09:50 robeden Exp $
  */
 public class TIntIntHashMap extends TIntIntHash {
-//    static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 1L;
 
     /** the values of the map */
     protected transient int[] _values;
@@ -58,54 +59,48 @@ public class TIntIntHashMap extends TIntIntHash {
         super( initialCapacity );
     }
 
-//
-//    /**
-//     * Creates a new <code>TIntIntHashMap</code> instance with a prime
-//     * capacity equal to or greater than <tt>initialCapacity</tt> and
-//     * with the specified load factor.
-//     *
-//     * @param initialCapacity an <code>int</code> value
-//     * @param loadFactor a <code>float</code> value
-//     */
-//    public TIntIntHashMap( int initialCapacity, float loadFactor ) {
-//        super( initialCapacity, loadFactor );
-//    }
-//
-//
-//    /**
-//     * Creates a new <code>TIntIntHashMap</code> instance with a prime
-//     * capacity equal to or greater than <tt>initialCapacity</tt> and
-//     * with the specified load factor.
-//     *
-//     * @param initialCapacity an <code>int</code> value
-//     * @param loadFactor a <code>float</code> value
-//     * @param noEntryKey a <code>int</code> value that represents
-//     *                   <tt>null</tt> for the Key set.
-//     * @param noEntryValue a <code>int</code> value that represents
-//     *                   <tt>null</tt> for the Value set.
-//     */
-//    public TIntIntHashMap( int initialCapacity, float loadFactor,
-//                           int noEntryKey, int noEntryValue ) {
-//        super( initialCapacity, loadFactor, noEntryKey, noEntryValue );
-//    }
-//
-//
-//    /**
-//     * Creates a new <code>TIntIntHashMap</code> instance containing
-//     * all of the entries in the map passed in.
-//     *
-//     * @param keys a <tt>int</tt> array containing the keys for the matching values.
-//     * @param values a <tt>int</tt> array containing the values.
-//     */
-//    public TIntIntHashMap( int[] keys, int[] values ) {
-//        super( Math.max( keys.length, values.length ) );
-//
-//        int size = Math.min( keys.length, values.length );
-//        for ( int i = 0; i < size; i++ ) {
-//            this.put( keys[i], values[i] );
-//        }
-//    }
 
+    /**
+     * Creates a new <code>TIntIntHashMap</code> instance containing
+     * all of the entries in the map passed in.
+     *
+     * @param keys a <tt>int</tt> array containing the keys for the matching values.
+     * @param values a <tt>int</tt> array containing the values.
+     */
+    public TIntIntHashMap( int[] keys, int[] values ) {
+        super( Math.max( keys.length, values.length ) );
+
+        int size = Math.min( keys.length, values.length );
+        for ( int i = 0; i < size; i++ ) {
+            this.put( keys[i], values[i] );
+        }
+    }
+
+    /**
+     * Ensure that this hashtable has sufficient capacity to hold
+     * <tt>desiredCapacity<tt> <b>additional</b> elements without
+     * requiring a rehash.  This is a tuning method you can call
+     * before doing a large insert.
+     *
+     * @param desiredCapacity an <code>int</code> value
+     */
+    public void ensureCapacity( int desiredCapacity ) {
+        if ( desiredCapacity > ( _maxSize - size() ) ) {
+            rehash( PrimeFinder.nextPrime( Math.max( size() + 1,
+                    fastCeil( ( desiredCapacity + size() ) / _loadFactor ) + 1 ) ) );
+            computeMaxSize( capacity() );
+        }
+    }
+
+    /**
+     * In profiling, it has been found to be faster to have our own local implementation
+     * of "ceil" rather than to call to {@link Math#ceil(double)}.
+     */
+    public static int fastCeil( float v ) {
+        int possible_result = ( int ) v;
+        if ( v - possible_result > 0 ) possible_result++;
+        return possible_result;
+    }
 
     /**
      * initializes the hashtable to a prime capacity which is at least
@@ -184,14 +179,14 @@ public class TIntIntHashMap extends TIntIntHash {
     }
 
 
-//    /** {@inheritDoc} */
-//    public void putAll( Map<? extends Integer, ? extends Integer> map ) {
-//        ensureCapacity( map.size() );
-//        // could optimize this for cases when map instanceof THashMap
-//        for ( Map.Entry<? extends Integer, ? extends Integer> entry : map.entrySet() ) {
-//            this.put( entry.getKey().intValue(), entry.getValue().intValue() );
-//        }
-//    }
+    /** {@inheritDoc} */
+    public void putAll( Map<? extends Integer, ? extends Integer> map ) {
+        ensureCapacity( map.size() );
+        // could optimize this for cases when map instanceof THashMap
+        for ( Map.Entry<? extends Integer, ? extends Integer> entry : map.entrySet() ) {
+            this.put( entry.getKey().intValue(), entry.getValue().intValue() );
+        }
+    }
 
 
     /** {@inheritDoc} */
@@ -211,28 +206,28 @@ public class TIntIntHashMap extends TIntIntHash {
 
 
     /** {@inheritDoc} */
-//    public boolean isEmpty() {
-//        return 0 == _size;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public int remove( int key ) {
-//        int prev = no_entry_value;
-//        int index = index( key );
-//        if ( index >= 0 ) {
-//            prev = _values[index];
-//            removeAt( index );    // clear key,state; adjust size
-//        }
-//        return prev;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    protected void removeAt( int index ) {
-//        _values[index] = no_entry_value;
-//        super.removeAt( index );  // clear key, state; adjust size
-//    }
+    public boolean isEmpty() {
+        return 0 == _size;
+    }
+
+
+    /** {@inheritDoc} */
+    public int remove( int key ) {
+        int prev = no_entry_value;
+        int index = index( key );
+        if ( index >= 0 ) {
+            prev = _values[index];
+            removeAt( index );    // clear key,state; adjust size
+        }
+        return prev;
+    }
+
+
+    /** {@inheritDoc} */
+    protected void removeAt( int index ) {
+        _values[index] = no_entry_value;
+        super.removeAt( index );  // clear key, state; adjust size
+    }
 
 
     /** {@inheritDoc} */
@@ -250,23 +245,23 @@ public class TIntIntHashMap extends TIntIntHash {
     }
 
 
-//    /** {@inheritDoc} */
-//    public int[] keys( int[] array ) {
-//        int size = size();
-//        if ( array.length < size ) {
-//            array = new int[size];
-//        }
-//
-//        int[] keys = _set;
-//        byte[] states = _states;
-//
-//        for ( int i = keys.length, j = 0; i-- > 0; ) {
-//            if ( states[i] == FULL ) {
-//                array[j++] = keys[i];
-//            }
-//        }
-//        return array;
-//    }
+    /** {@inheritDoc} */
+    public int[] keys( int[] array ) {
+        int size = size();
+        if ( array.length < size ) {
+            array = new int[size];
+        }
+
+        int[] keys = _set;
+        byte[] states = _states;
+
+        for ( int i = keys.length, j = 0; i-- > 0; ) {
+            if ( states[i] == FULL ) {
+                array[j++] = keys[i];
+            }
+        }
+        return array;
+    }
 
 
     /** {@inheritDoc} */
@@ -284,98 +279,8 @@ public class TIntIntHashMap extends TIntIntHash {
     }
 
 
-//    /** {@inheritDoc} */
-//    public int[] values( int[] array ) {
-//        int size = size();
-//        if ( array.length < size ) {
-//            array = new int[size];
-//        }
-//
-//        int[] v = _values;
-//        byte[] states = _states;
-//
-//        for ( int i = v.length, j = 0; i-- > 0; ) {
-//            if ( states[i] == FULL ) {
-//                array[j++] = v[i];
-//            }
-//        }
-//        return array;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean containsValue( int val ) {
-//        byte[] states = _states;
-//        int[] vals = _values;
-//
-//        for ( int i = vals.length; i-- > 0; ) {
-//            if ( states[i] == FULL && val == vals[i] ) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean containsKey( int key ) {
-//        return contains( key );
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean forEachKey( TIntProcedure procedure ) {
-//        return forEach( procedure );
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean forEachValue( TIntProcedure procedure ) {
-//        byte[] states = _states;
-//        int[] values = _values;
-//        for ( int i = values.length; i-- > 0; ) {
-//            if ( states[i] == FULL && ! procedure.execute( values[i] ) ) {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean forEachEntry( TIntIntProcedure procedure ) {
-//        byte[] states = _states;
-//        int[] keys = _set;
-//        int[] values = _values;
-//        for ( int i = keys.length; i-- > 0; ) {
-//            if ( states[i] == FULL && ! procedure.execute( keys[i], values[i] ) ) {
-//                return false;
-//            }
-//        }
-//        return true;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean increment( int key ) {
-//        return adjustValue( key, 1 );
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public boolean adjustValue( int key, int amount ) {
-//        int index = index( key );
-//        if (index < 0) {
-//            return false;
-//        } else {
-//            _values[index] += amount;
-//            return true;
-//        }
-//    }
-
-
     /** {@inheritDoc} */
-    public int adjustOrPutOne( int key ) {
+    public int incrementGet( int key ) {
         int index = insertKey( key );
         final boolean isNewMapping;
         final int newValue;
@@ -388,119 +293,10 @@ public class TIntIntHashMap extends TIntIntHash {
             isNewMapping = true;
         }
 
-//        byte previousState = _states[index];
-
         if ( isNewMapping ) {
             postInsertHook(consumeFreeSlot);
         }
 
         return newValue;
     }
-
-
-//    /** {@inheritDoc} */
-//    @Override
-//    public boolean equals( Object other ) {
-//        if ( ! ( other instanceof TIntIntHashMap ) ) {
-//            return false;
-//        }
-//        TIntIntHashMap that = ( TIntIntHashMap ) other;
-//        if ( that.size() != this.size() ) {
-//            return false;
-//        }
-//        int[] values = _values;
-//        byte[] states = _states;
-//        int this_no_entry_value = getNoEntryValue();
-//        int that_no_entry_value = that.getNoEntryValue();
-//        for ( int i = values.length; i-- > 0; ) {
-//            if ( states[i] == FULL ) {
-//                int key = _set[i];
-//                int that_value = that.get( key );
-//                int this_value = values[i];
-//                if ( ( this_value != that_value ) &&
-//                        ( this_value != this_no_entry_value ) &&
-//                        ( that_value != that_no_entry_value ) ) {
-//                    return false;
-//                }
-//            }
-//        }
-//        return true;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    @Override
-//    public int hashCode() {
-//        int hashcode = 0;
-//        byte[] states = _states;
-//        for ( int i = _values.length; i-- > 0; ) {
-//            if ( states[i] == FULL ) {
-//                hashcode += _set[i] ^ _values[i];
-//            }
-//        }
-//        return hashcode;
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    @Override
-//    public String toString() {
-//        final StringBuilder buf = new StringBuilder( "{" );
-//        forEachEntry( new TIntIntProcedure() {
-//            private boolean first = true;
-//            public boolean execute( int key, int value ) {
-//                if ( first ) first = false;
-//                else buf.append( ", " );
-//
-//                buf.append(key);
-//                buf.append("=");
-//                buf.append(value);
-//                return true;
-//            }
-//        });
-//        buf.append( "}" );
-//        return buf.toString();
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public void writeExternal(ObjectOutput out) throws IOException {
-//        // VERSION
-//        out.writeByte( 0 );
-//
-//        // SUPER
-//        super.writeExternal( out );
-//
-//        // NUMBER OF ENTRIES
-//        out.writeInt( _size );
-//
-//        // ENTRIES
-//        for ( int i = _states.length; i-- > 0; ) {
-//            if ( _states[i] == FULL ) {
-//                out.writeInt( _set[i] );
-//                out.writeInt( _values[i] );
-//            }
-//        }
-//    }
-//
-//
-//    /** {@inheritDoc} */
-//    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-//        // VERSION
-//        in.readByte();
-//
-//        // SUPER
-//        super.readExternal( in );
-//
-//        // NUMBER OF ENTRIES
-//        int size = in.readInt();
-//        setUp( size );
-//
-//        // ENTRIES
-//        while (size-- > 0) {
-//            int key = in.readInt();
-//            int val = in.readInt();
-//            put(key, val);
-//        }
-//    }
 } // TIntIntHashMap
