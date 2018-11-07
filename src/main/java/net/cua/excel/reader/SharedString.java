@@ -196,7 +196,7 @@ class SharedString {
                 if (index_area.isEmpty()) {
                     br.skip(skipR = vt);
                 } else {
-                    offsetR = max(index_area.keySet());
+//                    offsetR = max(index_area.keySet());
                     br.skip(skipR = index_area.get(offsetR));
                 }
 
@@ -204,7 +204,7 @@ class SharedString {
                     nChar = 0;
                     length += offset;
                     int cursor = 0;
-                    for (int len = length - 3; nChar < len && n < page; nChar++) {
+                    for (int len = length - 4; nChar < len && n < page; nChar++) {
                         if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 't' && cb[nChar + 3] == '>') {
                             n++;
                             cursor = nChar += 4;
@@ -247,25 +247,30 @@ class SharedString {
                         index_area.put(++offsetR, skipR);
                     }
                     break;
-                } else if (length < cb.length && nChar == len0) break; // EOF
+                } else if (length < cb.length && nChar == len0) { // EOF
+                    if (max == -1) { // Reset totals when unknown size
+                        max = offsetR * page + n;
+                    }
+                    break;
+                }
 
                 if (cursor < length) {
                     System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ExcelReadException(e);
         }
     }
 
-    private int max(Set<Integer> set) {
-        Integer max = 0;
-        for (Iterator<Integer> ite = set.iterator(); ite.hasNext(); ) {
-            Integer i = ite.next();
-            if (max.compareTo(i) < 0) {
-                max = i;
-            }
-        }
-        return max;
-    }
+//    private int max(Set<Integer> set) {
+//        Integer max = 0;
+//        for (Iterator<Integer> ite = set.iterator(); ite.hasNext(); ) {
+//            Integer i = ite.next();
+//            if (max.compareTo(i) < 0) {
+//                max = i;
+//            }
+//        }
+//        return max;
+//    }
 }
