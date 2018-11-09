@@ -1,6 +1,8 @@
 package net.cua.excel.reader;
 
 import net.cua.excel.tmap.TIntIntHashMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,42 +14,18 @@ import java.util.*;
  * 读取sharedString数据
  * 对于大文件来说不可能全部加载到内存然后根据下标直接取值，
  * 目前做法是进行分区，将数据分为eden, old, hot三个区域，
- * 新读取的数据放入eden区如果eden区查找不到则匀去old区，最后到hot区查找
+ * 新读取的数据放入eden区，如果eden区查找不到则去old区查找，最后到hot区查找
  * 如果都没有则按下标重新读取该区块到eden区，原eden区数据复制到old区。
  * 加载两次的区块将被标记，被标记的区块有重复读取时被放入hot区，
  * hot区采用LRU页面置换算法进行淘汰。
  * Create by guanquan.wang at 2018-09-27 14:28
  */
 class SharedString {
+    private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
     SharedString(Path sstPath) {
         this.sstPath = sstPath;
-    }
-
-    private int uniqueCount() throws IOException {
-        int off = -1;
-        try (BufferedReader br = Files.newBufferedReader(sstPath)) {
-            char[] bytes = new char[512];
-            int n = br.read(bytes);
-            String line = new String(bytes, 0, n);
-            // Microsoft Excel
-            String uniqueCount = " uniqueCount=";
-            int index = line.indexOf(uniqueCount), end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
-            if (end > 0) {
-                off = Integer.parseInt(line.substring(index, end));
-                // WPS
-            } else {
-                String count = " count=";
-                index = line.indexOf(count);
-                end = index > 0 ? line.indexOf('"', index += (count.length() + 1)) : -1;
-                if (end > 0) {
-                    off = Integer.parseInt(line.substring(index, end));
-                }
-            }
-            vt = line.indexOf("<t>", end);
-        }
-        return off;
     }
 
     /** 新加载数据放入此区域 */
@@ -55,26 +33,40 @@ class SharedString {
     /** eden区未命中时将数据复制到此区域 */
     private String[] old;
     /** 每次加载的数量 */
-    private int page = 1024;
+    private int page = 256;
     /** 整个文件有多少个字符串 */
-    private int max = -1, vt = 0, offsetR = 0;
+    private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
     /** 新生代offset */
     private int offset_eden = -1;
     /** 老年代offset */
     private int offset_old = -1;
+    /** 新生代limit */
+    private int limit_eden;
+    /** 老年代limit */
+    private int limit_old;
     /** 统计各段被访问次数 */
     private TIntIntHashMap count_area = null;
     /** hot world */
     private Hot hot;
     /** 记录各段的起始位置 */
     private Map<Integer, Long> index_area = null;
-    // debug
-    int total, total_eden, total_old, total_hot;
+
+    /** Main reader */
+    private BufferedReader reader;
+    /** Buffered */
+    private char[] cb;
+    /** offset of cb[] */
+    private int offset;
+    /** current skip of Main reader */
+    private long skipR;
+    // For debug
+    private int total, total_eden, total_old, total_hot;
 
     SharedString load() throws IOException {
         if (Files.exists(sstPath)) {
             // Get unique count
             max = uniqueCount();
+            logger.debug("Size of SharedString: {}", max);
             // Unknown size or big than page
             int default_cap = 10;
             if (max < 0 || max > page) {
@@ -97,51 +89,88 @@ class SharedString {
         return this;
     }
 
+    private int uniqueCount() throws IOException {
+        int off = -1;
+        reader = Files.newBufferedReader(sstPath);
+        cb = new char[1024];
+        offset = 0;
+        offset = reader.read(cb);
+
+        int i = 0, len = offset - 4;
+        for (; i < len && (cb[i] != '<' || cb[i+1] != 's' || cb[i+2] != 'i' || cb[i+3] != '>'); i++);
+        if (i == len) return  0; // Empty
+
+        String line = new String(cb, 0, i);
+        // Microsoft Excel
+        String uniqueCount = " uniqueCount=";
+        int index = line.indexOf(uniqueCount), end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
+        if (end > 0) {
+            off = Integer.parseInt(line.substring(index, end));
+            // WPS
+        } else {
+            String count = " count=";
+            index = line.indexOf(count);
+            end = index > 0 ? line.indexOf('"', index += (count.length() + 1)) : -1;
+            if (end > 0) {
+                off = Integer.parseInt(line.substring(index, end));
+            }
+        }
+
+        vt = i + 4;
+        System.arraycopy(cb, vt, cb, 0, offset -= vt);
+        skipR = vt;
+
+        return off;
+    }
+
     /**
      * 根据下标获取字符串
-     * @param index index of sharedString
+     * @param index of sharedString
      * @return string
      */
     String get(int index) {
         total++;
-        if (index < 0 || max > -1 && max < index) {
+        if (index < 0 || max > -1 && max <= index) {
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max);
         }
 
-        // load first
+        // Load first
         if (offset_eden == -1) {
             offset_eden = index / page * page;
 
             if (vt < 0) vt = 0;
 
-            loadXml0();
+            loadXml();
             test(index);
         }
 
         String value;
+        // Find in eden
         if (edenRange(index)) {
             value = eden[index - offset_eden];
             total_eden++;
             return value;
         }
 
+        // Find in old
         if (oldRange(index)) {
             value = old[index - offset_old];
             total_old++;
             return value;
         }
 
-        // find in hot cache
+        // Find in hot cache
         value = hot.get(index);
 
-        // can't find in memory cache
+        // Can't find in memory cache
         if (value == null) {
-            System.arraycopy(eden, 0, old, 0, page);
+            System.arraycopy(eden, 0, old, 0, limit_eden);
             offset_old = offset_eden;
+            limit_old = limit_eden;
             // reload data
             offset_eden = index / page * page;
             eden[0] = null;
-            loadXml0();
+            loadXml();
             if (eden[0] == null) {
                 throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max);
             }
@@ -158,11 +187,11 @@ class SharedString {
     }
 
     private boolean edenRange(int index) {
-        return offset_eden >= 0 && offset_eden <= index && offset_eden + page > index;
+        return offset_eden >= 0 && offset_eden <= index && offset_eden + limit_eden > index;
     }
 
     private boolean oldRange(int index) {
-        return offset_old >= 0 && offset_old <= index && offset_old + page > index;
+        return offset_old >= 0 && offset_old <= index && offset_old + limit_old > index;
     }
 
     /**
@@ -177,26 +206,50 @@ class SharedString {
     }
 
     /**
-     * 分段加载数据
-     * TODO 保留一个主要流
+     * Read or Load xml
      */
-    private void loadXml0() {
+    private void loadXml() {
         int index = offset_eden / page;
-        try (BufferedReader br = Files.newBufferedReader(sstPath)) {
+        try {
+            /*
+             * 从cache流中读取接下来的N个数据
+             * 如果Excel保持从上到下从左到右的写入顺序
+             * 那么此分支命中率极高，当此分支命中时就会直接从已知句柄中直接读取N个字符
+             * 减少读取文件的次数，同时也减少读取相同区块的次数，对于大文件读取效率非常高。
+             */
+            if (index == offsetM) {
+                logger.debug("---------------Read xml area {}---------------", index);
+                readData();
+            }
+            /*
+             * 从文件读取
+             * 文件读取时会跳过已知区块以增加速度（虽然java.io中skip方法并非跳过读取而是读取后跳过）
+             * 如果先读取文件尾部的数据那么在skip的时候会记录每个区块的起始位置，
+             * 接下来的读取将根据此预存的记录进行skip
+             */
+            else {
+                logger.debug("---------------Load xml area {}---------------", index);
+                loadXml(index);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            char[] cb = new char[8192];
+    /**
+     * 分段加载数据
+     */
+    private void loadXml(int index) throws IOException {
+        try (BufferedReader br = Files.newBufferedReader(sstPath)) {
+            char[] cb = new char[this.cb.length];
             int nChar, length, n = 0, offset = 0;
             long skip = index_area.containsKey(index) ? index_area.get(index) : 0L, skipR = skip;
 
-            // 下一个相邻区域或者已读区域
-            if (skip > 0L) {
-                br.skip(skip); // 跳过前方N个字符从当前位置直接读取
-                // 跳过N个区域读取时预先记录跳过的区域起始位置
-            } else {
+            // 跳过N个区域读取时预先记录跳过的区域起始位置
+            if (skip <= 0L) {
                 if (index_area.isEmpty()) {
                     br.skip(skipR = vt);
                 } else {
-//                    offsetR = max(index_area.keySet());
                     br.skip(skipR = index_area.get(offsetR));
                 }
 
@@ -219,6 +272,9 @@ class SharedString {
                     skipR += cursor;
                     System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
                 }
+                // 下一个相邻区域或者已读区域
+            } else {
+                br.skip(skipR); // 跳过前方N个字符从当前位置直接读取
             }
 
             // Read eden area data
@@ -240,6 +296,7 @@ class SharedString {
                 }
 
                 skipR += cursor;
+                limit_eden = n;
                 // A page
                 if (n == page) {
                     // Save next start index
@@ -258,19 +315,69 @@ class SharedString {
                     System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
                 }
             }
-        } catch (IOException e) {
-            throw new ExcelReadException(e);
         }
     }
 
-//    private int max(Set<Integer> set) {
-//        Integer max = 0;
-//        for (Iterator<Integer> ite = set.iterator(); ite.hasNext(); ) {
-//            Integer i = ite.next();
-//            if (max.compareTo(i) < 0) {
-//                max = i;
-//            }
-//        }
-//        return max;
-//    }
+    /**
+     * Read data from main reader
+     * forward only
+     * @return word count
+     * @throws IOException -
+     */
+    private int readData() throws IOException {
+        // Read eden area data
+        int n = 0, length, nChar;
+        while ((length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
+            length += offset;
+            nChar = offset &= 0;
+            int cursor = 0, len0 = length - 3, len1 = len0 - 1;
+            for ( ; nChar < length && n < page; ) {
+                for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't' || cb[nChar + 2] != '>'); ++nChar);
+                if (nChar >= len0) break; // Not found
+                cursor = nChar;
+                int a = nChar += 3;
+                for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/' || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar);
+                if (nChar >= len1) break; // Not found
+                eden[n++] = nChar > a ? new String(cb, a, nChar - a) : null;
+                nChar += 4;
+                cursor = nChar;
+            }
+
+            skipR += cursor;
+            limit_eden = n;
+
+            if (cursor < length) {
+                System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
+            }
+
+            // A page
+            if (n == page) {
+                // Save next start index
+                index_area.put(++offsetM, skipR);
+                break;
+            } else if (length < cb.length && nChar == len0) { // EOF
+                if (max == -1) { // Reset totals when unknown size
+                    max = offsetM * page + n;
+                }
+                break;
+            }
+        }
+        return n; // Return word count
+    }
+
+    /**
+     * close stream and free space
+     */
+    void close() {
+        if (reader != null) try {
+            // Debug hit rate
+            logger.debug("total: {}, eden: {}, old: {}, hot: {}", total, total_eden, total_old, total_hot);
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        cb = null;
+        eden = null;
+        old = null;
+    }
 }
