@@ -6,7 +6,7 @@
 
     <groupId>net.cua</groupId>
     <artifactId>eec</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.6</version>
     <packaging>jar</packaging>
 
     <properties>

@@ -1,3 +1,8 @@
+Version 0.2.6 (2018-11-09)
+1. sharedString保留一个顺序流句柄以减少读文件次数
+2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
+   `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
+
 Version 0.2.5 (2018-11-07)
 -------------
 1. ExcelReader添加热词区，提高大文件查找性能。

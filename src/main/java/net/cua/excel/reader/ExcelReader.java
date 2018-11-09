@@ -92,6 +92,8 @@ public class ExcelReader implements AutoCloseable {
             Sheet sheet = new Sheet();
             sheet.setName(e.attributeValue("name"));
             sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            String state = e.attributeValue("state");
+            sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
                 FileUtil.rm_rf(temp.toFile(), true);

@@ -6,6 +6,9 @@ eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持x
 
 eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
 
+
+[CHANGELOG](./CHANGELOG)
+
 ## 主要功能
 
 1. 支持`Statement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
