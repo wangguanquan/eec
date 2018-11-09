@@ -232,7 +232,7 @@ class SharedString {
                 loadXml(index);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ExcelReadException(e);
         }
     }
 
