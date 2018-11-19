@@ -2,13 +2,13 @@
 
 eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
 
-与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.Connection`和SQL文，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
+与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
 
 eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
 
 ## 主要功能
 
-1. 支持`Statement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
+1. 支持`PreparedStatement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
 2. 支持 对象数组 和 Map数组 导出。
 3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
 4. int类型(byte,char,short,int)方便转可被识别文字

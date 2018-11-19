@@ -351,6 +351,7 @@ class SharedString {
                 if (max == -1) { // Reset totals when unknown size
                     max = offsetM * page + n;
                 }
+                ++offsetM; // out of index range
                 break;
             }
         }
