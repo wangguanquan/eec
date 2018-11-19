@@ -73,10 +73,10 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
 @Test public void t1() {
     try (Connection con = dataSource.getConnection()) {
         new Workbook("用户注册列表", creator) // 指定workbook名，作者
-            .setConnection(con) // 配置数据库连接
             .setAutoSize(true) // 列宽自动调节
             .addSheet("用户注册"
-                , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
+                , con.prepareStatement("select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
+                    , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
                 , new Sheet.Column("ID", int.class)
                 , new Sheet.Column("产品ID", int.class)
                 , new Sheet.Column("渠道ID", int.class)
@@ -86,7 +86,7 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
                 , new Sheet.Column("CPS用户ID", int.class)
                 , new Sheet.Column("渠道类型", int.class)
             ) // 添加一个sheet页
-            .writeTo(Paths.get("f:\\excel")); // 指定输出位置
+            .writeTo(defaultPath); // 指定输出位置
     } catch (SQLException | IOException | ExportException e) {
         e.printStackTrace();
     }
@@ -105,11 +105,11 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
         boolean share = true;
         String[] cs = {"正常", "注销"};
         final Fill fill = new Fill(PatternType.solid, Color.red);
-        new Workbook("多Sheet页", creator)
-            .setConnection(con)
+        new Workbook("多Sheet页-值转换＆样式转换", creator)
             .setAutoSize(true)
             .addSheet("用户信息"
-                , "select id,name,account,status,city from t_user where id between ? and ? and city = ?"
+                , con.prepareStatement("select id,name,account,status,city from t_user where id between ? and ? and city = ?"
+                    , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
                 , p -> {
                     p.setInt(1, 1);
                     p.setInt(2, 500);
@@ -128,7 +128,8 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
                 , new Sheet.Column("城市", String.class, share) // 共享字串
             )
             .addSheet("用户注册"
-                , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
+                , con.prepareStatement("select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
+                        , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
                 , new Sheet.Column("ID", int.class)
                 , new Sheet.Column("产品ID", int.class)
                 , new Sheet.Column("渠道ID", int.class)
@@ -138,7 +139,7 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
                 , new Sheet.Column("CPS用户ID", int.class)
                 , new Sheet.Column("渠道类型", int.class)
             )
-            .writeTo(Paths.get("f:\\excel")); // 输出到output，如果是web导出功能这里可以直接输出到｀response.getOutputStream()｀
+            .writeTo(defaultPath); // 输出到output，如果是web导出功能这里可以直接输出到｀response.getOutputStream()｀
     } catch (SQLException | IOException | ExportException e) {
         e.printStackTrace();
     }
