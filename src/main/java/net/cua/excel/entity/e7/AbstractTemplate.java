@@ -162,7 +162,7 @@ public abstract class AbstractTemplate {
 
         if (n > 0) {
             try {
-                FileUtil.writeToDisk(document, shareStringPath);
+                FileUtil.writeToDiskNoFormat(document, shareStringPath);
             } catch (IOException e) {
                 wb.what("9004", shareStringPath.toString());
                 // Do nothing

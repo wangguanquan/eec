@@ -12,6 +12,7 @@ import net.cua.excel.util.ExtBufferedWriter;
 import net.cua.excel.util.StringUtil;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -19,11 +20,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 
 import static net.cua.excel.util.DateUtil.toDateTimeValue;
 import static net.cua.excel.util.DateUtil.toDateValue;
+import static net.cua.excel.util.DateUtil.toTimeValue;
 
 /**
  * 对应workbook各sheet页
@@ -412,9 +418,12 @@ public abstract class Sheet {
          */
         int defaultHorizontal() {
             int horizontal;
-            if (isDate(clazz) || isDateTime(clazz) || isChar(clazz) || isBool(clazz)) {
+            if (isDate(clazz) || isDateTime(clazz)
+                    || isLocalDate(clazz) || isLocalDateTime(clazz)
+                    || isTime(clazz) || isLocalTime(clazz)
+                    || isChar(clazz) || isBool(clazz)) {
                 horizontal = Horizontals.CENTER;
-            } else if (isInt(clazz) || isLong(clazz) || isFloat(clazz)) {
+            } else if (isInt(clazz) || isLong(clazz) || isFloat(clazz) || isBigDecimal(clazz)) {
                 horizontal = Horizontals.RIGHT;
             } else {
                 horizontal = Horizontals.LEFT;
@@ -570,7 +579,9 @@ public abstract class Sheet {
         private NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // 整数百分比
                 , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // 整数人民币
                 , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // 小数百分比
-                , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)"); // 小数人民币
+                , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // 小数人民币
+                , tm = new NumFmt("hh:mm:ss") // 时分秒
+                ;
 
         /**
          * 根据类型获取默认样式
@@ -581,13 +592,13 @@ public abstract class Sheet {
             int style;
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
-            } else if (isDate(clazz)) {
+            } else if (isDate(clazz) || isLocalDate(clazz)) {
                 style = Styles.defaultDateBorderStyle();
-            } else if (isDateTime(clazz)) {
+            } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
                 style = Styles.defaultTimestampBorderStyle();
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
-            } else if (isInt(clazz) || isLong(clazz)) {
+            } else if (isInt(clazz) || isLong(clazz) || isBigDecimal(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
                     case Const.ColumnType.NORMAL: // 正常显示数字
@@ -613,6 +624,8 @@ public abstract class Sheet {
                         break;
                 default:
                 }
+            } else if (isTime(clazz) || isLocalTime(clazz)) {
+                style = styles.addNumFmt(tm);
             } else {
                 style = 0; // Auto-style
             }
@@ -865,8 +878,7 @@ public abstract class Sheet {
      */
     static boolean isDate(Class<?> clazz) {
         return clazz == java.util.Date.class
-                || clazz == java.sql.Date.class
-                || clazz == java.time.LocalDate.class;
+                || clazz == java.sql.Date.class;
     }
     /**
      * 测试是否为DateTime类型
@@ -874,8 +886,7 @@ public abstract class Sheet {
      * @return bool
      */
     static boolean isDateTime(Class<?> clazz) {
-        return clazz == java.sql.Timestamp.class
-                || clazz == java.time.LocalDateTime.class;
+        return clazz == java.sql.Timestamp.class;
     }
     /**
      * 测试是否为Int类型
@@ -928,6 +939,46 @@ public abstract class Sheet {
      */
     static boolean isChar(Class<?> clazz) {
         return clazz == char.class || clazz == Character.class;
+    }
+    /**
+     * 测试是否为BigDecimal类型
+     * @param clazz 列类型
+     * @return bool
+     */
+    static boolean isBigDecimal(Class<?> clazz) {
+        return clazz == BigDecimal.class;
+    }
+    /**
+     * 测试是否为LocalDate类型
+     * @param clazz 列类型
+     * @return bool
+     */
+    static boolean isLocalDate(Class<?> clazz) {
+        return clazz == LocalDate.class;
+    }
+    /**
+     * 测试是否为LocalDateTime类型
+     * @param clazz 列类型
+     * @return bool
+     */
+    static boolean isLocalDateTime(Class<?> clazz) {
+        return clazz == LocalDateTime.class;
+    }
+    /**
+     * 测试是否为java.sql.Time类型
+     * @param clazz 列类型
+     * @return bool
+     */
+    static boolean isTime(Class<?> clazz) {
+        return clazz == java.sql.Time.class;
+    }
+    /**
+     * 测试是否为LocalTime类型
+     * @param clazz 列类型
+     * @return bool
+     */
+    static boolean isLocalTime(Class<?> clazz) {
+        return clazz == java.time.LocalTime.class;
     }
 
     static boolean blockOrDefault(int style) {
@@ -1091,6 +1142,10 @@ public abstract class Sheet {
             } else if (isBool(hc.clazz)) {
                 boolean bool = rs.getBoolean(i + 1);
                 writeBoolean(bw, bool, i);
+            } else if (isBigDecimal(hc.clazz)) {
+                writeBigDecimal(bw, rs.getBigDecimal(i + 1), i);
+            } else if (isTime(hc.clazz)) {
+                writeTime(bw, rs.getTime(i + 1), i);
             } else {
                 Object o = rs.getObject(i + 1);
                 if (o != null) {
@@ -1151,6 +1206,10 @@ public abstract class Sheet {
             } else if (isBool(hc.clazz)) {
                 boolean bool = rs.getBoolean(i + 1);
                 writeBoolean(bw, bool, i);
+            } else if (isBigDecimal(hc.clazz)) {
+                writeBigDecimal(bw, rs.getBigDecimal(i + 1), i);
+            } else if (isTime(hc.clazz)) {
+                writeTime(bw, rs.getTime(i + 1), i);
             } else {
                 Object o = rs.getObject(i + 1);
                 if (o != null) {
@@ -1180,6 +1239,8 @@ public abstract class Sheet {
     protected boolean isOdd() {
         return (rows & 1) == 1;
     }
+
+
 
     /**
      * 写字符串
@@ -1212,7 +1273,7 @@ public abstract class Sheet {
             bw.write("\" t=\"inlineStr\" s=\"");
             bw.writeInt(styleIndex);
             bw.write("\"><is><t>");
-            bw.write(s);
+            bw.escapeWrite(s); // escape text
             bw.write("</t></is></c>");
         }
     }
@@ -1243,7 +1304,7 @@ public abstract class Sheet {
                 bw.write("\" t=\"inlineStr\" s=\"");
                 bw.writeInt(styleIndex);
                 bw.write("\"><is><t>");
-                bw.write(s);
+                bw.escapeWrite(s); // escape text
                 bw.write("</t></is></c>");
             }
             int ln = s.getBytes("GB2312").length; // TODO 计算
@@ -1258,6 +1319,28 @@ public abstract class Sheet {
     }
 
     protected void writeDate(ExtBufferedWriter bw, Date date, int column, Object o) throws IOException {
+        int styleIndex = getStyleIndex(columns[column], o);
+        bw.write("<c r=\"");
+        bw.write(int2Col(column + 1));
+        bw.writeInt(rows);
+        if (date == null) {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"/>");
+        } else {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"><v>");
+            bw.writeInt(toDateValue(date));
+            bw.write("</v></c>");
+        }
+    }
+
+    protected void writeLocalDate(ExtBufferedWriter bw, LocalDate date, int column) throws IOException {
+        writeLocalDate(bw, date, column, date);
+    }
+
+    protected void writeLocalDate(ExtBufferedWriter bw, LocalDate date, int column, Object o) throws IOException {
         int styleIndex = getStyleIndex(columns[column], o);
         bw.write("<c r=\"");
         bw.write(int2Col(column + 1));
@@ -1293,6 +1376,94 @@ public abstract class Sheet {
             bw.writeInt(styleIndex);
             bw.write("\"><v>");
             bw.write(toDateTimeValue(ts));
+            bw.write("</v></c>");
+        }
+    }
+
+    protected void writeLocalDateTime(ExtBufferedWriter bw, LocalDateTime ts, int column) throws IOException {
+        writeLocalDateTime(bw, ts, column, ts);
+    }
+
+    protected void writeLocalDateTime(ExtBufferedWriter bw, LocalDateTime ts, int column, Object o) throws IOException {
+        int styleIndex = getStyleIndex(columns[column], o);
+        bw.write("<c r=\"");
+        bw.write(int2Col(column + 1));
+        bw.writeInt(rows);
+        if (ts == null) {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"/>");
+        } else {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"><v>");
+            bw.write(toDateTimeValue(ts));
+            bw.write("</v></c>");
+        }
+    }
+
+    protected void writeTime(ExtBufferedWriter bw, Time date, int column) throws IOException {
+        writeTime(bw, date, column, date);
+    }
+
+    protected void writeTime(ExtBufferedWriter bw, Time date, int column, Object o) throws IOException {
+        int styleIndex = getStyleIndex(columns[column], o);
+        bw.write("<c r=\"");
+        bw.write(int2Col(column + 1));
+        bw.writeInt(rows);
+        if (date == null) {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"/>");
+        } else {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"><v>");
+            bw.write(toTimeValue(date));
+            bw.write("</v></c>");
+        }
+    }
+
+    protected void writeLocalTime(ExtBufferedWriter bw, LocalTime date, int column) throws IOException {
+        writeLocalTime(bw, date, column, date);
+    }
+
+    protected void writeLocalTime(ExtBufferedWriter bw, LocalTime date, int column, Object o) throws IOException {
+        int styleIndex = getStyleIndex(columns[column], o);
+        bw.write("<c r=\"");
+        bw.write(int2Col(column + 1));
+        bw.writeInt(rows);
+        if (date == null) {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"/>");
+        } else {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"><v>");
+            bw.write(toTimeValue(date));
+            bw.write("</v></c>");
+        }
+    }
+
+    protected void writeBigDecimal(ExtBufferedWriter bw, BigDecimal bd, int column) throws IOException {
+        writeBigDecimal(bw, bd, column, bd);
+    }
+
+    protected void writeBigDecimal(ExtBufferedWriter bw, BigDecimal bd, int column, Object o) throws IOException {
+        int styleIndex = getStyleIndex(columns[column], o);
+        bw.write("<c r=\"");
+        bw.write(int2Col(column + 1));
+        bw.writeInt(rows);
+        if (bd == null) {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"/>");
+        } else {
+            bw.write("\" s=\"");
+            bw.writeInt(styleIndex);
+            bw.write("\"><v>");
+            bw.write(bd.toString());
             bw.write("</v></c>");
         }
     }
@@ -1351,6 +1522,36 @@ public abstract class Sheet {
                     }
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, column, n);
+                }
+                else if (isBigDecimal(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(BigDecimal.class);
+                    }
+                    writeBigDecimal(bw, (BigDecimal) o, column, n);
+                }
+                else if (isTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(Time.class);
+                    }
+                    writeTime(bw, (Time) o, column, n);
+                }
+                else  if (isLocalDate(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDate.class);
+                    }
+                    writeLocalDate(bw, (LocalDate) o, column, n);
+                }
+                else  if (isLocalDateTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDateTime.class);
+                    }
+                    writeLocalDateTime(bw, (LocalDateTime) o, column, n);
+                }
+                else  if (isLocalTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalTime.class);
+                    }
+                    writeLocalTime(bw, (LocalTime) o, column, n);
                 }
                 else {
                     if (blockOrDefault) {
@@ -1419,6 +1620,36 @@ public abstract class Sheet {
                     }
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, column, n);
+                }
+                else if (isBigDecimal(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(BigDecimal.class);
+                    }
+                    writeBigDecimal(bw, (BigDecimal) o, column, n);
+                }
+                else if (isTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(Time.class);
+                    }
+                    writeTime(bw, (Time) o, column, n);
+                }
+                else  if (isLocalDate(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDate.class);
+                    }
+                    writeLocalDate(bw, (LocalDate) o, column, n);
+                }
+                else  if (isLocalDateTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDateTime.class);
+                    }
+                    writeLocalDateTime(bw, (LocalDateTime) o, column, n);
+                }
+                else  if (isLocalTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalTime.class);
+                    }
+                    writeLocalTime(bw, (LocalTime) o, column, n);
                 }
                 else {
                     if (blockOrDefault) {
@@ -1491,6 +1722,36 @@ public abstract class Sheet {
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, column, c);
                 }
+                else if (isBigDecimal(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(BigDecimal.class);
+                    }
+                    writeBigDecimal(bw, (BigDecimal) o, column, c);
+                }
+                else if (isTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(Time.class);
+                    }
+                    writeTime(bw, (Time) o, column, c);
+                }
+                else  if (isLocalDate(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDate.class);
+                    }
+                    writeLocalDate(bw, (LocalDate) o, column, c);
+                }
+                else  if (isLocalDateTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDateTime.class);
+                    }
+                    writeLocalDateTime(bw, (LocalDateTime) o, column, c);
+                }
+                else  if (isLocalTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalTime.class);
+                    }
+                    writeLocalTime(bw, (LocalTime) o, column, c);
+                }
                 else {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
@@ -1535,38 +1796,68 @@ public abstract class Sheet {
                         hc.cellStyle = hc.getCellStyle(long.class);
                     }
                     long l = ((Long) o).longValue();
-                    writeLong(bw, l, column);
+                    writeLong(bw, l, column, c);
                 }
                 else if (isDate(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.util.Date.class);
                     }
-                    writeDate(bw, (Date) o, column);
+                    writeDate(bw, (Date) o, column, c);
                 }
                 else if (isDateTime(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(java.sql.Timestamp.class);
                     }
-                    writeTimestamp(bw, (Timestamp) o, column);
+                    writeTimestamp(bw, (Timestamp) o, column, c);
                 }
                 else if (isFloat(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(double.class);
                     }
-                    writeDouble(bw, ((Double) o).doubleValue(), column);
+                    writeDouble(bw, ((Double) o).doubleValue(), column, c);
                 }
                 else if (isBool(clazz)) {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(boolean.class);
                     }
                     boolean bool = ((Boolean) o).booleanValue();
-                    writeBoolean(bw, bool, column);
+                    writeBoolean(bw, bool, column, c);
+                }
+                else if (isBigDecimal(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(BigDecimal.class);
+                    }
+                    writeBigDecimal(bw, (BigDecimal) o, column, c);
+                }
+                else if (isTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(Time.class);
+                    }
+                    writeTime(bw, (Time) o, column, c);
+                }
+                else  if (isLocalDate(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDate.class);
+                    }
+                    writeLocalDate(bw, (LocalDate) o, column, c);
+                }
+                else  if (isLocalDateTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalDateTime.class);
+                    }
+                    writeLocalDateTime(bw, (LocalDateTime) o, column, c);
+                }
+                else  if (isLocalTime(clazz)) {
+                    if (blockOrDefault) {
+                        hc.cellStyle = hc.getCellStyle(LocalTime.class);
+                    }
+                    writeLocalTime(bw, (LocalTime) o, column, c);
                 }
                 else {
                     if (blockOrDefault) {
                         hc.cellStyle = hc.getCellStyle(String.class);
                     }
-                    writeStringAutoSize(bw, o.toString(), column);
+                    writeStringAutoSize(bw, o.toString(), column, c);
                 }
             } else {
                 writeNull(bw, column);
@@ -1750,10 +2041,10 @@ public abstract class Sheet {
                         }
 //                        len = hc.o.toString().getBytes("GB2312").length;
                     }
-                    else if (isDate(hc.clazz)) {
+                    else if (isDate(hc.clazz) || isLocalDate(hc.clazz)) {
                         len = 10;
                     }
-                    else if (hc.clazz == java.sql.Timestamp.class) {
+                    else if (isDateTime(hc.clazz) || isLocalDateTime(hc.clazz)) {
                         len = 20;
                     }
                     else if (isInt(hc.clazz)) {
@@ -1770,6 +2061,8 @@ public abstract class Sheet {
 //                        if (len < 11) {
 //                            len = hc.type > 0 ? 12 : 11;
 //                        }
+                    } else if (isTime(hc.clazz) || isLocalTime(hc.clazz)) {
+                        len = 8;
                     } else {
                         len = 10;
                     }

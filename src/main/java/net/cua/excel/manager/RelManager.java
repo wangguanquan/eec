@@ -128,7 +128,7 @@ public class RelManager implements Serializable, Cloneable {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, rels.resolve(name)); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, rels.resolve(name)); // write to desk
     }
 
     @Override

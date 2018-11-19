@@ -2,6 +2,7 @@ package net.cua.excel.util;
 
 import net.cua.excel.reader.UncheckedTypeException;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -64,6 +65,63 @@ public class DateUtil {
             n = (int) date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() + DAYS_1900_TO_1970;
         }
         return n;
+    }
+
+    /**
+     * time of day
+     * @param ts
+     * @return
+     */
+    public static double toTimeValue(Timestamp ts) {
+        return toTimeValue(ts.toLocalDateTime().toLocalTime());
+    }
+
+    /**
+     * time of day
+     * @param date
+     * @return
+     */
+    public static double toTimeValue(Date date) {
+        return toTimeValue(new Timestamp(date.getTime()));
+    }
+
+    /**
+     * time of day
+     * @param time
+     * @return
+     */
+    public static double toTimeValue(Time time) {
+        return toTimeValue(time.toLocalTime());
+    }
+
+    /**
+     * days from 1900 plus current second of day
+     * @param ldt
+     * @return
+     */
+    public static double toDateTimeValue(LocalDateTime ldt) {
+        long day = ldt.toLocalDate().toEpochDay();
+        int second = ldt.toLocalTime().toSecondOfDay();
+        return second / SECOND_OF_DAY + day + DAYS_1900_TO_1970;
+    }
+
+    /**
+     * days from 1900
+     * @param date
+     * @return
+     */
+    public static int toDateValue(LocalDate date) {
+        int n = (int) date.toEpochDay() + DAYS_1900_TO_1970;
+        return n;
+    }
+
+    /**
+     * time of day
+     * @param time
+     * @return
+     */
+    public static double toTimeValue(LocalTime time) {
+        return time.toSecondOfDay() / SECOND_OF_DAY;
     }
 
     /////////////////////////////number to date//////////////////////////////////

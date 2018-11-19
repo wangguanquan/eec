@@ -149,7 +149,7 @@ public class ContentType {
             }
         }
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.resolve("[Content_Types].xml")); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, root.resolve("[Content_Types].xml")); // write to desk
     }
 
 

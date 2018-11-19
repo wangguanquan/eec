@@ -1,7 +1,13 @@
-Version 0.2.6 (2018-11-09)
+Version 0.2.7 (2018-11-19)
+-------------
 1. sharedString保留一个顺序流句柄以减少读文件次数
 2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
    `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
+3. BigDecimal类型支持
+4. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持
+5. 增加读写转义（跳过不可见字符ASCII 0~31）
+6. setConnection方法被标记过时，将在0.3.x版本中删删除。传入一个数据库连接是一种不安全行为，
+   第三方可能利用此连接做其它非法的数据库操作
 
 Version 0.2.5 (2018-11-07)
 -------------

@@ -29,11 +29,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -169,7 +167,11 @@ public class Workbook {
      * 此eec内部产生的Statement和ResultSet会主动关闭</p>
      * @param con 连接
      * @return 工作簿
+     * @deprecated 传入一个Connection是一种不安全行为
+     * 第三方用户可能利用此连接做其它非法数据库操作，请在addSheet方法直接传入
+     * PreparedStatement或者ResultSet。此接口将在0.3.x版本中被删除
      */
+    @Deprecated
     public Workbook setConnection(Connection con) {
         this.con = con;
         return this;
@@ -344,7 +346,10 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
+     * @deprecated 此接口将在0.3.x版本中被删除。
+     * 请使用addSheet(PreparedStatement, Sheet.Column ...)代替
      */
+    @Deprecated
     public Workbook addSheet(String sql, Sheet.Column ... columns) throws SQLException {
         return addSheet(null, sql, columns);
     }
@@ -355,11 +360,13 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
+     * @deprecated 此接口将在0.3.x版本中被删除。
+     * 请使用addSheet(String, PreparedStatement, Sheet.Column ...)代替
      */
+    @Deprecated
     public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
-        // TODO 提前分页
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         sheet.setPs(ps);
         sheets[size++] = sheet;
@@ -375,7 +382,10 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
+     * @deprecated 此接口将在0.3.x版本中被删除。
+     * 请使用addSheet(PreparedStatement, ParamProcessor, Sheet.Column ...)代替
      */
+    @Deprecated
     public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
     }
@@ -390,7 +400,10 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
+     * @deprecated 此接口将在0.3.x版本中被删除。
+     * 请使用addSheet(String, PreparedStatement, ParamProcessor, Sheet.Column ...)代替
      */
+    @Deprecated
     public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
@@ -400,7 +413,65 @@ public class Workbook {
         sheets[size++] = sheet;
         return this;
     }
-
+    /**
+     * 尾部添加Sheet，未命名
+     * @param ps PreparedStatement
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
+        return addSheet(null, ps, columns);
+    }
+    /**
+     * 尾部添加Sheet
+     * @param name 名称
+     * @param ps PreparedStatement
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
+        ensureCapacityInternal();
+        StatementSheet sheet = new StatementSheet(this, name, columns);
+        sheet.setPs(ps);
+        sheets[size++] = sheet;
+        return this;
+    }
+    /**
+     * 尾部添加Sheet，未命令名
+     * <p>采用jdbc方式设置SQL参数
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * </p>
+     * @param ps PreparedStatement
+     * @param pp 参数
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+        return addSheet(null, ps, pp, columns);
+    }
+    /**
+     * 尾部添加Sheet
+     * <p>采用jdbc方式设置SQL参数
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * </p>
+     * @param name 名称
+     * @param ps PreparedStatement
+     * @param pp 参数
+     * @param columns 列头
+     * @return 工作簿
+     * @throws SQLException SQL异常
+     */
+    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+        ensureCapacityInternal();
+        StatementSheet sheet = new StatementSheet(this, name, columns);
+        pp.build(ps);
+        sheet.setPs(ps);
+        sheets[size++] = sheet;
+        return this;
+    }
     /**
      * 在指定位置上插入Sheet
      * @param index 下标从0开始
@@ -524,6 +595,16 @@ public class Workbook {
             app.setCompany("guanquan.wang@yandex.com");
         }
 
+        // Read app and version from pom
+        try {
+            Properties pom = new Properties();
+            pom.load(getClass().getClassLoader().getResourceAsStream("META-INF/maven/net.cua/eec/pom.properties"));
+            app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
+            app.setAppVersion(pom.getProperty("version"));
+        } catch (IOException e) {
+            // Nothing
+        }
+
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             titleParts.add(sheets[i].getName());
@@ -564,7 +645,7 @@ public class Workbook {
         try {
             Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), themeP.resolve("theme1.xml"));
         } catch (IOException e) {
-            e.printStackTrace();
+            // Nothing
         }
 //        FileUtil.copyFile(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), new File(themeP, "theme1.xml"));
         addRel(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
@@ -698,7 +779,7 @@ public class Workbook {
         rootElement.addElement("calcPr").addAttribute("calcId", "124519");
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
     //////////////////////////////////////////////////////

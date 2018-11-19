@@ -65,7 +65,7 @@ public class SharedStrings {
         elements.forEach((k,v) -> rootElement.addElement("si").addElement("t").setText(k));
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk
 
         // destroy
         destroy();
