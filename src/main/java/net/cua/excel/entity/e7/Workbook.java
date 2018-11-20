@@ -167,11 +167,7 @@ public class Workbook {
      * 此eec内部产生的Statement和ResultSet会主动关闭</p>
      * @param con 连接
      * @return 工作簿
-     * @deprecated 传入一个Connection是一种不安全行为
-     * 第三方用户可能利用此连接做其它非法数据库操作，请在addSheet方法直接传入
-     * PreparedStatement或者ResultSet。此接口将在0.3.x版本中被删除
      */
-    @Deprecated
     public Workbook setConnection(Connection con) {
         this.con = con;
         return this;
@@ -346,10 +342,7 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
-     * @deprecated 此接口将在0.3.x版本中被删除。
-     * 请使用addSheet(PreparedStatement, Sheet.Column ...)代替
      */
-    @Deprecated
     public Workbook addSheet(String sql, Sheet.Column ... columns) throws SQLException {
         return addSheet(null, sql, columns);
     }
@@ -360,10 +353,7 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
-     * @deprecated 此接口将在0.3.x版本中被删除。
-     * 请使用addSheet(String, PreparedStatement, Sheet.Column ...)代替
      */
-    @Deprecated
     public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
@@ -384,10 +374,7 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
-     * @deprecated 此接口将在0.3.x版本中被删除。
-     * 请使用addSheet(PreparedStatement, ParamProcessor, Sheet.Column ...)代替
      */
-    @Deprecated
     public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
     }
@@ -402,10 +389,7 @@ public class Workbook {
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
-     * @deprecated 此接口将在0.3.x版本中被删除。
-     * 请使用addSheet(String, PreparedStatement, ParamProcessor, Sheet.Column ...)代替
      */
-    @Deprecated
     public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);

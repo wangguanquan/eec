@@ -36,4 +36,52 @@
             <version>${log4j.version}</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>deploy</phase>
+                        <goals><goal>jar-no-fork</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--<plugin>-->
+            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>attach-javadocs</id>-->
+            <!--<phase>deploy</phase>-->
+            <!--<goals><goal>jar</goal></goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--</plugin>-->
+            <plugin>
+                <!-- explicitly define maven-deploy-plugin after other to force exec order -->
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals><goal>deploy</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <distributionManagement>
+        <repository>
+            <id>vipmro-releases</id>
+            <name>VIPMRO Releases</name>
+            <url>http://nexus.vipmro.org/content/repositories/vipmro-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>vipmro-snapshots</id>
+            <name>VIPMRO Snapshots</name>
+            <url>http://nexus.vipmro.org/content/repositories/vipmro-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
