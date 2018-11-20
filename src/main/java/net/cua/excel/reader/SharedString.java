@@ -178,7 +178,7 @@ class SharedString {
             }
             value = eden[index - offset_eden];
             if (test(index)) {
-                logger.info("put hot {}", index);
+                logger.debug("put hot {}", index);
                 hot.push(index, value);
             }
             total_eden++;
