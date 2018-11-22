@@ -41,9 +41,8 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException 文件不存在或读取文件失败
      */
     public static ExcelReader read(Path path) throws IOException {
-        return read(Files.newInputStream(path));
+        return read(Files.newInputStream(path), 0, 0);
     }
-
     /**
      * 实例化Reader
      * @param stream Excel文件流
@@ -51,6 +50,53 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException 读取文件失败
      */
     public static ExcelReader read(InputStream stream) throws IOException {
+        return read(stream, 0, 0);
+    }
+    /**
+     * 实例化Reader
+     * @param path Excel路径
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  将此参数影响读取文件次数
+     * @return ExcelReader
+     * @throws IOException 文件不存在或读取文件失败
+     */
+    public static ExcelReader read(Path path, int cacheSize) throws IOException {
+        return read(Files.newInputStream(path), cacheSize, 0);
+    }
+
+    /**
+     * 实例化Reader
+     * @param stream Excel文件流
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  将此参数影响读取文件次数
+     * @return ExcelReader
+     * @throws IOException 读取文件失败
+     */
+    public static ExcelReader read(InputStream stream, int cacheSize) throws IOException {
+        return read(stream, cacheSize, 0);
+    }
+    /**
+     * 实例化Reader
+     * @param path Excel路径
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  将此参数影响读取文件次数
+     * @param hotSize 热词区大小，默认64
+     * @return ExcelReader
+     * @throws IOException 文件不存在或读取文件失败
+     */
+    public static ExcelReader read(Path path, int cacheSize, int hotSize) throws IOException {
+        return read(Files.newInputStream(path), cacheSize, hotSize);
+    }
+    /**
+     * 实例化Reader
+     * @param stream Excel文件流
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  将此参数影响读取文件次数
+     * @param hotSize 热词区大小，默认64
+     * @return ExcelReader
+     * @throws IOException 读取文件失败
+     */
+    public static ExcelReader read(InputStream stream, int cacheSize, int hotSize) throws IOException {
         // Store template stream as zip file
         Path temp = FileUtil.mktmp("eec+");
         ZipUtil.unzip(stream, temp);
@@ -83,7 +129,7 @@ public class ExcelReader implements AutoCloseable {
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml")).load();
+        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
 
         List<Sheet> sheets = new ArrayList<>();
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();

@@ -8,7 +8,7 @@ import java.util.Map;
  * 由LRU页面淘汰算法实现push, get, remove方法时间复杂度均为O(1)
  * Create by guanquan.wang at 2018-10-31 16:06
  */
-class Hot {
+public class Hot {
     private static class E {
         private int k;
         private String v;

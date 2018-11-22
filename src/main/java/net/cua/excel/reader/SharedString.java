@@ -24,8 +24,12 @@ class SharedString {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
-    SharedString(Path sstPath) {
+    SharedString(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
+        if (cacheSize > 0) {
+            this.page = cacheSize;
+        }
+        this.hotSize = hotSize;
     }
 
     /** 新加载数据放入此区域 */
@@ -33,7 +37,7 @@ class SharedString {
     /** eden区未命中时将数据复制到此区域 */
     private String[] old;
     /** 每次加载的数量 */
-    private int page = 256;
+    private int page = 512;
     /** 整个文件有多少个字符串 */
     private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
     /** 新生代offset */
@@ -48,6 +52,8 @@ class SharedString {
     private TIntIntHashMap count_area = null;
     /** hot world */
     private Hot hot;
+    /** size of hot */
+    private int hotSize;
     /** 记录各段的起始位置 */
     private Map<Integer, Long> index_area = null;
 
@@ -78,7 +84,8 @@ class SharedString {
                 if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
                 count_area =  new TIntIntHashMap(default_cap);
 
-                hot = new Hot();
+                if (hotSize > 0) hot = new Hot(hotSize);
+                else hot = new Hot();
             }
             else {
                 eden = new String[max];
@@ -94,7 +101,7 @@ class SharedString {
     private int uniqueCount() throws IOException {
         int off = -1;
         reader = Files.newBufferedReader(sstPath);
-        cb = new char[1024];
+        cb = new char[2048];
         offset = 0;
         offset = reader.read(cb);
 
