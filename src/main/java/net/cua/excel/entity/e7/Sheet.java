@@ -1103,7 +1103,7 @@ public abstract class Sheet {
         bw.write("<row r=\"");
         bw.writeInt(r);
         // default data row height 16.5
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -1172,7 +1172,7 @@ public abstract class Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 

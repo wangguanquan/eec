@@ -141,7 +141,7 @@ public class ListMapSheet extends Sheet {
                     writeStringAutoSize(bw, s, i);
                 }
                 else if (isDate(clazz)) {
-                    java.sql.Date date = (Date) o;
+                    java.util.Date date = (java.util.Date) o;
                     writeDate(bw, date, i);
                 }
                 else if (isDateTime(clazz)) {
