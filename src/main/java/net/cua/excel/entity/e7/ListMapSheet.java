@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -218,7 +217,7 @@ public class ListMapSheet extends Sheet {
                     writeString(bw, s, i);
                 }
                 else if (isDate(clazz)) {
-                    java.sql.Date date = (Date) o;
+                    java.util.Date date = (java.util.Date) o;
                     writeDate(bw, date, i);
                 }
                 else if (isDateTime(clazz)) {

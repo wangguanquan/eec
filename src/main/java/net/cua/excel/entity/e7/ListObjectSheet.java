@@ -329,7 +329,7 @@ public class ListObjectSheet<T> extends Sheet {
             else if (isDate(clazz)) {
                 e = field.get(o);
                 if (e != null) {
-                    java.sql.Date date = (java.sql.Date) e;
+                    java.util.Date date = (java.util.Date) e;
                     writeDate(bw, date, i);
                 } else {
                     writeNull(bw, i);
