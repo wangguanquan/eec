@@ -126,7 +126,7 @@ public class ListMapSheet extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -203,7 +203,7 @@ public class ListMapSheet extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 

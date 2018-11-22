@@ -120,11 +120,10 @@ public class ListObjectSheet<T> extends Sheet {
                     continue;
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
-                if (dn == null) continue;
-                if (StringUtil.isNotEmpty(dn.value())) {
+                if (dn != null && StringUtil.isNotEmpty(dn.value())) {
                     list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
                 } else {
-                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn.share()));
+                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
                 }
             }
             columns = new Column[list.size()];
@@ -221,11 +220,8 @@ public class ListObjectSheet<T> extends Sheet {
             }
             else if (isInt(clazz)) {
                 Integer n = (Integer) field.get(o);
-                if (n != null) {
-                    writeIntAutoSize(bw, n, i);
-                } else {
-                    writeNull(bw, i);
-                }
+                if (n != null) writeIntAutoSize(bw, n, i);
+                else writeNull(bw, i);
             }
             else if (isLong(clazz)) {
                 Long l = (Long) field.get(o);
@@ -239,7 +235,7 @@ public class ListObjectSheet<T> extends Sheet {
             }
             else if (isBool(clazz)) {
                 Boolean bool = (Boolean) field.get(o);
-                if (bool != null)writeBoolean(bw, bool, i);
+                if (bool != null) writeBoolean(bw, bool, i);
                 else writeNull(bw, i);
             }
             else if (isBigDecimal(clazz)) {
@@ -350,16 +346,13 @@ public class ListObjectSheet<T> extends Sheet {
             }
             else if (isChar(clazz)) {
                 Character c = (Character) field.get(o);
-                if (c != null) writeCharAutoSize(bw, c, i);
+                if (c != null) writeChar(bw, c, i);
                 else writeNull(bw, i);
             }
             else if (isInt(clazz)) {
                 Integer n = (Integer) field.get(o);
-                if (n != null) {
-                    writeIntAutoSize(bw, n, i);
-                } else {
-                    writeNull(bw, i);
-                }
+                if (n != null) writeInt(bw, n, i);
+                else writeNull(bw, i);
             }
             else if (isLong(clazz)) {
                 Long l = (Long) field.get(o);
@@ -373,7 +366,7 @@ public class ListObjectSheet<T> extends Sheet {
             }
             else if (isBool(clazz)) {
                 Boolean bool = (Boolean) field.get(o);
-                if (bool != null)writeBoolean(bw, bool, i);
+                if (bool != null) writeBoolean(bw, bool, i);
                 else writeNull(bw, i);
             }
             else if (isBigDecimal(clazz)) {
