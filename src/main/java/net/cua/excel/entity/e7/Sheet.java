@@ -2101,7 +2101,7 @@ public abstract class Sheet {
      * Int转列号A-Z
      */
     private ThreadLocal<char[][]> cache = ThreadLocal.withInitial(() -> new char[][] {{65}, {65, 65}, {65, 65, 65}});
-    protected char[] int2Col(int n) {
+    private char[] int2Col(int n) {
         char[][] cache_col = cache.get();
         char[] c; char A = 'A';
         if (n <= 26) {
@@ -2117,14 +2117,18 @@ public abstract class Sheet {
             c[0] = (char) (t - 1 + A);
             c[1] = (char) (w - 1 + A);
         } else {
-            int t = n / 26, tt = t / 26, w = n % 26;
+            int tt = n / 26, t = tt / 26, w = n % 26, m = tt % 26;
             if (w == 0) {
-                t--;
+                m--;
                 w = 26;
             }
+            if (m <= 0) {
+                t--;
+                m += 26;
+            }
             c = cache_col[2];
-            c[0] = (char) (tt - 1 + A);
-            c[1] = (char) (t - 27 + A);
+            c[0] = (char) (t - 1 + A);
+            c[1] = (char) (m - 1 + A);
             c[2] = (char) (w - 1 + A);
         }
         return c;

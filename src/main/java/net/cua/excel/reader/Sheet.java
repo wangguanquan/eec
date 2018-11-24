@@ -1,5 +1,8 @@
 package net.cua.excel.reader;
 
+import net.cua.excel.entity.TooManyColumnsException;
+import net.cua.excel.manager.Const;
+import net.cua.excel.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -135,13 +138,13 @@ public class Sheet implements AutoCloseable {
     private BufferedReader reader;
     private char[] cb; // buffer
     private int nChar, length;
-    private boolean eof = false, heof = false;
+    private boolean eof = false, heof = false; // OPTIONS = false
 
     private Row sRow;
 
     /**
      * load sheet.xml as BufferedReader
-     * @return
+     * @return Sheet
      * @throws IOException
      */
     Sheet load() throws IOException {
@@ -154,17 +157,23 @@ public class Sheet implements AutoCloseable {
             if (length < 11) break;
             // read size
             if (nChar == 0) {
-                String line = new String(cb, 0, 512);
+                String line = new String(cb, 56, 1024);
                 String size = "<dimension ref=\"";
-                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index+=(size.length()+1)) : -1;
+                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index+=size.length()) : -1;
                 if (end > 0) {
                     String l_ = line.substring(index, end);
-                    Pattern pat = Pattern.compile("[A-Z]+(\\d+):[A-Z]+(\\d+)");
+                    Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
                     Matcher mat = pat.matcher(l_);
                     if (mat.matches()) {
-                        int from = Integer.parseInt(mat.group(1)), to = Integer.parseInt(mat.group(2));
+                        int from = Integer.parseInt(mat.group(2)), to = Integer.parseInt(mat.group(4));
                         this.startRow = from;
-                        this.size = to - from;
+                        this.size = to - from + 1;
+                        int c1 = col2Int(mat.group(1)), c2 = col2Int(mat.group(3)), columnSize = c2 - c1 + 1;
+                        if (columnSize > Const.Limit.MAX_COLUMNS_ON_SHEET) {
+                            throw new TooManyColumnsException(columnSize);
+                        }
+                        logger.debug("column size: {}", columnSize);
+//                        OPTIONS = columnSize > 128; // size more than DX
                     } else {
                         pat = Pattern.compile("[A-Z]+(\\d+)");
                         mat = pat.matcher(l_);
@@ -199,7 +208,7 @@ public class Sheet implements AutoCloseable {
 
     /**
      * iterator rows
-     * @return
+     * @return Row
      * @throws IOException
      */
     private Row nextRow() throws IOException {
@@ -225,7 +234,13 @@ public class Sheet implements AutoCloseable {
         /* Load more when not found end of row tag */
         if (!endTag) {
             int n;
-            System.arraycopy(cb, start, cb, 0, n = length - start);
+            if (start == 0) {
+                char[] _cb = new char[cb.length << 1];
+                System.arraycopy(cb, start, _cb, 0, n = length - start);
+                cb = _cb;
+            } else {
+                System.arraycopy(cb, start, cb, 0, n = length - start);
+            }
             length = reader.read(cb, n, cb.length - n);
             // end of file
             if (length < 0) {
@@ -406,6 +421,23 @@ public class Sheet implements AutoCloseable {
         }
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                 nIter, Spliterator.ORDERED | Spliterator.NONNULL), false);
+    }
+
+    /**
+     * column mark to int
+     * @param col column mark
+     * @return int value
+     */
+    private int col2Int(String col) {
+        if (StringUtil.isEmpty(col)) return 1;
+        char[] values = col.toCharArray();
+        int n = 0;
+        for (char value : values) {
+            if (value < 'A' || value > 'Z')
+                throw new ExcelReadException("Column mark out of range: " + col);
+            n = n * 26 + value - 'A' + 1;
+        }
+        return n;
     }
 
     /**
