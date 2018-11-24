@@ -73,10 +73,10 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
 @Test public void t1() {
     try (Connection con = dataSource.getConnection()) {
         new Workbook("用户注册列表", creator) // 指定workbook名，作者
+            .setConnection(con) // 数据库连接
             .setAutoSize(true) // 列宽自动调节
             .addSheet("用户注册"
-                , con.prepareStatement("select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
-                    , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+                , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
                 , new Sheet.Column("ID", int.class)
                 , new Sheet.Column("产品ID", int.class)
                 , new Sheet.Column("渠道ID", int.class)
@@ -106,10 +106,10 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
         String[] cs = {"正常", "注销"};
         final Fill fill = new Fill(PatternType.solid, Color.red);
         new Workbook("多Sheet页-值转换＆样式转换", creator)
+            .setConnection(con)
             .setAutoSize(true)
             .addSheet("用户信息"
-                , con.prepareStatement("select id,name,account,status,city from t_user where id between ? and ? and city = ?"
-                    , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+                , "select id,name,account,status,city from t_user where id between ? and ? and city = ?"
                 , p -> {
                     p.setInt(1, 1);
                     p.setInt(2, 500);
@@ -128,8 +128,7 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
                 , new Sheet.Column("城市", String.class, share) // 共享字串
             )
             .addSheet("用户注册"
-                , con.prepareStatement("select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
-                        , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+                , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
                 , new Sheet.Column("ID", int.class)
                 , new Sheet.Column("产品ID", int.class)
                 , new Sheet.Column("渠道ID", int.class)
@@ -340,10 +339,10 @@ reade.sheets()
 
 Version 0.2.8 (2018-11-24)
 -------------
-1.对象数组导出时包装类报类型转换错误bug
-2.对象数组导出类型为java.util.date时类型转换错误
-3.ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提交读取速度
-4.暂时取消setConnection方法的过时标记
+1. 对象数组导出时包装类报类型转换错误bug
+2. 对象数组导出类型为java.util.date时类型转换错误
+3. ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提交读取速度
+4. 暂时取消setConnection方法的过时标记
 5. 修改超过676列时Export会出现位置错误的BUG
 6. 修改列数据过多时Reader出现死循环的BUG
 
