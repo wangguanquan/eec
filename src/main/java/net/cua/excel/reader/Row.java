@@ -28,6 +28,7 @@ public class Row {
     private Cell[] cells;
     private SharedString sst;
     private HeaderRow hr;
+    private int startRow;
 
     public int getRowNumber() {
         if (rowNumber == -1)
@@ -37,8 +38,9 @@ public class Row {
 
     private Row(){}
 
-    Row(SharedString sst) {
+    Row(SharedString sst, int startRow) {
         this.sst = sst;
+        this.startRow = startRow;
     }
 
     /////////////////////////unsafe////////////////////////
@@ -102,11 +104,12 @@ public class Row {
                 }
             }
         }
+        if (p1 <= 0) p1 = this.startRow;
         if (cells == null || p2 > cells.length) {
             cells = new Cell[p2 > 0 ? p2 : 100]; // default array length 100
         }
         // clear and share
-        for (int n = 0; n < p2; n++) {
+        for (int n = 0, len = p2 > 0 ? p2 : cells.length; n < len; n++) {
             if (cells[n] != null) cells[n].clear();
             else cells[n] = new Cell();
         }
@@ -120,7 +123,12 @@ public class Row {
         int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; );
-        while (index < p2 && nextCell() != null);
+        if (p2 < 0) {
+            while (nextCell() != null) index++;
+            p2 = index;
+        } else {
+            while (index < p2 && nextCell() != null);
+        }
     }
 
     /**
@@ -174,7 +182,7 @@ public class Row {
                 if (a == cursor) { // null value
                     cell.setSv(null);
                 } else {
-                    cell.setSv(toString(a, cursor));
+                    cell.setSv(sst.unescape(cb, a, cursor));
                 }
 //                cell.setT('s'); // reset type to string
                 break;
