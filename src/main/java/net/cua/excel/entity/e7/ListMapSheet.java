@@ -9,11 +9,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -123,7 +125,7 @@ public class ListMapSheet extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -138,7 +140,7 @@ public class ListMapSheet extends Sheet {
                     writeStringAutoSize(bw, s, i);
                 }
                 else if (isDate(clazz)) {
-                    java.sql.Date date = (Date) o;
+                    java.util.Date date = (java.util.Date) o;
                     writeDate(bw, date, i);
                 }
                 else if (isDateTime(clazz)) {
@@ -165,6 +167,21 @@ public class ListMapSheet extends Sheet {
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, i);
                 }
+                else if (isBigDecimal(clazz)) {
+                    writeBigDecimal(bw, (BigDecimal) o, i);
+                }
+                else if (isLocalDate(clazz)) {
+                    writeLocalDate(bw, (LocalDate) o, i);
+                }
+                else if (isLocalDateTime(clazz)) {
+                    writeLocalDateTime(bw, (LocalDateTime) o, i);
+                }
+                else if (isTime(clazz)) {
+                    writeTime(bw, (java.sql.Time) o, i);
+                }
+                else if (isLocalTime(clazz)) {
+                    writeLocalTime(bw, (java.time.LocalTime) o, i);
+                }
                 else {
                     writeStringAutoSize(bw, o.toString(), i);
                 }
@@ -185,7 +202,7 @@ public class ListMapSheet extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -200,7 +217,7 @@ public class ListMapSheet extends Sheet {
                     writeString(bw, s, i);
                 }
                 else if (isDate(clazz)) {
-                    java.sql.Date date = (Date) o;
+                    java.util.Date date = (java.util.Date) o;
                     writeDate(bw, date, i);
                 }
                 else if (isDateTime(clazz)) {
@@ -226,6 +243,21 @@ public class ListMapSheet extends Sheet {
                 else if (isBool(clazz)) {
                     boolean bool = ((Boolean) o).booleanValue();
                     writeBoolean(bw, bool, i);
+                }
+                else if (isBigDecimal(clazz)) {
+                    writeBigDecimal(bw, (BigDecimal) o, i);
+                }
+                else if (isLocalDate(clazz)) {
+                    writeLocalDate(bw, (LocalDate) o, i);
+                }
+                else if (isLocalDateTime(clazz)) {
+                    writeLocalDateTime(bw, (LocalDateTime) o, i);
+                }
+                else if (isTime(clazz)) {
+                    writeTime(bw, (java.sql.Time) o, i);
+                }
+                else if (isLocalTime(clazz)) {
+                    writeLocalTime(bw, (java.time.LocalTime) o, i);
                 }
                 else {
                     writeString(bw, o.toString(), i);

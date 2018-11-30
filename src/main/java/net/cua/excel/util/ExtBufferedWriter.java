@@ -29,9 +29,21 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    char[][] cache_char_array = new char[25][];
-    static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
-    static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
+    private char[][] cache_char_array = new char[25][];
+    private static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
+    private static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
+    private static final char[][] ESCAPE_CHARS = new char[63][];
+
+    static {
+//        for (int i = 1; i < 32; i++) {
+//            ESCAPE_CHARS[i] = ("&#" + i + ";").toCharArray();
+//        }
+        ESCAPE_CHARS[' '] = "&nbsp;".toCharArray();
+        ESCAPE_CHARS['<'] = "&lt;".toCharArray();
+        ESCAPE_CHARS['>'] = "&gt;".toCharArray();
+        ESCAPE_CHARS['&'] = "&amp;".toCharArray();
+        ESCAPE_CHARS['"'] = "&quot;".toCharArray();
+    }
 
     /**
      * @param n
@@ -49,6 +61,41 @@ public class ExtBufferedWriter extends BufferedWriter {
 
     public void write(float f) throws IOException {
         write(Float.toString(f));
+    }
+
+    /**
+     * escape text
+     * @param text string
+     * @throws IOException
+     */
+    public void escapeWrite(String text) throws IOException {
+        char[] block = text.toCharArray();
+        int i;
+        int last = 0;
+        int size = text.length();
+
+        for (i = 0; i < size; i++) {
+            char c = block[i];
+            if (c < 0 || c > 62) continue;
+            // UnDisplay char
+            if (c < 32) {
+                write(block, last, i - last);
+                last = i + 1;
+                continue;
+            }
+            // html escape char
+            char[] entity = ESCAPE_CHARS[c];
+
+            if (entity != null) {
+                write(block, last, i - last);
+                write(entity);
+                last = i + 1;
+            }
+        }
+
+        if (last < size) {
+            write(block, last, i - last);
+        }
     }
 
     /**
@@ -221,4 +268,5 @@ public class ExtBufferedWriter extends BufferedWriter {
             'o', 'p', 'q', 'r', 's', 't',
             'u', 'v', 'w', 'x', 'y', 'z'
     };
+
 }

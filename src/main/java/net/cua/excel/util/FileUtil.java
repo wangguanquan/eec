@@ -283,7 +283,7 @@ public class FileUtil {
                 File f = folders.pollLast(), df = new File(desc, f.getPath().substring(src_path_len));
                 // 1.1 扫描的同时为目标文件夹创建目录
                 if (!df.exists() && !df.mkdir()) {
-                    logger.debug("创建子文件夹[{}]失败跳过.", df.getPath());
+                    logger.warn("创建子文件夹[{}]失败跳过.", df.getPath());
                     continue;
                 }
                 File[] fs = f.listFiles();

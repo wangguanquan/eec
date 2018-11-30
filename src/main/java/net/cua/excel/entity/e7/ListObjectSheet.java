@@ -13,10 +13,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -171,7 +174,7 @@ public class ListObjectSheet<T> extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -195,7 +198,7 @@ public class ListObjectSheet<T> extends Sheet {
             else if (isDate(clazz)) {
                 e = field.get(o);
                 if (e != null) {
-                    java.sql.Date date = (java.sql.Date) e;
+                    java.util.Date date = (java.util.Date) e;
                     writeDate(bw, date, i);
                 } else {
                     writeNull(bw, i);
@@ -211,24 +214,74 @@ public class ListObjectSheet<T> extends Sheet {
                 }
             }
             else if (isChar(clazz)) {
-                char c = field.getChar(o);
-                writeCharAutoSize(bw, c, i);
+                Character c = (Character) field.get(o);
+                if (c != null) writeCharAutoSize(bw, c, i);
+                else writeNull(bw, i);
             }
             else if (isInt(clazz)) {
-                int n = field.getInt(o);
-                writeIntAutoSize(bw, n, i);
+                Integer n = (Integer) field.get(o);
+                if (n != null) writeIntAutoSize(bw, n, i);
+                else writeNull(bw, i);
             }
             else if (isLong(clazz)) {
-                long l = field.getLong(o);
-                writeLong(bw, l, i);
+                Long l = (Long) field.get(o);
+                if (l != null) writeLong(bw, l, i);
+                else writeNull(bw, i);
             }
             else if (isFloat(clazz)) {
-                double d = field.getDouble(o);
-                writeDouble(bw, d, i);
+                Double d = (Double) field.get(o);
+                if (d != null) writeDouble(bw, d, i);
+                else writeNull(bw, i);
             }
             else if (isBool(clazz)) {
-                boolean bool = field.getBoolean(o);
-                writeBoolean(bw, bool, i);
+                Boolean bool = (Boolean) field.get(o);
+                if (bool != null) writeBoolean(bw, bool, i);
+                else writeNull(bw, i);
+            }
+            else if (isBigDecimal(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    BigDecimal bd = (BigDecimal) e;
+                    writeBigDecimal(bw, bd, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalDate(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    LocalDate date = (java.time.LocalDate) e;
+                    writeLocalDate(bw, date, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalDateTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    LocalDateTime ts = (java.time.LocalDateTime) e;
+                    writeLocalDateTime(bw, ts, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    java.sql.Time t = (java.sql.Time) e;
+                    writeTime(bw, t, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    java.time.LocalTime t = (java.time.LocalTime) e;
+                    writeLocalTime(bw, t, i);
+                } else {
+                    writeNull(bw, i);
+                }
             }
             else {
                 String s = (e = field.get(o)) != null ? e.toString() : null;
@@ -252,7 +305,7 @@ public class ListObjectSheet<T> extends Sheet {
         final int len = columns.length;
         bw.write("<row r=\"");
         bw.writeInt(r);
-        bw.write("\" ht=\"16.5\" spans=\"1:");
+        bw.write("\" spans=\"1:");
         bw.writeInt(len);
         bw.write("\">");
 
@@ -276,7 +329,7 @@ public class ListObjectSheet<T> extends Sheet {
             else if (isDate(clazz)) {
                 e = field.get(o);
                 if (e != null) {
-                    java.sql.Date date = (java.sql.Date) e;
+                    java.util.Date date = (java.util.Date) e;
                     writeDate(bw, date, i);
                 } else {
                     writeNull(bw, i);
@@ -292,24 +345,74 @@ public class ListObjectSheet<T> extends Sheet {
                 }
             }
             else if (isChar(clazz)) {
-                char c = field.getChar(o);
-                writeChar(bw, c, i);
+                Character c = (Character) field.get(o);
+                if (c != null) writeChar(bw, c, i);
+                else writeNull(bw, i);
             }
             else if (isInt(clazz)) {
-                int n = field.getInt(o);
-                writeInt(bw, n, i);
+                Integer n = (Integer) field.get(o);
+                if (n != null) writeInt(bw, n, i);
+                else writeNull(bw, i);
             }
             else if (isLong(clazz)) {
-                long l = field.getLong(o);
-                writeLong(bw, l, i);
+                Long l = (Long) field.get(o);
+                if (l != null) writeLong(bw, l, i);
+                else writeNull(bw, i);
             }
             else if (isFloat(clazz)) {
-                double d = field.getDouble(o);
-                writeDouble(bw, d, i);
+                Double d = (Double) field.get(o);
+                if (d != null) writeDouble(bw, d, i);
+                else writeNull(bw, i);
             }
             else if (isBool(clazz)) {
-                boolean bool = field.getBoolean(o);
-                writeBoolean(bw, bool, i);
+                Boolean bool = (Boolean) field.get(o);
+                if (bool != null) writeBoolean(bw, bool, i);
+                else writeNull(bw, i);
+            }
+            else if (isBigDecimal(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    BigDecimal bd = (BigDecimal) e;
+                    writeBigDecimal(bw, bd, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalDate(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    LocalDate date = (java.time.LocalDate) e;
+                    writeLocalDate(bw, date, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalDateTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    LocalDateTime ts = (java.time.LocalDateTime) e;
+                    writeLocalDateTime(bw, ts, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    java.sql.Time t = (java.sql.Time) e;
+                    writeTime(bw, t, i);
+                } else {
+                    writeNull(bw, i);
+                }
+            }
+            else if (isLocalTime(clazz)) {
+                e = field.get(o);
+                if (e != null) {
+                    java.time.LocalTime t = (java.time.LocalTime) e;
+                    writeLocalTime(bw, t, i);
+                } else {
+                    writeNull(bw, i);
+                }
             }
             else {
                 String s = (e = field.get(o)) != null ? e.toString() : null;

@@ -62,7 +62,7 @@ class XmlEntity {
         toXML(rootElement, this);
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDisk(doc, Paths.get(path)); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, Paths.get(path)); // write to desk
     }
 
     public void toXML(Element doc, Object o) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {

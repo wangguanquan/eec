@@ -102,16 +102,15 @@ abstract public class TPrimitiveHash extends THash {
         return _states.length;
     }
 
-//
-//    /**
-//     * Delete the record at <tt>index</tt>.
-//     *
-//     * @param index an <code>int</code> value
-//     */
-//    protected void removeAt( int index ) {
-//        _states[index] = REMOVED;
-//        super.removeAt( index );
-//    }
+
+    /**
+     * Delete the record at <tt>index</tt>.
+     *
+     * @param index an <code>int</code> value
+     */
+    protected void removeAt( int index ) {
+        _states[index] = REMOVED;
+    }
 
 
     /**

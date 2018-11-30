@@ -2,13 +2,13 @@
 
 eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
 
-与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.Connection`和SQL文，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
+与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
 
 eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
 
 ## 主要功能
 
-1. 支持`Statement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
+1. 支持`PreparedStatement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
 2. 支持 对象数组 和 Map数组 导出。
 3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
 4. int类型(byte,char,short,int)方便转可被识别文字
@@ -72,8 +72,8 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
 ```
 @Test public void t1() {
     try (Connection con = dataSource.getConnection()) {
-        new Workbook("单表－单Sheet-固定宽度", creator) // 指定workbook名，作者
-            .setConnection(con) // 配置数据库连接
+        new Workbook("用户注册列表", creator) // 指定workbook名，作者
+            .setConnection(con) // 数据库连接
             .setAutoSize(true) // 列宽自动调节
             .addSheet("用户注册"
                 , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
@@ -92,6 +92,10 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
     }
 }
 ```
+
+执行以上代码会在`f:\\excel`文件夹下生成一个《用户注册列表.xlsx》文件
+内容如下图
+![用户注册列表](./images/bd89e267-1d69-40ab-af3a-4df703469361.png)
 
 2. SQL带参数测试，且将满足条件的单元格标红。如果某个列字符串重复率很高时可以将其设为共享达到数据压缩的目的。
 
@@ -140,6 +144,9 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
     }
 }
 ```
+
+Excel如下图
+![多Sheet页](./images/6f2ffc52-f66a-4986-906a-7463d87d9fbe.png)
 
 3. 对象数组 & Map数组支持。对象可以通过注解@DisplayName来设置表头列或共享，敏感信息使用@NotExport来指定不导出的字段。
 
@@ -201,7 +208,7 @@ public class TestExportEntity {
     
     Workbook wb = new Workbook("对象数组测试", creator)
         .setAutoSize(true) // Auto-size
-        .setWaterMark(WaterMark.of("guanquan.wang")) // 设置水印
+        .setWaterMark(WaterMark.of("机密 2018-10-26")) // 设置水印
         .addSheet("Object测试", objectData)  //  方式1
         .addSheet("Object copy", objectData  // 方式2，方式2可以重置列顺序和进行转换，方式1的列顺序与对象Filed定义顺序一致
             , new Sheet.Column("渠道ID", "id")//.setType(Sheet.Column.TYPE_RMB) // 设置RMB样式
@@ -214,12 +221,17 @@ public class TestExportEntity {
     // 改变某个Sheet的头部样式
     wb.getSheet("Object测试").setHeadStyle(font, fill, border); 
     try {
-        wb.writeTo(defaultPath);
+        wb.writeTo(Paths.get("f:\\excel"));
     } catch (IOException | ExportException ex) {
         ex.printStackTrace();
     }
 }
 ```
+
+结果如下
+![对象数组测试-Sheet1](./images/164cd014-aa3b-4db9-b2f4-3e11f85c336a.png)
+
+![对象数组测试-Sheet2](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b1.png)
 
 4. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
 
@@ -248,7 +260,7 @@ public class TestExportEntity {
 
         new Workbook("模板导出", creator)
             .withTemplate(fis, map) // 绑定模板
-            .writeTo(defaultPath); // 写到某个文件夹
+            .writeTo(Paths.get("f:\\excel")); // 写到某个文件夹
     } catch (IOException | ExportException e) {
         e.printStackTrace();
     }
@@ -265,7 +277,7 @@ public class TestExportEntity {
  */
 @Test public void t4() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("单Sheet.xlsx"))) {
-        // get first sheet
+        // Get first sheet
         Sheet sheet = reader.sheet(0);
 
         for (
@@ -279,7 +291,7 @@ public class TestExportEntity {
 }
 ```
 
-2. 使用流
+2. 使用stream操作
 
 ```
 @Test public void t5() {
@@ -299,7 +311,7 @@ public class TestExportEntity {
  */
 @Test public void t6() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-        Regist[] array = reader.sheets()
+        Regist[] array = reader.sheets() // 所有worksheet
             .flatMap(Sheet::dataRows) // 去掉表头和空行
             .map(row -> row.to(Regist.class)) // 将每行数据转换为Regist对象
             .toArray(Regist[]::new);
@@ -322,6 +334,31 @@ reade.sheets()
 
 以上代码相当于`select * from 用户注册 where platform = 'iOS'`
 
+
+## CHANGELOG
+
+Version 0.2.8 (2018-11-24)
+-------------
+1. 对象数组导出时包装类报类型转换错误bug
+2. 对象数组导出类型为java.util.date时类型转换错误
+3. ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提交读取速度
+4. 暂时取消setConnection方法的过时标记
+5. 修改超过676列时Export会出现位置错误的BUG
+6. 修改列数据过多时Reader出现死循环的BUG
+
+Version 0.2.7 (2018-11-19)
+-------------
+1. sharedString保留一个顺序流句柄以减少读文件次数
+2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
+   `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
+3. BigDecimal类型支持
+4. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持
+5. 增加读写转义（跳过不可见字符ASCII 0~31）
+6. setConnection方法被标记过时，将在0.3.x版本中删删除。传入一个数据库连接是一种不安全行为，
+   第三方可能利用此连接做其它非法的数据库操作
+
+[更多...](./CHANGELOG)
+
 ## TODO LIST
 
 1. excel文件增加导出scripts功能
@@ -332,4 +369,3 @@ reade.sheets()
 6. SharedString增加热词区块提高命中率
 7. wiki for eec
 8. 读取colspan/rowspan单元格
-9. writer html标签转义

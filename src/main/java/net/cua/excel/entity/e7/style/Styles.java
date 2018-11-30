@@ -34,10 +34,10 @@ public class Styles {
     private TIntIntHashMap map;
     private Document document;
 
-    List<Font> fonts;
-    List<NumFmt> numFmts;
-    List<Fill> fills;
-    List<Border> borders;
+    private List<Font> fonts;
+    private List<NumFmt> numFmts;
+    private List<Fill> fills;
+    private List<Border> borders;
 
     private Styles() {
         map = new TIntIntHashMap();
@@ -151,7 +151,7 @@ public class Styles {
      * @param numFmt
      * @return
      */
-    public synchronized final int addNumFmt(NumFmt numFmt) {
+    public final int addNumFmt(NumFmt numFmt) {
         // check and search default code
         if (numFmt.getId() < 0) {
             if (StringUtil.isEmpty(numFmt.getCode())) {
@@ -189,7 +189,7 @@ public class Styles {
      * @param font
      * @return
      */
-    public synchronized final int addFont(Font font) {
+    public final int addFont(Font font) {
         if (StringUtil.isEmpty(font.getName())) {
             throw new FontParseException("Font name not support.");
         }
@@ -211,7 +211,7 @@ public class Styles {
      * @param fill
      * @return
      */
-    public synchronized final int addFill(Fill fill) {
+    public final int addFill(Fill fill) {
         int i = fills.indexOf(fill);
         if (i <= -1) {
             fills.add(fill);
@@ -228,7 +228,7 @@ public class Styles {
      * @param border
      * @return
      */
-    public synchronized final int addBorder(Border border) {
+    public final int addBorder(Border border) {
         int i = borders.indexOf(border);
         if (i <= -1) {
             borders.add(border);
@@ -316,7 +316,7 @@ public class Styles {
 
     public void writeTo(Path styleFile) throws IOException {
         if (document != null) { // Not null
-            FileUtil.writeToDisk(document, styleFile);
+            FileUtil.writeToDiskNoFormat(document, styleFile);
         } else {
             Files.copy(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
         }
