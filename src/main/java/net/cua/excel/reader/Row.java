@@ -29,6 +29,7 @@ public class Row {
     private SharedString sst;
     private HeaderRow hr;
     private int startRow;
+    private boolean unknownLength;
 
     public int getRowNumber() {
         if (rowNumber == -1)
@@ -123,9 +124,9 @@ public class Row {
         int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; );
-        if (p2 < 0) {
+        unknownLength = p2 < 0;
+        if (unknownLength) {
             while (nextCell() != null) index++;
-            p2 = index;
         } else {
             while (index < p2 && nextCell() != null);
         }
@@ -153,7 +154,7 @@ public class Row {
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++);
-                cell = cells[p2 = toCellIndex(a, cursor) - 1];
+                cell = cells[unknownLength ? (p2 = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
             }
             // cell type
             if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
