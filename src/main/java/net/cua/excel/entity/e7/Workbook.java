@@ -818,7 +818,7 @@ public class Workbook {
 
             // Write SharedString, Styles and workbook.xml
             writeXML(xl);
-            if (getWaterMark() != null && getWaterMark().delete()) ; // Delete template image
+            if (waterMark != null && waterMark.delete()) ; // Delete template image
             what("0003");
 
             // Zip compress

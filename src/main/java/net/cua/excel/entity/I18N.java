@@ -3,6 +3,7 @@ package net.cua.excel.entity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -23,7 +24,9 @@ public class I18N {
                 is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", "zh-CN"));
             }
             if (is != null) {
-                pro.load(new InputStreamReader(is, "UTF-8"));
+                try (Reader reader = new InputStreamReader(is, "UTF-8")) {
+                    pro.load(reader);
+                }
             }
         } catch (IOException e) {
             // nothing...
@@ -66,9 +69,6 @@ public class I18N {
         String msg = pro.getProperty(code);
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);
-        if (indexs == null) {
-            return msg;
-        }
         int len = indexs.length >= args.length ? args.length : indexs.length, size = 0;
         for (int i = 0; i < len; size += args[i++].length());
         StringBuilder buf = new StringBuilder(oldValue.length + size - (len << 1));

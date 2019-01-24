@@ -21,11 +21,9 @@ public final class DefaultNumFmt {
     static {
         InputStream is = DefaultNumFmt.class.getClassLoader().getResourceAsStream("numFmt");
         if (is != null) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-
             List<NumFmt> list = new ArrayList<>();
             int maxLen = 0;
-            try {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
                 String v;
                 Locale locale = Locale.ROOT;
                 boolean unicode = false, damaged = false;
@@ -76,12 +74,6 @@ public final class DefaultNumFmt {
                 }
             } catch (IOException e) {
                 ; // Empty
-            } finally {
-                if (br != null)
-                try {
-                    br.close();
-                } catch (IOException e) {
-                }
             }
 
             data = new NumFmt[maxLen + 1][]; // accept zero size

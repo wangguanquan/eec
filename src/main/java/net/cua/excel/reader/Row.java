@@ -257,6 +257,12 @@ public class Row {
         return a == b;
     }
 
+    /**
+     * FIXME check double
+     * @param a
+     * @param b
+     * @return
+     */
     private boolean isDouble(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
@@ -264,7 +270,7 @@ public class Row {
             char c = cb[a++];
             if (i > 1) return false;
             if (c >= '0' && c <= '9') continue;
-            if (c == '.') c++;
+            if (c == '.') i++;
         }
         return true;
     }

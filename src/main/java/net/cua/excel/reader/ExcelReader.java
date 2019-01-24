@@ -1,6 +1,7 @@
 package net.cua.excel.reader;
 
 import net.cua.excel.entity.e7.Relationship;
+import net.cua.excel.manager.ExcelType;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.util.FileUtil;
 import net.cua.excel.util.ZipUtil;
@@ -246,4 +247,31 @@ public class ExcelReader implements AutoCloseable {
         // delete temp files
         FileUtil.rm_rf(self.toFile(), true);
     }
+
+
+    // --- check
+    static ExcelType typeOfStream(byte[] bytes, int len) {
+        ExcelType excelType = ExcelType.UNKNOWN;
+        if (bytes.length < len || len < 4)
+            return excelType;
+        int type = bytes[0] & 0xff;
+        type += (bytes[1] & 0xff) << 8;
+        type += (bytes[2] & 0xff) << 16;
+        type += (bytes[3] & 0xff) << 24;
+        int zip = 0x04034b50;
+        int biff1 = 0xe011cfd0;
+        int biff2 = 0xe11ab1a1;
+
+        if (type == zip) {
+            excelType = ExcelType.XLSX;
+        } else if (type == biff1 && len >= 8) {
+            type = bytes[4] & 0xff;
+            type += (bytes[5] & 0xff) << 8;
+            type += (bytes[6] & 0xff) << 16;
+            type += (bytes[7] & 0xff) << 24;
+            if (type == biff2) excelType = ExcelType.BIFF8;
+        }
+        return excelType;
+    }
+
 }

@@ -16,7 +16,7 @@ import java.lang.reflect.Field;
  */
 public class Border {
 
-    static final Color defaultColor = new Color(51, 51, 51); // #333333
+    private static final Color defaultColor = new Color(51, 51, 51); // #333333
 
     private SubBorder[] borders;
 
