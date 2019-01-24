@@ -390,7 +390,7 @@ class SharedString {
     /**
      * 反转义
      */
-    private String unescape(char[] cb, int from, int to) {
+    String unescape(char[] cb, int from, int to) {
         int idx_38 = indexOf(cb, '&', from), idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 
         if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {

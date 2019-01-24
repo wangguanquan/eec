@@ -337,7 +337,7 @@ reade.sheets()
 
 ## CHANGELOG
 
-Version 0.2.8 (2018-11-24)
+Version 0.2.8 (2018-11-26)
 -------------
 1. 对象数组导出时包装类报类型转换错误bug
 2. 对象数组导出类型为java.util.date时类型转换错误
@@ -345,6 +345,7 @@ Version 0.2.8 (2018-11-24)
 4. 暂时取消setConnection方法的过时标记
 5. 修改超过676列时Export会出现位置错误的BUG
 6. 修改列数据过多时Reader出现死循环的BUG
+7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
 
 Version 0.2.7 (2018-11-19)
 -------------
