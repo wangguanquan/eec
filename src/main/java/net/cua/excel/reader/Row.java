@@ -125,6 +125,7 @@ public class Row {
         for (; cb[cursor++] != '>'; );
         if (p2 < 0) {
             while (nextCell() != null) index++;
+            p2 = index;
         } else {
             while (index < p2 && nextCell() != null);
         }

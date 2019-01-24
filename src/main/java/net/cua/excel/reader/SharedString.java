@@ -407,9 +407,9 @@ class SharedString {
             if (cb[idx_38 + 1] == '#') {
                 int n = toInt(cb, idx_38+2, idx_59);
                 // byte range
-                if (n < 0 || n > 127) {
-                    logger.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
-                }
+//                if (n < 0 || n > 127) {
+//                    logger.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
+//                }
                 // Unicode char
                 escapeBuf.append((char) n);
             }
