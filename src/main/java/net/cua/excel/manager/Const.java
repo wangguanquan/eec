@@ -17,6 +17,8 @@ public class Const {
     public static final Charset UTF_8 = Charset.forName("UTF-8");
     /** "\n" in UNIX systems, "\r\n" in Windows systems. */
     public static final String lineSeparator = System.lineSeparator();
+    /** prefix of eec project */
+    public static final String EEC_PREFIX = "eec+";
 
     /**
      * Relation

@@ -1,6 +1,7 @@
 package net.cua.excel.reader;
 
 import net.cua.excel.entity.e7.Relationship;
+import net.cua.excel.manager.Const;
 import net.cua.excel.manager.ExcelType;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.util.FileUtil;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -31,7 +33,7 @@ import java.util.stream.StreamSupport;
  */
 public class ExcelReader implements AutoCloseable {
     private ExcelReader() {}
-    private Path self;
+    private Path self, temp;
 
     private Sheet[] sheets;
 
@@ -42,7 +44,7 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException 文件不存在或读取文件失败
      */
     public static ExcelReader read(Path path) throws IOException {
-        return read(Files.newInputStream(path), 0, 0);
+        return read(path, 0, 0);
     }
     /**
      * 实例化Reader
@@ -62,7 +64,7 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException 文件不存在或读取文件失败
      */
     public static ExcelReader read(Path path, int cacheSize) throws IOException {
-        return read(Files.newInputStream(path), cacheSize, 0);
+        return read(path, cacheSize, 0);
     }
 
     /**
@@ -86,21 +88,27 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException 文件不存在或读取文件失败
      */
     public static ExcelReader read(Path path, int cacheSize, int hotSize) throws IOException {
-        return read(Files.newInputStream(path), cacheSize, hotSize);
+        return read(path, cacheSize, hotSize, false);
     }
     /**
      * 实例化Reader
-     * @param stream Excel文件流
+     * @param path Excel路径
      * @param cacheSize sharedString缓存大小，默认512
      *                  将此参数影响读取文件次数
      * @param hotSize 热词区大小，默认64
+     * @param rmSource 是否删除源文件
      * @return ExcelReader
-     * @throws IOException 读取文件失败
+     * @throws IOException 文件不存在或读取文件失败
      */
-    public static ExcelReader read(InputStream stream, int cacheSize, int hotSize) throws IOException {
+    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
+        // Check document type
+        ExcelType type = getType(path);
+        if (type != ExcelType.XLSX) {
+            throw new ExcelReadException("Only support read Office Open XML file.");
+        }
         // Store template stream as zip file
-        Path temp = FileUtil.mktmp("eec+");
-        ZipUtil.unzip(stream, temp);
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), temp);
 
         // load workbook.xml
         SAXReader reader = new SAXReader();
@@ -156,10 +164,56 @@ public class ExcelReader implements AutoCloseable {
         sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         ExcelReader er = new ExcelReader();
-        er.sheets = sheets.toArray(new Sheet[sheets.size()]);
+        er.sheets = new Sheet[sheets.size()];
+        sheets.toArray(er.sheets);
         er.self = temp;
 
+        // storage source path
+        if (rmSource) {
+            er.temp = path;
+        }
+
         return er;
+    }
+    /**
+     * 实例化Reader
+     * @param stream Excel文件流
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  将此参数影响读取文件次数
+     * @param hotSize 热词区大小，默认64
+     * @return ExcelReader
+     * @throws IOException 读取文件失败
+     */
+    public static ExcelReader read(InputStream stream, int cacheSize, int hotSize) throws IOException {
+        Path temp;
+        if (FileUtil.isWindows()) {
+            temp = Files.createTempFile(Const.EEC_PREFIX, null);
+        } else {
+            temp = Files.createTempFile(Const.EEC_PREFIX, null
+                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+        }
+        if (temp == null) {
+            throw new IOException("Create temp directory error. Please check your permission");
+        }
+        FileUtil.cp(stream, temp);
+        return read(temp, cacheSize, hotSize, true);
+    }
+
+    /**
+     * Check the documents type
+     * @param path documents path
+     * @return enum of ExcelType
+     */
+    private static ExcelType getType(Path path) {
+        ExcelType type;
+        try (InputStream is = Files.newInputStream(path)) {
+            byte[] bytes = new byte[8];
+            int len = is.read(bytes);
+            type = typeOfStream(bytes, len);
+        } catch (IOException e) {
+            type = ExcelType.UNKNOWN;
+        }
+        return type;
     }
 
     /**
@@ -246,29 +300,34 @@ public class ExcelReader implements AutoCloseable {
         }
         // delete temp files
         FileUtil.rm_rf(self.toFile(), true);
+        if (temp != null) {
+            FileUtil.rm(temp);
+        }
     }
 
 
     // --- check
-    static ExcelType typeOfStream(byte[] bytes, int len) {
+    static ExcelType typeOfStream(byte[] bytes, int size) {
         ExcelType excelType = ExcelType.UNKNOWN;
-        if (bytes.length < len || len < 4)
+        int length = Math.min(bytes.length, size);
+        if (length < 4)
             return excelType;
-        int type = bytes[0] & 0xff;
-        type += (bytes[1] & 0xff) << 8;
-        type += (bytes[2] & 0xff) << 16;
-        type += (bytes[3] & 0xff) << 24;
-        int zip = 0x04034b50;
-        int biff1 = 0xe011cfd0;
-        int biff2 = 0xe11ab1a1;
+        int type = bytes[0] & 0xFF;
+        type += (bytes[1] & 0xFF) << 8;
+        type += (bytes[2] & 0xFF) << 16;
+        type += (bytes[3] & 0xFF) << 24;
+
+        int zip = 0x04034B50;
+        int biff1 = 0xE011CFD0;
+        int biff2 = 0xE11AB1A1;
 
         if (type == zip) {
             excelType = ExcelType.XLSX;
-        } else if (type == biff1 && len >= 8) {
-            type = bytes[4] & 0xff;
-            type += (bytes[5] & 0xff) << 8;
-            type += (bytes[6] & 0xff) << 16;
-            type += (bytes[7] & 0xff) << 24;
+        } else if (type == biff1 && length >= 8) {
+            type = bytes[4] & 0xFF;
+            type += (bytes[5] & 0xFF) << 8;
+            type += (bytes[6] & 0xFF) << 16;
+            type += (bytes[7] & 0xFF) << 24;
             if (type == biff2) excelType = ExcelType.BIFF8;
         }
         return excelType;
