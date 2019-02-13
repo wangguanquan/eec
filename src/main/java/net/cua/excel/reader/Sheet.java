@@ -200,7 +200,7 @@ public class Sheet implements AutoCloseable {
             nChar++;
             eof = true;
         } else {
-            sRow = new Row(sst); // share row space
+            sRow = new Row(sst, this.startRow > 0 ? this.startRow : 1); // share row space
         }
 
         return this;
@@ -313,7 +313,7 @@ public class Sheet implements AutoCloseable {
         }
 
         // row
-        return new Row(sst).with(cb, start, nChar - start);
+        return new Row(sst, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
     }
 
     /**
