@@ -318,17 +318,17 @@ public class ExcelReader implements AutoCloseable {
         type += (bytes[3] & 0xFF) << 24;
 
         int zip = 0x04034B50;
-        int biff1 = 0xE011CFD0;
-        int biff2 = 0xE11AB1A1;
+        int b1 = 0xE011CFD0;
+        int b2 = 0xE11AB1A1;
 
         if (type == zip) {
             excelType = ExcelType.XLSX;
-        } else if (type == biff1 && length >= 8) {
+        } else if (type == b1 && length >= 8) {
             type = bytes[4] & 0xFF;
             type += (bytes[5] & 0xFF) << 8;
             type += (bytes[6] & 0xFF) << 16;
             type += (bytes[7] & 0xFF) << 24;
-            if (type == biff2) excelType = ExcelType.BIFF8;
+            if (type == b2) excelType = ExcelType.XLS;
         }
         return excelType;
     }
