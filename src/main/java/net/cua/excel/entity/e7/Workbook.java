@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 
+import javax.naming.OperationNotSupportedException;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
@@ -539,6 +540,14 @@ public class Workbook {
     }
 
     /**
+     * 以Excel 97-2003格式保存
+     * @return 工作薄
+     */
+    public Workbook saveAsExcel97To2003() {
+        throw new ExportException(new OperationNotSupportedException("Excel97-2003 Not support now."));
+    }
+
+    /**
      * output export info
      */
     void what(String code) {
@@ -613,7 +622,7 @@ public class Workbook {
         if (StringUtil.isNotEmpty(creator)) {
             core.setCreator(creator);
         } else {
-            core.setCreator("guanquan.wang@yandex.com");
+            core.setCreator(System.getProperty("user.name"));
         }
         core.setTitle(name);
 

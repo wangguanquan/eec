@@ -2,7 +2,7 @@
 
 eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
 
-与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
+与传统Excel操作不同之处在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
 
 eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
 
@@ -15,9 +15,10 @@ eec并不是一个功能全面的excel操作工具类，它功能有限并不能
 5. excel隔行变色
 6. 设置列宽自动调节（功能未完善）
 7. 设置水印（文字，本地＆网络图片）
-8. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
-9. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
-10. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
+8. 提供Watch窗口查看操作细节也可以做进度条。
+9. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
+10. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
+11. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
 
 ## 使用方法
 
@@ -39,7 +40,7 @@ pom.xml添加
 </dependency>
 ```
 
-eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，使用如下引用
+eec内部仅依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，使用如下引用
 
 ```
 <dependency>
@@ -75,6 +76,7 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
         new Workbook("用户注册列表", creator) // 指定workbook名，作者
             .setConnection(con) // 数据库连接
             .setAutoSize(true) // 列宽自动调节
+            .watch(System.out::println) // 添加watch窗口查看导出细节
             .addSheet("用户注册"
                 , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
                 , new Sheet.Column("ID", int.class)
