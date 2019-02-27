@@ -5,6 +5,7 @@ package net.cua.excel.util;
  * Created by guanquan.wang at 2017/9/30.
  */
 public class StringUtil {
+    public final static String EMPTY = "";
     public static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
     }
@@ -73,5 +74,31 @@ public class StringUtil {
         }
         if (i < len) oldValues[idx++] = oldValues[i];
         return new String(oldValues, 0, idx);
+    }
+
+    /**
+     * append charsequence
+     * @param src
+     * @param a
+     * @param n
+     * @param origin
+     * @return
+     */
+    public static String append(String src, String a, int n, int origin) {
+        StringBuilder buf = new StringBuilder();
+        // Insert header
+        if (origin == -1) {
+            for ( ; n-- > 0; ) {
+                buf.append(a);
+            }
+            buf.append(src);
+        } else {
+            buf.append(src);
+            for ( ; n-- > 0; ) {
+                buf.append(a);
+            }
+        }
+
+        return buf.toString();
     }
 }

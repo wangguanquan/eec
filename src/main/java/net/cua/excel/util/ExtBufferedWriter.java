@@ -21,12 +21,6 @@ public class ExtBufferedWriter extends BufferedWriter {
         for (int i = 0; i < cache_char_array.length; i++) {
             cache_char_array[i] = new char[i + 1];
         }
-
-        long p = 10;
-        for (int i = 0; i < longSizeTable.length; i++) {
-            longSizeTable[i] = p;
-            p = 10 * p;
-        }
     }
 
     private char[][] cache_char_array = new char[25][];
@@ -76,7 +70,7 @@ public class ExtBufferedWriter extends BufferedWriter {
 
         for (i = 0; i < size; i++) {
             char c = block[i];
-            if (c < 0 || c > 62) continue;
+            if (c > 62) continue;
             // UnDisplay char
             if (c < 32) {
                 write(block, last, i - last);
@@ -167,13 +161,13 @@ public class ExtBufferedWriter extends BufferedWriter {
         return cache_char_array[size - 1];
     }
 
-    long[] longSizeTable = new long[19];
-
     // Requires positive x
-    int stringSize(long x) {
-        for (int i = 0; i < 20; i++) {
-            if (x < longSizeTable[i])
-                return i + 1;
+    private int stringSize(long x) {
+        long p = 10;
+        for (int i=1; i<19; i++) {
+            if (x < p)
+                return i;
+            p = 10*p;
         }
         return 19;
     }

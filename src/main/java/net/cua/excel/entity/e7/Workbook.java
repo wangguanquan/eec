@@ -543,7 +543,7 @@ public class Workbook {
      * 以Excel 97-2003格式保存
      * @return 工作薄
      */
-    public Workbook saveAsExcel97To2003() {
+    public Workbook saveAsExcel2003() {
         throw new ExportException(new OperationNotSupportedException("Excel97-2003 Not support now."));
     }
 
