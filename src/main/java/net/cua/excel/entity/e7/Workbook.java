@@ -15,8 +15,8 @@
 package net.cua.excel.entity.e7;
 
 import net.cua.excel.entity.I18N;
-import net.cua.excel.entity.e7.style.Fill;
-import net.cua.excel.entity.e7.style.PatternType;
+import net.cua.excel.entity.style.Fill;
+import net.cua.excel.entity.style.PatternType;
 import net.cua.excel.manager.Const;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.manager.docProps.App;
@@ -26,7 +26,7 @@ import net.cua.excel.annotation.TopNS;
 import net.cua.excel.entity.ExportException;
 import net.cua.excel.entity.TooManyColumnsException;
 import net.cua.excel.entity.WaterMark;
-import net.cua.excel.entity.e7.style.Styles;
+import net.cua.excel.entity.style.Styles;
 import net.cua.excel.processor.DownProcessor;
 import net.cua.excel.processor.Watch;
 import net.cua.excel.util.FileUtil;

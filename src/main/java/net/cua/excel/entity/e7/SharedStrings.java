@@ -64,7 +64,7 @@ public class SharedStrings {
             }
         }
         count++;
-        return n.intValue();
+        return n;
     }
 
     public void write(Path root) throws IOException {

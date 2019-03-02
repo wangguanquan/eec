@@ -32,11 +32,16 @@ import java.util.*;
  * 如果都没有则按下标重新读取该区块到eden区，原eden区数据复制到old区。
  * 加载两次的区块将被标记，被标记的区块有重复读取时被放入hot区，
  * hot区采用LRU页面置换算法进行淘汰。
+ * FIXME public -> package-private
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-class SharedString {
+public class SharedString {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
+
+    SharedString(Path sstPath) {
+        this(sstPath, 0, 0);
+    }
 
     SharedString(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
@@ -47,21 +52,21 @@ class SharedString {
     }
 
     /** 新加载数据放入此区域 */
-    private String[] eden;
+    String[] eden;
     /** eden区未命中时将数据复制到此区域 */
-    private String[] old;
+    String[] old;
     /** 每次加载的数量 */
     private int page = 512;
     /** 整个文件有多少个字符串 */
-    private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
+    int max = -1, vt = 0, offsetR = 0, offsetM = 0;
     /** 新生代offset */
-    private int offset_eden = -1;
+    int offset_eden = -1;
     /** 老年代offset */
-    private int offset_old = -1;
+    int offset_old = -1;
     /** 新生代limit */
-    private int limit_eden;
+    int limit_eden;
     /** 老年代limit */
-    private int limit_old;
+    int limit_old;
     /** 统计各段被访问次数 */
     private TIntIntHashMap count_area = null;
     /** hot world */

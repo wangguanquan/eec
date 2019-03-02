@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.cua.excel.entity.e7.style;
+package net.cua.excel.entity.style;
 
 /**
  * Created by guanquan.wang at 2018-02-05 16:10

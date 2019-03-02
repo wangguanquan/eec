@@ -14,7 +14,7 @@
 
 package net.cua.excel.processor;
 
-import net.cua.excel.entity.e7.style.Styles;
+import net.cua.excel.entity.style.Styles;
 
 /**
  * 样式转换器

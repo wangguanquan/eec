@@ -114,7 +114,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         write(Double.toString(d));
     }
 
-    char[] toChars(int i) {
+    private char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
@@ -123,17 +123,17 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
 
-    final static int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999,
+    private final static int[] sizeTable = {9, 99, 999, 9999, 99999, 999999, 9999999,
             99999999, 999999999, Integer.MAX_VALUE};
 
     // Requires positive x
-    public static int stringSize(int x) {
+    private static int stringSize(int x) {
         for (int i = 0; ; i++)
             if (x <= sizeTable[i])
                 return i + 1;
     }
 
-    static void getChars(int i, int index, char[] buf) {
+    private static void getChars(int i, int index, char[] buf) {
         int q, r;
         int charPos = index;
         char sign = 0;
@@ -167,7 +167,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    char[] toChars(long i) {
+    private char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
@@ -195,7 +195,7 @@ public class ExtBufferedWriter extends BufferedWriter {
      * <p>
      * Will fail if i == Long.MIN_VALUE
      */
-    static void getChars(long i, int index, char[] buf) {
+    private static void getChars(long i, int index, char[] buf) {
         long q;
         int r;
         int charPos = index;
@@ -242,7 +242,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    final static char[] digitTens = {
+    private final static char[] digitTens = {
             '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
             '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
             '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
@@ -255,7 +255,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
     };
 
-    final static char[] digitOnes = {
+    private final static char[] digitOnes = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -268,7 +268,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     };
 
-    final static char[] digits = {
+    private final static char[] digits = {
             '0', '1', '2', '3', '4', '5',
             '6', '7', '8', '9', 'a', 'b',
             'c', 'd', 'e', 'f', 'g', 'h',

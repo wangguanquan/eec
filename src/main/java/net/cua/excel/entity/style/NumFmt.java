@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.cua.excel.entity.e7.style;
+package net.cua.excel.entity.style;
 
 import net.cua.excel.util.StringUtil;
 import org.dom4j.Element;
@@ -44,7 +44,11 @@ import org.dom4j.Element;
 public class NumFmt {
     private String code;
     private int id = -1;
-    private NumFmt(){}
+    private NumFmt() { }
+    NumFmt(int id, String code) {
+        this.id = id;
+        this.code = code;
+    }
 
     public NumFmt(String code) {
         this.code = code;
@@ -88,6 +92,10 @@ public class NumFmt {
             return other.code != null ? other.code.equals(code) : null == code;
         }
         return false;
+    }
+
+    @Override public String toString() {
+        return "id: " + id + ", code: " + code;
     }
 
     public Element toDom4j(Element root) {

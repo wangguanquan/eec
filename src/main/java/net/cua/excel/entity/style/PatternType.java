@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.cua.excel.entity.e7.style;
+package net.cua.excel.entity.style;
 
 /**
  * 2.4.53 ST_enmPattern

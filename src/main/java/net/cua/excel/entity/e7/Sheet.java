@@ -14,7 +14,7 @@
 
 package net.cua.excel.entity.e7;
 
-import net.cua.excel.entity.e7.style.*;
+import net.cua.excel.entity.style.*;
 import net.cua.excel.manager.Const;
 import net.cua.excel.manager.RelManager;
 import net.cua.excel.annotation.TopNS;
@@ -427,7 +427,7 @@ public abstract class Sheet {
         /**
          * 默认水平对齐
          * 日期，字符，bool值居中，numeric居右其余居左
-         * @see net.cua.excel.entity.e7.style.Horizontals
+         * @see net.cua.excel.entity.style.Horizontals
          * @return int
          */
         int defaultHorizontal() {

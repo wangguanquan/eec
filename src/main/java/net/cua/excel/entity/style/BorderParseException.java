@@ -12,27 +12,27 @@
  * limitations under the License.
  */
 
-package net.cua.excel.entity.e7.style;
+package net.cua.excel.entity.style;
 
 /**
- * Created by guanquan.wang at 2018-02-09 14:25
+ * Created by guanquan.wang at 2018-02-08 13:53
  */
-public class ColorParseException extends RuntimeException {
-    public ColorParseException(String message) {
-    super(message);
-}
+public class BorderParseException extends RuntimeException {
+    public BorderParseException(String message) {
+        super(message);
+    }
 
-    public ColorParseException(String message, Throwable cause) {
+    public BorderParseException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ColorParseException(Throwable cause) {
+    public BorderParseException(Throwable cause) {
         super(cause);
     }
 
-    protected ColorParseException(String message, Throwable cause,
-                                   boolean enableSuppression,
-                                   boolean writableStackTrace) {
+    protected BorderParseException(String message, Throwable cause,
+                                 boolean enableSuppression,
+                                 boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }
