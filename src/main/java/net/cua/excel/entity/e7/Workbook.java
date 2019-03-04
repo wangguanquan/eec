@@ -438,6 +438,8 @@ public class Workbook {
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
+        ps.setFetchSize(Integer.MIN_VALUE);
+        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         sheet.setPs(ps);
         sheets[size++] = sheet;
         return this;
@@ -471,6 +473,8 @@ public class Workbook {
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
+        ps.setFetchSize(Integer.MIN_VALUE);
+        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         pp.build(ps);
         sheet.setPs(ps);
         sheets[size++] = sheet;
@@ -762,9 +766,7 @@ public class Workbook {
 
         if (hasTopNs) {
             for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs.length > 0) {
-                    rootElement.add(Namespace.get(prefixs[i], uris[i]));
-                }
+                rootElement.add(Namespace.get(prefixs[i], uris[i]));
             }
         }
 
@@ -850,8 +852,7 @@ public class Workbook {
             what("0004", zipFile.toString());
 
             // Delete source files
-            boolean delSelf = true;
-            FileUtil.rm_rf(root.toFile(), delSelf);
+            FileUtil.rm_rf(root.toFile(), true);
             what("0005");
             return zipFile;
         } catch (IOException | ExportException e) {
@@ -1008,8 +1009,7 @@ public class Workbook {
         what("0004", zipFile.toString());
 
         // Delete source files
-        boolean delSelf = true;
-        FileUtil.rm_rf(temp.toFile(), delSelf);
+        FileUtil.rm_rf(temp.toFile(), true);
         what("0005");
 
         return zipFile;
