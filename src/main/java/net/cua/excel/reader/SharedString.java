@@ -32,15 +32,31 @@ import java.util.*;
  * 如果都没有则按下标重新读取该区块到eden区，原eden区数据复制到old区。
  * 加载两次的区块将被标记，被标记的区块有重复读取时被放入hot区，
  * hot区采用LRU页面置换算法进行淘汰。
- * FIXME public -> package-private
  * Create by guanquan.wang at 2018-09-27 14:28
  */
 public class SharedString {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
-    SharedString(Path sstPath) {
-        this(sstPath, 0, 0);
+    SharedString(String[] data) {
+        max = data.length;
+        offset_eden = 0;
+        if (max <= page) {
+            eden = new String[max];
+            System.arraycopy(data, offset_eden, eden, 0, max);
+            limit_eden = max;
+        } else {
+            if (max > page << 1) {
+                page = max >> 1;
+            }
+            eden = new String[page];
+            limit_eden = page;
+            System.arraycopy(data, offset_eden, eden, 0, limit_eden);
+            offset_old = page;
+            limit_old = max - page;
+            old = new String[limit_old];
+            System.arraycopy(data, offset_old, old, 0, limit_old);
+        }
     }
 
     SharedString(Path sstPath, int cacheSize, int hotSize) {
@@ -52,21 +68,21 @@ public class SharedString {
     }
 
     /** 新加载数据放入此区域 */
-    String[] eden;
+    private String[] eden;
     /** eden区未命中时将数据复制到此区域 */
-    String[] old;
+    private String[] old;
     /** 每次加载的数量 */
     private int page = 512;
     /** 整个文件有多少个字符串 */
-    int max = -1, vt = 0, offsetR = 0, offsetM = 0;
+    private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
     /** 新生代offset */
-    int offset_eden = -1;
+    private int offset_eden = -1;
     /** 老年代offset */
-    int offset_old = -1;
+    private int offset_old = -1;
     /** 新生代limit */
-    int limit_eden;
+    private int limit_eden;
     /** 老年代limit */
-    int limit_old;
+    private int limit_old;
     /** 统计各段被访问次数 */
     private TIntIntHashMap count_area = null;
     /** hot world */
@@ -88,6 +104,14 @@ public class SharedString {
     private StringBuilder escapeBuf;
     // For debug
     private int total, total_eden, total_old, total_hot;
+
+    /**
+     * @return the shared string unique count
+     * , if unknown then return -1
+     */
+    int size() {
+        return max;
+    }
 
     SharedString load() throws IOException {
         if (Files.exists(sstPath)) {
