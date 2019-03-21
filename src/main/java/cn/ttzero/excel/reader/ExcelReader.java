@@ -74,7 +74,7 @@ public class ExcelReader implements AutoCloseable {
      * 实例化Reader
      * @param path Excel路径
      * @param cacheSize sharedString缓存大小，默认512
-     *                  将此参数影响读取文件次数
+     *                  此参数影响读取文件次数
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
      */
@@ -86,7 +86,7 @@ public class ExcelReader implements AutoCloseable {
      * 实例化Reader
      * @param stream Excel文件流
      * @param cacheSize sharedString缓存大小，默认512
-     *                  将此参数影响读取文件次数
+     *                  此参数影响读取文件次数
      * @return ExcelReader
      * @throws IOException 读取文件失败
      */
@@ -97,7 +97,7 @@ public class ExcelReader implements AutoCloseable {
      * 实例化Reader
      * @param path Excel路径
      * @param cacheSize sharedString缓存大小，默认512
-     *                  将此参数影响读取文件次数
+     *                  此参数影响读取文件次数
      * @param hotSize 热词区大小，默认64
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
@@ -109,7 +109,7 @@ public class ExcelReader implements AutoCloseable {
      * 实例化Reader
      * @param path Excel路径
      * @param cacheSize sharedString缓存大小，默认512
-     *                  将此参数影响读取文件次数
+     *                  此参数影响读取文件次数
      * @param hotSize 热词区大小，默认64
      * @param rmSource 是否删除源文件
      * @return ExcelReader

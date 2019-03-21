@@ -34,7 +34,7 @@ pom.xml添加
 
 ```
 <dependency>
-    <groupId>net.cua</groupId>
+    <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
     <version>{eec.version}</version>
 </dependency>
@@ -44,7 +44,7 @@ eec内部仅依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖
 
 ```
 <dependency>
-    <groupId>net.cua</groupId>
+    <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
     <version>{eec.version}</version>
     <exclusions>
@@ -88,7 +88,7 @@ eec内部仅依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖
                 , new Sheet.Column("CPS用户ID", int.class)
                 , new Sheet.Column("渠道类型", int.class)
             ) // 添加一个sheet页
-            .writeTo(defaultPath); // 指定输出位置
+            .writeTo(Paths.get("f:\\excel")); // 指定输出位置
     } catch (SQLException | IOException | ExportException e) {
         e.printStackTrace();
     }
@@ -338,7 +338,14 @@ reade.sheets()
 
 
 ## CHANGELOG
-
+Version 0.2.9 (2019-02-22)
+-------------
+1. Excel读取时增加文件格式判断(BIFF 8 or Open xml)
+2. 创建者未指定时默认取当前操作系统登录名
+3. 增加 Apache License Version 2.0
+4. Rename package (net.cua->cn.ttzero)
+   访问[ttzero](https://www.ttzero.cn)可以了解更多关于eec的信息(网站还处于建设中)
+   
 Version 0.2.8 (2018-11-26)
 -------------
 1. 对象数组导出时包装类报类型转换错误bug
@@ -348,17 +355,6 @@ Version 0.2.8 (2018-11-26)
 5. 修改超过676列时Export会出现位置错误的BUG
 6. 修改列数据过多时Reader出现死循环的BUG
 7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
-
-Version 0.2.7 (2018-11-19)
--------------
-1. sharedString保留一个顺序流句柄以减少读文件次数
-2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
-   `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
-3. BigDecimal类型支持
-4. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持
-5. 增加读写转义（跳过不可见字符ASCII 0~31）
-6. setConnection方法被标记过时，将在0.3.x版本中删删除。传入一个数据库连接是一种不安全行为，
-   第三方可能利用此连接做其它非法的数据库操作
 
 [更多...](./CHANGELOG)
 
