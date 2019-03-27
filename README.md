@@ -25,7 +25,7 @@ eec并不是一个功能全面的excel操作工具类，它功能有限并不能
 导入eec.jar即可使用
 
 ```
-git clone https://www.github.com/wangguanquan/ecc.git
+git clone https://www.github.com/wangguanquan/eec.git
 mvn source:jar install
 ```
 
