@@ -609,13 +609,13 @@ public class Workbook {
         if (StringUtil.isNotEmpty(company)) {
             app.setCompany(company);
         } else {
-            app.setCompany("guanquan.wang@yandex.com");
+            app.setCompany("cn.ttzero");
         }
 
         // Read app and version from pom
         try {
             Properties pom = new Properties();
-            pom.load(getClass().getClassLoader().getResourceAsStream("META-INF/maven/net.cua/eec/pom.properties"));
+            pom.load(getClass().getClassLoader().getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties"));
             app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
             app.setAppVersion(pom.getProperty("version"));
         } catch (IOException e) {
