@@ -42,6 +42,7 @@ import java.util.List;
  */
 public class ListObjectSheet<T> extends Sheet {
     private List<T> data;
+    private Field[] fields;
 
     public ListObjectSheet(Workbook workbook) {
         super(workbook);
@@ -76,7 +77,11 @@ public class ListObjectSheet<T> extends Sheet {
         workbook.what("0010", getName());
 
         // create header columns
-        init();
+        fields = init();
+        if (fields.length == 0 || fields[0] == null) {
+            workbook.what("Worksheet do't has columns.");
+            return;
+        }
 
         File sheetFile = worksheets.resolve(name).toFile();
 
@@ -87,11 +92,11 @@ public class ListObjectSheet<T> extends Sheet {
             // Main data
             // Write sheet data
             if (getAutoSize() == 1) {
-                for (Object o : data) {
+                for (T o : data) {
                     writeRowAutoSize(o, bw);
                 }
             } else {
-                for (Object o : data) {
+                for (T o : data) {
                     writeRow(o, bw);
                 }
             }
@@ -121,7 +126,7 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
-    protected void init() throws IOException {
+    protected Field[] init() {
         Object o = workbook.getFirst(data);
         if (columns == null || columns.length == 0) {
             Field[] fields = o.getClass().getDeclaredFields();
@@ -131,6 +136,7 @@ public class ListObjectSheet<T> extends Sheet {
                 String gs = field.toGenericString();
                 NotExport notExport = field.getAnnotation(NotExport.class);
                 if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
+                    fields[i] = null;
                     continue;
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
@@ -145,12 +151,28 @@ public class ListObjectSheet<T> extends Sheet {
             for (int i = 0; i < columns.length; i++) {
                 columns[i].setSst(workbook.getStyles());
             }
+            // clear not export fields
+            for (int len = fields.length, n = len - 1; n >= 0; n--) {
+                if (fields[n] != null) {
+                    fields[n].setAccessible(true);
+                    continue;
+                }
+                if (n < len - 1) {
+                    System.arraycopy(fields, n + 1, fields, n, len - n - 1);
+                }
+                len--;
+            }
+            return fields;
         } else {
-            for (Column hc : columns) {
+            Field[] fields = new Field[columns.length];
+            Class<?> clazz = o.getClass();
+            for (int i = 0; i< columns.length; i++) {
+                Column hc = columns[i];
                 try {
+                    fields[i] = clazz.getDeclaredField(hc.getKey());
+                    fields[i].setAccessible(true);
                     if (hc.getClazz() == null) {
-                        Field field = o.getClass().getDeclaredField(hc.getKey());
-                        hc.setClazz(field.getType());
+                        hc.setClazz(fields[i].getType());
 //                        DisplayName dn = field.getAnnotation(DisplayName.class);
 //                        if (dn != null) {
 //                            hc.setShare(hc.isShare() || dn.share());
@@ -161,9 +183,10 @@ public class ListObjectSheet<T> extends Sheet {
 //                        }
                     }
                 } catch (NoSuchFieldException e) {
-                    throw new IOException(e.getCause());
+                    throw new ExportException("Column " + hc.getName() + " not declare in class " + clazz);
                 }
             }
+            return fields;
         }
 
     }
@@ -175,7 +198,7 @@ public class ListObjectSheet<T> extends Sheet {
      * @param bw
      * @throws IOException
      */
-    protected void writeRowAutoSize(Object o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
+    protected void writeRowAutoSize(T o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
         if (o == null) {
             writeEmptyRow(bw);
             return;
@@ -194,15 +217,9 @@ public class ListObjectSheet<T> extends Sheet {
 
         Field field;
         Object e;
-        Class<?> oclazz = o.getClass();
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
-            try {
-                field = oclazz.getDeclaredField(hc.getKey());
-                field.setAccessible(true);
-            } catch (NoSuchFieldException e1) {
-                throw new IOException(e1.getCause());
-            }
+            field = fields[i];
             Class<?> clazz = hc.getClazz();
             // t n=numeric (default), s=string, b=boolean
             if (isString(clazz)) {
@@ -305,7 +322,7 @@ public class ListObjectSheet<T> extends Sheet {
         bw.write("</row>");
     }
 
-    protected void writeRow(Object o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
+    protected void writeRow(T o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
         if (o == null) {
             writeEmptyRow(bw);
             return;
@@ -325,15 +342,9 @@ public class ListObjectSheet<T> extends Sheet {
 
         Field field;
         Object e;
-        Class<?> oclazz = o.getClass();
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
-            try {
-                field = oclazz.getDeclaredField(hc.getKey());
-                field.setAccessible(true);
-            } catch (NoSuchFieldException e1) {
-                throw new IOException(e1.getCause());
-            }
+            field = fields[i];
             Class<?> clazz = hc.getClazz();
             // t n=numeric (default), s=string, b=boolean
             if (isString(clazz)) {
