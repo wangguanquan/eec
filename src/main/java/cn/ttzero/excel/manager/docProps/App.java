@@ -37,7 +37,7 @@ public class App extends XmlEntity {
     private boolean linksUpToDate;
     private boolean sharedDoc;
     private boolean hyperlinksChanged;
-    private String appVersion = "0.2.9";   // TODO get pom version
+    private String appVersion;
     private TitlesOfParts titlesOfParts;
     private HeadingPairs headingPairs;
 
