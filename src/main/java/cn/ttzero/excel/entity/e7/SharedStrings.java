@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
+ * 字符串共享，一个workbook的所有worksheet共享
  *
  * Created by guanquan.wang at 2017/10/10.
  */
@@ -42,7 +43,7 @@ public class SharedStrings {
         elements = new LinkedHashMap<>();
     }
 
-    ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
+    private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
     public int get(char c) {
         char[] cs = charCache.get();
         cs[0] = c;
@@ -51,8 +52,9 @@ public class SharedStrings {
 
     /**
      * TODO 每个sheet采用one by one的方式输出，暂不考虑并发
-     * @param key
-     * @return
+     * FIXME OOM occur
+     * @param key the string
+     * @return index of the string in the SST
      */
     public int get(String key) {
         Integer n = elements.get(key);
@@ -88,7 +90,7 @@ public class SharedStrings {
     /**
      * clear memory
      */
-    protected void destroy() {
+    private void destroy() {
         elements.clear();
         elements = null;
     }
