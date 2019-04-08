@@ -37,7 +37,7 @@ import java.util.Map;
  * Created by guanquan.wang at 2018-01-26 14:46
  */
 public class ListMapSheet extends Sheet {
-    List<Map<String, ?>> data;
+    private List<Map<String, ?>> data;
 
     public ListMapSheet(Workbook workbook) {
         super(workbook);
@@ -71,6 +71,7 @@ public class ListMapSheet extends Sheet {
         String name = getFileName();
         workbook.what("0010", getName());
 
+        @SuppressWarnings("unchecked")
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
@@ -129,6 +130,7 @@ public class ListMapSheet extends Sheet {
      * @param bw
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     protected void writeRowAutoSize(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
         if (map == null) {
             writeEmptyRow(bw);
@@ -206,6 +208,7 @@ public class ListMapSheet extends Sheet {
         bw.write("</row>");
     }
 
+    @SuppressWarnings("unchecked")
     protected void writeRow(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
         if (map == null) {
             writeEmptyRow(bw);
