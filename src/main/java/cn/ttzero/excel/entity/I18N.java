@@ -28,9 +28,9 @@ import java.util.Properties;
  */
 public class I18N {
     private Properties pro;
-    private final String fn = "message._.properties";
     public I18N() {
         Locale locale = Locale.getDefault();
+        String fn = "message._.properties";
         pro = new Properties();
         try {
             InputStream is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", locale.toLanguageTag()));
