@@ -17,7 +17,7 @@
 package cn.ttzero.excel.entity;
 
 /**
- * Created by guanquan.wang at 2017/10/19.
+ * Created by guanquan.wang on 2017/10/19.
  */
 public class ExportException extends RuntimeException {
 

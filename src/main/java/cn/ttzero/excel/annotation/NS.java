@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 
 /**
  * Namespace
- * Created by guanquan.wang at 2017/9/18.
+ * Created by guanquan.wang on 2017/9/18.
  */
 @Target( ElementType.FIELD )
 @Retention(RetentionPolicy.RUNTIME)

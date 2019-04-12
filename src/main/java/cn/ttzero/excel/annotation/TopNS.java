@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 
 /**
  * Top namespace
- * Created by guanquan.wang at 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

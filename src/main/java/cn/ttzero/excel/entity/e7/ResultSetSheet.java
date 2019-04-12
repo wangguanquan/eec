@@ -35,7 +35,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Created by guanquan.wang at 2017/9/27.
+ * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet implements Cloneable {
     private ResultSet rs;

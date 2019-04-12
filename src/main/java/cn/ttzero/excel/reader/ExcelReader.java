@@ -46,7 +46,7 @@ import java.util.stream.StreamSupport;
  *     } catch (IOException e) {}
  * </code>
  *
- * Create by guanquan.wang at 2018-09-22
+ * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
     private ExcelReader() {}

@@ -18,7 +18,7 @@ package cn.ttzero.excel.util;
 
 /**
  * string util
- * Created by guanquan.wang at 2017/9/30.
+ * Created by guanquan.wang on 2017/9/30.
  */
 public class StringUtil {
     public final static String EMPTY = "";

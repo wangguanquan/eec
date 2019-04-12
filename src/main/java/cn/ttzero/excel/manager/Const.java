@@ -20,7 +20,7 @@ import java.nio.charset.Charset;
 
 /**
  * 常量类
- * Created by guanquan.wang at 2017/9/30.
+ * Created by guanquan.wang on 2017/9/30.
  */
 public class Const {
     /** open xml schema */

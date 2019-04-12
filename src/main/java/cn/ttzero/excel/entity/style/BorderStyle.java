@@ -18,6 +18,7 @@ package cn.ttzero.excel.entity.style;
 
 /**
  * 定义边框样式
+ * Created by guanquan.wang on 2018-02-06 08:55
  */
 public enum BorderStyle {
     NONE("none"),

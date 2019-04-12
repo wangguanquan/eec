@@ -17,7 +17,7 @@
 package cn.ttzero.excel.reader;
 
 /**
- * Create by guanquan.wang at 2018-09-22
+ * Create by guanquan.wang on 2018-09-22
  */
 class Cell {
     Cell() {}

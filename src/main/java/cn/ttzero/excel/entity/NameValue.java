@@ -17,7 +17,7 @@
 package cn.ttzero.excel.entity;
 
 /**
- * Created by guanquan.wang at 2017/9/26.
+ * Created by guanquan.wang on 2017/9/26.
  */
 public class NameValue {
     private String name;

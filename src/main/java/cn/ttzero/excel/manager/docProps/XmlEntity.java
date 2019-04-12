@@ -36,7 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by guanquan.wang at 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 class XmlEntity {
 

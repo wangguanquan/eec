@@ -21,7 +21,7 @@ import java.sql.SQLException;
 
 /**
  * 设置SQL参数用
- * Created by guanquan.wang at 2017/9/13.
+ * Created by guanquan.wang on 2017/9/13.
  */
 @FunctionalInterface
 public interface ParamProcessor {

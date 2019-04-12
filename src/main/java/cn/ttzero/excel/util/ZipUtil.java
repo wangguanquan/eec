@@ -29,7 +29,7 @@ import java.util.zip.*;
 
 /**
  * zip util
- * Created by guanquan.wang at 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 public class ZipUtil {
     private static final String suffix = ".zip";

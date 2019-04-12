@@ -20,7 +20,7 @@ import java.lang.annotation.*;
 
 /**
  * Xml Attribute
- * Created by guanquan.wang at 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 @Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)

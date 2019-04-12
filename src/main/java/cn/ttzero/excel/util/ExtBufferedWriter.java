@@ -22,7 +22,7 @@ import java.io.Writer;
 
 /**
  * 单线种操作流，内部复用buffer
- * Created by guanquan.wang at 2017/10/11.
+ * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
     private static int defaultCharBufferSize = 8192;

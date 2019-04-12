@@ -20,7 +20,7 @@ import cn.ttzero.excel.entity.style.Styles;
 
 /**
  * 样式转换器
- * Created by guanquan.wang at 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 @FunctionalInterface
 public interface StyleProcessor {

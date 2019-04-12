@@ -28,7 +28,7 @@ import java.lang.reflect.Field;
  * 分别是left,right,top,bottom,diagonalDown,diagonalUp
  * 样式请参照BorderStyle
  * EEC默认边框颜色为#333333
- * Created by guanquan.wang at 2018-02-06 08:55
+ * Created by guanquan.wang on 2018-02-06 08:55
  */
 public class Border {
 
