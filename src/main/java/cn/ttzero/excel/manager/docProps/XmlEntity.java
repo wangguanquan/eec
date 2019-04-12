@@ -38,7 +38,7 @@ import java.util.List;
  */
 class XmlEntity {
 
-    String[] prefixs, uris;
+    private String[] prefixs, uris;
 
     public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
@@ -204,7 +204,7 @@ class XmlEntity {
                     }
 
                     continue;
-                } else if (isDeclarClass(clazz)) {
+                } else if (isDeclareClass(clazz)) {
                     element = doc.addElement(StringUtil.uppFirstKey(field.getName()));
                     toXML(element, oo);
                 } else {
@@ -283,7 +283,7 @@ class XmlEntity {
         }
     }
 
-    private boolean isDeclarClass(Class<?> clazz) {
+    private boolean isDeclareClass(Class<?> clazz) {
         Class<?>[] declareClasses = getClass().getDeclaredClasses();
         for (Class<?> c : declareClasses) {
             if (c == clazz) {
