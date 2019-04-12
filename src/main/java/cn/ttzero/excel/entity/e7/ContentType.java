@@ -81,7 +81,7 @@ public class ContentType {
 
         @java.lang.Override
         public boolean equals(Object o) {
-            if (o == null || !(o instanceof Default)) return false;
+            if (!(o instanceof Default)) return false;
             return this == o || extension.equals(((Default)o).extension);
         }
 
@@ -113,7 +113,7 @@ public class ContentType {
 
         @java.lang.Override
         public boolean equals(Object o) {
-            if (o == null || !(o instanceof Override)) return false;
+            if (!(o instanceof Override)) return false;
             return this == o || partName.equals(((Override)o).partName);
         }
 
