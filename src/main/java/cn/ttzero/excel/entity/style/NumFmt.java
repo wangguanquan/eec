@@ -76,7 +76,7 @@ public class NumFmt {
      * @param id
      * @return
      */
-    public static final NumFmt valueOf(int id) {
+    public static NumFmt valueOf(int id) {
         return new NumFmt().setId(id);
     }
 
