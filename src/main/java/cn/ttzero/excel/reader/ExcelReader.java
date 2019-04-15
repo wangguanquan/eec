@@ -49,9 +49,9 @@ import java.util.stream.StreamSupport;
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private ExcelReader() {}
+    private ExcelReader() { }
     private Path self, temp;
-
+    private ExcelType type;
     private Sheet[] sheets;
 
     /**
@@ -63,6 +63,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(Path path) throws IOException {
         return read(path, 0, 0);
     }
+
     /**
      * 实例化Reader
      * @param stream Excel文件流
@@ -72,6 +73,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(InputStream stream) throws IOException {
         return read(stream, 0, 0);
     }
+
     /**
      * 实例化Reader
      * @param path Excel路径
@@ -95,6 +97,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(InputStream stream, int cacheSize) throws IOException {
         return read(stream, cacheSize, 0);
     }
+
     /**
      * 实例化Reader
      * @param path Excel路径
@@ -107,91 +110,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(Path path, int cacheSize, int hotSize) throws IOException {
         return read(path, cacheSize, hotSize, false);
     }
-    /**
-     * 实例化Reader
-     * @param path Excel路径
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认512
-     * @param rmSource 是否删除源文件
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
-     */
-    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
-        // Check document type
-        ExcelType type = getType(path);
-        if (type != ExcelType.XLSX) {
-            throw new ExcelReadException("Only support read Office Open XML file.");
-        }
-        // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(Files.newInputStream(path), temp);
 
-        // load workbook.xml
-        SAXReader reader = new SAXReader();
-        Document document;
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
-        } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        List<Element> list = document.getRootElement().elements();
-        Relationship[] rels = new Relationship[list.size()];
-        int i = 0;
-        for (Element e : list) {
-            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
-        }
-        RelManager relManager = RelManager.of(rels);
-
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
-        } catch (DocumentException | IOException e) {
-            // read style file fail.
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        Element root = document.getRootElement();
-        Namespace ns = root.getNamespaceForPrefix("r");
-
-        // Load SharedString
-        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
-
-        List<Sheet> sheets = new ArrayList<>();
-        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
-        for (; sheetIter.hasNext(); ) {
-            Element e = sheetIter.next();
-            Sheet sheet = new Sheet();
-            sheet.setName(e.attributeValue("name"));
-            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
-            String state = e.attributeValue("state");
-            sheet.setHidden("hidden".equals(state));
-            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
-            if (r == null) {
-                FileUtil.rm_rf(temp.toFile(), true);
-                throw new ExcelReadException("File has be destroyed");
-            }
-            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
-            // put shared string
-            sheet.setSst(sst);
-            sheets.add(sheet);
-        }
-
-        // sort by sheet index
-        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
-
-        ExcelReader er = new ExcelReader();
-        er.sheets = new Sheet[sheets.size()];
-        sheets.toArray(er.sheets);
-        er.self = temp;
-
-        // storage source path
-        if (rmSource) {
-            er.temp = path;
-        }
-
-        return er;
-    }
     /**
      * 实例化Reader
      * @param stream Excel文件流
@@ -217,19 +136,10 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * Check the documents type
-     * @param path documents path
-     * @return enum of ExcelType
+     * Type of excel
+     * @return enum type ExcelType
      */
-    private static ExcelType getType(Path path) {
-        ExcelType type;
-        try (InputStream is = Files.newInputStream(path)) {
-            byte[] bytes = new byte[8];
-            int len = is.read(bytes);
-            type = typeOfStream(bytes, len);
-        } catch (IOException e) {
-            type = ExcelType.UNKNOWN;
-        }
+    public ExcelType getType() {
         return type;
     }
 
@@ -323,8 +233,114 @@ public class ExcelReader implements AutoCloseable {
     }
 
 
+    // --- PRIVATE FUNCTIONS
+
+    /**
+     * 实例化Reader
+     * @param path Excel路径
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  此参数影响读取文件次数
+     * @param hotSize 热词区大小，默认512
+     * @param rmSource 是否删除源文件
+     * @return ExcelReader
+     * @throws IOException 文件不存在或读取文件失败
+     */
+    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
+        // Check document type
+        ExcelType type = getType(path);
+        if (type != ExcelType.XLSX) {
+            throw new ExcelReadException("Only support read Office Open XML file.");
+        }
+        // Store template stream as zip file
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), temp);
+
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
+        } catch (DocumentException | IOException e) {
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        List<Element> list = document.getRootElement().elements();
+        Relationship[] rels = new Relationship[list.size()];
+        int i = 0;
+        for (Element e : list) {
+            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
+        }
+        RelManager relManager = RelManager.of(rels);
+
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
+        } catch (DocumentException | IOException e) {
+            // read style file fail.
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        Element root = document.getRootElement();
+        Namespace ns = root.getNamespaceForPrefix("r");
+
+        // Load SharedString
+        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+
+        List<Sheet> sheets = new ArrayList<>();
+        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
+        for (; sheetIter.hasNext(); ) {
+            Element e = sheetIter.next();
+            Sheet sheet = new Sheet();
+            sheet.setName(e.attributeValue("name"));
+            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            String state = e.attributeValue("state");
+            sheet.setHidden("hidden".equals(state));
+            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
+            if (r == null) {
+                FileUtil.rm_rf(temp.toFile(), true);
+                throw new ExcelReadException("File has be destroyed");
+            }
+            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
+            // put shared string
+            sheet.setSst(sst);
+            sheets.add(sheet);
+        }
+
+        // sort by sheet index
+        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
+
+        ExcelReader er = new ExcelReader();
+        er.sheets = new Sheet[sheets.size()];
+        sheets.toArray(er.sheets);
+        er.self = temp;
+        er.type = type;
+
+        // storage source path
+        if (rmSource) {
+            er.temp = path;
+        }
+
+        return er;
+    }
+
+    /**
+     * Check the documents type
+     * @param path documents path
+     * @return enum of ExcelType
+     */
+    private static ExcelType getType(Path path) {
+        ExcelType type;
+        try (InputStream is = Files.newInputStream(path)) {
+            byte[] bytes = new byte[8];
+            int len = is.read(bytes);
+            type = typeOfStream(bytes, len);
+        } catch (IOException e) {
+            type = ExcelType.UNKNOWN;
+        }
+        return type;
+    }
+
     // --- check
-    static ExcelType typeOfStream(byte[] bytes, int size) {
+    private static ExcelType typeOfStream(byte[] bytes, int size) {
         ExcelType excelType = ExcelType.UNKNOWN;
         int length = Math.min(bytes.length, size);
         if (length < 4)
