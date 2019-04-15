@@ -19,7 +19,6 @@ package cn.ttzero.excel.entity.style;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.I18N;
 import cn.ttzero.excel.manager.Const;
-import cn.ttzero.excel.tmap.TIntIntHashMap;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import org.dom4j.Document;
@@ -30,9 +29,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * 每个style由一个int值组成
@@ -47,7 +44,7 @@ import java.util.Locale;
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles {
 
-    private TIntIntHashMap map;
+    private Map<Integer, Integer> map;
     private Document document;
 
     private List<Font> fonts;
@@ -56,7 +53,7 @@ public class Styles {
     private List<Border> borders;
 
     private Styles() {
-        map = new TIntIntHashMap();
+        map = new HashMap<>();
     }
 
     /**
