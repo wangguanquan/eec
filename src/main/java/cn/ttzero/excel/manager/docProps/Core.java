@@ -101,4 +101,47 @@ public class Core extends XmlEntity {
         this.modified = modified;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
 }

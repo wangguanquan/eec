@@ -16,11 +16,15 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.e7.Relationship;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.ExcelType;
 import cn.ttzero.excel.manager.RelManager;
+import cn.ttzero.excel.manager.docProps.App;
+import cn.ttzero.excel.manager.docProps.Core;
 import cn.ttzero.excel.util.FileUtil;
+import cn.ttzero.excel.util.StringUtil;
 import cn.ttzero.excel.util.ZipUtil;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
@@ -31,6 +35,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -53,6 +59,7 @@ public class ExcelReader implements AutoCloseable {
     private Path self, temp;
     private ExcelType type;
     private Sheet[] sheets;
+    AppInfo appInfo;
 
     /**
      * 实例化Reader
@@ -232,6 +239,17 @@ public class ExcelReader implements AutoCloseable {
         }
     }
 
+    /**
+     * General information like title,subject and creator
+     * @return the information
+     */
+    public AppInfo getAppInfo() {
+        if (appInfo == null) {
+            appInfo = getGeneralInfo();
+        }
+        return appInfo;
+    }
+
 
     // --- PRIVATE FUNCTIONS
 
@@ -366,4 +384,64 @@ public class ExcelReader implements AutoCloseable {
         return excelType;
     }
 
+    private AppInfo getGeneralInfo() {
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(self.resolve("docProps/app.xml")));
+        } catch (DocumentException | IOException e) {
+            throw new ExcelReadException(e);
+        }
+        Element root = document.getRootElement();
+        App app = new App();
+        app.setCompany(root.elementText("Company"));
+        app.setApplication(root.elementText("Application"));
+        app.setAppVersion(root.elementText("AppVersion"));
+        app.setManager(root.elementText("Manager"));
+
+        try {
+            document = reader.read(Files.newInputStream(self.resolve("docProps/core.xml")));
+        } catch (DocumentException | IOException e) {
+            throw new ExcelReadException(e);
+        }
+        root = document.getRootElement();
+        Core core = new Core();
+        Class<Core> clazz = Core.class;
+        TopNS topNS = clazz.getAnnotation(TopNS.class);
+        String[] prefixs = topNS.prefix(), urls = topNS.uri();
+        String preDc = "dc";
+        int dcIndex = StringUtil.indexOf(prefixs, preDc);
+        if (dcIndex > -1) {
+            Namespace dc = new Namespace(preDc, urls[dcIndex]);
+            core.setCreator(root.elementText(new QName("creator", dc)));
+            core.setTitle(root.elementText(new QName("title", dc)));
+            core.setSubject(root.elementText(new QName("subject", dc)));
+            core.setDescription(root.elementText(new QName("description", dc)));
+        }
+
+        String preCp = "cp";
+        int cpIndex = StringUtil.indexOf(prefixs, preCp);
+        if (cpIndex > -1) {
+            Namespace cp = new Namespace(preCp, urls[cpIndex]);
+            core.setKeywords(root.elementText(new QName("keywords", cp)));
+            core.setLastModifiedBy(root.elementText(new QName("lastModifiedBy", cp)));
+            core.setVersion(root.elementText(new QName("version", cp)));
+            core.setRevision(root.elementText(new QName("revision", cp)));
+            core.setCategory(root.elementText(new QName("category", cp)));
+        }
+
+        String preDcterms = "dcterms";
+        int dctermsIndex = StringUtil.indexOf(prefixs, preDcterms);
+        if (dctermsIndex > -1) {
+            Namespace dcterms = new Namespace(preDcterms, urls[dctermsIndex]);
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+            try {
+                core.setCreated(format.parse(root.elementText(new QName("created", dcterms))));
+                core.setModified(format.parse(root.elementText(new QName("modified", dcterms))));
+            } catch (ParseException e) { }
+        }
+
+        return new AppInfo(app, core);
+    }
 }

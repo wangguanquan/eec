@@ -106,4 +106,19 @@ public class App extends XmlEntity {
         this.appVersion = appVersion;
     }
 
+    public String getApplication() {
+        return application;
+    }
+
+    public String getManager() {
+        return manager;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public String getAppVersion() {
+        return appVersion;
+    }
 }
