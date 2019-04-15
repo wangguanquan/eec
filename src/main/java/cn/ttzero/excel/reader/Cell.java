@@ -21,6 +21,13 @@ package cn.ttzero.excel.reader;
  */
 class Cell {
     Cell() {}
+    // n=numeric
+    // s=string
+    // b=boolean
+    // f=function string
+    // r=inlineStr
+    // l=long
+    // d=double
     private char t; // type
     // value
     private String sv;
