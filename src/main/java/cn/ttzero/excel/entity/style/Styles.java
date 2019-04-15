@@ -63,7 +63,7 @@ public class Styles {
      * @return
      */
     public int of(int s) {
-        int n = map.get(s);
+        int n = map.getOrDefault(s, 0);
         if (n == 0) {
             n = addStyle(s);
             map.put(s, n);
