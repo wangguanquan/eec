@@ -63,7 +63,7 @@ public class Hot {
     private Map<Integer, Node<E>> table;
 
     public Hot() {
-        this(1 << 6);
+        this(1 << 9);
     }
 
     public Hot(int limit) {
