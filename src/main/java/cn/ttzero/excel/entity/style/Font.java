@@ -383,14 +383,14 @@ public class Font implements Cloneable {
 
     // ######################################Static inner class######################################
 
-    private static class Style {
-        static final int normal = 0 // 正常
+    public static class Style {
+        public static final int normal = 0 // 正常
                 , italic = 1 << 2 // 斜体
                 , bold = 1 << 1 // 加粗
                 , underLine = 1 // 下划线
                 ;
 
-        static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
+        public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name);
             return field.getInt(null);
         }
