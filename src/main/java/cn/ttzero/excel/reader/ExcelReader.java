@@ -16,6 +16,7 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.annotation.NS;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.e7.Relationship;
 import cn.ttzero.excel.manager.Const;
@@ -26,6 +27,8 @@ import cn.ttzero.excel.manager.docProps.Core;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import cn.ttzero.excel.util.ZipUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -56,78 +60,13 @@ import java.util.stream.StreamSupport;
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
+    private Logger logger = LogManager.getLogger(getClass());
     protected ExcelReader() { }
     Path self, temp;
     private ExcelType type;
     Sheet[] sheets;
     AppInfo appInfo;
 
-    private ExcelReader(Path path, int cacheSize, int hotSize) throws IOException {
-        // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(Files.newInputStream(path), temp);
-
-        // load workbook.xml
-        SAXReader reader = new SAXReader();
-        Document document;
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
-        } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        @SuppressWarnings("unchecked")
-        List<Element> list = document.getRootElement().elements();
-        Relationship[] rels = new Relationship[list.size()];
-        int i = 0;
-        for (Element e : list) {
-            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
-        }
-        RelManager relManager = RelManager.of(rels);
-
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
-        } catch (DocumentException | IOException e) {
-            // read style file fail.
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        Element root = document.getRootElement();
-        Namespace ns = root.getNamespaceForPrefix("r");
-
-        // Load SharedString
-        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
-
-        List<Sheet> sheets = new ArrayList<>();
-        @SuppressWarnings("unchecked")
-        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
-        for (; sheetIter.hasNext(); ) {
-            Element e = sheetIter.next();
-            Sheet sheet = new Sheet();
-            sheet.setName(e.attributeValue("name"));
-            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
-            String state = e.attributeValue("state");
-            sheet.setHidden("hidden".equals(state));
-            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
-            if (r == null) {
-                FileUtil.rm_rf(temp.toFile(), true);
-                throw new ExcelReadException("File has be destroyed");
-            }
-            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
-            // put shared string
-            sheet.setSst(sst);
-            sheets.add(sheet);
-        }
-
-        // sort by sheet index
-        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
-
-        Sheet[] sheets1 = new Sheet[sheets.size()];
-        sheets.toArray(sheets1);
-
-        this.sheets = sheets1;
-        this.self = temp;
-    }
 
     /**
      * 实例化Reader
@@ -321,6 +260,74 @@ public class ExcelReader implements AutoCloseable {
 
     // --- PRIVATE FUNCTIONS
 
+
+    private ExcelReader(Path path, int cacheSize, int hotSize) throws IOException {
+        // Store template stream as zip file
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), temp);
+
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
+        } catch (DocumentException | IOException e) {
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        @SuppressWarnings("unchecked")
+        List<Element> list = document.getRootElement().elements();
+        Relationship[] rels = new Relationship[list.size()];
+        int i = 0;
+        for (Element e : list) {
+            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
+        }
+        RelManager relManager = RelManager.of(rels);
+
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
+        } catch (DocumentException | IOException e) {
+            // read style file fail.
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        Element root = document.getRootElement();
+        Namespace ns = root.getNamespaceForPrefix("r");
+
+        // Load SharedString
+        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+
+        List<Sheet> sheets = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
+        for (; sheetIter.hasNext(); ) {
+            Element e = sheetIter.next();
+            Sheet sheet = new Sheet();
+            sheet.setName(e.attributeValue("name"));
+            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            String state = e.attributeValue("state");
+            sheet.setHidden("hidden".equals(state));
+            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
+            if (r == null) {
+                FileUtil.rm_rf(temp.toFile(), true);
+                throw new ExcelReadException("File has be destroyed");
+            }
+            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
+            // put shared string
+            sheet.setSst(sst);
+            sheets.add(sheet);
+        }
+
+        // sort by sheet index
+        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
+
+        Sheet[] sheets1 = new Sheet[sheets.size()];
+        sheets.toArray(sheets1);
+
+        this.sheets = sheets1;
+        this.self = temp;
+    }
+
     /**
      * 实例化Reader
      * @param path Excel路径
@@ -341,7 +348,7 @@ public class ExcelReader implements AutoCloseable {
                 break;
             case XLS:
                 try {
-                    Class<?> clazz = Class.forName("cn.ttzero.excel.reader.E3ExcelReader");
+                    Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
                     Constructor constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
                 } catch (Exception e) {
@@ -431,36 +438,32 @@ public class ExcelReader implements AutoCloseable {
         Class<Core> clazz = Core.class;
         TopNS topNS = clazz.getAnnotation(TopNS.class);
         String[] prefixs = topNS.prefix(), urls = topNS.uri();
-        String preDc = "dc";
-        int dcIndex = StringUtil.indexOf(prefixs, preDc);
-        if (dcIndex > -1) {
-            Namespace dc = new Namespace(preDc, urls[dcIndex]);
-            core.setCreator(root.elementText(new QName("creator", dc)));
-            core.setTitle(root.elementText(new QName("title", dc)));
-            core.setSubject(root.elementText(new QName("subject", dc)));
-            core.setDescription(root.elementText(new QName("description", dc)));
-        }
+        Field[] fields = clazz.getDeclaredFields();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+        for (Field f : fields) {
+            NS ns = f.getAnnotation(NS.class);
+            if (ns == null) continue;
 
-        String preCp = "cp";
-        int cpIndex = StringUtil.indexOf(prefixs, preCp);
-        if (cpIndex > -1) {
-            Namespace cp = new Namespace(preCp, urls[cpIndex]);
-            core.setKeywords(root.elementText(new QName("keywords", cp)));
-            core.setLastModifiedBy(root.elementText(new QName("lastModifiedBy", cp)));
-            core.setVersion(root.elementText(new QName("version", cp)));
-            core.setRevision(root.elementText(new QName("revision", cp)));
-            core.setCategory(root.elementText(new QName("category", cp)));
-        }
-
-        String preDcterms = "dcterms";
-        int dctermsIndex = StringUtil.indexOf(prefixs, preDcterms);
-        if (dctermsIndex > -1) {
-            Namespace dcterms = new Namespace(preDcterms, urls[dctermsIndex]);
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-            try {
-                core.setCreated(format.parse(root.elementText(new QName("created", dcterms))));
-                core.setModified(format.parse(root.elementText(new QName("modified", dcterms))));
-            } catch (ParseException e) { }
+            f.setAccessible(true);
+            int nsIndex = StringUtil.indexOf(prefixs, ns.value());
+            if (nsIndex > -1) {
+                Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+                Class<?> type = f.getType();
+                String v = root.elementText(new QName(f.getName(), namespace));
+                if (type == String.class) {
+                    try {
+                        f.set(core, v);
+                    } catch (IllegalAccessException e) {
+                        logger.warn("Set field (" + f + ") error.");
+                    }
+                } else if (type == Date.class) {
+                    try {
+                        f.set(core, format.parse(v));
+                    } catch (ParseException|IllegalAccessException e) {
+                        logger.warn("Set field (" + f + ") error.");
+                    }
+                }
+            }
         }
 
         return new AppInfo(app, core);
