@@ -640,6 +640,7 @@ public class Workbook {
         }
 
         Core core = new Core();
+        core.setCreated(new Date());
         if (StringUtil.isNotEmpty(creator)) {
             core.setCreator(creator);
         } else {

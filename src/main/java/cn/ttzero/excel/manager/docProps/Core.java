@@ -51,7 +51,7 @@ public class Core extends XmlEntity {
     private String category;        // 类别
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
-    private Date created = new Date();         // 创建时间
+    private Date created;         // 创建时间
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date modified;       // 最后更新时间
