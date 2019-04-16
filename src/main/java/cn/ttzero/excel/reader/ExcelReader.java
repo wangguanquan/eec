@@ -412,7 +412,7 @@ public class ExcelReader implements AutoCloseable {
         return excelType;
     }
 
-    private AppInfo getGeneralInfo() {
+    protected AppInfo getGeneralInfo() {
         // load workbook.xml
         SAXReader reader = new SAXReader();
         Document document;
