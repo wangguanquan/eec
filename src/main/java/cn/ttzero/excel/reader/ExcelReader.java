@@ -62,10 +62,11 @@ import java.util.stream.StreamSupport;
 public class ExcelReader implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());
     protected ExcelReader() { }
-    Path self, temp;
-    private ExcelType type;
+    Path self;
     ISheet[] sheets;
-    AppInfo appInfo;
+    private Path temp;
+    private ExcelType type;
+    private AppInfo appInfo;
 
 
     /**
