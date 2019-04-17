@@ -352,7 +352,7 @@ public class ExcelReader implements AutoCloseable {
                     Constructor constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
                 } catch (Exception e) {
-                    throw new ExcelReadException("Only support read Office Open XML file.");
+                    throw new ExcelReadException("Only support read Office Open XML file.", e);
                 }
                 break;
             default:
