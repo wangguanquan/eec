@@ -16,103 +16,49 @@
 
 package cn.ttzero.excel.reader;
 
-import cn.ttzero.excel.entity.TooManyColumnsException;
-import cn.ttzero.excel.manager.Const;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import cn.ttzero.excel.util.StringUtil;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
- * 对应Excel文件各Sheet页，包含隐藏Sheet页
- *
- * Create by guanquan.wang on 2018-09-22
+ * Create by guanquan.wang at 2019-04-17 11:36
  */
-public class Sheet implements ISheet {
-    private Logger logger = LogManager.getLogger(getClass());
-    Sheet() {}
-
-    private String name;
-    private int index // per sheet index of workbook
-            , size = -1; // size of rows per sheet
-    private Path path;
-    private SharedString sst;
-    private int startRow = -1; // row index of data
-    private Row header;
-    private boolean hidden; // state hidden
-
-    void setName(String name) {
-        this.name = name;
-    }
-
-    void setPath(Path path) {
-        this.path = path;
-    }
-
-    void setSst(SharedString sst) {
-        this.sst = sst;
-    }
+public interface Sheet extends AutoCloseable {
 
     /**
      * The worksheet name
      * @return the sheet name
      */
-    @Override
-    public String getName() {
-        return name;
-    }
+    String getName();
 
     /**
      * The index of worksheet located at the workbook
      * @return the index(zero base)
      */
-    @Override
-    public int getIndex() {
-        return index;
-    }
-
-    void setIndex(int index) {
-        this.index = index;
-    }
+    int getIndex();
 
     /**
      * size of rows.
      * @return size of rows
      * -1: unknown size
      */
-    @Override
-    public int getSize() {
-        return size;
-    }
-
-    /**
-     * The index of first used row
-     * @return the index
-     */
-    public int getFirstRow() {
-        return startRow;
-    }
+    int getSize();
 
     /**
      * Test Worksheet is hidden
      */
-    @Override
-    public boolean isHidden() {
-        return hidden;
-    }
+    boolean isHidden();
 
     /**
-     * Set Worksheet state
+     * Test Worksheet is show
      */
-    Sheet setHidden(boolean hidden) {
-        this.hidden = hidden;
-        return this;
+    default boolean isShow() {
+        return !isHidden();
     }
 
     /**
@@ -120,257 +66,76 @@ public class Sheet implements ISheet {
      * The first non-empty line defaults to the header information.
      * @return the HeaderRow
      */
-    @Override
-    public Row getHeader() {
-        if (header == null && !heof) {
-            Row row = findRow0();
-            if (row != null) {
-                header = row.asHeader();
-                sRow.setHr((HeaderRow) header);
-            }
-        }
-        return header;
-    }
+    Row getHeader();
 
     /**
      * Set the binding type
      * @param clazz the binding type
      * @return sheet
      */
-    @Override
-    public Sheet bind(Class<?> clazz) {
-        if (getHeader() != null) {
-            try {
-                ((HeaderRow) header).setClassOnce(clazz);
-            } catch (IllegalAccessException | InstantiationException e) {
-                throw new ExcelReadException(e);
-            }
-        }
-        return this;
-    }
-
-    @Override
-    public String toString() {
-        return "Sheet name: " + name + " has " + size + " rows.";
-    }
-
-    /////////////////////////////////Read sheet file/////////////////////////////////
-    private BufferedReader reader;
-    private char[] cb; // buffer
-    private int nChar, length;
-    private boolean eof = false, heof = false; // OPTIONS = false
-
-    private Row sRow;
+    Sheet bind(Class<?> clazz);
 
     /**
-     * Load sheet.xml as BufferedReader
-     * @return Sheet
+     * Load the sheet data
+     * @return sheet
      * @throws IOException if io error occur
      */
-    public Sheet load() throws IOException {
-        logger.debug("load {}", path.toString());
-        reader = Files.newBufferedReader(path);
-        cb = new char[8192];
-        nChar = 0;
-        loopA: for ( ; ; ) {
-            length = reader.read(cb);
-            if (length < 11) break;
-            // read size
-            if (nChar == 0) {
-                String line = new String(cb, 56, 1024);
-                String size = "<dimension ref=\"";
-                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index+=size.length()) : -1;
-                if (end > 0) {
-                    String l_ = line.substring(index, end);
-                    Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
-                    Matcher mat = pat.matcher(l_);
-                    if (mat.matches()) {
-                        int from = Integer.parseInt(mat.group(2)), to = Integer.parseInt(mat.group(4));
-                        this.startRow = from;
-                        this.size = to - from + 1;
-                        int c1 = col2Int(mat.group(1)), c2 = col2Int(mat.group(3)), columnSize = c2 - c1 + 1;
-                        if (columnSize > Const.Limit.MAX_COLUMNS_ON_SHEET) {
-                            throw new TooManyColumnsException(columnSize);
-                        }
-                        logger.debug("column size: {}", columnSize);
-//                        OPTIONS = columnSize > 128; // size more than DX
-                    } else {
-                        pat = Pattern.compile("[A-Z]+(\\d+)");
-                        mat = pat.matcher(l_);
-                        if (mat.matches()) {
-                            this.startRow = Integer.parseInt(mat.group(1));
-                        }
-                    }
-                    nChar += end;
-                }
-            }
-            // find index of <sheetData>
-            for (; nChar < length - 12; nChar++) {
-                if (cb[nChar] == '<' && cb[nChar+1] == 's' && cb[nChar+2] == 'h'
-                        && cb[nChar+3] == 'e' && cb[nChar+4] == 'e' && cb[nChar+5] == 't'
-                        && cb[nChar+6] == 'D' && cb[nChar+7] == 'a' && cb[nChar+8] == 't'
-                        && cb[nChar+9] == 'a' && (cb[nChar+10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
-                    nChar += 11;
-                    break loopA;
-                }
-            }
-        }
-        // Empty sheet
-        if (cb[nChar] == '>') {
-            nChar++;
-            eof = true;
-        } else {
-            sRow = new Row(sst, this.startRow > 0 ? this.startRow : 1); // share row space
-        }
-
-        return this;
-    }
-
-    /**
-     * iterator rows
-     * @return Row
-     * @throws IOException if io error occur
-     */
-    private Row nextRow() throws IOException {
-        if (eof) return null;
-        boolean endTag = false;
-        int start = nChar;
-        // find end of row tag
-        for ( ; ++nChar < length && cb[nChar] != '>'; );
-        // Empty Row
-        if (cb[nChar++ - 1] == '/') {
-            return sRow.empty(cb, start, nChar - start);
-        }
-        // Not empty
-        for (; nChar < length - 6; nChar++) {
-            if (cb[nChar] == '<' && cb[nChar+1] == '/' && cb[nChar+2] == 'r'
-                    && cb[nChar+3] == 'o' && cb[nChar+4] == 'w' && cb[nChar+5] == '>') {
-                nChar += 6;
-                endTag = true;
-                break;
-            }
-        }
-
-        /* Load more when not found end of row tag */
-        if (!endTag) {
-            int n;
-            if (start == 0) {
-                char[] _cb = new char[cb.length << 1];
-                System.arraycopy(cb, start, _cb, 0, n = length - start);
-                cb = _cb;
-            } else {
-                System.arraycopy(cb, start, cb, 0, n = length - start);
-            }
-            length = reader.read(cb, n, cb.length - n);
-            // end of file
-            if (length < 0) {
-                eof = true;
-                reader.close(); // close reader
-                reader = null; // wait GC
-                logger.debug("end of file.");
-                return null;
-            }
-            nChar = 0;
-            length += n;
-            return nextRow();
-        }
-
-        // share row
-        return sRow.with(cb, start, nChar - start);
-    }
-
-    protected Row findRow0() {
-        char[] cb = new char[8192];
-        int nChar = 0, length;
-        // reload file
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            loopA: for ( ; ; ) {
-                length = reader.read(cb);
-                // find index of <sheetData>
-                for (; nChar < length - 12; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
-                        nChar += 11;
-                        break loopA;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            logger.error("Read header row error.");
-            return null;
-        }
-        boolean eof = cb[nChar] == '>';
-        if (eof) {
-            this.heof = eof;
-            return null;
-        }
-
-        boolean endTag;
-        int start;
-        // find the first not null row
-        loopB: while (true) {
-            start = nChar;
-            for (; cb[++nChar] != '>' && nChar < length; );
-            // Empty Row
-            if (cb[nChar++ - 1] != '/') {
-                // find end of row tag
-                for (; nChar < length - 6; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                            && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                        nChar += 6;
-                        endTag = true;
-                        break loopB;
-                    }
-                }
-            }
-        }
-
-        if (!endTag) {
-            // too big
-            return null;
-        }
-
-        // row
-        return new Row(sst, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
-    }
+    Sheet load() throws IOException;
 
     /**
      * Iterating each row of data contains header information and blank lines
      * @return a row iterator
      */
-    @Override
-    public Iterator<IRow> iterator() {
-        return new RowIterator(this::nextRow, false);
-    }
+    Iterator<Row> iterator();
 
     /**
      * Iterating over data rows without header information and blank lines
      * @return a row iterator
      */
-    @Override
-    public Iterator<IRow> dataIterator() {
-        // iterator data rows
-        Iterator<IRow> nIter = new RowIterator(this::nextRow, true);
-        if (nIter.hasNext()) {
-            Row row = (Row) nIter.next();
-            if (header == null) header = row.asHeader();
-        }
-        return nIter;
+    Iterator<Row> dataIterator();
+
+    /**
+     * Return a stream of all rows
+     * @return a {@code Stream<Row>} providing the lines of row
+     *         described by this {@code Sheet}
+     * @since 1.8
+     */
+    default Stream<Row> rows() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+            iterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**
-     * close reader
+     * Return stream with out header row and empty rows
+     * @return a {@code Stream<Row>} providing the lines of row
+     *         described by this {@code Sheet}
+     * @since 1.8
+     */
+    default Stream<Row> dataRows() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+            dataIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
+    }
+
+    /**
+     * Convert column mark to int
+     * @param col column mark
+     * @return int value
+     */
+    default int col2Int(String col) {
+        if (StringUtil.isEmpty(col)) return 1;
+        char[] values = col.toCharArray();
+        int n = 0;
+        for (char value : values) {
+            if (value < 'A' || value > 'Z')
+                throw new ExcelReadException("Column mark out of range: " + col);
+            n = n * 26 + value - 'A' + 1;
+        }
+        return n;
+    }
+
+    /**
+     * Close resource
      * @throws IOException if io error occur
      */
-    @Override
-    public void close() throws IOException {
-        cb = null;
-        if (reader != null) {
-            reader.close();
-        }
-        if (sst != null)
-            sst.close();
-    }
+    void close() throws IOException;
 }

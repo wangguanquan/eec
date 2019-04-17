@@ -28,5 +28,5 @@ public interface RowSetProcessor {
      * The row set
      * @return the row data
      */
-    IRow next() throws IOException;
+    Row next() throws IOException;
 }

@@ -24,12 +24,12 @@ import java.util.NoSuchElementException;
 /**
  * Create by guanquan.wang at 2019-04-17 19:03
  */
-public class RowIterator implements Iterator<IRow> {
+public class RowSetIterator implements Iterator<Row> {
     private boolean onlyDataRow;
     private RowSetProcessor processor;
-    private IRow nextRow = null;
+    private Row nextRow = null;
 
-    public RowIterator(RowSetProcessor processor, boolean onlyDataRow) {
+    public RowSetIterator(RowSetProcessor processor, boolean onlyDataRow) {
         this.processor = processor;
         this.onlyDataRow = onlyDataRow;
     }
@@ -54,9 +54,9 @@ public class RowIterator implements Iterator<IRow> {
     }
 
     @Override
-    public IRow next() {
+    public Row next() {
         if (nextRow != null || hasNext()) {
-            IRow next = nextRow;
+            Row next = nextRow;
             nextRow = null;
             return next;
         } else {
