@@ -48,6 +48,7 @@ public abstract class AbstractTemplate {
      * 文件合法性检查
      * @return
      */
+    @SuppressWarnings("unchecked")
     public boolean check() {
         // Integrity check
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
@@ -146,6 +147,7 @@ public abstract class AbstractTemplate {
         wb.what("0099", String.valueOf(n1 + n2));
     }
 
+    @SuppressWarnings("unchecked")
     protected int bindSstData() {
         Path shareStringPath = zipPath.resolve("xl/sharedStrings.xml");
         SAXReader reader = new SAXReader();
@@ -187,6 +189,7 @@ public abstract class AbstractTemplate {
         return n;
     }
 
+    @SuppressWarnings("unchecked")
     protected int bindSheetData() {
         // Read content
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
@@ -213,6 +216,7 @@ public abstract class AbstractTemplate {
         return n;
     }
 
+    @SuppressWarnings("unchecked")
     int bindSheet(Path sheetPath) {
         SAXReader reader = new SAXReader();
         Document document;
