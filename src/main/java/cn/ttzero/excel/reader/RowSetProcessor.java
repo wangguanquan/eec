@@ -23,7 +23,7 @@ import java.io.IOException;
  * Created by guanquan.wang on 2018/6/13.
  */
 @FunctionalInterface
-public interface RowSetProcessor {
+interface RowSetProcessor {
     /**
      * The row set
      * @return the row data

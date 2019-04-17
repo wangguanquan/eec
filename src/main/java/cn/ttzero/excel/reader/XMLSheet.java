@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  *
  * Create by guanquan.wang on 2018-09-22
  */
-public class XMLSheet implements Sheet {
+class XMLSheet implements Sheet {
     private Logger logger = LogManager.getLogger(getClass());
     XMLSheet() {}
 

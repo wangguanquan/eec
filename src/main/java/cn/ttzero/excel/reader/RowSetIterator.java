@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 /**
  * Create by guanquan.wang at 2019-04-17 19:03
  */
-public class RowSetIterator implements Iterator<Row> {
+class RowSetIterator implements Iterator<Row> {
     private boolean onlyDataRow;
     private RowSetProcessor processor;
     private Row nextRow = null;
