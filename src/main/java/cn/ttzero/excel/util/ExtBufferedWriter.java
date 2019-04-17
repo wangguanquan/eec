@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +22,7 @@ import java.io.Writer;
 
 /**
  * 单线种操作流，内部复用buffer
- * Created by guanquan.wang at 2017/10/11.
+ * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
     private static int defaultCharBufferSize = 8192;

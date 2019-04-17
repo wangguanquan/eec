@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,21 +16,32 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.annotation.NS;
+import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.e7.Relationship;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.ExcelType;
 import cn.ttzero.excel.manager.RelManager;
+import cn.ttzero.excel.manager.docProps.App;
+import cn.ttzero.excel.manager.docProps.Core;
 import cn.ttzero.excel.util.FileUtil;
+import cn.ttzero.excel.util.StringUtil;
 import cn.ttzero.excel.util.ZipUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.*;
 import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -44,13 +57,16 @@ import java.util.stream.StreamSupport;
  *     } catch (IOException e) {}
  * </code>
  *
- * Create by guanquan.wang at 2018-09-22
+ * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private ExcelReader() {}
-    private Path self, temp;
+    private Logger logger = LogManager.getLogger(getClass());
+    protected ExcelReader() { }
+    Path self, temp;
+    private ExcelType type;
+    Sheet[] sheets;
+    AppInfo appInfo;
 
-    private Sheet[] sheets;
 
     /**
      * 实例化Reader
@@ -61,6 +77,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(Path path) throws IOException {
         return read(path, 0, 0);
     }
+
     /**
      * 实例化Reader
      * @param stream Excel文件流
@@ -70,6 +87,7 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(InputStream stream) throws IOException {
         return read(stream, 0, 0);
     }
+
     /**
      * 实例化Reader
      * @param path Excel路径
@@ -93,109 +111,26 @@ public class ExcelReader implements AutoCloseable {
     public static ExcelReader read(InputStream stream, int cacheSize) throws IOException {
         return read(stream, cacheSize, 0);
     }
+
     /**
      * 实例化Reader
      * @param path Excel路径
      * @param cacheSize sharedString缓存大小，默认512
      *                  此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认64
+     * @param hotSize 热词区大小，默认512
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
      */
     public static ExcelReader read(Path path, int cacheSize, int hotSize) throws IOException {
         return read(path, cacheSize, hotSize, false);
     }
-    /**
-     * 实例化Reader
-     * @param path Excel路径
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认64
-     * @param rmSource 是否删除源文件
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
-     */
-    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
-        // Check document type
-        ExcelType type = getType(path);
-        if (type != ExcelType.XLSX) {
-            throw new ExcelReadException("Only support read Office Open XML file.");
-        }
-        // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(Files.newInputStream(path), temp);
 
-        // load workbook.xml
-        SAXReader reader = new SAXReader();
-        Document document;
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
-        } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        List<Element> list = document.getRootElement().elements();
-        Relationship[] rels = new Relationship[list.size()];
-        int i = 0;
-        for (Element e : list) {
-            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
-        }
-        RelManager relManager = RelManager.of(rels);
-
-        try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
-        } catch (DocumentException | IOException e) {
-            // read style file fail.
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
-        }
-        Element root = document.getRootElement();
-        Namespace ns = root.getNamespaceForPrefix("r");
-
-        // Load SharedString
-        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
-
-        List<Sheet> sheets = new ArrayList<>();
-        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
-        for (; sheetIter.hasNext(); ) {
-            Element e = sheetIter.next();
-            Sheet sheet = new Sheet();
-            sheet.setName(e.attributeValue("name"));
-            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
-            String state = e.attributeValue("state");
-            sheet.setHidden("hidden".equals(state));
-            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
-            if (r == null) {
-                FileUtil.rm_rf(temp.toFile(), true);
-                throw new ExcelReadException("File has be destroyed");
-            }
-            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
-            // put shared string
-            sheet.setSst(sst);
-            sheets.add(sheet);
-        }
-
-        // sort by sheet index
-        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
-
-        ExcelReader er = new ExcelReader();
-        er.sheets = new Sheet[sheets.size()];
-        sheets.toArray(er.sheets);
-        er.self = temp;
-
-        // storage source path
-        if (rmSource) {
-            er.temp = path;
-        }
-
-        return er;
-    }
     /**
      * 实例化Reader
      * @param stream Excel文件流
      * @param cacheSize sharedString缓存大小，默认512
      *                  将此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认64
+     * @param hotSize 热词区大小，默认512
      * @return ExcelReader
      * @throws IOException 读取文件失败
      */
@@ -215,19 +150,10 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * Check the documents type
-     * @param path documents path
-     * @return enum of ExcelType
+     * Type of excel
+     * @return enum type ExcelType
      */
-    private static ExcelType getType(Path path) {
-        ExcelType type;
-        try (InputStream is = Files.newInputStream(path)) {
-            byte[] bytes = new byte[8];
-            int len = is.read(bytes);
-            type = typeOfStream(bytes, len);
-        } catch (IOException e) {
-            type = ExcelType.UNKNOWN;
-        }
+    public ExcelType getType() {
         return type;
     }
 
@@ -320,9 +246,147 @@ public class ExcelReader implements AutoCloseable {
         }
     }
 
+    /**
+     * General information like title,subject and creator
+     * @return the information
+     */
+    public AppInfo getAppInfo() {
+        if (appInfo == null) {
+            appInfo = getGeneralInfo();
+        }
+        return appInfo;
+    }
+
+
+    // --- PRIVATE FUNCTIONS
+
+
+    private ExcelReader(Path path, int cacheSize, int hotSize) throws IOException {
+        // Store template stream as zip file
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), temp);
+
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
+        } catch (DocumentException | IOException e) {
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        @SuppressWarnings("unchecked")
+        List<Element> list = document.getRootElement().elements();
+        Relationship[] rels = new Relationship[list.size()];
+        int i = 0;
+        for (Element e : list) {
+            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
+        }
+        RelManager relManager = RelManager.of(rels);
+
+        try {
+            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
+        } catch (DocumentException | IOException e) {
+            // read style file fail.
+            FileUtil.rm_rf(temp.toFile(), true);
+            throw new ExcelReadException(e);
+        }
+        Element root = document.getRootElement();
+        Namespace ns = root.getNamespaceForPrefix("r");
+
+        // Load SharedString
+        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+
+        List<Sheet> sheets = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        Iterator<Element> sheetIter = root.element("sheets").elementIterator();
+        for (; sheetIter.hasNext(); ) {
+            Element e = sheetIter.next();
+            Sheet sheet = new Sheet();
+            sheet.setName(e.attributeValue("name"));
+            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            String state = e.attributeValue("state");
+            sheet.setHidden("hidden".equals(state));
+            Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
+            if (r == null) {
+                FileUtil.rm_rf(temp.toFile(), true);
+                throw new ExcelReadException("File has be destroyed");
+            }
+            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
+            // put shared string
+            sheet.setSst(sst);
+            sheets.add(sheet);
+        }
+
+        // sort by sheet index
+        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
+
+        Sheet[] sheets1 = new Sheet[sheets.size()];
+        sheets.toArray(sheets1);
+
+        this.sheets = sheets1;
+        this.self = temp;
+    }
+
+    /**
+     * 实例化Reader
+     * @param path Excel路径
+     * @param cacheSize sharedString缓存大小，默认512
+     *                  此参数影响读取文件次数
+     * @param hotSize 热词区大小，默认512
+     * @param rmSource 是否删除源文件
+     * @return ExcelReader
+     * @throws IOException 文件不存在或读取文件失败
+     */
+    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
+        // Check document type
+        ExcelType type = getType(path);
+        ExcelReader er;
+        switch (type) {
+            case XLSX:
+                er = new ExcelReader(path, cacheSize, hotSize);
+                break;
+            case XLS:
+                try {
+                    Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
+                    Constructor constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
+                    er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
+                } catch (Exception e) {
+                    throw new ExcelReadException("Only support read Office Open XML file.", e);
+                }
+                break;
+            default:
+                throw new ExcelReadException("Unknown file type.");
+        }
+        er.type = type;
+
+        // storage source path
+        if (rmSource) {
+            er.temp = path;
+        }
+
+        return er;
+    }
+
+    /**
+     * Check the documents type
+     * @param path documents path
+     * @return enum of ExcelType
+     */
+    private static ExcelType getType(Path path) {
+        ExcelType type;
+        try (InputStream is = Files.newInputStream(path)) {
+            byte[] bytes = new byte[8];
+            int len = is.read(bytes);
+            type = typeOfStream(bytes, len);
+        } catch (IOException e) {
+            type = ExcelType.UNKNOWN;
+        }
+        return type;
+    }
 
     // --- check
-    static ExcelType typeOfStream(byte[] bytes, int size) {
+    private static ExcelType typeOfStream(byte[] bytes, int size) {
         ExcelType excelType = ExcelType.UNKNOWN;
         int length = Math.min(bytes.length, size);
         if (length < 4)
@@ -348,4 +412,60 @@ public class ExcelReader implements AutoCloseable {
         return excelType;
     }
 
+    protected AppInfo getGeneralInfo() {
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(self.resolve("docProps/app.xml")));
+        } catch (DocumentException | IOException e) {
+            throw new ExcelReadException(e);
+        }
+        Element root = document.getRootElement();
+        App app = new App();
+        app.setCompany(root.elementText("Company"));
+        app.setApplication(root.elementText("Application"));
+        app.setAppVersion(root.elementText("AppVersion"));
+        app.setManager(root.elementText("Manager"));
+
+        try {
+            document = reader.read(Files.newInputStream(self.resolve("docProps/core.xml")));
+        } catch (DocumentException | IOException e) {
+            throw new ExcelReadException(e);
+        }
+        root = document.getRootElement();
+        Core core = new Core();
+        Class<Core> clazz = Core.class;
+        TopNS topNS = clazz.getAnnotation(TopNS.class);
+        String[] prefixs = topNS.prefix(), urls = topNS.uri();
+        Field[] fields = clazz.getDeclaredFields();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+        for (Field f : fields) {
+            NS ns = f.getAnnotation(NS.class);
+            if (ns == null) continue;
+
+            f.setAccessible(true);
+            int nsIndex = StringUtil.indexOf(prefixs, ns.value());
+            if (nsIndex > -1) {
+                Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+                Class<?> type = f.getType();
+                String v = root.elementText(new QName(f.getName(), namespace));
+                if (type == String.class) {
+                    try {
+                        f.set(core, v);
+                    } catch (IllegalAccessException e) {
+                        logger.warn("Set field (" + f + ") error.");
+                    }
+                } else if (type == Date.class) {
+                    try {
+                        f.set(core, format.parse(v));
+                    } catch (ParseException|IllegalAccessException e) {
+                        logger.warn("Set field (" + f + ") error.");
+                    }
+                }
+            }
+        }
+
+        return new AppInfo(app, core);
+    }
 }

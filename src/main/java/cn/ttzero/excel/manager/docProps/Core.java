@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +24,7 @@ import cn.ttzero.excel.annotation.TopNS;
 import java.util.Date;
 
 /**
- * Created by guanquan.wang at 2017/9/18.
+ * Created by guanquan.wang on 2017/9/18.
  */
 @TopNS(prefix = {"dc", "cp", "dcterms"}
         , uri = {"http://purl.org/dc/elements/1.1/"
@@ -49,7 +51,7 @@ public class Core extends XmlEntity {
     private String category;        // 类别
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
-    private Date created = new Date();         // 创建时间
+    private Date created;         // 创建时间
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date modified;       // 最后更新时间
@@ -99,4 +101,47 @@ public class Core extends XmlEntity {
         this.modified = modified;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getKeywords() {
+        return keywords;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
 }

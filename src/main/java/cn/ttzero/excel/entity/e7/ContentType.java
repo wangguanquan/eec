@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +30,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Created by guanquan.wang at 2017/10/10.
+ * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "Types", uri = "http://schemas.openxmlformats.org/package/2006/content-types")
 public class ContentType {
@@ -81,7 +83,7 @@ public class ContentType {
 
         @java.lang.Override
         public boolean equals(Object o) {
-            if (o == null || !(o instanceof Default)) return false;
+            if (!(o instanceof Default)) return false;
             return this == o || extension.equals(((Default)o).extension);
         }
 
@@ -113,7 +115,7 @@ public class ContentType {
 
         @java.lang.Override
         public boolean equals(Object o) {
-            if (o == null || !(o instanceof Override)) return false;
+            if (!(o instanceof Override)) return false;
             return this == o || partName.equals(((Override)o).partName);
         }
 

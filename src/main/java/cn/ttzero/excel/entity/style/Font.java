@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -385,10 +387,10 @@ public class Font implements Cloneable {
         public static final int normal = 0 // 正常
                 , italic = 1 << 2 // 斜体
                 , bold = 1 << 1 // 加粗
-                , underLine = 1 << 0 // 下划线
+                , underLine = 1 // 下划线
                 ;
 
-        public static final int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
+        public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name);
             return field.getInt(null);
         }

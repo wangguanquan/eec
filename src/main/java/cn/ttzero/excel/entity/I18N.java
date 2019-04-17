@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,13 +26,13 @@ import java.util.Properties;
 
 /**
  * 国际化
- * Create by guanquan.wang at 2018-10-13
+ * Create by guanquan.wang on 2018-10-13
  */
 public class I18N {
     private Properties pro;
-    private final String fn = "message._.properties";
     public I18N() {
         Locale locale = Locale.getDefault();
+        String fn = "message._.properties";
         pro = new Properties();
         try {
             InputStream is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", locale.toLanguageTag()));

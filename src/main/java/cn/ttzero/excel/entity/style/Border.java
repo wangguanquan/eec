@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +28,7 @@ import java.lang.reflect.Field;
  * 分别是left,right,top,bottom,diagonalDown,diagonalUp
  * 样式请参照BorderStyle
  * EEC默认边框颜色为#333333
- * Created by guanquan.wang at 2018-02-06 08:55
+ * Created by guanquan.wang on 2018-02-06 08:55
  */
 public class Border {
 

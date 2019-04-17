@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +18,7 @@ package cn.ttzero.excel.entity.style;
 
 /**
  * 定义边框样式
+ * Created by guanquan.wang on 2018-02-06 08:55
  */
 public enum BorderStyle {
     NONE("none"),

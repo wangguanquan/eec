@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +20,7 @@ import cn.ttzero.excel.manager.Const;
 
 /**
  * xlsx文件最大列数为16_384，如果超出这个数将抛出此异常
- * Created by guanquan.wang at 2017/10/19.
+ * Created by guanquan.wang on 2017/10/19.
  */
 public class TooManyColumnsException extends ExportException {
 

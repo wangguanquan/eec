@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +19,6 @@ package cn.ttzero.excel.entity.style;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.I18N;
 import cn.ttzero.excel.manager.Const;
-import cn.ttzero.excel.tmap.TIntIntHashMap;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import org.dom4j.Document;
@@ -28,9 +29,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * 每个style由一个int值组成
@@ -40,12 +39,12 @@ import java.util.Locale;
  * 20~26位 border
  * 26~29位 vertical
  * 29~32位 horizontal
- * Created by guanquan.wang at 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles {
 
-    private TIntIntHashMap map;
+    private Map<Integer, Integer> map;
     private Document document;
 
     private List<Font> fonts;
@@ -54,7 +53,7 @@ public class Styles {
     private List<Border> borders;
 
     private Styles() {
-        map = new TIntIntHashMap();
+        map = new HashMap<>();
     }
 
     /**
@@ -64,7 +63,7 @@ public class Styles {
      * @return
      */
     public int of(int s) {
-        int n = map.get(s);
+        int n = map.getOrDefault(s, 0);
         if (n == 0) {
             n = addStyle(s);
             map.put(s, n);

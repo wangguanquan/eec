@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +16,6 @@
 
 package cn.ttzero.excel.reader;
 
-import cn.ttzero.excel.tmap.TIntIntHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -85,7 +86,7 @@ public class SharedString {
     /** 老年代limit */
     private int limit_old;
     /** 统计各段被访问次数 */
-    private TIntIntHashMap count_area = null;
+    private Map<Integer, Integer> count_area = null;
     /** hot world */
     private Hot hot;
     /** size of hot */
@@ -126,7 +127,7 @@ public class SharedString {
                 old = new String[page];
 
                 if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
-                count_area =  new TIntIntHashMap(default_cap);
+                count_area =  new HashMap<>(default_cap);
 
                 if (hotSize > 0) hot = new Hot(hotSize);
                 else hot = new Hot();
@@ -255,7 +256,9 @@ public class SharedString {
      */
     private boolean test(int index) {
         if (max < page) return false;
-        int n = count_area.incrementGet(index / page);
+        int idx = index / page;
+        int n = count_area.getOrDefault(idx, 0) + 1;
+        count_area.put(idx, n);
         return n > 1;
     }
 

@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +36,7 @@ import java.util.stream.StreamSupport;
 /**
  * 对应Excel文件各Sheet页，包含隐藏Sheet页
  *
- * Create by guanquan.wang at 2018-09-22
+ * Create by guanquan.wang on 2018-09-22
  */
 public class Sheet implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());

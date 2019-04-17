@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,14 +22,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.*;
 
 /**
  * zip util
- * Created by guanquan.wang at 2017/10/13.
+ * Created by guanquan.wang on 2017/10/13.
  */
 public class ZipUtil {
     private static final String suffix = ".zip";
@@ -35,10 +37,10 @@ public class ZipUtil {
     /**
      * zip files exclude root path
      * command: zip destPath srcPath1 srcPath2 ...
-     * @param destPath
-     * @param srcPath
-     * @return
-     * @throws IOException
+     * @param destPath the destination path
+     * @param srcPath the source path
+     * @return the result zip file path
+     * @throws IOException if error occur.
      */
     public static Path zip(Path destPath, Path ... srcPath) throws IOException {
         return zip(destPath, true, srcPath);
@@ -47,10 +49,10 @@ public class ZipUtil {
     /**
      * zip files exclude root path
      * command: zip destPath srcPath1 srcPath2 ...
-     * @param destPath
-     * @param srcPath
-     * @return
-     * @throws IOException
+     * @param destPath the destination path
+     * @param srcPath the source path
+     * @return the result zip file path
+     * @throws IOException if error occur.
      */
     public static Path zipExcludeRoot(Path destPath, Path ... srcPath) throws IOException {
         return zip(destPath, false, srcPath);
@@ -59,11 +61,11 @@ public class ZipUtil {
     /**
      * zip files include root path
      * command: zip destPath srcPath1 srcPath2 ...
-     * @param destPath
-     * @param compressRoot
-     * @param srcPath
-     * @return
-     * @throws IOException
+     * @param destPath the destination path
+     * @param compressRoot include root path if true
+     * @param srcPath the source path
+     * @return the result zip file path
+     * @throws IOException if error occur.
      */
     private static Path zip(Path destPath, boolean compressRoot, Path ... srcPath) throws IOException {
         if (!destPath.toString().endsWith(suffix)) {
@@ -79,12 +81,10 @@ public class ZipUtil {
         int[] array = new int[srcPath.length];
         for (Path src : srcPath) {
             if (Files.isDirectory(src)) {
-                paths.addAll(Arrays.stream(src.toFile().listFiles()).map(File::toPath).collect(Collectors.toList()));
+                paths.addAll(subPath(src));
                 while (i < paths.size()) {
                     if (Files.isDirectory(paths.get(i))) {
-                        paths.addAll(Arrays.stream(paths.get(i).toFile().listFiles()).map(File::toPath).collect(Collectors.toList()));
-                        // @FIX JDK BUG. => Files.list stream do not close resource
-//                        paths.addAll(Files.list(paths.get(i)).collect(Collectors.toList()));
+                        paths.addAll(subPath(paths.get(i)));
                     }
                     i++;
                 }
@@ -120,12 +120,18 @@ public class ZipUtil {
         return destPath;
     }
 
+    private static List<Path> subPath(Path path) throws IOException {
+        try (Stream<Path> fileStream = Files.list(path)) {
+            return fileStream.collect(Collectors.toList());
+        }
+    }
+
     /**
      * unzip file to descPath
-     * @param stream
-     * @param destPath
-     * @return
-     * @throws IOException
+     * @param stream the input stream
+     * @param destPath the destination path
+     * @return the result zip file path
+     * @throws IOException if error occur.
      */
     public static Path unzip(InputStream stream, Path destPath) throws IOException {
         if (!Files.isDirectory(destPath)) {

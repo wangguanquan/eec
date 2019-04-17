@@ -345,7 +345,9 @@ Version 0.2.9 (2019-02-22)
 3. 增加 Apache License Version 2.0
 4. Rename package (net.cua->cn.ttzero)
    访问[ttzero](https://www.ttzero.cn)可以了解更多关于eec的信息(网站还处于建设中)
-   
+5. ExcelReader增加返回Excel文件基本信息
+6. ExcelReader增加BIFF8(Excel97~2003)classpath加载
+
 Version 0.2.8 (2018-11-26)
 -------------
 1. 对象数组导出时包装类报类型转换错误bug

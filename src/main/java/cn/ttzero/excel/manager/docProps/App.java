@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,12 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by guanquan.wang at 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
         , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
 public class App extends XmlEntity {
-    private String application = "EEC";
+    private String application;
     private int docSecurity;
     private boolean scaleCrop;
     private String manager;
@@ -104,4 +106,19 @@ public class App extends XmlEntity {
         this.appVersion = appVersion;
     }
 
+    public String getApplication() {
+        return application;
+    }
+
+    public String getManager() {
+        return manager;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public String getAppVersion() {
+        return appVersion;
+    }
 }

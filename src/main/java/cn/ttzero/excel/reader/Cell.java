@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,10 +17,17 @@
 package cn.ttzero.excel.reader;
 
 /**
- * Create by guanquan.wang at 2018-09-22
+ * Create by guanquan.wang on 2018-09-22
  */
 class Cell {
     Cell() {}
+    // n=numeric
+    // s=string
+    // b=boolean
+    // f=function string
+    // r=inlineStr
+    // l=long
+    // d=double
     private char t; // type
     // value
     private String sv;

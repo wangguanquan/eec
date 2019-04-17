@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,11 +36,11 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by guanquan.wang at 2017/9/21.
+ * Created by guanquan.wang on 2017/9/21.
  */
 class XmlEntity {
 
-    String[] prefixs, uris;
+    private String[] prefixs, uris;
 
     public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
@@ -204,7 +206,7 @@ class XmlEntity {
                     }
 
                     continue;
-                } else if (isDeclarClass(clazz)) {
+                } else if (isDeclareClass(clazz)) {
                     element = doc.addElement(StringUtil.uppFirstKey(field.getName()));
                     toXML(element, oo);
                 } else {
@@ -283,7 +285,7 @@ class XmlEntity {
         }
     }
 
-    private boolean isDeclarClass(Class<?> clazz) {
+    private boolean isDeclareClass(Class<?> clazz) {
         Class<?>[] declareClasses = getClass().getDeclaredClasses();
         for (Class<?> c : declareClasses) {
             if (c == clazz) {
