@@ -27,7 +27,7 @@ import java.util.StringJoiner;
 /**
  * Create by guanquan.wang at 2019-04-17 11:55
  */
-public class HeaderRow extends XMLRow {
+class HeaderRow extends XMLRow {
 
     String[] names;
     Class<?> clazz;

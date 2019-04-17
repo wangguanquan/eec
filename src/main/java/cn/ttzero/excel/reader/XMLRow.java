@@ -35,7 +35,7 @@ import java.util.StringJoiner;
  *
  * Create by guanquan.wang on 2018-09-22
  */
-public class XMLRow implements Row {
+class XMLRow implements Row {
     protected Logger logger = LogManager.getLogger(getClass());
     int rowNumber = -1, p2 = -1, p1 = 0;
     Cell[] cells;
