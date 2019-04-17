@@ -18,7 +18,6 @@ package cn.ttzero.excel.reader;
 
 import cn.ttzero.excel.entity.TooManyColumnsException;
 import cn.ttzero.excel.manager.Const;
-import cn.ttzero.excel.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +37,7 @@ import java.util.stream.StreamSupport;
  *
  * Create by guanquan.wang on 2018-09-22
  */
-public class Sheet implements AutoCloseable {
+public class Sheet implements ISheet {
     private Logger logger = LogManager.getLogger(getClass());
     Sheet() {}
 
@@ -64,15 +63,19 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * @return sheet名
+     * The worksheet name
+     * @return the sheet name
      */
+    @Override
     public String getName() {
         return name;
     }
 
     /**
-     * @return sheet位于workbook的位置
+     * The index of worksheet located at the workbook
+     * @return the index(zero base)
      */
+    @Override
     public int getIndex() {
         return index;
     }
@@ -82,29 +85,29 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * size of sheet. -1: unknown size
-     * @return number of rows
+     * size of rows.
+     * @return size of rows
+     * -1: unknown size
      */
+    @Override
     public int getSize() {
         return size;
     }
 
-    public int getStartRow() {
+    /**
+     * The index of first used row
+     * @return the index
+     */
+    public int getFirstRow() {
         return startRow;
     }
 
     /**
      * Test Worksheet is hidden
      */
+    @Override
     public boolean isHidden() {
         return hidden;
-    }
-
-    /**
-     * Test Worksheet is show
-     */
-    public boolean isShow() {
-        return !hidden;
     }
 
     /**
@@ -116,29 +119,32 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * 返回列表头，第一个非空行默认为头部信息
-     * @return HeaderRow
+     * Returns the header of the list.
+     * The first non-empty line defaults to the header information.
+     * @return the HeaderRow
      */
+    @Override
     public Row getHeader() {
         if (header == null && !heof) {
             Row row = findRow0();
             if (row != null) {
                 header = row.asHeader();
-                sRow.setHr((Row.HeaderRow) header);
+                sRow.setHr((HeaderRow) header);
             }
         }
         return header;
     }
 
     /**
-     * 绑定对象
-     * @param clazz 对象类型
+     * Set the binding type
+     * @param clazz the binding type
      * @return sheet
      */
+    @Override
     public Sheet bind(Class<?> clazz) {
         if (getHeader() != null) {
             try {
-                ((Row.HeaderRow) header).setClassOnce(clazz);
+                ((HeaderRow) header).setClassOnce(clazz);
             } catch (IllegalAccessException | InstantiationException e) {
                 throw new ExcelReadException(e);
             }
@@ -160,11 +166,11 @@ public class Sheet implements AutoCloseable {
     private Row sRow;
 
     /**
-     * load sheet.xml as BufferedReader
+     * Load sheet.xml as BufferedReader
      * @return Sheet
-     * @throws IOException
+     * @throws IOException if io error occur
      */
-    Sheet load() throws IOException {
+    public Sheet load() throws IOException {
         logger.debug("load {}", path.toString());
         reader = Files.newBufferedReader(path);
         cb = new char[8192];
@@ -226,7 +232,7 @@ public class Sheet implements AutoCloseable {
     /**
      * iterator rows
      * @return Row
-     * @throws IOException
+     * @throws IOException if io error occur
      */
     private Row nextRow() throws IOException {
         if (eof) return null;
@@ -334,27 +340,29 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * 迭代每行数据包含头部信息和空行数据
-     * @return 迭代器
+     * Iterating each row of data contains header information and blank lines
+     * @return a row iterator
      */
-    public Iterator<Row> iterator() {
+    @Override
+    public Iterator<IRow> iterator() {
         return iter;
     }
 
     /**
-     * 迭代数据行，不包含头部信息和空行
-     * @return 迭代器
+     * Iterating over data rows without header information and blank lines
+     * @return a row iterator
      */
-    public Iterator<Row> dataIterator() {
+    @Override
+    public Iterator<IRow> dataIterator() {
         if (nIter.hasNext()) {
-            Row row = nIter.next();
+            Row row = (Row) nIter.next();
             if (header == null) header = row.asHeader();
         }
         return nIter;
     }
 
     // iterator data rows
-    private Iterator<Row> nIter = new Iterator<Row>() {
+    private Iterator<IRow> nIter = new Iterator<IRow>() {
         Row nextRow = null;
 
         @Override
@@ -385,7 +393,7 @@ public class Sheet implements AutoCloseable {
     };
 
     // iterator foreach rows
-    private Iterator<Row> iter = new Iterator<Row>() {
+    private Iterator<IRow> iter = new Iterator<IRow>() {
         Row nextRow = null;
 
         @Override
@@ -415,25 +423,27 @@ public class Sheet implements AutoCloseable {
     };
 
     /**
-     * stream of all rows
+     * Return a stream of all rows
      * @return a {@code Stream<Row>} providing the lines of row
      *         described by this {@code Sheet}
      * @since 1.8
      */
-    public Stream<Row> rows() {
+    @Override
+    public Stream<IRow> rows() {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                 iter, Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**
-     * stream with out header row and empty rows
+     * Return stream with out header row and empty rows
      * @return a {@code Stream<Row>} providing the lines of row
      *         described by this {@code Sheet}
      * @since 1.8
      */
-    public Stream<Row> dataRows() {
+    @Override
+    public Stream<IRow> dataRows() {
         if (nIter.hasNext()) {
-            Row row = nIter.next();
+            Row row = (Row) nIter.next();
             if (header == null) header = row.asHeader();
         }
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
@@ -441,26 +451,10 @@ public class Sheet implements AutoCloseable {
     }
 
     /**
-     * column mark to int
-     * @param col column mark
-     * @return int value
-     */
-    private int col2Int(String col) {
-        if (StringUtil.isEmpty(col)) return 1;
-        char[] values = col.toCharArray();
-        int n = 0;
-        for (char value : values) {
-            if (value < 'A' || value > 'Z')
-                throw new ExcelReadException("Column mark out of range: " + col);
-            n = n * 26 + value - 'A' + 1;
-        }
-        return n;
-    }
-
-    /**
      * close reader
      * @throws IOException
      */
+    @Override
     public void close() throws IOException {
         cb = null;
         if (reader != null) {
