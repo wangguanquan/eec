@@ -27,7 +27,7 @@ import java.util.StringJoiner;
 /**
  * Create by guanquan.wang at 2019-04-17 11:55
  */
-public class HeaderRow extends Row {
+public class HeaderRow extends XMLRow {
 
     String[] names;
     Class<?> clazz;
@@ -42,7 +42,7 @@ public class HeaderRow extends Row {
         super(sst, startRow);
     }
 
-    static HeaderRow with(Row row) {
+    static HeaderRow with(XMLRow row) {
         HeaderRow hr = new HeaderRow();
         hr.names = new String[row.p2];
         Cell c;
@@ -171,4 +171,32 @@ public class HeaderRow extends Row {
         return joiner.toString();
     }
 
+    void put(Row row, Object t) throws IllegalAccessException {
+        for (int i = 0; i < columns.length; i++) {
+            int c = columns[i];
+            if (fieldClazz[i] == String.class) {
+                fields[i].set(t, row.getString(c));
+            } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
+                fields[i].set(t, row.getInt(c));
+            } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
+                fields[i].set(t, row.getLong(c));
+            } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
+                fields[i].set(t, row.getDate(c));
+            } else if (fieldClazz[i] == java.sql.Timestamp.class) {
+                fields[i].set(t, row.getTimestamp(c));
+            } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
+                fields[i].set(t, row.getDouble(c));
+            } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
+                fields[i].set(t, row.getFloat(c));
+            } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
+                fields[i].set(t, row.getBoolean(c));
+            } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
+                fields[i].set(t, row.getChar(c));
+            } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
+                fields[i].set(t, row.getByte(c));
+            } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
+                fields[i].set(t, row.getShort(c));
+            }
+        }
+    }
 }
