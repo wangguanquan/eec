@@ -101,9 +101,8 @@ public interface ISheet extends AutoCloseable {
      * @since 1.8
      */
     default Stream<IRow> rows() {
-        Iterator<IRow> iter = iterator();
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-            iter, Spliterator.ORDERED | Spliterator.NONNULL), false);
+            iterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**
@@ -112,7 +111,10 @@ public interface ISheet extends AutoCloseable {
      *         described by this {@code Sheet}
      * @since 1.8
      */
-    Stream<IRow> dataRows();
+    default Stream<IRow> dataRows() {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+            dataIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
+    }
 
     /**
      * Convert column mark to int

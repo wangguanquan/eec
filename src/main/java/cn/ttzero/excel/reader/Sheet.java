@@ -23,14 +23,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * 对应Excel文件各Sheet页，包含隐藏Sheet页
@@ -154,7 +151,7 @@ public class Sheet implements ISheet {
 
     @Override
     public String toString() {
-        return name;
+        return "Sheet name: " + name + " has " + size + " rows.";
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
@@ -345,7 +342,7 @@ public class Sheet implements ISheet {
      */
     @Override
     public Iterator<IRow> iterator() {
-        return iter;
+        return new RowIterator(this::nextRow, false);
     }
 
     /**
@@ -354,6 +351,8 @@ public class Sheet implements ISheet {
      */
     @Override
     public Iterator<IRow> dataIterator() {
+        // iterator data rows
+        Iterator<IRow> nIter = new RowIterator(this::nextRow, true);
         if (nIter.hasNext()) {
             Row row = (Row) nIter.next();
             if (header == null) header = row.asHeader();
@@ -361,98 +360,9 @@ public class Sheet implements ISheet {
         return nIter;
     }
 
-    // iterator data rows
-    private Iterator<IRow> nIter = new Iterator<IRow>() {
-        Row nextRow = null;
-
-        @Override
-        public boolean hasNext() {
-            if (nextRow != null) {
-                return true;
-            } else {
-                try {
-                    // Skip empty rows
-                    for ( ; (nextRow = nextRow()) != null && nextRow.isEmpty(); );
-                    return nextRow != null;
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        }
-
-        @Override
-        public Row next() {
-            if (nextRow != null || hasNext()) {
-                Row next = nextRow;
-                nextRow = null;
-                return next;
-            } else {
-                throw new NoSuchElementException();
-            }
-        }
-    };
-
-    // iterator foreach rows
-    private Iterator<IRow> iter = new Iterator<IRow>() {
-        Row nextRow = null;
-
-        @Override
-        public boolean hasNext() {
-            if (nextRow != null) {
-                return true;
-            } else {
-                try {
-                    nextRow = nextRow();
-                    return (nextRow != null);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        }
-
-        @Override
-        public Row next() {
-            if (nextRow != null || hasNext()) {
-                Row next = nextRow;
-                nextRow = null;
-                return next;
-            } else {
-                throw new NoSuchElementException();
-            }
-        }
-    };
-
-    /**
-     * Return a stream of all rows
-     * @return a {@code Stream<Row>} providing the lines of row
-     *         described by this {@code Sheet}
-     * @since 1.8
-     */
-    @Override
-    public Stream<IRow> rows() {
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-                iter, Spliterator.ORDERED | Spliterator.NONNULL), false);
-    }
-
-    /**
-     * Return stream with out header row and empty rows
-     * @return a {@code Stream<Row>} providing the lines of row
-     *         described by this {@code Sheet}
-     * @since 1.8
-     */
-    @Override
-    public Stream<IRow> dataRows() {
-        if (nIter.hasNext()) {
-            Row row = (Row) nIter.next();
-            if (header == null) header = row.asHeader();
-        }
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-                nIter, Spliterator.ORDERED | Spliterator.NONNULL), false);
-    }
-
     /**
      * close reader
-     * @throws IOException
+     * @throws IOException if io error occur
      */
     @Override
     public void close() throws IOException {
