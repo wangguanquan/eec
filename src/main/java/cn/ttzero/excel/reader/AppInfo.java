@@ -18,6 +18,7 @@ package cn.ttzero.excel.reader;
 
 import cn.ttzero.excel.manager.docProps.App;
 import cn.ttzero.excel.manager.docProps.Core;
+import cn.ttzero.excel.util.DateUtil;
 
 import java.util.Date;
 
@@ -91,5 +92,25 @@ public class AppInfo {
 
     public Date getModified() {
         return core.getModified();
+    }
+
+    @Override
+    public String toString() {
+        return "Application: " + getApplication()
+            + " Manager: " + getManager()
+            + " Company: " + getCompany()
+            + " AppVersion: " + getAppVersion()
+            + " Title: " + getTitle()
+            + " Subject: " + getSubject()
+            + " Creator: " + getCreator()
+            + " Description: " + getDescription()
+            + " Keywords: " + getKeywords()
+            + " LastModifiedBy: " + getLastModifiedBy()
+            + " Version: " + getVersion()
+            + " Revision: " + getRevision()
+            + " Category: " + getCategory()
+            + " Created: " + DateUtil.toString(getCreated())
+            + " Modified: " + DateUtil.toString(getModified())
+            ;
     }
 }

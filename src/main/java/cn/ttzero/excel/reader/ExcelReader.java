@@ -62,10 +62,11 @@ import java.util.stream.StreamSupport;
 public class ExcelReader implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());
     protected ExcelReader() { }
-    Path self, temp;
+    Path self;
+    ISheet[] sheets;
+    private Path temp;
     private ExcelType type;
-    Sheet[] sheets;
-    AppInfo appInfo;
+    private AppInfo appInfo;
 
 
     /**
@@ -161,8 +162,8 @@ public class ExcelReader implements AutoCloseable {
      * to streams
      * @return sheet流
      */
-    public Stream<Sheet> sheets() {
-        Iterator<Sheet> iter = new Iterator<Sheet>() {
+    public Stream<ISheet> sheets() {
+        Iterator<ISheet> iter = new Iterator<ISheet>() {
             int n = 0;
             @Override
             public boolean hasNext() {
@@ -170,7 +171,7 @@ public class ExcelReader implements AutoCloseable {
             }
 
             @Override
-            public Sheet next() {
+            public ISheet next() {
                 try {
                     // test and load sheet data
                     return sheets[n++].load();
@@ -188,7 +189,7 @@ public class ExcelReader implements AutoCloseable {
      * @param index sheet index of workbook
      * @return sheet
      */
-    public Sheet sheet(int index) {
+    public ISheet sheet(int index) {
         try {
             return sheets[index].load(); // lazy loading worksheet data
         } catch (IOException e) {
@@ -201,9 +202,9 @@ public class ExcelReader implements AutoCloseable {
      * @param sheetName name
      * @return null if not found
      */
-    public Sheet sheet(String sheetName) {
+    public ISheet sheet(String sheetName) {
         try {
-            for (Sheet t : sheets) {
+            for (ISheet t : sheets) {
                 if (sheetName.equals(t.getName())) {
                     return t.load(); // lazy loading worksheet data
                 }
@@ -218,7 +219,7 @@ public class ExcelReader implements AutoCloseable {
      * get all sheets
      * @return Sheet Array
      */
-    public Sheet[] all() {
+    public ISheet[] all() {
         return sheets;
     }
 
@@ -236,7 +237,7 @@ public class ExcelReader implements AutoCloseable {
      */
     public void close() throws IOException {
         // close sheet
-        for (Sheet st : sheets) {
+        for (ISheet st : sheets) {
             st.close();
         }
         // delete temp files

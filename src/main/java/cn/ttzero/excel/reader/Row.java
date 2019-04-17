@@ -39,22 +39,27 @@ import java.util.StringJoiner;
  *
  * Create by guanquan.wang on 2018-09-22
  */
-public class Row {
+public class Row implements IRow {
     protected Logger logger = LogManager.getLogger(getClass());
-    private int rowNumber = -1, p2 = -1, p1 = 0;
-    private Cell[] cells;
-    private SharedString sst;
-    private HeaderRow hr;
-    private int startRow;
-    private boolean unknownLength;
+    int rowNumber = -1, p2 = -1, p1 = 0;
+    Cell[] cells;
+    SharedString sst;
+    HeaderRow hr;
+    int startRow;
+    boolean unknownLength;
 
+    /**
+     * The number of row. (zero base)
+     * @return int value
+     */
+    @Override
     public int getRowNumber() {
         if (rowNumber == -1)
             searchRowNumber();
         return rowNumber;
     }
 
-    private Row(){}
+    protected Row() { }
 
     Row(SharedString sst, int startRow) {
         this.sst = sst;
@@ -359,9 +364,10 @@ public class Row {
     }
 
     /**
-     * 是否为空行，行不带任何字符和格式内容
-     * @return boolean
+     * Check unused row (not contains any filled or formatted or value)
+     * @return true if unused
      */
+    @Override
     public boolean isEmpty() {
         return p1 == -1 && p1 == p2;
     }
@@ -409,7 +415,7 @@ public class Row {
      * convert row to header_row
      * @return header Row
      */
-    HeaderRow asHeader() {
+    public HeaderRow asHeader() {
         HeaderRow hr = HeaderRow.with(this);
         this.hr = hr;
         return hr;
@@ -435,10 +441,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get boolean value by column index
+     * @param columnIndex the cell index
      * @return boolean
      */
+    @Override
     public boolean getBoolean(int columnIndex) {
         Cell c = getCell(columnIndex);
         boolean v;
@@ -466,10 +473,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get byte value by column index
+     * @param columnIndex the cell index
      * @return byte
      */
+    @Override
     public byte getByte(int columnIndex) {
         Cell c = getCell(columnIndex);
         byte b = 0;
@@ -492,10 +500,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get char value by column index
+     * @param columnIndex the cell index
      * @return char
      */
+    @Override
     public char getChar(int columnIndex) {
         Cell c = getCell(columnIndex);
         char cc = 0;
@@ -533,10 +542,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get short value by column index
+     * @param columnIndex the cell index
      * @return short
      */
+    @Override
     public short getShort(int columnIndex) {
         Cell c = getCell(columnIndex);
         short s = 0;
@@ -559,10 +569,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get int value by column index
+     * @param columnIndex the cell index
      * @return int
      */
+    @Override
     public int getInt(int columnIndex) {
         Cell c = getCell(columnIndex);
         int n;
@@ -603,10 +614,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get long value by column index
+     * @param columnIndex the cell index
      * @return long
      */
+    @Override
     public long getLong(int columnIndex) {
         Cell c = getCell(columnIndex);
         long l;
@@ -646,10 +658,11 @@ public class Row {
     }
 
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get string value by column index
+     * @param columnIndex the cell index
      * @return string
      */
+    @Override
     public String getString(int columnIndex) {
         Cell c = getCell(columnIndex);
         String s;
@@ -679,19 +692,23 @@ public class Row {
         }
         return s;
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get float value by column index
+     * @param columnIndex the cell index
      * @return float
      */
+    @Override
     public float getFloat(int columnIndex) {
         return (float) getDouble(columnIndex);
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get double value by column index
+     * @param columnIndex the cell index
      * @return double
      */
+    @Override
     public double getDouble(int columnIndex) {
         Cell c = getCell(columnIndex);
         double d;
@@ -721,11 +738,13 @@ public class Row {
         }
         return d;
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get decimal value by column index
+     * @param columnIndex the cell index
      * @return BigDecimal
      */
+    @Override
     public BigDecimal getDecimal(int columnIndex) {
         Cell c = getCell(columnIndex);
         BigDecimal bd;
@@ -741,11 +760,13 @@ public class Row {
         }
         return bd;
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get date value by column index
+     * @param columnIndex the cell index
      * @return Date
      */
+    @Override
     public Date getDate(int columnIndex) {
         Cell c = getCell(columnIndex);
         Date date;
@@ -769,11 +790,13 @@ public class Row {
         }
         return date;
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get timestamp value by column index
+     * @param columnIndex the cell index
      * @return java.sql.Timestamp
      */
+    @Override
     public Timestamp getTimestamp(int columnIndex) {
         Cell c = getCell(columnIndex);
         Timestamp ts;
@@ -797,11 +820,13 @@ public class Row {
         }
         return ts;
     }
+
     /**
-     * get by index
-     * @param columnIndex cell index
+     * Get time value by column index
+     * @param columnIndex the cell index
      * @return java.sql.Time
      */
+    @Override
     public java.sql.Time getTime(int columnIndex) {
         Cell c = getCell(columnIndex);
         if (c.getT() == 'd') {
@@ -811,20 +836,12 @@ public class Row {
     }
 
     /**
-     * override this method
-     * @param columnIndex
-     * @param <T>
-     * @return
+     * Returns the binding type if is bound, otherwise returns Row
+     * @param <T> the type of binding
+     * @return T
      */
-    public <T> T get(int columnIndex) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * 如果绑定了类型则返回绑定类型否则返回Row
-     * @param <T> 指定类型
-     * @return 实例
-     */
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T get() {
         if (hr != null && hr.clazz != null) {
             T t;
@@ -839,10 +856,12 @@ public class Row {
     }
 
     /**
-     * 如果绑定了类型则返回绑定类型否则返回Row
-     * @param <T> 指定类型
-     * @return 共享实例
+     * Returns the binding type if is bound, otherwise returns Row
+     * @param <T> the type of binding
+     * @return T
      */
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T geet() {
         if (hr != null && hr.clazz != null) {
             T t = hr.getT();
@@ -857,11 +876,12 @@ public class Row {
     /////////////////////////////To object//////////////////////////////////
 
     /**
-     * convert to object, support annotation
-     * @param clazz
-     * @param <T>
-     * @return
+     * Convert to object, support annotation
+     * @param clazz the type of binding
+     * @param <T> the type of return object
+     * @return T
      */
+    @Override
     public <T> T to(Class<T> clazz) {
         if (hr == null) {
             throw new UncheckedTypeException("Lost header row info");
@@ -881,11 +901,13 @@ public class Row {
     }
 
     /**
-     * memory shared object
-     * @param clazz convert to class
-     * @param <T> class
-     * @return
+     * Convert to T object, support annotation
+     * the is a memory shared object
+     * @param clazz the type of binding
+     * @param <T> the type of return object
+     * @return T
      */
+    @Override
     public <T> T too(Class<T> clazz) {
         if (hr == null) {
             throw new UncheckedTypeException("Lost header row info");
@@ -949,135 +971,4 @@ public class Row {
         }
     }
 
-    ////////////////////////private inner class///////////////////////////////
-    static final class HeaderRow extends Row {
-        String[] names;
-        Class<?> clazz;
-        Field[] fields;
-        int[] columns;
-        Class<?>[] fieldClazz;
-        Object t;
-
-        static final HeaderRow with(Row row) {
-            HeaderRow hr = new HeaderRow();
-            hr.names = new String[row.p2];
-            Cell c;
-            for (int i = row.p1 - 1; i < row.p2; i++) {
-                c = row.cells[i];
-                // header type is string
-                if (c.getT() == 's') {
-                    hr.names[i] = row.sst.get(c.getNv());
-                } else {
-                    hr.names[i] = c.getSv();
-                }
-            }
-            return hr;
-        }
-
-        final boolean is(Class<?> clazz) {
-            return this.clazz != null && this.clazz == clazz;
-        }
-
-        /**
-         * mapping
-         * @param clazz
-         * @return
-         */
-        final HeaderRow setClass(Class<?> clazz) {
-            this.clazz = clazz;
-            Field[] fields = clazz.getDeclaredFields();
-            int[] index = new int[fields.length];
-            int count = 0;
-            for (int i = 0, n; i < fields.length; i++) {
-                Field f = fields[i];
-                // skip not import fields
-                NotImport nit = f.getAnnotation(NotImport.class);
-                if (nit != null) {
-                    fields[i] = null;
-                    continue;
-                }
-                // field has display name
-                DisplayName ano = f.getAnnotation(DisplayName.class);
-                if (ano != null && StringUtil.isNotEmpty(ano.value())) {
-                    n = StringUtil.indexOf(names, ano.value());
-                    if (n == -1) {
-                        logger.warn(clazz + " field [" + ano.value() + "] can't find in header" + Arrays.toString(names));
-                        fields[i] = null;
-                        continue;
-                    }
-                }
-                // no annotation or annotation value is null
-                else {
-                    String name = f.getName();
-                    n = StringUtil.indexOf(names, name);
-                    if (n == -1 && (n = StringUtil.indexOf(names, StringUtil.toPascalCase(name))) == -1) {
-                        fields[i] = null;
-                        continue;
-                    }
-                }
-
-                index[i] = n;
-                count++;
-            }
-
-            this.fields = new Field[count];
-            this.columns = new int[count];
-            this.fieldClazz = new Class<?>[count];
-
-            for (int i = fields.length - 1; i >= 0; i--) {
-                if (fields[i] != null) {
-                    count--;
-                    this.fields[count] = fields[i];
-                    this.fields[count].setAccessible(true);
-                    this.columns[count] = index[i];
-                    this.fieldClazz[count] = fields[i].getType();
-                }
-            }
-            return this;
-        }
-
-        /**
-         * mapping and instance
-         * @param clazz
-         * @return
-         * @throws IllegalAccessException
-         * @throws InstantiationException
-         */
-        final HeaderRow setClassOnce(Class<?> clazz) throws IllegalAccessException, InstantiationException {
-            setClass(clazz);
-            this.t = clazz.newInstance();
-            return this;
-        }
-
-        final Field[] getFields() {
-            return fields;
-        }
-
-        final int[] getColumns() {
-            return columns;
-        }
-
-        final Class<?>[] getFieldClazz() {
-            return fieldClazz;
-        }
-
-        final <T> T getT() {
-            return (T) t;
-        }
-
-        @Override public String get(int columnIndex) {
-            rangeCheck(columnIndex);
-            return names[columnIndex];
-        }
-
-        @Override public String toString() {
-            StringJoiner joiner = new StringJoiner(" | ");
-            int i = 0;
-            for (; names[i++] == null; );
-            for (; i < names.length; i++) {
-                joiner.add(names[i]);
-            }
-            return joiner.toString();
-        }
-    }
 }

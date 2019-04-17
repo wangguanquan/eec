@@ -111,7 +111,7 @@ public class SharedString {
      * @return the shared string unique count
      * -1 if unknown size
      */
-    int size() {
+    public int size() {
         return max;
     }
 
@@ -182,7 +182,7 @@ public class SharedString {
      * @param index of sharedString
      * @return string
      */
-    String get(int index) {
+    public String get(int index) {
         total++;
         if (index < 0 || max > -1 && max <= index) {
             throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max);
