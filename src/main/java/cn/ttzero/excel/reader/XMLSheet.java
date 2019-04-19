@@ -354,8 +354,9 @@ class XMLSheet implements Sheet {
         // iterator data rows
         Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
         if (nIter.hasNext()) {
-            XMLRow row = (XMLRow) nIter.next();
-            if (header == null) header = row.asHeader();
+            Row row = nIter.next();
+            if (header == null)
+                header = row.asHeader();
         }
         return nIter;
     }
