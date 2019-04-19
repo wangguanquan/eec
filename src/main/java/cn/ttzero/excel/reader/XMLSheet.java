@@ -44,7 +44,7 @@ class XMLSheet implements Sheet {
     private Path path;
     private SharedString sst;
     private int startRow = -1; // row index of data
-    private XMLRow header;
+    private HeaderRow header;
     private boolean hidden; // state hidden
 
     void setName(String name) {
@@ -126,7 +126,7 @@ class XMLSheet implements Sheet {
             XMLRow row = findRow0();
             if (row != null) {
                 header = row.asHeader();
-                sRow.setHr((HeaderRow) header);
+                sRow.setHr(header);
             }
         }
         return header;
@@ -141,7 +141,7 @@ class XMLSheet implements Sheet {
     public XMLSheet bind(Class<?> clazz) {
         if (getHeader() != null) {
             try {
-                ((HeaderRow) header).setClassOnce(clazz);
+                header.setClassOnce(clazz);
             } catch (IllegalAccessException | InstantiationException e) {
                 throw new ExcelReadException(e);
             }
