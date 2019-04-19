@@ -16,15 +16,13 @@
 
 package cn.ttzero.excel.reader;
 
-import cn.ttzero.excel.util.DateUtil;
-import cn.ttzero.excel.util.StringUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.StringJoiner;
+import static cn.ttzero.excel.reader.Cell.BOOL;
+import static cn.ttzero.excel.reader.Cell.NUMERIC;
+import static cn.ttzero.excel.reader.Cell.FUNCTION;
+import static cn.ttzero.excel.reader.Cell.SST;
+import static cn.ttzero.excel.reader.Cell.INLINESTR;
+import static cn.ttzero.excel.reader.Cell.LONG;
+import static cn.ttzero.excel.reader.Cell.DOUBLE;
 
 /**
  * 行数据，同一个Sheet页内的Row对象内存共享。
@@ -35,14 +33,8 @@ import java.util.StringJoiner;
  *
  * Create by guanquan.wang on 2018-09-22
  */
-class XMLRow implements Row {
-    protected Logger logger = LogManager.getLogger(getClass());
-    int rowNumber = -1, p2 = -1, p1 = 0;
-    Cell[] cells;
-    SharedString sst;
-    HeaderRow hr;
+class XMLRow extends Row {
     int startRow;
-    boolean unknownLength;
 
     /**
      * The number of row. (zero base)
@@ -50,9 +42,9 @@ class XMLRow implements Row {
      */
     @Override
     public int getRowNumber() {
-        if (rowNumber == -1)
+        if (index == -1)
             searchRowNumber();
-        return rowNumber;
+        return index;
     }
 
     protected XMLRow() { }
@@ -73,7 +65,7 @@ class XMLRow implements Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNumber = this.p2 = -1;
+        this.index = this.lc = -1;
         parseCells();
         return this;
     }
@@ -85,8 +77,8 @@ class XMLRow implements Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNumber = -1;
-        this.p1 = this.p2 = -1;
+        this.index = -1;
+        this.fc = this.lc = -1;
         return this;
     }
 
@@ -97,7 +89,7 @@ class XMLRow implements Row {
                 a = _f += 4;
                 for (; cb[_f] != '"' && _f < to; _f++);
                 if (_f > a) {
-                    rowNumber = toInt(a, _f);
+                    index = toInt(a, _f);
                 }
                 break;
             }
@@ -116,19 +108,20 @@ class XMLRow implements Row {
                 for (; cb[i] != '"' && cb[i] != '>'; i++);
                 for (b = i - 1; cb[b] != ':'; b--);
                 if (++b < i) {
-                    p2 = toInt(b, i);
+                    lc = toInt(b, i);
                 }
                 if (j < --b) {
-                    p1 = toInt(j, b);
+                    fc = toInt(j, b);
                 }
             }
         }
-        if (p1 <= 0) p1 = this.startRow;
-        if (cells == null || p2 > cells.length) {
-            cells = new Cell[p2 > 0 ? p2 : 100]; // default array length 100
+        if (fc <= 0) fc = this.startRow;
+        fc = fc - 1; // zero base
+        if (cells == null || lc > cells.length) {
+            cells = new Cell[lc > 0 ? lc : 100]; // default array length 100
         }
         // clear and share
-        for (int n = 0, len = p2 > 0 ? p2 : cells.length; n < len; n++) {
+        for (int n = 0, len = lc > 0 ? lc : cells.length; n < len; n++) {
             if (cells[n] != null) cells[n].clear();
             else cells[n] = new Cell();
         }
@@ -142,11 +135,11 @@ class XMLRow implements Row {
         int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; );
-        unknownLength = p2 < 0;
+        unknownLength = lc < 0;
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
-            while (index < p2 && nextCell() != null);
+            while (index < lc && nextCell() != null);
         }
     }
 
@@ -166,13 +159,13 @@ class XMLRow implements Row {
         Cell cell = null;
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
-        char t = 'n'; // default
+        char t = NUMERIC; // default
         for (; cb[cursor] != '>'; cursor++) {
             // cell index
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++);
-                cell = cells[unknownLength ? (p2 = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
+                cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
             }
             // cell type
             if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
@@ -181,9 +174,9 @@ class XMLRow implements Row {
                 if ((n = cursor - a) == 1) {
                     t = cb[a]; // s, n, b
                 } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
-                    t = 'f'; // function string
+                    t = FUNCTION; // function string
                 } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n' && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
-                    t = 'r'; // inlineStr
+                    t = INLINESTR; // inlineStr
                 }
                 // -> other unknown case
             }
@@ -196,27 +189,25 @@ class XMLRow implements Row {
         // get value
         int a;
         switch (t) {
-            case 'r': // inner string
+            case INLINESTR: // inner string
                 a = getT(e);
                 if (a == cursor) { // null value
                     cell.setSv(null);
                 } else {
                     cell.setSv(sst.unescape(cb, a, cursor));
                 }
-//                cell.setT('s'); // reset type to string
                 break;
-            case 's': // shared string lazy get
+            case SST: // shared string lazy get
                 a = getV(e);
                 cell.setNv(toInt(a, cursor));
-//                cell.setSv(sst.get(toInt(a, cursor)));
                 break;
-            case 'b': // boolean value
+            case BOOL: // boolean value
                 a = getV(e);
                 if (cursor - a == 1) {
                     cell.setBv(toInt(a, cursor) == 1);
                 }
                 break;
-            case 'f': // function string
+            case FUNCTION: // function string
                 break;
             default:
                 a = getV(e);
@@ -225,16 +216,16 @@ class XMLRow implements Row {
                         long l = toLong(a, cursor);
                         if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
                             cell.setNv((int) l);
-                            cell.setT('n');
+                            cell.setT(NUMERIC);
                         } else {
                             cell.setLv(l);
-                            cell.setT('l');
+                            cell.setT(LONG);
                         }
                     } else if (isDouble(a, cursor)) {
-                        cell.setT('d');
+                        cell.setT(DOUBLE);
                         cell.setDv(toDouble(a, cursor));
                     } else {
-                        cell.setT('s');
+                        cell.setT(INLINESTR);
                         cell.setSv(toString(a, cursor));
                     }
                 }
@@ -357,572 +348,6 @@ class XMLRow implements Row {
             } else break;
         }
         return n;
-    }
-
-    /**
-     * Check unused row (not contains any filled or formatted or value)
-     * @return true if unused
-     */
-    @Override
-    public boolean isEmpty() {
-        return p1 == -1 && p1 == p2;
-    }
-
-    @Override public String toString() {
-        if (isEmpty()) return null;
-        StringJoiner joiner = new StringJoiner(" | ");
-        // show row number
-//        joiner.add(String.valueOf(getRowNumber()));
-        for (int i = p1 - 1; i < p2; i++) {
-            Cell c = cells[i];
-            switch (c.getT()) {
-                case 's':
-                    if (c.getSv() == null) {
-                        c.setSv(sst.get(c.getNv()));
-                    }
-                    joiner.add(c.getSv());
-                    break;
-                case 'r':
-                    joiner.add(c.getSv());
-                    break;
-                case 'b':
-                    joiner.add(String.valueOf(c.getBv()));
-                    break;
-                case 'f':
-                    joiner.add("<function>");
-                    break;
-                case 'n':
-                    joiner.add(String.valueOf(c.getNv()));
-                    break;
-                case 'l':
-                    joiner.add(String.valueOf(c.getLv()));
-                    break;
-                case 'd':
-                    joiner.add(String.valueOf(c.getDv()));
-                    break;
-                    default:
-                        joiner.add(null);
-            }
-        }
-        return joiner.toString();
-    }
-
-    /**
-     * convert row to header_row
-     * @return header Row
-     */
-    public HeaderRow asHeader() {
-        HeaderRow hr = HeaderRow.with(this);
-        this.hr = hr;
-        return hr;
-    }
-
-    Row setHr(HeaderRow hr) {
-        this.hr = hr;
-        return this;
-    }
-
-    //////////////////////////////////////Read Value///////////////////////////////////
-    private String outOfBoundsMsg(int index) {
-        return "Index: " + index + ", Size: " + p2;
-    }
-    protected void rangeCheck(int index) {
-        if (index >= p2)
-            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
-    }
-
-    protected Cell getCell(int i) {
-        rangeCheck(i);
-        return cells[i];
-    }
-
-    /**
-     * Get boolean value by column index
-     * @param columnIndex the cell index
-     * @return boolean
-     */
-    @Override
-    public boolean getBoolean(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        boolean v;
-        switch (c.getT()) {
-            case 'b':
-                v = c.getBv();
-                break;
-            case 'n':
-            case 'd':
-                v = c.getNv() != 0 || c.getDv() >= 0.000001 || c.getDv() <= -0.000001;
-                break;
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                v = StringUtil.isNotEmpty(c.getSv());
-                break;
-            case 'r':
-                v = StringUtil.isNotEmpty(c.getSv());
-                break;
-
-                default: v = false;
-        }
-        return v;
-    }
-
-    /**
-     * Get byte value by column index
-     * @param columnIndex the cell index
-     * @return byte
-     */
-    @Override
-    public byte getByte(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        byte b = 0;
-        switch (c.getT()) {
-            case 'n':
-                b |= c.getNv();
-                break;
-            case 'l':
-                b |= c.getLv();
-                break;
-            case 'b':
-                b |= c.getBv() ? 1 : 0;
-                break;
-            case 'd':
-                b |= (int) c.getDv();
-                break;
-                default: throw new UncheckedTypeException("can't convert to byte");
-        }
-        return b;
-    }
-
-    /**
-     * Get char value by column index
-     * @param columnIndex the cell index
-     * @return char
-     */
-    @Override
-    public char getChar(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        char cc = 0;
-        switch (c.getT()) {
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                String s = c.getSv();
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
-                }
-                break;
-            case 'r':
-                s = c.getSv();
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
-                }
-                break;
-            case 'n':
-                cc |= c.getNv();
-                break;
-            case 'l':
-                cc |= c.getLv();
-                break;
-            case 'b':
-                cc |= c.getBv() ? 1 : 0;
-                break;
-            case 'd':
-                cc |= (int) c.getDv();
-                break;
-            default: throw new UncheckedTypeException("can't convert to char");
-        }
-        return cc;
-    }
-
-    /**
-     * Get short value by column index
-     * @param columnIndex the cell index
-     * @return short
-     */
-    @Override
-    public short getShort(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        short s = 0;
-        switch (c.getT()) {
-            case 'n':
-                s |= c.getNv();
-                break;
-            case 'l':
-                s |= c.getLv();
-                break;
-            case 'b':
-                s |= c.getBv() ? 1 : 0;
-                break;
-            case 'd':
-                s |= (int) c.getDv();
-                break;
-            default: throw new UncheckedTypeException("can't convert to short");
-        }
-        return s;
-    }
-
-    /**
-     * Get int value by column index
-     * @param columnIndex the cell index
-     * @return int
-     */
-    @Override
-    public int getInt(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        int n;
-        switch (c.getT()) {
-            case 'n':
-                n = c.getNv();
-                break;
-            case 'l':
-                n = (int) c.getLv();
-                break;
-            case 'd':
-              n = (int) c.getDv();
-              break;
-            case 'b':
-                n = c.getBv() ? 1 : 0;
-                break;
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                try {
-                    n = Integer.parseInt(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to int");
-                }
-                break;
-            case 'r':
-                try {
-                    n = Integer.parseInt(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to int");
-                }
-                break;
-
-                default: throw new UncheckedTypeException("unknown type");
-        }
-        return n;
-    }
-
-    /**
-     * Get long value by column index
-     * @param columnIndex the cell index
-     * @return long
-     */
-    @Override
-    public long getLong(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        long l;
-        switch (c.getT()) {
-            case 'l':
-                l = c.getLv();
-                break;
-            case 'n':
-                l = c.getNv();
-                break;
-            case 'd':
-                l = (long) c.getDv();
-                break;
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                try {
-                    l = Long.parseLong(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
-                }
-                break;
-            case 'r':
-                try {
-                    l = Long.parseLong(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
-                }
-                break;
-            case 'b':
-                l = c.getBv() ? 1L : 0L;
-                break;
-                default: throw new UncheckedTypeException("unknown type");
-        }
-        return l;
-    }
-
-    /**
-     * Get string value by column index
-     * @param columnIndex the cell index
-     * @return string
-     */
-    @Override
-    public String getString(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        String s;
-        switch (c.getT()) {
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                s = c.getSv();
-                break;
-            case 'r':
-                s = c.getSv();
-                break;
-            case 'l':
-                s = String.valueOf(c.getLv());
-                break;
-            case 'n':
-                s = String.valueOf(c.getNv());
-                break;
-            case 'd':
-                s = String.valueOf(c.getDv());
-                break;
-            case 'b':
-                s = c.getBv() ? "true" : "false";
-                break;
-                default: s = c.getSv();
-        }
-        return s;
-    }
-
-    /**
-     * Get float value by column index
-     * @param columnIndex the cell index
-     * @return float
-     */
-    @Override
-    public float getFloat(int columnIndex) {
-        return (float) getDouble(columnIndex);
-    }
-
-    /**
-     * Get double value by column index
-     * @param columnIndex the cell index
-     * @return double
-     */
-    @Override
-    public double getDouble(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        double d;
-        switch (c.getT()) {
-            case 'd':
-                d = c.getDv();
-                break;
-            case 'n':
-                d = c.getNv();
-                break;
-            case 's':
-                try {
-                    d = Double.valueOf(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to double");
-                }
-                break;
-            case 'r':
-                try {
-                    d = Double.valueOf(c.getSv());
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to double");
-                }
-                break;
-
-            default: throw new UncheckedTypeException("unknown type");
-        }
-        return d;
-    }
-
-    /**
-     * Get decimal value by column index
-     * @param columnIndex the cell index
-     * @return BigDecimal
-     */
-    @Override
-    public BigDecimal getDecimal(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        BigDecimal bd;
-        switch (c.getT()) {
-            case 'd':
-                bd = BigDecimal.valueOf(c.getDv());
-                break;
-            case 'n':
-                bd = BigDecimal.valueOf(c.getNv());
-                break;
-                default:
-                bd = new BigDecimal(c.getSv());
-        }
-        return bd;
-    }
-
-    /**
-     * Get date value by column index
-     * @param columnIndex the cell index
-     * @return Date
-     */
-    @Override
-    public Date getDate(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        Date date;
-        switch (c.getT()) {
-            case 'n':
-                date = DateUtil.toDate(c.getNv());
-                break;
-            case 'd':
-                date = DateUtil.toDate(c.getDv());
-                break;
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                date = DateUtil.toDate(c.getSv());
-                break;
-            case 'r':
-                date = DateUtil.toDate(c.getSv());
-                break;
-                default: throw new UncheckedTypeException("");
-        }
-        return date;
-    }
-
-    /**
-     * Get timestamp value by column index
-     * @param columnIndex the cell index
-     * @return java.sql.Timestamp
-     */
-    @Override
-    public Timestamp getTimestamp(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        Timestamp ts;
-        switch (c.getT()) {
-            case 'n':
-                ts = DateUtil.toTimestamp(c.getNv());
-                break;
-            case 'd':
-                ts = DateUtil.toTimestamp(c.getDv());
-                break;
-            case 's':
-                if (c.getSv() == null) {
-                    c.setSv(sst.get(c.getNv()));
-                }
-                ts = DateUtil.toTimestamp(c.getSv());
-                break;
-            case 'r':
-                ts = DateUtil.toTimestamp(c.getSv());
-                break;
-            default: throw new UncheckedTypeException("");
-        }
-        return ts;
-    }
-
-    /**
-     * Get time value by column index
-     * @param columnIndex the cell index
-     * @return java.sql.Time
-     */
-    @Override
-    public java.sql.Time getTime(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        if (c.getT() == 'd') {
-            return DateUtil.toTime(c.getDv());
-        }
-        throw new UncheckedTypeException("can't convert to java.sql.Time");
-    }
-
-    /**
-     * Returns the binding type if is bound, otherwise returns Row
-     * @param <T> the type of binding
-     * @return T
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T get() {
-        if (hr != null && hr.clazz != null) {
-            T t;
-            try {
-                t = (T) hr.clazz.newInstance();
-                hr.put(this, t);
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new UncheckedTypeException(hr.clazz + " new instance error.", e);
-            }
-            return t;
-        } else return (T) this;
-    }
-
-    /**
-     * Returns the binding type if is bound, otherwise returns Row
-     * @param <T> the type of binding
-     * @return T
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T geet() {
-        if (hr != null && hr.clazz != null) {
-            T t = hr.getT();
-            try {
-                hr.put(this, t);
-            } catch (IllegalAccessException  e) {
-                throw new UncheckedTypeException("call set method error.", e);
-            }
-            return t;
-        } else return (T) this;
-    }
-    /////////////////////////////To object//////////////////////////////////
-
-    /**
-     * Convert to object, support annotation
-     * @param clazz the type of binding
-     * @param <T> the type of return object
-     * @return T
-     */
-    @Override
-    public <T> T to(Class<T> clazz) {
-        if (hr == null) {
-            throw new UncheckedTypeException("Lost header row info");
-        }
-        // reset class info
-        if (!hr.is(clazz)) {
-            hr.setClass(clazz);
-        }
-        T t;
-        try {
-            t = clazz.newInstance();
-            hr.put(this, t);
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new UncheckedTypeException(clazz + " new instance error.", e);
-        }
-        return t;
-    }
-
-    /**
-     * Convert to T object, support annotation
-     * the is a memory shared object
-     * @param clazz the type of binding
-     * @param <T> the type of return object
-     * @return T
-     */
-    @Override
-    public <T> T too(Class<T> clazz) {
-        if (hr == null) {
-            throw new UncheckedTypeException("Lost header row info");
-        }
-        // reset class info
-        if (!hr.is(clazz)) {
-            try {
-                hr.setClassOnce(clazz);
-            } catch (IllegalAccessException | InstantiationException e) {
-                throw new UncheckedTypeException(clazz + " new instance error.", e);
-            }
-        }
-        T t = hr.getT();
-        try {
-            hr.put(this, t);
-        } catch (IllegalAccessException  e) {
-            throw new UncheckedTypeException("call set method error.", e);
-        }
-        return t;
     }
 
 }

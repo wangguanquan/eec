@@ -36,7 +36,7 @@ import java.util.*;
  *
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-class SharedString {
+public class SharedString {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
