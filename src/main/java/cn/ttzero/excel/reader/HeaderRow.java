@@ -28,7 +28,6 @@ import java.util.StringJoiner;
  * Create by guanquan.wang at 2019-04-17 11:55
  */
 class HeaderRow extends Row {
-
     private String[] names;
     private Class<?> clazz;
     private Field[] fields;
@@ -41,15 +40,8 @@ class HeaderRow extends Row {
     static HeaderRow with(Row row) {
         HeaderRow hr = new HeaderRow();
         hr.names = new String[row.lc];
-        Cell c;
         for (int i = row.fc - 1; i < row.lc; i++) {
-            c = row.cells[i];
-            // header type is string
-            if (c.getT() == 's') {
-                hr.names[i] = row.sst.get(c.getNv());
-            } else {
-                hr.names[i] = c.getSv();
-            }
+            hr.names[i] = row.getString(i);
         }
         return hr;
     }
