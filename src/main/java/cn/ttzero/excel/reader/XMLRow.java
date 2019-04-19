@@ -16,6 +16,14 @@
 
 package cn.ttzero.excel.reader;
 
+import static cn.ttzero.excel.reader.Cell.BOOL;
+import static cn.ttzero.excel.reader.Cell.NUMERIC;
+import static cn.ttzero.excel.reader.Cell.FUNCTION;
+import static cn.ttzero.excel.reader.Cell.SST;
+import static cn.ttzero.excel.reader.Cell.INLINESTR;
+import static cn.ttzero.excel.reader.Cell.LONG;
+import static cn.ttzero.excel.reader.Cell.DOUBLE;
+
 /**
  * 行数据，同一个Sheet页内的Row对象内存共享。
  * 行数据开始列和结束列读取的是span值，你可以使用<code>row.isEmpty()</code>方法测试行数据是否为空节点
@@ -150,7 +158,7 @@ class XMLRow extends Row {
         Cell cell = null;
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
-        char t = 'n'; // default
+        char t = NUMERIC; // default
         for (; cb[cursor] != '>'; cursor++) {
             // cell index
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
@@ -165,9 +173,9 @@ class XMLRow extends Row {
                 if ((n = cursor - a) == 1) {
                     t = cb[a]; // s, n, b
                 } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
-                    t = 'f'; // function string
+                    t = FUNCTION; // function string
                 } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n' && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
-                    t = 'r'; // inlineStr
+                    t = INLINESTR; // inlineStr
                 }
                 // -> other unknown case
             }
@@ -180,27 +188,25 @@ class XMLRow extends Row {
         // get value
         int a;
         switch (t) {
-            case 'r': // inner string
+            case INLINESTR: // inner string
                 a = getT(e);
                 if (a == cursor) { // null value
                     cell.setSv(null);
                 } else {
                     cell.setSv(sst.unescape(cb, a, cursor));
                 }
-//                cell.setT('s'); // reset type to string
                 break;
-            case 's': // shared string lazy get
+            case SST: // shared string lazy get
                 a = getV(e);
                 cell.setNv(toInt(a, cursor));
-//                cell.setSv(sst.get(toInt(a, cursor)));
                 break;
-            case 'b': // boolean value
+            case BOOL: // boolean value
                 a = getV(e);
                 if (cursor - a == 1) {
                     cell.setBv(toInt(a, cursor) == 1);
                 }
                 break;
-            case 'f': // function string
+            case FUNCTION: // function string
                 break;
             default:
                 a = getV(e);
@@ -209,16 +215,16 @@ class XMLRow extends Row {
                         long l = toLong(a, cursor);
                         if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
                             cell.setNv((int) l);
-                            cell.setT('n');
+                            cell.setT(NUMERIC);
                         } else {
                             cell.setLv(l);
-                            cell.setT('l');
+                            cell.setT(LONG);
                         }
                     } else if (isDouble(a, cursor)) {
-                        cell.setT('d');
+                        cell.setT(DOUBLE);
                         cell.setDv(toDouble(a, cursor));
                     } else {
-                        cell.setT('s');
+                        cell.setT(INLINESTR);
                         cell.setSv(toString(a, cursor));
                     }
                 }

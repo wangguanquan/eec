@@ -26,6 +26,14 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.StringJoiner;
 
+import static cn.ttzero.excel.reader.Cell.BOOL;
+import static cn.ttzero.excel.reader.Cell.NUMERIC;
+import static cn.ttzero.excel.reader.Cell.FUNCTION;
+import static cn.ttzero.excel.reader.Cell.SST;
+import static cn.ttzero.excel.reader.Cell.INLINESTR;
+import static cn.ttzero.excel.reader.Cell.LONG;
+import static cn.ttzero.excel.reader.Cell.DOUBLE;
+
 /**
  * Create by guanquan.wang at 2019-04-17 11:08
  */
@@ -97,20 +105,20 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         boolean v;
         switch (c.getT()) {
-            case 'b':
+            case BOOL:
                 v = c.getBv();
                 break;
-            case 'n':
-            case 'd':
+            case NUMERIC:
+            case DOUBLE:
                 v = c.getNv() != 0 || c.getDv() >= 0.000001 || c.getDv() <= -0.000001;
                 break;
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
                 v = StringUtil.isNotEmpty(c.getSv());
                 break;
-            case 'r':
+            case INLINESTR:
                 v = StringUtil.isNotEmpty(c.getSv());
                 break;
 
@@ -128,16 +136,16 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         byte b = 0;
         switch (c.getT()) {
-            case 'n':
+            case NUMERIC:
                 b |= c.getNv();
                 break;
-            case 'l':
+            case LONG:
                 b |= c.getLv();
                 break;
-            case 'b':
+            case BOOL:
                 b |= c.getBv() ? 1 : 0;
                 break;
-            case 'd':
+            case DOUBLE:
                 b |= (int) c.getDv();
                 break;
             default: throw new UncheckedTypeException("can't convert to byte");
@@ -154,7 +162,7 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         char cc = 0;
         switch (c.getT()) {
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
@@ -163,22 +171,22 @@ public abstract class Row {
                     cc |= s.charAt(0);
                 }
                 break;
-            case 'r':
+            case INLINESTR:
                 s = c.getSv();
                 if (StringUtil.isNotEmpty(s)) {
                     cc |= s.charAt(0);
                 }
                 break;
-            case 'n':
+            case NUMERIC:
                 cc |= c.getNv();
                 break;
-            case 'l':
+            case LONG:
                 cc |= c.getLv();
                 break;
-            case 'b':
+            case BOOL:
                 cc |= c.getBv() ? 1 : 0;
                 break;
-            case 'd':
+            case DOUBLE:
                 cc |= (int) c.getDv();
                 break;
             default: throw new UncheckedTypeException("can't convert to char");
@@ -195,16 +203,16 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         short s = 0;
         switch (c.getT()) {
-            case 'n':
+            case NUMERIC:
                 s |= c.getNv();
                 break;
-            case 'l':
+            case LONG:
                 s |= c.getLv();
                 break;
-            case 'b':
+            case BOOL:
                 s |= c.getBv() ? 1 : 0;
                 break;
-            case 'd':
+            case DOUBLE:
                 s |= (int) c.getDv();
                 break;
             default: throw new UncheckedTypeException("can't convert to short");
@@ -221,19 +229,19 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         int n;
         switch (c.getT()) {
-            case 'n':
+            case NUMERIC:
                 n = c.getNv();
                 break;
-            case 'l':
+            case LONG:
                 n = (int) c.getLv();
                 break;
-            case 'd':
+            case DOUBLE:
                 n = (int) c.getDv();
                 break;
-            case 'b':
+            case BOOL:
                 n = c.getBv() ? 1 : 0;
                 break;
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
@@ -243,7 +251,7 @@ public abstract class Row {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to int");
                 }
                 break;
-            case 'r':
+            case INLINESTR:
                 try {
                     n = Integer.parseInt(c.getSv());
                 } catch (NumberFormatException e) {
@@ -265,16 +273,16 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         long l;
         switch (c.getT()) {
-            case 'l':
+            case LONG:
                 l = c.getLv();
                 break;
-            case 'n':
+            case NUMERIC:
                 l = c.getNv();
                 break;
-            case 'd':
+            case DOUBLE:
                 l = (long) c.getDv();
                 break;
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
@@ -284,14 +292,14 @@ public abstract class Row {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
                 }
                 break;
-            case 'r':
+            case INLINESTR:
                 try {
                     l = Long.parseLong(c.getSv());
                 } catch (NumberFormatException e) {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to long");
                 }
                 break;
-            case 'b':
+            case BOOL:
                 l = c.getBv() ? 1L : 0L;
                 break;
             default: throw new UncheckedTypeException("unknown type");
@@ -308,25 +316,25 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         String s;
         switch (c.getT()) {
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
                 s = c.getSv();
                 break;
-            case 'r':
+            case INLINESTR:
                 s = c.getSv();
                 break;
-            case 'l':
+            case LONG:
                 s = String.valueOf(c.getLv());
                 break;
-            case 'n':
+            case NUMERIC:
                 s = String.valueOf(c.getNv());
                 break;
-            case 'd':
+            case DOUBLE:
                 s = String.valueOf(c.getDv());
                 break;
-            case 'b':
+            case BOOL:
                 s = c.getBv() ? "true" : "false";
                 break;
             default: s = c.getSv();
@@ -352,20 +360,20 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         double d;
         switch (c.getT()) {
-            case 'd':
+            case DOUBLE:
                 d = c.getDv();
                 break;
-            case 'n':
+            case NUMERIC:
                 d = c.getNv();
                 break;
-            case 's':
+            case SST:
                 try {
                     d = Double.valueOf(c.getSv());
                 } catch (NumberFormatException e) {
                     throw new UncheckedTypeException("String value " + c.getSv() + " can't convert to double");
                 }
                 break;
-            case 'r':
+            case INLINESTR:
                 try {
                     d = Double.valueOf(c.getSv());
                 } catch (NumberFormatException e) {
@@ -387,10 +395,10 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         BigDecimal bd;
         switch (c.getT()) {
-            case 'd':
+            case DOUBLE:
                 bd = BigDecimal.valueOf(c.getDv());
                 break;
-            case 'n':
+            case NUMERIC:
                 bd = BigDecimal.valueOf(c.getNv());
                 break;
             default:
@@ -408,19 +416,19 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         Date date;
         switch (c.getT()) {
-            case 'n':
+            case NUMERIC:
                 date = DateUtil.toDate(c.getNv());
                 break;
-            case 'd':
+            case DOUBLE:
                 date = DateUtil.toDate(c.getDv());
                 break;
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
                 date = DateUtil.toDate(c.getSv());
                 break;
-            case 'r':
+            case INLINESTR:
                 date = DateUtil.toDate(c.getSv());
                 break;
             default: throw new UncheckedTypeException("");
@@ -437,19 +445,19 @@ public abstract class Row {
         Cell c = getCell(columnIndex);
         Timestamp ts;
         switch (c.getT()) {
-            case 'n':
+            case NUMERIC:
                 ts = DateUtil.toTimestamp(c.getNv());
                 break;
-            case 'd':
+            case DOUBLE:
                 ts = DateUtil.toTimestamp(c.getDv());
                 break;
-            case 's':
+            case SST:
                 if (c.getSv() == null) {
                     c.setSv(sst.get(c.getNv()));
                 }
                 ts = DateUtil.toTimestamp(c.getSv());
                 break;
-            case 'r':
+            case INLINESTR:
                 ts = DateUtil.toTimestamp(c.getSv());
                 break;
             default: throw new UncheckedTypeException("");
@@ -464,7 +472,7 @@ public abstract class Row {
      */
     public java.sql.Time getTime(int columnIndex) {
         Cell c = getCell(columnIndex);
-        if (c.getT() == 'd') {
+        if (c.getT() == DOUBLE) {
             return DateUtil.toTime(c.getDv());
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
@@ -569,28 +577,28 @@ public abstract class Row {
         for (int i = fc - 1; i < lc; i++) {
             Cell c = cells[i];
             switch (c.getT()) {
-                case 's':
+                case SST:
                     if (c.getSv() == null) {
                         c.setSv(sst.get(c.getNv()));
                     }
                     joiner.add(c.getSv());
                     break;
-                case 'r':
+                case INLINESTR:
                     joiner.add(c.getSv());
                     break;
-                case 'b':
+                case BOOL:
                     joiner.add(String.valueOf(c.getBv()));
                     break;
-                case 'f':
+                case FUNCTION:
                     joiner.add("<function>");
                     break;
-                case 'n':
+                case NUMERIC:
                     joiner.add(String.valueOf(c.getNv()));
                     break;
-                case 'l':
+                case LONG:
                     joiner.add(String.valueOf(c.getLv()));
                     break;
-                case 'd':
+                case DOUBLE:
                     joiner.add(String.valueOf(c.getDv()));
                     break;
                 default:

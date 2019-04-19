@@ -20,7 +20,14 @@ package cn.ttzero.excel.reader;
  * Create by guanquan.wang on 2018-09-22
  */
 class Cell {
-    Cell() {}
+    Cell() { }
+    static final char SST         = 's';
+    static final char BOOL        = 'b';
+    static final char FUNCTION    = 'f';
+    static final char INLINESTR   = 'r';
+    static final char LONG        = 'l';
+    static final char DOUBLE      = 'd';
+    static final char NUMERIC     = 'n';
     // n=numeric
     // s=string
     // b=boolean
