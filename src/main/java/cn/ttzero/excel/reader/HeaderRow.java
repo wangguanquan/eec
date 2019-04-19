@@ -27,26 +27,22 @@ import java.util.StringJoiner;
 /**
  * Create by guanquan.wang at 2019-04-17 11:55
  */
-class HeaderRow extends XMLRow {
+class HeaderRow extends Row {
 
-    String[] names;
-    Class<?> clazz;
-    Field[] fields;
-    int[] columns;
-    Class<?>[] fieldClazz;
-    Object t;
+    private String[] names;
+    private Class<?> clazz;
+    private Field[] fields;
+    private int[] columns;
+    private Class<?>[] fieldClazz;
+    private Object t;
 
     private HeaderRow() { }
 
-    HeaderRow(SharedString sst, int startRow) {
-        super(sst, startRow);
-    }
-
-    static HeaderRow with(XMLRow row) {
+    static HeaderRow with(Row row) {
         HeaderRow hr = new HeaderRow();
-        hr.names = new String[row.p2];
+        hr.names = new String[row.lc];
         Cell c;
-        for (int i = row.p1 - 1; i < row.p2; i++) {
+        for (int i = row.fc - 1; i < row.lc; i++) {
             c = row.cells[i];
             // header type is string
             if (c.getT() == 's') {
@@ -150,18 +146,23 @@ class HeaderRow extends XMLRow {
         return (T) t;
     }
 
+    public Class<?> getClazz() {
+        return clazz;
+    }
+
     /**
      * Get T value by column index
      * @param columnIndex the cell index
      * @return T
      */
     @SuppressWarnings("unchecked")
-    @Override public String get(int columnIndex) {
+    public String get(int columnIndex) {
         rangeCheck(columnIndex);
         return names[columnIndex];
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringJoiner joiner = new StringJoiner(" | ");
         int i = 0;
         for (; names[i++] == null; );
