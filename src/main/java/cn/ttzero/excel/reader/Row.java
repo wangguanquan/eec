@@ -49,7 +49,7 @@ public abstract class Row {
     Cell[] cells;
     SharedString sst;
     // The header row
-    HeaderRow hr;
+    private HeaderRow hr;
     boolean unknownLength;
 
     /**
