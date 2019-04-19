@@ -41,9 +41,9 @@ public abstract class Row {
     protected Logger logger = LogManager.getLogger(getClass());
     // Index to row
     int index = -1;
-    // Index to first column
+    // Index to first column (zero base)
     int fc = 0;
-    // Index to last column
+    // Index to last column (zero base)
     int lc = -1;
     // Share cell
     Cell[] cells;
@@ -574,7 +574,7 @@ public abstract class Row {
         StringJoiner joiner = new StringJoiner(" | ");
         // show row number
 //        joiner.add(String.valueOf(getRowNumber()));
-        for (int i = fc - 1; i < lc; i++) {
+        for (int i = fc; i < lc; i++) {
             Cell c = cells[i];
             switch (c.getT()) {
                 case SST:

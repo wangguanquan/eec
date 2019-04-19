@@ -40,7 +40,7 @@ class HeaderRow extends Row {
     static HeaderRow with(Row row) {
         HeaderRow hr = new HeaderRow();
         hr.names = new String[row.lc];
-        for (int i = row.fc - 1; i < row.lc; i++) {
+        for (int i = row.fc; i < row.lc; i++) {
             hr.names[i] = row.getString(i);
         }
         return hr;

@@ -116,6 +116,7 @@ class XMLRow extends Row {
             }
         }
         if (fc <= 0) fc = this.startRow;
+        fc = fc - 1; // zero base
         if (cells == null || lc > cells.length) {
             cells = new Cell[lc > 0 ? lc : 100]; // default array length 100
         }
