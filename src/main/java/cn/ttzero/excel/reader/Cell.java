@@ -28,6 +28,7 @@ class Cell {
     static final char LONG        = 'l';
     static final char DOUBLE      = 'd';
     static final char NUMERIC     = 'n';
+    static final char BLANK       = 'k';
     // n=numeric
     // s=string
     // b=boolean

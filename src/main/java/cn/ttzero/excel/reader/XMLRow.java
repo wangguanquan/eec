@@ -23,6 +23,7 @@ import static cn.ttzero.excel.reader.Cell.SST;
 import static cn.ttzero.excel.reader.Cell.INLINESTR;
 import static cn.ttzero.excel.reader.Cell.LONG;
 import static cn.ttzero.excel.reader.Cell.DOUBLE;
+import static cn.ttzero.excel.reader.Cell.BLANK;
 
 /**
  * 行数据，同一个Sheet页内的Row对象内存共享。
@@ -192,7 +193,8 @@ class XMLRow extends Row {
             case INLINESTR: // inner string
                 a = getT(e);
                 if (a == cursor) { // null value
-                    cell.setSv(null);
+//                    cell.setSv(null);
+                    cell.setT(BLANK); // Reset type to BLANK if null value
                 } else {
                     cell.setSv(sst.unescape(cb, a, cursor));
                 }
