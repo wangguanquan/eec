@@ -35,7 +35,7 @@ import static cn.ttzero.excel.reader.Cell.BLANK;
  * Create by guanquan.wang on 2018-09-22
  */
 class XMLRow extends Row {
-    int startRow;
+    private int startRow;
 
     /**
      * The number of row. (zero base)
