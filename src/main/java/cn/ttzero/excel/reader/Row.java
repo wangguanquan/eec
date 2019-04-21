@@ -33,6 +33,7 @@ import static cn.ttzero.excel.reader.Cell.SST;
 import static cn.ttzero.excel.reader.Cell.INLINESTR;
 import static cn.ttzero.excel.reader.Cell.LONG;
 import static cn.ttzero.excel.reader.Cell.DOUBLE;
+import static cn.ttzero.excel.reader.Cell.BLANK;
 
 /**
  * Create by guanquan.wang at 2019-04-17 11:08
@@ -325,6 +326,9 @@ public abstract class Row {
             case INLINESTR:
                 s = c.getSv();
                 break;
+            case BLANK:
+                s = StringUtil.EMPTY;
+                break;
             case LONG:
                 s = String.valueOf(c.getLv());
                 break;
@@ -601,6 +605,8 @@ public abstract class Row {
                 case DOUBLE:
                     joiner.add(String.valueOf(c.getDv()));
                     break;
+                case BLANK:
+                    joiner.add(StringUtil.EMPTY);
                 default:
                     joiner.add(null);
             }

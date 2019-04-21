@@ -19,6 +19,7 @@ package cn.ttzero.excel.reader;
 import cn.ttzero.excel.manager.docProps.App;
 import cn.ttzero.excel.manager.docProps.Core;
 import cn.ttzero.excel.util.DateUtil;
+import cn.ttzero.excel.util.StringUtil;
 
 import java.util.Date;
 
@@ -29,7 +30,7 @@ public class AppInfo {
     private App app;
     private Core core;
 
-    public AppInfo(App app, Core core) {
+    AppInfo(App app, Core core) {
         this.app = app;
         this.core = core;
     }
@@ -109,8 +110,8 @@ public class AppInfo {
             + " Version: " + getVersion()
             + " Revision: " + getRevision()
             + " Category: " + getCategory()
-            + " Created: " + DateUtil.toString(getCreated())
-            + " Modified: " + DateUtil.toString(getModified())
+            + " Created: " + (getCreated() != null ? DateUtil.toString(getCreated()) : StringUtil.EMPTY)
+            + " Modified: " + (getModified() != null ? DateUtil.toString(getModified()) : StringUtil.EMPTY)
             ;
     }
 }
