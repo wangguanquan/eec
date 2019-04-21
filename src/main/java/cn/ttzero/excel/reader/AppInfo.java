@@ -30,7 +30,7 @@ public class AppInfo {
     private App app;
     private Core core;
 
-    public AppInfo(App app, Core core) {
+    AppInfo(App app, Core core) {
         this.app = app;
         this.core = core;
     }
