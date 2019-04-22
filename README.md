@@ -1,6 +1,6 @@
 # eec介绍
 
-eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
+eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
 
 与传统Excel操作不同之处在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
 
@@ -40,7 +40,7 @@ pom.xml添加
 </dependency>
 ```
 
-eec内部仅依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，使用如下引用
+eec内部仅依赖dom4j.1.6.1和log4j.2.11.1, 如果目标工程已包含此依赖，使用如下引用
 
 ```
 <dependency>
@@ -63,6 +63,14 @@ eec内部仅依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖
     </exclusions>
 </dependency>
 ```
+
+## xls格式支持
+
+xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源
+尝鲜的朋友可以在本项目的[dist](./dist)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
+xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文件类型，执行不同的Reader方法。
+
+**注意：eec-e3-support依赖于eec不能独立存在**
 
 ## 示例
 
@@ -335,6 +343,18 @@ reade.sheets()
 ```
 
 以上代码相当于`select * from 用户注册 where platform = 'iOS'`
+
+5. xls读取
+
+```
+@Test public void testXLS() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
+        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
 
 
 ## CHANGELOG
