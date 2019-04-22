@@ -21,7 +21,9 @@ package cn.ttzero.excel.entity;
  */
 public class ExportException extends RuntimeException {
 
-    public ExportException() {
+	private static final long serialVersionUID = 1L;
+
+	public ExportException() {
         super();
     }
 

@@ -117,7 +117,7 @@ public abstract class AbstractTemplate {
             // Translate object to string hashMap
             map = new HashMap<>();
             if (o instanceof Map) {
-                Map<?, ?> map1 = (Map) o;
+                Map<?, ?> map1 = (Map<?, ?>) o;
                 map1.forEach((k, v) -> {
                     String vs = v != null ? v.toString() : "";
                     map.put(k.toString(), vs);

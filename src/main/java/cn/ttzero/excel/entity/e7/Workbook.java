@@ -288,7 +288,7 @@ public class Workbook {
      * @param columns 表头
      * @return 工作簿
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Workbook addSheet(String name, List<?> data, Sheet.Column ... columns) {
         int _size = size;
         Object o;

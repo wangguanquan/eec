@@ -350,7 +350,7 @@ public class ExcelReader implements AutoCloseable {
             case XLS:
                 try {
                     Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
-                    Constructor constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
+                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
                 } catch (Exception e) {
                     throw new ExcelReadException("Only support read Office Open XML file.", e);

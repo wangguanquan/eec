@@ -166,7 +166,6 @@ public abstract class Sheet {
         protected void setSst(Styles styles) {
             this.styles = styles;
         }
-        private Column() {}
 
         /**
          * 指定列名和类型
@@ -604,7 +603,7 @@ public abstract class Sheet {
          * @param clazz 数据类型
          * @return 样式
          */
-        protected int getCellStyle(Class clazz) {
+        protected int getCellStyle(Class<?> clazz) {
             int style;
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
@@ -2109,6 +2108,12 @@ public abstract class Sheet {
             boolean delete = temp.delete();
             if (!delete) {
                 workbook.what("9005", temp.getAbsolutePath());
+            }
+            if (inChannel != null) {
+            	inChannel.close();
+            }
+            if (outChannel != null) {
+            	outChannel.close();
             }
         }
     }
