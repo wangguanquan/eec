@@ -20,7 +20,10 @@ package cn.ttzero.excel.entity.style;
  * Created by guanquan.wang at 2018-02-05 16:10
  */
 public class FontParseException extends RuntimeException {
-    public FontParseException(String message) {
+
+	private static final long serialVersionUID = 1L;
+
+	public FontParseException(String message) {
         super(message);
     }
 

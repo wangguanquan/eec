@@ -166,7 +166,6 @@ public abstract class Sheet {
         protected void setSst(Styles styles) {
             this.styles = styles;
         }
-        private Column() {}
 
         /**
          * 指定列名和类型
@@ -604,7 +603,7 @@ public abstract class Sheet {
          * @param clazz 数据类型
          * @return 样式
          */
-        protected int getCellStyle(Class clazz) {
+        protected int getCellStyle(Class<?> clazz) {
             int style;
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
@@ -2015,9 +2014,13 @@ public abstract class Sheet {
             Files.move(sheet.toPath(), temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
 
-        try (FileChannel inChannel = new FileInputStream(temp).getChannel();
-             FileChannel outChannel = new FileOutputStream(sheet).getChannel()) {
-
+        FileChannel inChannel = null;
+        FileChannel outChannel = null;
+        try (FileInputStream fis = new FileInputStream(temp);
+        		FileOutputStream fos = new FileOutputStream(sheet)) {
+        	inChannel = fis.getChannel();
+            outChannel = fos.getChannel();
+            
             inChannel.transferTo(0, headInfoLen, outChannel);
             ByteBuffer buffer = ByteBuffer.allocate(baseInfoLen);
             inChannel.read(buffer, headInfoLen);
@@ -2109,6 +2112,12 @@ public abstract class Sheet {
             boolean delete = temp.delete();
             if (!delete) {
                 workbook.what("9005", temp.getAbsolutePath());
+            }
+            if (inChannel != null) {
+            	inChannel.close();
+            }
+            if (outChannel != null) {
+            	outChannel.close();
             }
         }
     }

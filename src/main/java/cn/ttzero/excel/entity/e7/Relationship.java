@@ -22,7 +22,9 @@ import java.io.Serializable;
  * Created by guanquan.wang on 2017/9/30.
  */
 public class Relationship implements Serializable, Cloneable {
-    private String target;
+
+	private static final long serialVersionUID = 1L;
+	private String target;
     private String type;
     private String id;
 

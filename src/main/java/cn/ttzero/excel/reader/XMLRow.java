@@ -328,7 +328,8 @@ class XMLRow extends Row {
      * @param e
      * @return
      */
-    private int getF(int e) {
+    @SuppressWarnings("unused")
+	private int getF(int e) {
         // undo
         // return end index of row
         return e;

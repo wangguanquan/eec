@@ -20,7 +20,10 @@ package cn.ttzero.excel.entity.style;
  * Created by guanquan.wang at 2018-02-09 14:25
  */
 public class ColorParseException extends RuntimeException {
-    public ColorParseException(String message) {
+
+	private static final long serialVersionUID = 1L;
+
+	public ColorParseException(String message) {
     super(message);
 }
 

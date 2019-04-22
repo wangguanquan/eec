@@ -311,6 +311,7 @@ public class ExcelReader implements AutoCloseable {
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
                 FileUtil.rm_rf(temp.toFile(), true);
+                sheet.close();
                 throw new ExcelReadException("File has be destroyed");
             }
             sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
@@ -350,7 +351,7 @@ public class ExcelReader implements AutoCloseable {
             case XLS:
                 try {
                     Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
-                    Constructor constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
+                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
                 } catch (Exception e) {
                     throw new ExcelReadException("Only support read Office Open XML file.", e);

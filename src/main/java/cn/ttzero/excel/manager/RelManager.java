@@ -37,7 +37,9 @@ import java.util.List;
  */
 @TopNS(prefix = "", value = "Relationships", uri = "http://schemas.openxmlformats.org/package/2006/relationships")
 public class RelManager implements Serializable, Cloneable {
-    private List<Relationship> relationships;
+
+	private static final long serialVersionUID = 1L;
+	private List<Relationship> relationships;
 
     public static RelManager of(Relationship ... relationships) {
         RelManager relManager = new RelManager();
@@ -123,11 +125,14 @@ public class RelManager implements Serializable, Cloneable {
         Element rootElement = factory.createElement(topNS.value(), topNS.uri()[0]);
 
         for (Relationship rel : relationships) {
-            Class clazz = rel.getClass();
+            Class<?> clazz = rel.getClass();
             String className = clazz.getSimpleName();
             Element ele = rootElement.addElement(className);
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
+                if ("serialVersionUID".equals(field.getName())) {
+                    continue;
+                }
                 field.setAccessible(true);
                 Object oo = null;
                 try {
@@ -136,7 +141,7 @@ public class RelManager implements Serializable, Cloneable {
                     e.printStackTrace();
                 }
                 if (oo == null) continue;
-                Class _clazz = field.getType();
+                Class<?> _clazz = field.getType();
                 if (_clazz == this.getClass()) {
                     continue;
                 }

@@ -20,7 +20,10 @@ package cn.ttzero.excel.entity.style;
  * Created by guanquan.wang at 2018-02-08 13:53
  */
 public class BorderParseException extends RuntimeException {
-    public BorderParseException(String message) {
+
+	private static final long serialVersionUID = 1L;
+
+	public BorderParseException(String message) {
         super(message);
     }
 

@@ -32,12 +32,17 @@ import java.util.List;
         , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
 public class App extends XmlEntity {
     private String application;
-    private int docSecurity;
+    @SuppressWarnings("unused")
+	private int docSecurity;
+    @SuppressWarnings("unused")
     private boolean scaleCrop;
     private String manager;
     private String company;
+    @SuppressWarnings("unused")
     private boolean linksUpToDate;
+    @SuppressWarnings("unused")
     private boolean sharedDoc;
+    @SuppressWarnings("unused")
     private boolean hyperlinksChanged;
     private String appVersion;
     private TitlesOfParts titlesOfParts;

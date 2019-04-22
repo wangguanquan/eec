@@ -132,7 +132,6 @@ public class ListMapSheet extends Sheet {
      * @param bw
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     protected void writeRowAutoSize(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
         if (map == null) {
             writeEmptyRow(bw);
@@ -210,7 +209,6 @@ public class ListMapSheet extends Sheet {
         bw.write("</row>");
     }
 
-    @SuppressWarnings("unchecked")
     protected void writeRow(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
         if (map == null) {
             writeEmptyRow(bw);

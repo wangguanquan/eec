@@ -24,7 +24,9 @@ import cn.ttzero.excel.manager.Const;
  */
 public class TooManyColumnsException extends ExportException {
 
-    public TooManyColumnsException() {
+	private static final long serialVersionUID = 1L;
+
+	public TooManyColumnsException() {
         super();
     }
 

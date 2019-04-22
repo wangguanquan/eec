@@ -20,7 +20,10 @@ package cn.ttzero.excel.reader;
  * Create by guanquan.wang at 2018-09-27 14:48
  */
 public class ExcelReadException extends RuntimeException {
-    public ExcelReadException(String message) {
+
+	private static final long serialVersionUID = 1L;
+
+	public ExcelReadException(String message) {
         super(message);
     }
 

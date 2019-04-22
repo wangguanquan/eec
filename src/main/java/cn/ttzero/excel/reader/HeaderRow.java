@@ -147,7 +147,6 @@ class HeaderRow extends Row {
      * @param columnIndex the cell index
      * @return T
      */
-    @SuppressWarnings("unchecked")
     public String get(int columnIndex) {
         rangeCheck(columnIndex);
         return names[columnIndex];

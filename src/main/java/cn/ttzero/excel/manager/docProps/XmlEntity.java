@@ -119,7 +119,7 @@ class XmlEntity {
                     element = doc.addElement(QName.get(field.getName(), namespace)).addText(DateUtil.toTString((Date) oo));
                 } else if (clazz == List.class) {
                     element = doc.addElement(QName.get(field.getName(), namespace));
-                    Collection collection = (Collection) oo;
+                    Collection<?> collection = (Collection<?>) oo;
                     if (field.isAnnotationPresent(Attr.class)) {
                         Attr attr = field.getAnnotation(Attr.class);
                         String[] names = attr.name(), values = attr.value();
@@ -174,7 +174,7 @@ class XmlEntity {
                     element = doc.addElement(StringUtil.uppFirstKey(field.getName())).addText(DateUtil.toTString((Date) oo));
                 } else if (clazz == List.class) {
                     element = doc.addElement(StringUtil.uppFirstKey(field.getName()));
-                    Collection collection = (Collection) oo;
+                    Collection<?> collection = (Collection<?>) oo;
                     if (field.isAnnotationPresent(Attr.class)) {
                         Attr attr = field.getAnnotation(Attr.class);
                         String[] names = attr.name(), values = attr.value();
@@ -241,10 +241,10 @@ class XmlEntity {
         return (ns.value().length() == 0 || "-".equals(ns.value()));
     }
 
-    private void writeArrayNoBaseType(Element element, Collection collection) {
+    private void writeArrayNoBaseType(Element element, Collection<?> collection) {
         // TODO not namespace array
         StringBuilder buf = new StringBuilder();
-        for (Iterator it = collection.iterator(); it.hasNext(); ) {
+        for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
             Object node = it.next();
             if (node instanceof NameValue) {
                 NameValue nv = (NameValue) node;
@@ -260,9 +260,9 @@ class XmlEntity {
         }
     }
 
-    protected void writeArrayWithBaseType(Element element, Collection collection, Namespace namespace, String baseType) {
+    protected void writeArrayWithBaseType(Element element, Collection<?> collection, Namespace namespace, String baseType) {
         if (namespace != null) {
-            for (Iterator it = collection.iterator(); it.hasNext(); ) {
+            for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
                 Object node = it.next();
                 if (node instanceof NameValue) {
                     NameValue nv = (NameValue) node;
@@ -273,7 +273,7 @@ class XmlEntity {
                 }
             }
         } else {
-            for (Iterator it = collection.iterator(); it.hasNext(); ) {
+            for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
                 Object node = it.next();
                 if (node instanceof NameValue) {
                     NameValue nv = (NameValue) node;

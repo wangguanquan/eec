@@ -209,9 +209,10 @@ public class FileUtil {
             }
         }
         FileChannel inChannel = null, outChannel = null;
-        try {
-            inChannel = new FileInputStream(srcFile).getChannel();
-            outChannel = new FileOutputStream(descFile).getChannel();
+        try (FileInputStream fis = new FileInputStream(srcFile);
+        		FileOutputStream fos = new FileOutputStream(descFile)) {
+            inChannel = fis.getChannel();
+            outChannel = fos.getChannel();
 
             inChannel.transferTo(0, inChannel.size(), outChannel);
         } catch (IOException e) {
