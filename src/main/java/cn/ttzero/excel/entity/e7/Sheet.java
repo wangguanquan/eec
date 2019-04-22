@@ -2014,9 +2014,13 @@ public abstract class Sheet {
             Files.move(sheet.toPath(), temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
 
-        try (FileChannel inChannel = new FileInputStream(temp).getChannel();
-             FileChannel outChannel = new FileOutputStream(sheet).getChannel()) {
-
+        FileChannel inChannel = null;
+        FileChannel outChannel = null;
+        try (FileInputStream fis = new FileInputStream(temp);
+        		FileOutputStream fos = new FileOutputStream(sheet)) {
+        	inChannel = fis.getChannel();
+            outChannel = fos.getChannel();
+            
             inChannel.transferTo(0, headInfoLen, outChannel);
             ByteBuffer buffer = ByteBuffer.allocate(baseInfoLen);
             inChannel.read(buffer, headInfoLen);

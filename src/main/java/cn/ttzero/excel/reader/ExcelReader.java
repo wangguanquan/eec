@@ -311,6 +311,7 @@ public class ExcelReader implements AutoCloseable {
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
                 FileUtil.rm_rf(temp.toFile(), true);
+                sheet.close();
                 throw new ExcelReadException("File has be destroyed");
             }
             sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
