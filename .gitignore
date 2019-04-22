@@ -1,0 +1,10 @@
+/target/
+
+# open with Intellij IDEA
+/.idea/
+/*.iml
+
+# open with eclipse
+/.classpath
+/.project
+/.settings/
