@@ -81,9 +81,7 @@ public class Const {
      */
     public static final class Limit {
         /** Excel07 每个worksheet页最大行 1 << 20 */
-        public static final int MAX_ROWS_ON_SHEET_07 = 1_048_576;
-        /** Excel07 每个worksheet页最大行 1 << 16 */
-        public static final int MAX_ROWS_ON_SHEET_03 = 65_536;
+        public static final int MAX_ROWS_ON_SHEET = 1_048_576;
         /** 每个worksheet页最大列 */
         public static final int MAX_COLUMNS_ON_SHEET = 16_384;
         /** 单个cell最多包含多少字符 */

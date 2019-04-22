@@ -101,7 +101,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
         try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
             // Write header
             writeBefore(bw);
-            int limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - rows; // exclude header rows
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
             // Main data
             if (rs != null && rs.next()) {
 
@@ -136,7 +136,7 @@ public class ResultSetSheet extends Sheet implements Cloneable {
             close();
             throw new ExportException(e);
         } finally {
-            if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
                 close();
             }
         }

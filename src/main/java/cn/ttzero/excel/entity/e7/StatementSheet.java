@@ -114,7 +114,7 @@ public class StatementSheet extends Sheet {
             workbook.what("0012");
             // Write header
             writeBefore(bw);
-            int limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - rows; // exclude header rows
+            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
             if (rs.next()) {
                 // Write sheet data
                 if (getAutoSize() == 1) {
@@ -154,7 +154,7 @@ public class StatementSheet extends Sheet {
             }
             throw new ExportException(e);
         } finally {
-            if (rows < Const.Limit.MAX_ROWS_ON_SHEET_07) {
+            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
                 if (rs != null) {
                     try {
                         rs.close();
