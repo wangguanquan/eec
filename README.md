@@ -70,7 +70,14 @@ xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://g
 尝鲜的朋友可以在本项目的[dist](./dist)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
 xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文件类型，执行不同的Reader方法。
 
-**注意：eec-e3-support依赖于eec不能独立存在**
+示例请查找`testReadXLS()`方法。
+
+Download
+- [eec-0.2.9.jar](./dist/eec-0.2.9.jar)
+- [eec-0.2.9-sources.jar](./dist/eec-0.2.9-sources.jar)
+- [eec-e3-support-0.2.9.jar](./dist/eec-e3-support-0.2.9.jar)
+
+*注意：eec-e3-support依赖于eec不能独立存在*
 
 ## 示例
 
@@ -347,7 +354,7 @@ reade.sheets()
 5. xls读取
 
 ```
-@Test public void testXLS() {
+@Test public void testReadXLS() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
     } catch (IOException e) {
