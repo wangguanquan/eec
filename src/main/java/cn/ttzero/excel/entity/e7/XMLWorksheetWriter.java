@@ -69,7 +69,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        this.sheet = sheet;
         this.workbook = workbook;
         this.sheet = sheet;
-
+        this.columns = sheet.getColumns();
     }
 
     /**
@@ -85,7 +85,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         workbook.what("0010", sheet.getName());
 
-        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(path.resolve(sheet.getName()), StandardCharsets.UTF_8));
+        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
+                workSheetPath.resolve(sheet.getFileName()), StandardCharsets.UTF_8));
         // write before
         writeBefore();
 
@@ -93,6 +94,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         while ((rowBlock = supplier.get()) != null) {
             // TODO write data
 
+            // end of row
+            if (rowBlock.isEof()) break;
         }
 
         // write end

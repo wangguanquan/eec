@@ -805,7 +805,7 @@ public abstract class Sheet {
         return relManager.likeByTarget(key);
     }
 
-    protected String getFileName() {
+    public String getFileName() {
         return "sheet" + id + Const.Suffix.XML;
     }
 
