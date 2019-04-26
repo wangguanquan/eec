@@ -69,7 +69,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        this.sheet = sheet;
         this.workbook = workbook;
         this.sheet = sheet;
-        this.columns = sheet.getColumns();
     }
 
     /**
@@ -87,6 +86,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
                 workSheetPath.resolve(sheet.getFileName()), StandardCharsets.UTF_8));
+
         // write before
         writeBefore();
 
@@ -171,6 +171,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Write body data
         bw.write("<sheetData>");
+
+        // The header columns
+        columns = sheet.getColumns();
 
         // Write header
         int r = 1;
