@@ -32,10 +32,13 @@ import org.dom4j.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
@@ -123,10 +126,24 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         // Read app and version from pom
         try {
+            InputStream is = getClass().getClassLoader()
+                    .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
             Properties pom = new Properties();
-            pom.load(getClass().getClassLoader().getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties"));
-            app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
-            app.setAppVersion(pom.getProperty("version"));
+            if (is == null) {
+                // Read from target/maven-archiver/pom.properties
+                URL url = getClass().getClassLoader().getResource(".");
+                if (url != null) {
+                    Path targetPath = (FileUtil.isWindows()
+                            ? Paths.get(url.getFile().substring(1))
+                            : Paths.get(url.getFile())).getParent();
+                    is = Files.newInputStream(targetPath.resolve("maven-archiver/pom.properties"));
+                }
+            }
+            if (is != null) {
+                pom.load(is);
+                app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
+                app.setAppVersion(pom.getProperty("version"));
+            }
         } catch (IOException e) {
             // Nothing
         }
