@@ -28,6 +28,8 @@ import java.nio.file.*;
 
 /**
  * 水印
+ * Excel 并没有水印功能，此处的水印仅设计Worksheet背景图片，
+ * 打印时此设置会被忽略
  * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
@@ -53,8 +55,8 @@ public class WaterMark {
 
     /**
      * 生成文字水印
-     * @param mark
-     * @return
+     * @param mark the mark value
+     * @return WaterMark
      */
     public static WaterMark of(String mark) {
         return new WaterMark(mark);
@@ -62,8 +64,8 @@ public class WaterMark {
 
     /**
      * 本地图片水印
-     * @param path
-     * @return
+     * @param path the image location path
+     * @return WaterMark
      */
     public static WaterMark of(Path path) {
         return new WaterMark(path);
@@ -71,9 +73,9 @@ public class WaterMark {
 
     /**
      * 流图片水印
-     * @param is
-     * @return
-     * @throws IOException
+     * @param is the image InputStream
+     * @return WaterMark
+     * @throws IOException if io error occur
      */
     public static WaterMark of(InputStream is) throws IOException {
         return new WaterMark(is);
@@ -82,11 +84,10 @@ public class WaterMark {
     /**
      * 生成水印图片
      *
-     * @param watermark
-     * @return
-     * @throws IOException
+     * @param watermark mark value
+     * @return the temp image path
      */
-    public Path createWaterMark(String watermark) {
+     private Path createWaterMark(String watermark) {
         try {
             Path temp = createTemp();
             int width = 510; // 水印图片的宽度
@@ -125,7 +126,7 @@ public class WaterMark {
             ImageIO.write(bi, "png", temp.toFile());
             return temp;
         } catch (IOException e) {
-            throw new ExportException("水印制作失败", e);
+            throw new ExportException("Create Water Mark error.", e);
         }
     }
 

@@ -99,8 +99,8 @@ public class Fill implements Cloneable {
         if (o instanceof Fill) {
             Fill other = (Fill) o;
             return (other.patternType == this.patternType)
-                    && (other.bgColor != null ? other.bgColor.equals(bgColor) : other.bgColor == bgColor)
-                    && (other.fgColor != null ? other.fgColor.equals(fgColor) : other.fgColor == fgColor);
+                    && (other.bgColor != null ? other.bgColor.equals(bgColor) : null == bgColor)
+                    && (other.fgColor != null ? other.fgColor.equals(fgColor) : null == fgColor);
         }
         return false;
     }

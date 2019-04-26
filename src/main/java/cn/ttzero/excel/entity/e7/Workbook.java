@@ -298,7 +298,7 @@ public class Workbook {
             return this;
         }
 
-        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET_07 - 1, page = len / limit;
+        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
         if (len % limit > 0) {
             page++;
         }
