@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.entity.e3;
+package cn.ttzero.excel.entity;
 
 /**
- * Create by guanquan.wang at 2019-01-25 10:20
+ * A row block has const 32 rows.
+ * Create by guanquan.wang at 2019-04-23 08:50
  */
-public enum DocType {
-    Empty(0x0),
-    UserStorage(0x01),
-    UserStream(0x02),
-    LockBytes(0x03),
-    Property(0x04),
-    RootStorage(0x05)
-    ;
+public class RowBlock {
+    private Row[] rows;
+    private int i, n, total = 0;
+    private boolean eof;
 
-    int value;
-
-    DocType(int value) {
-        this.value = value;
+    public void clear() {
+        i = n = 0;
     }
 
-    public int getValue() {
-        return value;
+    public int getTotal() {
+        return total;
     }
 
-    public static DocType of(int value) {
-        DocType[] types = values();
-        if (value >= types.length || value < 0) return Empty;
-        return types[value];
+    public void markEnd() {
+        eof = true;
+    }
+
+    public boolean isEof() {
+        return eof;
     }
 }

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.entity.e7;
+package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.entity.e7.ContentType;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.util.FileUtil;
 import org.dom4j.Attribute;
@@ -37,8 +38,8 @@ public abstract class AbstractTemplate {
     static final String inlineStr = "inlineStr";
     protected Workbook wb;
 
-    Path zipPath;
-    Map<String, String> map;
+    protected Path zipPath;
+    protected Map<String, String> map;
     public AbstractTemplate(Path zipPath, Workbook wb) {
         this.zipPath = zipPath;
         this.wb = wb;

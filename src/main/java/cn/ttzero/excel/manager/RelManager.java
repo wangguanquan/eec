@@ -17,7 +17,7 @@
 package cn.ttzero.excel.manager;
 
 import cn.ttzero.excel.annotation.TopNS;
-import cn.ttzero.excel.entity.e7.Relationship;
+import cn.ttzero.excel.entity.Relationship;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import org.dom4j.Document;

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.entity.e7;
+package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.util.ExtBufferedWriter;
-import cn.ttzero.excel.entity.WaterMark;
 import cn.ttzero.excel.util.FileUtil;
 
 import java.io.File;
@@ -57,36 +56,36 @@ public class EmptySheet extends Sheet {
 
         File sheetFile = worksheets.resolve(name).toFile();
 
-        // write date
-        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-            // Write header
-            writeBefore(bw);
-            // Main data
-            // write ten empty rows
-            for (int i = 0; i < 10; i++) {
-                writeEmptyRow(bw);
-            }
-
-            // Write foot
-            writeAfter(bw);
-
-        } finally {
-            close();
-        }
-
-        // resize columns
-        boolean resize = false;
-        for  (Column hc : columns) {
-            if (hc.getWidth() > 0.000001) {
-                resize = true;
-                break;
-            }
-        }
-        if (getAutoSize() == 1 || resize) {
-            autoColumnSize(sheetFile);
-        }
-
-        // relationship
-        relManager.write(worksheets, name);
+//        // write date
+//        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+//            // Write header
+//            writeBefore(bw);
+//            // Main data
+//            // write ten empty rows
+//            for (int i = 0; i < 10; i++) {
+//                writeEmptyRow(bw);
+//            }
+//
+//            // Write foot
+//            writeAfter(bw);
+//
+//        } finally {
+//            close();
+//        }
+//
+//        // resize columns
+//        boolean resize = false;
+//        for  (Column hc : columns) {
+//            if (hc.getWidth() > 0.000001) {
+//                resize = true;
+//                break;
+//            }
+//        }
+//        if (getAutoSize() == 1 || resize) {
+//            autoColumnSize(sheetFile);
+//        }
+//
+//        // relationship
+//        relManager.write(worksheets, name);
     }
 }

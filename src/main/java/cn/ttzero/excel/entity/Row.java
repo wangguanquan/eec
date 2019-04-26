@@ -16,26 +16,40 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.reader.Cell;
+
 /**
- * Created by guanquan.wang on 2017/10/19.
+ * Create by guanquan.wang at 2019-04-23 09:57
  */
-public class ExportException extends RuntimeException {
+public class Row {
+    // Index to row
+    int index = -1;
+    // Index to first column (zero base)
+    int fc = 0;
+    // Index to last column (zero base)
+    int lc = -1;
+    // Share cell
+    Cell[] cells;
+    // The header row
+    Sheet.Column[] columns;
 
-	private static final long serialVersionUID = 1L;
-
-	public ExportException() {
-        super();
+    public int getIndex() {
+        return index;
     }
 
-    public ExportException(String s) {
-        super(s);
+    public int getFc() {
+        return fc;
     }
 
-    public ExportException(String message, Throwable cause) {
-        super(message, cause);
+    public int getLc() {
+        return lc;
     }
 
-    public ExportException(Throwable cause) {
-        super(cause);
+    public Cell[] getCells() {
+        return cells;
+    }
+
+    public Sheet.Column[] getColumns() {
+        return columns;
     }
 }

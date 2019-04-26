@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.entity.e7;
+package cn.ttzero.excel.entity;
 
 import java.io.Serializable;
 
