@@ -75,14 +75,36 @@ public class ListObjectSheet<T> extends Sheet {
 //        }
 //        String name = getFileName();
 //        workbook.what("0010", getName());
-//
-//        // create header columns
-//        fields = init();
-//        if (fields.length == 0 || fields[0] == null) {
-//            workbook.what("Worksheet do't has columns.");
-//            return;
-//        }
-//
+
+        //
+        if (data == null || data.isEmpty()) {
+            writeEmptySheet(xl);
+            return;
+        }
+
+        // create header columns
+        fields = init();
+        if (fields.length == 0 || fields[0] == null) {
+            writeEmptySheet(xl);
+            return;
+        }
+
+
+        RowBlock rowBlock = new RowBlock();
+
+        try {
+            sheetWriter.write(xl, () -> {
+                rowBlock.clear();
+
+                rowBlock.markEnd();
+                // TODO
+                return rowBlock.flip();
+            });
+        } finally {
+            sheetWriter.close();
+        }
+
+
 //        File sheetFile = worksheets.resolve(name).toFile();
 //
 //        // write date
@@ -125,71 +147,72 @@ public class ListObjectSheet<T> extends Sheet {
 //        relManager.write(worksheets, name);
     }
 //
-//    private static final String[] exclude = {"serialVersionUID", "this$0"};
-//    protected Field[] init() {
-//        Object o = workbook.getFirst(data);
-//        if (columns == null || columns.length == 0) {
-//            Field[] fields = o.getClass().getDeclaredFields();
-//            List<Column> list = new ArrayList<>(fields.length);
-//            for (int i = 0; i < fields.length; i++) {
-//                Field field = fields[i];
-//                String gs = field.toGenericString();
-//                NotExport notExport = field.getAnnotation(NotExport.class);
-//                if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
-//                    fields[i] = null;
-//                    continue;
-//                }
-//                DisplayName dn = field.getAnnotation(DisplayName.class);
-//                if (dn != null && StringUtil.isNotEmpty(dn.value())) {
-//                    list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
-//                } else {
-//                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
-//                }
-//            }
-//            columns = new Column[list.size()];
-//            list.toArray(columns);
-//            for (int i = 0; i < columns.length; i++) {
-//                columns[i].styles = workbook.getStyles();
-//            }
-//            // clear not export fields
-//            for (int len = fields.length, n = len - 1; n >= 0; n--) {
-//                if (fields[n] != null) {
-//                    fields[n].setAccessible(true);
-//                    continue;
-//                }
-//                if (n < len - 1) {
-//                    System.arraycopy(fields, n + 1, fields, n, len - n - 1);
-//                }
-//                len--;
-//            }
-//            return fields;
-//        } else {
-//            Field[] fields = new Field[columns.length];
-//            Class<?> clazz = o.getClass();
-//            for (int i = 0; i< columns.length; i++) {
-//                Column hc = columns[i];
-//                try {
-//                    fields[i] = clazz.getDeclaredField(hc.key);
-//                    fields[i].setAccessible(true);
-//                    if (hc.getClazz() == null) {
-//                        hc.setClazz(fields[i].getType());
-////                        DisplayName dn = field.getAnnotation(DisplayName.class);
-////                        if (dn != null) {
-////                            hc.setShare(hc.isShare() || dn.share());
-////                            if (StringUtil.isEmpty(hc.getName())
-////                                    && StringUtil.isNotEmpty(dn.value())) {
-////                                hc.setName(dn.value());
-////                            }
-////                        }
-//                    }
-//                } catch (NoSuchFieldException e) {
-//                    throw new ExcelWriteException("Column " + hc.getName() + " not declare in class " + clazz);
-//                }
-//            }
-//            return fields;
-//        }
-//
-//    }
+    private static final String[] exclude = {"serialVersionUID", "this$0"};
+    protected Field[] init() {
+        Object o = workbook.getFirst(data);
+        if (o == null) return null;
+        if (columns == null || columns.length == 0) {
+            Field[] fields = o.getClass().getDeclaredFields();
+            List<Column> list = new ArrayList<>(fields.length);
+            for (int i = 0; i < fields.length; i++) {
+                Field field = fields[i];
+                String gs = field.toGenericString();
+                NotExport notExport = field.getAnnotation(NotExport.class);
+                if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
+                    fields[i] = null;
+                    continue;
+                }
+                DisplayName dn = field.getAnnotation(DisplayName.class);
+                if (dn != null && StringUtil.isNotEmpty(dn.value())) {
+                    list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
+                } else {
+                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
+                }
+            }
+            columns = new Column[list.size()];
+            list.toArray(columns);
+            for (int i = 0; i < columns.length; i++) {
+                columns[i].styles = workbook.getStyles();
+            }
+            // clear not export fields
+            for (int len = fields.length, n = len - 1; n >= 0; n--) {
+                if (fields[n] != null) {
+                    fields[n].setAccessible(true);
+                    continue;
+                }
+                if (n < len - 1) {
+                    System.arraycopy(fields, n + 1, fields, n, len - n - 1);
+                }
+                len--;
+            }
+            return fields;
+        } else {
+            Field[] fields = new Field[columns.length];
+            Class<?> clazz = o.getClass();
+            for (int i = 0; i< columns.length; i++) {
+                Column hc = columns[i];
+                try {
+                    fields[i] = clazz.getDeclaredField(hc.key);
+                    fields[i].setAccessible(true);
+                    if (hc.getClazz() == null) {
+                        hc.setClazz(fields[i].getType());
+//                        DisplayName dn = field.getAnnotation(DisplayName.class);
+//                        if (dn != null) {
+//                            hc.setShare(hc.isShare() || dn.share());
+//                            if (StringUtil.isEmpty(hc.getName())
+//                                    && StringUtil.isNotEmpty(dn.value())) {
+//                                hc.setName(dn.value());
+//                            }
+//                        }
+                    }
+                } catch (NoSuchFieldException e) {
+                    throw new ExcelWriteException("Column " + hc.getName() + " not declare in class " + clazz);
+                }
+            }
+            return fields;
+        }
+
+    }
 //
 //    /**
 //     * write object

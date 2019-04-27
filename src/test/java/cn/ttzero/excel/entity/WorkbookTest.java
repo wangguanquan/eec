@@ -33,7 +33,7 @@ public class WorkbookTest {
     /**
      * The default output path
      */
-    private Path defaultTestPath = Paths.get("f:/excel");
+    private Path defaultTestPath = Paths.get("excel/");
     private Random random = new Random();
 
     @Test public void testWrite() throws IOException {

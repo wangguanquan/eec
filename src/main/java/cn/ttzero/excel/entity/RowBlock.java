@@ -25,19 +25,39 @@ public class RowBlock {
     private int i, n, total = 0;
     private boolean eof;
 
-    public void clear() {
+    /**
+     * Clear index mark
+     */
+    final RowBlock clear() {
         i = n = 0;
+        return this;
     }
 
+    /**
+     * Total rows of a worksheet
+     * @return the total rows
+     */
     public int getTotal() {
         return total;
     }
 
-    public void markEnd() {
+    /**
+     * End of file mark
+     */
+    void markEnd() {
         eof = true;
     }
 
+    /**
+     * End of file mark
+     * @return true if end of file
+     */
     public boolean isEof() {
         return eof;
+    }
+
+    final RowBlock flip() {
+        i = 0;
+        return this;
     }
 }

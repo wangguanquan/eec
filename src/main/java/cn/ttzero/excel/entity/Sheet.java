@@ -882,6 +882,20 @@ public abstract class Sheet {
     }
 
     /**
+     * Write a empty sheet
+     * @param xl the temp path
+     * @throws IOException if io error occur
+     */
+    protected void writeEmptySheet(Path xl) throws IOException {
+        workbook.what("Worksheet do't has columns.");
+        try {
+            sheetWriter.write(xl, () -> null);
+        } finally {
+            sheetWriter.close();
+        }
+    }
+
+    /**
      * Int转列号A-Z
      */
     private ThreadLocal<char[][]> cache = ThreadLocal.withInitial(() -> new char[][] {{65}, {65, 65}, {65, 65, 65}});

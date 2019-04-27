@@ -28,6 +28,8 @@ public class Row {
     int fc = 0;
     // Index to last column (zero base)
     int lc = -1;
+    // Index to XF record
+    int xf;
     // Share cell
     Cell[] cells;
     // The header row
