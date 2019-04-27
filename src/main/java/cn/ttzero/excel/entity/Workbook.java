@@ -673,6 +673,9 @@ public class Workbook {
      * @throws ExcelWriteException 其它异常
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
+        if (!file.getParentFile().exists()) {
+            FileUtil.mkdir(file.toPath().getParent());
+        }
         workbookWriter.writeTo(file);
     }
 
