@@ -19,8 +19,8 @@ package cn.ttzero.excel.reader;
 /**
  * Create by guanquan.wang on 2018-09-22
  */
-class Cell {
-    Cell() { }
+public class Cell {
+    public Cell() { }
     static final char SST         = 's';
     static final char BOOL        = 'b';
     static final char FUNCTION    = 'f';
