@@ -638,6 +638,21 @@ public class Workbook {
      * @throws ExcelWriteException 其它异常
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
+        if (!Files.exists(path)) {
+            String name = path.getFileName().toString();
+            // write to file
+            if (name.indexOf('.') > 0) {
+                Path parent = path.getParent();
+                FileUtil.mkdir(parent);
+                writeTo(path.toFile());
+                return;
+                // write to directory
+            } else FileUtil.mkdir(path);
+        }
+        else if (!Files.isDirectory(path)) {
+            writeTo(path.toFile());
+            return;
+        }
         workbookWriter.writeTo(path);
     }
 

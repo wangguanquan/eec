@@ -75,15 +75,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      * @param path the storage path
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
-        if (!Files.isDirectory(path)) {
-            writeTo(path.toFile());
-            return;
-        }
-        if (!Files.exists(path)) {
-            FileUtil.mkdir(path);
-        }
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
-
         reMarkPath(zip, path);
     }
 
