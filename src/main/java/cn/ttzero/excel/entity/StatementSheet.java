@@ -72,12 +72,12 @@ public class StatementSheet extends Sheet {
 
     /**
      * 写数据
-     * @param path the storage path
+     * @param xl the storage path
      * @throws IOException
      * @throws ExcelWriteException
      */
     @Override
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    public void writeTo(Path xl) throws IOException, ExcelWriteException {
 
 //        Path worksheets = xl.resolve("worksheets");
 //        if (!Files.exists(worksheets)) {
@@ -111,10 +111,9 @@ public class StatementSheet extends Sheet {
         try {
             workbook.what("0011");
             rs = ps.executeQuery();
-            RowBlock rowBlock = new RowBlock();
-
             if (rs.next()) {
-                sheetWriter.write(path, () -> {
+                RowBlock rowBlock = new RowBlock();
+                sheetWriter.write(xl, () -> {
                     rowBlock.clear();
 
                     // TODO loop
@@ -125,7 +124,8 @@ public class StatementSheet extends Sheet {
 
                     return rowBlock;
                 });
-            }
+                // TODO paging
+            } else writeEmptySheet(xl);
 
         } catch (SQLException e) {
             if (rs != null) {
