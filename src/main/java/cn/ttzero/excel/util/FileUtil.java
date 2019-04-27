@@ -199,7 +199,7 @@ public class FileUtil {
      * @param descFile 目标文件
      */
     public static void cp(File srcFile, File descFile) {
-        if (srcFile.length() == 0l) {
+        if (srcFile.length() == 0L) {
             try {
                 boolean boo = descFile.createNewFile();
                 if (!boo)
