@@ -731,8 +731,8 @@ public abstract class Sheet {
     }
 
     /**
-     * 获取列头
-     * @return 列头数组
+     * Returns the header column info
+     * @return array of column
      */
     public Column[] getHeaderColumns() {
         if (!headerReady) {

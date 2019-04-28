@@ -188,8 +188,13 @@ public class ResultSetSheet extends Sheet {
         return null;
     }
 
+    /**
+     * Returns the header column info
+     * @return array of column
+     */
     @Override
     public Column[] getHeaderColumns() {
+        if (headerReady) return columns;
         if (columns != null) {
             for (int i = 0; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {
