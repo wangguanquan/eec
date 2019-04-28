@@ -59,7 +59,7 @@ public class StatementSheet extends Sheet {
      * 关闭外部源
      */
     @Override
-    public void close() {
+    public void close() throws IOException {
 //        super.close();
         if (ps != null) {
             try {
@@ -68,120 +68,68 @@ public class StatementSheet extends Sheet {
                 workbook.what("9006", e.getMessage());
             }
         }
+        super.close();
     }
 
-    /**
-     * 写数据
-     * @param xl the storage path
-     * @throws IOException
-     * @throws ExcelWriteException
-     */
-    @Override
-    public void writeTo(Path xl) throws IOException, ExcelWriteException {
 
-//        Path worksheets = xl.resolve("worksheets");
-//        if (!Files.exists(worksheets)) {
-//            FileUtil.mkdir(worksheets);
+//    /**
+//     * 写数据
+//     * @param xl the storage path
+//     * @throws IOException
+//     * @throws ExcelWriteException
+//     */
+//    @Override
+//    public void writeTo(Path xl) throws IOException, ExcelWriteException {
+//
+////        Path worksheets = xl.resolve("worksheets");
+////        if (!Files.exists(worksheets)) {
+////            FileUtil.mkdir(worksheets);
+////        }
+////        String name = getFileName();
+////        workbook.what("0010", getName());
+////
+////        // TODO 1.判断各sheet抽出的数据量大小
+////        // TODO 2.如果量大则抽取类型为String的列判断重复率
+////
+//        int i = 0;
+//        try {
+//            ResultSetMetaData metaData = ps.getMetaData();
+//            for ( ; i < columns.length; i++) {
+//                if (StringUtil.isEmpty(columns[i].getName())) {
+//                    columns[i].setName(metaData.getColumnName(i));
+//                }
+//                // TODO metaData.getColumnType()
+//            }
+//        } catch (SQLException e) {
 //        }
-//        String name = getFileName();
-//        workbook.what("0010", getName());
 //
-//        // TODO 1.判断各sheet抽出的数据量大小
-//        // TODO 2.如果量大则抽取类型为String的列判断重复率
+//        for (i = 0 ; i < columns.length; i++) {
+//            if (StringUtil.isEmpty(columns[i].getName())) {
+//                columns[i].setName(String.valueOf(i));
+//            }
+//        }
 //
-        int i = 0;
-        try {
-            ResultSetMetaData metaData = ps.getMetaData();
-            for ( ; i < columns.length; i++) {
-                if (StringUtil.isEmpty(columns[i].getName())) {
-                    columns[i].setName(metaData.getColumnName(i));
-                }
-                // TODO metaData.getColumnType()
-            }
-        } catch (SQLException e) {
-        }
-
-        for (i = 0 ; i < columns.length; i++) {
-            if (StringUtil.isEmpty(columns[i].getName())) {
-                columns[i].setName(String.valueOf(i));
-            }
-        }
-
-        ResultSet rs = null;
-        try {
-            workbook.what("0011");
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                RowBlock rowBlock = new RowBlock();
-                sheetWriter.write(xl, () -> {
-                    rowBlock.clear();
-
-                    // TODO loop
-                    if (sheetWriter.outOfSheet(rowBlock.getTotal())) {
-                        rowBlock.markEnd();
-                        // TODO break
-                    }
-
-                    return rowBlock;
-                });
-                // TODO paging
-            } else writeEmptySheet(xl);
-
-        } catch (SQLException e) {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    workbook.what("9006", ex.getMessage());
-                }
-            }
-            close();
-            throw new ExcelWriteException(e);
-        } finally {
-            sheetWriter.close();
-        }
-
-//        File sheetFile = worksheets.resolve(name).toFile();
 //        ResultSet rs = null;
-//        int sub = 0;
-//        // write date
-//        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+//        try {
 //            workbook.what("0011");
 //            rs = ps.executeQuery();
-//            workbook.what("0012");
-//            // Write header
-//            writeBefore(bw);
-//            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
 //            if (rs.next()) {
-//                // Write sheet data
-//                if (getAutoSize() == 1) {
-//                    do {
-//                        // Paging
-//                        if (rows >= limit) {
-//                            writeRowAutoSize(rs, bw);
-//                            sub++;
-//                            break;
-//                        }
-//                        writeRowAutoSize(rs, bw);
-//                    } while (rs.next());
-//                } else {
-//                    do {
-//                        // Paging
-//                        if (rows >= limit) {
-//                            writeRow(rs, bw);
-//                            sub++;
-//                            break;
-//                        }
-//                        writeRow(rs, bw);
-//                    } while (rs.next());
-//                }
-//            }
+//                RowBlock rowBlock = new RowBlock();
+//                sheetWriter.write(xl, () -> {
+//                    rowBlock.clear();
 //
-//            // Write foot
-//            writeAfter(bw);
+//                    // TODO loop
+//                    if (sheetWriter.outOfSheet(rowBlock.getTotal())) {
+//                        rowBlock.markEnd();
+//                        // TODO break
+//                    }
+//
+//                    return rowBlock;
+//                });
+//                // TODO paging
+//            } else writeEmptySheet(xl);
 //
 //        } catch (SQLException e) {
-//            close();
 //            if (rs != null) {
 //                try {
 //                    rs.close();
@@ -189,50 +137,109 @@ public class StatementSheet extends Sheet {
 //                    workbook.what("9006", ex.getMessage());
 //                }
 //            }
+//            close();
 //            throw new ExcelWriteException(e);
 //        } finally {
-//            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
-//                if (rs != null) {
-//                    try {
-//                        rs.close();
-//                    } catch (SQLException e) {
-//                        workbook.what("9006", e.getMessage());
-//                    }
-//                }
-//                close();
-//            }
+//            sheetWriter.close();
 //        }
 //
-//        // resize columns
-//        boolean resize = false;
-//        for (Column hc : columns) {
-//            if (hc.getWidth() > 0.000001) {
-//                resize = true;
-//                break;
-//            }
-//        }
-//        boolean autoSize;
-//        if (autoSize = (getAutoSize() == 1 || resize)) {
-//            autoColumnSize(sheetFile);
-//        }
+////        File sheetFile = worksheets.resolve(name).toFile();
+////        ResultSet rs = null;
+////        int sub = 0;
+////        // write date
+////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+////            workbook.what("0011");
+////            rs = ps.executeQuery();
+////            workbook.what("0012");
+////            // Write header
+////            writeBefore(bw);
+////            int limit = Const.Limit.MAX_ROWS_ON_SHEET - rows; // exclude header rows
+////            if (rs.next()) {
+////                // Write sheet data
+////                if (getAutoSize() == 1) {
+////                    do {
+////                        // Paging
+////                        if (rows >= limit) {
+////                            writeRowAutoSize(rs, bw);
+////                            sub++;
+////                            break;
+////                        }
+////                        writeRowAutoSize(rs, bw);
+////                    } while (rs.next());
+////                } else {
+////                    do {
+////                        // Paging
+////                        if (rows >= limit) {
+////                            writeRow(rs, bw);
+////                            sub++;
+////                            break;
+////                        }
+////                        writeRow(rs, bw);
+////                    } while (rs.next());
+////                }
+////            }
+////
+////            // Write foot
+////            writeAfter(bw);
+////
+////        } catch (SQLException e) {
+////            close();
+////            if (rs != null) {
+////                try {
+////                    rs.close();
+////                } catch (SQLException ex) {
+////                    workbook.what("9006", ex.getMessage());
+////                }
+////            }
+////            throw new ExcelWriteException(e);
+////        } finally {
+////            if (rows < Const.Limit.MAX_ROWS_ON_SHEET) {
+////                if (rs != null) {
+////                    try {
+////                        rs.close();
+////                    } catch (SQLException e) {
+////                        workbook.what("9006", e.getMessage());
+////                    }
+////                }
+////                close();
+////            }
+////        }
+////
+////        // resize columns
+////        boolean resize = false;
+////        for (Column hc : columns) {
+////            if (hc.getWidth() > 0.000001) {
+////                resize = true;
+////                break;
+////            }
+////        }
+////        boolean autoSize;
+////        if (autoSize = (getAutoSize() == 1 || resize)) {
+////            autoColumnSize(sheetFile);
+////        }
+////
+////        // relationship
+////        relManager.write(worksheets, name);
+////
+////        // Paging
+////        if (sub == 1) {
+////            workbook.what("0013");
+////            ResultSetSheet rss = new ResultSetSheet(workbook, this.name + " (" + (sub) + ")", waterMark, columns, rs, relManager.clone());
+////            rss.setCopySheet(true);
+////            if (autoSize) rss.autoSize();
+////            rss.autoOdd = this.autoOdd;
+////            rss.oddFill = this.oddFill;
+////            workbook.insertSheet(id, rss);
+////            rss.writeTo(xl);
+////        }
+////
+////        close();
 //
-//        // relationship
-//        relManager.write(worksheets, name);
-//
-//        // Paging
-//        if (sub == 1) {
-//            workbook.what("0013");
-//            ResultSetSheet rss = new ResultSetSheet(workbook, this.name + " (" + (sub) + ")", waterMark, columns, rs, relManager.clone());
-//            rss.setCopySheet(true);
-//            if (autoSize) rss.autoSize();
-//            rss.autoOdd = this.autoOdd;
-//            rss.oddFill = this.oddFill;
-//            workbook.insertSheet(id, rss);
-//            rss.writeTo(xl);
-//        }
-//
-//        close();
+//    }
 
+    @Override
+    public RowBlock nextBlock() {
+        return null;
     }
 
 

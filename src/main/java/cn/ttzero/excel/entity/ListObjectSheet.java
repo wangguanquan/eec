@@ -16,6 +16,9 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.manager.Const;
+import cn.ttzero.excel.reader.Cell;
+import cn.ttzero.excel.util.DateUtil;
 import cn.ttzero.excel.util.ExtBufferedWriter;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
@@ -37,6 +40,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static cn.ttzero.excel.entity.IWorksheetWriter.*;
+import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
+import static cn.ttzero.excel.util.DateUtil.toDateValue;
+import static cn.ttzero.excel.util.DateUtil.toTimeValue;
+
 /**
  * Created by guanquan.wang at 2018-01-26 14:48
  */
@@ -56,10 +65,12 @@ public class ListObjectSheet<T> extends Sheet {
         super(workbook, name, waterMark, columns);
     }
 
+
     @Override
-    public void close() {
+    public void close() throws IOException {
         data.clear();
         data = null;
+        super.close();
     }
 
     public ListObjectSheet<T> setData(final List<T> data) {
@@ -68,87 +79,145 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     @Override
-    public void writeTo(Path xl) throws IOException, ExcelWriteException {
-//        Path worksheets = xl.resolve("worksheets");
-//        if (!Files.exists(worksheets)) {
-//            FileUtil.mkdir(worksheets);
-//        }
-//        String name = getFileName();
-//        workbook.what("0010", getName());
-
-        //
-        if (data == null || data.isEmpty()) {
-            writeEmptySheet(xl);
-            return;
-        }
-
-        // create header columns
-        fields = init();
-        if (fields.length == 0 || fields[0] == null) {
-            writeEmptySheet(xl);
-            return;
-        }
-
-
-        RowBlock rowBlock = new RowBlock();
+    public RowBlock nextBlock() {
+        // clear first
+        rowBlock.clear();
 
         try {
-            sheetWriter.write(xl, () -> {
-                rowBlock.clear();
-
-                rowBlock.markEnd();
-                // TODO
-                return rowBlock.flip();
-            });
-        } finally {
-            sheetWriter.close();
+            loopData();
+        } catch (IllegalAccessException e) {
+            throw new ExcelWriteException(e);
         }
 
-
-//        File sheetFile = worksheets.resolve(name).toFile();
-//
-//        // write date
-//        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-//            // Write header
-//            writeBefore(bw);
-//            // Main data
-//            // Write sheet data
-//            if (getAutoSize() == 1) {
-//                for (T o : data) {
-//                    writeRowAutoSize(o, bw);
-//                }
-//            } else {
-//                for (T o : data) {
-//                    writeRow(o, bw);
-//                }
-//            }
-//
-//            // Write foot
-//            writeAfter(bw);
-//
-//        } catch (IllegalAccessException e) {
-//            throw new ExcelWriteException(e);
-//        }
-//
-//        // resize columns
-//        boolean resize = false;
-//        for (Column hc : columns) {
-//            if (hc.getWidth() > 0.000001) {
-//                resize = true;
-//                break;
-//            }
-//        }
-//
-//        if (getAutoSize() == 1 || resize) {
-//            autoColumnSize(sheetFile);
-//        }
-//
-//        // relationship
-//        relManager.write(worksheets, name);
+        return rowBlock.flip();
     }
+
+    private void loopData() throws IllegalAccessException {
+        int end = getEndIndex();
+        List<T> sub = data.subList(rows, end);
+        int len = columns.length;
+        for (T o : sub) {
+            Row row = rowBlock.next();
+            row.index = rows++;
+            Field field;
+            Cell[] cells = row.realloc(len);
+            for (int i = 0; i < len; i++) {
+                field = fields[i];
+                // clear cells
+                Cell cell = cells[i];
+                cell.clear();
+
+                Object e = field.get(o);
+                // blank cell
+                if (e == null) {
+                    cell.setBlank();
+                    continue;
+                }
+
+                Column hc = columns[i];
+                Class<?> clazz = hc.getClazz();
+                setCellValue(cell, e, clazz);
+            }
+        }
+        if (end == data.size()) {
+            rowBlock.markEnd();
+        }
+    }
+
+    private int getEndIndex() {
+        int end = rows + ROW_BLOCK_SIZE;
+        return end <= data.size() ? end : data.size();
+    }
+
+//    @Override
+//    public void writeTo(Path xl) throws IOException, ExcelWriteException {
+////        Path worksheets = xl.resolve("worksheets");
+////        if (!Files.exists(worksheets)) {
+////            FileUtil.mkdir(worksheets);
+////        }
+////        String name = getFileName();
+////        workbook.what("0010", getName());
 //
+//        //
+//        if (data == null || data.isEmpty()) {
+//            writeEmptySheet(xl);
+//            return;
+//        }
+//
+//        // create header columns
+//        fields = init();
+//        if (fields.length == 0 || fields[0] == null) {
+//            writeEmptySheet(xl);
+//            return;
+//        }
+//
+//
+//        RowBlock rowBlock = new RowBlock();
+//
+//        try {
+//            sheetWriter.write(xl, () -> {
+//                rowBlock.clear();
+//
+//                rowBlock.markEnd();
+//                // TODO
+//                return rowBlock.flip();
+//            });
+//        } finally {
+//            sheetWriter.close();
+//        }
+//
+//
+////        File sheetFile = worksheets.resolve(name).toFile();
+////
+////        // write date
+////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+////            // Write header
+////            writeBefore(bw);
+////            // Main data
+////            // Write sheet data
+////            if (getAutoSize() == 1) {
+////                for (T o : data) {
+////                    writeRowAutoSize(o, bw);
+////                }
+////            } else {
+////                for (T o : data) {
+////                    writeRow(o, bw);
+////                }
+////            }
+////
+////            // Write foot
+////            writeAfter(bw);
+////
+////        } catch (IllegalAccessException e) {
+////            throw new ExcelWriteException(e);
+////        }
+////
+////        // resize columns
+////        boolean resize = false;
+////        for (Column hc : columns) {
+////            if (hc.getWidth() > 0.000001) {
+////                resize = true;
+////                break;
+////            }
+////        }
+////
+////        if (getAutoSize() == 1 || resize) {
+////            autoColumnSize(sheetFile);
+////        }
+////
+////        // relationship
+////        relManager.write(worksheets, name);
+//    }
+//
+//    @Override
+//    public RowBlock nextBlock() {
+//        return null;
+//    }
+
+    //
     private static final String[] exclude = {"serialVersionUID", "this$0"};
-    protected Field[] init() {
+
+    private Field[] init() {
         Object o = workbook.getFirst(data);
         if (o == null) return null;
         if (columns == null || columns.length == 0) {
@@ -189,7 +258,7 @@ public class ListObjectSheet<T> extends Sheet {
         } else {
             Field[] fields = new Field[columns.length];
             Class<?> clazz = o.getClass();
-            for (int i = 0; i< columns.length; i++) {
+            for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 try {
                     fields[i] = clazz.getDeclaredField(hc.key);

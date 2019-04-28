@@ -56,6 +56,7 @@ public abstract class Sheet {
     /** odd row's background color */
     protected int oddFill;
 
+    protected RowBlock rowBlock;
     protected IWorksheetWriter sheetWriter;
 
     public int getId() {
@@ -783,7 +784,11 @@ public abstract class Sheet {
     /**
      * abstract method close
      */
-    public abstract void close();
+    public void close() throws IOException {
+        if (sheetWriter != null) {
+            sheetWriter.close();
+        }
+    }
 
     /**
      * write worksheet data to path
@@ -791,8 +796,14 @@ public abstract class Sheet {
      * @throws IOException write error
      * @throws ExcelWriteException others
      */
-
-    public abstract void writeTo(Path path) throws IOException, ExcelWriteException;
+    public void writeTo(Path path) throws IOException, ExcelWriteException {
+        if (sheetWriter != null) {
+            rowBlock = new RowBlock();
+            sheetWriter.write(path);
+        } else {
+            throw new ExcelWriteException("Worksheet writer is not instanced.");
+        }
+    }
 
     /**
      * 添加关联
@@ -885,9 +896,14 @@ public abstract class Sheet {
     }
 
     /**
-     * Write a empty sheet
-     * @param xl the temp path
-     * @throws IOException if io error occur
+     * Returns a row-block. The row-block is content by 32 rows
+     * @return a row-block
+     */
+    public abstract RowBlock nextBlock();
+
+    /**
+     * Returns total rows in this worksheet
+     * @return -1 if unknown
      */
     protected void writeEmptySheet(Path xl) throws IOException {
         workbook.what("Worksheet do't has columns.");

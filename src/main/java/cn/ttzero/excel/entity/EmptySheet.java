@@ -39,53 +39,54 @@ public class EmptySheet extends Sheet {
         super(workbook, name, waterMark, columns);
     }
 
+
+//    @Override
+//    public void writeTo(Path xl) throws IOException {
+//        Path worksheets = xl.resolve("worksheets");
+//        if (!Files.exists(worksheets)) {
+//            FileUtil.mkdir(worksheets);
+//        }
+//        String name = getFileName();
+//        workbook.what("0010", getName());
+//
+//
+//        File sheetFile = worksheets.resolve(name).toFile();
+//
+////        // write date
+////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+////            // Write header
+////            writeBefore(bw);
+////            // Main data
+////            // write ten empty rows
+////            for (int i = 0; i < 10; i++) {
+////                writeEmptyRow(bw);
+////            }
+////
+////            // Write foot
+////            writeAfter(bw);
+////
+////        } finally {
+////            close();
+////        }
+////
+////        // resize columns
+////        boolean resize = false;
+////        for  (Column hc : columns) {
+////            if (hc.getWidth() > 0.000001) {
+////                resize = true;
+////                break;
+////            }
+////        }
+////        if (getAutoSize() == 1 || resize) {
+////            autoColumnSize(sheetFile);
+////        }
+////
+////        // relationship
+////        relManager.write(worksheets, name);
+//    }
+
     @Override
-    public void close() {
-        ;
-    }
-
-    @Override
-    public void writeTo(Path xl) throws IOException {
-        Path worksheets = xl.resolve("worksheets");
-        if (!Files.exists(worksheets)) {
-            FileUtil.mkdir(worksheets);
-        }
-        String name = getFileName();
-        workbook.what("0010", getName());
-
-
-        File sheetFile = worksheets.resolve(name).toFile();
-
-//        // write date
-//        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-//            // Write header
-//            writeBefore(bw);
-//            // Main data
-//            // write ten empty rows
-//            for (int i = 0; i < 10; i++) {
-//                writeEmptyRow(bw);
-//            }
-//
-//            // Write foot
-//            writeAfter(bw);
-//
-//        } finally {
-//            close();
-//        }
-//
-//        // resize columns
-//        boolean resize = false;
-//        for  (Column hc : columns) {
-//            if (hc.getWidth() > 0.000001) {
-//                resize = true;
-//                break;
-//            }
-//        }
-//        if (getAutoSize() == 1 || resize) {
-//            autoColumnSize(sheetFile);
-//        }
-//
-//        // relationship
-//        relManager.write(worksheets, name);
+    public RowBlock nextBlock() {
+        return null;
     }
 }

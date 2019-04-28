@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -51,79 +52,6 @@ public class ListMapSheet extends Sheet {
     public ListMapSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
         super(workbook, name, waterMark, columns);
     }
-
-    @Override
-    public void close() {
-        data.clear();
-        data = null;
-    }
-
-    public ListMapSheet setData(final List<Map<String, ?>> data) {
-        this.data = data;
-        return this;
-    }
-
-    @Override
-    public void writeTo(Path xl) throws IOException {
-//        Path worksheets = xl.resolve("worksheets");
-//        if (!Files.exists(worksheets)) {
-//            FileUtil.mkdir(worksheets);
-//        }
-//        String name = getFileName();
-//        workbook.what("0010", getName());
-//
-//        @SuppressWarnings("unchecked")
-//        Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
-//        for (int i = 0; i < columns.length; i++) {
-//            Column hc = columns[i];
-//            if (StringUtil.isEmpty(hc.key)) {
-//                throw new IOException(getClass() + " 类别必须指定map的key。");
-//            }
-//            if (hc.getClazz() == null) {
-//                hc.setClazz(first.get(hc.key).getClass());
-//            }
-//        }
-//
-//        File sheetFile = worksheets.resolve(name).toFile();
-//
-//        // write date
-//        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-//            // Write header
-//            writeBefore(bw);
-//            // Main data
-//            // Write sheet data
-//            if (getAutoSize() == 1) {
-//                for (Map<String, ?> map : data) {
-//                    writeRowAutoSize(map, bw);
-//                }
-//            } else {
-//                for (Map<String, ?> map : data) {
-//                    writeRow(map, bw);
-//                }
-//            }
-//
-//            // Write foot
-//            writeAfter(bw);
-//
-//        }
-//
-//        // resize columns
-//        boolean resize = false;
-//        for (Column hc : columns) {
-//            if (hc.getWidth() > 0.000001) {
-//                resize = true;
-//                break;
-//            }
-//        }
-//
-//        if (getAutoSize() == 1 || resize) {
-//            autoColumnSize(sheetFile);
-//        }
-//
-//        // relationship
-//        relManager.write(worksheets, name);
-    }
-
 
     @Override
     public Column[] getHeaderColumns() {
@@ -154,6 +82,83 @@ public class ListMapSheet extends Sheet {
         return columns;
     }
 
+    @Override
+    public void close() throws IOException {
+        data.clear();
+        data = null;
+        super.close();
+    }
+
+    public ListMapSheet setData(final List<Map<String, ?>> data) {
+        this.data = data;
+        return this;
+    }
+//
+//    @Override
+//    public void writeTo(Path xl) throws IOException {
+////        Path worksheets = xl.resolve("worksheets");
+////        if (!Files.exists(worksheets)) {
+////            FileUtil.mkdir(worksheets);
+////        }
+////        String name = getFileName();
+////        workbook.what("0010", getName());
+////
+////        @SuppressWarnings("unchecked")
+////        Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
+////        for (int i = 0; i < columns.length; i++) {
+////            Column hc = columns[i];
+////            if (StringUtil.isEmpty(hc.key)) {
+////                throw new IOException(getClass() + " 类别必须指定map的key。");
+////            }
+////            if (hc.getClazz() == null) {
+////                hc.setClazz(first.get(hc.key).getClass());
+////            }
+////        }
+////
+////        File sheetFile = worksheets.resolve(name).toFile();
+////
+////        // write date
+////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
+////            // Write header
+////            writeBefore(bw);
+////            // Main data
+////            // Write sheet data
+////            if (getAutoSize() == 1) {
+////                for (Map<String, ?> map : data) {
+////                    writeRowAutoSize(map, bw);
+////                }
+////            } else {
+////                for (Map<String, ?> map : data) {
+////                    writeRow(map, bw);
+////                }
+////            }
+////
+////            // Write foot
+////            writeAfter(bw);
+////
+////        }
+////
+////        // resize columns
+////        boolean resize = false;
+////        for (Column hc : columns) {
+////            if (hc.getWidth() > 0.000001) {
+////                resize = true;
+////                break;
+////            }
+////        }
+////
+////        if (getAutoSize() == 1 || resize) {
+////            autoColumnSize(sheetFile);
+////        }
+////
+////        // relationship
+////        relManager.write(worksheets, name);
+//    }
+
+    @Override
+    public RowBlock nextBlock() {
+        return null;
+    }
 //
 //    /**
 //     * write map
