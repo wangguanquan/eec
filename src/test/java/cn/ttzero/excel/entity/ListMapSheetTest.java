@@ -41,9 +41,45 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testAllType() throws IOException {
-        new Workbook("test map", "guanquan.wang")
+        new Workbook("test all type map", "guanquan.wang")
                 .watch(Print::println)
                 .addSheet(createAllTypeData())
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testHeaderColumn() throws IOException {
+        new Workbook("test header column map", "guanquan.wang")
+                .watch(Print::println)
+                .addSheet(createAllTypeData()
+                    , new Sheet.Column("char", "cv", char.class)
+                    , new Sheet.Column("short", "sv", short.class)
+                    , new Sheet.Column("int", "nv", int.class)
+                    , new Sheet.Column("long", "lv", long.class)
+                    , new Sheet.Column("float", "fv", float.class)
+                    , new Sheet.Column("double", "dv", double.class)
+                    , new Sheet.Column("string", "s", String.class)
+                    , new Sheet.Column("decimal", "mv", BigDecimal.class)
+                    , new Sheet.Column("date", "av", Date.class)
+                    , new Sheet.Column("timestamp", "iv", Timestamp.class)
+                    , new Sheet.Column("time", "tv", Time.class)
+                    , new Sheet.Column("LocalDate", "ldv", LocalDate.class)
+                    , new Sheet.Column("LocalDateTime", "ldtv", LocalDateTime.class)
+                    , new Sheet.Column("LocalTime", "ltv", LocalTime.class)
+                )
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testHeaderColumnBox() throws IOException {
+        new Workbook("test header column box type map", "guanquan.wang")
+                .watch(Print::println)
+                .addSheet(createAllTypeData()
+                        , new Sheet.Column("Character", "cv", Character.class)
+                        , new Sheet.Column("Short", "sv", Short.class)
+                        , new Sheet.Column("Integer", "nv", Integer.class)
+                        , new Sheet.Column("Long", "lv", Long.class)
+                        , new Sheet.Column("Float", "fv", Float.class)
+                        , new Sheet.Column("Double", "dv", Double.class)
+                )
                 .writeTo(defaultTestPath);
     }
 
