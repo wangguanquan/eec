@@ -16,24 +16,15 @@
 
 package cn.ttzero.excel.entity;
 
-import cn.ttzero.excel.util.ExtBufferedWriter;
-import cn.ttzero.excel.util.FileUtil;
+import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 
 /**
  * Created by guanquan.wang at 2018-01-26 14:46
@@ -53,6 +44,10 @@ public class ListMapSheet extends Sheet {
         super(workbook, name, waterMark, columns);
     }
 
+    /**
+     * Returns the header column info
+     * @return array of column
+     */
     @Override
     public Column[] getHeaderColumns() {
         @SuppressWarnings("unchecked")
@@ -93,7 +88,7 @@ public class ListMapSheet extends Sheet {
         this.data = data;
         return this;
     }
-//
+
 //    @Override
 //    public void writeTo(Path xl) throws IOException {
 ////        Path worksheets = xl.resolve("worksheets");
@@ -155,11 +150,54 @@ public class ListMapSheet extends Sheet {
 ////        relManager.write(worksheets, name);
 //    }
 
+    /**
+     * Returns a row-block. The row-block is content by 32 rows
+     * @return a row-block
+     */
     @Override
     public RowBlock nextBlock() {
-        return null;
+        // clear first
+        rowBlock.clear();
+
+        loopData();
+
+        return rowBlock.flip();
     }
-//
+
+    private void loopData() {
+        int end = getEndIndex();
+        List<Map<String, ?>> sub = data.subList(rows, end);
+        int len = columns.length;
+        for (Map<String, ?> map : sub) {
+            Row row = rowBlock.next();
+            row.index = rows++;
+            Cell[] cells = row.realloc(len);
+            for (int i = 0; i < len; i++) {
+                Column hc = columns[i];
+                Object e = map.get(hc.key);
+                // clear cells
+                Cell cell = cells[i];
+                cell.clear();
+
+                // blank cell
+                if (e == null) {
+                    cell.setBlank();
+                    continue;
+                }
+
+                setCellValue(cell, e, columns[i]);
+            }
+        }
+        if (end == data.size()) {
+            rowBlock.markEnd();
+        }
+    }
+
+    private int getEndIndex() {
+        int end = rows + ROW_BLOCK_SIZE;
+        return end <= data.size() ? end : data.size();
+    }
+
 //    /**
 //     * write map
 //     *
