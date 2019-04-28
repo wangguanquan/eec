@@ -321,4 +321,12 @@ public class ListMapSheet extends Sheet {
 //        }
 //        bw.write("</row>");
 //    }
+
+    /**
+     * Returns total rows in this worksheet
+     * @return -1 if unknown
+     */
+    public int size() {
+        return data != null ? data.size() : 0;
+    }
 }

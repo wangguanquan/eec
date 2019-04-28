@@ -896,6 +896,14 @@ public abstract class Sheet {
     }
 
     /**
+     * Returns total rows in this worksheet
+     * @return -1 if unknown
+     */
+    public int size() {
+        return -1;
+    }
+
+    /**
      * Returns a row-block. The row-block is content by 32 rows
      * @return a row-block
      */

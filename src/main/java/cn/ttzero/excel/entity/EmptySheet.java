@@ -89,4 +89,12 @@ public class EmptySheet extends Sheet {
     public RowBlock nextBlock() {
         return null;
     }
+
+    /**
+     * Returns total rows in this worksheet
+     * @return 0
+     */
+    public int size() {
+        return 0;
+    }
 }
