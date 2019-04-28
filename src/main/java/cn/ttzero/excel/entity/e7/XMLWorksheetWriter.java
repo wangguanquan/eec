@@ -314,6 +314,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             Cell cell = cells[i];
             int xf = cell.xf;
             switch (cell.t) {
+                case INLINESTR:
                 case SST:
                     writeString(cell.sv, r, i, xf);
                     break;
