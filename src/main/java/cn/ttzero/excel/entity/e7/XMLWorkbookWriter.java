@@ -336,7 +336,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
             IWorksheetWriter worksheetWriter = new XMLWorksheetWriter(workbook, sheet);
-            if ((n = sheet.getColumns().length) > worksheetWriter.getColumnLimit()) {
+            if ((n = sheet.getHeaderColumns().length) > worksheetWriter.getColumnLimit()) {
                 throw new TooManyColumnsException(n, worksheetWriter.getColumnLimit());
             }
             sheet.setSheetWriter(worksheetWriter);

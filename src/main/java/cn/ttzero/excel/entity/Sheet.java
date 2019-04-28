@@ -725,7 +725,10 @@ public abstract class Sheet {
      * 获取列头
      * @return 列头数组
      */
-    public final Column[] getColumns() {
+    public Column[] getHeaderColumns() {
+        if (columns == null) {
+            columns = new Column[0];
+        }
         return columns;
     }
 

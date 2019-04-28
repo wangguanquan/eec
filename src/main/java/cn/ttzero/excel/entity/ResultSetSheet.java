@@ -67,7 +67,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
 //        super.close();
         if (rs != null) {
             try {
@@ -180,6 +180,18 @@ public class ResultSetSheet extends Sheet {
 //            rss.writeTo(xl);
 //        }
 
+    }
+
+    @Override
+    public Column[] getHeaderColumns() {
+        if (columns != null) {
+            for (int i = 0; i < columns.length; i++) {
+                if (StringUtil.isEmpty(columns[i].getName())) {
+                    columns[i].setName(String.valueOf(i));
+                }
+            }
+        } else columns = new Column[0];
+        return columns;
     }
 
     protected ResultSetSheet clone() {

@@ -234,4 +234,28 @@ public class StatementSheet extends Sheet {
 //        close();
 
     }
+
+
+    @Override
+    public Column[] getHeaderColumns() {
+
+        int i = 0;
+        try {
+            ResultSetMetaData metaData = ps.getMetaData();
+            for ( ; i < columns.length; i++) {
+                if (StringUtil.isEmpty(columns[i].getName())) {
+                    columns[i].setName(metaData.getColumnName(i));
+                }
+                // TODO metaData.getColumnType()
+            }
+        } catch (SQLException e) {
+        }
+
+        for (i = 0 ; i < columns.length; i++) {
+            if (StringUtil.isEmpty(columns[i].getName())) {
+                columns[i].setName(String.valueOf(i));
+            }
+        }
+        return new Column[0];
+    }
 }

@@ -123,6 +123,37 @@ public class ListMapSheet extends Sheet {
 //        // relationship
 //        relManager.write(worksheets, name);
     }
+
+
+    @Override
+    public Column[] getHeaderColumns() {
+        @SuppressWarnings("unchecked")
+        Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
+        if (first == null && columns == null) {
+            columns = new Column[0];
+        }
+        else if (columns == null) {
+            int size = first.size(), i = 0;
+            columns = new Column[size];
+            for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, ?> entry = it.next();
+                columns[i] = new Column(entry.getKey(), entry.getValue().getClass());
+            }
+        }
+        else if (first != null) {
+            for (int i = 0; i < columns.length; i++) {
+                Column hc = columns[i];
+                if (StringUtil.isEmpty(hc.key)) {
+                    throw new ExcelWriteException(getClass() + " 类别必须指定map的key。");
+                }
+                if (hc.getClazz() == null) {
+                    hc.setClazz(first.get(hc.key).getClass());
+                }
+            }
+        }
+        return columns;
+    }
+
 //
 //    /**
 //     * write map
