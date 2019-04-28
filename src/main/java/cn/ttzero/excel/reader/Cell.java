@@ -16,19 +16,26 @@
 
 package cn.ttzero.excel.reader;
 
+import java.math.BigDecimal;
+
 /**
  * Create by guanquan.wang on 2018-09-22
  */
 public class Cell {
     public Cell() { }
-    static final char SST         = 's';
-    static final char BOOL        = 'b';
-    static final char FUNCTION    = 'f';
-    static final char INLINESTR   = 'r';
-    static final char LONG        = 'l';
-    static final char DOUBLE      = 'd';
-    static final char NUMERIC     = 'n';
-    static final char BLANK       = 'k';
+    public static final char SST         = 's';
+    public static final char BOOL        = 'b';
+    public static final char FUNCTION    = 'f';
+    public static final char INLINESTR   = 'r';
+    public static final char LONG        = 'l';
+    public static final char DOUBLE      = 'd';
+    public static final char NUMERIC     = 'n';
+    public static final char BLANK       = 'k';
+    public static final char CHARACTER   = 'c';
+    public static final char DECIMAL     = 'm';
+    public static final char DATETIME    = 'i';
+    public static final char DATE        = 'a';
+    public static final char TIME        = 't';
     // n=numeric
     // s=string
     // b=boolean
@@ -36,67 +43,84 @@ public class Cell {
     // r=inlineStr
     // l=long
     // d=double
-    private char t; // type
+    public char t; // type
     // value
-    private String sv;
-    private int nv;
-    private long lv;
-    private double dv;
-    private boolean bv;
+    public String sv;
+    public int nv;
+    public long lv;
+    public double dv;
+    public boolean bv;
+    public char cv;
+    public BigDecimal mv;
+    public int xf;
 
-    void setT(char t) {
+    public void setT(char t) {
         this.t = t;
     }
 
-    void setSv(String sv) {
+    public void setSv(String sv) {
+        this.t = INLINESTR;
         this.sv = sv;
     }
 
-    void setNv(int nv) {
+    public void setNv(int nv) {
+        this.t = NUMERIC;
         this.nv = nv;
     }
 
-    void setDv(double dv) {
+    public void setDv(double dv) {
+        this.t = DOUBLE;
         this.dv = dv;
     }
 
-    void setBv(boolean bv) {
+    public void setBv(boolean bv) {
+        this.t = BOOL;
         this.bv = bv;
     }
 
-    long getLv() {
-        return lv;
+    public void setCv(char c) {
+        this.t = CHARACTER;
+        this.cv = c;
     }
 
-    void setLv(long lv) {
+    public void setBlank() {
+        this.t = BLANK;
+    }
+
+    public void setLv(long lv) {
+        this.t = LONG;
         this.lv = lv;
     }
 
-    char getT() {
-        return t;
+    public void setMv(BigDecimal mv) {
+        this.t = DECIMAL;
+        this.mv = mv;
     }
 
-    String getSv() {
-        return sv;
+    public void setIv(double i) {
+        this.t = DATETIME;
+        this.dv = i;
     }
 
-    int getNv() {
-        return nv;
+    public void setAv(int a) {
+        this.t = DATE;
+        this.nv = a;
     }
 
-    double getDv() {
-        return dv;
+    public void setTv(double t) {
+        this.t = TIME;
+        this.dv = t;
     }
 
-    boolean getBv() {
-        return bv;
-    }
-
-    void clear() {
+    public void clear() {
         this.t = '\0';
         this.sv = null;
         this.nv = 0;
         this.dv = 0.0;
         this.bv = false;
+        this.lv = 0L;
+        this.cv = '\0';
+        this.mv = null;
+        this.xf = 0;
     }
 }
