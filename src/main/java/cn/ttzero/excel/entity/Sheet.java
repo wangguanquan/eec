@@ -590,7 +590,7 @@ public abstract class Sheet {
                 style = Styles.defaultTimestampBorderStyle();
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
-            } else if (isInt(clazz) || isLong(clazz) || isBigDecimal(clazz)) {
+            } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
                     case Const.ColumnType.NORMAL: // 正常显示数字
@@ -603,7 +603,7 @@ public abstract class Sheet {
                         break;
                     default:
                 }
-            } else if (isFloat(clazz)) {
+            } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
                 style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
                     case Const.ColumnType.NORMAL: // 正常显示数字
@@ -933,11 +933,15 @@ public abstract class Sheet {
             cell.setIv(toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
             cell.setCv((Character) e);
+        } else if (isShort(clazz)) {
+            cell.setNv((Short) e);
         } else if (isInt(clazz)) {
             cell.setNv((Integer) e);
         } else if (isLong(clazz)) {
             cell.setLv((Long) e);
         } else if (isFloat(clazz)) {
+            cell.setDv((Float) e);
+        } else if (isDouble(clazz)) {
             cell.setDv((Double) e);
         } else if (isBool(clazz)) {
             cell.setBv((Boolean) e);
