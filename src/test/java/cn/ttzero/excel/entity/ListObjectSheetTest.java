@@ -18,6 +18,7 @@ package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.Print;
 import cn.ttzero.excel.annotation.DisplayName;
+import cn.ttzero.excel.annotation.NotExport;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -129,6 +130,8 @@ public class ListObjectSheetTest extends WorkbookTest{
         private String name;
         @DisplayName("年龄")
         private int age;
+        @NotExport("secret")
+        private String password;
 
         Student(int id, String name, int age) {
             this.id = id;
@@ -140,7 +143,9 @@ public class ListObjectSheetTest extends WorkbookTest{
             int n = random.nextInt(100) + 1;
             List<Student> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new Student(i, getRandomString(), random.nextInt(15) + 5));
+                Student e = new Student(i, getRandomString(), random.nextInt(15) + 5);
+                e.password = getRandomString();
+                list.add(e);
             }
             return list;
         }
