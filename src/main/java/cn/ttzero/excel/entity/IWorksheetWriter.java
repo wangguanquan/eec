@@ -137,6 +137,15 @@ public interface IWorksheetWriter extends Closeable {
     }
 
     /**
+     * Test clazz is double class
+     * @param clazz the class
+     * @return boolean value
+     */
+    static boolean isDouble(Class<?> clazz) {
+        return clazz == double.class || clazz == Double.class;
+    }
+
+    /**
      * 测试是否为Boolean类型
      * @param clazz 列类型
      * @return bool
