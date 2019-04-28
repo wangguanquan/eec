@@ -31,6 +31,8 @@ public class Const {
     public static final String lineSeparator = System.lineSeparator();
     /** prefix of eec project */
     public static final String EEC_PREFIX = "eec+";
+    /** Size of row-block */
+    public static final int ROW_BLOCK_SIZE = 32;
 
     /**
      * Relation
