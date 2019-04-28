@@ -50,6 +50,7 @@ public class ListMapSheet extends Sheet {
      */
     @Override
     public Column[] getHeaderColumns() {
+        if (headerReady) return columns;
         @SuppressWarnings("unchecked")
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
         // No data
@@ -80,6 +81,7 @@ public class ListMapSheet extends Sheet {
         for (Column hc : columns) {
             hc.styles = workbook.getStyles();
         }
+        headerReady = true;
         return columns;
     }
 

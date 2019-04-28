@@ -64,6 +64,8 @@ public abstract class Sheet {
 
     protected RowBlock rowBlock;
     protected IWorksheetWriter sheetWriter;
+    /** To mark the header column is ready */
+    protected boolean headerReady;
 
     public int getId() {
         return id;
@@ -733,8 +735,11 @@ public abstract class Sheet {
      * @return 列头数组
      */
     public Column[] getHeaderColumns() {
-        if (columns == null) {
-            columns = new Column[0];
+        if (!headerReady) {
+            if (columns == null) {
+                columns = new Column[0];
+            }
+            headerReady = true;
         }
         return columns;
     }

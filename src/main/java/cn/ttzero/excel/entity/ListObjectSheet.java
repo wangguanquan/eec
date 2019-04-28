@@ -183,13 +183,16 @@ public class ListObjectSheet<T> extends Sheet {
      */
     @Override
     public Column[] getHeaderColumns() {
-        if (data == null || data.isEmpty()) {
-            columns = new Column[0];
-        }
-        // create header columns
-        fields = init();
-        if (fields == null || fields.length == 0 || fields[0] == null) {
-            columns = new Column[0];
+        if (!headerReady) {
+            if (data == null || data.isEmpty()) {
+                columns = new Column[0];
+            }
+            // create header columns
+            fields = init();
+            if (fields == null || fields.length == 0 || fields[0] == null) {
+                columns = new Column[0];
+            }
+            headerReady = true;
         }
         return columns;
     }
