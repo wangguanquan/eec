@@ -124,8 +124,7 @@ public interface IWorksheetWriter extends Closeable {
      * @return bool
      */
     static boolean isFloat(Class<?> clazz) {
-        return clazz == double.class || clazz == Double.class
-            || clazz == float.class || clazz == Float.class;
+        return clazz == float.class || clazz == Float.class;
     }
 
     /**
