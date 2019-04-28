@@ -52,18 +52,21 @@ public class ListMapSheet extends Sheet {
     public Column[] getHeaderColumns() {
         @SuppressWarnings("unchecked")
         Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
-        if (first == null && columns == null) {
-            columns = new Column[0];
+        // No data
+        if (first == null) {
+            if (columns == null) {
+                columns = new Column[0];
+            }
         }
-        else if (columns == null) {
+        else if (columns.length == 0) {
             int size = first.size(), i = 0;
             columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
-                columns[i] = new Column(entry.getKey(), entry.getValue().getClass());
+                columns[i++] = new Column(entry.getKey(), entry.getKey(), entry.getValue().getClass());
             }
         }
-        else if (first != null) {
+        else {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 if (StringUtil.isEmpty(hc.key)) {
@@ -73,6 +76,9 @@ public class ListMapSheet extends Sheet {
                     hc.setClazz(first.get(hc.key).getClass());
                 }
             }
+        }
+        for (Column hc : columns) {
+            hc.styles = workbook.getStyles();
         }
         return columns;
     }
