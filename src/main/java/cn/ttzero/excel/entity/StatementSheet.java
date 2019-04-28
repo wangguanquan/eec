@@ -245,7 +245,7 @@ public class StatementSheet extends Sheet {
 
     @Override
     public Column[] getHeaderColumns() {
-
+        if (headerReady) return columns;
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
@@ -263,6 +263,6 @@ public class StatementSheet extends Sheet {
                 columns[i].setName(String.valueOf(i));
             }
         }
-        return new Column[0];
+        return columns;
     }
 }
