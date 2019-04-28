@@ -20,9 +20,16 @@ import cn.ttzero.excel.Print;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -34,27 +41,25 @@ public class WorkbookTest {
      * The default output path
      */
     private Path defaultTestPath = Paths.get("target/excel/");
-    private Random random = new Random();
+    private static Random random = new Random();
 
     @Test public void testWrite() throws IOException {
         new Workbook("test", "guanquan.wang")
             .watch(Print::println)
-            .addSheet(createTestData())
+            .addSheet(Item.randomTestData())
             .writeTo(defaultTestPath);
     }
 
-    private List<Item> createTestData() {
-        int n = random.nextInt(100) + 1;
-        List<Item> list = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            list.add(new Item(i, getRandom()));
-        }
-        return list;
+    @Test public void testAllTypeWrite() throws IOException {
+        new Workbook("all type", "guanquan.wang")
+            .watch(Print::println)
+            .addSheet(AllType.randomTestData())
+            .writeTo(defaultTestPath);
     }
 
-    private char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
-    private char[][] cache = {new char[6], new char[7], new char[8], new char[9], new char[10]};
-    public String getRandom() {
+    private static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
+    private static char[][] cache = {new char[6], new char[7], new char[8], new char[9], new char[10]};
+    public static String getRandomString() {
         int n = random.nextInt(5), size = charArray.length;
         char[] cs = cache[n];
         for (int i = 0; i < cs.length; i++) {
@@ -67,9 +72,59 @@ public class WorkbookTest {
         private int id;
         private String name;
 
-        public Item(int id, String name) {
+        Item(int id, String name) {
             this.id = id;
             this.name = name;
+        }
+
+        static List<Item> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            List<Item> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new Item(i, getRandomString()));
+            }
+            return list;
+        }
+    }
+
+    public static class AllType {
+        private char cv;
+        private short sv;
+        private int nv;
+        private long lv;
+        private float fv;
+        private double dv;
+        private String s;
+        private BigDecimal mv;
+        private Date av;
+        private Timestamp iv;
+        private Time tv;
+        private LocalDate ldv;
+        private LocalDateTime ldtv;
+        private LocalTime ltv;
+
+        static List<AllType> randomTestData() {
+            int size = random.nextInt(100) + 1;
+            List<AllType> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                AllType o = new AllType();
+                o.cv = charArray[random.nextInt(charArray.length)];
+                o.sv = (short) (random.nextInt() & 0xFFFF);
+                o.nv = random.nextInt();
+                o.lv = random.nextLong();
+                o.fv = random.nextFloat();
+                o.dv = random.nextDouble();
+                o.s = getRandomString();
+                o.mv = BigDecimal.valueOf(random.nextDouble());
+                o.av = new Date();
+                o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
+                o.tv = new Time(random.nextLong());
+                o.ldv = LocalDate.now();
+                o.ldtv = LocalDateTime.now();
+                o.ltv = LocalTime.now();
+                list.add(o);
+            }
+            return list;
         }
     }
 }
