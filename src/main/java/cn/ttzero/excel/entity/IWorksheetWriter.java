@@ -110,6 +110,15 @@ public interface IWorksheetWriter extends Closeable {
     }
 
     /**
+     * Test clazz is short class
+     * @param clazz the class
+     * @return boolean value
+     */
+    static boolean isShort(Class<?> clazz) {
+        return clazz == short.class || clazz == Short.class;
+    }
+
+    /**
      * 测试是否为Long类型
      * @param clazz 列类型
      * @return bool
