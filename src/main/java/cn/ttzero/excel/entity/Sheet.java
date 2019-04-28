@@ -919,12 +919,12 @@ public abstract class Sheet {
     protected void convert(Cell cell, Column hc, int n) {
         Object e = hc.processor.conversion(n);
         if (e != null) {
-            Class<?> clazz = e.getClass();
-            setCellValue(cell, e, clazz);
+            setCellValue(cell, e, hc);
         } else cell.setBlank();
     }
 
-    protected void setCellValue(Cell cell, Object e, Class<?> clazz) {
+    protected void setCellValue(Cell cell, Object e, Column hc) {
+        Class<?> clazz = hc.getClazz();
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
@@ -958,6 +958,7 @@ public abstract class Sheet {
         } else {
             cell.setSv(e.toString());
         }
+        cell.xf = getStyleIndex(hc, e);
     }
 
     protected int getStyleIndex(Sheet.Column hc, Object o) {

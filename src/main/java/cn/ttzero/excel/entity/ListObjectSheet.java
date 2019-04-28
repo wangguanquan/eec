@@ -114,9 +114,7 @@ public class ListObjectSheet<T> extends Sheet {
                     continue;
                 }
 
-                Column hc = columns[i];
-                Class<?> clazz = hc.getClazz();
-                setCellValue(cell, e, clazz);
+                setCellValue(cell, e, columns[i]);
             }
         }
         if (end == data.size()) {
