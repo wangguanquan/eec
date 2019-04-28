@@ -17,6 +17,7 @@
 package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.Print;
+import cn.ttzero.excel.annotation.DisplayName;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -47,6 +48,13 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("all type object", "guanquan.wang")
             .watch(Print::println)
             .addSheet(AllType.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testAnnotation() throws IOException {
+        new Workbook("annotation object", "guanquan.wang")
+            .watch(Print::println)
+            .addSheet(Student.randomTestData())
             .writeTo(defaultTestPath);
     }
 
@@ -106,6 +114,33 @@ public class ListObjectSheetTest extends WorkbookTest{
                 o.ldtv = LocalDateTime.now();
                 o.ltv = LocalTime.now();
                 list.add(o);
+            }
+            return list;
+        }
+    }
+
+    /**
+     * Annotation Object
+     */
+    public static class Student {
+        @DisplayName("学号")
+        private int id;
+        @DisplayName("姓名")
+        private String name;
+        @DisplayName("年龄")
+        private int age;
+
+        Student(int id, String name, int age) {
+            this.id = id;
+            this.name = name;
+            this.age = age;
+        }
+
+        static List<Student> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            List<Student> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new Student(i, getRandomString(), random.nextInt(15) + 5));
             }
             return list;
         }
