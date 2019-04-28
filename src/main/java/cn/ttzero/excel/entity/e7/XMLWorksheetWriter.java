@@ -292,7 +292,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     /**
      * Write a row data
-     * @param row
+     * @param row a row data
      */
     private void writeRow(Row row) throws IOException {
         // Row number
