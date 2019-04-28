@@ -193,7 +193,7 @@ public class ListMapSheet extends Sheet {
                     continue;
                 }
 
-                setCellValue(cell, e, columns[i]);
+                setCellValue(cell, e, hc);
             }
         }
         if (end == data.size()) {
