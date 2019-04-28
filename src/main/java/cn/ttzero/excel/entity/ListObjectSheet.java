@@ -16,35 +16,17 @@
 
 package cn.ttzero.excel.entity;
 
-import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.reader.Cell;
-import cn.ttzero.excel.util.DateUtil;
-import cn.ttzero.excel.util.ExtBufferedWriter;
-import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import cn.ttzero.excel.annotation.DisplayName;
 import cn.ttzero.excel.annotation.NotExport;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cn.ttzero.excel.entity.IWorksheetWriter.*;
 import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
-import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
-import static cn.ttzero.excel.util.DateUtil.toDateValue;
-import static cn.ttzero.excel.util.DateUtil.toTimeValue;
 
 /**
  * Created by guanquan.wang at 2018-01-26 14:48
@@ -127,92 +109,6 @@ public class ListObjectSheet<T> extends Sheet {
         return end <= data.size() ? end : data.size();
     }
 
-//    @Override
-//    public void writeTo(Path xl) throws IOException, ExcelWriteException {
-////        Path worksheets = xl.resolve("worksheets");
-////        if (!Files.exists(worksheets)) {
-////            FileUtil.mkdir(worksheets);
-////        }
-////        String name = getFileName();
-////        workbook.what("0010", getName());
-//
-//        //
-//        if (data == null || data.isEmpty()) {
-//            writeEmptySheet(xl);
-//            return;
-//        }
-//
-//        // create header columns
-//        fields = init();
-//        if (fields.length == 0 || fields[0] == null) {
-//            writeEmptySheet(xl);
-//            return;
-//        }
-//
-//
-//        RowBlock rowBlock = new RowBlock();
-//
-//        try {
-//            sheetWriter.write(xl, () -> {
-//                rowBlock.clear();
-//
-//                rowBlock.markEnd();
-//                // TODO
-//                return rowBlock.flip();
-//            });
-//        } finally {
-//            sheetWriter.close();
-//        }
-//
-//
-////        File sheetFile = worksheets.resolve(name).toFile();
-////
-////        // write date
-////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-////            // Write header
-////            writeBefore(bw);
-////            // Main data
-////            // Write sheet data
-////            if (getAutoSize() == 1) {
-////                for (T o : data) {
-////                    writeRowAutoSize(o, bw);
-////                }
-////            } else {
-////                for (T o : data) {
-////                    writeRow(o, bw);
-////                }
-////            }
-////
-////            // Write foot
-////            writeAfter(bw);
-////
-////        } catch (IllegalAccessException e) {
-////            throw new ExcelWriteException(e);
-////        }
-////
-////        // resize columns
-////        boolean resize = false;
-////        for (Column hc : columns) {
-////            if (hc.getWidth() > 0.000001) {
-////                resize = true;
-////                break;
-////            }
-////        }
-////
-////        if (getAutoSize() == 1 || resize) {
-////            autoColumnSize(sheetFile);
-////        }
-////
-////        // relationship
-////        relManager.write(worksheets, name);
-//    }
-//
-//    @Override
-//    public RowBlock nextBlock() {
-//        return null;
-//    }
-
-    //
     private static final String[] exclude = {"serialVersionUID", "this$0"};
 
     private Field[] init() {
@@ -281,6 +177,10 @@ public class ListObjectSheet<T> extends Sheet {
 
     }
 
+    /**
+     * Returns the header column info
+     * @return array of column
+     */
     @Override
     public Column[] getHeaderColumns() {
         if (data == null || data.isEmpty()) {
@@ -293,261 +193,6 @@ public class ListObjectSheet<T> extends Sheet {
         }
         return columns;
     }
-//    /**
-//     * write object
-//     *
-//     * @param o
-//     * @param bw
-//     * @throws IOException
-//     */
-//    protected void writeRowAutoSize(T o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
-//        if (o == null) {
-//            writeEmptyRow(bw);
-//            return;
-//        }
-//        int r = ++rows;
-//        // logging
-//        if (r % 1_0000 == 0) {
-//            workbook.what("0014", String.valueOf(r));
-//        }
-//        final int len = columns.length;
-//        bw.write("<row r=\"");
-//        bw.writeInt(r);
-//        bw.write("\" spans=\"1:");
-//        bw.writeInt(len);
-//        bw.write("\">");
-//
-//        Field field;
-//        Object e;
-//        for (int i = 0; i < len; i++) {
-//            Column hc = columns[i];
-//            field = fields[i];
-//            Class<?> clazz = hc.getClazz();
-//            // t n=numeric (default), s=string, b=boolean
-//            if (isString(clazz)) {
-//                String s = (e = field.get(o)) != null ? e.toString() : null;
-//                writeStringAutoSize(bw, s, i);
-//            }
-//            else if (isDate(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.util.Date date = (java.util.Date) e;
-//                    writeDate(bw, date, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isDateTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    Timestamp ts = (Timestamp) e;
-//                    writeTimestamp(bw, ts, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isChar(clazz)) {
-//                Character c = (Character) field.get(o);
-//                if (c != null) writeCharAutoSize(bw, c, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isInt(clazz)) {
-//                Integer n = (Integer) field.get(o);
-//                if (n != null) writeIntAutoSize(bw, n, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isLong(clazz)) {
-//                Long l = (Long) field.get(o);
-//                if (l != null) writeLong(bw, l, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isFloat(clazz)) {
-//                Double d = (Double) field.get(o);
-//                if (d != null) writeDouble(bw, d, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isBool(clazz)) {
-//                Boolean bool = (Boolean) field.get(o);
-//                if (bool != null) writeBoolean(bw, bool, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isBigDecimal(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    BigDecimal bd = (BigDecimal) e;
-//                    writeBigDecimal(bw, bd, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalDate(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    LocalDate date = (java.time.LocalDate) e;
-//                    writeLocalDate(bw, date, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalDateTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    LocalDateTime ts = (java.time.LocalDateTime) e;
-//                    writeLocalDateTime(bw, ts, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.sql.Time t = (java.sql.Time) e;
-//                    writeTime(bw, t, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.time.LocalTime t = (java.time.LocalTime) e;
-//                    writeLocalTime(bw, t, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else {
-//                String s = (e = field.get(o)) != null ? e.toString() : null;
-//                writeStringAutoSize(bw, s, i);
-//            }
-//        }
-//        bw.write("</row>");
-//    }
-//
-//    protected void writeRow(T o, ExtBufferedWriter bw) throws IOException, IllegalAccessException {
-//        if (o == null) {
-//            writeEmptyRow(bw);
-//            return;
-//        }
-//        // Row number
-//        int r = ++rows;
-//        // logging
-//        if (r % 1_0000 == 0) {
-//            workbook.what("0014", String.valueOf(r));
-//        }
-//        final int len = columns.length;
-//        bw.write("<row r=\"");
-//        bw.writeInt(r);
-//        bw.write("\" spans=\"1:");
-//        bw.writeInt(len);
-//        bw.write("\">");
-//
-//        Field field;
-//        Object e;
-//        for (int i = 0; i < len; i++) {
-//            Column hc = columns[i];
-//            field = fields[i];
-//            Class<?> clazz = hc.getClazz();
-//            // t n=numeric (default), s=string, b=boolean
-//            if (isString(clazz)) {
-//                String s = (e = field.get(o)) != null ? e.toString() : null;
-//                writeString(bw, s, i);
-//            }
-//            else if (isDate(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.util.Date date = (java.util.Date) e;
-//                    writeDate(bw, date, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isDateTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    Timestamp ts = (Timestamp) e;
-//                    writeTimestamp(bw, ts, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isChar(clazz)) {
-//                Character c = (Character) field.get(o);
-//                if (c != null) writeChar(bw, c, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isInt(clazz)) {
-//                Integer n = (Integer) field.get(o);
-//                if (n != null) writeInt(bw, n, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isLong(clazz)) {
-//                Long l = (Long) field.get(o);
-//                if (l != null) writeLong(bw, l, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isFloat(clazz)) {
-//                Double d = (Double) field.get(o);
-//                if (d != null) writeDouble(bw, d, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isBool(clazz)) {
-//                Boolean bool = (Boolean) field.get(o);
-//                if (bool != null) writeBoolean(bw, bool, i);
-//                else writeNull(bw, i);
-//            }
-//            else if (isBigDecimal(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    BigDecimal bd = (BigDecimal) e;
-//                    writeBigDecimal(bw, bd, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalDate(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    LocalDate date = (java.time.LocalDate) e;
-//                    writeLocalDate(bw, date, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalDateTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    LocalDateTime ts = (java.time.LocalDateTime) e;
-//                    writeLocalDateTime(bw, ts, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.sql.Time t = (java.sql.Time) e;
-//                    writeTime(bw, t, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else if (isLocalTime(clazz)) {
-//                e = field.get(o);
-//                if (e != null) {
-//                    java.time.LocalTime t = (java.time.LocalTime) e;
-//                    writeLocalTime(bw, t, i);
-//                } else {
-//                    writeNull(bw, i);
-//                }
-//            }
-//            else {
-//                String s = (e = field.get(o)) != null ? e.toString() : null;
-//                writeString(bw, s, i);
-//            }
-//        }
-//        bw.write("</row>");
-//    }
 
     /**
      * Returns total rows in this worksheet
