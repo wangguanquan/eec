@@ -617,7 +617,7 @@ public abstract class Sheet {
                 default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style = styles.addNumFmt(tm);
+                style = Styles.clearNumfmt(Styles.defaultDoubleBorderStyle()) | styles.addNumFmt(tm);
             } else {
                 style = 0; // Auto-style
             }
