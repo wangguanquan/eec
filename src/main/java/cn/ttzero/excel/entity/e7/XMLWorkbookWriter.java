@@ -375,6 +375,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             for (Sheet e : sheets) {
                 e.writeTo(xl);
                 if (e.getWaterMark() != null && e.getWaterMark().delete()) ; // Delete template image
+                e.close();
             }
 
             // Write SharedString, Styles and workbook.xml
