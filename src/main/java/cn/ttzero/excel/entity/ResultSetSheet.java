@@ -16,21 +16,24 @@
 
 package cn.ttzero.excel.entity;
 
-import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.RelManager;
-import cn.ttzero.excel.util.ExtBufferedWriter;
-import cn.ttzero.excel.util.FileUtil;
+import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+
+import static cn.ttzero.excel.entity.IWorksheetWriter.*;
+import static cn.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
+import static cn.ttzero.excel.entity.IWorksheetWriter.isTime;
+import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
+import static cn.ttzero.excel.util.DateUtil.toDateValue;
+import static cn.ttzero.excel.util.DateUtil.toTimeValue;
 
 /**
  * Created by guanquan.wang on 2017/9/27.
@@ -183,9 +186,92 @@ public class ResultSetSheet extends Sheet {
 //
 //    }
 
+    /**
+     * Returns a row-block. The row-block is content by 32 rows
+     * @return a row-block
+     */
     @Override
     public RowBlock nextBlock() {
-        return null;
+        // clear first
+        rowBlock.clear();
+
+        try {
+            loopData();
+        } catch (SQLException e) {
+            throw new ExcelWriteException(e);
+        }
+
+        // TODO paging
+
+        return rowBlock.flip();
+    }
+
+    private void loopData() throws SQLException {
+        int len = columns.length, n = 0;
+
+        for (; n++ < ROW_BLOCK_SIZE && rs.next(); ) {
+            Row row = rowBlock.next();
+            row.index = rows++;
+            Cell[] cells = row.realloc(len);
+            for (int i = 1; i <= len; i++) {
+                Column hc = columns[i - 1];
+
+                // clear cells
+                Cell cell = cells[i - 1];
+                cell.clear();
+
+                Object e = rs.getObject(i);
+
+//                Class<?> clazz = hc.clazz;
+//
+//                if (isString(clazz)) {
+//                    cell.setSv(rs.getString(i));
+//                } else if (isDate(clazz)) {
+//                    cell.setAv(toDateValue(rs.getDate(i)));
+//                } else if (isDateTime(clazz)) {
+//                    cell.setIv(toDateTimeValue(rs.getTimestamp(i)));
+//                } else if (isChar(clazz)) {
+//                    String s = rs.getString(i);
+//                    cell.setCv(();
+//                } else if (isShort(clazz)) {
+//                    cell.setNv((Short) e);
+//                } else if (isInt(clazz)) {
+//                    cell.setNv((Integer) e);
+//                } else if (isLong(clazz)) {
+//                    cell.setLv((Long) e);
+//                } else if (isFloat(clazz)) {
+//                    cell.setDv((Float) e);
+//                } else if (isDouble(clazz)) {
+//                    cell.setDv((Double) e);
+//                } else if (isBool(clazz)) {
+//                    cell.setBv((Boolean) e);
+//                } else if (isBigDecimal(clazz)) {
+//                    cell.setMv((BigDecimal) e);
+//                } else if (isLocalDate(clazz)) {
+//                    cell.setAv(toDateValue((java.time.LocalDate) e));
+//                } else if (isLocalDateTime(clazz)) {
+//                    cell.setIv(toDateTimeValue((java.time.LocalDateTime) e));
+//                } else if (isTime(clazz)) {
+//                    cell.setTv(toTimeValue((java.sql.Time) e));
+//                } else if (isLocalTime(clazz)) {
+//                    cell.setTv(toTimeValue((java.time.LocalTime) e));
+//                } else {
+//                    cell.setSv(e.toString());
+//                }
+//                cell.xf = getStyleIndex(hc, e);
+
+                // blank cell
+                if (e == null) {
+                    cell.setBlank();
+                    continue;
+                }
+
+                setCellValue(cell, e, hc);
+            }
+        }
+        if (n < ROW_BLOCK_SIZE) {
+            rowBlock.markEnd();
+        }
     }
 
     /**
