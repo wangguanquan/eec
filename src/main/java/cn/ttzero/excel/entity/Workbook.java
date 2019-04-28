@@ -393,8 +393,12 @@ public class Workbook {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        ps.setFetchSize(Integer.MIN_VALUE);
-        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        try {
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
         sheet.setPs(ps);
         sheets[size++] = sheet;
         return this;
@@ -431,8 +435,12 @@ public class Workbook {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        ps.setFetchSize(Integer.MIN_VALUE);
-        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        try {
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
         pp.build(ps);
         sheet.setPs(ps);
         sheets[size++] = sheet;
@@ -461,8 +469,12 @@ public class Workbook {
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
-        ps.setFetchSize(Integer.MIN_VALUE);
-        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        try {
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
         sheet.setPs(ps);
         sheets[size++] = sheet;
         return this;
@@ -498,8 +510,12 @@ public class Workbook {
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(this, name, columns);
-        ps.setFetchSize(Integer.MIN_VALUE);
-        ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        try {
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
         pp.build(ps);
         sheet.setPs(ps);
         sheets[size++] = sheet;
