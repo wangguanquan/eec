@@ -16,19 +16,38 @@
 
 package cn.ttzero.excel.entity;
 
+import java.util.Iterator;
+
+import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+
 /**
- * A row block has const 32 rows.
+ * All cells in the Cell Table are divided into blocks of 32 consecutive rows, called Row Blocks.
+ * The first Row Block starts with the first used row in that sheet.
+ * Inside each Row Block there will occur ROW records describing
+ * the properties of the rows, and cell records with all the cell contents in this Row Block
+ *
  * Create by guanquan.wang at 2019-04-23 08:50
  */
-public class RowBlock {
+public class RowBlock implements Iterator<Row> {
     private Row[] rows;
     private int i, n, total = 0;
     private boolean eof;
 
+    public RowBlock() {
+        init();
+    }
+
+    private void init() {
+        rows = new Row[ROW_BLOCK_SIZE];
+        for (int i = 0; i < ROW_BLOCK_SIZE; i++) {
+            rows[i] = new Row();
+        }
+    }
+
     /**
      * Clear index mark
      */
-    final RowBlock clear() {
+    public final RowBlock clear() {
         i = n = 0;
         return this;
     }
@@ -57,7 +76,30 @@ public class RowBlock {
     }
 
     final RowBlock flip() {
+        n = i;
+        total += i;
         i = 0;
         return this;
     }
+
+    public boolean hasNext() {
+        return i < n;
+    }
+
+    public Row next() {
+        return rows[i++];
+    }
+
+    public Row firstRow() {
+        return rows[0];
+    }
+
+    public Row lastRow() {
+        return rows[n - 1];
+    }
+
+    public int size() {
+        return n;
+    }
+
 }

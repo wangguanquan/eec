@@ -22,11 +22,17 @@ import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.RelManager;
 import cn.ttzero.excel.processor.IntConversionProcessor;
 import cn.ttzero.excel.processor.StyleProcessor;
+import cn.ttzero.excel.reader.Cell;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 
 import static cn.ttzero.excel.entity.IWorksheetWriter.*;
+import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
+import static cn.ttzero.excel.util.DateUtil.toDateValue;
+import static cn.ttzero.excel.util.DateUtil.toTimeValue;
 
 /**
  * 对应workbook各sheet页
@@ -909,17 +915,63 @@ public abstract class Sheet {
      */
     public abstract RowBlock nextBlock();
 
-    /**
-     * Returns total rows in this worksheet
-     * @return -1 if unknown
-     */
-    protected void writeEmptySheet(Path xl) throws IOException {
-        workbook.what("Worksheet do't has columns.");
-        try {
-            sheetWriter.write(xl, () -> null);
-        } finally {
-            sheetWriter.close();
+
+    protected void convert(Cell cell, Column hc, int n) {
+        Object e = hc.processor.conversion(n);
+        if (e != null) {
+            Class<?> clazz = e.getClass();
+            setCellValue(cell, e, clazz);
+        } else cell.setBlank();
+    }
+
+    protected void setCellValue(Cell cell, Object e, Class<?> clazz) {
+        if (isString(clazz)) {
+            cell.setSv(e.toString());
+        } else if (isDate(clazz)) {
+            cell.setAv(toDateValue((java.util.Date) e));
+        } else if (isDateTime(clazz)) {
+            cell.setIv(toDateTimeValue((Timestamp) e));
+        } else if (isChar(clazz)) {
+            cell.setCv((Character) e);
+        } else if (isInt(clazz)) {
+            cell.setNv((Integer) e);
+        } else if (isLong(clazz)) {
+            cell.setLv((Long) e);
+        } else if (isFloat(clazz)) {
+            cell.setDv((Double) e);
+        } else if (isBool(clazz)) {
+            cell.setBv((Boolean) e);
+        } else if (isBigDecimal(clazz)) {
+            cell.setMv((BigDecimal) e);
+        } else if (isLocalDate(clazz)) {
+            cell.setAv(toDateValue((java.time.LocalDate) e));
+        } else if (isLocalDateTime(clazz)) {
+            cell.setIv(toDateTimeValue((java.time.LocalDateTime) e));
+        } else if (isTime(clazz)) {
+            cell.setTv(toTimeValue((java.sql.Time) e));
+        } else if (isLocalTime(clazz)) {
+            cell.setTv(toTimeValue((java.time.LocalTime) e));
+        } else {
+            cell.setSv(e.toString());
         }
+    }
+
+    protected int getStyleIndex(Sheet.Column hc, Object o) {
+        int style = hc.getCellStyle();
+        // 隔行变色
+        if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
+            style |= oddFill;
+        }
+        int styleIndex = hc.styles.of(style);
+        if (hc.styleProcessor != null) {
+            style = hc.styleProcessor.build(o, style, hc.styles);
+            styleIndex = hc.styles.of(style);
+        }
+        return styleIndex;
+    }
+
+    protected boolean isOdd() {
+        return (rows & 1) == 1;
     }
 
     /**

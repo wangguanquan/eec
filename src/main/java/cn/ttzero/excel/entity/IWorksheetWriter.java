@@ -43,10 +43,31 @@ public interface IWorksheetWriter extends Closeable {
 
     /**
      * Write a row block
+     * @param path the storage path
      * @param supplier a row-block supplier
      * @throws IOException if io error occur
      */
     void write(Path path, Supplier<RowBlock> supplier) throws IOException;
+
+    /**
+     * Write a row block
+     * @param path the storage path
+     * @throws IOException if io error occur
+     */
+    void write(Path path) throws IOException;
+
+    /**
+     * Write a empty worksheet
+     * @param path the path to storage
+     * @throws IOException if io error occur
+     */
+    default void writeEmptySheet(Path path) throws IOException {
+        try {
+            write(path, () -> null);
+        } finally {
+            close();
+        }
+    }
 
     /**
      * TO check rows out of workshee

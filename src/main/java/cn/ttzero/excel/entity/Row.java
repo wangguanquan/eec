@@ -32,8 +32,6 @@ public class Row {
     int xf;
     // Share cell
     Cell[] cells;
-    // The header row
-    Sheet.Column[] columns;
 
     public int getIndex() {
         return index;
@@ -51,7 +49,34 @@ public class Row {
         return cells;
     }
 
-    public Sheet.Column[] getColumns() {
-        return columns;
+    /**
+     * Malloc
+     * @param n size_t
+     */
+    public Cell[] malloc(int n) {
+        return cells = new Cell[n];
+    }
+
+    /**
+     * Malloc and clear
+     * @param n size_t
+     */
+    public Cell[] calloc(int n) {
+        malloc(n);
+        for (int i = 0; i < n; i++) {
+            cells[i] = new Cell();
+        }
+        return cells;
+    }
+
+    /**
+     * Resize and clear
+     * @param n size_t
+     */
+    public Cell[] realloc(int n) {
+        if (cells == null || cells.length < n) {
+            calloc(n);
+        }
+        return cells;
     }
 }

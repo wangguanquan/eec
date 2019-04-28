@@ -20,6 +20,7 @@ import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.*;
 import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.manager.Const;
+import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.ExtBufferedWriter;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
@@ -46,6 +47,7 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.function.Supplier;
 
+import static cn.ttzero.excel.reader.Cell.*;
 import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
 import static cn.ttzero.excel.util.DateUtil.toDateValue;
 import static cn.ttzero.excel.util.DateUtil.toTimeValue;
@@ -63,11 +65,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private ExtBufferedWriter bw;
     private Sheet sheet;
     private Sheet.Column[] columns;
-    private int rows;
+    private SharedStrings sst;
 
     public XMLWorksheetWriter(Workbook workbook, Sheet sheet) throws IOException {
 //        this.sheet = sheet;
         this.workbook = workbook;
+        this.sst = workbook.getSst();
         this.sheet = sheet;
     }
 
@@ -99,7 +102,41 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // write end
-        writeAfter();
+        writeAfter(rowBlock.getTotal());
+
+        // TODO resize
+    }
+
+    /**
+     * Write a row block
+     * @param path the storage path
+     * @throws IOException if io error occur
+     */
+    @Override
+    public void write(Path path) throws IOException {
+        this.workSheetPath = path.resolve("worksheets");
+        if (!Files.exists(this.workSheetPath)) {
+            FileUtil.mkdir(workSheetPath);
+        }
+        workbook.what("0010", sheet.getName());
+
+        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
+            workSheetPath.resolve(sheet.getFileName()), StandardCharsets.UTF_8));
+
+        // write before
+        writeBefore();
+
+        RowBlock rowBlock;
+        for ( ; ; ) {
+            rowBlock = sheet.nextBlock();
+            // write row-block data
+            for (; rowBlock.hasNext(); writeRow(rowBlock.next()));
+            // end of row
+            if (rowBlock.isEof()) break;
+        }
+
+        // write end
+        writeAfter(rowBlock.getTotal());
 
         // TODO resize
     }
@@ -126,12 +163,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * 写worksheet头部
      */
     protected void writeBefore() throws IOException {
+        // The header columns
+        columns = sheet.getHeaderColumns();
+
         StringBuilder buf = new StringBuilder(Const.EXCEL_XML_DECLARATION);
         // Declaration
         buf.append(Const.lineSeparator); // new line
         // Root node
-        if (getClass().isAnnotationPresent(TopNS.class)) {
-            TopNS topNS = getClass().getAnnotation(TopNS.class);
+        if (sheet.getClass().isAnnotationPresent(TopNS.class)) {
+            TopNS topNS = sheet.getClass().getAnnotation(TopNS.class);
             buf.append('<').append(topNS.value());
             String[] prefixs = topNS.prefix(), urls = topNS.uri();
             for (int i = 0, len = prefixs.length; i < len; ) {
@@ -150,7 +190,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         buf.append("\">");
 
         // Dimension
-        buf.append("<dimension ref=\"A1\"/>");
+        buf.append("<dimension ref=\"A1");
+        if (sheet.size() > 0) {
+            buf.append(":").append(sheet.int2Col(columns.length)).append(sheet.size() + 1);
+        }
+        buf.append("\"/>");
         headInfoLen = buf.length() - 3;
 
         // SheetViews default value
@@ -161,7 +205,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         buf.append("/></sheetViews>");
 
         // Default format
-        buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" baseColWidth=\"");
+        // throw unknown tag if not auto-size
+        buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" defaultColWidth=\"");
         buf.append(sheet.getDefaultWidth());
         buf.append("\"/>");
 
@@ -169,11 +214,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Write base info
         bw.write(buf.toString());
 
+
+        // cols
+        bw.write("<cols>");
+        for (int i = 0; i < columns.length; i++) {
+            bw.write("<col customWidth=\"1\" width=\"");
+            bw.write(sheet.getDefaultWidth());
+            bw.write("\" max=\"");
+            bw.writeInt(i + 1);
+            bw.write("\" min=\"");
+            bw.writeInt(i + 1);
+            bw.write("\" bestFit=\"1\"/>");
+        }
+        bw.write("</cols>");
+
         // Write body data
         bw.write("<sheetData>");
-
-        // The header columns
-        columns = sheet.getColumns();
 
         // Write header
         int r = 1;
@@ -200,7 +256,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * 写尾部
      */
-    protected void writeAfter() throws IOException {
+    protected void writeAfter(int total) throws IOException {
         // End target --sheetData
         bw.write("</sheetData>");
 
@@ -223,9 +279,74 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         } else {
             bw.write("</worksheet>");
         }
-        workbook.what("0009", sheet.getName(), String.valueOf(rows));
+        workbook.what("0009", sheet.getName(), String.valueOf(total));
     }
-//
+
+    /**
+     * Write a row-block
+     * @param rowBlock the row-block
+     */
+    void writeRowBlock(RowBlock rowBlock) throws IOException {
+        for (; rowBlock.hasNext(); writeRow(rowBlock.next()));
+    }
+
+    /**
+     * Write a row data
+     * @param row
+     */
+    private void writeRow(Row row) throws IOException {
+        // Row number
+        int r = row.getIndex() + 2;
+        // logging
+        if (r % 1_0000 == 0) {
+            workbook.what("0014", String.valueOf(r));
+        }
+        Cell[] cells = row.getCells();
+        int len = cells.length;
+        bw.write("<row r=\"");
+        bw.writeInt(r);
+        // default data row height 16.5
+        bw.write("\" spans=\"1:");
+        bw.writeInt(len);
+        bw.write("\">");
+
+        for (int i = 0; i < len; i++) {
+            Cell cell = cells[i];
+            int xf = cell.xf;
+            switch (cell.t) {
+                case SST:
+                    writeString(cell.sv, r, i, xf);
+                    break;
+                case DATE:
+                case NUMERIC:
+                    writeNumeric(cell.nv, r, i, xf);
+                    break;
+                case LONG:
+                    writeNumeric(cell.lv, r, i, xf);
+                    break;
+                case DATETIME:
+                case DOUBLE:
+                case TIME:
+                    writeDouble(cell.dv, r, i, xf);
+                    break;
+                case BOOL:
+                    writeBool(cell.bv, r, i, xf);
+                    break;
+                case DECIMAL:
+                    writeDecimal(cell.mv, r, i, xf);
+                    break;
+                case CHARACTER:
+                    writeChar(cell.cv, r, i, xf);
+                    break;
+                case BLANK:
+                    writeNull(r, i, xf);
+                    break;
+                default:
+            }
+        }
+        bw.write("</row>");
+    }
+
 //    /**
 //     * 写行数据
 //     * @param rs ResultSet
@@ -361,62 +482,46 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        bw.write("</row>");
 //    }
 //
-//    protected int getStyleIndex(Column hc, Object o) {
-//        int style = hc.getCellStyle();
-//        // 隔行变色
-//        if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
-//            style |= oddFill;
-//        }
-//        int styleIndex = hc.styles.of(style);
-//        if (hc.styleProcessor != null) {
-//            style = hc.styleProcessor.build(o, style, hc.styles);
-//            styleIndex = hc.styles.of(style);
-//        }
-//        return styleIndex;
-//    }
-//
-//    protected boolean isOdd() {
-//        return (rows & 1) == 1;
-//    }
-//
-//
-//
+
+
+
+
 //    /**
 //     * 写字符串
 //     * @throws IOException
 //     */
-//    protected void writeString(ExtBufferedWriter bw, String s, int column) throws IOException {
-//        writeString(bw, s, column, s);
+//    protected void writeString(String s, int row, int column) throws IOException {
+//        writeString(s, row, column, s);
 //    }
-//
-//    private void writeString(ExtBufferedWriter bw, String s, int column, Object o) throws IOException {
-//        Column hc = columns[column];
-//        int styleIndex = getStyleIndex(hc, o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        int i;
-//        if (StringUtil.isEmpty(s)) {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"/>");
-//        }
-//        else if (hc.isShare() && (i = workbook.getSst().get(s)) >= 0) {
-//            bw.write("\" t=\"s\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"><v>");
-//            bw.writeInt(i);
-//            bw.write("</v></c>");
-//        }
-//        else {
-//            bw.write("\" t=\"inlineStr\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"><is><t>");
-//            bw.escapeWrite(s); // escape text
-//            bw.write("</t></is></c>");
-//        }
-//    }
-//
+
+    private void writeString(String s, int row, int column, int xf) throws IOException {
+        Sheet.Column hc = columns[column];
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        int i;
+        if (StringUtil.isEmpty(s)) {
+            bw.write("\" s=\"");
+            bw.writeInt(xf);
+            bw.write("\"/>");
+        }
+        // FIXME default string value is shared
+        else if (hc.isShare() && (i = sst.get(s)) >= 0) {
+            bw.write("\" t=\"s\" s=\"");
+            bw.writeInt(xf);
+            bw.write("\"><v>");
+            bw.writeInt(i);
+            bw.write("</v></c>");
+        }
+        else {
+            bw.write("\" t=\"inlineStr\" s=\"");
+            bw.writeInt(xf);
+            bw.write("\"><is><t>");
+            bw.escapeWrite(s); // escape text
+            bw.write("</t></is></c>");
+        }
+    }
+
 //    protected void writeStringAutoSize(ExtBufferedWriter bw, String s, int column) throws IOException {
 //        writeStringAutoSize(bw, s, column, s);
 //    }
@@ -452,50 +557,36 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //            }
 //        }
 //    }
-//
-//    protected void writeDate(ExtBufferedWriter bw, Date date, int column) throws IOException {
-//        writeDate(bw, date, column, date);
+
+//    protected void writeDate(int n, int row, int column) throws IOException {
+//        writeDate(date, row, column, date);
 //    }
-//
-//    protected void writeDate(ExtBufferedWriter bw, Date date, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
+
+//    protected void writeDate(int n, int row, int column, int xf) throws IOException {
 //        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        if (date == null) {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"/>");
-//        } else {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"><v>");
-//            bw.writeInt(toDateValue(date));
-//            bw.write("</v></c>");
-//        }
+//        bw.write(sheet.int2Col(column + 1));
+//        bw.writeInt(row);
+//        bw.write("\" s=\"");
+//        bw.writeInt(xf);
+//        bw.write("\"><v>");
+//        bw.writeInt(n);
+//        bw.write("</v></c>");
 //    }
-//
-//    protected void writeLocalDate(ExtBufferedWriter bw, LocalDate date, int column) throws IOException {
+
+//    protected void writeLocalDate(LocalDate date, int column) throws IOException {
 //        writeLocalDate(bw, date, column, date);
 //    }
-//
-//    protected void writeLocalDate(ExtBufferedWriter bw, LocalDate date, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        if (date == null) {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"/>");
-//        } else {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"><v>");
-//            bw.writeInt(toDateValue(date));
-//            bw.write("</v></c>");
-//        }
-//    }
+
+    protected void writeDouble(double d, int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"><v>");
+        bw.write(d);
+        bw.write("</v></c>");
+    }
 //
 //    protected void writeTimestamp(ExtBufferedWriter bw, Timestamp ts, int column) throws IOException {
 //        writeTimestamp(bw, ts, column, ts);
@@ -589,24 +680,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        writeBigDecimal(bw, bd, column, bd);
 //    }
 //
-//    protected void writeBigDecimal(ExtBufferedWriter bw, BigDecimal bd, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        if (bd == null) {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"/>");
-//        } else {
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"><v>");
-//            bw.write(bd.toString());
-//            bw.write("</v></c>");
-//        }
-//    }
-//
+    private void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"><v>");
+        bw.write(bd.toString());
+        bw.write("</v></c>");
+    }
+
 //    protected void writeInt(ExtBufferedWriter bw, int n, int column) throws IOException {
 //        Column hc = columns[column];
 //        if (hc.processor == null) {
@@ -1007,13 +1091,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        writeInt0(bw, n, column, n);
 //    }
 //
-//    private void writeInt0(ExtBufferedWriter bw, int n, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
+//    private void writeInt(int n, int row, int column, int xf) throws IOException {
 //        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
+//        bw.write(sheet.int2Col(column + 1));
+//        bw.writeInt(row);
 //        bw.write("\" s=\"");
-//        bw.writeInt(styleIndex);
+//        bw.writeInt(xf);
 //        bw.write("\"><v>");
 //        bw.writeInt(n);
 //        bw.write("</v></c>");
@@ -1022,35 +1105,33 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //    private void writeChar0(ExtBufferedWriter bw, char c, int column) throws IOException {
 //        writeChar0(bw, c, column, c);
 //    }
-//
-//    private void writeChar0(ExtBufferedWriter bw, char c, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        bw.write("\" t=\"s\" s=\"");
-//        bw.writeInt(styleIndex);
-//        bw.write("\"><v>");
-//        bw.writeInt(workbook.getSst().get(c));
-//        bw.write("</v></c>");
-//    }
-//
+
+    private void writeChar(char c, int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" t=\"s\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"><v>");
+        bw.writeInt(sst.get(c));
+        bw.write("</v></c>");
+    }
+
 //    protected void writeLong(ExtBufferedWriter bw, long l, int column) throws IOException {
 //        writeLong(bw, l, column, l);
 //    }
-//
-//    protected void writeLong(ExtBufferedWriter bw, long l, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        bw.write("\" s=\"");
-//        bw.writeInt(styleIndex);
-//        bw.write("\"><v>");
-//        bw.write(l);
-//        bw.write("</v></c>");
-//    }
-//
+
+    private void writeNumeric(long l, int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"><v>");
+        bw.write(l);
+        bw.write("</v></c>");
+    }
+
 //    protected void writeDouble(ExtBufferedWriter bw, double d, int column) throws IOException {
 //        writeDouble(bw, d, column, d);
 //    }
@@ -1071,28 +1152,26 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //        writeBoolean(bw, bool, column, bool);
 //    }
 //
-//    protected void writeBoolean(ExtBufferedWriter bw, boolean bool, int column, Object o) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], o);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        bw.write("\" t=\"b\" s=\"");
-//        bw.writeInt(styleIndex);
-//        bw.write("\"><v>");
-//        bw.writeInt(bool ? 1 : 0);
-//        bw.write("</v></c>");
-//    }
-//
-//    protected void writeNull(ExtBufferedWriter bw, int column) throws IOException {
-//        int styleIndex = getStyleIndex(columns[column], null);
-//        bw.write("<c r=\"");
-//        bw.write(int2Col(column + 1));
-//        bw.writeInt(rows);
-//        bw.write("\" s=\"");
-//        bw.writeInt(styleIndex);
-//        bw.write("\"/>");
-//    }
-//
+    protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" t=\"b\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"><v>");
+        bw.writeInt(bool ? 1 : 0);
+        bw.write("</v></c>");
+    }
+
+    protected void writeNull(int row, int column, int xf) throws IOException {
+        bw.write("<c r=\"");
+        bw.write(sheet.int2Col(column + 1));
+        bw.writeInt(row);
+        bw.write("\" s=\"");
+        bw.writeInt(xf);
+        bw.write("\"/>");
+    }
+
 //    /**
 //     * 写空行数据
 //     * @param bw
