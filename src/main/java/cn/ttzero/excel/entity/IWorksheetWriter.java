@@ -57,6 +57,12 @@ public interface IWorksheetWriter extends Closeable {
     void write(Path path) throws IOException;
 
     /**
+     * Return a copy worksheet writer
+     * @return the copy worksheet writer
+     */
+    IWorksheetWriter copy(Sheet sheet);
+
+    /**
      * Write a empty worksheet
      * @param path the path to storage
      * @throws IOException if io error occur

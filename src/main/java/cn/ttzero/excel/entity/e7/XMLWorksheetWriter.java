@@ -147,6 +147,16 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         sheet.afterSheetAccess(workSheetPath);
     }
 
+    @Override
+    public IWorksheetWriter copy(Sheet sheet) {
+        try {
+            return new XMLWorksheetWriter(workbook, sheet);
+        } catch (IOException e) {
+            workbook.what("Copy worksheet " + sheet.getName() + " error.\n" + e.getMessage());
+        }
+        return null;
+    }
+
     /**
      * The Worksheet row limit
      * @return the limit
