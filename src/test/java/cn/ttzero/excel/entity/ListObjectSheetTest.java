@@ -88,7 +88,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("all type auto size", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(AllType.randomTestData(3))
+            .addSheet(AllType.randomTestData())
             .writeTo(defaultTestPath);
     }
 
