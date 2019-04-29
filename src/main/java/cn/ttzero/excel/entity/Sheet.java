@@ -934,9 +934,17 @@ public abstract class Sheet {
 
     /**
      * Returns a row-block. The row-block is content by 32 rows
+     *
      * @return a row-block
      */
-    public abstract RowBlock nextBlock();
+    public RowBlock nextBlock() {
+        // clear first
+        rowBlock.clear();
+
+        resetBlockData();
+
+        return rowBlock.flip();
+    }
 
     /**
      * Write some final info
@@ -1047,4 +1055,10 @@ public abstract class Sheet {
         return c;
     }
 
+    ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    /**
+     * Reset the row-block data
+     */
+    protected abstract void resetBlockData();
 }

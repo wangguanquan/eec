@@ -47,6 +47,10 @@ public class ResultSetSheet extends Sheet {
         this.rs = rs;
     }
 
+    /**
+     * Release resources
+     * @throws IOException if io error occur
+     */
     @Override
     public void close() throws IOException {
         if (shouldClose && rs != null) {
@@ -60,47 +64,37 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Returns a row-block. The row-block is content by 32 rows
-     * @return a row-block
+     * Reset the row-block data
      */
     @Override
-    public RowBlock nextBlock() {
-        // clear first
-        rowBlock.clear();
-
-        try {
-            loopData();
-        } catch (SQLException e) {
-            throw new ExcelWriteException(e);
-        }
-
-        return rowBlock.flip();
-    }
-
-    private void loopData() throws SQLException {
+    protected void resetBlockData() {
         int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
 
-        for (; n++ < ROW_BLOCK_SIZE && rows < limit && rs.next(); ) {
-            Row row = rowBlock.next();
-            row.index = rows++;
-            Cell[] cells = row.realloc(len);
-            for (int i = 1; i <= len; i++) {
-                Column hc = columns[i - 1];
+        try {
+            for (; n++ < ROW_BLOCK_SIZE && rows < limit && rs.next(); ) {
+                Row row = rowBlock.next();
+                row.index = rows++;
+                Cell[] cells = row.realloc(len);
+                for (int i = 1; i <= len; i++) {
+                    Column hc = columns[i - 1];
 
-                // clear cells
-                Cell cell = cells[i - 1];
-                cell.clear();
+                    // clear cells
+                    Cell cell = cells[i - 1];
+                    cell.clear();
 
-                Object e = rs.getObject(i);
+                    Object e = rs.getObject(i);
 
-                // blank cell
-                if (e == null) {
-                    cell.setBlank();
-                    continue;
+                    // blank cell
+                    if (e == null) {
+                        cell.setBlank();
+                        continue;
+                    }
+
+                    setCellValue(cell, e, hc);
                 }
-
-                setCellValue(cell, e, hc);
             }
+        } catch (SQLException e) {
+            throw new ExcelWriteException(e);
         }
 
         // Paging
@@ -138,6 +132,10 @@ public class ResultSetSheet extends Sheet {
         return columns;
     }
 
+    /**
+     * Paging worksheet
+     * @return a copy worksheet
+     */
     protected ResultSetSheet copy() {
         ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns);
         rss.rs = rs;

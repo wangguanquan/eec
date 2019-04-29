@@ -46,7 +46,8 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * 关闭外部源
+     * Release resources
+     * @throws IOException if io error occur
      */
     @Override
     public void close() throws IOException {
