@@ -105,6 +105,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeAfter(rowBlock.getTotal());
 
         // TODO resize
+
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
     }
 
     /**
@@ -139,6 +142,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeAfter(rowBlock.getTotal());
 
         // TODO resize
+
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
     }
 
     /**
@@ -160,7 +166,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * 写worksheet头部
+     * Write worksheet header data
      */
     protected void writeBefore() throws IOException {
         // The header columns

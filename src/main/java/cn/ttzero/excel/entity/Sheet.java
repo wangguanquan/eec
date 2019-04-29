@@ -920,6 +920,14 @@ public abstract class Sheet {
      */
     public abstract RowBlock nextBlock();
 
+    /**
+     * Write some final info
+     */
+    public void afterSheetAccess(Path workSheetPath) throws IOException {
+        // relationship
+        relManager.write(workSheetPath, getFileName());
+    }
+
 
     protected void convert(Cell cell, Column hc, int n) {
         Object e = hc.processor.conversion(n);
