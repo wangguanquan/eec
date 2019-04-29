@@ -89,8 +89,8 @@ public class ListMapSheet extends Sheet {
 
     @Override
     public void close() throws IOException {
-        data.clear();
-        data = null;
+//        data.clear();
+//        data = null;
         super.close();
     }
 
@@ -110,29 +110,7 @@ public class ListMapSheet extends Sheet {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
         if (!copySheet) {
-            int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
-            workbook.what("Total size: " + len);
-            // paging
-            if (len > limit) {
-                int page = len / limit;
-                if (len % limit > 0) {
-                    page++;
-                }
-                // Insert sub-sheet
-                for (int i = 1, index = id, n; i < page; i++) {
-                    ListMapSheet sheet = copy();
-                    sheet.name = name + " (" + i + ")";
-                    sheet.start = i * limit;
-                    sheet.end = (n = (i + 1) * limit) < len ? n : len;
-                    workbook.insertSheet(index++, sheet);
-                }
-                // Reset current index
-                start = 0;
-                end = limit;
-            } else {
-                start = 0;
-                end = len;
-            }
+            paging();
         }
         rowBlock = new RowBlock();
         sheetWriter.write(path);
@@ -188,6 +166,32 @@ public class ListMapSheet extends Sheet {
      */
     public int size() {
         return end - start;
+    }
+
+    protected void paging() {
+        int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
+        workbook.what("Total size: " + len);
+        // paging
+        if (len > limit) {
+            int page = len / limit;
+            if (len % limit > 0) {
+                page++;
+            }
+            // Insert sub-sheet
+            for (int i = 1, index = id, n; i < page; i++) {
+                ListMapSheet sheet = copy();
+                sheet.name = name + " (" + i + ")";
+                sheet.start = i * limit;
+                sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                workbook.insertSheet(index++, sheet);
+            }
+            // Reset current index
+            start = 0;
+            end = limit;
+        } else {
+            start = 0;
+            end = len;
+        }
     }
 
     public ListMapSheet copy() {

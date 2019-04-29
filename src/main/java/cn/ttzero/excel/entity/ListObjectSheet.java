@@ -73,29 +73,7 @@ public class ListObjectSheet<T> extends Sheet {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
         if (!copySheet) {
-            int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
-            workbook.what("Total size: " + len);
-            // paging
-            if (len > limit) {
-                int page = len / limit;
-                if (len % limit > 0) {
-                    page++;
-                }
-                // Insert sub-sheet
-                for (int i = 1, index = id, n; i < page; i++) {
-                    ListObjectSheet<T> sheet = copy();
-                    sheet.name = name + " (" + i + ")";
-                    sheet.start = i * limit;
-                    sheet.end = (n = (i + 1) * limit) < len ? n : len;
-                    workbook.insertSheet(index++, sheet);
-                }
-                // Reset current index
-                start = 0;
-                end = limit;
-            } else {
-                start = 0;
-                end = len;
-            }
+            paging();
         }
         rowBlock = new RowBlock();
         sheetWriter.write(path);
@@ -244,6 +222,31 @@ public class ListObjectSheet<T> extends Sheet {
         return end - start;
     }
 
+    protected void paging() {
+        int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
+        workbook.what("Total size: " + len);
+        // paging
+        if (len > limit) {
+            int page = len / limit;
+            if (len % limit > 0) {
+                page++;
+            }
+            // Insert sub-sheet
+            for (int i = 1, index = id, n; i < page; i++) {
+                ListObjectSheet<T> sheet = copy();
+                sheet.name = name + " (" + i + ")";
+                sheet.start = i * limit;
+                sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                workbook.insertSheet(index++, sheet);
+            }
+            // Reset current index
+            start = 0;
+            end = limit;
+        } else {
+            start = 0;
+            end = len;
+        }
+    }
 
     public ListObjectSheet<T> copy() {
         ListObjectSheet<T> sheet = new ListObjectSheet<>(workbook, name, columns);
