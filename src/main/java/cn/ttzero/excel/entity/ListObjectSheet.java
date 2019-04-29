@@ -33,16 +33,35 @@ public class ListObjectSheet<T> extends ListSheet {
     private List<T> data;
     private Field[] fields;
 
-    public ListObjectSheet(Workbook workbook) {
-        super(workbook);
+    /**
+     * Constructor worksheet
+     */
+    public ListObjectSheet() {
+        super();
     }
 
-    public ListObjectSheet(Workbook workbook, String name, Column[] columns) {
-        super(workbook, name, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ListObjectSheet(String name) {
+        super(name);
     }
 
-    public ListObjectSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
-        super(workbook, name, waterMark, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ListObjectSheet(String name, Column[] columns) {
+        super(name, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ListObjectSheet(String name, WaterMark waterMark, Column[] columns) {
+        super(name, waterMark, columns);
     }
 
     public ListObjectSheet<T> setData(final List<T> data) {
@@ -192,7 +211,8 @@ public class ListObjectSheet<T> extends ListSheet {
      */
     @Override
     public ListObjectSheet<T> copy() {
-        ListObjectSheet<T> sheet = new ListObjectSheet<>(workbook, name, columns);
+        ListObjectSheet<T> sheet = new ListObjectSheet<>(name, columns);
+        sheet.workbook = workbook;
         sheet.data = data;
         sheet.autoSize = autoSize;
         sheet.autoOdd = autoOdd;

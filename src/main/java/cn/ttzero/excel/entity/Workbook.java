@@ -18,14 +18,10 @@ package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.entity.e7.*;
 import cn.ttzero.excel.entity.style.Fill;
-import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.processor.ParamProcessor;
 import cn.ttzero.excel.entity.style.Styles;
-import cn.ttzero.excel.processor.DownProcessor;
 import cn.ttzero.excel.processor.Watch;
 import cn.ttzero.excel.util.FileUtil;
-import cn.ttzero.excel.util.StringUtil;
-import cn.ttzero.excel.util.ZipUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -279,6 +275,7 @@ public class Workbook {
      */
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
+        sheet.setWorkbook(this);
         sheets[size++] = sheet;
         return this;
     }
@@ -302,42 +299,17 @@ public class Workbook {
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Workbook addSheet(String name, List<?> data, Sheet.Column ... columns) {
-        int _size = size;
         Object o;
         if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
-            ensureCapacityInternal();
-            sheets[_size] = new EmptySheet(this, name, columns);
+            addSheet(new EmptySheet(name, columns));
             return this;
         }
 
         if (o instanceof Map) {
-            sheets[size++] = new ListMapSheet(this, name, columns).setData((List<Map<String, ?>>) data);
+            addSheet(new ListMapSheet(name, columns).setData((List<Map<String, ?>>) data));
         } else {
-            sheets[size++] = new ListObjectSheet(this, name, columns).setData(data);
+            addSheet(new ListObjectSheet(name, columns).setData(data));
         }
-
-//        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
-//        if (len % limit > 0) {
-//            page++;
-//        }
-//        if (_size + page > sheets.length) {
-//            sheets = Arrays.copyOf(sheets, _size + page);
-//        }
-//        if (StringUtil.isEmpty(name)) {
-//            name = "Sheet";
-//        }
-//        // 提前分页
-//        for (int i = 0, n; i < page; i++) {
-//            Sheet sheet;
-//            List<?> subList = data.subList(i * limit, (n = (i + 1) * limit) < len ? n : len);
-//            if (o instanceof Map) {
-//                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData((List<Map<String, ?>>) subList);
-//            } else {
-//                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData(subList);
-//            }
-//            sheets[_size + i] = sheet;
-//        }
-//        size += page;
         return this;
     }
 
@@ -369,10 +341,9 @@ public class Workbook {
      * @return 工作簿
      */
     public Workbook addSheet(String name, ResultSet rs, Sheet.Column ... columns) {
-        ensureCapacityInternal();
-        ResultSetSheet sheet = new ResultSetSheet(this, name, columns);
+        ResultSetSheet sheet = new ResultSetSheet(name, columns);
         sheet.setRs(rs);
-        sheets[size++] = sheet;
+        addSheet(sheet);
         return this;
     }
 
@@ -396,8 +367,7 @@ public class Workbook {
      * @throws SQLException SQL异常
      */
     public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
-        ensureCapacityInternal();
-        StatementSheet sheet = new StatementSheet(this, name, columns);
+        StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
@@ -406,7 +376,7 @@ public class Workbook {
             watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         sheet.setPs(ps);
-        sheets[size++] = sheet;
+        addSheet(sheet);
         return this;
     }
 
@@ -438,8 +408,7 @@ public class Workbook {
      * @throws SQLException SQL异常
      */
     public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
-        ensureCapacityInternal();
-        StatementSheet sheet = new StatementSheet(this, name, columns);
+        StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
@@ -449,7 +418,7 @@ public class Workbook {
         }
         pp.build(ps);
         sheet.setPs(ps);
-        sheets[size++] = sheet;
+        addSheet(sheet);
         return this;
     }
 
@@ -473,8 +442,7 @@ public class Workbook {
      * @throws SQLException SQL异常
      */
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
-        ensureCapacityInternal();
-        StatementSheet sheet = new StatementSheet(this, name, columns);
+        StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
@@ -482,7 +450,7 @@ public class Workbook {
             watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         sheet.setPs(ps);
-        sheets[size++] = sheet;
+        addSheet(sheet);
         return this;
     }
 
@@ -515,7 +483,7 @@ public class Workbook {
      */
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
         ensureCapacityInternal();
-        StatementSheet sheet = new StatementSheet(this, name, columns);
+        StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
@@ -524,7 +492,7 @@ public class Workbook {
         }
         pp.build(ps);
         sheet.setPs(ps);
-        sheets[size++] = sheet;
+        addSheet(sheet);
         return this;
     }
 
@@ -545,6 +513,7 @@ public class Workbook {
         }
         sheets[index] = sheet;
         sheet.setId(index + 1);
+        sheet.setWorkbook(this);
         size++;
         return this;
     }

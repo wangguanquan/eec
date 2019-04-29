@@ -30,16 +30,38 @@ import java.util.Map;
 public class ListMapSheet extends ListSheet {
     private List<Map<String, ?>> data;
 
-    public ListMapSheet(Workbook workbook) {
-        super(workbook);
+    /**
+     * Constructor worksheet
+     */
+    public ListMapSheet() {
+        super();
     }
 
-    public ListMapSheet(Workbook workbook, String name, Column[] columns) {
-        super(workbook, name, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ListMapSheet(String name) {
+        super(name);
     }
 
-    public ListMapSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
-        super(workbook, name, waterMark, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param columns the header info
+     */
+    public ListMapSheet(String name, final Column[] columns) {
+        super(name, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param waterMark the water mark
+     * @param columns the header info
+     */
+    public ListMapSheet(String name, WaterMark waterMark, final Column[] columns) {
+        super(name, waterMark, columns);
     }
 
     public ListMapSheet setData(final List<Map<String, ?>> data) {
@@ -138,7 +160,7 @@ public class ListMapSheet extends ListSheet {
      */
     @Override
     public ListMapSheet copy() {
-        ListMapSheet sheet = new ListMapSheet(workbook, name, columns);
+        ListMapSheet sheet = new ListMapSheet(name, columns);
         sheet.data = data;
         sheet.autoSize = autoSize;
         sheet.autoOdd = autoOdd;

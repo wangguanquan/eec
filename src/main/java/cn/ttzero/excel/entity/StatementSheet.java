@@ -30,12 +30,38 @@ import java.sql.SQLException;
 public class StatementSheet extends ResultSetSheet {
     private PreparedStatement ps;
 
-    public StatementSheet(Workbook workbook, String name, Column[] columns) {
-        super(workbook, name, columns);
+    /**
+     * Constructor worksheet
+     */
+    public StatementSheet() {
+        super();
     }
 
-    public StatementSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
-        super(workbook, name, waterMark, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public StatementSheet(String name) {
+        super(name);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param columns the header info
+     */
+    public StatementSheet(String name, final Column[] columns) {
+        super(name, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param waterMark the water mark
+     * @param columns the header info
+     */
+    public StatementSheet(String name, WaterMark waterMark, final Column[] columns) {
+        super(name, waterMark, columns);
     }
 
     /**

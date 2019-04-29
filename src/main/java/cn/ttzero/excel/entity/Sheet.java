@@ -82,44 +82,37 @@ public abstract class Sheet {
         this.sheetWriter = sheetWriter;
     }
 
-    /**
-     * 实例化Sheet
-     * @param workbook workbook
-     */
-    public Sheet(Workbook workbook) {
-        this.workbook = workbook;
-        relManager = new RelManager();
+    public Sheet() {
+        this(null);
     }
+
     /**
-     * 实例化Sheet
-     * @param workbook workbook
-     * @param name sheet名
-     * @param columns 行信息
+     * Constructor worksheet
+     * @param name the worksheet name
      */
-    public Sheet(Workbook workbook, String name, final Column[] columns) {
-        this.workbook = workbook;
+    public Sheet(String name) {
         this.name = name;
-        this.columns = columns;
-        for (int i = 0; i < columns.length; i++) {
-            columns[i].styles = workbook.getStyles();
-        }
         relManager = new RelManager();
     }
 
     /**
-     * 实例化Sheet
-     * @param workbook workbook
-     * @param name sheet名
-     * @param waterMark 水印
-     * @param columns 行信息
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param columns the header info
      */
-    public Sheet(Workbook workbook, String name, WaterMark waterMark, final Column[] columns) {
-        this.workbook = workbook;
+    public Sheet(String name, final Column[] columns) {
+        this(name, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param waterMark the water mark
+     * @param columns the header info
+     */
+    public Sheet(String name, WaterMark waterMark, final Column[] columns) {
         this.name = name;
         this.columns = columns;
-        for (int i = 0; i < columns.length; i++) {
-            columns[i].styles = workbook.getStyles();
-        }
         this.waterMark = waterMark;
         relManager = new RelManager();
     }
@@ -641,10 +634,32 @@ public abstract class Sheet {
         }
     }
 
+    /**
+     * Returns workbook
+     * @return the workbook
+     */
     public Workbook getWorkbook() {
         return workbook;
     }
 
+    /**
+     * Setting worksheet
+     * @param workbook the worksheet
+     */
+    public Sheet setWorkbook(Workbook workbook) {
+        this.workbook = workbook;
+        if (columns != null) {
+            for (int i = 0; i < columns.length; i++) {
+                columns[i].styles = workbook.getStyles();
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Return the cell default width
+     * @return the width value
+     */
     public double getDefaultWidth() {
         return width;
     }

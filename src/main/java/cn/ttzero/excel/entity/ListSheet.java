@@ -22,16 +22,38 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 public abstract class ListSheet extends Sheet {
     protected int start, end;
 
-    public ListSheet(Workbook workbook) {
-        super(workbook);
+    /**
+     * Constructor worksheet
+     */
+    public ListSheet() {
+        super();
     }
 
-    public ListSheet(Workbook workbook, String name, Column[] columns) {
-        super(workbook, name, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ListSheet(String name) {
+        super(name);
     }
 
-    public ListSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
-        super(workbook, name, waterMark, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param columns the header info
+     */
+    public ListSheet(String name, final Column[] columns) {
+        super(name, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param waterMark the water mark
+     * @param columns the header info
+     */
+    public ListSheet(String name, WaterMark waterMark, final Column[] columns) {
+        super(name, waterMark, columns);
     }
 
     protected int getEndIndex() {

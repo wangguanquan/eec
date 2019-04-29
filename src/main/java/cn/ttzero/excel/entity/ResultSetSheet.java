@@ -31,16 +31,38 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 public class ResultSetSheet extends Sheet {
     protected ResultSet rs;
 
-    public ResultSetSheet(Workbook workbook) {
-        super(workbook);
+    /**
+     * Constructor worksheet
+     */
+    public ResultSetSheet() {
+        super();
     }
 
-    public ResultSetSheet(Workbook workbook, String name, Column[] columns) {
-        super(workbook, name, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     */
+    public ResultSetSheet(String name) {
+        super(name);
     }
 
-    public ResultSetSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
-        super(workbook, name, waterMark, columns);
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param columns the header info
+     */
+    public ResultSetSheet(String name, final Column[] columns) {
+        super(name, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     * @param name the worksheet name
+     * @param waterMark the water mark
+     * @param columns the header info
+     */
+    public ResultSetSheet(String name, WaterMark waterMark, final Column[] columns) {
+        super(name, waterMark, columns);
     }
 
     public void setRs(ResultSet rs) {
@@ -137,7 +159,7 @@ public class ResultSetSheet extends Sheet {
      * @return a copy worksheet
      */
     protected ResultSetSheet copy() {
-        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns);
+        ResultSetSheet rss =  new ResultSetSheet(name, waterMark, columns);
         rss.rs = rs;
         rss.autoSize = autoSize;
         rss.autoOdd = this.autoOdd;
