@@ -26,6 +26,11 @@ import java.nio.file.Path;
  */
 public interface IWorkbookWriter {
 
+    /**
+     * Setting workbook
+     * @param workbook the global workbook context
+     */
+    void setWorkbook(Workbook workbook);
 
     /**
      * The Workbook suffix

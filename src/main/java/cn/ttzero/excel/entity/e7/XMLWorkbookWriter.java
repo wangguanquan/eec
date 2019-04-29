@@ -55,6 +55,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     private Workbook workbook;
     private RelManager relManager; // 关联管理
 
+    public XMLWorkbookWriter() {
+        relManager = new RelManager();
+    }
+
     public XMLWorkbookWriter(Workbook workbook) {
         this.workbook = workbook;
         relManager = new RelManager();
@@ -66,6 +70,15 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     public RelManager getRelManager() {
         return relManager;
+    }
+
+    /**
+     * Setting workbook
+     * @param workbook the global workbook context
+     */
+    @Override
+    public void setWorkbook(Workbook workbook) {
+        this.workbook = workbook;
     }
 
     /**
