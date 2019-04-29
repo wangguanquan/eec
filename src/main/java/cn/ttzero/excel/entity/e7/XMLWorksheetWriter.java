@@ -95,14 +95,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         RowBlock rowBlock;
         while ((rowBlock = supplier.get()) != null) {
-            // TODO write data
-
+            // write row-block data
+            for (; rowBlock.hasNext(); writeRow(rowBlock.next()));
             // end of row
             if (rowBlock.isEof()) break;
         }
 
         // write end
-        writeAfter(rowBlock.getTotal());
+        writeAfter(rowBlock != null ? rowBlock.getTotal() : 0);
 
         // TODO resize
 
