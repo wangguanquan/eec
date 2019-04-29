@@ -64,23 +64,6 @@ public class ListObjectSheet<T> extends Sheet {
         return this;
     }
 
-    /**
-     * write worksheet data to path
-     * @param path the storage path
-     * @throws IOException write error
-     * @throws ExcelWriteException others
-     */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
-        if (sheetWriter == null) {
-            throw new ExcelWriteException("Worksheet writer is not instanced.");
-        }
-        if (!copySheet) {
-            paging();
-        }
-        rowBlock = new RowBlock();
-        sheetWriter.write(path);
-    }
-
     @Override
     public RowBlock nextBlock() {
         // clear first
@@ -224,6 +207,9 @@ public class ListObjectSheet<T> extends Sheet {
         return end - start;
     }
 
+    /**
+     * Split worksheet data
+     */
     protected void paging() {
         int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
         workbook.what("Total size: " + len);

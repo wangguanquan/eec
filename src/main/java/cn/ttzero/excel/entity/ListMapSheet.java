@@ -103,24 +103,6 @@ public class ListMapSheet extends Sheet {
     }
 
     /**
-     * write worksheet data to path
-     *
-     * @param path the storage path
-     * @throws IOException         write error
-     * @throws ExcelWriteException others
-     */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
-        if (sheetWriter == null) {
-            throw new ExcelWriteException("Worksheet writer is not instanced.");
-        }
-        if (!copySheet) {
-            paging();
-        }
-        rowBlock = new RowBlock();
-        sheetWriter.write(path);
-    }
-
-    /**
      * Returns a row-block. The row-block is content by 32 rows
      *
      * @return a row-block
@@ -174,6 +156,10 @@ public class ListMapSheet extends Sheet {
         return end - start;
     }
 
+    /**
+     * Split worksheet data
+     */
+    @Override
     protected void paging() {
         int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
         workbook.what("Total size: " + len);

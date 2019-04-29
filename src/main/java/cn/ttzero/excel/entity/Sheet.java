@@ -811,13 +811,20 @@ public abstract class Sheet {
      * @throws ExcelWriteException others
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
-        if (sheetWriter != null) {
-            rowBlock = new RowBlock();
-            sheetWriter.write(path);
-        } else {
+        if (sheetWriter == null) {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
+        if (!copySheet) {
+            paging();
+        }
+        rowBlock = new RowBlock();
+        sheetWriter.write(path);
     }
+
+    /**
+     * Split worksheet data
+     */
+    protected void paging() { }
 
     /**
      * 添加关联
