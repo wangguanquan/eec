@@ -60,6 +60,13 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager = new RelManager();
     }
 
+    public Workbook getWorkbook() {
+        return workbook;
+    }
+
+    public RelManager getRelManager() {
+        return relManager;
+    }
 
     /**
      * The Workbook suffix
@@ -250,7 +257,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
         WaterMark wm;
         for (int i = 0; i < workbook.getSize(); i++) {
-            // TODO
             Sheet sheet = workbook.getSheetAt(i);
             if ((wm = sheet.getWaterMark()) != null) {
                 Path media = parent.resolve("media");
@@ -308,7 +314,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // sheets
         Element sheetEle = rootElement.addElement("sheets");
         for (int i = 0; i < workbook.getSize(); i++) {
-            // TODO XMLSheet
             Sheet sheetInfo = workbook.getSheetAt(i);
             Element st = sheetEle.addElement("sheet")
                 .addAttribute("sheetId", String.valueOf(i + 1))
