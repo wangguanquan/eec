@@ -34,21 +34,21 @@ import java.util.*;
 public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrite() throws IOException {
-        new Workbook("test map", "guanquan.wang")
+        new Workbook("test map", author)
             .watch(Print::println)
             .addSheet(createTestData())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAllType() throws IOException {
-        new Workbook("test all type map", "guanquan.wang")
+        new Workbook("test all type map", author)
                 .watch(Print::println)
                 .addSheet(createAllTypeData())
                 .writeTo(defaultTestPath);
     }
 
     @Test public void testHeaderColumn() throws IOException {
-        new Workbook("test header column map", "guanquan.wang")
+        new Workbook("test header column map", author)
                 .watch(Print::println)
                 .addSheet(createAllTypeData()
                     , new Sheet.Column("char", "cv", char.class)
@@ -70,7 +70,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testHeaderColumnBox() throws IOException {
-        new Workbook("test header column box type map", "guanquan.wang")
+        new Workbook("test header column box type map", author)
                 .watch(Print::println)
                 .addSheet(createAllTypeData()
                         , new Sheet.Column("Character", "cv", Character.class)

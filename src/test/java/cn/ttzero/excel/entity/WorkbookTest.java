@@ -28,6 +28,7 @@ public class WorkbookTest {
      * The default output path
      */
     Path defaultTestPath = Paths.get("target/excel/");
+    String author = "guanquan.wang";
     static Random random = new Random();
 
     static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();

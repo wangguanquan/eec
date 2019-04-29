@@ -40,28 +40,28 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test
     public void testWrite() throws IOException {
-        new Workbook("test object", "guanquan.wang")
+        new Workbook("test object", author)
             .watch(Print::println)
             .addSheet(Item.randomTestData())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAllTypeWrite() throws IOException {
-        new Workbook("all type object", "guanquan.wang")
+        new Workbook("all type object", author)
             .watch(Print::println)
             .addSheet(AllType.randomTestData())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAnnotation() throws IOException {
-        new Workbook("annotation object", "guanquan.wang")
+        new Workbook("annotation object", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testStringWaterMark() throws IOException {
-        new Workbook("object string water mark", "guanquan.wang")
+        new Workbook("object string water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of("SECRET"))
             .addSheet(Item.randomTestData())
@@ -69,7 +69,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     }
 
     @Test public void testLocalPicWaterMark() throws IOException {
-        new Workbook("object local pic water mark", "guanquan.wang")
+        new Workbook("object local pic water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
             .addSheet(Item.randomTestData())
@@ -77,7 +77,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     }
 
     @Test public void testStreamWaterMark() throws IOException {
-        new Workbook("object input stream water mark", "guanquan.wang")
+        new Workbook("object input stream water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(Item.randomTestData())

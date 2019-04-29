@@ -27,7 +27,7 @@ import java.sql.SQLException;
 public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testWrite() {
         try (Connection con = getConnection()) {
-            new Workbook("statement", "guanquan.wang")
+            new Workbook("statement", author)
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet("select id, name, age from student order by age"

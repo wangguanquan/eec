@@ -31,7 +31,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student order by age");
             ResultSet rs = ps.executeQuery();
-            new Workbook("result set", "guanquan.wang")
+            new Workbook("result set", author)
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet(rs
