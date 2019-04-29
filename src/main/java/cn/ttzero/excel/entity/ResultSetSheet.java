@@ -288,7 +288,7 @@ public class ResultSetSheet extends Sheet {
         return columns;
     }
 
-    protected ResultSetSheet clone() {
+    protected ResultSetSheet copy() {
         ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns, rs, relManager).setCopySheet(true);
         if (getAutoSize() == 1) {
             rss.autoSize();
