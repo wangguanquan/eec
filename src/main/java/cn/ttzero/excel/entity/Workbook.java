@@ -755,6 +755,7 @@ public class Workbook {
     // --- Customize workbook writer
     public Workbook setWorkbookWriter(IWorkbookWriter workbookWriter) {
         this.workbookWriter = workbookWriter;
+        this.workbookWriter.setWorkbook(this);
         return this;
     }
 }
