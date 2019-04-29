@@ -244,6 +244,7 @@ public class ListObjectSheet<T> extends Sheet {
         sheet.autoSize = autoSize;
         sheet.autoOdd = autoOdd;
         sheet.oddFill = oddFill;
+        sheet.relManager = relManager.clone();
         sheet.sheetWriter = sheetWriter.copy(sheet);
         sheet.copySheet = true;
         return sheet;
