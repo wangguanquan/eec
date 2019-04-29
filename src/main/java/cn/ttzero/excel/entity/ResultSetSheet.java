@@ -289,10 +289,11 @@ public class ResultSetSheet extends Sheet {
     }
 
     protected ResultSetSheet copy() {
-        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns, rs, relManager).setCopySheet(true);
+        ResultSetSheet rss =  new ResultSetSheet(workbook, name, waterMark, columns, rs, relManager.clone());
         if (getAutoSize() == 1) {
             rss.autoSize();
         }
+        rss.copySheet = true;
         rss.autoOdd = this.autoOdd;
         rss.oddFill = this.oddFill;
         return rss;
