@@ -78,7 +78,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     private void loopData() throws SQLException {
-        int len = columns.length, n = 0, limit = sheetWriter.getRowLimit();
+        int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
 
         for (; n++ < ROW_BLOCK_SIZE && rows < limit && rs.next(); ) {
             Row row = rowBlock.next();
