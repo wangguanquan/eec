@@ -689,6 +689,14 @@ public abstract class Sheet {
     }
 
     /**
+     * Test is auto size column width
+     * @return true if auto-size
+     */
+    public boolean isAutoSize() {
+        return autoSize == 1;
+    }
+
+    /**
      * 取消隔行变色
      * @return worksheet实例
      */
