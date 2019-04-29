@@ -99,6 +99,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // resize
         if (sheet.isAutoSize()) {
+            // close writer before resize
+            close();
             resizeColumnWidth(sheetPath.toFile(), total);
         }
     }
@@ -152,6 +154,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // resize
         if (sheet.isAutoSize()) {
+            // close writer before resize
+            close();
             resizeColumnWidth(sheetPath.toFile(), rowBlock.getTotal());
         }
     }
