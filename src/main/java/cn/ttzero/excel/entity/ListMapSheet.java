@@ -48,6 +48,7 @@ public class ListMapSheet extends Sheet {
 
     /**
      * Returns the header column info
+     *
      * @return array of column
      */
     @Override
@@ -89,8 +90,10 @@ public class ListMapSheet extends Sheet {
 
     @Override
     public void close() throws IOException {
-//        data.clear();
-//        data = null;
+        if (shouldClose) {
+            data.clear();
+            data = null;
+        }
         super.close();
     }
 
@@ -101,8 +104,9 @@ public class ListMapSheet extends Sheet {
 
     /**
      * write worksheet data to path
+     *
      * @param path the storage path
-     * @throws IOException write error
+     * @throws IOException         write error
      * @throws ExcelWriteException others
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
@@ -118,6 +122,7 @@ public class ListMapSheet extends Sheet {
 
     /**
      * Returns a row-block. The row-block is content by 32 rows
+     *
      * @return a row-block
      */
     @Override
@@ -133,7 +138,7 @@ public class ListMapSheet extends Sheet {
     private void loopData() {
         int end = getEndIndex();
         int len = columns.length;
-        for ( ; start < end; rows++, start++) {
+        for (; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
@@ -162,6 +167,7 @@ public class ListMapSheet extends Sheet {
 
     /**
      * Returns total rows in this worksheet
+     *
      * @return -1 if unknown
      */
     public int size() {
@@ -178,16 +184,18 @@ public class ListMapSheet extends Sheet {
                 page++;
             }
             // Insert sub-sheet
-            for (int i = 1, index = id, n; i < page; i++) {
+            for (int i = 1, index = id, last = page - 1, n; i < page; i++) {
                 ListMapSheet sheet = copy();
                 sheet.name = name + " (" + i + ")";
                 sheet.start = i * limit;
                 sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                sheet.shouldClose = i == last;
                 workbook.insertSheet(index++, sheet);
             }
             // Reset current index
             start = 0;
             end = limit;
+            shouldClose = false;
         } else {
             start = 0;
             end = len;

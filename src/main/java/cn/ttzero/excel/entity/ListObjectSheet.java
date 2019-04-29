@@ -52,8 +52,10 @@ public class ListObjectSheet<T> extends Sheet {
 
     @Override
     public void close() throws IOException {
-//        data.clear();
-//        data = null;
+        if (shouldClose) {
+            data.clear();
+            data = null;
+        }
         super.close();
     }
 
@@ -232,16 +234,18 @@ public class ListObjectSheet<T> extends Sheet {
                 page++;
             }
             // Insert sub-sheet
-            for (int i = 1, index = id, n; i < page; i++) {
+            for (int i = 1, index = id, last = page - 1, n; i < page; i++) {
                 ListObjectSheet<T> sheet = copy();
                 sheet.name = name + " (" + i + ")";
                 sheet.start = i * limit;
                 sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                sheet.shouldClose = i == last;
                 workbook.insertSheet(index++, sheet);
             }
             // Reset current index
             start = 0;
             end = limit;
+            shouldClose = false;
         } else {
             start = 0;
             end = len;

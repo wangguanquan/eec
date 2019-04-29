@@ -67,6 +67,8 @@ public abstract class Sheet {
     protected IWorksheetWriter sheetWriter;
     /** To mark the header column is ready */
     protected boolean headerReady;
+    /** Close resource on the last copy worksheet */
+    protected boolean shouldClose = true;
 
     public int getId() {
         return id;
