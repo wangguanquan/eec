@@ -196,6 +196,7 @@ public class ListMapSheet extends Sheet {
         sheet.oddFill = oddFill;
         sheet.relManager = relManager.clone();
         sheet.sheetWriter = sheetWriter.copy(sheet);
+        sheet.waterMark = waterMark;
         sheet.copySheet = true;
         return sheet;
     }
