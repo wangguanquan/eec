@@ -745,4 +745,10 @@ public class Workbook {
     protected Path template() throws IOException {
         return workbookWriter.template();
     }
+
+    // --- Customize workbook writer
+    public Workbook setWorkbookWriter(IWorkbookWriter workbookWriter) {
+        this.workbookWriter = workbookWriter;
+        return this;
+    }
 }
