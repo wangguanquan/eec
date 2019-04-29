@@ -344,9 +344,6 @@ public class StatementSheet extends Sheet {
                 setCellValue(cell, e, hc);
             }
         }
-        if (n < ROW_BLOCK_SIZE) {
-            rowBlock.markEnd();
-        }
     }
 
 

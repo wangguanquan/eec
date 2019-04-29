@@ -63,7 +63,7 @@ public class RowBlock implements Iterator<Row> {
     /**
      * End of file mark
      */
-    void markEnd() {
+    private void markEnd() {
         eof = true;
     }
 
@@ -76,6 +76,9 @@ public class RowBlock implements Iterator<Row> {
     }
 
     final RowBlock flip() {
+        if (i < ROW_BLOCK_SIZE) {
+            markEnd();
+        }
         n = i;
         total += i;
         i = 0;

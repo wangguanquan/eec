@@ -196,9 +196,6 @@ public class ListMapSheet extends Sheet {
                 setCellValue(cell, e, hc);
             }
         }
-        if (end == data.size()) {
-            rowBlock.markEnd();
-        }
     }
 
     private int getEndIndex() {

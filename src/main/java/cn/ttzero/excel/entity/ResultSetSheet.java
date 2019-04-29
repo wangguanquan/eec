@@ -269,9 +269,6 @@ public class ResultSetSheet extends Sheet {
                 setCellValue(cell, e, hc);
             }
         }
-        if (n < ROW_BLOCK_SIZE) {
-            rowBlock.markEnd();
-        }
     }
 
     /**

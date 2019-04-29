@@ -99,9 +99,6 @@ public class ListObjectSheet<T> extends Sheet {
                 setCellValue(cell, e, columns[i]);
             }
         }
-        if (end == data.size()) {
-            rowBlock.markEnd();
-        }
     }
 
     private int getEndIndex() {
