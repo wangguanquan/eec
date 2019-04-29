@@ -55,10 +55,7 @@ public class I18N {
      * @return I18N string
      */
     public String get(String code) {
-        if (pro != null) {
-            return pro.getProperty(code);
-        }
-        return code;
+        return pro.getProperty(code, code);
     }
 
     /**
@@ -68,10 +65,7 @@ public class I18N {
      * @return I18N string
      */
     public String getOrElse(String code, String other) {
-        if (pro != null) {
-            return pro.getProperty(code);
-        }
-        return other;
+        return pro.getProperty(code, other);
     }
 
     /**
@@ -81,12 +75,11 @@ public class I18N {
      * @return I18N string
      */
     public String get(String code, String ... args) {
-        if (pro == null) return code;
-        String msg = pro.getProperty(code);
+        String msg = pro.getProperty(code, code);
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);
         int len = indexs.length >= args.length ? args.length : indexs.length, size = 0;
-        for (int i = 0; i < len; size += args[i++].length());
+        for (int i = 0; i < len; size += args[i++].length()) ;
         StringBuilder buf = new StringBuilder(oldValue.length + size - (len << 1));
         buf.append(oldValue, 0, indexs[0]).append(args[0]);
         for (int i = 1; i < len; i++) {
