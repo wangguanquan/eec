@@ -106,7 +106,7 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     private int getEndIndex() {
-        int end = start + rows + ROW_BLOCK_SIZE;
+        int end = start + ROW_BLOCK_SIZE;
         return end <= this.end ? end : this.end;
     }
 
