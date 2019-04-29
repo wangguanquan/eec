@@ -19,22 +19,20 @@ package cn.ttzero.excel.entity;
 import cn.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import cn.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
-import java.io.IOException;
-
 /**
  * Create by guanquan.wang at 2019-04-29 14:16
  */
 public class MyXMLWorkbookWriter extends XMLWorkbookWriter {
 
     @Override
-    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) throws IOException {
+    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
         return new MyXMLWorksheetWriter(getWorkbook(), sheet);
     }
 }
 
 class MyXMLWorksheetWriter extends XMLWorksheetWriter {
 
-    public MyXMLWorksheetWriter(Workbook workbook, Sheet sheet) throws IOException {
+    public MyXMLWorksheetWriter(Workbook workbook, Sheet sheet) {
         super(workbook, sheet);
     }
 
