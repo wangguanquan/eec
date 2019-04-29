@@ -23,6 +23,7 @@ import cn.ttzero.excel.annotation.NotExport;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 public class ListObjectSheet<T> extends Sheet {
     private List<T> data;
     private Field[] fields;
+    private int start, end;
 
     public ListObjectSheet(Workbook workbook) {
         super(workbook);
@@ -50,14 +52,49 @@ public class ListObjectSheet<T> extends Sheet {
 
     @Override
     public void close() throws IOException {
-        data.clear();
-        data = null;
+//        data.clear();
+//        data = null;
         super.close();
     }
 
     public ListObjectSheet<T> setData(final List<T> data) {
         this.data = data;
         return this;
+    }
+
+    /**
+     * write worksheet data to path
+     * @param path the storage path
+     * @throws IOException write error
+     * @throws ExcelWriteException others
+     */
+    public void writeTo(Path path) throws IOException, ExcelWriteException {
+        if (sheetWriter != null) {
+            int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
+            // paging
+            if (!copySheet && len > limit) {
+                workbook.what("Total size: " + len);
+                int page = len / limit;
+                if (len % limit > 0) {
+                    page++;
+                }
+                // Insert sub-sheet
+                for (int i = 1, index = id, n; i < page; i++) {
+                    ListObjectSheet<T> sheet = copy();
+                    sheet.name = name + " (" + i + ")";
+                    sheet.start = i * limit;
+                    sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                    workbook.insertSheet(index++, sheet);
+                }
+                // Reset current index
+                start = 0;
+                end = limit;
+            }
+            rowBlock = new RowBlock();
+            sheetWriter.write(path);
+        } else {
+            throw new ExcelWriteException("Worksheet writer is not instanced.");
+        }
     }
 
     @Override
@@ -78,7 +115,7 @@ public class ListObjectSheet<T> extends Sheet {
         // Find the end index of row-block
         int end = getEndIndex();
         int len = columns.length;
-        for ( ; rows < end; rows++) {
+        for ( ; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
             Field field;
@@ -89,7 +126,7 @@ public class ListObjectSheet<T> extends Sheet {
                 Cell cell = cells[i];
                 cell.clear();
 
-                Object e = field.get(data.get(rows));
+                Object e = field.get(data.get(start));
                 // blank cell
                 if (e == null) {
                     cell.setBlank();
@@ -102,8 +139,8 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     private int getEndIndex() {
-        int end = rows + ROW_BLOCK_SIZE;
-        return end <= data.size() ? end : data.size();
+        int end = start + rows + ROW_BLOCK_SIZE;
+        return end <= this.end ? end : this.end;
     }
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
@@ -200,8 +237,18 @@ public class ListObjectSheet<T> extends Sheet {
      */
     @Override
     public int size() {
-        return data != null ? data.size() : 0;
+        return end - start;
     }
 
 
+    public ListObjectSheet<T> copy() {
+        ListObjectSheet<T> sheet = new ListObjectSheet<>(workbook, name, columns);
+        sheet.data = data;
+        sheet.autoSize = autoSize;
+        sheet.autoOdd = autoOdd;
+        sheet.oddFill = oddFill;
+        sheet.sheetWriter = sheetWriter.copy(sheet);
+        sheet.copySheet = true;
+        return sheet;
+    }
 }
