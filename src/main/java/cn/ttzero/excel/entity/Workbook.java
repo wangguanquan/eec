@@ -310,28 +310,34 @@ public class Workbook {
             return this;
         }
 
-        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
-        if (len % limit > 0) {
-            page++;
+        if (o instanceof Map) {
+            sheets[size++] = new ListMapSheet(this, name, columns).setData((List<Map<String, ?>>) data);
+        } else {
+            sheets[size++] = new ListObjectSheet(this, name, columns).setData(data);
         }
-        if (_size + page > sheets.length) {
-            sheets = Arrays.copyOf(sheets, _size + page);
-        }
-        if (StringUtil.isEmpty(name)) {
-            name = "Sheet";
-        }
-        // 提前分页
-        for (int i = 0, n; i < page; i++) {
-            Sheet sheet;
-            List<?> subList = data.subList(i * limit, (n = (i + 1) * limit) < len ? n : len);
-            if (o instanceof Map) {
-                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData((List<Map<String, ?>>) subList);
-            } else {
-                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData(subList);
-            }
-            sheets[_size + i] = sheet;
-        }
-        size += page;
+
+//        int len = data.size(), limit = Const.Limit.MAX_ROWS_ON_SHEET - 1, page = len / limit;
+//        if (len % limit > 0) {
+//            page++;
+//        }
+//        if (_size + page > sheets.length) {
+//            sheets = Arrays.copyOf(sheets, _size + page);
+//        }
+//        if (StringUtil.isEmpty(name)) {
+//            name = "Sheet";
+//        }
+//        // 提前分页
+//        for (int i = 0, n; i < page; i++) {
+//            Sheet sheet;
+//            List<?> subList = data.subList(i * limit, (n = (i + 1) * limit) < len ? n : len);
+//            if (o instanceof Map) {
+//                sheet = new ListMapSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData((List<Map<String, ?>>) subList);
+//            } else {
+//                sheet = new ListObjectSheet(this, i > 0 ? name + " (" + i + ")" : name, columns).setData(subList);
+//            }
+//            sheets[_size + i] = sheet;
+//        }
+//        size += page;
         return this;
     }
 
