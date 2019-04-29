@@ -50,14 +50,14 @@ public class StatementSheet extends ResultSetSheet {
      */
     @Override
     public void close() throws IOException {
-        if (ps != null) {
+        super.close();
+        if (shouldClose && ps != null) {
             try {
                 ps.close();
             } catch (SQLException e) {
                 workbook.what("9006", e.getMessage());
             }
         }
-        super.close();
     }
 
     /**
