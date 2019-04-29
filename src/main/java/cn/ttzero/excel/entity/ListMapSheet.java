@@ -20,6 +20,7 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
  */
 public class ListMapSheet extends Sheet {
     private List<Map<String, ?>> data;
+    private int start, end;
 
     public ListMapSheet(Workbook workbook) {
         super(workbook);
@@ -97,66 +99,44 @@ public class ListMapSheet extends Sheet {
         return this;
     }
 
-//    @Override
-//    public void writeTo(Path xl) throws IOException {
-////        Path worksheets = xl.resolve("worksheets");
-////        if (!Files.exists(worksheets)) {
-////            FileUtil.mkdir(worksheets);
-////        }
-////        String name = getFileName();
-////        workbook.what("0010", getName());
-////
-////        @SuppressWarnings("unchecked")
-////        Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
-////        for (int i = 0; i < columns.length; i++) {
-////            Column hc = columns[i];
-////            if (StringUtil.isEmpty(hc.key)) {
-////                throw new IOException(getClass() + " 类别必须指定map的key。");
-////            }
-////            if (hc.getClazz() == null) {
-////                hc.setClazz(first.get(hc.key).getClass());
-////            }
-////        }
-////
-////        File sheetFile = worksheets.resolve(name).toFile();
-////
-////        // write date
-////        try (ExtBufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(new FileOutputStream(sheetFile), StandardCharsets.UTF_8))) {
-////            // Write header
-////            writeBefore(bw);
-////            // Main data
-////            // Write sheet data
-////            if (getAutoSize() == 1) {
-////                for (Map<String, ?> map : data) {
-////                    writeRowAutoSize(map, bw);
-////                }
-////            } else {
-////                for (Map<String, ?> map : data) {
-////                    writeRow(map, bw);
-////                }
-////            }
-////
-////            // Write foot
-////            writeAfter(bw);
-////
-////        }
-////
-////        // resize columns
-////        boolean resize = false;
-////        for (Column hc : columns) {
-////            if (hc.getWidth() > 0.000001) {
-////                resize = true;
-////                break;
-////            }
-////        }
-////
-////        if (getAutoSize() == 1 || resize) {
-////            autoColumnSize(sheetFile);
-////        }
-////
-////        // relationship
-////        relManager.write(worksheets, name);
-//    }
+    /**
+     * write worksheet data to path
+     * @param path the storage path
+     * @throws IOException write error
+     * @throws ExcelWriteException others
+     */
+    public void writeTo(Path path) throws IOException, ExcelWriteException {
+        if (sheetWriter == null) {
+            throw new ExcelWriteException("Worksheet writer is not instanced.");
+        }
+        if (!copySheet) {
+            int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
+            workbook.what("Total size: " + len);
+            // paging
+            if (len > limit) {
+                int page = len / limit;
+                if (len % limit > 0) {
+                    page++;
+                }
+                // Insert sub-sheet
+                for (int i = 1, index = id, n; i < page; i++) {
+                    ListMapSheet sheet = copy();
+                    sheet.name = name + " (" + i + ")";
+                    sheet.start = i * limit;
+                    sheet.end = (n = (i + 1) * limit) < len ? n : len;
+                    workbook.insertSheet(index++, sheet);
+                }
+                // Reset current index
+                start = 0;
+                end = limit;
+            } else {
+                start = 0;
+                end = len;
+            }
+        }
+        rowBlock = new RowBlock();
+        sheetWriter.write(path);
+    }
 
     /**
      * Returns a row-block. The row-block is content by 32 rows
@@ -202,173 +182,22 @@ public class ListMapSheet extends Sheet {
         return end <= data.size() ? end : data.size();
     }
 
-//    /**
-//     * write map
-//     *
-//     * @param map
-//     * @param bw
-//     * @throws IOException
-//     */
-//    protected void writeRowAutoSize(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
-//        if (map == null) {
-//            writeEmptyRow(bw);
-//            return;
-//        }
-//        // 行番号
-//        int r = ++rows;
-//        final int len = columns.length;
-//        bw.write("<row r=\"");
-//        bw.writeInt(r);
-//        bw.write("\" spans=\"1:");
-//        bw.writeInt(len);
-//        bw.write("\">");
-//
-//        for (int i = 0; i < len; i++) {
-//            Column hc = columns[i];
-//            Object o = map.get(hc.key);
-//            if (o != null) {
-//                Class<?> clazz = hc.getClazz();
-//                // t n=numeric (default), s=string, b=boolean
-//                if (isString(clazz)) {
-//                    String s = o.toString();
-//                    writeStringAutoSize(bw, s, i);
-//                }
-//                else if (isDate(clazz)) {
-//                    java.util.Date date = (java.util.Date) o;
-//                    writeDate(bw, date, i);
-//                }
-//                else if (isDateTime(clazz)) {
-//                    Timestamp ts = (Timestamp) o;
-//                    writeTimestamp(bw, ts, i);
-//                }
-//                else if (isChar(clazz)) {
-//                    char c = ((Character) o).charValue();
-//                    writeCharAutoSize(bw, c, i);
-//                }
-//                else if (isInt(clazz)) {
-//                    int n = ((Integer) o).intValue();
-//                    writeIntAutoSize(bw, n, i);
-//                }
-//                else if (isLong(clazz)) {
-//                    long l = ((Long) o).longValue();
-//                    writeLong(bw, l, i);
-//                }
-//                else if (isFloat(clazz)) {
-//                    double d = ((Double) o).doubleValue();
-//                    writeDouble(bw, d, i);
-//                }
-//                else if (isBool(clazz)) {
-//                    boolean bool = ((Boolean) o).booleanValue();
-//                    writeBoolean(bw, bool, i);
-//                }
-//                else if (isBigDecimal(clazz)) {
-//                    writeBigDecimal(bw, (BigDecimal) o, i);
-//                }
-//                else if (isLocalDate(clazz)) {
-//                    writeLocalDate(bw, (LocalDate) o, i);
-//                }
-//                else if (isLocalDateTime(clazz)) {
-//                    writeLocalDateTime(bw, (LocalDateTime) o, i);
-//                }
-//                else if (isTime(clazz)) {
-//                    writeTime(bw, (java.sql.Time) o, i);
-//                }
-//                else if (isLocalTime(clazz)) {
-//                    writeLocalTime(bw, (java.time.LocalTime) o, i);
-//                }
-//                else {
-//                    writeStringAutoSize(bw, o.toString(), i);
-//                }
-//            } else {
-//                writeNull(bw, i);
-//            }
-//        }
-//        bw.write("</row>");
-//    }
-//
-//    protected void writeRow(Map<String, ?> map, ExtBufferedWriter bw) throws IOException {
-//        if (map == null) {
-//            writeEmptyRow(bw);
-//            return;
-//        }
-//        // Row number
-//        int r = ++rows;
-//        final int len = columns.length;
-//        bw.write("<row r=\"");
-//        bw.writeInt(r);
-//        bw.write("\" spans=\"1:");
-//        bw.writeInt(len);
-//        bw.write("\">");
-//
-//        for (int i = 0; i < len; i++) {
-//            Column hc = columns[i];
-//            Object o = map.get(hc.key);
-//            if (o != null) {
-//                Class<?> clazz = hc.getClazz();
-//                // t n=numeric (default), s=string, b=boolean
-//                if (isString(clazz)) {
-//                    String s = o.toString();
-//                    writeString(bw, s, i);
-//                }
-//                else if (isDate(clazz)) {
-//                    java.util.Date date = (java.util.Date) o;
-//                    writeDate(bw, date, i);
-//                }
-//                else if (isDateTime(clazz)) {
-//                    Timestamp ts = (Timestamp) o;
-//                    writeTimestamp(bw, ts, i);
-//                }
-//                else if (isChar(clazz)) {
-//                    char c = ((Character) o).charValue();
-//                    writeChar(bw, c, i);
-//                }
-//                else if (isInt(clazz)) {
-//                    int n = ((Integer) o).intValue();
-//                    writeInt(bw, n, i);
-//                }
-//                else if (isLong(clazz)) {
-//                    long l = ((Long) o).longValue();
-//                    writeLong(bw, l, i);
-//                }
-//                else if (isFloat(clazz)) {
-//                    double d = ((Double) o).doubleValue();
-//                    writeDouble(bw, d, i);
-//                }
-//                else if (isBool(clazz)) {
-//                    boolean bool = ((Boolean) o).booleanValue();
-//                    writeBoolean(bw, bool, i);
-//                }
-//                else if (isBigDecimal(clazz)) {
-//                    writeBigDecimal(bw, (BigDecimal) o, i);
-//                }
-//                else if (isLocalDate(clazz)) {
-//                    writeLocalDate(bw, (LocalDate) o, i);
-//                }
-//                else if (isLocalDateTime(clazz)) {
-//                    writeLocalDateTime(bw, (LocalDateTime) o, i);
-//                }
-//                else if (isTime(clazz)) {
-//                    writeTime(bw, (java.sql.Time) o, i);
-//                }
-//                else if (isLocalTime(clazz)) {
-//                    writeLocalTime(bw, (java.time.LocalTime) o, i);
-//                }
-//                else {
-//                    writeString(bw, o.toString(), i);
-//                }
-//            }
-//            else {
-//                writeNull(bw, i);
-//            }
-//        }
-//        bw.write("</row>");
-//    }
-
     /**
      * Returns total rows in this worksheet
      * @return -1 if unknown
      */
     public int size() {
-        return data != null ? data.size() : 0;
+        return end - start;
+    }
+
+    public ListMapSheet copy() {
+        ListMapSheet sheet = new ListMapSheet(workbook, name, columns);
+        sheet.data = data;
+        sheet.autoSize = autoSize;
+        sheet.autoOdd = autoOdd;
+        sheet.oddFill = oddFill;
+        sheet.sheetWriter = sheetWriter.copy(sheet);
+        sheet.copySheet = true;
+        return sheet;
     }
 }
