@@ -51,7 +51,7 @@ public class ListMapSheet extends ListSheet {
      * @param columns the header info
      */
     public ListMapSheet(String name, final Column[] columns) {
-        super(name, null, columns);
+        super(name, columns);
     }
 
     /**

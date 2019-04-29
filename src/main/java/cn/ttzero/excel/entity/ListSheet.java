@@ -43,7 +43,7 @@ public abstract class ListSheet extends Sheet {
      * @param columns the header info
      */
     public ListSheet(String name, final Column[] columns) {
-        super(name, null, columns);
+        super(name, columns);
     }
 
     /**
