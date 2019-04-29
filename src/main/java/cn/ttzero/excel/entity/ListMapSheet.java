@@ -174,15 +174,14 @@ public class ListMapSheet extends Sheet {
 
     private void loopData() {
         int end = getEndIndex();
-        List<Map<String, ?>> sub = data.subList(rows, end);
         int len = columns.length;
-        for (Map<String, ?> map : sub) {
+        for ( ; rows < end; rows++) {
             Row row = rowBlock.next();
-            row.index = rows++;
+            row.index = rows;
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
                 Column hc = columns[i];
-                Object e = map.get(hc.key);
+                Object e = data.get(rows).get(hc.key);
                 // clear cells
                 Cell cell = cells[i];
                 cell.clear();
