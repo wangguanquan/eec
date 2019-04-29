@@ -19,6 +19,7 @@ package cn.ttzero.excel.entity;
 import cn.ttzero.excel.Print;
 import cn.ttzero.excel.annotation.DisplayName;
 import cn.ttzero.excel.annotation.NotExport;
+import cn.ttzero.excel.reader.ExcelReaderTest;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -56,6 +57,30 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("annotation object", "guanquan.wang")
             .watch(Print::println)
             .addSheet(Student.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStringWaterMark() throws IOException {
+        new Workbook("object string water mark", "guanquan.wang")
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of("SECRET"))
+            .addSheet(Item.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testLocalPicWaterMark() throws IOException {
+        new Workbook("object local pic water mark", "guanquan.wang")
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
+            .addSheet(Item.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStreamWaterMark() throws IOException {
+        new Workbook("object input stream water mark", "guanquan.wang")
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
+            .addSheet(Item.randomTestData())
             .writeTo(defaultTestPath);
     }
 
