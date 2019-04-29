@@ -23,19 +23,15 @@ import cn.ttzero.excel.annotation.NotExport;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 
 /**
  * Created by guanquan.wang at 2018-01-26 14:48
  */
-public class ListObjectSheet<T> extends Sheet {
+public class ListObjectSheet<T> extends ListSheet {
     private List<T> data;
     private Field[] fields;
-    private int start, end;
 
     public ListObjectSheet(Workbook workbook) {
         super(workbook);
@@ -49,7 +45,15 @@ public class ListObjectSheet<T> extends Sheet {
         super(workbook, name, waterMark, columns);
     }
 
+    public ListObjectSheet<T> setData(final List<T> data) {
+        this.data = data;
+        return this;
+    }
 
+    /**
+     * Release resources
+     * @throws IOException if io error occur
+     */
     @Override
     public void close() throws IOException {
         if (shouldClose) {
@@ -59,55 +63,39 @@ public class ListObjectSheet<T> extends Sheet {
         super.close();
     }
 
-    public ListObjectSheet<T> setData(final List<T> data) {
-        this.data = data;
-        return this;
-    }
-
+    /**
+     * Reset the row-block data
+     */
     @Override
-    public RowBlock nextBlock() {
-        // clear first
-        rowBlock.clear();
-
-        try {
-            loopData();
-        } catch (IllegalAccessException e) {
-            throw new ExcelWriteException(e);
-        }
-
-        return rowBlock.flip();
-    }
-
-    private void loopData() throws IllegalAccessException {
+    protected void resetBlockData() {
         // Find the end index of row-block
         int end = getEndIndex();
         int len = columns.length;
-        for ( ; start < end; rows++, start++) {
-            Row row = rowBlock.next();
-            row.index = rows;
-            Field field;
-            Cell[] cells = row.realloc(len);
-            for (int i = 0; i < len; i++) {
-                field = fields[i];
-                // clear cells
-                Cell cell = cells[i];
-                cell.clear();
+        try {
+            for (; start < end; rows++, start++) {
+                Row row = rowBlock.next();
+                row.index = rows;
+                Field field;
+                Cell[] cells = row.realloc(len);
+                for (int i = 0; i < len; i++) {
+                    field = fields[i];
+                    // clear cells
+                    Cell cell = cells[i];
+                    cell.clear();
 
-                Object e = field.get(data.get(start));
-                // blank cell
-                if (e == null) {
-                    cell.setBlank();
-                    continue;
+                    Object e = field.get(data.get(start));
+                    // blank cell
+                    if (e == null) {
+                        cell.setBlank();
+                        continue;
+                    }
+
+                    setCellValue(cell, e, columns[i]);
                 }
-
-                setCellValue(cell, e, columns[i]);
             }
+        } catch (IllegalAccessException e) {
+            throw new ExcelWriteException(e);
         }
-    }
-
-    private int getEndIndex() {
-        int end = start + ROW_BLOCK_SIZE;
-        return end <= this.end ? end : this.end;
     }
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
@@ -199,45 +187,10 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     /**
-     * Returns total rows in this worksheet
-     * @return -1 if unknown
+     * Paging worksheet
+     * @return a copy worksheet
      */
     @Override
-    public int size() {
-        return end - start;
-    }
-
-    /**
-     * Split worksheet data
-     */
-    protected void paging() {
-        int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
-        workbook.what("Total size: " + len);
-        // paging
-        if (len > limit) {
-            int page = len / limit;
-            if (len % limit > 0) {
-                page++;
-            }
-            // Insert sub-sheet
-            for (int i = 1, index = id, last = page - 1, n; i < page; i++) {
-                ListObjectSheet<T> sheet = copy();
-                sheet.name = name + " (" + i + ")";
-                sheet.start = i * limit;
-                sheet.end = (n = (i + 1) * limit) < len ? n : len;
-                sheet.shouldClose = i == last;
-                workbook.insertSheet(index++, sheet);
-            }
-            // Reset current index
-            start = 0;
-            end = limit;
-            shouldClose = false;
-        } else {
-            start = 0;
-            end = len;
-        }
-    }
-
     public ListObjectSheet<T> copy() {
         ListObjectSheet<T> sheet = new ListObjectSheet<>(workbook, name, columns);
         sheet.data = data;
@@ -249,5 +202,14 @@ public class ListObjectSheet<T> extends Sheet {
         sheet.waterMark = waterMark;
         sheet.copySheet = true;
         return sheet;
+    }
+
+    /**
+     * Returns total data size before split
+     * @return the total size
+     */
+    @Override
+    public int dataSize() {
+        return data.size();
     }
 }

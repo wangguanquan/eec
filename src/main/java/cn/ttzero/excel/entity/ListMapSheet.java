@@ -20,19 +20,15 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
-
 /**
  * Created by guanquan.wang at 2018-01-26 14:46
  */
-public class ListMapSheet extends Sheet {
+public class ListMapSheet extends ListSheet {
     private List<Map<String, ?>> data;
-    private int start, end;
 
     public ListMapSheet(Workbook workbook) {
         super(workbook);
@@ -45,6 +41,54 @@ public class ListMapSheet extends Sheet {
     public ListMapSheet(Workbook workbook, String name, WaterMark waterMark, Column[] columns) {
         super(workbook, name, waterMark, columns);
     }
+
+    public ListMapSheet setData(final List<Map<String, ?>> data) {
+        this.data = data;
+        return this;
+    }
+
+    /**
+     * Release resources
+     * @throws IOException if io error occur
+     */
+    @Override
+    public void close() throws IOException {
+        if (shouldClose) {
+            data.clear();
+            data = null;
+        }
+        super.close();
+    }
+
+    /**
+     * Reset the row-block data
+     */
+    @Override
+    protected void resetBlockData() {
+        int end = getEndIndex();
+        int len = columns.length;
+        for (; start < end; rows++, start++) {
+            Row row = rowBlock.next();
+            row.index = rows;
+            Cell[] cells = row.realloc(len);
+            for (int i = 0; i < len; i++) {
+                Column hc = columns[i];
+                Object e = data.get(start).get(hc.key);
+                // clear cells
+                Cell cell = cells[i];
+                cell.clear();
+
+                // blank cell
+                if (e == null) {
+                    cell.setBlank();
+                    continue;
+                }
+
+                setCellValue(cell, e, hc);
+            }
+        }
+    }
+
 
     /**
      * Returns the header column info
@@ -88,106 +132,11 @@ public class ListMapSheet extends Sheet {
         return columns;
     }
 
-    @Override
-    public void close() throws IOException {
-        if (shouldClose) {
-            data.clear();
-            data = null;
-        }
-        super.close();
-    }
-
-    public ListMapSheet setData(final List<Map<String, ?>> data) {
-        this.data = data;
-        return this;
-    }
-
     /**
-     * Returns a row-block. The row-block is content by 32 rows
-     *
-     * @return a row-block
+     * Paging worksheet
+     * @return a copy worksheet
      */
     @Override
-    public RowBlock nextBlock() {
-        // clear first
-        rowBlock.clear();
-
-        loopData();
-
-        return rowBlock.flip();
-    }
-
-    private void loopData() {
-        int end = getEndIndex();
-        int len = columns.length;
-        for (; start < end; rows++, start++) {
-            Row row = rowBlock.next();
-            row.index = rows;
-            Cell[] cells = row.realloc(len);
-            for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
-                Object e = data.get(start).get(hc.key);
-                // clear cells
-                Cell cell = cells[i];
-                cell.clear();
-
-                // blank cell
-                if (e == null) {
-                    cell.setBlank();
-                    continue;
-                }
-
-                setCellValue(cell, e, hc);
-            }
-        }
-    }
-
-    private int getEndIndex() {
-        int end = start + ROW_BLOCK_SIZE;
-        return end <= this.end ? end : this.end;
-    }
-
-    /**
-     * Returns total rows in this worksheet
-     *
-     * @return -1 if unknown
-     */
-    public int size() {
-        return end - start;
-    }
-
-    /**
-     * Split worksheet data
-     */
-    @Override
-    protected void paging() {
-        int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
-        workbook.what("Total size: " + len);
-        // paging
-        if (len > limit) {
-            int page = len / limit;
-            if (len % limit > 0) {
-                page++;
-            }
-            // Insert sub-sheet
-            for (int i = 1, index = id, last = page - 1, n; i < page; i++) {
-                ListMapSheet sheet = copy();
-                sheet.name = name + " (" + i + ")";
-                sheet.start = i * limit;
-                sheet.end = (n = (i + 1) * limit) < len ? n : len;
-                sheet.shouldClose = i == last;
-                workbook.insertSheet(index++, sheet);
-            }
-            // Reset current index
-            start = 0;
-            end = limit;
-            shouldClose = false;
-        } else {
-            start = 0;
-            end = len;
-        }
-    }
-
     public ListMapSheet copy() {
         ListMapSheet sheet = new ListMapSheet(workbook, name, columns);
         sheet.data = data;
@@ -199,5 +148,14 @@ public class ListMapSheet extends Sheet {
         sheet.waterMark = waterMark;
         sheet.copySheet = true;
         return sheet;
+    }
+
+    /**
+     * Returns total data size before split
+     * @return the total size
+     */
+    @Override
+    protected int dataSize() {
+        return data.size();
     }
 }
