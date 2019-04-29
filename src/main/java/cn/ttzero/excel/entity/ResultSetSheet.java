@@ -39,8 +39,7 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
  * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
-    private ResultSet rs;
-    private boolean copySheet;
+    protected ResultSet rs;
 
     public ResultSetSheet(Workbook workbook) {
         super(workbook);
@@ -71,7 +70,6 @@ public class ResultSetSheet extends Sheet {
 
     @Override
     public void close() throws IOException {
-//        super.close();
         if (rs != null) {
             try {
                 rs.close();

@@ -61,6 +61,7 @@ public abstract class Sheet {
     protected int autoOdd = -1;
     /** odd row's background color */
     protected int oddFill;
+    protected boolean copySheet;
 
     protected RowBlock rowBlock;
     protected IWorksheetWriter sheetWriter;
