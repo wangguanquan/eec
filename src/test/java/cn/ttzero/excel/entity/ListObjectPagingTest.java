@@ -37,7 +37,7 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test
     public void testLessPaging() throws IOException {
-        Workbook workbook = new Workbook("test paging", author)
+        Workbook workbook = new Workbook("test less paging", author)
             .watch(Print::println)
             .addSheet(ListObjectSheetTest.Item.randomTestData(23));
         workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
