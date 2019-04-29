@@ -84,6 +84,14 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testAutoSize() throws IOException {
+        new Workbook("all type auto size", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(AllType.randomTestData(3))
+            .writeTo(defaultTestPath);
+    }
+
 
     public static class Item {
         private int id;
