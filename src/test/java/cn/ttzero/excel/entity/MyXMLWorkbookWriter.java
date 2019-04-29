@@ -26,10 +26,6 @@ import java.io.IOException;
  */
 public class MyXMLWorkbookWriter extends XMLWorkbookWriter {
 
-    public MyXMLWorkbookWriter(Workbook workbook) {
-        super(workbook);
-    }
-
     @Override
     protected IWorksheetWriter getWorksheetWriter(Sheet sheet) throws IOException {
         return new MyXMLWorksheetWriter(getWorkbook(), sheet);

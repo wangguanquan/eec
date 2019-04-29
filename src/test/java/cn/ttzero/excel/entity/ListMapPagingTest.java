@@ -28,19 +28,19 @@ public class ListMapPagingTest extends WorkbookTest {
 
     @Test
     public void testPaging() throws IOException {
-        Workbook workbook = new Workbook("test map paging", author)
+        new Workbook("test map paging", author)
             .watch(Print::println)
-            .addSheet(ListMapSheetTest.createTestData(301));
-        workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
+            .addSheet(ListMapSheetTest.createTestData(301))
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
     @Test
     public void testLessPaging() throws IOException {
-        Workbook workbook = new Workbook("test map less paging", author)
+        new Workbook("test map less paging", author)
             .watch(Print::println)
-            .addSheet(ListMapSheetTest.createTestData(29));
-        workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
+            .addSheet(ListMapSheetTest.createTestData(29))
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 

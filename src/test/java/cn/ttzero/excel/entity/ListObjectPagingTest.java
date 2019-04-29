@@ -17,6 +17,7 @@
 package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.Print;
+import cn.ttzero.excel.reader.ExcelReaderTest;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -28,20 +29,44 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test
     public void testPaging() throws IOException {
-        Workbook workbook = new Workbook("test paging", author)
+        new Workbook("test paging", author)
             .watch(Print::println)
-            .addSheet(ListObjectSheetTest.Item.randomTestData(202));
-        workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
+            .addSheet(ListObjectSheetTest.Item.randomTestData(202))
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
     @Test
     public void testLessPaging() throws IOException {
-        Workbook workbook = new Workbook("test less paging", author)
+        new Workbook("test less paging", author)
             .watch(Print::println)
-            .addSheet(ListObjectSheetTest.Item.randomTestData(23));
-        workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
+            .addSheet(ListObjectSheetTest.Item.randomTestData(23))
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testStringWaterMark() throws IOException {
+        new Workbook("paging string water mark", author)
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of("SECRET"))
+            .addSheet(ListObjectSheetTest.Item.randomTestData())
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testLocalPicWaterMark() throws IOException {
+        new Workbook("paging local pic water mark", author)
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
+            .addSheet(ListObjectSheetTest.Item.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStreamWaterMark() throws IOException {
+        new Workbook("paging input stream water mark", author)
+            .watch(Print::println)
+            .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
+            .addSheet(ListObjectSheetTest.Item.randomTestData())
+            .writeTo(defaultTestPath);
+    }
 }

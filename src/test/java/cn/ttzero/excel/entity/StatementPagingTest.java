@@ -27,15 +27,15 @@ import java.sql.SQLException;
 public class StatementPagingTest extends SQLWorkbookTest {
     @Test public void testPaging() {
         try (Connection con = getConnection()) {
-            Workbook workbook = new Workbook("statement paging", author)
+            new Workbook("statement paging", author)
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet("select id, name, age from student"
                     , new Sheet.Column("学号", int.class)
                     , new Sheet.Column("性名", String.class)
                     , new Sheet.Column("年龄", int.class)
-                );
-            workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
+                )
+                .setWorkbookWriter(new MyXMLWorkbookWriter())
                 .writeTo(defaultTestPath);
         } catch (SQLException |IOException e) {
             e.printStackTrace();

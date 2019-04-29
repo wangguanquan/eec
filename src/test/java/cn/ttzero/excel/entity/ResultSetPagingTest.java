@@ -34,16 +34,16 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student");
             ResultSet rs = ps.executeQuery();
-            Workbook workbook = new Workbook("result set paging", author)
+            new Workbook("result set paging", author)
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet(rs
                     , new Sheet.Column("学号", int.class)
                     , new Sheet.Column("性名", String.class)
                     , new Sheet.Column("年龄", int.class)
-                );
-            workbook.setWorkbookWriter(new MyXMLWorkbookWriter(workbook))
-                .writeTo(defaultTestPath);
+                )
+            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .writeTo(defaultTestPath);
             ps.close();
         } catch (SQLException |IOException e) {
             e.printStackTrace();
