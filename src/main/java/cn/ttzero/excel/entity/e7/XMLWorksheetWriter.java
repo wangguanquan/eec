@@ -67,7 +67,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private Sheet.Column[] columns;
     private SharedStrings sst;
 
-    public XMLWorksheetWriter(Workbook workbook, Sheet sheet) throws IOException {
+    public XMLWorksheetWriter(Workbook workbook, Sheet sheet) {
 //        this.sheet = sheet;
         this.workbook = workbook;
         this.sst = workbook.getSst();
@@ -149,12 +149,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public IWorksheetWriter copy(Sheet sheet) {
-        try {
-            return new XMLWorksheetWriter(workbook, sheet);
-        } catch (IOException e) {
-            workbook.what("Copy worksheet " + sheet.getName() + " error.\n" + e.getMessage());
-        }
-        return null;
+        return new XMLWorksheetWriter(workbook, sheet);
     }
 
     /**
