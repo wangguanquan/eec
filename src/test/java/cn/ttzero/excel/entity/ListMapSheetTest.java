@@ -83,12 +83,12 @@ public class ListMapSheetTest extends WorkbookTest {
                 .writeTo(defaultTestPath);
     }
 
-    private List<Map<String, ?>> createTestData() {
+    static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
     }
 
-    private List<Map<String, ?>> createTestData(int size) {
+    static List<Map<String, ?>> createTestData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
@@ -99,12 +99,12 @@ public class ListMapSheetTest extends WorkbookTest {
         return list;
     }
 
-    private List<Map<String, ?>> createAllTypeData() {
+    static List<Map<String, ?>> createAllTypeData() {
         int size = random.nextInt(100) + 1;
         return createAllTypeData(size);
     }
 
-    private List<Map<String, ?>> createAllTypeData(int size) {
+    static List<Map<String, ?>> createAllTypeData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
