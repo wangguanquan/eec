@@ -340,7 +340,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         int n;
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
-            IWorksheetWriter worksheetWriter = new XMLWorksheetWriter(workbook, sheet);
+            IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
             if ((n = sheet.getHeaderColumns().length) > worksheetWriter.getColumnLimit()) {
                 throw new TooManyColumnsException(n, worksheetWriter.getColumnLimit());
             }
@@ -473,5 +473,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         workbook.what("0005");
 
         return zipFile;
+    }
+
+    // --- Customize worksheet writer
+
+    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) throws IOException {
+        return new XMLWorksheetWriter(workbook, sheet);
     }
 }
