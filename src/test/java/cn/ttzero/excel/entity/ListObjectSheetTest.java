@@ -94,13 +94,17 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.name = name;
         }
 
-        static List<Item> randomTestData() {
-            int n = random.nextInt(100) + 1;
+        static List<Item> randomTestData(int n) {
             List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 list.add(new Item(i, getRandomString()));
             }
             return list;
+        }
+
+        static List<Item> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
         }
     }
 
@@ -120,8 +124,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         private LocalDateTime ldtv;
         private LocalTime ltv;
 
-        static List<AllType> randomTestData() {
-            int size = random.nextInt(100) + 1;
+        static List<AllType> randomTestData(int size) {
             List<AllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
                 AllType o = new AllType();
@@ -142,6 +145,11 @@ public class ListObjectSheetTest extends WorkbookTest{
                 list.add(o);
             }
             return list;
+        }
+
+        static List<AllType> randomTestData() {
+            int size = random.nextInt(100) + 1;
+            return randomTestData(size);
         }
     }
 
@@ -164,8 +172,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.age = age;
         }
 
-        static List<Student> randomTestData() {
-            int n = random.nextInt(100) + 1;
+        static List<Student> randomTestData(int n) {
             List<Student> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 Student e = new Student(i, getRandomString(), random.nextInt(15) + 5);
@@ -173,6 +180,11 @@ public class ListObjectSheetTest extends WorkbookTest{
                 list.add(e);
             }
             return list;
+        }
+
+        static List<Student> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
         }
     }
 }

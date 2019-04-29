@@ -85,6 +85,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     private List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
+        return createTestData(size);
+    }
+
+    private List<Map<String, ?>> createTestData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
@@ -97,6 +101,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     private List<Map<String, ?>> createAllTypeData() {
         int size = random.nextInt(100) + 1;
+        return createAllTypeData(size);
+    }
+
+    private List<Map<String, ?>> createAllTypeData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
