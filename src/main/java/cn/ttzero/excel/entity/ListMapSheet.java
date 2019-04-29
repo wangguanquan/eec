@@ -133,13 +133,13 @@ public class ListMapSheet extends Sheet {
     private void loopData() {
         int end = getEndIndex();
         int len = columns.length;
-        for ( ; rows < end; rows++) {
+        for ( ; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
                 Column hc = columns[i];
-                Object e = data.get(rows).get(hc.key);
+                Object e = data.get(start).get(hc.key);
                 // clear cells
                 Cell cell = cells[i];
                 cell.clear();
@@ -156,8 +156,8 @@ public class ListMapSheet extends Sheet {
     }
 
     private int getEndIndex() {
-        int end = rows + ROW_BLOCK_SIZE;
-        return end <= data.size() ? end : data.size();
+        int end = start + rows + ROW_BLOCK_SIZE;
+        return end <= this.end ? end : this.end;
     }
 
     /**
