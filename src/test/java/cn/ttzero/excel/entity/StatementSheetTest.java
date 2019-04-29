@@ -15,8 +15,12 @@
 package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.Print;
+import cn.ttzero.excel.entity.style.Fill;
+import cn.ttzero.excel.entity.style.PatternType;
+import cn.ttzero.excel.entity.style.Styles;
 import org.junit.Test;
 
+import java.awt.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,6 +40,31 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("年龄", int.class)
                 )
                 .writeTo(defaultTestPath);
+        } catch (SQLException |IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test public void testStyleProcessor() {
+        try (Connection con = getConnection()) {
+            new Workbook("statement style processor", author)
+                    .watch(Print::println)
+                    .setConnection(con)
+                    .addSheet("select id, name, age from student"
+                            , new Sheet.Column("学号", int.class)
+                            , new Sheet.Column("性名", String.class)
+                            , new Sheet.Column("年龄", int.class)
+                                .setStyleProcessor((o, style, sst) -> {
+                                    int n = (int) o;
+                                    if (n < 10) {
+                                        style = Styles.clearFill(style)
+                                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                                    }
+                                    return style;
+                                })
+                    )
+                    .writeTo(defaultTestPath);
         } catch (SQLException |IOException e) {
             e.printStackTrace();
         }
