@@ -75,12 +75,12 @@ public class ListObjectSheet<T> extends Sheet {
     }
 
     private void loopData() throws IllegalAccessException {
+        // Find the end index of row-block
         int end = getEndIndex();
-        List<T> sub = data.subList(rows, end);
         int len = columns.length;
-        for (T o : sub) {
+        for ( ; rows < end; rows++) {
             Row row = rowBlock.next();
-            row.index = rows++;
+            row.index = rows;
             Field field;
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
@@ -89,7 +89,7 @@ public class ListObjectSheet<T> extends Sheet {
                 Cell cell = cells[i];
                 cell.clear();
 
-                Object e = field.get(o);
+                Object e = field.get(data.get(rows));
                 // blank cell
                 if (e == null) {
                     cell.setBlank();
