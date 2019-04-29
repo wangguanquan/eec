@@ -69,11 +69,14 @@ public class ListObjectSheet<T> extends Sheet {
      * @throws ExcelWriteException others
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
-        if (sheetWriter != null) {
+        if (sheetWriter == null) {
+            throw new ExcelWriteException("Worksheet writer is not instanced.");
+        }
+        if (!copySheet) {
             int len = data.size(), limit = sheetWriter.getRowLimit() - 1;
+            workbook.what("Total size: " + len);
             // paging
-            if (!copySheet && len > limit) {
-                workbook.what("Total size: " + len);
+            if (len > limit) {
                 int page = len / limit;
                 if (len % limit > 0) {
                     page++;
@@ -89,12 +92,13 @@ public class ListObjectSheet<T> extends Sheet {
                 // Reset current index
                 start = 0;
                 end = limit;
+            } else {
+                start = 0;
+                end = len;
             }
-            rowBlock = new RowBlock();
-            sheetWriter.write(path);
-        } else {
-            throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
+        rowBlock = new RowBlock();
+        sheetWriter.write(path);
     }
 
     @Override
