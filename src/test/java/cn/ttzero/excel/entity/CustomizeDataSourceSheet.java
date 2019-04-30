@@ -18,6 +18,8 @@ package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.service.StudentService;
 
+import java.util.List;
+
 /**
  * Create by guanquan.wang at 2019-04-30 15:12
  */
@@ -31,11 +33,8 @@ public class CustomizeDataSourceSheet extends ListObjectSheet<ListObjectSheetTes
         this.service = new StudentService();
     }
 
-    public RowBlock nextBlock() {
-        // Get block data
-        super.setData(this.service.getPageData(pageNo++, limit));
-
-        return super.nextBlock();
+    public List<ListObjectSheetTest.Student> more() {
+        return service.getPageData(pageNo++, limit);
     }
 
 }
