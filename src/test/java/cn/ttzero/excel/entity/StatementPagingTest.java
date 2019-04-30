@@ -35,7 +35,7 @@ public class StatementPagingTest extends SQLWorkbookTest {
                     , new Sheet.Column("性名", String.class)
                     , new Sheet.Column("年龄", int.class)
                 )
-                .setWorkbookWriter(new MyXMLWorkbookWriter())
+                .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);
         } catch (SQLException |IOException e) {
             e.printStackTrace();
