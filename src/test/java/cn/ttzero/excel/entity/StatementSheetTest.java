@@ -69,4 +69,28 @@ public class StatementSheetTest extends SQLWorkbookTest {
             e.printStackTrace();
         }
     }
+
+    @Test public void testIntConversion() {
+        try (Connection con = getConnection()) {
+            new Workbook("test int conversion statement", author)
+                .setConnection(con)
+                .watch(Print::println)
+                .addSheet("select id, name, age from student"
+                    , new Sheet.Column("学号", int.class)
+                    , new Sheet.Column("姓名", String.class)
+                    , new Sheet.Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                        .setStyleProcessor((o, style, sst) -> {
+                            int n = (int) o;
+                            if (n > 14) {
+                                style = Styles.clearFill(style)
+                                    | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                            }
+                            return style;
+                        })
+                )
+                .writeTo(defaultTestPath);
+        } catch (SQLException |IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
