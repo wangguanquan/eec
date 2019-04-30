@@ -56,6 +56,10 @@ public abstract class ListSheet extends Sheet {
         super(name, waterMark, columns);
     }
 
+    /**
+     * Returns the end index of row-block
+     * @return the end index
+     */
     protected int getEndIndex() {
         int end = start + ROW_BLOCK_SIZE;
         return end <= this.end ? end : this.end;
