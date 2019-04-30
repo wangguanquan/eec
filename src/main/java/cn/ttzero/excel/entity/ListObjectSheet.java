@@ -90,15 +90,25 @@ public class ListObjectSheet<T> extends ListSheet {
      */
     @Override
     protected void resetBlockData() {
+        for (int rbs = getRowBlockSize(), size; (size = size()) < rbs; ) {
+            List<T> list = more();
+            if (list == null || list.isEmpty()) break;
+            if (data == null) {
+                data = new ArrayList<>(rbs);
+            }
+            if (start > 0 && size > 0) {
+                // append and resize
+                List<T> last = new ArrayList<>(size);
+                last.addAll(data.subList(start, end));
+                data.clear();
+                data.addAll(last);
+            } else data.clear();
+            data.addAll(list);
+            start = 0;
+            end = data.size();
+        }
         if (!headerReady) {
             getHeaderColumns();
-        }
-        if (size() < getRowBlockSize() && hasMore()) {
-            List<T> list = more();
-            if (start > 0) {
-                // TODO append and resize
-//                System.arraycopy(data, start, data, 0, size());
-            }
         }
         // Find the end index of row-block
         int end = getEndIndex();
@@ -245,15 +255,6 @@ public class ListObjectSheet<T> extends ListSheet {
     @Override
     public int dataSize() {
         return data != null ? data.size() : 0;
-    }
-
-    /**
-     * Test there has more row data
-     * @return true if paging
-     */
-    @Override
-    protected boolean hasMore() {
-        return false;
     }
 
     /**

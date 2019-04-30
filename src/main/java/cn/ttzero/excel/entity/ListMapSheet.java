@@ -20,6 +20,7 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,23 @@ public class ListMapSheet extends ListSheet {
      */
     @Override
     protected void resetBlockData() {
+        for (int rbs = getRowBlockSize(), size; (size = size()) < rbs; ) {
+            List<Map<String, ?>> list = more();
+            if (list == null || list.isEmpty()) break;
+            if (data == null) {
+                data = new ArrayList<>(rbs);
+            }
+            if (start > 0 && size > 0) {
+                // append and resize
+                List<Map<String, ?>> last = new ArrayList<>(size);
+                last.addAll(data.subList(start, end));
+                data.clear();
+                data.addAll(last);
+            } else data.clear();
+            data.addAll(list);
+            start = 0;
+            end = data.size();
+        }
         if (!headerReady) {
             getHeaderColumns();
         }
@@ -185,15 +203,6 @@ public class ListMapSheet extends ListSheet {
     @Override
     protected int dataSize() {
         return data != null ? data.size() : 0;
-    }
-
-    /**
-     * Test there has more row data
-     * @return true if paging
-     */
-    @Override
-    protected boolean hasMore() {
-        return false;
     }
 
     /**

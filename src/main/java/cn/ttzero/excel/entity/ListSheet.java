@@ -118,12 +118,6 @@ public abstract class ListSheet extends Sheet {
     protected abstract int dataSize();
 
     /**
-     * Test there has more row data
-     * @return true if paging
-     */
-    protected abstract boolean hasMore();
-
-    /**
      * Get more row data if hasMore returns true
      * @return the row data
      */
