@@ -949,8 +949,10 @@ public abstract class Sheet {
         return headStyle;
     }
 
-    protected static boolean blockOrDefault(int style) {
-        return style == -1 || style == Styles.defaultIntBorderStyle();
+    protected static boolean nonOrIntDefault(int style) {
+        return style == -1
+            || style == Styles.defaultIntBorderStyle()
+            || style == Styles.defaultIntStyle();
     }
 
     /**
