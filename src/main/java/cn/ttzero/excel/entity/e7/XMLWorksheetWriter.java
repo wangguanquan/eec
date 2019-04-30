@@ -78,15 +78,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
                 sheetPath, StandardCharsets.UTF_8));
 
+        // Get the first block
+        RowBlock rowBlock = supplier.get();
+
         // write before
         writeBefore();
 
-        RowBlock rowBlock;
-        while ((rowBlock = supplier.get()) != null) {
-            // write row-block data
-            for (; rowBlock.hasNext(); writeRow(rowBlock.next()));
-            // end of row
-            if (rowBlock.isEof()) break;
+        if (rowBlock != null && rowBlock.hasNext()) {
+            do {
+                // write row-block data
+                for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
+                // end of row
+                if (rowBlock.isEof()) break;
+            } while ((rowBlock = supplier.get()) != null);
         }
 
         int total = rowBlock != null ? rowBlock.getTotal() : 0;
@@ -123,26 +127,31 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
             sheetPath, StandardCharsets.UTF_8));
 
+        // Get the first block
+        RowBlock rowBlock = sheet.nextBlock();
+
         // write before
         writeBefore();
 
-        RowBlock rowBlock;
-
-        if (sheet.isAutoSize()) {
-            for ( ; ; ) {
-                rowBlock = sheet.nextBlock();
-                // write row-block data
-                writeAutoSizeRowBlock(rowBlock);
-                // end of row
-                if (rowBlock.isEof()) break;
-            }
-        } else {
-            for ( ; ; ) {
-                rowBlock = sheet.nextBlock();
-                // write row-block data
-                writeRowBlock(rowBlock);
-                // end of row
-                if (rowBlock.isEof()) break;
+        if (rowBlock.hasNext()) {
+            if (sheet.isAutoSize()) {
+                for (; ; ) {
+                    // write row-block data
+                    writeAutoSizeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEof()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
+            } else {
+                for (; ; ) {
+                    // write row-block data
+                    writeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEof()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
             }
         }
 
@@ -189,7 +198,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeBefore() throws IOException {
         // The header columns
         columns = sheet.getHeaderColumns();
-        boolean noneColumns = columns == null || columns.length == 0;
+        boolean noneHeader = columns == null || columns.length == 0;
 
         StringBuilder buf = new StringBuilder(Const.EXCEL_XML_DECLARATION);
         // Declaration
@@ -231,7 +240,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Default format
         // throw unknown tag if not auto-size
-        if (!noneColumns) {
+        if (!noneHeader) {
             buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" defaultColWidth=\"");
             buf.append(sheet.getDefaultWidth());
             buf.append("\"/>");
@@ -260,7 +269,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Write body data
         bw.write("<sheetData>");
 
-        if (!noneColumns) {
+        if (!noneHeader) {
             writeHeaderRow();
         }
     }
