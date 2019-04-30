@@ -314,6 +314,7 @@ public class Workbook {
     }
 
     Object getFirst(List<?> data) {
+        if (data == null) return null;
         Object first = data.get(0);
         if (first != null) return first;
         int i = 1;
