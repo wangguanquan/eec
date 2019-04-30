@@ -145,6 +145,14 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testCustomizeDataSource() throws IOException {
+        new Workbook("customize datasource", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new CustomizeDataSourceSheet())
+            .writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -154,7 +162,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.name = name;
         }
 
-        static List<Item> randomTestData(int n) {
+        public static List<Item> randomTestData(int n) {
             List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 list.add(new Item(i, getRandomString()));
@@ -162,7 +170,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             return list;
         }
 
-        static List<Item> randomTestData() {
+        public static List<Item> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
         }
@@ -184,7 +192,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         private LocalDateTime ldtv;
         private LocalTime ltv;
 
-        static List<AllType> randomTestData(int size) {
+        public static List<AllType> randomTestData(int size) {
             List<AllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
                 AllType o = new AllType();
@@ -207,7 +215,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             return list;
         }
 
-        static List<AllType> randomTestData() {
+        public static List<AllType> randomTestData() {
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
@@ -232,7 +240,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.age = age;
         }
 
-        static List<Student> randomTestData(int n) {
+        public static List<Student> randomTestData(int n) {
             List<Student> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 Student e = new Student(i, getRandomString(), random.nextInt(15) + 5);
@@ -242,7 +250,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             return list;
         }
 
-        static List<Student> randomTestData() {
+        public static List<Student> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
         }
