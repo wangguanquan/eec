@@ -66,6 +66,9 @@ public class ListMapSheet extends ListSheet {
 
     public ListMapSheet setData(final List<Map<String, ?>> data) {
         this.data = data;
+        if (data != null) {
+            end = data.size();
+        }
         return this;
     }
 

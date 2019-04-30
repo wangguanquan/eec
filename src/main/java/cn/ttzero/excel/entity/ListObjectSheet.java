@@ -66,6 +66,9 @@ public class ListObjectSheet<T> extends ListSheet {
 
     public ListObjectSheet<T> setData(final List<T> data) {
         this.data = data;
+        if (data != null) {
+            end = data.size();
+        }
         return this;
     }
 
