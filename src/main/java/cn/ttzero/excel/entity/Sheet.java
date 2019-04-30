@@ -1077,9 +1077,15 @@ public abstract class Sheet {
         }
     }
 
-    protected int getStyleIndex(Sheet.Column hc, Object o) {
+    /**
+     * Returns the cell style index
+     * @param hc the header column
+     * @param o the cell value
+     * @return the style index in xf
+     */
+    protected int getStyleIndex(Column hc, Object o) {
         int style = hc.getCellStyle();
-        // 隔行变色
+        // Interlaced discoloration
         if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
             style |= oddFill;
         }
@@ -1096,7 +1102,18 @@ public abstract class Sheet {
     }
 
     /**
-     * Int转列号A-Z
+     * Int conversion to column string number
+     * The max column on sheet is 16_384
+     *
+     *   int  | column number
+     * -------|---------
+     * 1      | A
+     * 10     | J
+     * 26     | Z
+     * 27     | AA
+     * 28     | AB
+     * 53     | BA
+     * 16_384 | XFD
      */
     private ThreadLocal<char[][]> cache = ThreadLocal.withInitial(() -> new char[][] {{65}, {65, 65}, {65, 65, 65}});
     public char[] int2Col(int n) {
