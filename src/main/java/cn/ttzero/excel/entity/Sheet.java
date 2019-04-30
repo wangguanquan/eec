@@ -995,7 +995,6 @@ public abstract class Sheet {
      */
     protected void conversion(Cell cell, int n, Column hc) {
         Object e = hc.processor.conversion(n);
-        cell.xf = getStyleIndex(hc, e);
         if (e != null) {
             Class<?> clazz = e.getClass();
             if (isInt(clazz)) {
@@ -1006,12 +1005,16 @@ public abstract class Sheet {
                 } else {
                     cell.setNv((Integer) e);
                 }
+                cell.xf = getStyleIndex(hc, e);
             } else {
                 setCellValue(cell, e, hc, clazz);
                 // reset style
                 cell.xf = hc.styles.of(hc.getCellStyle(clazz));
             }
-        } else cell.setBlank();
+        } else {
+            cell.setBlank();
+            cell.xf = getStyleIndex(hc, e);
+        }
     }
 
     /**
