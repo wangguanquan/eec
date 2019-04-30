@@ -977,8 +977,28 @@ public abstract class Sheet {
         } else cell.setBlank();
     }
 
-    protected void setCellValue(Cell cell, Object e, Column hc) {
-        Class<?> clazz = hc.getClazz();
+    /**
+     * Setting cell value and cell styles
+     * @param cell the cell
+     * @param e the cell value
+     * @param hc the header column
+     */
+    protected void setCellValueAndStyle(Cell cell, Object e, Column hc) {
+        setCellValue(cell, e, hc, hc.getClazz());
+        if (hc.processor == null) {
+            cell.xf = getStyleIndex(hc, e);
+        }
+    }
+
+    /**
+     * Setting cell value
+     * @param cell the cell
+     * @param e the cell value
+     * @param hc the header column
+     * @param clazz the cell value type
+     */
+    protected void setCellValue(Cell cell, Object e, Column hc, Class<?> clazz) {
+        boolean hasIntProcessor = hc.processor != null;
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {

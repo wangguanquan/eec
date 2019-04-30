@@ -109,7 +109,7 @@ public class ListObjectSheet<T> extends ListSheet {
                         continue;
                     }
 
-                    setCellValue(cell, e, columns[i]);
+                    setCellValueAndStyle(cell, e, columns[i]);
                 }
             }
         } catch (IllegalAccessException e) {

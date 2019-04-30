@@ -106,7 +106,7 @@ public class ListMapSheet extends ListSheet {
                     continue;
                 }
 
-                setCellValue(cell, e, hc);
+                setCellValueAndStyle(cell, e, hc);
             }
         }
     }

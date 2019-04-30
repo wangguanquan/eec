@@ -112,7 +112,7 @@ public class ResultSetSheet extends Sheet {
                         continue;
                     }
 
-                    setCellValue(cell, e, hc);
+                    setCellValueAndStyle(cell, e, hc);
                 }
             }
         } catch (SQLException e) {
