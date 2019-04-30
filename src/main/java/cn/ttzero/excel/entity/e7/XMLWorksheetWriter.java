@@ -672,20 +672,24 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
                         len = 20;
                     }
-                    else if (isInt(clazz)) {
-                        // TODO 根据numFmt计算字符宽度
-                        len = hc.type > 0 ? 12 :  11;
+                    else if (isChar(clazz)) {
+                        len = 1;
                     }
-                    else if (isFloat(clazz)) {
+                    else if (isInt(clazz) || isLong(clazz)) {
                         // TODO 根据numFmt计算字符宽度
-                        if (hc.o == null) {
-                            len = 0;
-                        } else {
-                            len = hc.o.toString().getBytes("GB2312").length;
-                        }
-                    } else if (isTime(clazz) || isLocalTime(clazz)) {
+                        len = hc.o.toString().length();
+                    }
+                    else if (isFloat(clazz) || isDouble(clazz)) {
+                        // TODO 根据numFmt计算字符宽度
+                        len = hc.o.toString().length();
+                    }
+                    else if (isBigDecimal(clazz)) {
+                        len = (int) hc.o;
+                    }
+                    else if (isTime(clazz) || isLocalTime(clazz)) {
                         len = 8;
-                    } else {
+                    }
+                    else {
                         len = 10;
                     }
                     buf.append(_l > len ? _l + 3.38 : len + 3.38);
