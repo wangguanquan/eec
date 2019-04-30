@@ -239,6 +239,20 @@ public abstract class Sheet {
          * 默认非共享以innerStr方式设值
          * @param name 列名
          * @param key field
+         * @param clazz type of cell
+         * @param processor 转换
+         */
+        public Column(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
+            this(name, key, clazz);
+            this.processor = processor;
+        }
+
+        /**
+         * 指定列名，field，转换和是否共享字串
+         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 默认非共享以innerStr方式设值
+         * @param name 列名
+         * @param key field
          * @param processor 转换
          * @param share true:共享 false:非共享
          */
