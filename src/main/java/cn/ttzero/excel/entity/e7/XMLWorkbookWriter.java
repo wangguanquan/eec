@@ -382,7 +382,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         Path root = null;
         try {
-            root = FileUtil.mktmp("eec+"); // 创建临时文件
+            root = FileUtil.mktmp(Const.EEC_PREFIX); // 创建临时文件
             workbook.what("0002", root.toString());
 
             Path xl = Files.createDirectory(root.resolve("xl"));
@@ -467,7 +467,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     public Path template() throws IOException {
         workbook.what("0007");
         // Store template stream as zip file
-        Path temp = FileUtil.mktmp("eec+");
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         ZipUtil.unzip(workbook.getTemplate(), temp);
         workbook.what("0008");
 
