@@ -329,7 +329,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @return the row index (one base)
      * @throws IOException
      */
-    private int startRow(int rows, int columns) throws IOException {
+    protected int startRow(int rows, int columns) throws IOException {
         // Row number
         int r = rows + 2;
         // logging
@@ -350,7 +350,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row data
      * @param row a row data
      */
-    private void writeRow(Row row) throws IOException {
+    protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
         int len = cells.length, r = startRow(row.getIndex(), len);
 
@@ -397,7 +397,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row data
      * @param row a row data
      */
-    private void writeRowAutoSize(Row row) throws IOException {
+    protected void writeRowAutoSize(Row row) throws IOException {
         Cell[] cells = row.getCells();
         int len = cells.length, r = startRow(row.getIndex(), len);
 
@@ -439,8 +439,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</row>");
     }
 
-
-    private void writeString(String s, int row, int column, int xf) throws IOException {
+    /**
+     * Write string value
+     * @param s the string value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeString(String s, int row, int column, int xf) throws IOException {
         Sheet.Column hc = columns[column];
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
@@ -468,6 +475,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
+    /**
+     * Write string value and cache the max string length
+     * @param s the string value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
     protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
         writeString(s, row, column, xf);
         Sheet.Column hc = columns[column];
@@ -477,7 +492,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
-
+    /**
+     * Write double value
+     * @param d the double value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
@@ -489,6 +511,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
     }
 
+    /**
+     * Write double value and cache the max value
+     * @param d the double value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
     protected void writeDoubleAutoSize(double d, int row, int column, int xf) throws IOException {
         writeDouble(d, row, column, xf);
         Sheet.Column hc = columns[column];
@@ -497,7 +527,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
-    private void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
+    /**
+     * Write decimal value
+     * @param bd the decimal value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
         bw.writeInt(row);
@@ -508,7 +546,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
     }
 
-    private void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
+    /**
+     * Write decimal value and cache the max value
+     * @param bd the decimal value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
         writeDecimal(bd, row, column, xf);
         Sheet.Column hc = columns[column];
         int l = bd.toString().length();
@@ -517,7 +563,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
-    private void writeChar(char c, int row, int column, int xf) throws IOException {
+    /**
+     * Write char value
+     * @param c the character value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeChar(char c, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
         bw.writeInt(row);
@@ -528,7 +582,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
     }
 
-    private void writeNumeric(long l, int row, int column, int xf) throws IOException {
+    /**
+     * Write numeric value
+     * @param l the numeric value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
         bw.writeInt(row);
@@ -539,7 +601,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
     }
 
-    private void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
+    /**
+     * Write numeric value and cache the max value
+     * @param l the numeric value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
+    protected void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
         writeNumeric(l, row, column, xf);
         Sheet.Column hc = columns[column];
         if (hc.width == 0 && (hc.o == null || (long) hc.o < l)) {
@@ -547,7 +617,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
-
+    /**
+     * Write boolean value
+     * @param bool the boolean value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
@@ -559,6 +636,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
     }
 
+    /**
+     * Write blank value
+     * @param row the row index
+     * @param column the column index
+     * @param xf the style index
+     * @throws IOException if io error occur
+     */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
