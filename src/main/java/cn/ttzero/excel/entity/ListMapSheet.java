@@ -178,6 +178,6 @@ public class ListMapSheet extends ListSheet {
      */
     @Override
     protected int dataSize() {
-        return data.size();
+        return data != null ? data.size() : 0;
     }
 }
