@@ -87,6 +87,9 @@ public class ListMapSheet extends ListSheet {
      */
     @Override
     protected void resetBlockData() {
+        if (!headerReady) {
+            getHeaderColumns();
+        }
         int end = getEndIndex();
         int len = columns.length;
         for (; start < end; rows++, start++) {
@@ -150,7 +153,7 @@ public class ListMapSheet extends ListSheet {
         for (Column hc : columns) {
             hc.styles = workbook.getStyles();
         }
-        headerReady = true;
+        headerReady = columns.length > 0;
         return columns;
     }
 

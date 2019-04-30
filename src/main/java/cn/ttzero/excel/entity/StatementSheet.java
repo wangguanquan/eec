@@ -129,6 +129,7 @@ public class StatementSheet extends ResultSetSheet {
                 columns[i].setName(String.valueOf(i));
             }
         }
+        headerReady = columns.length > 0;
         return columns;
     }
 }

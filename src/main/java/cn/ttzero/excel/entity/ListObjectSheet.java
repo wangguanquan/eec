@@ -87,6 +87,9 @@ public class ListObjectSheet<T> extends ListSheet {
      */
     @Override
     protected void resetBlockData() {
+        if (!headerReady) {
+            getHeaderColumns();
+        }
         // Find the end index of row-block
         int end = getEndIndex();
         int len = columns.length;
@@ -199,8 +202,9 @@ public class ListObjectSheet<T> extends ListSheet {
             fields = init();
             if (fields == null || fields.length == 0 || fields[0] == null) {
                 columns = new Column[0];
+            } else {
+                headerReady = true;
             }
-            headerReady = true;
         }
         return columns;
     }

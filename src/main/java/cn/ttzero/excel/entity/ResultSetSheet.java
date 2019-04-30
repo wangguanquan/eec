@@ -151,6 +151,7 @@ public class ResultSetSheet extends Sheet {
                 }
             }
         } else columns = new Column[0];
+        headerReady = columns.length > 0;
         return columns;
     }
 
