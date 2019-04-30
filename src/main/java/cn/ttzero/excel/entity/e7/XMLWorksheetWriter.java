@@ -189,6 +189,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeBefore() throws IOException {
         // The header columns
         columns = sheet.getHeaderColumns();
+        boolean noneColumns = columns == null || columns.length == 0;
 
         StringBuilder buf = new StringBuilder(Const.EXCEL_XML_DECLARATION);
         // Declaration
@@ -230,9 +231,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Default format
         // throw unknown tag if not auto-size
-        buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" defaultColWidth=\"");
-        buf.append(sheet.getDefaultWidth());
-        buf.append("\"/>");
+        if (!noneColumns) {
+            buf.append("<sheetFormatPr defaultRowHeight=\"16.5\" defaultColWidth=\"");
+            buf.append(sheet.getDefaultWidth());
+            buf.append("\"/>");
+        } else {
+            buf.append("<sheetFormatPr defaultRowHeight=\"13.5\" defaultColWidth=\"8.38\" />");
+        }
 
         baseInfoLen = buf.length() - headInfoLen;
         // Write base info
@@ -255,11 +260,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Write body data
         bw.write("<sheetData>");
 
+        if (!noneColumns) {
+            writeHeaderRow();
+        }
+    }
+
+    /**
+     * Write the header row
+     * @throws IOException if io error occur
+     */
+    protected void writeHeaderRow() throws IOException {
         // Write header
-        int r = 1;
+        int row = 1;
         bw.write("<row r=\"");
-        bw.writeInt(r);
-        bw.write("\" customHeight=\"1\" ht=\"18.6\" spans=\"1:"); // spans 指定row开始和结束行
+        bw.writeInt(row);
+        bw.write("\" customHeight=\"1\" ht=\"18.6\" spans=\"1:");
         bw.writeInt(columns.length);
         bw.write("\">");
 
@@ -267,7 +282,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (Sheet.Column hc : columns) {
             bw.write("<c r=\"");
             bw.write(sheet.int2Col(c++));
-            bw.writeInt(r);
+            bw.writeInt(row);
             bw.write("\" t=\"inlineStr\" s=\"");
             bw.writeInt(defaultStyle);
             bw.write("\"><is><t>");
@@ -659,6 +674,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
+        // There has no column to reset width
+        if (columns.length <= 0) return;
         // resize each column width ...
         File temp = new File(path.getParent(), sheet.getName() + ".temp");
         if (!path.renameTo(temp)) {
@@ -678,8 +695,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             buffer.compact();
             byte b;
             if ((b = buffer.get()) == '"') {
-                char[] chars = sheet.int2Col(columns.length);
-                String s = ':' + new String(chars) + rows + 1;
+                char[] chars = sheet.int2Col(columns.length > 0 ? columns.length : 1);
+                String s = ':' + new String(chars) + (rows + 1);
                 outChannel.write(ByteBuffer.wrap(s.getBytes(StandardCharsets.UTF_8)));
             }
             buffer.flip();
