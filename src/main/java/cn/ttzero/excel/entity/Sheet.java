@@ -967,13 +967,34 @@ public abstract class Sheet {
     public void afterSheetAccess(Path workSheetPath) throws IOException {
         // relationship
         relManager.write(workSheetPath, getFileName());
+
+        // others ...
     }
 
-
-    protected void convert(Cell cell, Column hc, int n) {
+    /**
+     * Int value conversion to others
+     * @param cell the cell
+     * @param n the cell value
+     * @param hc the header column
+     */
+    protected void conversion(Cell cell, int n, Column hc) {
         Object e = hc.processor.conversion(n);
+        cell.xf = getStyleIndex(hc, e);
         if (e != null) {
-            setCellValue(cell, e, hc);
+            Class<?> clazz = e.getClass();
+            if (isInt(clazz)) {
+                if (isChar(clazz)) {
+                    cell.setCv((Character) e);
+                } else if (isShort(clazz)) {
+                    cell.setNv((Short) e);
+                } else {
+                    cell.setNv((Integer) e);
+                }
+            } else {
+                setCellValue(cell, e, hc, clazz);
+                // reset style
+                cell.xf = hc.styles.of(hc.getCellStyle(clazz));
+            }
         } else cell.setBlank();
     }
 
@@ -1006,11 +1027,17 @@ public abstract class Sheet {
         } else if (isDateTime(clazz)) {
             cell.setIv(toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
-            cell.setCv((Character) e);
+            Character c = (Character) e;
+            if (hasIntProcessor) conversion(cell, c, hc);
+            else cell.setCv(c);
         } else if (isShort(clazz)) {
-            cell.setNv((Short) e);
+            Short t = (Short) e;
+            if (hasIntProcessor) conversion(cell, t, hc);
+            else cell.setNv(t);
         } else if (isInt(clazz)) {
-            cell.setNv((Integer) e);
+            Integer n = (Integer) e;
+            if (hasIntProcessor) conversion(cell, n, hc);
+            else cell.setNv(n);
         } else if (isLong(clazz)) {
             cell.setLv((Long) e);
         } else if (isFloat(clazz)) {
@@ -1032,7 +1059,6 @@ public abstract class Sheet {
         } else {
             cell.setSv(e.toString());
         }
-        cell.xf = getStyleIndex(hc, e);
     }
 
     protected int getStyleIndex(Sheet.Column hc, Object o) {
