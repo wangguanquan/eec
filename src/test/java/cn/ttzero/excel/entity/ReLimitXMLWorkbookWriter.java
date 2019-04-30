@@ -22,17 +22,17 @@ import cn.ttzero.excel.entity.e7.XMLWorksheetWriter;
 /**
  * Create by guanquan.wang at 2019-04-29 14:16
  */
-public class MyXMLWorkbookWriter extends XMLWorkbookWriter {
+public class ReLimitXMLWorkbookWriter extends XMLWorkbookWriter {
 
     @Override
     protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
-        return new MyXMLWorksheetWriter(getWorkbook(), sheet);
+        return new ReLimitXMLWorksheetWriter(getWorkbook(), sheet);
     }
 }
 
-class MyXMLWorksheetWriter extends XMLWorksheetWriter {
+class ReLimitXMLWorksheetWriter extends XMLWorksheetWriter {
 
-    public MyXMLWorksheetWriter(Workbook workbook, Sheet sheet) {
+    public ReLimitXMLWorksheetWriter(Workbook workbook, Sheet sheet) {
         super(workbook, sheet);
     }
 

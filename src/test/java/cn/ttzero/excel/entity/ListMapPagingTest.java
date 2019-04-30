@@ -31,7 +31,7 @@ public class ListMapPagingTest extends WorkbookTest {
         new Workbook("test map paging", author)
             .watch(Print::println)
             .addSheet(ListMapSheetTest.createTestData(301))
-            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
@@ -40,7 +40,7 @@ public class ListMapPagingTest extends WorkbookTest {
         new Workbook("test map less paging", author)
             .watch(Print::println)
             .addSheet(ListMapSheetTest.createTestData(29))
-            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 

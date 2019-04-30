@@ -32,7 +32,7 @@ public class ListObjectPagingTest extends WorkbookTest {
         new Workbook("test paging", author)
             .watch(Print::println)
             .addSheet(ListObjectSheetTest.Item.randomTestData(202))
-            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
@@ -41,7 +41,7 @@ public class ListObjectPagingTest extends WorkbookTest {
         new Workbook("test less paging", author)
             .watch(Print::println)
             .addSheet(ListObjectSheetTest.Item.randomTestData(23))
-            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
@@ -50,7 +50,7 @@ public class ListObjectPagingTest extends WorkbookTest {
             .watch(Print::println)
             .setWaterMark(WaterMark.of("SECRET"))
             .addSheet(ListObjectSheetTest.Item.randomTestData())
-            .setWorkbookWriter(new MyXMLWorkbookWriter())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
