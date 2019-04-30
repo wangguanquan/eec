@@ -19,9 +19,13 @@ package cn.ttzero.excel.entity;
 import cn.ttzero.excel.Print;
 import cn.ttzero.excel.annotation.DisplayName;
 import cn.ttzero.excel.annotation.NotExport;
+import cn.ttzero.excel.entity.style.Fill;
+import cn.ttzero.excel.entity.style.PatternType;
+import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.reader.ExcelReaderTest;
 import org.junit.Test;
 
+import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -92,6 +96,54 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testIntConversion() throws IOException {
+        new Workbook("test int conversion", author)
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id", int.class)
+                , new Sheet.Column("姓名", "name", String.class)
+                , new Sheet.Column("年龄", "age", int.class, n -> n > 14 ? "高龄" : n)
+            )
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStyleConversion() throws IOException {
+        new Workbook("object style processor", author)
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id", int.class)
+                , new Sheet.Column("姓名", "name", String.class)
+                , new Sheet.Column("年龄", "age", int.class)
+                    .setStyleProcessor((o, style, sst) -> {
+                        int n = (int) o;
+                        if (n < 10) {
+                            style = Styles.clearFill(style)
+                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                        }
+                        return style;
+                    })
+            )
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConvertAndStyleConversion() throws IOException {
+        new Workbook("object style and style processor", author)
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id", int.class)
+                , new Sheet.Column("姓名", "name", String.class)
+                , new Sheet.Column("年龄", "age", int.class, n -> n > 14 ? "高龄" : n)
+                    .setStyleProcessor((o, style, sst) -> {
+                        int n = (int) o;
+                        if (n > 14) {
+                            style = Styles.clearFill(style)
+                                | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
+                        }
+                        return style;
+                    })
+            )
+            .writeTo(defaultTestPath);
+    }
 
     public static class Item {
         private int id;
