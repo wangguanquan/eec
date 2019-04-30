@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
-
 /**
  * Created by guanquan.wang on 2017/9/27.
  */
@@ -93,7 +91,7 @@ public class ResultSetSheet extends Sheet {
         int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
 
         try {
-            for (; n++ < ROW_BLOCK_SIZE && rows < limit && rs.next(); ) {
+            for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); ) {
                 Row row = rowBlock.next();
                 row.index = rows++;
                 Cell[] cells = row.realloc(len);

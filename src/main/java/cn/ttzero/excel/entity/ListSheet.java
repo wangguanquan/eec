@@ -14,7 +14,7 @@
 
 package cn.ttzero.excel.entity;
 
-import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import java.util.List;
 
 /**
  * Create by guanquan.wang at 2019-04-29 20:56
@@ -61,7 +61,7 @@ public abstract class ListSheet extends Sheet {
      * @return the end index
      */
     protected int getEndIndex() {
-        int end = start + ROW_BLOCK_SIZE;
+        int end = start + getRowBlockSize();
         return end <= this.end ? end : this.end;
     }
 

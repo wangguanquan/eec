@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 
 import static cn.ttzero.excel.entity.IWorksheetWriter.*;
+import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static cn.ttzero.excel.util.DateUtil.toDateTimeValue;
 import static cn.ttzero.excel.util.DateUtil.toDateValue;
 import static cn.ttzero.excel.util.DateUtil.toTimeValue;
@@ -975,6 +976,15 @@ public abstract class Sheet {
         resetBlockData();
 
         return rowBlock.flip();
+    }
+
+    /**
+     * Returns a row-block size
+     * default size is 32
+     * @return the row-block size
+     */
+    public int getRowBlockSize() {
+        return ROW_BLOCK_SIZE;
     }
 
     /**
