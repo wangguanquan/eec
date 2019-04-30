@@ -93,6 +93,13 @@ public class ListObjectSheet<T> extends ListSheet {
         if (!headerReady) {
             getHeaderColumns();
         }
+        if (size() < getRowBlockSize() && hasMore()) {
+            List<T> list = more();
+            if (start > 0) {
+                // TODO append and resize
+//                System.arraycopy(data, start, data, 0, size());
+            }
+        }
         // Find the end index of row-block
         int end = getEndIndex();
         int len = columns.length;
@@ -238,5 +245,23 @@ public class ListObjectSheet<T> extends ListSheet {
     @Override
     public int dataSize() {
         return data != null ? data.size() : 0;
+    }
+
+    /**
+     * Test there has more row data
+     * @return true if paging
+     */
+    @Override
+    protected boolean hasMore() {
+        return false;
+    }
+
+    /**
+     * Get more row data if hasMore returns true
+     * @return the row data
+     */
+    @Override
+    protected List<T> more() {
+        return null;
     }
 }

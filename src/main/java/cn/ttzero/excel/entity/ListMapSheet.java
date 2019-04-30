@@ -186,4 +186,22 @@ public class ListMapSheet extends ListSheet {
     protected int dataSize() {
         return data != null ? data.size() : 0;
     }
+
+    /**
+     * Test there has more row data
+     * @return true if paging
+     */
+    @Override
+    protected boolean hasMore() {
+        return false;
+    }
+
+    /**
+     * Get more row data if hasMore returns true
+     * @return the row data
+     */
+    @Override
+    protected List<Map<String, ?>> more() {
+        return null;
+    }
 }
