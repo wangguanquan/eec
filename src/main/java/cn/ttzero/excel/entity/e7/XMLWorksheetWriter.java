@@ -568,44 +568,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("\"/>");
     }
 
-//    /**
-//     * 写空行数据
-//     * @param bw
-//     */
-//    protected void writeEmptyRow(ExtBufferedWriter bw) throws IOException {
-//        // Row number
-//        int r = ++rows;
-//        final int len = columns.length;
-//        bw.write("<row r=\"");
-//        bw.writeInt(r);
-//        bw.write("\" ht=\"16.5\" spans=\"1:");
-//        bw.writeInt(len);
-//        bw.write("\">");
-//
-//        Styles styles = workbook.getStyles();
-//        for (int i = 1; i <= len; i++) {
-//            Column hc = columns[i - 1];
-//            bw.write("<c r=\"");
-//            bw.write(int2Col(i));
-//            bw.writeInt(r);
-//
-//            int style = hc.getCellStyle();
-//            // 隔行变色
-//            if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
-//                style |= oddFill;
-//            }
-//            int styleIndex = styles.of(style);
-//            bw.write("\" s=\"");
-//            bw.writeInt(styleIndex);
-//            bw.write("\"/>");
-//
-//            if (hc.o == null) {
-//                hc.o = hc.getName().getBytes("GB2312").length;
-//            }
-//        }
-//        bw.write("</row>");
-//    }
-
     /**
      * Resize column width
      * @param path the sheet temp path
@@ -720,6 +682,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
+    /**
+     * Release resources
+     */
     @Override
     public void close() {
         FileUtil.close(bw);
