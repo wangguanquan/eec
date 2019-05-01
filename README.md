@@ -67,15 +67,15 @@ eec内部仅依赖dom4j.1.6.1和log4j.2.11.1, 如果目标工程已包含此依�
 ## xls格式支持
 
 xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源
-尝鲜的朋友可以在本项目的[dist](./dist)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
+尝鲜的朋友可以在本项目的[beta](./beta)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
 xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文件类型，执行不同的Reader方法。
 
 示例请查找`testReadXLS()`方法。
 
 Download
-- [eec-0.2.9.jar](./dist/eec-0.2.9.jar)
-- [eec-0.2.9-sources.jar](./dist/eec-0.2.9-sources.jar)
-- [eec-e3-support-0.2.9.jar](./dist/eec-e3-support-0.2.9.jar)
+- [eec-0.3.0.jar](./beta/eec-0.3.0.jar)
+- [eec-0.3.0-sources.jar](./beta/eec-0.3.0-sources.jar)
+- [eec-e3-support-0.3.0.jar](./beta/eec-e3-support-0.3.0.jar)
 
 *注意：eec-e3-support依赖于eec不能独立存在*
 
