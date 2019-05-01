@@ -32,14 +32,20 @@ public class RowBlock implements Iterator<Row> {
     private Row[] rows;
     private int i, n, total = 0;
     private boolean eof;
+    private int limit;
 
     public RowBlock() {
+        this(ROW_BLOCK_SIZE);
+    }
+
+    public RowBlock(int limit) {
+        this.limit = limit;
         init();
     }
 
     private void init() {
-        rows = new Row[ROW_BLOCK_SIZE];
-        for (int i = 0; i < ROW_BLOCK_SIZE; i++) {
+        rows = new Row[limit];
+        for (int i = 0; i < limit; i++) {
             rows[i] = new Row();
         }
     }
@@ -86,7 +92,7 @@ public class RowBlock implements Iterator<Row> {
     }
 
     final RowBlock flip() {
-        if (i < ROW_BLOCK_SIZE) {
+        if (i < limit) {
             markEnd();
         }
         n = i;
