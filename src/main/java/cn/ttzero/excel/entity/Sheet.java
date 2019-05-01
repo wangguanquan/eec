@@ -1009,8 +1009,11 @@ public abstract class Sheet implements Cloneable {
     }
 
     /**
-     * Returns a row-block size
-     * default size is 32
+     * The worksheet is written by units of row-block. The default size
+     * of a row-block is 32, which means that 32 rows of data are
+     * written at a time. If the data is not enough, the {@code more}
+     * method will be called to get more data.
+     *
      * @return the row-block size
      */
     public int getRowBlockSize() {

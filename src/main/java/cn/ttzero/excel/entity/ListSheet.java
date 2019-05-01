@@ -319,8 +319,20 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Get more row data if hasMore returns true
-     * @return the row data
+     * This method is used for the worksheet to get the data.
+     * This is a data source independent method. You can get data
+     * from any data source. Since this method is stateless, you
+     * should manage paging or other information in your custom Sheet.
+     *
+     * The more data you get each time, the faster write speed. You
+     * should minimize the database query or network request, but the
+     * excessive data will put pressure on the memory. Please balance
+     * this value before the speed and memory. You can refer to 2^8 ~ 2^10
+     *
+     * This method is blocked
+     *
+     * @return The data output to the worksheet, if a null or empty
+     * ArrayList returned, mean that the current worksheet is finished written.
      */
     protected List<T> more() {
         return null;
