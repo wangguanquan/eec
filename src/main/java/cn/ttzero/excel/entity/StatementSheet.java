@@ -95,12 +95,18 @@ public class StatementSheet extends ResultSetSheet {
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
         if (sheetWriter != null) {
-            try {
-                rs = ps.executeQuery();
-            } catch (SQLException e) {
-                throw new ExcelWriteException(e);
+            if (!copySheet) {
+                try {
+                    rs = ps.executeQuery();
+                } catch (SQLException e) {
+                    throw new ExcelWriteException(e);
+                }
             }
-            rowBlock = new RowBlock();
+
+            if (rowBlock == null) {
+                rowBlock = new RowBlock();
+            } else rowBlock.reopen();
+
             sheetWriter.write(path);
         } else {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
