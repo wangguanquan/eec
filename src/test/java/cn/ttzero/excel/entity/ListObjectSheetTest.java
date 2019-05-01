@@ -148,6 +148,30 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testCustomizeDataSource() throws IOException {
         new Workbook("customize datasource", author)
             .watch(Print::println)
+            .addSheet(new CustomizeDataSourceSheet())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testBoxAllTypeWrite() throws IOException {
+        new Workbook("box all type object", author)
+            .watch(Print::println)
+            .addSheet(BoxAllType.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    // -----AUTO SIZE
+
+    @Test public void testBoxAllTypeAutoSizeWrite() throws IOException {
+        new Workbook("auto-size box all type object", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(BoxAllType.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testCustomizeDataSourceAutoSize() throws IOException {
+        new Workbook("auto-size customize datasource", author)
+            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new CustomizeDataSourceSheet())
             .writeTo(defaultTestPath);
@@ -258,6 +282,53 @@ public class ListObjectSheetTest extends WorkbookTest{
         public static List<Student> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+    }
+
+    public static class BoxAllType {
+        private Boolean bv;
+        private Character cv;
+        private Short sv;
+        private Integer nv;
+        private Long lv;
+        private Float fv;
+        private Double dv;
+        private String s;
+        private BigDecimal mv;
+        private Date av;
+        private Timestamp iv;
+        private Time tv;
+        private LocalDate ldv;
+        private LocalDateTime ldtv;
+        private LocalTime ltv;
+
+        public static List<AllType> randomTestData(int size) {
+            List<AllType> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                AllType o = new AllType();
+                o.bv = random.nextInt(10) == 5;
+                o.cv = charArray[random.nextInt(charArray.length)];
+                o.sv = (short) (random.nextInt() & 0xFFFF);
+                o.nv = random.nextInt();
+                o.lv = random.nextLong();
+                o.fv = random.nextFloat();
+                o.dv = random.nextDouble();
+                o.s = getRandomString();
+                o.mv = BigDecimal.valueOf(random.nextDouble());
+                o.av = new Date();
+                o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
+                o.tv = new Time(random.nextLong());
+                o.ldv = LocalDate.now();
+                o.ldtv = LocalDateTime.now();
+                o.ltv = LocalTime.now();
+                list.add(o);
+            }
+            return list;
+        }
+
+        public static List<AllType> randomTestData() {
+            int size = random.nextInt(100) + 1;
+            return randomTestData(size);
         }
     }
 }
