@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Create by guanquan.wang at 2019-04-30 15:12
  */
-public class CustomizeDataSourceSheet extends ListObjectSheet<ListObjectSheetTest.Student> {
+public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Student> {
 
     private StudentService service;
 
@@ -33,8 +33,13 @@ public class CustomizeDataSourceSheet extends ListObjectSheet<ListObjectSheetTes
         this.service = new StudentService();
     }
 
+    @Override
     public List<ListObjectSheetTest.Student> more() {
         return service.getPageData(pageNo++, limit);
+    }
+
+    public int getRowBlockSize() {
+        return 256;
     }
 
 }

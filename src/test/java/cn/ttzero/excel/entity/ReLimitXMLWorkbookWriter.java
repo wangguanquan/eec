@@ -42,6 +42,6 @@ class ReLimitXMLWorksheetWriter extends XMLWorksheetWriter {
      */
     @Override
     public int getRowLimit() {
-        return 50;
+        return 256;
     }
 }

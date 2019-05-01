@@ -59,6 +59,7 @@ public class ListObjectPagingTest extends WorkbookTest {
             .watch(Print::println)
             .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
             .addSheet(ListObjectSheetTest.Item.randomTestData())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 
@@ -67,6 +68,16 @@ public class ListObjectPagingTest extends WorkbookTest {
             .watch(Print::println)
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(ListObjectSheetTest.Item.randomTestData())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testPagingCustomizeDataSource() throws IOException {
+        new Workbook("paging customize datasource", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new CustomizeDataSourceSheet())
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
 }

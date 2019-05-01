@@ -62,7 +62,7 @@ public class SQLWorkbookTest extends WorkbookTest {
                 ps.close();
                 con.setAutoCommit(false);
                 ps = con.prepareStatement("insert into student(name, age) values (?,?)");
-                int size = random.nextInt(100) + 1;
+                int size = 10_000;
                 for (int i = 0; i < size; i++) {
                     ps.setString(1, getRandomString());
                     ps.setInt(2, random.nextInt(15) + 5);
