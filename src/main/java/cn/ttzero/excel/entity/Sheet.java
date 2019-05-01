@@ -1048,8 +1048,8 @@ public abstract class Sheet implements Cloneable {
                 cell.xf = getStyleIndex(hc, e);
             } else {
                 setCellValue(cell, e, hc, clazz);
-                // reset style
-                cell.xf = hc.styles.of(hc.getCellStyle(clazz));
+                int style = hc.getCellStyle(clazz);
+                cell.xf = getStyleIndex(hc, n, style);
             }
         } else {
             cell.setBlank();
@@ -1124,10 +1124,10 @@ public abstract class Sheet implements Cloneable {
      * Returns the cell style index
      * @param hc the header column
      * @param o the cell value
+     * @param style the default style
      * @return the style index in xf
      */
-    protected int getStyleIndex(Column hc, Object o) {
-        int style = hc.getCellStyle();
+    private int getStyleIndex(Column hc, Object o, int style) {
         // Interlaced discoloration
         if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
             style |= oddFill;
@@ -1138,6 +1138,17 @@ public abstract class Sheet implements Cloneable {
             styleIndex = hc.styles.of(style);
         }
         return styleIndex;
+    }
+
+    /**
+     * Returns the cell style index
+     * @param hc the header column
+     * @param o the cell value
+     * @return the style index in xf
+     */
+    protected int getStyleIndex(Column hc, Object o) {
+        int style = hc.getCellStyle();
+        return getStyleIndex(hc, o, style);
     }
 
     protected boolean isOdd() {
