@@ -56,7 +56,7 @@ public class RowBlock implements Iterator<Row> {
      */
     public final RowBlock reopen() {
         eof = false;
-        total = 0;
+//        total = 0;
         return this;
     }
 
