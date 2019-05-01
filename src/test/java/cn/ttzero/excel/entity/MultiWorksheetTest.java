@@ -54,7 +54,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
 
             new Workbook("test multi dataSource worksheet", author)
                 .watch(Print::println)
-//                .setAutoSize(true)
+                .setAutoSize(true)
                 .setConnection(con)
                 // List<Map>
                 .addSheet("List<Map>", ListMapSheetTest.createAllTypeData())

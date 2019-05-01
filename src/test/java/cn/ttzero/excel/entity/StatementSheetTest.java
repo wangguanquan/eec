@@ -30,9 +30,36 @@ import java.sql.SQLException;
  */
 public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testWrite() {
+        testWrite(false);
+    }
+
+    @Test public void testStyleProcessor() {
+        testStyleProcessor(false);
+    }
+
+    @Test public void testIntConversion() {
+        testIntConversion(false);
+    }
+
+    // ---- AUTO SIZE
+
+    @Test public void testWriteAutoSize() {
+        testWrite(true);
+    }
+
+    @Test public void testStyleProcessorAutoSize() {
+        testStyleProcessor(true);
+    }
+
+    @Test public void testIntConversionAutoSize() {
+        testIntConversion(true);
+    }
+
+    private void testWrite(boolean autoSize) {
         try (Connection con = getConnection()) {
             new Workbook("statement", author)
                 .watch(Print::println)
+                .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age from student order by age"
                     , new Sheet.Column("学号", int.class)
@@ -45,11 +72,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
         }
     }
 
-
-    @Test public void testStyleProcessor() {
+    private void testStyleProcessor(boolean autoSize) {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor", author)
                 .watch(Print::println)
+                .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age from student"
                     , new Sheet.Column("学号", int.class)
@@ -70,10 +97,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
         }
     }
 
-    @Test public void testIntConversion() {
+    private void testIntConversion(boolean autoSize) {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement", author)
                 .setConnection(con)
+                .setAutoSize(autoSize)
                 .watch(Print::println)
                 .addSheet("select id, name, age from student"
                     , new Sheet.Column("学号", int.class)
