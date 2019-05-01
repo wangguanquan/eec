@@ -491,7 +491,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     // --- Customize worksheet writer
 
-    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) throws IOException {
-        return new XMLWorksheetWriter(workbook, sheet);
+    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+        return new XMLWorksheetWriter(sheet);
     }
 }

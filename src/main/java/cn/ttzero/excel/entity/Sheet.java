@@ -671,6 +671,29 @@ public abstract class Sheet {
         return this;
     }
 
+
+    /**
+     * Output export info
+     */
+    public void what(String code) {
+        workbook.what(code);
+    }
+
+    /**
+     * Output export info
+     */
+    public void what(String code, String ... args) {
+        workbook.what(code, args);
+    }
+
+    /**
+     * Returns shared string
+     * @return the sst
+     */
+    public SharedStrings getSst() {
+        return workbook.getSst();
+    }
+
     /**
      * Return the cell default width
      * @return the width value

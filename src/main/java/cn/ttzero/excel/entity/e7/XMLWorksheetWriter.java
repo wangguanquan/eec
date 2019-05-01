@@ -48,16 +48,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private int headInfoLen, baseInfoLen;
     // the storage path
     private Path workSheetPath;
-    private Workbook workbook;
     private ExtBufferedWriter bw;
     private Sheet sheet;
     private Sheet.Column[] columns;
     private SharedStrings sst;
 
-    public XMLWorksheetWriter(Workbook workbook, Sheet sheet) {
-        this.workbook = workbook;
-        this.sst = workbook.getSst();
+    public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
+        this.sst = sheet.getSst();
     }
 
     /**
@@ -71,7 +69,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
         }
-        workbook.what("0010", sheet.getName());
+        sheet.what("0010", sheet.getName());
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
 
@@ -120,7 +118,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
         }
-        workbook.what("0010", sheet.getName());
+        sheet.what("0010", sheet.getName());
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
 
@@ -309,7 +307,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</sheetData>");
 
         // background image
-        if (workbook.getWaterMark() != null) {
+        if (sheet.getWaterMark() != null) {
             // relationship
             Relationship r = sheet.find("media/image"); // only one background image
             if (r != null) {
@@ -358,7 +356,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         int r = rows + 2;
         // logging
         if (r % 1_0000 == 0) {
-            workbook.what("0014", String.valueOf(r));
+            sheet.what("0014", String.valueOf(r));
         }
 
         bw.write("<row r=\"");
@@ -781,7 +779,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         } finally {
             boolean delete = temp.delete();
             if (!delete) {
-                workbook.what("9005", temp.getAbsolutePath());
+                sheet.what("9005", temp.getAbsolutePath());
             }
             if (inChannel != null) {
                 inChannel.close();
