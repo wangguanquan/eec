@@ -882,7 +882,7 @@ public abstract class Sheet implements Cloneable {
             paging();
         }
         if (rowBlock == null) {
-            rowBlock = new RowBlock();
+            rowBlock = new RowBlock(getRowBlockSize());
         } else rowBlock.reopen();
 
         sheetWriter.write(path);

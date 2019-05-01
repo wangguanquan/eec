@@ -104,7 +104,7 @@ public class StatementSheet extends ResultSetSheet {
             }
 
             if (rowBlock == null) {
-                rowBlock = new RowBlock();
+                rowBlock = new RowBlock(getRowBlockSize());
             } else rowBlock.reopen();
 
             sheetWriter.write(path);
