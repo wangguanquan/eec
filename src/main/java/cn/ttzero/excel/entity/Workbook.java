@@ -59,7 +59,7 @@ public class Workbook {
     private int autoOdd = 0; // 自动隔行变色
     private String creator, company; // 创建者，公司
     private Fill oddFill; // 偶数行的填充
-    private Watch watch; // 观察者
+    private Watch watch; // A debug watcher
     private I18N i18N;
 
     private SharedStrings sst; // 共享字符区

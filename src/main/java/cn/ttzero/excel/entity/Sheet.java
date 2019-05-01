@@ -64,6 +64,7 @@ public abstract class Sheet implements Cloneable {
     protected int autoOdd = -1;
     /** odd row's background color */
     protected int oddFill;
+    /** A copy worksheet flag */
     protected boolean copySheet;
     protected int copyCount;
 
@@ -894,9 +895,9 @@ public abstract class Sheet implements Cloneable {
     protected void paging() { }
 
     /**
-     * 添加关联
+     * Add relationship
      * @param rel Relationship
-     * @return worksheet实例
+     * @return worksheet
      */
     public Sheet addRel(Relationship rel) {
         relManager.add(rel);
