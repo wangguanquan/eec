@@ -878,7 +878,10 @@ public abstract class Sheet {
         if (!copySheet) {
             paging();
         }
-        rowBlock = new RowBlock();
+        if (rowBlock == null) {
+            rowBlock = new RowBlock();
+        } else rowBlock.reopen();
+
         sheetWriter.write(path);
     }
 

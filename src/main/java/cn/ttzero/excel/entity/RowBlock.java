@@ -45,6 +45,16 @@ public class RowBlock implements Iterator<Row> {
     }
 
     /**
+     * re-open the row-block
+     * @return self
+     */
+    public final RowBlock reopen() {
+        eof = false;
+        total = 0;
+        return this;
+    }
+
+    /**
      * Clear index mark
      */
     public final RowBlock clear() {
