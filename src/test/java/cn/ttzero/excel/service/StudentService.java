@@ -27,6 +27,6 @@ import java.util.List;
 public class StudentService {
 
     public List<ListObjectSheetTest.Student> getPageData(int pageNo, int limit) {
-        return pageNo < 100 ? ListObjectSheetTest.Student.randomTestData(limit) : Collections.emptyList();
+        return pageNo < 100 ? ListObjectSheetTest.Student.randomTestData(pageNo, limit) : Collections.emptyList();
     }
 }

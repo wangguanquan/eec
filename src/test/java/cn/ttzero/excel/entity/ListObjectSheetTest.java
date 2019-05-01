@@ -239,15 +239,18 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.name = name;
             this.age = age;
         }
-
-        public static List<Student> randomTestData(int n) {
-            List<Student> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
+        public static List<Student> randomTestData(int pageNo, int limit) {
+            List<Student> list = new ArrayList<>(limit);
+            for (int i = pageNo * limit, n = i + limit; i < n; i++) {
                 Student e = new Student(i, getRandomString(), random.nextInt(15) + 5);
                 e.password = getRandomString();
                 list.add(e);
             }
             return list;
+        }
+
+        public static List<Student> randomTestData(int n) {
+            return randomTestData(0, n);
         }
 
         public static List<Student> randomTestData() {
