@@ -18,7 +18,7 @@ package cn.ttzero.excel.reader;
 
 import cn.ttzero.excel.annotation.NS;
 import cn.ttzero.excel.annotation.TopNS;
-import cn.ttzero.excel.entity.e7.Relationship;
+import cn.ttzero.excel.entity.Relationship;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.ExcelType;
 import cn.ttzero.excel.manager.RelManager;

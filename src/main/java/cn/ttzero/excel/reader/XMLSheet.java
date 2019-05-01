@@ -190,7 +190,7 @@ class XMLSheet implements Sheet {
                         this.size = to - from + 1;
                         int c1 = col2Int(mat.group(1)), c2 = col2Int(mat.group(3)), columnSize = c2 - c1 + 1;
                         if (columnSize > Const.Limit.MAX_COLUMNS_ON_SHEET) {
-                            throw new TooManyColumnsException(columnSize);
+                            throw new TooManyColumnsException(columnSize, Const.Limit.MAX_COLUMNS_ON_SHEET);
                         }
                         logger.debug("column size: {}", columnSize);
 //                        OPTIONS = columnSize > 128; // size more than DX

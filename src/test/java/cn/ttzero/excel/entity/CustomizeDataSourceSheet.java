@@ -16,26 +16,35 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.service.StudentService;
+
+import java.util.List;
+
 /**
- * Created by guanquan.wang on 2017/10/19.
+ * Create by guanquan.wang at 2019-04-30 15:12
  */
-public class ExportException extends RuntimeException {
+public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Student> {
 
-	private static final long serialVersionUID = 1L;
+    private StudentService service;
 
-	public ExportException() {
-        super();
+    private int pageNo, limit = 64;
+
+    public CustomizeDataSourceSheet() {
+        this(null);
     }
 
-    public ExportException(String s) {
-        super(s);
+    public CustomizeDataSourceSheet(String name) {
+        super(name);
+        this.service = new StudentService();
     }
 
-    public ExportException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public List<ListObjectSheetTest.Student> more() {
+        return service.getPageData(pageNo++, limit);
     }
 
-    public ExportException(Throwable cause) {
-        super(cause);
+    public int getRowBlockSize() {
+        return 256;
     }
+
 }

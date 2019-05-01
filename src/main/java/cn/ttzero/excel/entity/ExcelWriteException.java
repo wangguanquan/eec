@@ -17,22 +17,25 @@
 package cn.ttzero.excel.entity;
 
 /**
- * xlsx文件最大列数为16_384，如果超出这个数将抛出此异常
  * Created by guanquan.wang on 2017/10/19.
  */
-public class TooManyColumnsException extends ExcelWriteException {
+public class ExcelWriteException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	public TooManyColumnsException() {
+	public ExcelWriteException() {
         super();
     }
 
-    public TooManyColumnsException(int n, int m) {
-        super(n + " out of Total number of columns on a worksheet " + m);
+    public ExcelWriteException(String s) {
+        super(s);
     }
 
-    public TooManyColumnsException(String s) {
-        super(s);
+    public ExcelWriteException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ExcelWriteException(Throwable cause) {
+        super(cause);
     }
 }

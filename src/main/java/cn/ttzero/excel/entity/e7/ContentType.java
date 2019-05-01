@@ -16,6 +16,7 @@
 
 package cn.ttzero.excel.entity.e7;
 
+import cn.ttzero.excel.entity.Relationship;
 import cn.ttzero.excel.manager.RelManager;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.util.FileUtil;
@@ -46,7 +47,7 @@ public class ContentType {
         relManager.add(rel);
     }
 
-    static abstract class Type {
+    public static abstract class Type {
         protected String contentType;
 
         public String getContentType() {

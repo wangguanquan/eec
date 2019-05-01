@@ -126,7 +126,7 @@ public class WaterMark {
             ImageIO.write(bi, "png", temp.toFile());
             return temp;
         } catch (IOException e) {
-            throw new ExportException("Create Water Mark error.", e);
+            throw new ExcelWriteException("Create Water Mark error.", e);
         }
     }
 

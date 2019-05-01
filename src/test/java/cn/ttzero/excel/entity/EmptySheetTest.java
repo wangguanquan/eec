@@ -1,6 +1,4 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,23 +14,20 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.Print;
+import org.junit.Test;
+
+import java.io.IOException;
+
 /**
- * xlsx文件最大列数为16_384，如果超出这个数将抛出此异常
- * Created by guanquan.wang on 2017/10/19.
+ * Create by guanquan.wang at 2019-04-29 21:36
  */
-public class TooManyColumnsException extends ExcelWriteException {
-
-	private static final long serialVersionUID = 1L;
-
-	public TooManyColumnsException() {
-        super();
-    }
-
-    public TooManyColumnsException(int n, int m) {
-        super(n + " out of Total number of columns on a worksheet " + m);
-    }
-
-    public TooManyColumnsException(String s) {
-        super(s);
+public class EmptySheetTest extends WorkbookTest {
+    @Test
+    public void testEmpty() throws IOException {
+        new Workbook("test empty", author)
+            .watch(Print::println)
+            .addSheet(new EmptySheet())
+            .writeTo(defaultTestPath);
     }
 }

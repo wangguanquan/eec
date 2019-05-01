@@ -14,19 +14,34 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.processor;
+package cn.ttzero.excel.entity;
 
-import java.nio.file.Path;
+import cn.ttzero.excel.entity.e7.XMLWorkbookWriter;
+import cn.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 /**
- * Excel定操作完成后可以做后续操作
- * Created by guanquan.wang on 2018/6/13.
+ * Create by guanquan.wang at 2019-04-29 14:16
  */
-@FunctionalInterface
-public interface DownProcessor {
+public class ReLimitXMLWorkbookWriter extends XMLWorkbookWriter {
+
+    @Override
+    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+        return new ReLimitXMLWorksheetWriter(sheet);
+    }
+}
+
+class ReLimitXMLWorksheetWriter extends XMLWorksheetWriter {
+
+    ReLimitXMLWorksheetWriter(Sheet sheet) {
+        super(sheet);
+    }
+
     /**
-     * 执行此方法
-     * @param path excel临时位置
+     * The Worksheet row limit
+     * @return the limit
      */
-    void exec(Path path);
+    @Override
+    public int getRowLimit() {
+        return 256;
+    }
 }

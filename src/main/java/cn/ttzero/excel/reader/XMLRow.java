@@ -185,7 +185,7 @@ class XMLRow extends Row {
 
         if (cell == null) return null;
 
-        cell.setT(t);
+//        cell.setT(t);
 
         // get value
         int a;
@@ -202,6 +202,7 @@ class XMLRow extends Row {
             case SST: // shared string lazy get
                 a = getV(e);
                 cell.setNv(toInt(a, cursor));
+                cell.setT(SST);
                 break;
             case BOOL: // boolean value
                 a = getV(e);
@@ -218,16 +219,12 @@ class XMLRow extends Row {
                         long l = toLong(a, cursor);
                         if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
                             cell.setNv((int) l);
-                            cell.setT(NUMERIC);
                         } else {
                             cell.setLv(l);
-                            cell.setT(LONG);
                         }
                     } else if (isDouble(a, cursor)) {
-                        cell.setT(DOUBLE);
                         cell.setDv(toDouble(a, cursor));
                     } else {
-                        cell.setT(INLINESTR);
                         cell.setSv(toString(a, cursor));
                     }
                 }

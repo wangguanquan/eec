@@ -129,7 +129,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             99999999, 999999999, Integer.MAX_VALUE};
 
     // Requires positive x
-    private static int stringSize(int x) {
+    public static int stringSize(int x) {
         for (int i = 0; ; i++)
             if (x <= sizeTable[i])
                 return i + 1;
@@ -178,7 +178,7 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     // Requires positive x
-    private int stringSize(long x) {
+    public static int stringSize(long x) {
         long p = 10;
         for (int i=1; i<19; i++) {
             if (x < p)

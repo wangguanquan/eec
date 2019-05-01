@@ -16,8 +16,6 @@
 
 package cn.ttzero.excel.manager;
 
-import java.nio.charset.Charset;
-
 /**
  * 常量类
  * Created by guanquan.wang on 2017/9/30.
@@ -29,12 +27,12 @@ public class Const {
     public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     /** excel xml declatation */
     public static final String EXCEL_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
-    /** utf-8 charset */
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
     /** "\n" in UNIX systems, "\r\n" in Windows systems. */
     public static final String lineSeparator = System.lineSeparator();
     /** prefix of eec project */
     public static final String EEC_PREFIX = "eec+";
+    /** Size of row-block */
+    public static final int ROW_BLOCK_SIZE = 32;
 
     /**
      * Relation
