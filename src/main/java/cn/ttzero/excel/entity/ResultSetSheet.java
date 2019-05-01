@@ -120,18 +120,8 @@ public class ResultSetSheet extends Sheet {
         // Paging
         if (rows >= limit) {
             shouldClose = false;
-            ResultSetSheet sheet = copy();
-            // reset name
-            int i = name.lastIndexOf('('), sub;
-            String _name = name;
-            if (i > 0) {
-                sub = Integer.parseInt(name.substring(i + 1, name.lastIndexOf(')')));
-                _name = name.substring(0, i);
-            } else {
-                sub = 0;
-            }
-            sheet.name = _name + " (" + (sub + 1) + ")";
-            workbook.insertSheet(id, sheet);
+            ResultSetSheet copy = getClass().cast(clone());
+            workbook.insertSheet(id, copy);
         } else shouldClose = true;
     }
 
@@ -153,19 +143,4 @@ public class ResultSetSheet extends Sheet {
         return columns;
     }
 
-    /**
-     * Paging worksheet
-     * @return a copy worksheet
-     */
-    protected ResultSetSheet copy() {
-        ResultSetSheet rss =  new ResultSetSheet(name, waterMark, columns);
-        rss.rs = rs;
-        rss.autoSize = autoSize;
-        rss.autoOdd = this.autoOdd;
-        rss.oddFill = this.oddFill;
-        rss.relManager = relManager.clone();
-        rss.sheetWriter = sheetWriter.copy(rss);
-        rss.copySheet = true;
-        return rss;
-    }
 }
