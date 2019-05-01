@@ -793,6 +793,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     else if (isTime(clazz) || isLocalTime(clazz)) {
                         len = 8;
                     }
+                    else if (isBool(clazz)) {
+                        len = 5;
+                    }
                     else {
                         len = 10;
                     }
