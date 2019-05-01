@@ -684,7 +684,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
         // There has no column to reset width
-        if (columns.length <= 0) return;
+        if (columns.length <= 0 || rows <= 1) return;
         // resize each column width ...
         File temp = new File(path.getParent(), sheet.getName() + ".temp");
         if (!path.renameTo(temp)) {
