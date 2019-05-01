@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 /**
  * Create by guanquan.wang at 2019-04-22 17:23
  */
-public interface IWorksheetWriter extends Closeable {
+public interface IWorksheetWriter extends Closeable, Cloneable {
 
     /**
      * The Worksheet row limit
@@ -60,7 +60,7 @@ public interface IWorksheetWriter extends Closeable {
      * Return a copy worksheet writer
      * @return the copy worksheet writer
      */
-    IWorksheetWriter copy(Sheet sheet);
+    IWorksheetWriter setWorksheet(Sheet sheet);
 
     /**
      * Write a empty worksheet
@@ -83,6 +83,12 @@ public interface IWorksheetWriter extends Closeable {
     default boolean outOfSheet(int row) {
         return row >= getRowLimit();
     }
+
+    /**
+     * Clone
+     * @return IWorksheetWriter
+     */
+    IWorksheetWriter clone();
 
     /**
      * 测试是否为Date类型

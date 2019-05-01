@@ -24,10 +24,8 @@ import cn.ttzero.excel.util.ExtBufferedWriter;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -167,9 +165,45 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
+    /**
+     * Rest worksheet
+     * @param sheet the worksheet
+     * @return self
+     */
     @Override
-    public IWorksheetWriter copy(Sheet sheet) {
-        return new XMLWorksheetWriter(workbook, sheet);
+    public IWorksheetWriter setWorksheet(Sheet sheet) {
+        this.sheet = sheet;
+        return this;
+    }
+
+    @Override
+    public IWorksheetWriter clone() {
+        IWorksheetWriter copy = null;
+        try {
+            copy = (IWorksheetWriter) super.clone();
+        } catch (CloneNotSupportedException e) {
+            ObjectOutputStream oos = null;
+            ObjectInputStream ois = null;
+            try {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                oos = new ObjectOutputStream(bos);
+                oos.writeObject(this);
+
+                ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+                copy = (IWorksheetWriter) ois.readObject();
+            } catch (IOException|ClassNotFoundException e1) {
+                try {
+                    copy = getClass().getConstructor(Sheet.class).newInstance(sheet);
+                } catch (NoSuchMethodException | IllegalAccessException
+                        | InstantiationException | InvocationTargetException e2) {
+                    e2.printStackTrace();
+                }
+            } finally {
+                FileUtil.close(oos);
+                FileUtil.close(ois);
+            }
+        }
+        return copy;
     }
 
     /**
