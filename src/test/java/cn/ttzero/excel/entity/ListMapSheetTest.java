@@ -43,6 +43,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testAllType() throws IOException {
         new Workbook("test all type map", author)
             .watch(Print::println)
+            .setAutoSize(true)
             .addSheet(createAllTypeData())
             .writeTo(defaultTestPath);
     }
@@ -51,6 +52,7 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook("test header column map", author)
             .watch(Print::println)
             .addSheet(createAllTypeData()
+                , new Sheet.Column("boolean", "bv", boolean.class)
                 , new Sheet.Column("char", "cv", char.class)
                 , new Sheet.Column("short", "sv", short.class)
                 , new Sheet.Column("int", "nv", int.class)
@@ -109,6 +111,7 @@ public class ListMapSheetTest extends WorkbookTest {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
+            map.put("bv", random.nextInt(10) == 6);
             map.put("cv", charArray[random.nextInt(charArray.length)]);
             map.put("sv", (short) (random.nextInt() & 0xFFFF));
             map.put("nv", random.nextInt());

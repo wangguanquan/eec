@@ -177,6 +177,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     }
 
     public static class AllType {
+        private boolean bv;
         private char cv;
         private short sv;
         private int nv;
@@ -196,6 +197,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             List<AllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
                 AllType o = new AllType();
+                o.bv = random.nextInt(10) == 5;
                 o.cv = charArray[random.nextInt(charArray.length)];
                 o.sv = (short) (random.nextInt() & 0xFFFF);
                 o.nv = random.nextInt();
