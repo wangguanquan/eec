@@ -26,8 +26,8 @@ public class EmptySheetTest extends WorkbookTest {
     @Test
     public void testEmpty() throws IOException {
         new Workbook("test empty", author)
-                .watch(Print::println)
-                .addSheet(new EmptySheet())
-                .writeTo(defaultTestPath);
+            .watch(Print::println)
+            .addSheet(new EmptySheet())
+            .writeTo(defaultTestPath);
     }
 }
