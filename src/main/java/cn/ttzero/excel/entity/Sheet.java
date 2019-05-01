@@ -1139,7 +1139,7 @@ public abstract class Sheet implements Cloneable {
     }
 
     protected boolean isOdd() {
-        return (rows & 1) == 1;
+        return (rows & 1) == 0;
     }
 
     /**
