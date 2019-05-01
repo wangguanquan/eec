@@ -1264,7 +1264,11 @@ public abstract class Sheet implements Cloneable {
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     /**
-     * Reset the row-block data
+     * Each row-block is multiplexed and will be called to reset
+     * the data when a row-block is completely written.
+     * Call the {@code RowBlock#getRowBlockSize} method to get
+     * the row-block size, call the {@code setCellValueAndStyle}
+     * method to set value and styles.
      */
     protected abstract void resetBlockData();
 }
