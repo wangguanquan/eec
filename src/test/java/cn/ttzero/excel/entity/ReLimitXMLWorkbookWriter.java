@@ -26,14 +26,14 @@ public class ReLimitXMLWorkbookWriter extends XMLWorkbookWriter {
 
     @Override
     protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
-        return new ReLimitXMLWorksheetWriter(getWorkbook(), sheet);
+        return new ReLimitXMLWorksheetWriter(sheet);
     }
 }
 
 class ReLimitXMLWorksheetWriter extends XMLWorksheetWriter {
 
-    public ReLimitXMLWorksheetWriter(Workbook workbook, Sheet sheet) {
-        super(workbook, sheet);
+    ReLimitXMLWorksheetWriter(Sheet sheet) {
+        super(sheet);
     }
 
     /**
