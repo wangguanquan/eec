@@ -308,7 +308,7 @@ public class Workbook {
         if (o instanceof Map) {
             addSheet(new ListMapSheet(name, columns).setData((List<Map<String, ?>>) data));
         } else {
-            addSheet(new ListObjectSheet(name, columns).setData(data));
+            addSheet(new ListSheet(name, columns).setData(data));
         }
         return this;
     }
