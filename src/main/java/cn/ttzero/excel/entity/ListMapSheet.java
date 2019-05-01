@@ -19,17 +19,13 @@ package cn.ttzero.excel.entity;
 import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Created by guanquan.wang at 2018-01-26 14:46
  */
-public class ListMapSheet extends ListSheet {
-    private List<Map<String, ?>> data;
+public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
@@ -65,51 +61,13 @@ public class ListMapSheet extends ListSheet {
         super(name, waterMark, columns);
     }
 
-    public ListMapSheet setData(final List<Map<String, ?>> data) {
-        this.data = data;
-        if (data != null) {
-            end = data.size();
-        }
-        return this;
-    }
-
-    /**
-     * Release resources
-     * @throws IOException if io error occur
-     */
-    @Override
-    public void close() throws IOException {
-        if (shouldClose) {
-            data.clear();
-            data = null;
-        }
-        super.close();
-    }
-
     /**
      * Reset the row-block data
      */
     @Override
     protected void resetBlockData() {
-        for (int rbs = getRowBlockSize(), size; (size = size()) < rbs; ) {
-            List<Map<String, ?>> list = more();
-            if (list == null || list.isEmpty()) break;
-            if (data == null) {
-                data = new ArrayList<>(rbs);
-            }
-            if (start > 0 && size > 0) {
-                // append and resize
-                List<Map<String, ?>> last = new ArrayList<>(size);
-                last.addAll(data.subList(start, end));
-                data.clear();
-                data.addAll(last);
-            } else data.clear();
-            data.addAll(list);
-            start = 0;
-            end = data.size();
-        }
-        if (!headerReady) {
-            getHeaderColumns();
+        if (!eof && size() < getRowBlockSize()) {
+            append();
         }
         int end = getEndIndex();
         int len = columns.length;
@@ -144,8 +102,7 @@ public class ListMapSheet extends ListSheet {
     @Override
     public Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        @SuppressWarnings("unchecked")
-        Map<String, ?> first = (Map<String, ?>) workbook.getFirst(data);
+        Map<String, ?> first = getFirst();
         // No data
         if (first == null) {
             if (columns == null) {
@@ -178,39 +135,4 @@ public class ListMapSheet extends ListSheet {
         return columns;
     }
 
-    /**
-     * Paging worksheet
-     * @return a copy worksheet
-     */
-    @Override
-    public ListMapSheet copy() {
-        ListMapSheet sheet = new ListMapSheet(name, columns);
-        sheet.data = data;
-        sheet.autoSize = autoSize;
-        sheet.autoOdd = autoOdd;
-        sheet.oddFill = oddFill;
-        sheet.relManager = relManager.clone();
-        sheet.sheetWriter = sheetWriter.copy(sheet);
-        sheet.waterMark = waterMark;
-        sheet.copySheet = true;
-        return sheet;
-    }
-
-    /**
-     * Returns total data size before split
-     * @return the total size
-     */
-    @Override
-    protected int dataSize() {
-        return data != null ? data.size() : 0;
-    }
-
-    /**
-     * Get more row data if hasMore returns true
-     * @return the row data
-     */
-    @Override
-    protected List<Map<String, ?>> more() {
-        return null;
-    }
 }
