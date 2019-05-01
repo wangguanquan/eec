@@ -325,7 +325,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         } else {
             bw.write("</worksheet>");
         }
-        workbook.what("0009", sheet.getName(), String.valueOf(total));
+        sheet.what("0009", sheet.getName(), String.valueOf(total));
     }
 
     /**
