@@ -289,7 +289,6 @@ public class ListSheet<T> extends Sheet {
      */
     protected void paging() {
         int len = dataSize(), limit = sheetWriter.getRowLimit() - 1;
-        workbook.what("Total size: " + len);
         // paging
         if (len > limit) {
             // Reset current index
