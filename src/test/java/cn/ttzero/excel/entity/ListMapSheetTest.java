@@ -83,14 +83,6 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
-    @Test public void testMultiWorksheet() throws IOException {
-        new Workbook("test multi worksheet", author)
-            .watch(Print::println)
-            .setAutoSize(true)
-            .addSheet("E", createTestData())
-            .addSheet("All type", createAllTypeData())
-            .writeTo(defaultTestPath);
-    }
 
     static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;

@@ -30,6 +30,11 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
     private int pageNo, limit = 64;
 
     public CustomizeDataSourceSheet() {
+        this(null);
+    }
+
+    public CustomizeDataSourceSheet(String name) {
+        super(name);
         this.service = new StudentService();
     }
 
