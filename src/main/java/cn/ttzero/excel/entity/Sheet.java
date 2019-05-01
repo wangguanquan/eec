@@ -65,6 +65,7 @@ public abstract class Sheet implements Cloneable {
     /** odd row's background color */
     protected int oddFill;
     protected boolean copySheet;
+    protected int copyCount;
 
     protected RowBlock rowBlock;
     protected IWorksheetWriter sheetWriter;
@@ -1152,9 +1153,9 @@ public abstract class Sheet implements Cloneable {
         // reset name
         int i = name.lastIndexOf('(');
         if (i > 0) {
-            sub = Integer.parseInt(name.substring(i + 1, name.lastIndexOf(')')));
-            sub += 1;
+            int fs = Integer.parseInt(name.substring(i + 1, name.lastIndexOf(')')));
             _name = name.substring(0, name.charAt(i - 1) == ' ' ? i - 1 : i);
+            if (++fs > sub) sub = fs;
         }
         return _name + " (" + (sub) + ")";
     }
@@ -1187,7 +1188,7 @@ public abstract class Sheet implements Cloneable {
             }
         }
         if (copy != null) {
-            copyCount++;
+            copy.copyCount = ++copyCount;
             copy.name = getCopySheetName();
             copy.relManager = relManager.clone();
             copy.sheetWriter = sheetWriter.clone().setWorksheet(copy);
