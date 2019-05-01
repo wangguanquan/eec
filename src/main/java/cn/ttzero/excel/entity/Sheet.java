@@ -23,8 +23,10 @@ import cn.ttzero.excel.manager.RelManager;
 import cn.ttzero.excel.processor.IntConversionProcessor;
 import cn.ttzero.excel.processor.StyleProcessor;
 import cn.ttzero.excel.reader.Cell;
+import cn.ttzero.excel.util.FileUtil;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Timestamp;
@@ -40,7 +42,7 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
-public abstract class Sheet {
+public abstract class Sheet implements Cloneable {
     protected Workbook workbook;
 
     protected String name;
@@ -1138,6 +1140,61 @@ public abstract class Sheet {
 
     protected boolean isOdd() {
         return (rows & 1) == 1;
+    }
+
+    /**
+     * Returns the copy worksheet name
+     * @return the name
+     */
+    protected String getCopySheetName() {
+        int sub = copyCount;
+        String _name = name;
+        // reset name
+        int i = name.lastIndexOf('(');
+        if (i > 0) {
+            sub = Integer.parseInt(name.substring(i + 1, name.lastIndexOf(')')));
+            sub += 1;
+            _name = name.substring(0, name.charAt(i - 1) == ' ' ? i - 1 : i);
+        }
+        return _name + " (" + (sub) + ")";
+    }
+
+    @Override
+    public Sheet clone() {
+        Sheet copy = null;
+        try {
+            copy = (Sheet) super.clone();
+        } catch (CloneNotSupportedException e) {
+            ObjectOutputStream oos = null;
+            ObjectInputStream ois = null;
+            try {
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                oos = new ObjectOutputStream(bos);
+                oos.writeObject(this);
+
+                ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+                copy = (Sheet) ois.readObject();
+            } catch (IOException|ClassNotFoundException e1) {
+                try {
+                    copy = getClass().getConstructor().newInstance();
+                } catch (NoSuchMethodException | IllegalAccessException
+                        | InstantiationException | InvocationTargetException e2) {
+                    e2.printStackTrace();
+                }
+            } finally {
+                FileUtil.close(oos);
+                FileUtil.close(ois);
+            }
+        }
+        if (copy != null) {
+            copyCount++;
+            copy.name = getCopySheetName();
+            copy.relManager = relManager.clone();
+            copy.sheetWriter = sheetWriter.clone().setWorksheet(copy);
+            copy.copySheet = true;
+            copy.rows = 0;
+        }
+        return copy;
     }
 
     /**
