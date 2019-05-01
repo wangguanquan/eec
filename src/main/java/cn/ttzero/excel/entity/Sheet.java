@@ -870,7 +870,7 @@ public abstract class Sheet implements Cloneable {
     }
 
     /**
-     * write worksheet data to path
+     * Write worksheet data to path
      * @param path the storage path
      * @throws IOException write error
      * @throws ExcelWriteException others
