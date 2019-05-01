@@ -1,3 +1,11 @@
+Version 0.3.0 (2019-05-01)
+-------------
+1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
+2. 对Excel 97~03写入兼容支持，eec-e3-support还在开发当中
+3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
+      比如修改每个worksheet最大行数
+4. 修复一些已知BUG
+
 Version 0.2.9 (2019-02-22)
 -------------
 1. Excel读取时增加文件格式判断(BIFF 8 or Open xml)

@@ -284,6 +284,85 @@ public class TestExportEntity {
 }
 ```
 
+5. 自定义数据源worksheet
+
+有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个workbook继承已有的Sheet类
+并实现more方法即可。如下
+
+```
+public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Student> {
+
+    // RPC, mybatis, jpa or others service
+    private StudentService service;
+
+    private int pageNo, limit = 64;
+
+    public CustomizeDataSourceSheet() {
+        this(null);
+    }
+
+    /**
+     * 指定worksheet名称
+     */
+    public CustomizeDataSourceSheet(String name) {
+        super(name);
+        this.service = new StudentService();
+    }
+
+    /**
+     * 获取worksheet行数据，返回null或空数组表示当前worksheet写结束
+     */
+    @Override
+    public List<ListObjectSheetTest.Student> more() {
+        return service.getPageData(pageNo++, limit);
+    }
+}
+
+/**
+ * 测试类
+ */
+@Test
+public void testCustomizeDataSource() throws IOException {
+    new Workbook("customize datasource", author)
+        .watch(Print::println)
+        // 设置自定义数据源worksheet
+        .addSheet(new CustomizeDataSourceSheet("自定义源"))
+        .writeTo(defaultTestPath);
+}
+
+```
+
+你还可以通过自定义WorksheetWriter来修改每个worksheet的最大行数, 或者某些敏感信息的加密处理
+
+```
+@Test
+public void testPagingCustomizeDataSource() throws IOException {
+    new Workbook("paging customize datasource", author)
+        .watch(Print::println)
+        .setAutoSize(true)
+        .addSheet(new CustomizeDataSourceSheet())
+        .setWorkbookWriter(new XMLWorkbookWriter() {
+            @Override
+            public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+                return new XMLWorksheetWriter(sheet) {
+                    /**
+                     * 复写此方法可以修改每页最大行数，此值包含列表头和数据行
+                     * 如: 返回100 表示每页数据行99+列表头1
+                     * @return the limit
+                     */
+                    @Override
+                    public int getRowLimit() {
+                        return 100;
+                    }
+                };
+            }
+        })
+        .writeTo(defaultTestPath);
+}
+```
+
+更详细的信息请查测试类`ListObjectPagingTest.testPagingCustomizeDataSource`
+
 ### 读取示例
 
 1. 使用iterator迭代每行数据
@@ -365,6 +444,14 @@ reade.sheets()
 
 
 ## CHANGELOG
+Version 0.3.0 (2019-05-01)
+-------------
+1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
+2. 对Excel 97~03写入兼容支持，eec-e3-support还在开发当中
+3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
+      比如修改每个worksheet最大行数
+4. 修复一些已知BUG
+
 Version 0.2.9 (2019-02-22)
 -------------
 1. Excel读取时增加文件格式判断(BIFF 8 or Open xml)
@@ -374,16 +461,6 @@ Version 0.2.9 (2019-02-22)
    访问[ttzero](https://www.ttzero.cn)可以了解更多关于eec的信息(网站还处于建设中)
 5. ExcelReader增加返回Excel文件基本信息
 6. ExcelReader增加BIFF8(Excel97~2003)classpath加载
-
-Version 0.2.8 (2018-11-26)
--------------
-1. 对象数组导出时包装类报类型转换错误bug
-2. 对象数组导出类型为java.util.date时类型转换错误
-3. ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提交读取速度
-4. 暂时取消setConnection方法的过时标记
-5. 修改超过676列时Export会出现位置错误的BUG
-6. 修改列数据过多时Reader出现死循环的BUG
-7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
 
 [更多...](./CHANGELOG)
 

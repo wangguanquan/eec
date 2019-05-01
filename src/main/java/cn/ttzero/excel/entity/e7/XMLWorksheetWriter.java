@@ -208,8 +208,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * The Worksheet row limit
-     * @return the limit
+     * Override this method to modify the maximum number
+     * of rows per page, this value contains the header
+     * row and data rows
+     *
+     * eq: limit is 100 means data has 99 rows
+     *
+     * @return the row limit
      */
     @Override
     public int getRowLimit() {
