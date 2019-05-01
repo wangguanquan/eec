@@ -37,6 +37,7 @@ import java.util.function.Supplier;
 
 import static cn.ttzero.excel.reader.Cell.*;
 import static cn.ttzero.excel.entity.IWorksheetWriter.*;
+import static cn.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
  * Create by guanquan.wang at 2019-04-22 16:31
@@ -542,8 +543,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
         writeString(s, row, column, xf);
         Sheet.Column hc = columns[column];
-        int ln = s.getBytes("GB2312").length; // TODO get charset from font style
-        if (hc.width == 0 && (hc.o == null || (int) hc.o < ln)) {
+        int ln; // TODO get charset base on font style
+        if (hc.width == 0 && hc.o < (ln = s.getBytes("GBK").length)) {
             hc.o = ln;
         }
     }
@@ -578,8 +579,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeDoubleAutoSize(double d, int row, int column, int xf) throws IOException {
         writeDouble(d, row, column, xf);
         Sheet.Column hc = columns[column];
-        if (hc.width == 0 && (hc.o == null || (double) hc.o < d)) {
-            hc.o = d;
+        int n;
+        if (hc.width == 0 && hc.o < (n = Double.toString(d).length())) {
+            hc.o = n;
         }
     }
 
@@ -613,8 +615,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
         writeDecimal(bd, row, column, xf);
         Sheet.Column hc = columns[column];
-        int l = bd.toString().length();
-        if (hc.width == 0 && (hc.o == null || (int) hc.o < l)) {
+        int l;
+        if (hc.width == 0 && hc.o < (l = bd.toString().length())) {
             hc.o = l;
         }
     }
@@ -668,8 +670,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
         writeNumeric(l, row, column, xf);
         Sheet.Column hc = columns[column];
-        if (hc.width == 0 && (hc.o == null || (long) hc.o < l)) {
-            hc.o = l;
+        int n;
+        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
+            hc.o = n;
         }
     }
 
@@ -762,13 +765,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 } else {
                     int _l = hc.name.getBytes("GB2312").length, len;
                     Class<?> clazz = hc.getClazz();
-                    // TODO 根据字体字号计算文本宽度
+                    // TODO Calculate text width based on font-family and font-size
                     if (isString(clazz)) {
-                        if (hc.o == null) {
-                            len = 0;
-                        } else {
-                            len = (int) hc.o;
-                        }
+                        len = hc.o;
                     }
                     else if (isDate(clazz) || isLocalDate(clazz)) {
                         len = 10;
@@ -780,15 +779,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                         len = 1;
                     }
                     else if (isInt(clazz) || isLong(clazz)) {
-                        // TODO 根据numFmt计算字符宽度
-                        len = hc.o.toString().length();
+                        // TODO Calculate character width based on numFmt
+                        len = hc.o;
                     }
                     else if (isFloat(clazz) || isDouble(clazz)) {
-                        // TODO 根据numFmt计算字符宽度
-                        len = hc.o.toString().length();
+                        // TODO Calculate character width based on numFmt
+                        len = hc.o;
                     }
                     else if (isBigDecimal(clazz)) {
-                        len = (int) hc.o;
+                        len = hc.o;
                     }
                     else if (isTime(clazz) || isLocalTime(clazz)) {
                         len = 8;

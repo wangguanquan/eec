@@ -144,7 +144,7 @@ public abstract class Sheet implements Cloneable {
         public int cellStyle = -1;
         /** 列宽 */
         public double width;
-        public Object o;
+        public int o;
         public Styles styles;
 
         /**
