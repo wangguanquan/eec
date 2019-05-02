@@ -33,41 +33,46 @@ import java.util.zip.*;
  */
 public class ZipUtil {
     private static final String suffix = ".zip";
-    private ZipUtil() {}
+
+    private ZipUtil() { }
+
     /**
      * zip files exclude root path
      * command: zip destPath srcPath1 srcPath2 ...
+     *
      * @param destPath the destination path
-     * @param srcPath the source path
+     * @param srcPath  the source path
      * @return the result zip file path
      * @throws IOException if error occur.
      */
-    public static Path zip(Path destPath, Path ... srcPath) throws IOException {
+    public static Path zip(Path destPath, Path... srcPath) throws IOException {
         return zip(destPath, true, srcPath);
     }
 
     /**
      * zip files exclude root path
      * command: zip destPath srcPath1 srcPath2 ...
+     *
      * @param destPath the destination path
-     * @param srcPath the source path
+     * @param srcPath  the source path
      * @return the result zip file path
      * @throws IOException if error occur.
      */
-    public static Path zipExcludeRoot(Path destPath, Path ... srcPath) throws IOException {
+    public static Path zipExcludeRoot(Path destPath, Path... srcPath) throws IOException {
         return zip(destPath, false, srcPath);
     }
 
     /**
      * zip files include root path
      * command: zip destPath srcPath1 srcPath2 ...
-     * @param destPath the destination path
+     *
+     * @param destPath     the destination path
      * @param compressRoot include root path if true
-     * @param srcPath the source path
+     * @param srcPath      the source path
      * @return the result zip file path
      * @throws IOException if error occur.
      */
-    private static Path zip(Path destPath, boolean compressRoot, Path ... srcPath) throws IOException {
+    private static Path zip(Path destPath, boolean compressRoot, Path... srcPath) throws IOException {
         if (!destPath.toString().endsWith(suffix)) {
             destPath = Paths.get(destPath.toString() + suffix);
         }
@@ -75,7 +80,7 @@ public class ZipUtil {
             FileUtil.mkdir(destPath.getParent());
         }
         ZipOutputStream zos = new ZipOutputStream(new CheckedOutputStream(
-                Files.newOutputStream(destPath, StandardOpenOption.CREATE), new CRC32()));
+            Files.newOutputStream(destPath, StandardOpenOption.CREATE), new CRC32()));
         List<Path> paths = new ArrayList<>();
         int i = 0, index = 0;
         int[] array = new int[srcPath.length];
@@ -128,7 +133,8 @@ public class ZipUtil {
 
     /**
      * unzip file to descPath
-     * @param stream the input stream
+     *
+     * @param stream   the input stream
      * @param destPath the destination path
      * @return the result zip file path
      * @throws IOException if error occur.

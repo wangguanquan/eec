@@ -21,7 +21,9 @@ package cn.ttzero.excel.util;
  * Created by guanquan.wang on 2017/9/30.
  */
 public class StringUtil {
+    private StringUtil() { }
     public final static String EMPTY = "";
+
     public static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
     }
@@ -70,6 +72,7 @@ public class StringUtil {
 
     /**
      * convert string to pascal case string
+     *
      * @param name
      * @return
      */
@@ -94,6 +97,7 @@ public class StringUtil {
 
     /**
      * append charsequence
+     *
      * @param src
      * @param a
      * @param n
@@ -104,13 +108,13 @@ public class StringUtil {
         StringBuilder buf = new StringBuilder();
         // Insert header
         if (origin == -1) {
-            for ( ; n-- > 0; ) {
+            for (; n-- > 0; ) {
                 buf.append(a);
             }
             buf.append(src);
         } else {
             buf.append(src);
-            for ( ; n-- > 0; ) {
+            for (; n-- > 0; ) {
                 buf.append(a);
             }
         }

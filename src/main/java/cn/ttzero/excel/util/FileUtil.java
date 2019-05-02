@@ -36,15 +36,14 @@ import java.util.List;
 
 /**
  * 文件操作工具类
- *
+ * <p>
  * Created by guanquan.wang on 2017-9-10
  */
 
 public class FileUtil {
     private static Logger logger = LogManager.getLogger(FileUtil.class);
 
-    private FileUtil() {
-    }
+    private FileUtil() { }
 
 
     /**
@@ -106,6 +105,7 @@ public class FileUtil {
             }
         }
     }
+
     /**
      * 关闭Channel
      *
@@ -120,9 +120,11 @@ public class FileUtil {
             }
         }
     }
-    public static void rm(Path path){
+
+    public static void rm(Path path) {
         rm(path.toFile());
     }
+
     /**
      * 如果文件存在删除文件
      *
@@ -134,6 +136,7 @@ public class FileUtil {
 
     /**
      * Remove if is file
+     *
      * @param file
      */
     public static void rm(File file) {
@@ -144,11 +147,14 @@ public class FileUtil {
             }
         }
     }
+
     public static void rm_rf(Path root) {
         rm_rf(root.toFile(), true);
     }
+
     /**
      * Remove file and sub files
+     *
      * @param root
      * @param rmSelf Remove self if true
      */
@@ -172,7 +178,7 @@ public class FileUtil {
                 }
             } while (index < files.size());
 
-            for ( ; --index >= 0; ) {
+            for (; --index >= 0; ) {
                 rm(files.get(index));
             }
         }
@@ -184,6 +190,7 @@ public class FileUtil {
     public static void cp(Path srcFile, Path descPath) {
         cp(srcFile.toFile(), descPath.toFile());
     }
+
     public static void cp(File srcFile, Path descPath) {
         cp(srcFile, descPath.toFile());
     }
@@ -210,7 +217,7 @@ public class FileUtil {
         }
         FileChannel inChannel = null, outChannel = null;
         try (FileInputStream fis = new FileInputStream(srcFile);
-        		FileOutputStream fos = new FileOutputStream(descFile)) {
+             FileOutputStream fos = new FileOutputStream(descFile)) {
             inChannel = fis.getChannel();
             outChannel = fos.getChannel();
 
@@ -324,7 +331,7 @@ public class FileUtil {
             path = Files.createDirectories(destPath);
         } else {
             path = Files.createDirectories(destPath
-                    , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
         }
         return path;
     }
@@ -335,7 +342,7 @@ public class FileUtil {
             path = Files.createTempDirectory(prefix);
         } else {
             path = Files.createTempDirectory(prefix
-                    , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
+                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
         }
         return path;
     }

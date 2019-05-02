@@ -33,7 +33,7 @@ public class ExtXMLWriter extends XMLWriter {
     }
 
     public ExtXMLWriter(OutputStream out, OutputFormat format)
-            throws UnsupportedEncodingException {
+        throws UnsupportedEncodingException {
         super(out, format);
     }
 
@@ -43,8 +43,7 @@ public class ExtXMLWriter extends XMLWriter {
      * 1.0 since we don't directly know.
      * </p>
      *
-     * @throws IOException
-     *             DOCUMENT ME!
+     * @throws IOException DOCUMENT ME!
      */
     @Override
     protected void writeDeclaration() throws IOException {
