@@ -43,12 +43,9 @@ public class SimpleTemplate extends AbstractTemplate {
     @Override
     protected String getValue(String txt) {
         if (map == null) return txt;
-        String value, key = getKey(txt);
-        if (map.containsKey(key)) {
-            value = map.get(key);
-        } else value = txt;
+        String key = getKey(txt);
 
-        return value;
+        return map.getOrDefault(key, txt);
     }
 
 }
