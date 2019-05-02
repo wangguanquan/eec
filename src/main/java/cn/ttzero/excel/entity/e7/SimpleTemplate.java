@@ -33,7 +33,7 @@ public class SimpleTemplate extends AbstractTemplate {
     @Override
     protected boolean isPlaceholder(String txt) {
         int len = txt.length();
-        return len > 3 &&  txt.charAt(0) == '$' && txt.charAt(1) == '{' && txt.charAt(len - 1) == '}';
+        return len > 3 && txt.charAt(0) == '$' && txt.charAt(1) == '{' && txt.charAt(len - 1) == '}';
     }
 
     private String getKey(String txt) {

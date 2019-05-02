@@ -85,7 +85,7 @@ public class ContentType {
         @java.lang.Override
         public boolean equals(Object o) {
             if (!(o instanceof Default)) return false;
-            return this == o || extension.equals(((Default)o).extension);
+            return this == o || extension.equals(((Default) o).extension);
         }
 
         @java.lang.Override
@@ -109,6 +109,7 @@ public class ContentType {
         public void setPartName(String partName) {
             this.partName = partName;
         }
+
         @java.lang.Override
         public int hashCode() {
             return partName.hashCode();
@@ -117,7 +118,7 @@ public class ContentType {
         @java.lang.Override
         public boolean equals(Object o) {
             if (!(o instanceof Override)) return false;
-            return this == o || partName.equals(((Override)o).partName);
+            return this == o || partName.equals(((Override) o).partName);
         }
 
         @java.lang.Override
@@ -144,7 +145,7 @@ public class ContentType {
             Class<?> clazz = o.getClass();
             Element ele = rootElement.addElement(clazz.getSimpleName());
             Field[] fields = clazz.getDeclaredFields()
-                    , sfilds = clazz.getSuperclass().getDeclaredFields();
+                , sfilds = clazz.getSuperclass().getDeclaredFields();
             Field[] newFields = Arrays.copyOf(fields, fields.length + sfilds.length);
             for (int j = fields.length; j < newFields.length; j++) {
                 newFields[j] = sfilds[j - fields.length];
