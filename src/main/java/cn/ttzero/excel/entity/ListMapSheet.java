@@ -47,7 +47,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param name the worksheet name
      * @param columns the header info
      */
-    public ListMapSheet(String name, final Column[] columns) {
+    public ListMapSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -57,7 +57,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns the header info
      */
-    public ListMapSheet(String name, WaterMark waterMark, final Column[] columns) {
+    public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 

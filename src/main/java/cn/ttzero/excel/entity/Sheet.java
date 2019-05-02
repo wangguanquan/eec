@@ -105,7 +105,7 @@ public abstract class Sheet implements Cloneable {
      * @param name the worksheet name
      * @param columns the header info
      */
-    public Sheet(String name, final Column[] columns) {
+    public Sheet(String name, final Column... columns) {
         this(name, null, columns);
     }
 
@@ -115,7 +115,7 @@ public abstract class Sheet implements Cloneable {
      * @param waterMark the water mark
      * @param columns the header info
      */
-    public Sheet(String name, WaterMark waterMark, final Column[] columns) {
+    public Sheet(String name, WaterMark waterMark, final Column... columns) {
         this.name = name;
         this.columns = columns;
         this.waterMark = waterMark;

@@ -55,7 +55,7 @@ public class ListSheet<T> extends Sheet {
      * @param name the worksheet name
      * @param columns the header info
      */
-    public ListSheet(String name, final Column[] columns) {
+    public ListSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -65,7 +65,7 @@ public class ListSheet<T> extends Sheet {
      * @param waterMark the water mark
      * @param columns the header info
      */
-    public ListSheet(String name, WaterMark waterMark, final Column[] columns) {
+    public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 

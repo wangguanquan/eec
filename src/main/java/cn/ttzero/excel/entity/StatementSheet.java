@@ -50,7 +50,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param name the worksheet name
      * @param columns the header info
      */
-    public StatementSheet(String name, final Column[] columns) {
+    public StatementSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -60,7 +60,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param waterMark the water mark
      * @param columns the header info
      */
-    public StatementSheet(String name, WaterMark waterMark, final Column[] columns) {
+    public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
