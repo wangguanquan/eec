@@ -56,12 +56,14 @@ import java.util.stream.StreamSupport;
  *         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
  *     } catch (IOException e) {}
  * </code>
- *
+ * <p>
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());
+
     protected ExcelReader() { }
+
     Path self;
     Sheet[] sheets;
     private Path temp;
@@ -71,6 +73,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
+     *
      * @param path Excel路径
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
@@ -81,6 +84,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
+     *
      * @param stream Excel文件流
      * @return ExcelReader
      * @throws IOException 读取文件失败
@@ -91,7 +95,8 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
-     * @param path Excel路径
+     *
+     * @param path      Excel路径
      * @param cacheSize sharedString缓存大小，默认512
      *                  此参数影响读取文件次数
      * @return ExcelReader
@@ -103,7 +108,8 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
-     * @param stream Excel文件流
+     *
+     * @param stream    Excel文件流
      * @param cacheSize sharedString缓存大小，默认512
      *                  此参数影响读取文件次数
      * @return ExcelReader
@@ -115,10 +121,11 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
-     * @param path Excel路径
+     *
+     * @param path      Excel路径
      * @param cacheSize sharedString缓存大小，默认512
      *                  此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认512
+     * @param hotSize   热词区大小，默认512
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
      */
@@ -128,10 +135,11 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
-     * @param stream Excel文件流
+     *
+     * @param stream    Excel文件流
      * @param cacheSize sharedString缓存大小，默认512
      *                  将此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认512
+     * @param hotSize   热词区大小，默认512
      * @return ExcelReader
      * @throws IOException 读取文件失败
      */
@@ -152,6 +160,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * Type of excel
+     *
      * @return enum type ExcelType
      */
     public ExcelType getType() {
@@ -160,11 +169,13 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * to streams
+     *
      * @return sheet流
      */
     public Stream<Sheet> sheets() {
         Iterator<Sheet> iter = new Iterator<Sheet>() {
             int n = 0;
+
             @Override
             public boolean hasNext() {
                 return n < sheets.length;
@@ -181,11 +192,12 @@ public class ExcelReader implements AutoCloseable {
             }
         };
         return StreamSupport.stream(Spliterators.spliterator(iter, sheets.length
-                , Spliterator.ORDERED | Spliterator.NONNULL), false);
+            , Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
     /**
      * get by index
+     *
      * @param index sheet index of workbook
      * @return sheet
      */
@@ -199,6 +211,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * get by name
+     *
      * @param sheetName name
      * @return null if not found
      */
@@ -217,6 +230,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * get all sheets
+     *
      * @return Sheet Array
      */
     public Sheet[] all() {
@@ -225,6 +239,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * size of sheets
+     *
      * @return int
      */
     public int getSize() {
@@ -233,6 +248,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * close stream and delete temp files
+     *
      * @throws IOException when fail close readers
      */
     public void close() throws IOException {
@@ -249,6 +265,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * General information like title,subject and creator
+     *
      * @return the information
      */
     public AppInfo getAppInfo() {
@@ -332,11 +349,12 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * 实例化Reader
-     * @param path Excel路径
+     *
+     * @param path      Excel路径
      * @param cacheSize sharedString缓存大小，默认512
      *                  此参数影响读取文件次数
-     * @param hotSize 热词区大小，默认512
-     * @param rmSource 是否删除源文件
+     * @param hotSize   热词区大小，默认512
+     * @param rmSource  是否删除源文件
      * @return ExcelReader
      * @throws IOException 文件不存在或读取文件失败
      */
@@ -372,6 +390,7 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * Check the documents type
+     *
      * @param path documents path
      * @return enum of ExcelType
      */
@@ -461,7 +480,7 @@ public class ExcelReader implements AutoCloseable {
                 } else if (type == Date.class) {
                     try {
                         f.set(core, format.parse(v));
-                    } catch (ParseException|IllegalAccessException e) {
+                    } catch (ParseException | IllegalAccessException e) {
                         logger.warn("Set field (" + f + ") error.");
                     }
                 }

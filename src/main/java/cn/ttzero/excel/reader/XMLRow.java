@@ -21,8 +21,6 @@ import static cn.ttzero.excel.reader.Cell.NUMERIC;
 import static cn.ttzero.excel.reader.Cell.FUNCTION;
 import static cn.ttzero.excel.reader.Cell.SST;
 import static cn.ttzero.excel.reader.Cell.INLINESTR;
-import static cn.ttzero.excel.reader.Cell.LONG;
-import static cn.ttzero.excel.reader.Cell.DOUBLE;
 import static cn.ttzero.excel.reader.Cell.BLANK;
 
 /**
@@ -31,7 +29,7 @@ import static cn.ttzero.excel.reader.Cell.BLANK;
  * 空节点定义为: 没有任何值和样式以及格式化的行. 像这样<code><row r="x"/></code>
  * 你可以像ResultSet一样通过单元格下标获取数据eq:<code>row.getInt(1) // 获取当前行第2列的数据</code>下标从0开始。
  * 也可以使用to&amp;too方法将行数据转为对象，前者会实例化每个对象，后者内存共享只会有一个实例,在流式操作中这是一个好主意。
- *
+ * <p>
  * Create by guanquan.wang on 2018-09-22
  */
 class XMLRow extends Row {
@@ -39,6 +37,7 @@ class XMLRow extends Row {
 
     /**
      * The number of row. (zero base)
+     *
      * @return int value
      */
     @Override
@@ -59,6 +58,7 @@ class XMLRow extends Row {
     private char[] cb;
     private int from, to;
     private int cursor;
+
     ///////////////////////////////////////////////////////
     XMLRow with(char[] cb, int from, int size) {
 //        logger.info(new String(cb, from, size));
@@ -88,7 +88,7 @@ class XMLRow extends Row {
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] == ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
                 a = _f += 4;
-                for (; cb[_f] != '"' && _f < to; _f++);
+                for (; cb[_f] != '"' && _f < to; _f++) ;
                 if (_f > a) {
                     index = toInt(a, _f);
                 }
@@ -102,12 +102,12 @@ class XMLRow extends Row {
         int i = from;
         for (; cb[i] != '>'; i++) {
             if (cb[i] == ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
-                    && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
-                    && cb[i + 6] == '=') {
+                && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
+                && cb[i + 6] == '=') {
                 i += 8;
                 int b, j = i;
-                for (; cb[i] != '"' && cb[i] != '>'; i++);
-                for (b = i - 1; cb[b] != ':'; b--);
+                for (; cb[i] != '"' && cb[i] != '>'; i++) ;
+                for (b = i - 1; cb[b] != ':'; b--) ;
                 if (++b < i) {
                     lc = toInt(b, i);
                 }
@@ -135,27 +135,28 @@ class XMLRow extends Row {
     private void parseCells() {
         int index = 0;
         cursor = searchSpan();
-        for (; cb[cursor++] != '>'; );
+        for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
-            while (index < lc && nextCell() != null);
+            while (index < lc && nextCell() != null) ;
         }
     }
 
     /**
      * 迭代每列数据
+     *
      * @return Cell
      */
     protected Cell nextCell() {
-        for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c' || cb[cursor + 2] != ' '); cursor++);
+        for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c' || cb[cursor + 2] != ' '); cursor++) ;
         // end of row
         if (cursor >= to) return null;
         cursor += 2;
         // find end of cell
         int e = cursor;
-        for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] != ' '); e++);
+        for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] != ' '); e++) ;
 
         Cell cell = null;
         // find type
@@ -165,13 +166,13 @@ class XMLRow extends Row {
             // cell index
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
-                for (; cb[cursor] != '"'; cursor++);
+                for (; cb[cursor] != '"'; cursor++) ;
                 cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
             }
             // cell type
             if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
                 int a = cursor += 4, n;
-                for (; cb[cursor] != '"'; cursor++);
+                for (; cb[cursor] != '"'; cursor++) ;
                 if ((n = cursor - a) == 1) {
                     t = cb[a]; // s, n, b
                 } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
@@ -267,7 +268,7 @@ class XMLRow extends Row {
     private boolean isNumber(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
-        for ( ; a < b; ) {
+        for (; a < b; ) {
             char c = cb[a++];
             if (c < '0' || c > '9') break;
         }
@@ -276,6 +277,7 @@ class XMLRow extends Row {
 
     /**
      * FIXME check double
+     *
      * @param a
      * @param b
      * @return
@@ -283,7 +285,7 @@ class XMLRow extends Row {
     private boolean isDouble(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
-        for (char i = 0 ; a < b; ) {
+        for (char i = 0; a < b; ) {
             char c = cb[a++];
             if (i > 1) return false;
             if (c >= '0' && c <= '9') continue;
@@ -295,38 +297,41 @@ class XMLRow extends Row {
     /**
      * inner string
      * <is><t>cell value</t></is>
+     *
      * @param e
      * @return
      */
     private int getT(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't' || cb[cursor + 2] != '>'); cursor++);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't' || cb[cursor + 2] != '>'); cursor++) ;
         if (cursor == e) return cursor;
         int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++) ;
         return a;
     }
 
     /**
      * shared string
      * <v>1</v>
+     *
      * @param e
      * @return
      */
     private int getV(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v' || cb[cursor + 2] != '>'); cursor++);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v' || cb[cursor + 2] != '>'); cursor++) ;
         if (cursor == e) return cursor;
         int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++) ;
         return a;
     }
 
     /**
      * function string
+     *
      * @param e
      * @return
      */
     @SuppressWarnings("unused")
-	private int getF(int e) {
+    private int getF(int e) {
         // undo
         // return end index of row
         return e;
@@ -334,13 +339,14 @@ class XMLRow extends Row {
 
     /**
      * 26进制转10进制
+     *
      * @param a
      * @param b
      * @return
      */
     private int toCellIndex(int a, int b) {
         int n = 0;
-        for ( ; a <= b; a++) {
+        for (; a <= b; a++) {
             if (cb[a] <= 'Z' && cb[a] >= 'A') {
                 n = n * 26 + cb[a] - '@';
             } else if (cb[a] <= 'z' && cb[a] >= 'a') {

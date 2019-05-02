@@ -52,6 +52,7 @@ class HeaderRow extends Row {
 
     /**
      * mapping
+     *
      * @param clazz the type of binding
      * @return the header row
      */
@@ -110,6 +111,7 @@ class HeaderRow extends Row {
 
     /**
      * mapping and instance
+     *
      * @param clazz the type of binding
      * @return the header row
      * @throws IllegalAccessException -
@@ -144,6 +146,7 @@ class HeaderRow extends Row {
 
     /**
      * Get T value by column index
+     *
      * @param columnIndex the cell index
      * @return T
      */
@@ -156,7 +159,7 @@ class HeaderRow extends Row {
     public String toString() {
         StringJoiner joiner = new StringJoiner(" | ");
         int i = 0;
-        for (; names[i++] == null; );
+        for (; names[i++] == null; ) ;
         for (; i < names.length; i++) {
             joiner.add(names[i]);
         }

@@ -22,13 +22,14 @@ import java.util.Map;
 /**
  * 热词区
  * 由LRU页面淘汰算法实现push, get, remove方法时间复杂度均为O(1)
- *
+ * <p>
  * Create by guanquan.wang at 2018-10-31 16:06
  */
 public class Hot {
     private static class E {
         private int k;
         private String v;
+
         private E(int k, String v) {
             this.k = k;
             this.v = v;
@@ -73,6 +74,7 @@ public class Hot {
 
     /**
      * get by key
+     *
      * @param k int
      * @return value
      */
@@ -101,6 +103,7 @@ public class Hot {
 
     /**
      * insert first
+     *
      * @param v element
      */
     public void push(int k, String v) {
@@ -118,6 +121,7 @@ public class Hot {
 
     /**
      * remove last
+     *
      * @return last item
      */
     public E remove() {
