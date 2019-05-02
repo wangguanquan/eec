@@ -82,12 +82,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeBefore();
 
         if (rowBlock != null && rowBlock.hasNext()) {
-            do {
-                // write row-block data
-                for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
-                // end of row
-                if (rowBlock.isEof()) break;
-            } while ((rowBlock = supplier.get()) != null);
+            if (sheet.isAutoSize()) {
+                do {
+                    // write row-block data auto size
+                    writeAutoSizeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEof()) break;
+                } while ((rowBlock = supplier.get()) != null);
+            } else {
+                do {
+                    // write row-block data
+                    writeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEof()) break;
+                } while ((rowBlock = supplier.get()) != null);
+            }
         }
 
         int total = rowBlock != null ? rowBlock.getTotal() : 0;
