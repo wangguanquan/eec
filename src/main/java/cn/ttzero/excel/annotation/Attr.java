@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  * Xml Attribute
  * Created by guanquan.wang on 2017/9/21.
  */
-@Target({ ElementType.FIELD })
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Attr {
@@ -33,12 +33,14 @@ public @interface Attr {
 
     /**
      * attribute value
+     *
      * @return
      */
     String[] value() default {};
 
     /**
      * namespace
+     *
      * @return
      */
     NS namespace() default @NS("-");
