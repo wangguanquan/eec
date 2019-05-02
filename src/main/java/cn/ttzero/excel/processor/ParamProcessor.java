@@ -27,6 +27,7 @@ import java.sql.SQLException;
 public interface ParamProcessor {
     /**
      * 设置SQL参数
+     *
      * @param ps PreparedStatement
      * @throws SQLException
      */

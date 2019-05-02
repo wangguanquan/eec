@@ -32,9 +32,10 @@ public interface StyleProcessor {
      *    StyleProcessor sp = (o, style, sst) // 将背景改为黄色
      *      -> style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
      * </code></pre>
-     * @param o 当前单元格值
+     *
+     * @param o     当前单元格值
      * @param style 当前单元格样式
-     * @param sst 样式类，整个Workbook共享样式
+     * @param sst   样式类，整个Workbook共享样式
      * @return 新样式
      */
     int build(Object o, int style, Styles sst);
