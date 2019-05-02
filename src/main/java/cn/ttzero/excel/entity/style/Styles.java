@@ -60,7 +60,7 @@ public class Styles {
      * 根据位编码找到style下标
      *
      * @param s 位编码
-     * @return
+     * @return the style index
      */
     public int of(int s) {
         int n = map.getOrDefault(s, 0);
@@ -104,20 +104,20 @@ public class Styles {
         // cellStyleXfs
         Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
         cellStyleXfs.addElement("xf")   // General style
-                .addAttribute("borderId", "0")
-                .addAttribute("fillId", "0")
-                .addAttribute("fontId", "0")
-                .addAttribute("numFmtId", "0")
-                .addElement("alignment")
-                .addAttribute("vertical", "center");
+            .addAttribute("borderId", "0")
+            .addAttribute("fillId", "0")
+            .addAttribute("fontId", "0")
+            .addAttribute("numFmtId", "0")
+            .addElement("alignment")
+            .addAttribute("vertical", "center");
         // cellXfs
         rootElement.addElement("cellXfs").addAttribute("count", "0");
         // cellStyles
         Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
         cellStyles.addElement("cellStyle")
-                .addAttribute("builtinId", "0")
-                .addAttribute("name", i18N.get("general"))
-                .addAttribute("xfId", "0");
+            .addAttribute("builtinId", "0")
+            .addAttribute("name", i18N.get("general"))
+            .addAttribute("xfId", "0");
 
         self.document = factory.createDocument(rootElement);
 
@@ -266,16 +266,16 @@ public class Styles {
 
     private static int pack(int[] styles) {
         return styles[0] << INDEX_NUMBER_FORMAT
-                | styles[1] << INDEX_FONT
-                | styles[2] << INDEX_FILL
-                | styles[3] << INDEX_BORDER
-                | styles[4] << INDEX_VERTICAL
-                | styles[5] << INDEX_HORIZONTAL
-                ;
+            | styles[1] << INDEX_FONT
+            | styles[2] << INDEX_FILL
+            | styles[3] << INDEX_BORDER
+            | styles[4] << INDEX_VERTICAL
+            | styles[5] << INDEX_HORIZONTAL
+            ;
     }
 
     static final String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
-            , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
+        , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
     /**
      * add style in document
      *
@@ -297,10 +297,10 @@ public class Styles {
         int n = cellXfs.elements().size();
         Element newXf = cellXfs.addElement("xf");
         newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
-                .addAttribute(attrNames[1], String.valueOf(styles[1]))
-                .addAttribute(attrNames[2], String.valueOf(styles[2]))
-                .addAttribute(attrNames[3], String.valueOf(styles[3]))
-                .addAttribute("xfId", "0")
+            .addAttribute(attrNames[1], String.valueOf(styles[1]))
+            .addAttribute(attrNames[2], String.valueOf(styles[2]))
+            .addAttribute(attrNames[3], String.valueOf(styles[3]))
+            .addAttribute("xfId", "0")
         ;
         int start = 6;
         if (styles[0] > 0) {

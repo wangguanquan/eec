@@ -42,6 +42,7 @@ public class Border {
 
     /**
      * 使用默认颜色设置单元格上方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -49,8 +50,10 @@ public class Border {
         borders[2] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格右方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -58,8 +61,10 @@ public class Border {
         borders[1] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格下方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -67,8 +72,10 @@ public class Border {
         borders[3] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格左方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -76,8 +83,10 @@ public class Border {
         borders[0] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格左上到右下方边框[\]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -85,8 +94,10 @@ public class Border {
         borders[4] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格边框适用于上下左右4个方位
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -95,8 +106,10 @@ public class Border {
         borders[1] = borders[2] = borders[3] = borders[0];
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格左下到右上方边框[/]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -104,8 +117,10 @@ public class Border {
         borders[5] = new SubBorder(style, defaultColor);
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格左下到右上和右下到右上方边框[X]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -114,8 +129,10 @@ public class Border {
         borders[5] = borders[4];
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格上方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -123,8 +140,10 @@ public class Border {
         borders[2] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格右方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -132,8 +151,10 @@ public class Border {
         borders[1] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格下方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -141,8 +162,10 @@ public class Border {
         borders[3] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格左方边框
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -150,8 +173,10 @@ public class Border {
         borders[0] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格左上到右下方边框[\]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -159,8 +184,10 @@ public class Border {
         borders[4] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格左下到右上方边框[/]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -168,8 +195,10 @@ public class Border {
         borders[5] = new SubBorder(style, color);
         return this;
     }
+
     /**
      * 使用指定颜色设置单元格左下到右上和右下到右上方边框[X]
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -178,8 +207,10 @@ public class Border {
         borders[5] = borders[4];
         return this;
     }
+
     /**
      * 使用默认颜色设置单元格边框，适用于上下左右4个方位
+     *
      * @param style BorderStyle
      * @return Border
      */
@@ -205,9 +236,10 @@ public class Border {
         borders[index] = null;
         return this;
     }
+
     public int hashCode() {
         int down = borders[4] != null ? 1 : 0
-                , up = borders[5] != null ? 2 : 0;
+            , up = borders[5] != null ? 2 : 0;
         int hash = down | up;
         for (SubBorder sub : borders) {
             hash += sub.hashCode();
@@ -239,6 +271,7 @@ public class Border {
      * thin red thin dashed dashed
      * medium black thick #cccccc double black hair green
      * none none thin thin
+     *
      * @param text
      * @return
      */
@@ -325,9 +358,9 @@ public class Border {
 
     protected void writeProperties(Element element, SubBorder subBorder) {
         if (subBorder != null && subBorder.style != BorderStyle.NONE) {
-             element.addAttribute("style", subBorder.style.getName());
-             Element colorEle = element.element("color");
-             if (colorEle == null) colorEle = element.addElement("color");
+            element.addAttribute("style", subBorder.style.getName());
+            Element colorEle = element.element("color");
+            if (colorEle == null) colorEle = element.addElement("color");
             int colorIndex;
             if ((colorIndex = ColorIndex.indexOf(subBorder.color)) > -1) {
                 colorEle.addAttribute("indexed", String.valueOf(colorIndex));
