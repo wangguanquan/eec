@@ -38,10 +38,10 @@ import java.util.List;
 @TopNS(prefix = "", value = "Relationships", uri = "http://schemas.openxmlformats.org/package/2006/relationships")
 public class RelManager implements Serializable, Cloneable {
 
-	private static final long serialVersionUID = 1L;
-	private List<Relationship> relationships;
+    private static final long serialVersionUID = 1L;
+    private List<Relationship> relationships;
 
-    public static RelManager of(Relationship ... relationships) {
+    public static RelManager of(Relationship... relationships) {
         RelManager relManager = new RelManager();
         relManager.relationships = new ArrayList<>();
         for (Relationship r : relationships) {
@@ -49,6 +49,7 @@ public class RelManager implements Serializable, Cloneable {
         }
         return relManager;
     }
+
     public synchronized void add(Relationship rel) {
         if (relationships == null) {
             relationships = new ArrayList<>();

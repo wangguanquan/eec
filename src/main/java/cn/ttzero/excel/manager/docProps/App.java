@@ -29,11 +29,11 @@ import java.util.List;
  * Created by guanquan.wang on 2017/9/21.
  */
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
-        , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
+    , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
 public class App extends XmlEntity {
     private String application;
     @SuppressWarnings("unused")
-	private int docSecurity;
+    private int docSecurity;
     @SuppressWarnings("unused")
     private boolean scaleCrop;
     private String manager;
