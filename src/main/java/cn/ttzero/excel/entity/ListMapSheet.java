@@ -36,6 +36,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public ListMapSheet(String name) {
@@ -44,7 +45,8 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
     public ListMapSheet(String name, final Column... columns) {
@@ -53,9 +55,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
     public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -108,16 +111,14 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             if (columns == null) {
                 columns = new Column[0];
             }
-        }
-        else if (columns.length == 0) {
+        } else if (columns.length == 0) {
             int size = first.size(), i = 0;
             columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
                 columns[i++] = new Column(entry.getKey(), entry.getKey(), entry.getValue().getClass());
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 if (StringUtil.isEmpty(hc.key)) {

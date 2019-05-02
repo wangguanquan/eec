@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * 字符串共享，一个workbook的所有worksheet共享
- *
+ * <p>
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
@@ -46,6 +46,7 @@ public class SharedStrings {
     }
 
     private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
+
     public int get(char c) {
         char[] cs = charCache.get();
         cs[0] = c;
@@ -55,6 +56,7 @@ public class SharedStrings {
     /**
      * TODO 每个sheet采用one by one的方式输出，暂不考虑并发
      * FIXME OOM occur
+     *
      * @param key the string
      * @return index of the string in the SST
      */
@@ -80,7 +82,7 @@ public class SharedStrings {
         rootElement.addAttribute("uniqueCount", String.valueOf(elements.size()));
         rootElement.addAttribute("count", String.valueOf(count));
 
-        elements.forEach((k,v) -> rootElement.addElement("si").addElement("t").setText(k));
+        elements.forEach((k, v) -> rootElement.addElement("si").addElement("t").setText(k));
 
         Document doc = factory.createDocument(rootElement);
         FileUtil.writeToDiskNoFormat(doc, root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk

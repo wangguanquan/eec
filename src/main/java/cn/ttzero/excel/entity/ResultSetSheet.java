@@ -38,6 +38,7 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public ResultSetSheet(String name) {
@@ -46,7 +47,8 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
     public ResultSetSheet(String name, final Column... columns) {
@@ -55,9 +57,10 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
     public ResultSetSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -70,6 +73,7 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Release resources
+     *
      * @throws IOException if io error occur
      */
     @Override
@@ -128,6 +132,7 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Returns the header column info
+     *
      * @return array of column
      */
     @Override

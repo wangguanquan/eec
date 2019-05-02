@@ -39,6 +39,7 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public StatementSheet(String name) {
@@ -47,7 +48,8 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
     public StatementSheet(String name, final Column... columns) {
@@ -56,9 +58,10 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
     public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -74,6 +77,7 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * Release resources
+     *
      * @throws IOException if io error occur
      */
     @Override
@@ -90,8 +94,9 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * write worksheet data to path
+     *
      * @param path the storage path
-     * @throws IOException write error
+     * @throws IOException         write error
      * @throws ExcelWriteException others
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
@@ -121,7 +126,7 @@ public class StatementSheet extends ResultSetSheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
-            for ( ; i < columns.length; i++) {
+            for (; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {
                     columns[i].setName(metaData.getColumnName(i));
                 }
@@ -131,7 +136,7 @@ public class StatementSheet extends ResultSetSheet {
             workbook.what("un-support get result set meta data.");
         }
 
-        for (i = 0 ; i < columns.length; i++) {
+        for (i = 0; i < columns.length; i++) {
             if (StringUtil.isEmpty(columns[i].getName())) {
                 columns[i].setName(String.valueOf(i));
             }

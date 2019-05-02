@@ -25,7 +25,7 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
  * The first Row Block starts with the first used row in that sheet.
  * Inside each Row Block there will occur ROW records describing
  * the properties of the rows, and cell records with all the cell contents in this Row Block
- *
+ * <p>
  * Create by guanquan.wang at 2019-04-23 08:50
  */
 public class RowBlock implements Iterator<Row> {
@@ -52,6 +52,7 @@ public class RowBlock implements Iterator<Row> {
 
     /**
      * re-open the row-block
+     *
      * @return self
      */
     public final RowBlock reopen() {
@@ -70,6 +71,7 @@ public class RowBlock implements Iterator<Row> {
 
     /**
      * Total rows of a worksheet
+     *
      * @return the total rows
      */
     public int getTotal() {
@@ -85,6 +87,7 @@ public class RowBlock implements Iterator<Row> {
 
     /**
      * End of file mark
+     *
      * @return true if end of file
      */
     public boolean isEof() {

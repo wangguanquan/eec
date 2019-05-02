@@ -35,6 +35,7 @@ public class CollectionSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public CollectionSheet(String name) {
@@ -43,6 +44,7 @@ public class CollectionSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public CollectionSheet(String name, final Column... columns) {
@@ -51,6 +53,7 @@ public class CollectionSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {

@@ -44,6 +44,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public ListSheet(String name) {
@@ -52,7 +53,8 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
     public ListSheet(String name, final Column... columns) {
@@ -61,9 +63,10 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
     public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -84,6 +87,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the first not null object
+     *
      * @return the object
      */
     protected T getFirst() {
@@ -99,6 +103,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Release resources
+     *
      * @throws IOException if io error occur
      */
     @Override
@@ -151,7 +156,7 @@ public class ListSheet<T> extends Sheet {
 
     protected void append() {
         int rbs = getRowBlockSize(), size = size();
-        for ( ; ; ) {
+        for (; ; ) {
             List<T> list = more();
             if (list == null || list.isEmpty()) {
                 eof = shouldClose = true;
@@ -243,6 +248,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the header column info
+     *
      * @return array of column
      */
     @Override
@@ -264,6 +270,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the end index of row-block
+     *
      * @return the end index
      */
     protected int getEndIndex() {
@@ -277,6 +284,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns total rows in this worksheet
+     *
      * @return -1 if unknown
      */
     @Override
@@ -312,6 +320,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns total data size before split
+     *
      * @return the total size
      */
     public int dataSize() {
@@ -323,12 +332,12 @@ public class ListSheet<T> extends Sheet {
      * This is a data source independent method. You can get data
      * from any data source. Since this method is stateless, you
      * should manage paging or other information in your custom Sheet.
-     *
+     * <p>
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
      * this value before the speed and memory. You can refer to 2^8 ~ 2^10
-     *
+     * <p>
      * This method is blocked
      *
      * @return The data output to the worksheet, if a null or empty

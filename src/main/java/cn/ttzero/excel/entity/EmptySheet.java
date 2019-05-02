@@ -30,6 +30,7 @@ public class EmptySheet extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public EmptySheet(String name) {
@@ -38,7 +39,8 @@ public class EmptySheet extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
     public EmptySheet(String name, final Column... columns) {
@@ -47,9 +49,10 @@ public class EmptySheet extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
     public EmptySheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -63,6 +66,7 @@ public class EmptySheet extends Sheet {
 
     /**
      * Returns total rows in this worksheet
+     *
      * @return 0
      */
     public int size() {

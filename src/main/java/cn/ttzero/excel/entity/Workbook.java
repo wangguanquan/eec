@@ -40,16 +40,19 @@ import java.util.List;
  * 工作簿是Excel的基础单元，一个xlsx文件对应一个工作簿实例
  * 先设置属性和添加Sheet最后调writeTo方法执行写操作。
  * writeTo和create是一个终止语句，应该放置在未尾否则设置将不会被反应到最终的Excel文件中。
+ *
  * @link https://poi.apache.org/encryption.html encrypted
  * @link https://msdn.microsoft.com/library
  * @link https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
  * @link https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)
- *
+ * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
 public class Workbook {
     private Logger logger = LogManager.getLogger(getClass());
-    /** 工作薄名，最终反应到Excel文件名*/
+    /**
+     * 工作薄名，最终反应到Excel文件名
+     */
     private String name;
     private Sheet[] sheets;
     private WaterMark waterMark; // workbook背景，应用于所有sheet页
@@ -77,6 +80,7 @@ public class Workbook {
     /**
      * 创建工作簿
      * 保存时以此名称为文件名
+     *
      * @param name 名称
      */
     public Workbook(String name) {
@@ -85,7 +89,8 @@ public class Workbook {
 
     /**
      * 创建工作簿
-     * @param name 名称
+     *
+     * @param name    名称
      * @param creator 作者
      */
     public Workbook(String name, String creator) {
@@ -104,6 +109,7 @@ public class Workbook {
 
     /**
      * 返回工作簿名称
+     *
      * @return name
      */
     public String getName() {
@@ -112,6 +118,7 @@ public class Workbook {
 
     /**
      * 设置工作簿名称
+     *
      * @param name 名称
      * @return 工作簿
      */
@@ -151,6 +158,7 @@ public class Workbook {
 
     /**
      * 返回所有Sheet页
+     *
      * @return Sheet数组
      */
     public final Sheet[] getSheets() {
@@ -159,6 +167,7 @@ public class Workbook {
 
     /**
      * 设置Sheet页
+     *
      * @param sheets Sheet数组
      * @return 工作簿
      */
@@ -172,6 +181,7 @@ public class Workbook {
      * <p>标准excel文件中没有水印，所谓水印就是设置图片背景然后平铺以达到效果
      * ，此水印打印的时候并不会被打印。
      * </p>
+     *
      * @return 工作簿
      */
     public WaterMark getWaterMark() {
@@ -181,6 +191,7 @@ public class Workbook {
     /**
      * 设置水印
      * <p>可使用<code>WaterMark.of()</code>创建水印</p>
+     *
      * @param waterMark 水印
      * @return 工作簿
      * @link {WaterMark#of}
@@ -194,6 +205,7 @@ public class Workbook {
      * 设置数据库连接
      * <p>工作簿内部不会主动关闭数据库连接，需要外部手动关闭，
      * 此eec内部产生的Statement和ResultSet会主动关闭</p>
+     *
      * @param con 连接
      * @return 工作簿
      */
@@ -204,6 +216,7 @@ public class Workbook {
 
     /**
      * 设置列宽自动调整
+     *
      * @param autoSize boolean value
      * @return 工作簿
      */
@@ -214,6 +227,7 @@ public class Workbook {
 
     /**
      * 返回列宽是否自动调整
+     *
      * @return boolean value
      */
     public boolean isAutoSize() {
@@ -223,6 +237,7 @@ public class Workbook {
 
     /**
      * 返回所有样式
+     *
      * @return Styles
      */
     public Styles getStyles() {
@@ -231,6 +246,7 @@ public class Workbook {
 
     /**
      * 设置作者
+     *
      * @param creator 作者
      * @return 工作簿
      */
@@ -241,6 +257,7 @@ public class Workbook {
 
     /**
      * 设置公司名
+     *
      * @param company 公司名
      * @return 工作簿
      */
@@ -251,6 +268,7 @@ public class Workbook {
 
     /**
      * 取消隔行变色
+     *
      * @return 工作簿
      */
     public Workbook cancelOddFill() {
@@ -260,6 +278,7 @@ public class Workbook {
 
     /**
      * 设置隔行变色的背景色，默认为#e2edda
+     *
      * @param fill 偶数行背景色
      * @return 工作簿
      */
@@ -270,6 +289,7 @@ public class Workbook {
 
     /**
      * 尾部添加Sheet
+     *
      * @param sheet Sheet
      * @return 工作簿
      */
@@ -282,23 +302,25 @@ public class Workbook {
 
     /**
      * 尾部添加Sheet，默认名称
-     * @param data 数据，Map数组/对象数组
+     *
+     * @param data    数据，Map数组/对象数组
      * @param columns 表头
      * @return 工作簿
      */
-    public Workbook addSheet(List<?> data, Sheet.Column ... columns) {
+    public Workbook addSheet(List<?> data, Sheet.Column... columns) {
         return addSheet(null, data, columns);
     }
 
     /**
      * 尾部添加Sheet
-     * @param name 名称
-     * @param data 数据，Map数组/对象数组
+     *
+     * @param name    名称
+     * @param data    数据，Map数组/对象数组
      * @param columns 表头
      * @return 工作簿
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Workbook addSheet(String name, List<?> data, Sheet.Column ... columns) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Workbook addSheet(String name, List<?> data, Sheet.Column... columns) {
         Object o;
         if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
             addSheet(new EmptySheet(name, columns));
@@ -326,22 +348,24 @@ public class Workbook {
 
     /**
      * 尾部添加Sheet，未命名
-     * @param rs ResultSet
+     *
+     * @param rs      ResultSet
      * @param columns 表头
      * @return 工作簿
      */
-    public Workbook addSheet(ResultSet rs, Sheet.Column ... columns) {
+    public Workbook addSheet(ResultSet rs, Sheet.Column... columns) {
         return addSheet(null, rs, columns);
     }
 
     /**
      * 尾部添加Sheet
-     * @param name 名称
-     * @param rs ResultSet
+     *
+     * @param name    名称
+     * @param rs      ResultSet
      * @param columns 表头
      * @return 工作簿
      */
-    public Workbook addSheet(String name, ResultSet rs, Sheet.Column ... columns) {
+    public Workbook addSheet(String name, ResultSet rs, Sheet.Column... columns) {
         ResultSetSheet sheet = new ResultSetSheet(name, columns);
         sheet.setRs(rs);
         addSheet(sheet);
@@ -350,24 +374,26 @@ public class Workbook {
 
     /**
      * 尾部添加Sheet，未命名
-     * @param sql SQL文
+     *
+     * @param sql     SQL文
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String sql, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String sql, Sheet.Column... columns) throws SQLException {
         return addSheet(null, sql, columns);
     }
 
     /**
      * 尾部添加Sheet
-     * @param name 名称
-     * @param sql SQL文
+     *
+     * @param name    名称
+     * @param sql     SQL文
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String name, String sql, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String name, String sql, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         try {
@@ -386,13 +412,14 @@ public class Workbook {
      * <p>采用jdbc方式设置SQL参数
      * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
      * </p>
-     * @param sql SQL文
-     * @param pp 参数
+     *
+     * @param sql     SQL文
+     * @param pp      参数
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
     }
 
@@ -401,14 +428,15 @@ public class Workbook {
      * <p>采用jdbc方式设置SQL参数
      * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
      * </p>
-     * @param name 名称
-     * @param sql SQL文
-     * @param pp 参数
+     *
+     * @param name    名称
+     * @param sql     SQL文
+     * @param pp      参数
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         try {
@@ -425,24 +453,26 @@ public class Workbook {
 
     /**
      * 尾部添加Sheet，未命名
-     * @param ps PreparedStatement
+     *
+     * @param ps      PreparedStatement
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(PreparedStatement ps, Sheet.Column... columns) throws SQLException {
         return addSheet(null, ps, columns);
     }
 
     /**
      * 尾部添加Sheet
-     * @param name 名称
-     * @param ps PreparedStatement
+     *
+     * @param name    名称
+     * @param ps      PreparedStatement
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
@@ -460,13 +490,14 @@ public class Workbook {
      * <p>采用jdbc方式设置SQL参数
      * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
      * </p>
-     * @param ps PreparedStatement
-     * @param pp 参数
+     *
+     * @param ps      PreparedStatement
+     * @param pp      参数
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         return addSheet(null, ps, pp, columns);
     }
 
@@ -475,14 +506,15 @@ public class Workbook {
      * <p>采用jdbc方式设置SQL参数
      * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
      * </p>
-     * @param name 名称
-     * @param ps PreparedStatement
-     * @param pp 参数
+     *
+     * @param name    名称
+     * @param ps      PreparedStatement
+     * @param pp      参数
      * @param columns 列头
      * @return 工作簿
      * @throws SQLException SQL异常
      */
-    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column ... columns) throws SQLException {
+    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(name, columns);
         try {
@@ -499,6 +531,7 @@ public class Workbook {
 
     /**
      * 在指定位置上插入Sheet
+     *
      * @param index 下标从0开始
      * @param sheet 要插入的Sheet
      * @return 工作簿
@@ -507,7 +540,7 @@ public class Workbook {
         ensureCapacityInternal();
         int _size = size;
         if (sheets[index] != null) {
-            for ( ; _size > index; _size--) {
+            for (; _size > index; _size--) {
                 sheets[_size] = sheets[_size - 1];
                 sheets[_size].setId(sheets[_size].getId() + 1);
             }
@@ -521,6 +554,7 @@ public class Workbook {
 
     /**
      * 移除指定下标的Sheet
+     *
      * @param index 下标从0开始
      * @return 工作簿
      */
@@ -531,7 +565,7 @@ public class Workbook {
         if (index == size - 1) {
             sheets[index] = null;
         } else {
-            for ( ; index < size - 1; index++) {
+            for (; index < size - 1; index++) {
                 sheets[index] = sheets[index + 1];
                 sheets[index].setId(sheets[index].getId() - 1);
             }
@@ -542,17 +576,19 @@ public class Workbook {
 
     /**
      * 返回指定下标的Sheet
+     *
      * @param index 下标从0开始
      * @return Sheet
      */
     public Sheet getSheetAt(int index) {
         if (index < 0 || index >= size)
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         return sheets[index];
     }
 
     /**
      * 返回指定名称的Sheet
+     *
      * @param sheetName sheet name
      * @return Sheet, 未打到时返回null
      */
@@ -567,6 +603,7 @@ public class Workbook {
 
     /**
      * 添加观察者
+     *
      * @param watch 观察者
      * @return 工作簿
      */
@@ -577,6 +614,7 @@ public class Workbook {
 
     /**
      * 以Excel 97-2003格式保存
+     *
      * @return 工作薄
      */
     public Workbook saveAsExcel2003() {
@@ -604,7 +642,7 @@ public class Workbook {
     /**
      * output export info
      */
-    public void what(String code, String ... args) {
+    public void what(String code, String... args) {
         String msg = i18N.get(code, args);
         logger.debug(msg);
         if (watch != null) {
@@ -625,8 +663,9 @@ public class Workbook {
      * <p>如果Path是文件夹，则将工作簿保存到该文件夹下，
      * 如果Path是文件，则将写到该文件下。
      * </p>
+     *
      * @param path 保存地址
-     * @throws IOException IO异常
+     * @throws IOException         IO异常
      * @throws ExcelWriteException 其它异常
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
@@ -640,8 +679,7 @@ public class Workbook {
                 return;
                 // write to directory
             } else FileUtil.mkdir(path);
-        }
-        else if (!Files.isDirectory(path)) {
+        } else if (!Files.isDirectory(path)) {
             writeTo(path.toFile());
             return;
         }
@@ -650,8 +688,9 @@ public class Workbook {
 
     /**
      * 输出到指定流
+     *
      * @param os OutputStream
-     * @throws IOException IO异常
+     * @throws IOException         IO异常
      * @throws ExcelWriteException 其它异常
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
@@ -660,8 +699,9 @@ public class Workbook {
 
     /**
      * 输出到文件
+     *
      * @param file 文件名
-     * @throws IOException IO异常
+     * @throws IOException         IO异常
      * @throws ExcelWriteException 其它异常
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
@@ -698,6 +738,7 @@ public class Workbook {
 
     /**
      * 设置模版
+     *
      * @param is 从流中读取模版
      * @return 工作簿
      */
@@ -708,8 +749,9 @@ public class Workbook {
 
     /**
      * 设置模版和绑定对象
+     *
      * @param is 从流中读取模版
-     * @param o 绑定对象
+     * @param o  绑定对象
      * @return 工作簿
      */
     public Workbook withTemplate(InputStream is, Object o) {
