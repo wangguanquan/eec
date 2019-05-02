@@ -63,8 +63,9 @@ public class ResultSetSheet extends Sheet {
         super(name, waterMark, columns);
     }
 
-    public void setRs(ResultSet rs) {
+    public ResultSetSheet setRs(ResultSet rs) {
         this.rs = rs;
+        return this;
     }
 
     /**

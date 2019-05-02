@@ -67,8 +67,9 @@ public class StatementSheet extends ResultSetSheet {
     /**
      * @param ps PreparedStatement
      */
-    public void setPs(PreparedStatement ps) {
+    public StatementSheet setPs(PreparedStatement ps) {
         this.ps = ps;
+        return this;
     }
 
     /**
