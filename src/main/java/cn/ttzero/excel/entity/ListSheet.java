@@ -27,6 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * List is the most important data source, you can pass all
+ * the data at a time, or customize the worksheet to extends
+ * the {@code ListSheet}, and then override the {@code more}
+ * method to achieve segmented loading of data. The {@code more}
+ * method returns NULL or an empty array to complete the current
+ * worksheet write
  * Created by guanquan.wang at 2018-01-26 14:48
  */
 public class ListSheet<T> extends Sheet {
@@ -224,20 +230,28 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
+    /**
+     * Call this method to get more data when the data length
+     * less than the row-block size until there is no more data
+     * or more than the row limit
+     */
     protected void append() {
         int rbs = getRowBlockSize(), size = size();
         for (; ; ) {
             List<T> list = more();
+            // No more data
             if (list == null || list.isEmpty()) {
                 eof = shouldClose = true;
                 break;
             }
+            // The first getting
             if (data == null) {
                 data = new ArrayList<>(rbs);
                 setData(list);
 
                 if (list.size() < rbs) continue;
             }
+            // Copy the remaining data to a temporary array
             if (start > 0 && size > 0) {
                 // append and resize
                 List<T> last = new ArrayList<>(size);
@@ -258,7 +272,21 @@ public class ListSheet<T> extends Sheet {
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
 
+    /**
+     * Get the first object of the object array witch is not NULL,
+     * reflect all declared fields, and then do the following steps
+     * step 1. If there is has DisplayName annotation, the value of
+     * this annotation is used as the column name.
+     * step 2. If the DisplayName annotation has no value or no
+     * DisplayName annotation, the field name is used as the column name.
+     * step 3. Skip this Field if field has a NotExport annotation
+     * <p>
+     * The column order is the same as the order in declared fields.
+     *
+     * @return the field array
+     */
     private Field[] init() {
+        // Get the first not NULL object
         T o = getFirst();
         if (o == null) return null;
         if (!hasHeaderColumns()) {
@@ -274,9 +302,11 @@ public class ListSheet<T> extends Sheet {
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
                 if (dn != null && StringUtil.isNotEmpty(dn.value())) {
-                    list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
+                    list.add(new Column(dn.value(), field.getName()
+                        , field.getType()).setShare(dn.share()));
                 } else {
-                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
+                    list.add(new Column(field.getName(), field.getName()
+                        , field.getType()).setShare(dn != null && dn.share()));
                 }
             }
             columns = new Column[list.size()];
@@ -408,7 +438,7 @@ public class ListSheet<T> extends Sheet {
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
-     * this value before the speed and memory. You can refer to 2^8 ~ 2^10
+     * this value between the speed and memory. You can refer to 2^8 ~ 2^10
      * <p>
      * This method is blocked
      *
