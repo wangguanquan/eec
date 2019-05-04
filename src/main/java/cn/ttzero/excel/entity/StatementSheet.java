@@ -16,11 +16,14 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.processor.ParamProcessor;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
@@ -65,6 +68,149 @@ public class StatementSheet extends ResultSetSheet {
      */
     public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param con the Connection
+     * @param sql the sql string
+     */
+    public StatementSheet(Connection con, String sql) {
+        this(null, con, sql);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param con  the Connection
+     * @param sql  the sql string
+     */
+    public StatementSheet(String name, Connection con, String sql) {
+        super(name);
+        PreparedStatement ps = null;
+        try {
+            ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
+        if (ps == null) {
+            throw new ExcelWriteException("Constructor worksheet error");
+        }
+        this.ps = ps;
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param con the Connection
+     * @param sql the sql string
+     * @param pp  the ParamProcessor
+     */
+    public StatementSheet(Connection con, String sql, ParamProcessor pp) {
+        this(null, con, sql, pp);
+    }
+
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param con  the Connection
+     * @param sql  the sql string
+     * @param pp   the ParamProcessor
+     */
+    public StatementSheet(String name, Connection con, String sql, ParamProcessor pp) {
+        super(name);
+        PreparedStatement ps = null;
+        try {
+            ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
+        if (ps == null) {
+            throw new ExcelWriteException("Constructor worksheet error");
+        }
+        if (pp != null) {
+            try {
+                pp.build(ps);
+            } catch (SQLException e) {
+                throw new ExcelWriteException(e);
+            }
+        }
+        this.ps = ps;
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param con     the Connection
+     * @param sql     the sql string
+     * @param columns the header column
+     */
+    public StatementSheet(Connection con, String sql, Sheet.Column... columns) {
+        this(null, con, sql, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param con     the Connection
+     * @param sql     the sql string
+     * @param columns the header column
+     */
+    public StatementSheet(String name, Connection con, String sql, Sheet.Column... columns) {
+        this(name, con, sql, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param con     the Connection
+     * @param sql     the sql string
+     * @param pp      the ParamProcessor
+     * @param columns the header column
+     */
+    public StatementSheet(Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
+        this(null, con, sql, pp, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param con     the Connection
+     * @param sql     the sql string
+     * @param pp      the ParamProcessor
+     * @param columns the header column
+     */
+    public StatementSheet(String name, Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
+        super(name, columns);
+        PreparedStatement ps = null;
+        try {
+            ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            ps.setFetchSize(Integer.MIN_VALUE);
+            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
+        } catch (SQLException e) {
+//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+        }
+        if (ps == null) {
+            throw new ExcelWriteException("Constructor worksheet error");
+        }
+        if (pp != null) {
+            try {
+                pp.build(ps);
+            } catch (SQLException e) {
+                throw new ExcelWriteException(e);
+            }
+        }
+        this.ps = ps;
     }
 
     /**
