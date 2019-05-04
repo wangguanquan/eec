@@ -177,6 +177,103 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testConstructor1() throws IOException {
+        new Workbook("test list sheet Constructor1", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<Item>())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor2() throws IOException {
+        new Workbook("test list sheet Constructor2", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<Item>("Item").setData(Item.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor3() throws IOException {
+        new Workbook("test list sheet Constructor3", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<Item>("Item"
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class))
+                .setData(Item.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor4() throws IOException {
+        new Workbook("test list sheet Constructor4", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class))
+                .setData(Item.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor5() throws IOException {
+        new Workbook("test list sheet Constructor5", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Item.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor6() throws IOException {
+        new Workbook("test list sheet Constructor6", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor7() throws IOException {
+        new Workbook("test list sheet Constructor7", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Item.randomTestData(10)
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor8() throws IOException {
+        new Workbook("test list sheet Constructor8", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor9() throws IOException {
+        new Workbook("test list sheet Constructor9", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Item.randomTestData(10)
+                , WaterMark.of(author)
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testConstructor10() throws IOException {
+        new Workbook("test list sheet Constructor10", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>("ITEM"
+                , Item.randomTestData(10)
+                , WaterMark.of(author)
+                , new Sheet.Column("ID", "id", int.class)
+                , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
