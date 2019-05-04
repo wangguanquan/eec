@@ -291,4 +291,43 @@ public class StatementSheetTest extends SQLWorkbookTest {
             e.printStackTrace();
         }
     }
+
+    @Test public void testConstructor11() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement sheet Constructor11", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet("Student")
+                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                .writeTo(defaultTestPath);
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testConstructor12() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement sheet Constructor12", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet("Student", WaterMark.of(author))
+                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                .writeTo(defaultTestPath);
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testConstructor13() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement sheet Constructor13", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet("Student", WaterMark.of(author)
+                    , new Sheet.Column("ID", int.class)
+                    , new Sheet.Column("NAME", String.class)
+                    , new Sheet.Column("AGE", int.class))
+                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                .writeTo(defaultTestPath);
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
