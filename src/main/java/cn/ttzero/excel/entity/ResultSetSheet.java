@@ -96,9 +96,9 @@ public class ResultSetSheet extends Sheet {
         int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
 
         try {
-            for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); ) {
+            for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
                 Row row = rowBlock.next();
-                row.index = rows++;
+                row.index = rows;
                 Cell[] cells = row.realloc(len);
                 for (int i = 1; i <= len; i++) {
                     Column hc = columns[i - 1];
