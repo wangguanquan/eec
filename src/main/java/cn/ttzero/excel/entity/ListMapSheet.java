@@ -84,7 +84,8 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data the worksheet's body data
      */
     public ListMapSheet(String name, List<Map<String, ?>> data) {
-        this(name, data, null);
+        super(name);
+        setData(data);
     }
 
     /**
