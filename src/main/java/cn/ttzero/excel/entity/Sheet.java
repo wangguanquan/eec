@@ -39,6 +39,12 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
 
 /**
  * 对应workbook各sheet页
+ *
+ * Usually worksheetWriter calls the
+ * {@code worksheet#nextBlock} method to load a row-block for writing.
+ * When the row-block returns the flag EOF, the current worksheet is
+ * finish written, and the next worksheet is written.
+ *
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
@@ -895,6 +901,8 @@ public abstract class Sheet implements Cloneable {
 
     /**
      * Returns the header column info
+     *
+     * The copy sheet will use the parent worksheet header information.
      *
      * @return array of column
      */

@@ -20,6 +20,7 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,6 +63,71 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      */
     public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
+    }
+
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data the worksheet's body data
+     */
+    public ListMapSheet(List<Map<String, ?>> data) {
+        this(null, data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param data the worksheet's body data
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data) {
+        this(name, data, null);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
+        this(null, data, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
+        this(name, data, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+        this(null, data, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name      the worksheet name
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+        super(name, waterMark, columns);
+        setData(data);
     }
 
     /**
