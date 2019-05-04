@@ -261,7 +261,7 @@ public class ListSheet<T> extends Sheet {
     private Field[] init() {
         T o = getFirst();
         if (o == null) return null;
-        if (columns == null || columns.length == 0) {
+        if (!hasHeaderColumns()) {
             Field[] fields = o.getClass().getDeclaredFields();
             List<Column> list = new ArrayList<>(fields.length);
             for (int i = 0; i < fields.length; i++) {
@@ -324,14 +324,16 @@ public class ListSheet<T> extends Sheet {
     @Override
     public Column[] getHeaderColumns() {
         if (!headerReady) {
-            if (data == null || data.isEmpty()) {
-                columns = new Column[0];
-            }
+//            if (!hasHeaderColumns()) {
+//                columns = new Column[0];
+//            }
             // create header columns
             fields = init();
             if (fields == null || fields.length == 0 || fields[0] == null) {
                 columns = new Column[0];
             } else {
+                // Check the header column limit
+                checkColumnLimit();
                 headerReady = true;
             }
         }
