@@ -662,7 +662,7 @@ public abstract class Sheet implements Cloneable {
             return this;
         }
 
-        private NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // 整数百分比
+        private static final NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // 整数百分比
             , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // 整数人民币
             , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // 小数百分比
             , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // 小数人民币
