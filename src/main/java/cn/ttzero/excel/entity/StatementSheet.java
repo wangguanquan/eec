@@ -28,6 +28,15 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
+ * Statement is one of the worksheet data sources, it's
+ * extends from {@code ResultSetSheet}, and will be obtained from
+ * MetaData if no header information is given. When MetaData
+ * cannot be obtained, the header name will be setting as 1, 2,
+ * and 3...
+ * <p>
+ * The Connection will not be actively closed, but the {@code Statement}
+ * and {@code ResultSet} will be closed with worksheet.
+ * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
 public class StatementSheet extends ResultSetSheet {
@@ -214,6 +223,8 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
+     * Setting PreparedStatement
+     *
      * @param ps PreparedStatement
      */
     public StatementSheet setPs(PreparedStatement ps) {
@@ -223,6 +234,7 @@ public class StatementSheet extends ResultSetSheet {
 
     /**
      * Release resources
+     * will close the {@code Statement} and {@code ResultSet}
      *
      * @throws IOException if io error occur
      */
@@ -265,10 +277,16 @@ public class StatementSheet extends ResultSetSheet {
         }
     }
 
+    /**
+     * Get header information, get from MetaData if not specified
+     * The copy sheet will use the parent worksheet header information.
+     *
+     * @return the header information
+     */
     @Override
     public Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        // TODO 1.判断各sheet抽出的数据量大小
+        // TODO 1.check data size and paging in advance
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
