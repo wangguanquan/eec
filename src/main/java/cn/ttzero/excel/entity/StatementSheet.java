@@ -263,10 +263,16 @@ public class StatementSheet extends ResultSetSheet {
                 if (ps == null) {
                     throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
                 }
+                // Execute query
                 try {
                     rs = ps.executeQuery();
                 } catch (SQLException e) {
                     throw new ExcelWriteException(e);
+                }
+
+                // Check the header information is exists
+                if (!hasHeaderColumns()) {
+                    getHeaderColumns();
                 }
             }
 

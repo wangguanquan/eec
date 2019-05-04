@@ -1337,6 +1337,14 @@ public abstract class Sheet implements Cloneable {
     }
 
     /**
+     * Check the header information is exist
+     * @return true if exist
+     */
+    public boolean hasHeaderColumns() {
+        return columns != null && columns.length > 0;
+    }
+
+    /**
      * Int conversion to column string number
      * The max column on sheet is 16_384
      * <p>
