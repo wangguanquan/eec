@@ -214,15 +214,83 @@ public class ResultSetSheet extends Sheet {
     @Override
     public Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        if (columns != null) {
-            for (int i = 0; i < columns.length; i++) {
+        if (rs == null) {
+            throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter ResultSet");
+        }
+        int i = 0;
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            if (hasHeaderColumns()) {
+                for (; i < columns.length; i++) {
+                    Column column = columns[i];
+                    if (StringUtil.isEmpty(column.getName())) {
+                        column.setName(metaData.getColumnName(i + 1));
+                    }
+                    // FIXME maybe do not reset the types
+                    Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
+                    if (column.clazz != metaClazz) {
+                        what("The specified type " + column.clazz +" is different" +
+                            " from metadata column type " + metaClazz);
+                        column.clazz = metaClazz;
+                    }
+                }
+            } else {
+                int count = metaData.getColumnCount();
+                columns = new Column[count];
+                for (; ++i <= count; ) {
+                    columns[i - 1] = new Column(metaData.getColumnName(i)
+                        , columnTypeToClass(metaData.getColumnType(i)));
+                }
+            }
+        } catch (SQLException e) {
+            what("un-support get result set meta data.");
+        }
+
+        if (hasHeaderColumns()) {
+            // Check the limit of columns
+            checkColumnLimit();
+
+            for (i = 0; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {
                     columns[i].setName(String.valueOf(i));
                 }
+                if (columns[i].styles == null) {
+                    columns[i].styles = workbook.getStyles();
+                }
             }
-        } else columns = new Column[0];
-        headerReady = columns.length > 0;
+            headerReady = columns.length > 0;
+        }
         return columns;
     }
 
+    /**
+     * Convert {@code java.sql.Type} to java type
+     * @param type type sql type
+     * @return java class
+     */
+    protected Class<?> columnTypeToClass(int type) {
+        Class<?> clazz;
+        switch (type) {
+            case VARCHAR:
+            case CHAR:
+            case LONGVARCHAR:
+            case NULL:      clazz = String.class;        break;
+            case INTEGER:   clazz = int.class;           break;
+            case DATE:      clazz = java.sql.Date.class; break;
+            case TIMESTAMP: clazz = Timestamp.class;     break;
+            case NUMERIC:
+            case DECIMAL:   clazz = BigDecimal.class;    break;
+            case BIT:       clazz = boolean.class;       break;
+            case TINYINT:   clazz = byte.class;          break;
+            case SMALLINT:  clazz = short.class;         break;
+            case BIGINT:    clazz = long.class;          break;
+            case REAL:      clazz = float.class;         break;
+            case FLOAT:
+            case DOUBLE:    clazz = double.class;        break;
+//            case CHAR:      clazz = char.class;          break;
+            case TIME:      clazz = java.sql.Time.class; break;
+            default:        clazz = Object.class;
+        }
+        return clazz;
+    }
 }

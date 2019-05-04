@@ -17,14 +17,12 @@
 package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.processor.ParamProcessor;
-import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
@@ -282,60 +280,5 @@ public class StatementSheet extends ResultSetSheet {
         } else {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
-    }
-
-    /**
-     * Get header information, get from MetaData if not specified
-     * The copy sheet will use the parent worksheet header information.
-     *
-     * @return the header information
-     */
-    @Override
-    public Column[] getHeaderColumns() {
-        if (headerReady) return columns;
-        int i = 0;
-        try {
-            ResultSetMetaData metaData = ps.getMetaData();
-            if (hasHeaderColumns()) {
-                for (; i < columns.length; i++) {
-                    Column column = columns[i];
-                    if (StringUtil.isEmpty(column.getName())) {
-                        column.setName(metaData.getColumnName(i + 1));
-                    }
-                    // FIXME maybe do not reset the types
-                    Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
-                    if (column.clazz != metaClazz) {
-                        what("The specified type " + column.clazz +" is different" +
-                            " from metadata column type " + metaClazz);
-                        column.clazz = metaClazz;
-                    }
-                }
-            } else {
-                int count = metaData.getColumnCount();
-                columns = new Column[count];
-                for (; ++i <= count; ) {
-                    columns[i - 1] = new Column(metaData.getColumnName(i)
-                        , columnTypeToClass(metaData.getColumnType(i)));
-                }
-            }
-        } catch (SQLException e) {
-            what("un-support get result set meta data.");
-        }
-
-        if (hasHeaderColumns()) {
-            // Check the limit of columns
-            checkColumnLimit();
-
-            for (i = 0; i < columns.length; i++) {
-                if (StringUtil.isEmpty(columns[i].getName())) {
-                    columns[i].setName(String.valueOf(i));
-                }
-                if (columns[i].styles == null) {
-                    columns[i].styles = workbook.getStyles();
-                }
-            }
-            headerReady = columns.length > 0;
-        }
-        return columns;
     }
 }
