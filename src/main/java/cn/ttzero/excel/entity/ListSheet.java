@@ -72,6 +72,76 @@ public class ListSheet<T> extends Sheet {
         super(name, waterMark, columns);
     }
 
+    /**
+     * Constructor worksheet
+     *
+     * @param data the worksheet's body data
+     */
+    public ListSheet(List<T> data) {
+        this(null, data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param data the worksheet's body data
+     */
+    public ListSheet(String name, List<T> data) {
+        this(name, data, null);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListSheet(List<T> data, final Column... columns) {
+        this(null, data, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListSheet(String name, List<T> data, final Column... columns) {
+        this(name, data, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
+        this(null, data, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name      the worksheet name
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
+        super(name, waterMark, columns);
+        setData(data);
+    }
+
+    /**
+     * Setting the worksheet data
+     *
+     * @param data the body data
+     * @return worksheet
+     */
     public ListSheet<T> setData(final List<T> data) {
         this.data = data;
         if (!headerReady && workbook != null) {
