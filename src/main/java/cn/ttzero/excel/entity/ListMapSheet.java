@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * ListMapSheet is a subclass of ListSheet, the difference is
+ * in the way the data is taken
  * Created by guanquan.wang at 2018-01-26 14:46
  */
 public class ListMapSheet extends ListSheet<Map<String, ?>> {
