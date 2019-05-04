@@ -33,6 +33,7 @@ import java.util.List;
  * method to achieve segmented loading of data. The {@code more}
  * method returns NULL or an empty array to complete the current
  * worksheet write
+ * @see ListMapSheet
  * Created by guanquan.wang at 2018-01-26 14:48
  */
 public class ListSheet<T> extends Sheet {

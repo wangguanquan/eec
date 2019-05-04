@@ -38,13 +38,33 @@ import static cn.ttzero.excel.util.DateUtil.toDateValue;
 import static cn.ttzero.excel.util.DateUtil.toTimeValue;
 
 /**
- * 对应workbook各sheet页
+ * Each worksheet corresponds to one or more sheet.xml of physical.
+ * When the amount of data exceeds the upper limit of the worksheet,
+ * the extra data will be written in the next worksheet page of the
+ * current position, with the name of the parent worksheet. After
+ * adding "(1,2,3...n)" as the name of the copied sheet, the pagination
+ * is automatic without additional settings.
  *
  * Usually worksheetWriter calls the
  * {@code worksheet#nextBlock} method to load a row-block for writing.
- * When the row-block returns the flag EOF, the current worksheet is
- * finish written, and the next worksheet is written.
+ * When the row-block returns the flag EOF, mean is the current worksheet
+ * finished written, and the next worksheet is written.
  *
+ * Extends the existing worksheet to implement a custom data source worksheet.
+ * The data source can be micro-services, Mybatis, JPA or any others. If
+ * the data source returns an array of json objects, please convert to
+ * an object ArrayList or Map ArrayList, the object ArrayList needs to
+ * extends {@code ListSheet}, the Map ArrayList needs to extends
+ * {@code ListMapSheet} and implement the {@code more} method.
+ *
+ * If other formats cannot be converted to ArrayList, you
+ * need to inherit from the base class {@code Sheet} and implement the
+ * {@code resetBlockData} and {@code getHeaderColumns} methods.
+ *
+ * @see ListSheet
+ * @see ListMapSheet
+ * @see ResultSetSheet
+ * @see StatementSheet
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
@@ -1279,6 +1299,10 @@ public abstract class Sheet implements Cloneable {
         return getStyleIndex(hc, o, style);
     }
 
+    /**
+     * Check the odd rows
+     * @return true if odd rows
+     */
     protected boolean isOdd() {
         return (rows & 1) == 1;
     }

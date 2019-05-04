@@ -36,7 +36,7 @@ import static java.sql.Types.TIME;
  * <p>
  * Write data to the row-block via the cursor, finished write when
  * {@code ResultSet#next} returns false
- * <p>
+ * @see StatementSheet
  * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {

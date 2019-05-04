@@ -34,7 +34,7 @@ import java.sql.SQLException;
  * <p>
  * The Connection will not be actively closed, but the {@code Statement}
  * and {@code ResultSet} will be closed with worksheet.
- * <p>
+ * @see ResultSetSheet
  * Created by guanquan.wang on 2017/9/26.
  */
 public class StatementSheet extends ResultSetSheet {
