@@ -20,8 +20,14 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+
+import static java.sql.Types.*;
+import static java.sql.Types.TIME;
 
 /**
  * Created by guanquan.wang on 2017/9/27.
@@ -66,6 +72,76 @@ public class ResultSetSheet extends Sheet {
         super(name, waterMark, columns);
     }
 
+    /**
+     * Constructor worksheet
+     *
+     * @param rs the ResultSet
+     */
+    public ResultSetSheet(ResultSet rs) {
+        this(null, rs);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param rs   the ResultSet
+     */
+    public ResultSetSheet(String name, ResultSet rs) {
+        super(name);
+        this.rs = rs;
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param rs      the ResultSet
+     * @param columns the header info
+     */
+    public ResultSetSheet(ResultSet rs, final Column... columns) {
+        this(null, rs, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param rs      the ResultSet
+     * @param columns the header info
+     */
+    public ResultSetSheet(String name, ResultSet rs, final Column... columns) {
+        this(name, rs, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param rs        the ResultSet
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ResultSetSheet(ResultSet rs, WaterMark waterMark, final Column... columns) {
+        this(null, rs, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name      the worksheet name
+     * @param rs        the ResultSet
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final Column... columns) {
+        super(name, waterMark, columns);
+        this.rs = rs;
+    }
+
+    /**
+     * Setting ResultSet
+     * @param rs the ResultSet
+     * @return {@code ResultSetSheet}
+     */
     public ResultSetSheet setRs(ResultSet rs) {
         this.rs = rs;
         return this;
