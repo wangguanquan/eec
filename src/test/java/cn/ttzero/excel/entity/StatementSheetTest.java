@@ -257,12 +257,37 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test different type from metadata", author)
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"
-                    , new Sheet.Column("ID", String.class) // Integer in database
+                    , new Sheet.Column("ID", String.class)  // Integer in database
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", String.class) // Integer in database
                 ))
                 .writeTo(defaultTestPath);
         } catch (SQLException |IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testConstructor9() {
+        try {
+            new Workbook("test statement sheet Constructor9", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet())
+                .writeTo(defaultTestPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ExcelWriteException e) {
+            assert true;
+        }
+    }
+
+    @Test public void testConstructor10() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement sheet Constructor10", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet()
+                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                .writeTo(defaultTestPath);
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
     }
