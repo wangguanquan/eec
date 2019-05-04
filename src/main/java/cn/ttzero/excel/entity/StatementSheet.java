@@ -107,7 +107,7 @@ public class StatementSheet extends ResultSetSheet {
 //            what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         if (ps == null) {
-            throw new ExcelWriteException("Constructor worksheet error");
+            throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
         }
         this.ps = ps;
     }
@@ -143,7 +143,7 @@ public class StatementSheet extends ResultSetSheet {
 //            what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         if (ps == null) {
-            throw new ExcelWriteException("Constructor worksheet error");
+            throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
         }
         if (pp != null) {
             try {
@@ -210,7 +210,7 @@ public class StatementSheet extends ResultSetSheet {
 //            what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         if (ps == null) {
-            throw new ExcelWriteException("Constructor worksheet error");
+            throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
         }
         if (pp != null) {
             try {
@@ -245,7 +245,7 @@ public class StatementSheet extends ResultSetSheet {
             try {
                 ps.close();
             } catch (SQLException e) {
-                workbook.what("9006", e.getMessage());
+                what("9006", e.getMessage());
             }
         }
     }
