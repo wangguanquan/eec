@@ -271,9 +271,7 @@ public class StatementSheet extends ResultSetSheet {
                 }
 
                 // Check the header information is exists
-                if (!hasHeaderColumns()) {
-                    getHeaderColumns();
-                }
+                getHeaderColumns();
             }
 
             if (rowBlock == null) {
@@ -298,7 +296,7 @@ public class StatementSheet extends ResultSetSheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
-            if (columns != null) {
+            if (hasHeaderColumns()) {
                 for (; i < columns.length; i++) {
                     Column column = columns[i];
                     if (StringUtil.isEmpty(column.getName())) {
@@ -324,7 +322,7 @@ public class StatementSheet extends ResultSetSheet {
             what("un-support get result set meta data.");
         }
 
-        if (columns != null) {
+        if (hasHeaderColumns()) {
             // Check the limit of columns
             checkColumnLimit();
 
