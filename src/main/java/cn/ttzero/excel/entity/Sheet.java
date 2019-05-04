@@ -817,8 +817,11 @@ public abstract class Sheet implements Cloneable {
      */
     public Sheet fixSize(double width) {
         this.autoSize = 2;
-        for (Column hc : columns) {
-            hc.setWidth(width);
+        this.width = width;
+        if (headerReady) {
+            for (Column hc : columns) {
+                hc.setWidth(width);
+            }
         }
         return this;
     }
