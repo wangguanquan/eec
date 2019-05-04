@@ -985,6 +985,9 @@ public abstract class Sheet implements Cloneable {
         if (!copySheet) {
             paging();
         }
+        if (!headerReady) {
+            getHeaderColumns();
+        }
         if (rowBlock == null) {
             rowBlock = new RowBlock(getRowBlockSize());
         } else rowBlock.reopen();
