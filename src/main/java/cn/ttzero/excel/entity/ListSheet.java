@@ -178,7 +178,7 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     public void close() throws IOException {
-        if (shouldClose) {
+        if (shouldClose && data != null) {
             data.clear();
             data = null;
         }
