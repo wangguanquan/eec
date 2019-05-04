@@ -1326,6 +1326,17 @@ public abstract class Sheet implements Cloneable {
     }
 
     /**
+     * Check the limit of columns
+     */
+    public void checkColumnLimit() {
+        int a = columns.length
+            , b = sheetWriter.getColumnLimit();
+        if (a > b) {
+            throw new TooManyColumnsException(a, b);
+        }
+    }
+
+    /**
      * Int conversion to column string number
      * The max column on sheet is 16_384
      * <p>

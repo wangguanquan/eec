@@ -286,7 +286,6 @@ public class StatementSheet extends ResultSetSheet {
     @Override
     public Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        // TODO 1.check data size and paging in advance
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
@@ -317,6 +316,9 @@ public class StatementSheet extends ResultSetSheet {
         }
 
         if (columns != null) {
+            // Check the limit of columns
+            checkColumnLimit();
+
             for (i = 0; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {
                     columns[i].setName(String.valueOf(i));
