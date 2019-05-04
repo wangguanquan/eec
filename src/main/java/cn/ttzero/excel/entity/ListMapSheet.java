@@ -20,9 +20,13 @@ import cn.ttzero.excel.reader.Cell;
 import cn.ttzero.excel.util.StringUtil;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
+ * ListMapSheet is a subclass of ListSheet, the difference is
+ * in the way the data is taken
+ * @see ListSheet
  * Created by guanquan.wang at 2018-01-26 14:46
  */
 public class ListMapSheet extends ListSheet<Map<String, ?>> {
@@ -36,6 +40,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public ListMapSheet(String name) {
@@ -44,21 +49,89 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
-    public ListMapSheet(String name, final Column[] columns) {
+    public ListMapSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
+        super(name, waterMark, columns);
+    }
+
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data the worksheet's body data
+     */
+    public ListMapSheet(List<Map<String, ?>> data) {
+        this(null, data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param data the worksheet's body data
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data) {
+        super(name);
+        setData(data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListMapSheet(String name, WaterMark waterMark, final Column[] columns) {
+    public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
+        this(null, data, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
+        this(name, data, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+        this(null, data, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name      the worksheet name
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
+        setData(data);
     }
 
     /**
@@ -108,16 +181,14 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             if (columns == null) {
                 columns = new Column[0];
             }
-        }
-        else if (columns.length == 0) {
+        } else if (!hasHeaderColumns()) {
             int size = first.size(), i = 0;
             columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
                 columns[i++] = new Column(entry.getKey(), entry.getKey(), entry.getValue().getClass());
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 if (StringUtil.isEmpty(hc.key)) {
@@ -128,6 +199,9 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 }
             }
         }
+        // Check the header column limit
+        checkColumnLimit();
+
         for (Column hc : columns) {
             hc.styles = workbook.getStyles();
         }

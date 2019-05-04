@@ -19,13 +19,13 @@ package cn.ttzero.excel.reader;
 import java.io.IOException;
 
 /**
- *
  * Created by guanquan.wang on 2018/6/13.
  */
 @FunctionalInterface
 interface RowSetProcessor {
     /**
      * The row set
+     *
      * @return the row data
      */
     Row next() throws IOException;

@@ -25,6 +25,7 @@ package cn.ttzero.excel.processor;
 public interface IntConversionProcessor {
     /**
      * Int值包括byte, char, short, int
+     *
      * @param n 数据库值或原对象值
      * @return 转换后的值
      */

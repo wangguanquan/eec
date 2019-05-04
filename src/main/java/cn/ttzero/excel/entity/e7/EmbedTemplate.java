@@ -106,7 +106,7 @@ public class EmbedTemplate extends AbstractTemplate {
         }
 
         private int[] get(int index) {
-            return new int[]{ elements[index <<= 1], elements[index + 1] };
+            return new int[]{elements[index <<= 1], elements[index + 1]};
         }
 
     }

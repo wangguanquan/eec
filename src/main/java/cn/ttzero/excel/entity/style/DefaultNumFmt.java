@@ -65,7 +65,7 @@ public final class DefaultNumFmt {
                         int index = v.indexOf('=');
                         if (index <= 0) continue;
                         String v1 = v.substring(0, index).trim()
-                                , v2 = v.substring(index + 1).trim();
+                            , v2 = v.substring(index + 1).trim();
                         // check id and check code
                         int id;
                         try {
@@ -96,9 +96,9 @@ public final class DefaultNumFmt {
             for (int i = 1; i <= maxLen; i++) {
                 final int length = i;
                 data[i] = list.stream()
-                        .filter(o -> o.code.length() == length)
-                        .sorted(Comparator.comparingInt(NumFmt::getId))
-                        .toArray(NumFmt[]::new);
+                    .filter(o -> o.code.length() == length)
+                    .sorted(Comparator.comparingInt(NumFmt::getId))
+                    .toArray(NumFmt[]::new);
 
                 if (data[i].length == 0) { // Undo empty array
                     data[i] = null;

@@ -16,15 +16,20 @@
 
 package cn.ttzero.excel.entity;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+
 /**
- * Created by guanquan.wang at 2018-01-29 16:05
+ * Create by guanquan.wang at 2019-04-30 20:45
  */
-public class EmptySheet extends Sheet {
+public class CollectionSheet<T> extends Sheet {
+    private Collection<T> data;
+    private Field[] fields;
 
     /**
      * Constructor worksheet
      */
-    public EmptySheet() {
+    public CollectionSheet() {
         super();
     }
 
@@ -33,43 +38,36 @@ public class EmptySheet extends Sheet {
      *
      * @param name the worksheet name
      */
-    public EmptySheet(String name) {
+    public CollectionSheet(String name) {
         super(name);
     }
 
     /**
      * Constructor worksheet
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name the worksheet name
      */
-    public EmptySheet(String name, final Column... columns) {
+    public CollectionSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
      * Constructor worksheet
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name the worksheet name
      */
-    public EmptySheet(String name, WaterMark waterMark, final Column... columns) {
+    public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
-    /**
-     * Reset the row-block data
-     */
-    @Override
-    protected void resetBlockData() { }
-
-    /**
-     * Returns total rows in this worksheet
-     *
-     * @return 0
-     */
-    public int size() {
-        return 0;
+    public CollectionSheet<T> setData(final Collection<T> data) {
+        this.data = data;
+        return this;
     }
+
+    @Override
+    protected void resetBlockData() {
+
+    }
+
 }

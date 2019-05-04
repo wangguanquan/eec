@@ -30,6 +30,7 @@ import java.util.Properties;
  */
 public class I18N {
     private Properties pro;
+
     public I18N() {
         Locale locale = Locale.getDefault();
         String fn = "message._.properties";
@@ -51,6 +52,7 @@ public class I18N {
 
     /**
      * get message by code
+     *
      * @param code message code
      * @return I18N string
      */
@@ -60,7 +62,8 @@ public class I18N {
 
     /**
      * get message by code
-     * @param code message code
+     *
+     * @param code  message code
      * @param other default value
      * @return I18N string
      */
@@ -70,11 +73,12 @@ public class I18N {
 
     /**
      * get message by code
+     *
      * @param code code
      * @param args args
      * @return I18N string
      */
-    public String get(String code, String ... args) {
+    public String get(String code, String... args) {
         String msg = pro.getProperty(code, code);
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);

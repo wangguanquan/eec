@@ -31,16 +31,17 @@ import java.util.regex.Pattern;
 
 /**
  * 对应Excel文件各Sheet页，包含隐藏Sheet页
- *
+ * <p>
  * Create by guanquan.wang on 2018-09-22
  */
 class XMLSheet implements Sheet {
     private Logger logger = LogManager.getLogger(getClass());
-    XMLSheet() {}
+
+    XMLSheet() { }
 
     private String name;
     private int index // per sheet index of workbook
-            , size = -1; // size of rows per sheet
+        , size = -1; // size of rows per sheet
     private Path path;
     private SharedString sst;
     private int startRow = -1; // row index of data
@@ -61,6 +62,7 @@ class XMLSheet implements Sheet {
 
     /**
      * The worksheet name
+     *
      * @return the sheet name
      */
     @Override
@@ -70,6 +72,7 @@ class XMLSheet implements Sheet {
 
     /**
      * The index of worksheet located at the workbook
+     *
      * @return the index(zero base)
      */
     @Override
@@ -83,6 +86,7 @@ class XMLSheet implements Sheet {
 
     /**
      * size of rows.
+     *
      * @return size of rows
      * -1: unknown size
      */
@@ -93,6 +97,7 @@ class XMLSheet implements Sheet {
 
     /**
      * The index of first used row
+     *
      * @return the index
      */
     public int getFirstRow() {
@@ -118,6 +123,7 @@ class XMLSheet implements Sheet {
     /**
      * Returns the header of the list.
      * The first non-empty line defaults to the header information.
+     *
      * @return the HeaderRow
      */
     @Override
@@ -134,6 +140,7 @@ class XMLSheet implements Sheet {
 
     /**
      * Set the binding type
+     *
      * @param clazz the binding type
      * @return sheet
      */
@@ -164,6 +171,7 @@ class XMLSheet implements Sheet {
 
     /**
      * Load sheet.xml as BufferedReader
+     *
      * @return Sheet
      * @throws IOException if io error occur
      */
@@ -172,14 +180,14 @@ class XMLSheet implements Sheet {
         reader = Files.newBufferedReader(path);
         cb = new char[8192];
         nChar = 0;
-        loopA: for ( ; ; ) {
+        loopA: for (; ; ) {
             length = reader.read(cb);
             if (length < 11) break;
             // read size
             if (nChar == 0) {
                 String line = new String(cb, 56, 1024);
                 String size = "<dimension ref=\"";
-                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index+=size.length()) : -1;
+                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index += size.length()) : -1;
                 if (end > 0) {
                     String l_ = line.substring(index, end);
                     Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
@@ -206,10 +214,10 @@ class XMLSheet implements Sheet {
             }
             // find index of <sheetData>
             for (; nChar < length - 12; nChar++) {
-                if (cb[nChar] == '<' && cb[nChar+1] == 's' && cb[nChar+2] == 'h'
-                        && cb[nChar+3] == 'e' && cb[nChar+4] == 'e' && cb[nChar+5] == 't'
-                        && cb[nChar+6] == 'D' && cb[nChar+7] == 'a' && cb[nChar+8] == 't'
-                        && cb[nChar+9] == 'a' && (cb[nChar+10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
+                if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
+                    && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
+                    && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
+                    && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
                     nChar += 11;
                     break loopA;
                 }
@@ -228,6 +236,7 @@ class XMLSheet implements Sheet {
 
     /**
      * iterator rows
+     *
      * @return Row
      * @throws IOException if io error occur
      */
@@ -236,15 +245,15 @@ class XMLSheet implements Sheet {
         boolean endTag = false;
         int start = nChar;
         // find end of row tag
-        for ( ; ++nChar < length && cb[nChar] != '>'; );
+        for (; ++nChar < length && cb[nChar] != '>'; ) ;
         // Empty Row
         if (cb[nChar++ - 1] == '/') {
             return sRow.empty(cb, start, nChar - start);
         }
         // Not empty
         for (; nChar < length - 6; nChar++) {
-            if (cb[nChar] == '<' && cb[nChar+1] == '/' && cb[nChar+2] == 'r'
-                    && cb[nChar+3] == 'o' && cb[nChar+4] == 'w' && cb[nChar+5] == '>') {
+            if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
+                && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
                 nChar += 6;
                 endTag = true;
                 break;
@@ -284,14 +293,14 @@ class XMLSheet implements Sheet {
         int nChar = 0, length;
         // reload file
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            loopA: for ( ; ; ) {
+            loopA: for (; ; ) {
                 length = reader.read(cb);
                 // find index of <sheetData>
                 for (; nChar < length - 12; nChar++) {
                     if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar+10] == '/' && cb[nChar+11] == '>')) {
+                        && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
+                        && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
+                        && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
                         nChar += 11;
                         break loopA;
                     }
@@ -312,13 +321,13 @@ class XMLSheet implements Sheet {
         // find the first not null row
         loopB: while (true) {
             start = nChar;
-            for (; cb[++nChar] != '>' && nChar < length; );
+            for (; cb[++nChar] != '>' && nChar < length; ) ;
             // Empty Row
             if (cb[nChar++ - 1] != '/') {
                 // find end of row tag
                 for (; nChar < length - 6; nChar++) {
                     if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                            && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
+                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
                         nChar += 6;
                         endTag = true;
                         break loopB;
@@ -338,6 +347,7 @@ class XMLSheet implements Sheet {
 
     /**
      * Iterating each row of data contains header information and blank lines
+     *
      * @return a row iterator
      */
     @Override
@@ -347,6 +357,7 @@ class XMLSheet implements Sheet {
 
     /**
      * Iterating over data rows without header information and blank lines
+     *
      * @return a row iterator
      */
     @Override
@@ -363,6 +374,7 @@ class XMLSheet implements Sheet {
 
     /**
      * close reader
+     *
      * @throws IOException if io error occur
      */
     @Override

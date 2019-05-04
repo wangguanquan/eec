@@ -55,6 +55,7 @@ public abstract class Row {
 
     /**
      * The number of row. (zero base)
+     *
      * @return int value
      */
     public int getRowNumber() {
@@ -63,6 +64,7 @@ public abstract class Row {
 
     /**
      * Test unused row (not contains any filled or formatted or value)
+     *
      * @return true if unused
      */
     public boolean isEmpty() {
@@ -72,6 +74,7 @@ public abstract class Row {
     private String outOfBoundsMsg(int index) {
         return "Index: " + index + ", Size: " + lc;
     }
+
     protected void rangeCheck(int index) {
         if (index >= lc)
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
@@ -84,6 +87,7 @@ public abstract class Row {
 
     /**
      * convert row to header_row
+     *
      * @return header Row
      */
     public HeaderRow asHeader() {
@@ -99,6 +103,7 @@ public abstract class Row {
 
     /**
      * Get boolean value by column index
+     *
      * @param columnIndex the cell index
      * @return boolean
      */
@@ -130,6 +135,7 @@ public abstract class Row {
 
     /**
      * Get byte value by column index
+     *
      * @param columnIndex the cell index
      * @return byte
      */
@@ -156,6 +162,7 @@ public abstract class Row {
 
     /**
      * Get char value by column index
+     *
      * @param columnIndex the cell index
      * @return char
      */
@@ -197,6 +204,7 @@ public abstract class Row {
 
     /**
      * Get short value by column index
+     *
      * @param columnIndex the cell index
      * @return short
      */
@@ -223,6 +231,7 @@ public abstract class Row {
 
     /**
      * Get int value by column index
+     *
      * @param columnIndex the cell index
      * @return int
      */
@@ -267,6 +276,7 @@ public abstract class Row {
 
     /**
      * Get long value by column index
+     *
      * @param columnIndex the cell index
      * @return long
      */
@@ -310,6 +320,7 @@ public abstract class Row {
 
     /**
      * Get string value by column index
+     *
      * @param columnIndex the cell index
      * @return string
      */
@@ -348,6 +359,7 @@ public abstract class Row {
 
     /**
      * Get float value by column index
+     *
      * @param columnIndex the cell index
      * @return float
      */
@@ -357,6 +369,7 @@ public abstract class Row {
 
     /**
      * Get double value by column index
+     *
      * @param columnIndex the cell index
      * @return double
      */
@@ -392,6 +405,7 @@ public abstract class Row {
 
     /**
      * Get decimal value by column index
+     *
      * @param columnIndex the cell index
      * @return BigDecimal
      */
@@ -413,6 +427,7 @@ public abstract class Row {
 
     /**
      * Get date value by column index
+     *
      * @param columnIndex the cell index
      * @return Date
      */
@@ -442,6 +457,7 @@ public abstract class Row {
 
     /**
      * Get timestamp value by column index
+     *
      * @param columnIndex the cell index
      * @return java.sql.Timestamp
      */
@@ -471,6 +487,7 @@ public abstract class Row {
 
     /**
      * Get time value by column index
+     *
      * @param columnIndex the cell index
      * @return java.sql.Time
      */
@@ -484,6 +501,7 @@ public abstract class Row {
 
     /**
      * Returns the binding type if is bound, otherwise returns Row
+     *
      * @param <T> the type of binding
      * @return T
      */
@@ -503,6 +521,7 @@ public abstract class Row {
 
     /**
      * Returns the binding type if is bound, otherwise returns Row
+     *
      * @param <T> the type of binding
      * @return T
      */
@@ -512,7 +531,7 @@ public abstract class Row {
             T t = hr.getT();
             try {
                 hr.put(this, t);
-            } catch (IllegalAccessException  e) {
+            } catch (IllegalAccessException e) {
                 throw new UncheckedTypeException("call set method error.", e);
             }
             return t;
@@ -522,8 +541,9 @@ public abstract class Row {
 
     /**
      * Convert to object, support annotation
+     *
      * @param clazz the type of binding
-     * @param <T> the type of return object
+     * @param <T>   the type of return object
      * @return T
      */
     public <T> T to(Class<T> clazz) {
@@ -547,8 +567,9 @@ public abstract class Row {
     /**
      * Convert to T object, support annotation
      * the is a memory shared object
+     *
      * @param clazz the type of binding
-     * @param <T> the type of return object
+     * @param <T>   the type of return object
      * @return T
      */
     public <T> T too(Class<T> clazz) {
@@ -566,7 +587,7 @@ public abstract class Row {
         T t = hr.getT();
         try {
             hr.put(this, t);
-        } catch (IllegalAccessException  e) {
+        } catch (IllegalAccessException e) {
             throw new UncheckedTypeException("call set method error.", e);
         }
         return t;

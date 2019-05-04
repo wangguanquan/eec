@@ -74,6 +74,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     /**
      * Setting workbook
+     *
      * @param workbook the global workbook context
      */
     @Override
@@ -83,6 +84,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     /**
      * The Workbook suffix
+     *
      * @return xlsx if excel07, xls if excel03
      */
     @Override
@@ -92,6 +94,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     /**
      * Write the workbook file to ${path}
+     *
      * @param path the storage path
      */
     public void writeTo(Path path) throws IOException, ExcelWriteException {
@@ -139,15 +142,15 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // Read app and version from pom
         try {
             InputStream is = getClass().getClassLoader()
-                    .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
+                .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
             Properties pom = new Properties();
             if (is == null) {
                 // Read from target/maven-archiver/pom.properties
                 URL url = getClass().getClassLoader().getResource(".");
                 if (url != null) {
                     Path targetPath = (FileUtil.isWindows()
-                            ? Paths.get(url.getFile().substring(1))
-                            : Paths.get(url.getFile())).getParent();
+                        ? Paths.get(url.getFile().substring(1))
+                        : Paths.get(url.getFile())).getParent();
                     is = Files.newInputStream(targetPath.resolve("maven-archiver/pom.properties"));
                 }
             }
@@ -354,9 +357,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
             IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
-            if ((n = sheet.getHeaderColumns().length) > worksheetWriter.getColumnLimit()) {
-                throw new TooManyColumnsException(n, worksheetWriter.getColumnLimit());
-            }
+//            if ((n = sheet.getHeaderColumns().length) > worksheetWriter.getColumnLimit()) {
+//                throw new TooManyColumnsException(n, worksheetWriter.getColumnLimit());
+//            }
             sheet.setSheetWriter(worksheetWriter);
             if (sheet.getAutoSize() == 0) {
                 if (workbook.isAutoSize()) {

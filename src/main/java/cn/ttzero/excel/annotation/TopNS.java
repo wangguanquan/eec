@@ -28,6 +28,8 @@ import java.lang.annotation.*;
 @Documented
 public @interface TopNS {
     String[] prefix();
+
     String[] uri() default {};
+
     String value();
 }

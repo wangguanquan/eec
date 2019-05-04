@@ -27,9 +27,9 @@ import java.util.Date;
  * Created by guanquan.wang on 2017/9/18.
  */
 @TopNS(prefix = {"dc", "cp", "dcterms"}
-        , uri = {"http://purl.org/dc/elements/1.1/"
-        , "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
-        , "http://purl.org/dc/terms/"}, value = "cp:coreProperties")
+    , uri = {"http://purl.org/dc/elements/1.1/"
+    , "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+    , "http://purl.org/dc/terms/"}, value = "cp:coreProperties")
 public class Core extends XmlEntity {
     @NS("dc")
     private String title;   // 标题

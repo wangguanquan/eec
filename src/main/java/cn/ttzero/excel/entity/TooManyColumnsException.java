@@ -22,9 +22,9 @@ package cn.ttzero.excel.entity;
  */
 public class TooManyColumnsException extends ExcelWriteException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public TooManyColumnsException() {
+    public TooManyColumnsException() {
         super();
     }
 

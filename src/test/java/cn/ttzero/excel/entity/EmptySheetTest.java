@@ -30,4 +30,15 @@ public class EmptySheetTest extends WorkbookTest {
             .addSheet(new EmptySheet())
             .writeTo(defaultTestPath);
     }
+
+    @Test public void testEmptyWithHeader() throws IOException {
+        new Workbook("test empty", author)
+            .watch(Print::println)
+            .addSheet(new EmptySheet("Empty"
+                , new Sheet.Column("ID", Integer.class)
+                , new Sheet.Column("NAME", String.class)
+                , new Sheet.Column("AGE", Integer.class)
+            ))
+            .writeTo(defaultTestPath);
+    }
 }

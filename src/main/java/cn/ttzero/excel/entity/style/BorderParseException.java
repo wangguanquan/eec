@@ -21,9 +21,9 @@ package cn.ttzero.excel.entity.style;
  */
 public class BorderParseException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public BorderParseException(String message) {
+    public BorderParseException(String message) {
         super(message);
     }
 
@@ -36,8 +36,8 @@ public class BorderParseException extends RuntimeException {
     }
 
     protected BorderParseException(String message, Throwable cause,
-                                 boolean enableSuppression,
-                                 boolean writableStackTrace) {
+                                   boolean enableSuppression,
+                                   boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

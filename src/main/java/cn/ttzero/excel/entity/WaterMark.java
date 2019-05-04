@@ -55,6 +55,7 @@ public class WaterMark {
 
     /**
      * 生成文字水印
+     *
      * @param mark the mark value
      * @return WaterMark
      */
@@ -64,6 +65,7 @@ public class WaterMark {
 
     /**
      * 本地图片水印
+     *
      * @param path the image location path
      * @return WaterMark
      */
@@ -73,6 +75,7 @@ public class WaterMark {
 
     /**
      * 流图片水印
+     *
      * @param is the image InputStream
      * @return WaterMark
      * @throws IOException if io error occur
@@ -87,7 +90,7 @@ public class WaterMark {
      * @param watermark mark value
      * @return the temp image path
      */
-     private Path createWaterMark(String watermark) {
+    private Path createWaterMark(String watermark) {
         try {
             Path temp = createTemp();
             int width = 510; // 水印图片的宽度
@@ -165,6 +168,7 @@ public class WaterMark {
 
     /**
      * content-type
+     *
      * @return string
      */
     public String getContentType() {

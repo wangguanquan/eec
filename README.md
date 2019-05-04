@@ -286,11 +286,11 @@ public class TestExportEntity {
 
 5. 自定义数据源worksheet
 
-有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个workbook继承已有的Sheet类
-并实现more方法即可。如下
+有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类
+并复写相应方法即可。如下
 
 ```
-public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Student> {
+public class CustomizeDataSourceSheet extends ListSheet<Student> {
 
     // RPC, mybatis, jpa or others service
     private StudentService service;
@@ -313,7 +313,7 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
      * 获取worksheet行数据，返回null或空数组表示当前worksheet写结束
      */
     @Override
-    public List<ListObjectSheetTest.Student> more() {
+    public List<Student> more() {
         return service.getPageData(pageNo++, limit);
     }
 }

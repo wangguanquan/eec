@@ -23,16 +23,18 @@ import java.io.Serializable;
  */
 public class Relationship implements Serializable, Cloneable {
 
-	private static final long serialVersionUID = 1L;
-	private String target;
+    private static final long serialVersionUID = 1L;
+    private String target;
     private String type;
     private String id;
 
-    public Relationship() {}
+    public Relationship() { }
+
     public Relationship(String target, String type) {
         this.target = target;
         this.type = type;
     }
+
     public Relationship(String id, String target, String type) {
         this.id = id;
         this.target = target;

@@ -21,10 +21,10 @@ package cn.ttzero.excel.entity.style;
  */
 public class Verticals {
     public static final int CENTER = 0 // Align Center
-            , BOTTOM = 1 << Styles.INDEX_VERTICAL // Align Bottom
-            , TOP    = 2 << Styles.INDEX_VERTICAL // Align Top
-            , BOTH   = 3 << Styles.INDEX_VERTICAL // Vertical Justification
-            ;
+        , BOTTOM = 1 << Styles.INDEX_VERTICAL // Align Bottom
+        , TOP    = 2 << Styles.INDEX_VERTICAL // Align Top
+        , BOTH   = 3 << Styles.INDEX_VERTICAL // Vertical Justification
+        ;
 
     private static final String[] _names = {"center", "bottom", "top", "both"};
 

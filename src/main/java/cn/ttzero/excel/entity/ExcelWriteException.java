@@ -21,9 +21,9 @@ package cn.ttzero.excel.entity;
  */
 public class ExcelWriteException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ExcelWriteException() {
+    public ExcelWriteException() {
         super();
     }
 

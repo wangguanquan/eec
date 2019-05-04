@@ -322,11 +322,11 @@ public class Font implements Cloneable {
         if (o instanceof Font) {
             Font other = (Font) o;
             return other.family == family
-                    && other.style == style
-                    && other.size == size
-                    && (other.color != null ? other.color.equals(color) : null == color)
-                    && (other.name != null ? other.name.equals(name) : null == name)
-                    ;
+                && other.style == style
+                && other.size == size
+                && (other.color != null ? other.color.equals(color) : null == color)
+                && (other.name != null ? other.name.equals(name) : null == name)
+                ;
         }
         return false;
     }
@@ -385,10 +385,10 @@ public class Font implements Cloneable {
 
     public static class Style {
         public static final int normal = 0 // 正常
-                , italic = 1 << 2 // 斜体
-                , bold = 1 << 1 // 加粗
-                , underLine = 1 // 下划线
-                ;
+            , italic = 1 << 2 // 斜体
+            , bold = 1 << 1 // 加粗
+            , underLine = 1 // 下划线
+            ;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name);

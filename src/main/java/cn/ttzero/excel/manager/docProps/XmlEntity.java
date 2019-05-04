@@ -267,7 +267,7 @@ class XmlEntity {
                 if (node instanceof NameValue) {
                     NameValue nv = (NameValue) node;
                     element.addElement(QName.get(baseType, namespace))
-                            .addElement(QName.get(nv.getName(), namespace)).setText(nv.getValue());
+                        .addElement(QName.get(nv.getName(), namespace)).setText(nv.getValue());
                 } else {
                     element.addElement(QName.get(baseType, namespace)).setText(node.toString());
                 }

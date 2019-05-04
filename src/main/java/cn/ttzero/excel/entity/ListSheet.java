@@ -27,6 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * List is the most important data source, you can pass all
+ * the data at a time, or customize the worksheet to extends
+ * the {@code ListSheet}, and then override the {@code more}
+ * method to achieve segmented loading of data. The {@code more}
+ * method returns NULL or an empty array to complete the current
+ * worksheet write
+ * @see ListMapSheet
  * Created by guanquan.wang at 2018-01-26 14:48
  */
 public class ListSheet<T> extends Sheet {
@@ -44,6 +51,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
+     *
      * @param name the worksheet name
      */
     public ListSheet(String name) {
@@ -52,23 +60,95 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name    the worksheet name
      * @param columns the header info
      */
-    public ListSheet(String name, final Column[] columns) {
+    public ListSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
      * Constructor worksheet
-     * @param name the worksheet name
+     *
+     * @param name      the worksheet name
      * @param waterMark the water mark
-     * @param columns the header info
+     * @param columns   the header info
      */
-    public ListSheet(String name, WaterMark waterMark, final Column[] columns) {
+    public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
+    /**
+     * Constructor worksheet
+     *
+     * @param data the worksheet's body data
+     */
+    public ListSheet(List<T> data) {
+        this(null, data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param data the worksheet's body data
+     */
+    public ListSheet(String name, List<T> data) {
+        this(name, data, null);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListSheet(List<T> data, final Column... columns) {
+        this(null, data, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name    the worksheet name
+     * @param data    the worksheet's body data
+     * @param columns the header info
+     */
+    public ListSheet(String name, List<T> data, final Column... columns) {
+        this(name, data, null, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
+        this(null, data, waterMark, columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name      the worksheet name
+     * @param data      the worksheet's body data
+     * @param waterMark the water mark
+     * @param columns   the header info
+     */
+    public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
+        super(name, waterMark, columns);
+        setData(data);
+    }
+
+    /**
+     * Setting the worksheet data
+     *
+     * @param data the body data
+     * @return worksheet
+     */
     public ListSheet<T> setData(final List<T> data) {
         this.data = data;
         if (!headerReady && workbook != null) {
@@ -84,6 +164,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the first not null object
+     *
      * @return the object
      */
     protected T getFirst() {
@@ -99,11 +180,12 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Release resources
+     *
      * @throws IOException if io error occur
      */
     @Override
     public void close() throws IOException {
-        if (shouldClose) {
+        if (shouldClose && data != null) {
             data.clear();
             data = null;
         }
@@ -149,20 +231,28 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
+    /**
+     * Call this method to get more data when the data length
+     * less than the row-block size until there is no more data
+     * or more than the row limit
+     */
     protected void append() {
         int rbs = getRowBlockSize(), size = size();
-        for ( ; ; ) {
+        for (; ; ) {
             List<T> list = more();
+            // No more data
             if (list == null || list.isEmpty()) {
                 eof = shouldClose = true;
                 break;
             }
+            // The first getting
             if (data == null) {
                 data = new ArrayList<>(rbs);
                 setData(list);
 
                 if (list.size() < rbs) continue;
             }
+            // Copy the remaining data to a temporary array
             if (start > 0 && size > 0) {
                 // append and resize
                 List<T> last = new ArrayList<>(size);
@@ -183,10 +273,24 @@ public class ListSheet<T> extends Sheet {
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
 
+    /**
+     * Get the first object of the object array witch is not NULL,
+     * reflect all declared fields, and then do the following steps
+     * step 1. If there is has DisplayName annotation, the value of
+     * this annotation is used as the column name.
+     * step 2. If the DisplayName annotation has no value or no
+     * DisplayName annotation, the field name is used as the column name.
+     * step 3. Skip this Field if field has a NotExport annotation
+     * <p>
+     * The column order is the same as the order in declared fields.
+     *
+     * @return the field array
+     */
     private Field[] init() {
+        // Get the first not NULL object
         T o = getFirst();
         if (o == null) return null;
-        if (columns == null || columns.length == 0) {
+        if (!hasHeaderColumns()) {
             Field[] fields = o.getClass().getDeclaredFields();
             List<Column> list = new ArrayList<>(fields.length);
             for (int i = 0; i < fields.length; i++) {
@@ -199,9 +303,11 @@ public class ListSheet<T> extends Sheet {
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
                 if (dn != null && StringUtil.isNotEmpty(dn.value())) {
-                    list.add(new Column(dn.value(), field.getName(), field.getType()).setShare(dn.share()));
+                    list.add(new Column(dn.value(), field.getName()
+                        , field.getType()).setShare(dn.share()));
                 } else {
-                    list.add(new Column(field.getName(), field.getName(), field.getType()).setShare(dn != null && dn.share()));
+                    list.add(new Column(field.getName(), field.getName()
+                        , field.getType()).setShare(dn != null && dn.share()));
                 }
             }
             columns = new Column[list.size()];
@@ -243,19 +349,22 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the header column info
+     *
      * @return array of column
      */
     @Override
     public Column[] getHeaderColumns() {
         if (!headerReady) {
-            if (data == null || data.isEmpty()) {
-                columns = new Column[0];
-            }
+//            if (!hasHeaderColumns()) {
+//                columns = new Column[0];
+//            }
             // create header columns
             fields = init();
             if (fields == null || fields.length == 0 || fields[0] == null) {
                 columns = new Column[0];
             } else {
+                // Check the header column limit
+                checkColumnLimit();
                 headerReady = true;
             }
         }
@@ -264,6 +373,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns the end index of row-block
+     *
      * @return the end index
      */
     protected int getEndIndex() {
@@ -277,6 +387,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns total rows in this worksheet
+     *
      * @return -1 if unknown
      */
     @Override
@@ -312,6 +423,7 @@ public class ListSheet<T> extends Sheet {
 
     /**
      * Returns total data size before split
+     *
      * @return the total size
      */
     public int dataSize() {
@@ -323,12 +435,12 @@ public class ListSheet<T> extends Sheet {
      * This is a data source independent method. You can get data
      * from any data source. Since this method is stateless, you
      * should manage paging or other information in your custom Sheet.
-     *
+     * <p>
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
-     * this value before the speed and memory. You can refer to 2^8 ~ 2^10
-     *
+     * this value between the speed and memory. You can refer to 2^8 ~ 2^10
+     * <p>
      * This method is blocked
      *
      * @return The data output to the worksheet, if a null or empty

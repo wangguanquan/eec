@@ -30,18 +30,18 @@ import java.util.TimeZone;
  * Created by guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
-    static final int DAYS_1900_TO_1970 = ~(int)LocalDate.of(1900, 1, 1).toEpochDay() + 3;
+    static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
     static final double SECOND_OF_DAY = (double) 24 * 60 * 60;
 
     // time-zone
     static final int tz = TimeZone.getDefault().getRawOffset();
 
     static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
-            = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"));
+        = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"));
     static final ThreadLocal<SimpleDateFormat> dateTimeFormat
-            = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+        = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     static final ThreadLocal<SimpleDateFormat> dateFormat
-            = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+        = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
 
     public static String toString(Date date) {
         return dateTimeFormat.get().format(date);
@@ -59,8 +59,10 @@ public class DateUtil {
         return LocalDate.now().toString();
     }
 
+    private DateUtil() { }
     /**
      * Timestamp to Office open xml timestamp
+     *
      * @param ts the java.sql.timestamp value
      * @return Office open xml timestamp
      */
@@ -73,6 +75,7 @@ public class DateUtil {
 
     /**
      * java.util.Date to Office open xml date
+     *
      * @param date the java.util.Date value
      * @return Office open xml date
      */
@@ -88,6 +91,7 @@ public class DateUtil {
 
     /**
      * Timestamp to Office open xml time-of-day
+     *
      * @param ts the Timestamp value
      * @return Office open xml time-of-day
      */
@@ -97,6 +101,7 @@ public class DateUtil {
 
     /**
      * java.util.Date to Office open xml time-of-day
+     *
      * @param date the java.util.Date value
      * @return Office open xml time-of-day
      */
@@ -106,6 +111,7 @@ public class DateUtil {
 
     /**
      * java.sql.Time to Office open xml time-of-day
+     *
      * @param time the java.sql.Time value
      * @return Office open xml time-of-day
      */
@@ -115,6 +121,7 @@ public class DateUtil {
 
     /**
      * LocalDateTime to Office open xml timestamp
+     *
      * @param ldt the java.time.LocalDateTime value
      * @return Office open xml timestamp
      */
@@ -126,6 +133,7 @@ public class DateUtil {
 
     /**
      * LocalDate to Office open xml date
+     *
      * @param date the java.time.LocalDate value
      * @return Office open xml date
      */
@@ -135,6 +143,7 @@ public class DateUtil {
 
     /**
      * LocalTime to Office open xml time-of-day
+     *
      * @param time the LocalTime value
      * @return Office open xml time-of-day
      */
@@ -146,6 +155,7 @@ public class DateUtil {
 
     /**
      * Office open XML timestamp to java.util.Date
+     *
      * @param n the office open xml timestamp value
      * @return java.util.Date
      */
@@ -158,6 +168,7 @@ public class DateUtil {
 
     /**
      * Office open xml timestamp to java.util.Date
+     *
      * @param d the Office open xml timestamp value
      * @return java.util.Date
      */

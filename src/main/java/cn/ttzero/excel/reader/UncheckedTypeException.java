@@ -30,13 +30,9 @@ public class UncheckedTypeException extends RuntimeException {
     /**
      * Constructs an instance of this class.
      *
-     * @param   message
-     *          the detail message, can be null
-     * @param   thr
-     *          the {@code TypeException}
-     *
-     * @throws  NullPointerException
-     *          if the cause is {@code null}
+     * @param message the detail message, can be null
+     * @param thr     the {@code TypeException}
+     * @throws NullPointerException if the cause is {@code null}
      */
     public UncheckedTypeException(String message, Throwable thr) {
         super(message, Objects.requireNonNull(thr));
@@ -45,10 +41,8 @@ public class UncheckedTypeException extends RuntimeException {
     /**
      * Constructs an instance of this class.
      *
-     * @param   message the detail message
-     *
-     * @throws  NullPointerException
-     *          if the cause is {@code null}
+     * @param message the detail message
+     * @throws NullPointerException if the cause is {@code null}
      */
     public UncheckedTypeException(String message) {
         super(message);
@@ -62,8 +56,7 @@ public class UncheckedTypeException extends RuntimeException {
      *          an {@code IOException}
      */
     private void readObject(ObjectInputStream s)
-            throws IOException, ClassNotFoundException
-    {
+        throws IOException, ClassNotFoundException {
         s.defaultReadObject();
         Throwable cause = super.getCause();
         if (!(cause instanceof IOException))

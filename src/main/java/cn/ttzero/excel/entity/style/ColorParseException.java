@@ -21,11 +21,11 @@ package cn.ttzero.excel.entity.style;
  */
 public class ColorParseException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ColorParseException(String message) {
-    super(message);
-}
+    public ColorParseException(String message) {
+        super(message);
+    }
 
     public ColorParseException(String message, Throwable cause) {
         super(message, cause);
@@ -36,8 +36,8 @@ public class ColorParseException extends RuntimeException {
     }
 
     protected ColorParseException(String message, Throwable cause,
-                                   boolean enableSuppression,
-                                   boolean writableStackTrace) {
+                                  boolean enableSuppression,
+                                  boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

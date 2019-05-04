@@ -32,18 +32,21 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * The worksheet name
+     *
      * @return the sheet name
      */
     String getName();
 
     /**
      * The index of worksheet located at the workbook
+     *
      * @return the index(zero base)
      */
     int getIndex();
 
     /**
      * size of rows.
+     *
      * @return size of rows
      * -1: unknown size
      */
@@ -64,12 +67,14 @@ public interface Sheet extends AutoCloseable {
     /**
      * Returns the header of the list.
      * The first non-empty line defaults to the header information.
+     *
      * @return the HeaderRow
      */
     Row getHeader();
 
     /**
      * Set the binding type
+     *
      * @param clazz the binding type
      * @return sheet
      */
@@ -77,6 +82,7 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Load the sheet data
+     *
      * @return sheet
      * @throws IOException if io error occur
      */
@@ -84,20 +90,23 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Iterating each row of data contains header information and blank lines
+     *
      * @return a row iterator
      */
     Iterator<Row> iterator();
 
     /**
      * Iterating over data rows without header information and blank lines
+     *
      * @return a row iterator
      */
     Iterator<Row> dataIterator();
 
     /**
      * Return a stream of all rows
+     *
      * @return a {@code Stream<Row>} providing the lines of row
-     *         described by this {@code Sheet}
+     * described by this {@code Sheet}
      * @since 1.8
      */
     default Stream<Row> rows() {
@@ -107,8 +116,9 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Return stream with out header row and empty rows
+     *
      * @return a {@code Stream<Row>} providing the lines of row
-     *         described by this {@code Sheet}
+     * described by this {@code Sheet}
      * @since 1.8
      */
     default Stream<Row> dataRows() {
@@ -118,6 +128,7 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Convert column mark to int
+     *
      * @param col column mark
      * @return int value
      */
@@ -135,6 +146,7 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Close resource
+     *
      * @throws IOException if io error occur
      */
     void close() throws IOException;

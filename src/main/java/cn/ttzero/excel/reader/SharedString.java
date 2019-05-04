@@ -33,7 +33,7 @@ import java.util.*;
  * 如果都没有则按下标重新读取该区块到eden区，原eden区数据复制到old区。
  * 加载两次的区块将被标记，被标记的区块有重复读取时被放入hot区，
  * hot区采用LRU页面置换算法进行淘汰。
- *
+ * <p>
  * Create by guanquan.wang at 2018-09-27 14:28
  */
 public class SharedString {
@@ -69,40 +69,74 @@ public class SharedString {
         this.hotSize = hotSize;
     }
 
-    /** 新加载数据放入此区域 */
+    /**
+     * 新加载数据放入此区域
+     */
     private String[] eden;
-    /** eden区未命中时将数据复制到此区域 */
+    /**
+     * eden区未命中时将数据复制到此区域
+     */
     private String[] old;
-    /** 每次加载的数量 */
+    /**
+     * 每次加载的数量
+     */
     private int page = 512;
-    /** 整个文件有多少个字符串 */
+    /**
+     * 整个文件有多少个字符串
+     */
     private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
-    /** 新生代offset */
+    /**
+     * 新生代offset
+     */
     private int offset_eden = -1;
-    /** 老年代offset */
+    /**
+     * 老年代offset
+     */
     private int offset_old = -1;
-    /** 新生代limit */
+    /**
+     * 新生代limit
+     */
     private int limit_eden;
-    /** 老年代limit */
+    /**
+     * 老年代limit
+     */
     private int limit_old;
-    /** 统计各段被访问次数 */
+    /**
+     * 统计各段被访问次数
+     */
     private Map<Integer, Integer> count_area = null;
-    /** hot world */
+    /**
+     * hot world
+     */
     private Hot hot;
-    /** size of hot */
+    /**
+     * size of hot
+     */
     private int hotSize;
-    /** 记录各段的起始位置 */
+    /**
+     * 记录各段的起始位置
+     */
     private Map<Integer, Long> index_area = null;
 
-    /** Main reader */
+    /**
+     * Main reader
+     */
     private BufferedReader reader;
-    /** Buffered */
+    /**
+     * Buffered
+     */
     private char[] cb;
-    /** offset of cb[] */
+    /**
+     * offset of cb[]
+     */
     private int offset;
-    /** current skip of Main reader */
+    /**
+     * current skip of Main reader
+     */
     private long skipR;
-    /** escape buffer */
+    /**
+     * escape buffer
+     */
     private StringBuilder escapeBuf;
     // For debug
     private int total, total_eden, total_old, total_hot;
@@ -127,7 +161,7 @@ public class SharedString {
                 old = new String[page];
 
                 if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
-                count_area =  new HashMap<>(default_cap);
+                count_area = new HashMap<>(default_cap);
 
                 if (hotSize > 0) hot = new Hot(hotSize);
                 else hot = new Hot();
@@ -151,8 +185,8 @@ public class SharedString {
         offset = reader.read(cb);
 
         int i = 0, len = offset - 4;
-        for (; i < len && (cb[i] != '<' || cb[i+1] != 's' || cb[i+2] != 'i' || cb[i+3] != '>'); i++);
-        if (i == len) return  0; // Empty
+        for (; i < len && (cb[i] != '<' || cb[i + 1] != 's' || cb[i + 2] != 'i' || cb[i + 3] != '>'); i++) ;
+        if (i == len) return 0; // Empty
 
         String line = new String(cb, 0, i);
         // Microsoft Excel
@@ -179,13 +213,14 @@ public class SharedString {
 
     /**
      * 根据下标获取字符串
+     *
      * @param index of sharedString
      * @return string
      */
     public String get(int index) {
         total++;
         if (index < 0 || max > -1 && max <= index) {
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max);
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
         }
 
         // Load first
@@ -226,7 +261,7 @@ public class SharedString {
             eden[0] = null;
             loadXml();
             if (eden[0] == null) {
-                throw new IndexOutOfBoundsException("Index: "+index+", Size: "+max);
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
             }
             value = eden[index - offset_eden];
             if (test(index)) {
@@ -251,6 +286,7 @@ public class SharedString {
 
     /**
      * LRU2
+     *
      * @param index
      * @return
      */
@@ -373,6 +409,7 @@ public class SharedString {
     /**
      * Read data from main reader
      * forward only
+     *
      * @return word count
      * @throws IOException -
      */
@@ -431,7 +468,7 @@ public class SharedString {
             nChar += 4;
             cursor = nChar;
         }
-        return new int[]{ nChar, n, cursor };
+        return new int[]{nChar, n, cursor};
     }
 
     /**
@@ -452,7 +489,7 @@ public class SharedString {
             escapeBuf.append(cb, from, idx_38 - from);
             // ASCII值
             if (cb[idx_38 + 1] == '#') {
-                int n = toInt(cb, idx_38+2, idx_59);
+                int n = toInt(cb, idx_38 + 2, idx_59);
                 // byte range
 //                if (n < 0 || n > 127) {
 //                    logger.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
@@ -462,13 +499,23 @@ public class SharedString {
             }
             // 转义字符
             else {
-                String name = new String(cb, idx_38+1, idx_59 - idx_38 - 1);
+                String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
                 switch (name) {
-                    case "lt": escapeBuf.append('<'); break;
-                    case "gt": escapeBuf.append('>'); break;
-                    case "amp": escapeBuf.append('&'); break;
-                    case "quot": escapeBuf.append('"'); break;
-                    case "nbsp": escapeBuf.append(' '); break;
+                    case "lt":
+                        escapeBuf.append('<');
+                        break;
+                    case "gt":
+                        escapeBuf.append('>');
+                        break;
+                    case "amp":
+                        escapeBuf.append('&');
+                        break;
+                    case "quot":
+                        escapeBuf.append('"');
+                        break;
+                    case "nbsp":
+                        escapeBuf.append(' ');
+                        break;
                     default: // Unknown escape
                         logger.warn("Unknown escape [&{}]", name);
                         escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
@@ -485,7 +532,7 @@ public class SharedString {
     }
 
     private int indexOf(char[] cb, char c, int from) {
-        for ( ; from < cb.length; from++) {
+        for (; from < cb.length; from++) {
             if (cb[from] == c) return from;
         }
         return -1;
