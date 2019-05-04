@@ -272,22 +272,43 @@ public class StatementSheet extends ResultSetSheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = ps.getMetaData();
-            for (; i < columns.length; i++) {
-                if (StringUtil.isEmpty(columns[i].getName())) {
-                    columns[i].setName(metaData.getColumnName(i));
+            if (columns != null) {
+                for (; i < columns.length; i++) {
+                    Column column = columns[i];
+                    if (StringUtil.isEmpty(column.getName())) {
+                        column.setName(metaData.getColumnName(i + 1));
+                    }
+                    // FIXME maybe do not reset the types
+                    Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
+                    if (column.clazz != metaClazz) {
+                        what("The specified type " + column.clazz +" is different" +
+                            " from metadata column type " + metaClazz);
+                        column.clazz = metaClazz;
+                    }
                 }
-                // TODO metaData.getColumnType()
+            } else {
+                int count = metaData.getColumnCount();
+                columns = new Column[count];
+                for (; ++i <= count; ) {
+                    columns[i - 1] = new Column(metaData.getColumnName(i)
+                        , columnTypeToClass(metaData.getColumnType(i)));
+                }
             }
         } catch (SQLException e) {
-            workbook.what("un-support get result set meta data.");
+            what("un-support get result set meta data.");
         }
 
-        for (i = 0; i < columns.length; i++) {
-            if (StringUtil.isEmpty(columns[i].getName())) {
-                columns[i].setName(String.valueOf(i));
+        if (columns != null) {
+            for (i = 0; i < columns.length; i++) {
+                if (StringUtil.isEmpty(columns[i].getName())) {
+                    columns[i].setName(String.valueOf(i));
+                }
+                if (columns[i].styles == null) {
+                    columns[i].styles = workbook.getStyles();
+                }
             }
+            headerReady = columns.length > 0;
         }
-        headerReady = columns.length > 0;
         return columns;
     }
 }
