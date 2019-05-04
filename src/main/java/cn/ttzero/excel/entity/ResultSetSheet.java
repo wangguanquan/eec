@@ -33,10 +33,10 @@ import static java.sql.Types.TIME;
  * ResultSet is one of the worksheet data sources, It has a subclass
  * {@code StatementSheet}. Most of the time it is used to get the
  * result of a stored procedure.
- *
+ * <p>
  * Write data to the row-block via the cursor, finished write when
  * {@code ResultSet#next} returns false
- *
+ * <p>
  * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
@@ -146,6 +146,7 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Setting ResultSet
+     *
      * @param rs the ResultSet
      * @return {@code ResultSetSheet}
      */
@@ -237,7 +238,7 @@ public class ResultSetSheet extends Sheet {
                     // FIXME maybe do not reset the types
                     Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
                     if (column.clazz != metaClazz) {
-                        what("The specified type " + column.clazz +" is different" +
+                        what("The specified type " + column.clazz + " is different" +
                             " from metadata column type " + metaClazz);
                         column.clazz = metaClazz;
                     }
@@ -273,6 +274,7 @@ public class ResultSetSheet extends Sheet {
 
     /**
      * Convert {@code java.sql.Type} to java type
+     *
      * @param type type sql type
      * @return java class
      */
