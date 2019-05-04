@@ -30,6 +30,13 @@ import static java.sql.Types.*;
 import static java.sql.Types.TIME;
 
 /**
+ * ResultSet is one of the worksheet data sources, It has a subclass
+ * {@code StatementSheet}. Most of the time it is used to get the
+ * result of a stored procedure.
+ *
+ * Write data to the row-block via the cursor, finished write when
+ * {@code ResultSet#next} returns false
+ *
  * Created by guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
@@ -207,9 +214,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Returns the header column info
+     * Get header information, get from MetaData if not specified
+     * The copy sheet will use the parent worksheet header information.
      *
-     * @return array of column
+     * @return the header information
      */
     @Override
     public Column[] getHeaderColumns() {
