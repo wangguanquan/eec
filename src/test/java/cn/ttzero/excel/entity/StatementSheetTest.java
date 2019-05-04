@@ -238,35 +238,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
         }
     }
 
-    @Test public void testCancelOddStyle() {
-        try (Connection con = getConnection()) {
-            new Workbook("test statement sheet cancel odd", author)
-                .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10")
-                    .setWaterMark(WaterMark.of("TEST"))
-                    .cancelOddStyle()
-                )
-                .writeTo(defaultTestPath);
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test public void testDiffTypeFromMetadata() {
-        try (Connection con = getConnection()) {
-            new Workbook("test different type from metadata", author)
-                .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"
-                    , new Sheet.Column("ID", String.class)  // Integer in database
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", String.class) // Integer in database
-                ))
-                .writeTo(defaultTestPath);
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Test public void testConstructor9() {
         try {
             new Workbook("test statement sheet Constructor9", author)
@@ -327,6 +298,47 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .writeTo(defaultTestPath);
         } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test public void testCancelOddStyle() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement sheet cancel odd", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10")
+                    .setWaterMark(WaterMark.of("TEST"))
+                    .cancelOddStyle()
+                )
+                .writeTo(defaultTestPath);
+        } catch (SQLException |IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testDiffTypeFromMetadata() {
+        try (Connection con = getConnection()) {
+            new Workbook("test Statement different type from metadata", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"
+                    , new Sheet.Column("ID", String.class)  // Integer in database
+                    , new Sheet.Column("NAME", String.class)
+                    , new Sheet.Column("AGE", String.class) // Integer in database
+                ))
+                .writeTo(defaultTestPath);
+        } catch (SQLException |IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testFixWidth() {
+        try (Connection con = getConnection()) {
+            new Workbook("test statement fix width", author)
+                .watch(Print::println)
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixSize(10))
+                .writeTo(defaultTestPath);
+        } catch (SQLException |IOException e) {
             e.printStackTrace();
         }
     }
