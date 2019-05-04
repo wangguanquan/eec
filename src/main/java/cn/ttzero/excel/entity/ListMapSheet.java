@@ -177,7 +177,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             if (columns == null) {
                 columns = new Column[0];
             }
-        } else if (columns.length == 0) {
+        } else if (!hasHeaderColumns()) {
             int size = first.size(), i = 0;
             columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
@@ -195,6 +195,9 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 }
             }
         }
+        // Check the header column limit
+        checkColumnLimit();
+
         for (Column hc : columns) {
             hc.styles = workbook.getStyles();
         }
