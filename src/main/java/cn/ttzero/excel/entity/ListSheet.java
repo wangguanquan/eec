@@ -247,7 +247,7 @@ public class ListSheet<T> extends Sheet {
             }
             // The first getting
             if (data == null) {
-                data = new ArrayList<>(rbs);
+//                data = new ArrayList<>(rbs);
                 setData(list);
 
                 if (list.size() < rbs) continue;
