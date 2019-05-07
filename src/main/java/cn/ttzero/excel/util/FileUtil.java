@@ -374,11 +374,7 @@ public class FileUtil {
 
     public static void writeToDiskNoFormat(Document doc, Path path) throws IOException {
         if (!Files.exists(path.getParent())) {
-            try {
-                Files.createDirectories(path.getParent());
-            } catch (IOException e) {
-                throw e;
-            }
+            mkdir(path.getParent());
         }
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
             //write the created document to an arbitrary file
