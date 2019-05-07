@@ -344,11 +344,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<c r=\"");
             bw.write(sheet.int2Col(c++));
             bw.writeInt(row);
-            bw.write("\" t=\"inlineStr\" s=\"");
+            bw.write("\" t=\"s\" s=\"");
             bw.writeInt(defaultStyle);
-            bw.write("\"><is><t>");
-            bw.write(hc.getName());
-            bw.write("</t></is></c>");
+            bw.write("\"><v>");
+            bw.writeInt(sst.get(hc.getName()));
+            bw.write("</v></c>");
         }
         bw.write("</row>");
     }
