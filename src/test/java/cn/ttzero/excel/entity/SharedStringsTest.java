@@ -37,5 +37,11 @@ public class SharedStringsTest {
 
         index = sst.get("guanquan.wang");
         assert index == 2;
+
+        index = sst.get("guanquan.wang");
+        assert index == 2;
+
+        index = sst.get("test");
+        assert index == 3;
     }
 }

@@ -36,6 +36,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
+import static cn.ttzero.excel.reader.SharedString.unescape;
+
 /**
  * 字符串共享，一个workbook的所有worksheet共享
  * <p>
@@ -53,6 +55,8 @@ public class SharedStrings {
     private Path temp;
     private ExtBufferedWriter writer;
     private Hot<String, Integer> hot;
+
+    private StringBuilder buf;
 
     SharedStrings() {
         hot = new Hot<>(1 << 10);
@@ -88,10 +92,8 @@ public class SharedStrings {
             int n = ascii[c];
             // Not exists
             if (n == -1) {
-                char[] cs = charCache.get();
-                cs[0] = c;
-                add(new String(cs));
-                n = ++uniqueCount;
+                add(c);
+                n = uniqueCount++;
                 ascii[c] = n;
             }
             count++;
@@ -109,10 +111,11 @@ public class SharedStrings {
      * @return index of the string in the SST
      */
     public int get(String key) throws IOException {
+        count++;
         // The keyword not exists
         if (!filter.mightContain(key)) {
             filter.put(key);
-            int n = ++uniqueCount;
+            int n = uniqueCount++;
             add(key);
             return n;
         }
@@ -121,15 +124,22 @@ public class SharedStrings {
         if (n == null) {
             // Find in temp file
             n = findFromFile(key);
-            hot.push(key, n);
+            if (n >= 0) {
+                hot.push(key, n);
+            } else add(key);
         }
-        count++;
         return n;
     }
 
     private void add(String key) throws IOException {
         writer.write("<si><t>");
         writer.escapeWrite(key);
+        writer.write("</t></si>");
+    }
+
+    private void add(char c) throws IOException {
+        writer.write("<si><t>");
+        writer.write(c);
         writer.write("</t></si>");
     }
 
@@ -199,12 +209,13 @@ public class SharedStrings {
     /**
      *
      * @param key the string value
-     * @return
+     * @return the index in sst file (zero base)
      */
     private int findFromFile(String key) throws IOException {
         writer.flush();
 
-//        char[] values = key.toCharArray();
+        buf = new StringBuilder();
+
         try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
             char[] cb = new char[8192];
             int n, off = 0;
@@ -223,7 +234,7 @@ public class SharedStrings {
             }
         }
 
-        throw new ExcelWriteException("Maybe Bloom Filter has some error.");
+        return -1;
     }
 
     private void findT(O o) {
@@ -231,8 +242,11 @@ public class SharedStrings {
         for (; nChar < o.n; ) {
             o.index++;
             int next = next(o.cb, nChar, o.n);
-            // TODO unescape
-            String v = new String(o.cb, nChar, next - nChar);
+            if (next >= o.n) {
+                o.off = nChar;
+                break;
+            }
+            String v = unescape(buf, o.cb, nChar, next);
             o.f = v.equals(o.key);
             if (o.f) {
                 break;
@@ -242,20 +256,7 @@ public class SharedStrings {
                 break;
             }
             nChar = next + ln;
-//            if (charArrayEquals(val, cb, nChar, n)) {
-//                return new int[] {n, index, 1};
-//            } else {
-//                int a = next(cb, nChar, n);
-//                // end
-//                if (a == n) {
-//                    System.arraycopy(cb, nChar, cb, 0, n - nChar);
-//                    return new int[] {0, index, 0};
-//                }
-//                if (a + ln > n) break;
-//                nChar = a + ln;
-//            }
         }
-//        return new int[] {nChar, index, 0};
     }
 
     private int next(char[] cb, int nChar, int n) {
@@ -263,22 +264,15 @@ public class SharedStrings {
         return nChar;
     }
 
-//    private static boolean charArrayEquals(char[] c1, char[] c2, int off, int n) {
-//        int i = 0, c = 0, len = c1.length;
-//        for (; i < len && (c = off + i) < n;) {
-//            if (c1[i++] != c2[c])
-//                return c2[c] == '<';
-//        }
-//        return c2[c + 1] == '<';
-//    }
-
     /**
      * clear memory
      */
     private void destroy() {
-//        elements.clear();
-//        elements = null;
         FileUtil.rm(temp);
+        buf = null;
+        filter = null;
+        hot.clear();
+        hot = null;
     }
 
     private static class O {
