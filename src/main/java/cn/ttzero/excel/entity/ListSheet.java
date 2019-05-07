@@ -95,7 +95,8 @@ public class ListSheet<T> extends Sheet {
      * @param data the worksheet's body data
      */
     public ListSheet(String name, List<T> data) {
-        this(name, data, null);
+        super(name);
+        setData(data);
     }
 
     /**
