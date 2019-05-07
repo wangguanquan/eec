@@ -188,7 +188,7 @@ public abstract class Sheet implements Cloneable {
         /**
          * 字符串是否共享
          */
-        public boolean share;
+        public boolean share = true;
         /**
          * 0: 正常显示 1:显示百分比 2:显示人民币
          */
