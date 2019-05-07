@@ -18,16 +18,23 @@ package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.annotation.TopNS;
+import cn.ttzero.excel.reader.Hot;
+import cn.ttzero.excel.util.ExtBufferedWriter;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
-import org.dom4j.Document;
-import org.dom4j.DocumentFactory;
-import org.dom4j.Element;
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnels;
 
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 
 /**
  * 字符串共享，一个workbook的所有worksheet共享
@@ -37,65 +44,250 @@ import java.util.Map;
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings {
     // 存储共享字符
-    private Map<String, Integer> elements;
     private int count; // workbook所有字符串(shared属性为true)的个数
-    private static final int MAX_CACHE_SIZE = 8192;
+    private int uniqueCount;
+    // Import google BloomFilter to check keyword not exists
+    private BloomFilter<String> filter;
+    // Cache ASCII value
+    private int[] ascii;
+    private Path temp;
+    private ExtBufferedWriter writer;
+    private Hot<String, Integer> hot;
 
     SharedStrings() {
-        elements = new LinkedHashMap<>();
+        hot = new Hot<>(1 << 10);
+        ascii = new int[1 << 7];
+        // -1 means the keyword not exists
+        Arrays.fill(ascii, -1);
+        // Create a 10w expected insertions and 0.03% fpp bloom filter
+        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.0003);
+
+        init();
+    }
+
+    private void init() {
+        try {
+            temp = Files.createTempFile("+", "sst");
+            Files.deleteIfExists(temp);
+            writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new ExcelWriteException(e);
+        }
     }
 
     private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
 
-    public int get(char c) {
-        char[] cs = charCache.get();
-        cs[0] = c;
-        return get(new String(cs));
+    /**
+     * Getting the character value index
+     * @param c the character value
+     * @return the index in ShareString
+     */
+    public int get(char c) throws IOException {
+        // An ASCII keyword
+        if (c < 128) {
+            int n = ascii[c];
+            // Not exists
+            if (n == -1) {
+                char[] cs = charCache.get();
+                cs[0] = c;
+                add(new String(cs));
+                n = ++uniqueCount;
+                ascii[c] = n;
+            }
+            count++;
+            return n;
+        } else {
+            char[] cs = charCache.get();
+            cs[0] = c;
+            return get(new String(cs));
+        }
     }
 
     /**
-     * TODO 每个sheet采用one by one的方式输出，暂不考虑并发
-     * FIXME OOM occur
-     *
-     * @param key the string
+     * Getting the string value from cache
+     * @param key the string value
      * @return index of the string in the SST
      */
-    public int get(String key) {
-        Integer n = elements.get(key);
+    public int get(String key) throws IOException {
+        // The keyword not exists
+        if (!filter.mightContain(key)) {
+            filter.put(key);
+            int n = ++uniqueCount;
+            add(key);
+            return n;
+        }
+        // Check the keyword exists in cache
+        Integer n = hot.get(key);
         if (n == null) {
-            if (elements.size() < MAX_CACHE_SIZE) {
-                elements.put(key, n = elements.size());
-            } else {
-                return -1;
-            }
+            // Find in temp file
+            n = findFromFile(key);
+            hot.push(key, n);
         }
         count++;
         return n;
     }
 
+    private void add(String key) throws IOException {
+        writer.write("<si><t>");
+        writer.escapeWrite(key);
+        writer.write("</t></si>");
+    }
+
     public void write(Path root) throws IOException {
+        // Close temp writer
+        FileUtil.close(writer);
+
+        if (!Files.exists(root)) {
+            FileUtil.mkdir(root);
+        }
+
+        StringBuilder buf = new StringBuilder();
         TopNS topNS = getClass().getAnnotation(TopNS.class);
+        if (topNS != null) {
+            buf.append(Const.EXCEL_XML_DECLARATION);
+            buf.append(Const.lineSeparator);
+            buf.append("<").append(topNS.value()).append(" xmlns=\"").append(topNS.uri()[0]).append("\"")
+                .append(" count=\"").append(count).append("\"")
+                .append(" uniqueCount=\"").append(uniqueCount).append("\">")
+                .append(Const.lineSeparator);
+        } else {
+            buf.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")
+                .append(count).append("\" uniqueCount=\"").append(uniqueCount).append("\">")
+            .append(Const.lineSeparator);
+        }
 
-        DocumentFactory factory = DocumentFactory.getInstance();
-        //use the factory to create a root element
-        Element rootElement = factory.createElement(topNS.value(), topNS.uri()[0]);
-        rootElement.addAttribute("uniqueCount", String.valueOf(elements.size()));
-        rootElement.addAttribute("count", String.valueOf(count));
+        // The output path
+        Path dist = root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML));
 
-        elements.forEach((k, v) -> rootElement.addElement("si").addElement("t").setText(k));
+        try (FileOutputStream fos = new FileOutputStream(dist.toFile());
+            FileChannel channel = fos.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocate(512);
+            buffer.put(buf.toString().getBytes(StandardCharsets.UTF_8));
+            buffer.flip();
+            channel.write(buffer);
 
-        Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDiskNoFormat(doc, root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML))); // write to desk
+            if (count > 0) {
+                transfer(channel);
+            }
 
+            buffer.clear();
+            buf.delete(0, buf.length());
+            if (topNS != null) {
+                buf.append("</").append(topNS.value()).append(">");
+            } else {
+                buf.append("</sst>");
+            }
+            buffer.put(buf.toString().getBytes(StandardCharsets.UTF_8));
+            buffer.flip();
+            channel.write(buffer);
+        }
         // destroy
         destroy();
     }
 
     /**
+     * Transfer temp data to dist path
+     * @param channel the dist file channel
+     * @throws IOException if io error occur
+     */
+    private void transfer(FileChannel channel) throws IOException {
+        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
+            tempChannel.transferTo(0, tempChannel.size(), channel);
+        }
+    }
+
+    /**
+     *
+     * @param key the string value
+     * @return
+     */
+    private int findFromFile(String key) throws IOException {
+        writer.flush();
+
+//        char[] values = key.toCharArray();
+        try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
+            char[] cb = new char[8192];
+            int n, off = 0;
+            O o = new O();
+            o.cb = cb;
+            o.key = key;
+            while ((n = reader.read(cb, off, cb.length - off)) > 0) {
+                o.n = n;
+                findT(o);
+                // Get it
+                if (o.f) {
+                    return o.index;
+                } else {
+                    System.arraycopy(cb, o.off, cb, 0, off = n - o.off);
+                }
+            }
+        }
+
+        throw new ExcelWriteException("Maybe Bloom Filter has some error.");
+    }
+
+    private void findT(O o) {
+        int sn = 7, ln = 9 + sn, nChar = sn;
+        for (; nChar < o.n; ) {
+            o.index++;
+            int next = next(o.cb, nChar, o.n);
+            // TODO unescape
+            String v = new String(o.cb, nChar, next - nChar);
+            o.f = v.equals(o.key);
+            if (o.f) {
+                break;
+            }
+            if (next + ln > o.n) {
+                o.off = nChar;
+                break;
+            }
+            nChar = next + ln;
+//            if (charArrayEquals(val, cb, nChar, n)) {
+//                return new int[] {n, index, 1};
+//            } else {
+//                int a = next(cb, nChar, n);
+//                // end
+//                if (a == n) {
+//                    System.arraycopy(cb, nChar, cb, 0, n - nChar);
+//                    return new int[] {0, index, 0};
+//                }
+//                if (a + ln > n) break;
+//                nChar = a + ln;
+//            }
+        }
+//        return new int[] {nChar, index, 0};
+    }
+
+    private int next(char[] cb, int nChar, int n) {
+        for (; nChar < n && cb[nChar] != '<'; nChar++);
+        return nChar;
+    }
+
+//    private static boolean charArrayEquals(char[] c1, char[] c2, int off, int n) {
+//        int i = 0, c = 0, len = c1.length;
+//        for (; i < len && (c = off + i) < n;) {
+//            if (c1[i++] != c2[c])
+//                return c2[c] == '<';
+//        }
+//        return c2[c + 1] == '<';
+//    }
+
+    /**
      * clear memory
      */
     private void destroy() {
-        elements.clear();
-        elements = null;
+//        elements.clear();
+//        elements = null;
+        FileUtil.rm(temp);
+    }
+
+    private static class O {
+        private char[] cb;
+        private int n;
+        private int off;
+        private String key;
+
+        private int index;
+        private boolean f;
     }
 }
