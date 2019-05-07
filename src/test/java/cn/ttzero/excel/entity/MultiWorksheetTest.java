@@ -57,9 +57,9 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .setAutoSize(true)
                 .setConnection(con)
                 // List<Map>
-                .addSheet("List<Map>", ListMapSheetTest.createAllTypeData())
+                .addSheet("ListMap", ListMapSheetTest.createAllTypeData())
                 // List<Object>
-                .addSheet("List<Object>", ListObjectSheetTest.Item.randomTestData())
+                .addSheet("ListObject", ListObjectSheetTest.Item.randomTestData())
                 // Statement
                 .addSheet("Statement", "select id, name, age from student"
                     , new Sheet.Column("学号", int.class)

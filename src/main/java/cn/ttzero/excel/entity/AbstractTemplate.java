@@ -51,7 +51,6 @@ public abstract class AbstractTemplate {
      *
      * @return
      */
-    @SuppressWarnings("unchecked")
     public boolean check() {
         // Integrity check
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
@@ -66,6 +65,7 @@ public abstract class AbstractTemplate {
 
         List<ContentType.Override> overrides = new ArrayList<>();
         List<ContentType.Default> defaults = new ArrayList<>();
+        @SuppressWarnings("unchecked")
         Iterator<Element> it = document.getRootElement().elementIterator();
         while (it.hasNext()) {
             Element e = it.next();
@@ -150,7 +150,6 @@ public abstract class AbstractTemplate {
         wb.what("0099", String.valueOf(n1 + n2));
     }
 
-    @SuppressWarnings("unchecked")
     protected int bindSstData() {
         Path shareStringPath = zipPath.resolve("xl/sharedStrings.xml");
         SAXReader reader = new SAXReader();
@@ -170,6 +169,7 @@ public abstract class AbstractTemplate {
             return 0;
         }
         int n = 0;
+        @SuppressWarnings("unchecked")
         Iterator<Element> iterator = sst.elementIterator();
         while (iterator.hasNext()) {
             Element si = iterator.next(), t = si.element("t");
@@ -192,7 +192,6 @@ public abstract class AbstractTemplate {
         return n;
     }
 
-    @SuppressWarnings("unchecked")
     protected int bindSheetData() {
         // Read content
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
@@ -207,6 +206,7 @@ public abstract class AbstractTemplate {
         }
 
         // Find Override
+        @SuppressWarnings("unchecked")
         List<Element> overrides = document.getRootElement().elements("Override");
         int[] result = overrides.stream()
             .filter(e -> Const.ContentType.SHEET.equals(e.attributeValue("ContentType")))

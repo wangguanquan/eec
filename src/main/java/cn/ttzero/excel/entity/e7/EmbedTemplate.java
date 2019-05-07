@@ -70,7 +70,8 @@ public class EmbedTemplate extends AbstractTemplate {
         } while (n > -1 && n < len);
 
         StringBuilder buf = new StringBuilder();
-        for (int i = 0, size = array.size(), offset = 0; i < size; i++) {
+        int offset = 0;
+        for (int i = 0, size = array.size(); i < size; i++) {
             int[] idx = array.get(i);
             String key = new String(values, idx[0] + 2, idx[1] - idx[0] - 2).trim();
             if (map.containsKey(key)) {
@@ -79,6 +80,10 @@ public class EmbedTemplate extends AbstractTemplate {
                 buf.append(values, offset, idx[1] - offset + 1);
             }
             offset = idx[1] + 1;
+        }
+        // Append the last values
+        if (offset < values.length) {
+            buf.append(values, offset, values.length - offset);
         }
         return buf.toString();
     }
