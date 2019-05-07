@@ -68,4 +68,45 @@ public class HotTest {
             println(e.getK() + ": " + e.getV());
         }
     }
+
+    @Test public void testRemove() {
+        Hot<Integer, String> hot = new Hot<>();
+        hot.push(1, "a");
+        hot.push(2, "b");
+        hot.push(3, "c");
+        hot.push(4, "d");
+
+        assert hot.size() == 4;
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+
+        hot.remove();
+
+        assert hot.size() == 3;
+
+        hot.remove();
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+        hot.remove();
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+        hot.remove();
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+        hot.remove();
+        hot.remove();
+        hot.remove();
+        hot.remove();
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+    }
+
+    @Test public void testClear() {
+        Hot<Integer, String> hot = new Hot<>();
+        hot.push(1, "a");
+        hot.push(2, "b");
+        hot.push(3, "c");
+        hot.push(4, "d");
+
+        assert hot.size() == 4;
+        hot.clear();
+
+        assert hot.size() == 0;
+        hot.forEach(e -> println(e.getK() + ": " + e.getV()));
+    }
 }
