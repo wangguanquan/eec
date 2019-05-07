@@ -77,7 +77,7 @@ public class ExtBufferedWriter extends BufferedWriter {
      * escape text
      *
      * @param text string
-     * @throws IOException
+     * @throws IOException if io error occur
      */
     public void escapeWrite(String text) throws IOException {
         char[] block = text.toCharArray();
