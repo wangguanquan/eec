@@ -1,3 +1,49 @@
+Version 0.3.0 (2019-05-01)
+-------------
+1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
+2. 对Excel 97~03写入兼容支持，eec-e3-support还在开发当中
+3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
+      比如修改每个worksheet最大行数
+4. 修复一些已知BUG
+
+Version 0.2.9 (2019-02-22)
+-------------
+1. Excel读取时增加文件格式判断(BIFF 8 or Open xml)
+2. 创建者未指定时默认取当前操作系统登录名
+3. 增加 Apache License Version 2.0
+4. Rename package (net.cua->cn.ttzero)
+   访问[ttzero](https://www.ttzero.cn)可以了解更多关于eec的信息(网站还处于建设中)
+5. ExcelReader增加返回Excel文件基本信息
+6. ExcelReader增加BIFF8(Excel97~2003)classpath加载
+
+Version 0.2.8 (2018-11-26)
+-------------
+1. 对象数组导出时包装类报类型转换错误bug
+2. 对象数组导出类型为java.util.date时类型转换错误
+3. ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提高读取速度
+4. 暂时取消setConnection方法的过时标记
+5. 修改超过676列时Export会出现位置错误的BUG
+6. 修改列数据过多时Reader出现死循环的BUG
+7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
+
+Version 0.2.7 (2018-11-19)
+-------------
+1. sharedString保留一个顺序流句柄以减少读文件次数
+2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
+   `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
+3. BigDecimal类型支持
+4. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持
+5. 增加读写转义（跳过不可见字符ASCII 0~31）
+6. setConnection方法被标记过时，将在0.3.x版本中删删除。传入一个数据库连接是一种不安全行为，
+   第三方可能利用此连接做其它非法的数据库操作
+
+Version 0.2.5 (2018-11-07)
+-------------
+1. ExcelReader添加热词区，提高大文件查找性能。
+2. sharedString读取由原来的SAX方式改为BufferedReader方式，在不改变切割区块大小的情况下性能提升5倍以上。
+3. 修复取消隔行变色无效的BUG
+4. 添加Sheet时可以不指定名称，默认Sheet名为"Sheet1.2.3..."
+
 Version 0.2.3 (2018-10-18)
 -------------
 1. 修复空行（不含任何元素的行&lt;row/&gt;）读取错位的BUG
