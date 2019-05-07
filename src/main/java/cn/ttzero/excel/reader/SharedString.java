@@ -163,8 +163,8 @@ public class SharedString {
                 if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
                 count_area = new HashMap<>(default_cap);
 
-                if (hotSize > 0) hot = new Hot(hotSize);
-                else hot = new Hot();
+                if (hotSize > 0) hot = new Hot<>(hotSize);
+                else hot = new Hot<>();
             }
             else {
                 eden = new String[max];
