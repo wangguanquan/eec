@@ -108,7 +108,7 @@ public class SharedString {
     /**
      * hot world
      */
-    private Hot hot;
+    private Hot<Integer, String> hot;
     /**
      * size of hot
      */
