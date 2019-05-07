@@ -174,6 +174,7 @@ public class SharedString {
         } else {
             max = 0;
         }
+        escapeBuf = new StringBuilder();
         return this;
     }
 
@@ -464,7 +465,7 @@ public class SharedString {
             }
             for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/' || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar);
             if (nChar >= len1) break; // Not found
-            eden[n++] = nChar > a ? unescape(cb, a, nChar) : null;
+            eden[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
             nChar += 4;
             cursor = nChar;
         }
@@ -474,17 +475,17 @@ public class SharedString {
     /**
      * 反转义
      */
-    String unescape(char[] cb, int from, int to) {
+    public static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
         int idx_38 = indexOf(cb, '&', from), idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 
         if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {
             return new String(cb, from, to - from);
         }
-        if (escapeBuf != null) {
-            escapeBuf.delete(0, escapeBuf.length());
-        } else {
-            escapeBuf = new StringBuilder(to - from < 10 ? 10 : to - from);
-        }
+//        if (escapeBuf != null) {
+        escapeBuf.delete(0, escapeBuf.length());
+//        } else {
+//            escapeBuf = new StringBuilder(to - from < 10 ? 10 : to - from);
+//        }
         do {
             escapeBuf.append(cb, from, idx_38 - from);
             // ASCII值
@@ -517,7 +518,7 @@ public class SharedString {
                         escapeBuf.append(' ');
                         break;
                     default: // Unknown escape
-                        logger.warn("Unknown escape [&{}]", name);
+//                        logger.warn("Unknown escape [&{}]", name);
                         escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
                 }
             }
@@ -531,14 +532,14 @@ public class SharedString {
         return escapeBuf.toString();
     }
 
-    private int indexOf(char[] cb, char c, int from) {
+    private static int indexOf(char[] cb, char c, int from) {
         for (; from < cb.length; from++) {
             if (cb[from] == c) return from;
         }
         return -1;
     }
 
-    private int toInt(char[] cb, int a, int b) {
+    private static int toInt(char[] cb, int a, int b) {
         boolean _n;
         if (_n = cb[a] == '-') a++;
         int n = cb[a++] - '0';

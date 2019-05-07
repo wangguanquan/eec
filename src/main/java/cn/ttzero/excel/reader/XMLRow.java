@@ -22,6 +22,7 @@ import static cn.ttzero.excel.reader.Cell.FUNCTION;
 import static cn.ttzero.excel.reader.Cell.SST;
 import static cn.ttzero.excel.reader.Cell.INLINESTR;
 import static cn.ttzero.excel.reader.Cell.BLANK;
+import static cn.ttzero.excel.reader.SharedString.unescape;
 
 /**
  * 行数据，同一个Sheet页内的Row对象内存共享。
@@ -34,6 +35,7 @@ import static cn.ttzero.excel.reader.Cell.BLANK;
  */
 class XMLRow extends Row {
     private int startRow;
+    private StringBuilder buf;
 
     /**
      * The number of row. (zero base)
@@ -47,11 +49,12 @@ class XMLRow extends Row {
         return index;
     }
 
-    protected XMLRow() { }
+    private XMLRow() { }
 
     XMLRow(SharedString sst, int startRow) {
         this.sst = sst;
         this.startRow = startRow;
+        buf = new StringBuilder();
     }
 
     /////////////////////////unsafe////////////////////////
@@ -197,7 +200,7 @@ class XMLRow extends Row {
 //                    cell.setSv(null);
                     cell.setT(BLANK); // Reset type to BLANK if null value
                 } else {
-                    cell.setSv(sst.unescape(cb, a, cursor));
+                    cell.setSv(unescape(buf, cb, a, cursor));
                 }
                 break;
             case SST: // shared string lazy get
