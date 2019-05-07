@@ -130,18 +130,26 @@ public class Hot<K,V> implements Iterable<Hot.E<K,V>> {
     }
 
     /**
-     * remove last
+     * Remove the last value
      *
-     * @return last item
+     * @return the last item
      */
     public E<K,V> remove() {
         final Node<E<K,V>> l = last;
+        if (l == null) {
+            return null;
+        }
         final E<K,V> data = l.data;
 
         last = last.prev;
-        last.next = null;
+        if (last != null) {
+            last.next = null;
+        }
 
         table.remove(data.k);
+        if (--size == 0) {
+            first = null;
+        }
         return data;
     }
 
