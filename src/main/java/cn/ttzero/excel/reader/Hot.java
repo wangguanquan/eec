@@ -154,6 +154,16 @@ public class Hot<K,V> implements Iterable<Hot.E<K,V>> {
     }
 
     /**
+     * Clear all cache data
+     */
+    public void clear() {
+        first = null;
+        last = null;
+        table.clear();
+        size = 0;
+    }
+
+    /**
      * Returns the cache word size
      * @return size of cache
      */
