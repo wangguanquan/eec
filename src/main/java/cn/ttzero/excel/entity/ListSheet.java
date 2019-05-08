@@ -308,7 +308,7 @@ public class ListSheet<T> extends Sheet {
                         , field.getType()).setShare(dn.share()));
                 } else {
                     list.add(new Column(field.getName(), field.getName()
-                        , field.getType()).setShare(dn != null && dn.share()));
+                        , field.getType()).setShare(dn == null || dn.share()));
                 }
             }
             columns = new Column[list.size()];

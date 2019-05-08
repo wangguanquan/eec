@@ -219,7 +219,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param clazz 类型
          */
         public Column(String name, Class<?> clazz) {
-            this(name, clazz, false);
+            this(name, clazz, true);
         }
 
         /**
@@ -229,7 +229,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param key  field
          */
         public Column(String name, String key) {
-            this(name, key, false);
+            this(name, key, true);
         }
 
         /**
@@ -240,7 +240,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param clazz 类型
          */
         public Column(String name, String key, Class<?> clazz) {
-            this(name, key, false);
+            this(name, key, true);
             this.clazz = clazz;
         }
 
@@ -252,7 +252,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param processor 转换
          */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
-            this(name, clazz, processor, false);
+            this(name, clazz, processor, true);
         }
 
         /**
@@ -263,7 +263,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param processor 转换
          */
         public Column(String name, String key, IntConversionProcessor processor) {
-            this(name, key, processor, false);
+            this(name, key, processor, true);
         }
 
         /**
@@ -349,7 +349,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param cellStyle 样式
          */
         public Column(String name, Class<?> clazz, int cellStyle) {
-            this(name, clazz, cellStyle, false);
+            this(name, clazz, cellStyle, true);
         }
 
         /**
@@ -360,7 +360,7 @@ public abstract class Sheet implements Cloneable, Storageable {
          * @param cellStyle 样式
          */
         public Column(String name, String key, int cellStyle) {
-            this(name, key, cellStyle, false);
+            this(name, key, cellStyle, true);
         }
 
         /**
