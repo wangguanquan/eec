@@ -42,7 +42,8 @@ class XmlEntity {
 
     private String[] prefixs, uris;
 
-    public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, IOException {
+    public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException
+        , InvocationTargetException, IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
@@ -81,7 +82,8 @@ class XmlEntity {
         FileUtil.writeToDiskNoFormat(doc, Paths.get(path)); // write to desk
     }
 
-    public void toXML(Element doc, Object o) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public void toXML(Element doc, Object o) throws IllegalAccessException
+        , NoSuchMethodException, InvocationTargetException {
         Field[] fields = o.getClass().getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);

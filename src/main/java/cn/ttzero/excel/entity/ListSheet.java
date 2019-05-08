@@ -410,8 +410,8 @@ public class ListSheet<T> extends Sheet {
 
             int n = id;
             for (int i = end; i < len; ) {
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                ListSheet<T> copy = getClass().cast(clone());
+//                @SuppressWarnings({"unchecked", "rawtypes"})
+                ListSheet copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = i + limit < len ? i + limit : len);
                 copy.eof = copy.size() == limit;
