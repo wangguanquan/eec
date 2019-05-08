@@ -74,7 +74,7 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     /**
-     * escape text
+     * escape character
      *
      * @param c a character value
      * @throws IOException if io error occur
@@ -86,7 +86,8 @@ public class ExtBufferedWriter extends BufferedWriter {
         // Display char
         else if (c >= 32) {
             char[] entity = ESCAPE_CHARS[c];
-            write(entity);
+            if (entity != null) write(entity);
+            else write(c);
         }
     }
 
