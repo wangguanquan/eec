@@ -19,7 +19,6 @@ package cn.ttzero.excel.entity;
 import cn.ttzero.excel.util.FileUtil;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -39,8 +38,6 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
      * The temp path
      */
     private Path temp;
-
-    private OutputStream out;
 
     /**
      * Searches for only the first 100,000 words
@@ -159,10 +156,18 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
         return index < count ? index : -1;
     }
 
+    /**
+     * Returns the cache size
+     * @return total keyword
+     */
     public int size() {
         return count;
     }
 
+    /**
+     * Write buffered data to channel
+     * @throws IOException if io error occur
+     */
     private void flush() throws IOException {
         buffer.flip();
         channel.write(buffer);
