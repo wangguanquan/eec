@@ -16,7 +16,6 @@
 
 package cn.ttzero.excel.entity;
 
-import cn.ttzero.excel.Print;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,9 +37,9 @@ public class SharedStringTableTest {
         sst = new SharedStringTable();
     }
 
-//    @After public void after() throws IOException {
-//        sst.close();
-//    }
+    @After public void after() throws IOException {
+        sst.close();
+    }
 
     @Test public void testPutChar() throws IOException {
         int n = sst.push('a');
@@ -50,34 +49,54 @@ public class SharedStringTableTest {
 
         int index = sst.find('a');
         assert index == 0;
+
+        index = sst.find('z');
+        assert index == -1;
     }
 
     @Test public void testPutString() throws IOException {
         int n = sst.push("abc");
-        assert n == 1;
-        assert sst.size() == 2;
+        assert n == 0;
+        assert sst.size() == 1;
 
         int index = sst.find("ab");
         assert index == -1;
 
         index = sst.find("abc");
-        assert index == 1;
+        assert index == 0;
+
+        index = sst.find("123");
+        assert index == -1;
     }
 
     @Test public void testPush() throws IOException {
-        for (int i = 0; i < 1_000; i++) {
+        int size = 10_000;
+        for (int i = 0; i < size; i++) {
             sst.push(getRandomString());
         }
 
 //        sst.forEach(Print::println);
+
         int i = 0;
         for (Iterator<String> it = sst.iterator(); it.hasNext();) {
             print(i++);
             print(' ');
-            if (i == 147) {
-                println();
-            }
             println(it.next());
         }
+        assert i == size;
+    }
+
+    @Test public void testFind() throws IOException {
+        int size = 1_000_000;
+        for (int i = 0; i < size; i++) {
+            sst.push(getRandomString());
+        }
+
+        int index = sst.find('a');
+        println(index);
+        assert index == -1;
+
+        index = sst.find(getRandomString());
+        println(index);
     }
 }

@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import static cn.ttzero.excel.reader.SharedString.unescape;
 
