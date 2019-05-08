@@ -142,8 +142,8 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
                 // A string value
                 if (n != (short) 0x8000 && n == key.length()) {
                     int i = 0;
-                    for (; i < a; i++) {
-                        if (buffer.get() != bytes[i]) break;
+                    for (; i < a; ) {
+                        if (buffer.get() != bytes[i++]) break;
                     }
                     if (i < a) {
                         buffer.position(buffer.position() + a - i);
