@@ -254,7 +254,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         workbook.getStyles().writeTo(root.resolve("styles.xml"));
 
         // share string
-        workbook.getSst().writeTo(root);
+        try (SharedStrings sst = workbook.getSst()) {
+            sst.writeTo(root);
+        }
     }
 
     private void madeMark(Path parent) throws IOException {

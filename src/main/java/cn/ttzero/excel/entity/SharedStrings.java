@@ -65,7 +65,7 @@ import static cn.ttzero.excel.reader.SharedString.unescape;
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
-public class SharedStrings implements Storageable {
+public class SharedStrings implements Storageable, AutoCloseable {
 
     /**
      * The total word in workbook.
@@ -254,8 +254,6 @@ public class SharedStrings implements Storageable {
             buffer.flip();
             channel.write(buffer);
         }
-        // destroy
-        destroy();
     }
 
     /**
@@ -348,10 +346,8 @@ public class SharedStrings implements Storageable {
         return nChar;
     }
 
-    /**
-     * clear memory
-     */
-    private void destroy() {
+    @Override
+    public void close() {
         FileUtil.rm(temp);
         buf = null;
         filter = null;
