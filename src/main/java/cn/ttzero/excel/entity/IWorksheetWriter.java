@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 /**
  * Create by guanquan.wang at 2019-04-22 17:23
  */
-public interface IWorksheetWriter extends Closeable, Cloneable {
+public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
 
     /**
      * The Worksheet row limit
@@ -50,15 +50,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable {
      * @param supplier a row-block supplier
      * @throws IOException if io error occur
      */
-    void write(Path path, Supplier<RowBlock> supplier) throws IOException;
-
-    /**
-     * Write a row block
-     *
-     * @param path the storage path
-     * @throws IOException if io error occur
-     */
-    void write(Path path) throws IOException;
+    void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException;
 
     /**
      * Return a copy worksheet writer
@@ -75,7 +67,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable {
      */
     default void writeEmptySheet(Path path) throws IOException {
         try {
-            write(path, () -> null);
+            writeTo(path, () -> null);
         } finally {
             close();
         }

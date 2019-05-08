@@ -253,9 +253,9 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param path the storage path
      * @throws IOException         write error
-     * @throws ExcelWriteException others
      */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    @Override
+    public void writeTo(Path path) throws IOException {
         if (sheetWriter != null) {
             if (!copySheet) {
                 if (ps == null) {
@@ -276,7 +276,7 @@ public class StatementSheet extends ResultSetSheet {
                 rowBlock = new RowBlock(getRowBlockSize());
             } else rowBlock.reopen();
 
-            sheetWriter.write(path);
+            sheetWriter.writeTo(path);
         } else {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }

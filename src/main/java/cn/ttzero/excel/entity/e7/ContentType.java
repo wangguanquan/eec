@@ -17,6 +17,7 @@
 package cn.ttzero.excel.entity.e7;
 
 import cn.ttzero.excel.entity.Relationship;
+import cn.ttzero.excel.entity.Storageable;
 import cn.ttzero.excel.manager.RelManager;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.util.FileUtil;
@@ -34,7 +35,7 @@ import java.util.*;
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "Types", uri = "http://schemas.openxmlformats.org/package/2006/content-types")
-public class ContentType {
+public class ContentType implements Storageable {
     private Set<? super Type> set;
     private RelManager relManager;
 
@@ -131,7 +132,8 @@ public class ContentType {
         set.add(type);
     }
 
-    public void write(Path root) throws IOException {
+    @java.lang.Override
+    public void writeTo(Path root) throws IOException {
         // relationship
         relManager.write(root, null);
         // write self

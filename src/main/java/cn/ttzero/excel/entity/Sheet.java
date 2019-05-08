@@ -68,7 +68,7 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
-public abstract class Sheet implements Cloneable {
+public abstract class Sheet implements Cloneable, Storageable {
     protected Workbook workbook;
 
     protected String name;
@@ -1004,9 +1004,9 @@ public abstract class Sheet implements Cloneable {
      *
      * @param path the storage path
      * @throws IOException         write error
-     * @throws ExcelWriteException others
      */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    @Override
+    public void writeTo(Path path) throws IOException {
         if (sheetWriter == null) {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
@@ -1020,7 +1020,7 @@ public abstract class Sheet implements Cloneable {
             rowBlock = new RowBlock(getRowBlockSize());
         } else rowBlock.reopen();
 
-        sheetWriter.write(path);
+        sheetWriter.writeTo(path);
     }
 
     /**

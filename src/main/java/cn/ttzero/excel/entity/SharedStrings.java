@@ -44,7 +44,7 @@ import static cn.ttzero.excel.reader.SharedString.unescape;
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
-public class SharedStrings {
+public class SharedStrings implements Storageable {
     // 存储共享字符
     private int count; // workbook所有字符串(shared属性为true)的个数
     private int uniqueCount;
@@ -144,7 +144,8 @@ public class SharedStrings {
         writer.write("</t></si>");
     }
 
-    public void write(Path root) throws IOException {
+    @Override
+    public void writeTo(Path root) throws IOException {
         // Close temp writer
         FileUtil.close(writer);
 

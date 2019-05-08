@@ -64,7 +64,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     @Override
-    public void write(Path path, Supplier<RowBlock> supplier) throws IOException {
+    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
         this.workSheetPath = path.resolve("worksheets");
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
@@ -123,7 +123,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     @Override
-    public void write(Path path) throws IOException {
+    public void writeTo(Path path) throws IOException {
         this.workSheetPath = path.resolve("worksheets");
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
