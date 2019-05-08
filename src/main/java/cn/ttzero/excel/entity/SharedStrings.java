@@ -114,6 +114,7 @@ public class SharedStrings {
         count++;
         // The keyword not exists
         if (!filter.mightContain(key)) {
+            // TODO resize if full
             filter.put(key);
             int n = uniqueCount++;
             add(key);
@@ -139,7 +140,7 @@ public class SharedStrings {
 
     private void add(char c) throws IOException {
         writer.write("<si><t>");
-        writer.write(c);
+        writer.escapeWrite(c);
         writer.write("</t></si>");
     }
 
@@ -228,6 +229,7 @@ public class SharedStrings {
                 // Get it
                 if (o.f) {
                     return o.index;
+                    // search next block
                 } else {
                     System.arraycopy(cb, o.off, cb, 0, off = n - o.off);
                 }
