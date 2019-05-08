@@ -197,10 +197,6 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
      */
     @Override
     public void close() throws IOException {
-        if (out != null) {
-            out.close();
-        }
-        flush();
         if (channel != null) {
             channel.close();
         }
