@@ -24,24 +24,35 @@ import java.io.IOException;
  * Create by guanquan.wang at 2019-05-07 17:41
  */
 public class SharedStringsTest {
-    @Test public void test() throws IOException {
+    @Test public void testGet() throws IOException {
         SharedStrings sst = new SharedStrings();
         int index = sst.get("abc");
-        assert index == 1;
+        assert index == 0;
 
         index = sst.get("guanquan.wang");
-        assert index == 2;
+        assert index == 1;
 
         index = sst.get("abc");
+        assert index == 0;
+
+        index = sst.get("guanquan.wang");
         assert index == 1;
 
         index = sst.get("guanquan.wang");
-        assert index == 2;
-
-        index = sst.get("guanquan.wang");
-        assert index == 2;
+        assert index == 1;
 
         index = sst.get("test");
-        assert index == 3;
+        assert index == 2;
+    }
+
+    @Test public void testGetChar() throws IOException {
+        SharedStrings sst = new SharedStrings();
+        for (int i = 0; i <= 0x7F; i++) {
+            sst.get((char) i);
+        }
+
+        for (int i = 0; i < 0x7FFFFFFF; i++) {
+            sst.get((char) (i & 0x7F));
+        }
     }
 }
