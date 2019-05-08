@@ -49,7 +49,7 @@ import static cn.ttzero.excel.reader.SharedString.unescape;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is 0.03%. When the number exceeds 1 million, it will not be
+ * positive rate is 0.01%. When the number exceeds 1 million, it will not be
  * written to SST and will be converted to inline string.
  *
  * A hot zone is also designed internally to cache multiple occurrences,
@@ -72,10 +72,10 @@ public class SharedStrings implements Storageable, AutoCloseable {
      */
     private int count;
 
-    /**
-     * The total unique word in workbook.
-     */
-    private int uniqueCount;
+//    /**
+//     * The total unique word in workbook.
+//     */
+//    private int uniqueCount;
 
     /**
      * Import google BloomFilter to check keyword not exists
@@ -86,8 +86,6 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Cache ASCII value
      */
     private int[] ascii;
-    private Path temp;
-    private ExtBufferedWriter writer;
 
     /**
      * Cache the string which read twice and above
@@ -96,39 +94,26 @@ public class SharedStrings implements Storageable, AutoCloseable {
     private Hot<String, Integer> hot;
 
     /**
+     * Storage into temp file on disk
+     */
+    private SharedStringTable sst;
+
+    /**
      * the number of expected insertions to the constructed bloom
      */
     private int expectedInsertions = 1 << 20;
 
-    private StringBuilder buf;
-
-    /**
-     * Searches for only the first 100,000 words
-     */
-    private int find_limit = 100_000;
+//    private StringBuilder buf;
 
     SharedStrings() {
         hot = new Hot<>(1 << 10);
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 2^20 expected insertions and 0.03% fpp bloom filter
-        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
-
-        init();
-    }
-
-    /**
-     * Create a temp file to storage all text cells
-     */
-    private void init() {
-        try {
-            temp = Files.createTempFile("+", ".sst");
-            Files.deleteIfExists(temp);
-            writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new ExcelWriteException(e);
-        }
+        // Create a 2^20 expected insertions and 0.01% fpp bloom filter
+        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0001);
+        // The shared string table
+        sst = new SharedStringTable();
     }
 
     private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
@@ -145,13 +130,14 @@ public class SharedStrings implements Storageable, AutoCloseable {
             int n = ascii[c];
             // Not exists
             if (n == -1) {
-                add(c);
-                n = uniqueCount++;
+                n = sst.push(c);
+//                n = uniqueCount++;
                 ascii[c] = n;
             }
             count++;
             return n;
         } else {
+            // TODO write as character
             char[] cs = charCache.get();
             cs[0] = c;
             return get(new String(cs));
@@ -170,45 +156,43 @@ public class SharedStrings implements Storageable, AutoCloseable {
         // The keyword not exists
         if (!filter.mightContain(key)) {
             // Add to bloom if not full
-            if (uniqueCount < expectedInsertions) {
+            if (sst.size() < expectedInsertions) {
                 filter.put(key);
-                int n = uniqueCount++;
-                add(key);
-                return n;
+                return sst.push(key);
             } else return -1;
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
         if (n == null) {
             // Find in temp file
-            n = findFromFile(key);
+            n = sst.find(key);
             // If not found in first 100,000 words
             // append last and cache it
             if (n < 0) {
-                add(key);
-                n = uniqueCount++;
+                n = sst.push(key);
             }
             hot.push(key, n);
         }
         return n;
     }
 
-    private void add(String key) throws IOException {
-        writer.write("<si><t>");
-        writer.escapeWrite(key);
-        writer.write("</t></si>");
-    }
-
-    private void add(char c) throws IOException {
-        writer.write("<si><t>");
-        writer.escapeWrite(c);
-        writer.write("</t></si>");
-    }
+//    private void add(String key) throws IOException {
+//        writer.write("<si><t>");
+//        writer.escapeWrite(key);
+//        writer.write("</t></si>");
+//    }
+//
+//    private void add(char c) throws IOException {
+//        writer.write("<si><t>");
+//        writer.escapeWrite(c);
+//        writer.write("</t></si>");
+//    }
 
     @Override
     public void writeTo(Path root) throws IOException {
-        // Close temp writer
-        FileUtil.close(writer);
+        // TODO Close temp writer
+//        FileUtil.close(writer);
+        sst.close();
 
         if (!Files.exists(root)) {
             FileUtil.mkdir(root);
@@ -221,11 +205,11 @@ public class SharedStrings implements Storageable, AutoCloseable {
             buf.append(Const.lineSeparator);
             buf.append("<").append(topNS.value()).append(" xmlns=\"").append(topNS.uri()[0]).append("\"")
                 .append(" count=\"").append(count).append("\"")
-                .append(" uniqueCount=\"").append(uniqueCount).append("\">")
+                .append(" uniqueCount=\"").append(sst.size()).append("\">")
                 .append(Const.lineSeparator);
         } else {
             buf.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")
-                .append(count).append("\" uniqueCount=\"").append(uniqueCount).append("\">")
+                .append(count).append("\" uniqueCount=\"").append(sst.size()).append("\">")
                 .append(Const.lineSeparator);
         }
 
@@ -263,93 +247,93 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * @throws IOException if io error occur
      */
     private void transfer(FileChannel channel) throws IOException {
-        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
-            tempChannel.transferTo(0, tempChannel.size(), channel);
-        }
+//        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
+//            tempChannel.transferTo(0, tempChannel.size(), channel);
+//        }
+        // TODO
     }
-
-    /**
-     * Found in temp file
-     * @param key the string value
-     * @return the index in sst file (zero base)
-     */
-    private int findFromFile(String key) throws IOException {
-        writer.flush();
-
-        buf = new StringBuilder();
-
-        try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
-            char[] cb = new char[1 << 11];
-            int n, off = 0;
-            O o = new O();
-            o.cb = cb;
-            o.key = key;
-            while ((n = reader.read(cb, off, cb.length - off)) > 0) {
-                o.n = n + off;
-                findT(o);
-                // Get it
-                if (o.f) {
-                    return o.index;
-                    // search next block
-                } else if (o.off > 0) {
-                    System.arraycopy(cb, o.off, cb, 0, off = o.n - o.off);
-                    o.off = 0;
-                    // resize
-                } else {
-                    char[] bigCb = new char[cb.length << 1];
-                    System.arraycopy(cb, 0, bigCb, 0, o.n);
-                    o.cb = cb = bigCb;
-                    off = o.n;
-                }
-            }
-        }
-
-        return -1;
-    }
-
-    private void findT(O o) {
-        int sn = 7, ln = 9, nChar = sn;
-        for (; nChar < o.n; ) {
-            int next = next(o.cb, nChar, o.n);
-            // End of block
-            if (next >= o.n) {
-                break;
-            }
-            String v = unescape(buf, o.cb, nChar, next);
-            // Check values
-            o.f = v.equals(o.key);
-            if (o.f) {
-                break;
-            }
-            if (next + ln > o.n) {
-                o.off = nChar;
-                break;
-            }
-            // Not found in first 100,000 words
-            if (o.index++ >= find_limit) {
-                o.f = true;
-                o.index = -1;
-                break;
-            }
-
-            if (next + ln + sn > o.n) {
-                o.off = next + ln;
-                break;
-            }
-            nChar = next + ln + sn;
-        }
-    }
-
-    // found the end index of string value
-    private int next(char[] cb, int nChar, int n) {
-        for (; nChar < n && cb[nChar] != '<'; nChar++) ;
-        return nChar;
-    }
+//
+//    /**
+//     * Found in temp file
+//     * @param key the string value
+//     * @return the index in sst file (zero base)
+//     */
+//    private int findFromFile(String key) throws IOException {
+//        writer.flush();
+//
+//        buf = new StringBuilder();
+//
+//        try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
+//            char[] cb = new char[1 << 11];
+//            int n, off = 0;
+//            O o = new O();
+//            o.cb = cb;
+//            o.key = key;
+//            while ((n = reader.read(cb, off, cb.length - off)) > 0) {
+//                o.n = n + off;
+//                findT(o);
+//                // Get it
+//                if (o.f) {
+//                    return o.index;
+//                    // search next block
+//                } else if (o.off > 0) {
+//                    System.arraycopy(cb, o.off, cb, 0, off = o.n - o.off);
+//                    o.off = 0;
+//                    // resize
+//                } else {
+//                    char[] bigCb = new char[cb.length << 1];
+//                    System.arraycopy(cb, 0, bigCb, 0, o.n);
+//                    o.cb = cb = bigCb;
+//                    off = o.n;
+//                }
+//            }
+//        }
+//
+//        return -1;
+//    }
+//
+//    private void findT(O o) {
+//        int sn = 7, ln = 9, nChar = sn;
+//        for (; nChar < o.n; ) {
+//            int next = next(o.cb, nChar, o.n);
+//            // End of block
+//            if (next >= o.n) {
+//                break;
+//            }
+//            String v = unescape(buf, o.cb, nChar, next);
+//            // Check values
+//            o.f = v.equals(o.key);
+//            if (o.f) {
+//                break;
+//            }
+//            if (next + ln > o.n) {
+//                o.off = nChar;
+//                break;
+//            }
+//            // Not found in first 100,000 words
+//            if (o.index++ >= find_limit) {
+//                o.f = true;
+//                o.index = -1;
+//                break;
+//            }
+//
+//            if (next + ln + sn > o.n) {
+//                o.off = next + ln;
+//                break;
+//            }
+//            nChar = next + ln + sn;
+//        }
+//    }
+//
+//    // found the end index of string value
+//    private int next(char[] cb, int nChar, int n) {
+//        for (; nChar < n && cb[nChar] != '<'; nChar++) ;
+//        return nChar;
+//    }
 
     @Override
     public void close() {
-        FileUtil.rm(temp);
-        buf = null;
+//        buf = null;
         filter = null;
         hot.clear();
         hot = null;
