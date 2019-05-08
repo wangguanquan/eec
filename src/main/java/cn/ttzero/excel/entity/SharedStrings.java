@@ -39,39 +39,91 @@ import java.util.Arrays;
 import static cn.ttzero.excel.reader.SharedString.unescape;
 
 /**
- * 字符串共享，一个workbook的所有worksheet共享
- * <p>
+ * A workbook collects the strings of all text cells in a global list,
+ * the Shared String Table. This table is located in the record SST in
+ * the Workbook Globals Substream.
+ *
+ * SST saves characters and strings sequentially. When writing a string,
+ * it first determines whether it exists. If it exists, returns the index
+ * in the Table (zero base), otherwise add it in to the last element of
+ * Table and returns the current subscript.
+ * Introduced Google BloomFilter to increase filtering speed, the
+ * BloomFilter estimates the amount of data to be 1 million, and the false
+ * positive rate is 0.03%. When the number exceeds 1 million, it will not be
+ * written to SST and will be converted to inline string.
+ *
+ * A hot zone is also designed internally to cache multiple occurrences,
+ * the default size is 1024, and the LRU elimination algorithm is used.
+ * If the cache misses, it will be read from in temp file and flushed to the
+ * cache. In order to prevent too many time-consuming searches for only the
+ * first 100,000 words, will converted to inline string if not found.
+ *
+ * Characters are handled differently. ASCII characters use the built-in array
+ * cache subscript. The over 0x7F characters will be converted to strings and
+ * searched using strings.
+ *
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings implements Storageable {
-    // 存储共享字符
-    private int count; // workbook所有字符串(shared属性为true)的个数
+
+    /**
+     * The total word in workbook.
+     */
+    private int count;
+
+    /**
+     * The total unique word in workbook.
+     */
     private int uniqueCount;
-    // Import google BloomFilter to check keyword not exists
+
+    /**
+     * Import google BloomFilter to check keyword not exists
+     */
     private BloomFilter<String> filter;
-    // Cache ASCII value
+
+    /**
+     * Cache ASCII value
+     */
     private int[] ascii;
     private Path temp;
     private ExtBufferedWriter writer;
+
+    /**
+     * Cache the string which read twice and above
+     * Use LRU elimination algorithm
+     */
     private Hot<String, Integer> hot;
 
+    /**
+     * the number of expected insertions to the constructed bloom
+     */
+    private int expectedInsertions = 1 << 20;
+
     private StringBuilder buf;
+
+    /**
+     * Searches for only the first 100,000 words
+     */
+    private int find_limit = 100_000;
 
     SharedStrings() {
         hot = new Hot<>(1 << 10);
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 10w expected insertions and 0.03% fpp bloom filter
-        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100_000, 0.0003);
+        // Create a 2^20 expected insertions and 0.03% fpp bloom filter
+        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 
         init();
     }
 
+    /**
+     * Create a temp file to storage all text cells
+     */
     private void init() {
         try {
-            temp = Files.createTempFile("+", "sst");
+            temp = Files.createTempFile("+", ".sst");
             Files.deleteIfExists(temp);
             writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -82,7 +134,8 @@ public class SharedStrings implements Storageable {
     private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
 
     /**
-     * Getting the character value index
+     * Getting the character value index (zero base)
+     *
      * @param c the character value
      * @return the index in ShareString
      */
@@ -106,19 +159,23 @@ public class SharedStrings implements Storageable {
     }
 
     /**
-     * Getting the string value from cache
+     * Getting the string value from cache (zero base)
+     *
      * @param key the string value
      * @return index of the string in the SST
+     * -1 if cache full, please write as 'inlineStr'
      */
     public int get(String key) throws IOException {
         count++;
         // The keyword not exists
         if (!filter.mightContain(key)) {
-            // TODO resize if full
-            filter.put(key);
-            int n = uniqueCount++;
-            add(key);
-            return n;
+            // Add to bloom if not full
+            if (uniqueCount < expectedInsertions) {
+                filter.put(key);
+                int n = uniqueCount++;
+                add(key);
+                return n;
+            } else return -1;
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
@@ -165,15 +222,15 @@ public class SharedStrings implements Storageable {
         } else {
             buf.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")
                 .append(count).append("\" uniqueCount=\"").append(uniqueCount).append("\">")
-            .append(Const.lineSeparator);
+                .append(Const.lineSeparator);
         }
 
         // The output path
         Path dist = root.resolve(StringUtil.lowFirstKey(getClass().getSimpleName() + Const.Suffix.XML));
 
         try (FileOutputStream fos = new FileOutputStream(dist.toFile());
-            FileChannel channel = fos.getChannel()) {
-            ByteBuffer buffer = ByteBuffer.allocate(512);
+             FileChannel channel = fos.getChannel()) {
+            ByteBuffer buffer = ByteBuffer.allocate(1 << 9);
             buffer.put(buf.toString().getBytes(StandardCharsets.UTF_8));
             buffer.flip();
             channel.write(buffer);
@@ -199,6 +256,7 @@ public class SharedStrings implements Storageable {
 
     /**
      * Transfer temp data to dist path
+     *
      * @param channel the dist file channel
      * @throws IOException if io error occur
      */
@@ -209,7 +267,7 @@ public class SharedStrings implements Storageable {
     }
 
     /**
-     *
+     * Found in temp file
      * @param key the string value
      * @return the index in sst file (zero base)
      */
@@ -219,20 +277,27 @@ public class SharedStrings implements Storageable {
         buf = new StringBuilder();
 
         try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
-            char[] cb = new char[8192];
+            char[] cb = new char[1 << 11];
             int n, off = 0;
             O o = new O();
             o.cb = cb;
             o.key = key;
             while ((n = reader.read(cb, off, cb.length - off)) > 0) {
-                o.n = n;
+                o.n = n + off;
                 findT(o);
                 // Get it
                 if (o.f) {
                     return o.index;
                     // search next block
+                } else if (o.off > 0) {
+                    System.arraycopy(cb, o.off, cb, 0, off = o.n - o.off);
+                    o.off = 0;
+                    // resize
                 } else {
-                    System.arraycopy(cb, o.off, cb, 0, off = n - o.off);
+                    char[] bigCb = new char[cb.length << 1];
+                    System.arraycopy(cb, 0, bigCb, 0, o.n);
+                    o.cb = cb = bigCb;
+                    off = o.n;
                 }
             }
         }
@@ -241,15 +306,15 @@ public class SharedStrings implements Storageable {
     }
 
     private void findT(O o) {
-        int sn = 7, ln = 9 + sn, nChar = sn;
+        int sn = 7, ln = 9, nChar = sn;
         for (; nChar < o.n; ) {
-            o.index++;
             int next = next(o.cb, nChar, o.n);
+            // End of block
             if (next >= o.n) {
-                o.off = nChar;
                 break;
             }
             String v = unescape(buf, o.cb, nChar, next);
+            // Check values
             o.f = v.equals(o.key);
             if (o.f) {
                 break;
@@ -258,12 +323,24 @@ public class SharedStrings implements Storageable {
                 o.off = nChar;
                 break;
             }
-            nChar = next + ln;
+            // Not found in first 100,000 words
+            if (o.index++ >= find_limit) {
+                o.f = true;
+                o.index = -1;
+                break;
+            }
+
+            if (next + ln + sn > o.n) {
+                o.off = next + ln;
+                break;
+            }
+            nChar = next + ln + sn;
         }
     }
 
+    // found the end index of string value
     private int next(char[] cb, int nChar, int n) {
-        for (; nChar < n && cb[nChar] != '<'; nChar++);
+        for (; nChar < n && cb[nChar] != '<'; nChar++) ;
         return nChar;
     }
 
