@@ -103,7 +103,7 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; buffer.hasRemaining();) {
+            for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
                 int a = buffer.getInt();
                 short n = buffer.getShort();
                 // A char value
@@ -115,7 +115,7 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
                 } else buffer.position(buffer.position() + a);
                 index++;
             }
-            buffer.rewind();
+            buffer.compact();
         }
         channel.position(position);
         buffer.rewind();
@@ -136,7 +136,7 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; buffer.hasRemaining();) {
+            for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
                 int a = buffer.getInt();
                 short n = buffer.getShort();
                 // A string value
@@ -151,8 +151,7 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
                 } else buffer.position(buffer.position() + a);
                 index++;
             }
-            // TODO
-            buffer.rewind();
+            buffer.compact();
         }
         channel.position(position);
         buffer.rewind();
@@ -167,7 +166,7 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
     private void flush() throws IOException {
         buffer.flip();
         channel.write(buffer);
-        buffer.clear();
+        buffer.compact();
     }
 
     private /* FOR TESTS */ void print(byte[] bytes, int off, int len) {
@@ -178,6 +177,24 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
         }
     }
 
+    /**
+     * Check the remaining data is complete
+     * @param buffer the ByteBuffer
+     * @return true or false
+     */
+    private static boolean hasFullValue(ByteBuffer buffer) {
+        int position = buffer.position();
+        int n = buffer.get(position)   & 0xFF;
+        n |= (buffer.get(position + 1) & 0xFF) <<  8;
+        n |= (buffer.get(position + 2) & 0xFF) << 16;
+        n |= (buffer.get(position + 3) & 0xFF) << 24;
+        return n + 6 <= buffer.remaining();
+    }
+
+    /**
+     * Close channel and delete temp files
+     * @throws IOException if io error occur
+     */
     @Override
     public void close() throws IOException {
         if (out != null) {
