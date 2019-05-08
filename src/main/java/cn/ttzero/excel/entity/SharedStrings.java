@@ -182,9 +182,13 @@ public class SharedStrings implements Storageable {
         if (n == null) {
             // Find in temp file
             n = findFromFile(key);
-            if (n >= 0) {
-                hot.push(key, n);
-            } else add(key);
+            // If not found in first 100,000 words
+            // append last and cache it
+            if (n < 0) {
+                add(key);
+                n = uniqueCount++;
+            }
+            hot.push(key, n);
         }
         return n;
     }
