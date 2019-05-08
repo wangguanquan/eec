@@ -190,10 +190,6 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     @Override
     public void writeTo(Path root) throws IOException {
-        // TODO Close temp writer
-//        FileUtil.close(writer);
-        sst.close();
-
         if (!Files.exists(root)) {
             FileUtil.mkdir(root);
         }
@@ -223,7 +219,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
             buffer.flip();
             channel.write(buffer);
 
-            if (count > 0) {
+            if (sst.size() > 0) {
                 transfer(channel);
             }
 
@@ -247,10 +243,12 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * @throws IOException if io error occur
      */
     private void transfer(FileChannel channel) throws IOException {
+        for (Iterator<String> it = sst.iterator(); it.hasNext();) {
+            // TODO
+        }
 //        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
 //            tempChannel.transferTo(0, tempChannel.size(), channel);
 //        }
-        // TODO
     }
 //
 //    /**
@@ -332,11 +330,12 @@ public class SharedStrings implements Storageable, AutoCloseable {
 //    }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
 //        buf = null;
         filter = null;
         hot.clear();
         hot = null;
+        sst.close();
     }
 
     private static class O {
