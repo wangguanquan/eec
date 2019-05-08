@@ -209,6 +209,11 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
 
     @Override
     public Iterator<String> iterator() {
+        try {
+            flush();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         return new SSTIterator(temp);
     }
 
@@ -231,10 +236,9 @@ class SharedStringTable implements AutoCloseable, Iterable<String> {
         }
         @Override
         public boolean hasNext() {
-            // TODO check has full value
             try {
-                if (!buffer.hasRemaining()) {
-                    buffer.clear();
+                if (buffer.remaining() < 6 || !hasFullValue(buffer)) {
+                    buffer.compact();
                     channel.read(buffer);
                     buffer.flip();
                 }
