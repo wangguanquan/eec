@@ -5,6 +5,7 @@ Version 0.3.0 (2019-05-01)
 3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
       比如修改每个worksheet最大行数
 4. 修复一些已知BUG
+5. SharedStringTable引入Google BloomFilter
 
 Version 0.2.9 (2019-02-22)
 -------------
