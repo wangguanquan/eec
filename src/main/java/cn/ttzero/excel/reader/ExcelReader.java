@@ -313,7 +313,7 @@ public class ExcelReader implements AutoCloseable {
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        SharedString sst = new SharedString(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+        SharedStrings sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")

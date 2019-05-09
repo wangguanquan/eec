@@ -51,7 +51,7 @@ class XMLRow extends Row {
 
     private XMLRow() { }
 
-    XMLRow(SharedString sst, int startRow) {
+    XMLRow(SharedStrings sst, int startRow) {
         this.sst = sst;
         this.startRow = startRow;
         buf = new StringBuilder();

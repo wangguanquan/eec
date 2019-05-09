@@ -36,11 +36,11 @@ import java.util.*;
  * <p>
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-public class SharedString {
+public class SharedStrings {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
-    SharedString(String[] data) {
+    SharedStrings(String[] data) {
         max = data.length;
         offset_eden = 0;
         if (max <= page) {
@@ -61,7 +61,7 @@ public class SharedString {
         }
     }
 
-    SharedString(Path sstPath, int cacheSize, int hotSize) {
+    SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
             this.page = cacheSize;
@@ -149,7 +149,7 @@ public class SharedString {
         return max;
     }
 
-    SharedString load() throws IOException {
+    SharedStrings load() throws IOException {
         if (Files.exists(sstPath)) {
             // Get unique count
             max = uniqueCount();

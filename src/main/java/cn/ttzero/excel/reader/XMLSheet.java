@@ -43,7 +43,7 @@ class XMLSheet implements Sheet {
     private int index // per sheet index of workbook
         , size = -1; // size of rows per sheet
     private Path path;
-    private SharedString sst;
+    private SharedStrings sst;
     private int startRow = -1; // row index of data
     private HeaderRow header;
     private boolean hidden; // state hidden
@@ -56,7 +56,7 @@ class XMLSheet implements Sheet {
         this.path = path;
     }
 
-    void setSst(SharedString sst) {
+    void setSst(SharedStrings sst) {
         this.sst = sst;
     }
 
