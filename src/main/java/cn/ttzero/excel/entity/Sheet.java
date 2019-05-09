@@ -68,7 +68,7 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
-public abstract class Sheet implements Cloneable {
+public abstract class Sheet implements Cloneable, Storageable {
     protected Workbook workbook;
 
     protected String name;
@@ -188,7 +188,7 @@ public abstract class Sheet implements Cloneable {
         /**
          * 字符串是否共享
          */
-        public boolean share;
+        public boolean share = true;
         /**
          * 0: 正常显示 1:显示百分比 2:显示人民币
          */
@@ -219,7 +219,7 @@ public abstract class Sheet implements Cloneable {
          * @param clazz 类型
          */
         public Column(String name, Class<?> clazz) {
-            this(name, clazz, false);
+            this(name, clazz, true);
         }
 
         /**
@@ -229,7 +229,7 @@ public abstract class Sheet implements Cloneable {
          * @param key  field
          */
         public Column(String name, String key) {
-            this(name, key, false);
+            this(name, key, true);
         }
 
         /**
@@ -240,7 +240,7 @@ public abstract class Sheet implements Cloneable {
          * @param clazz 类型
          */
         public Column(String name, String key, Class<?> clazz) {
-            this(name, key, false);
+            this(name, key, true);
             this.clazz = clazz;
         }
 
@@ -252,7 +252,7 @@ public abstract class Sheet implements Cloneable {
          * @param processor 转换
          */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
-            this(name, clazz, processor, false);
+            this(name, clazz, processor, true);
         }
 
         /**
@@ -263,7 +263,7 @@ public abstract class Sheet implements Cloneable {
          * @param processor 转换
          */
         public Column(String name, String key, IntConversionProcessor processor) {
-            this(name, key, processor, false);
+            this(name, key, processor, true);
         }
 
         /**
@@ -349,7 +349,7 @@ public abstract class Sheet implements Cloneable {
          * @param cellStyle 样式
          */
         public Column(String name, Class<?> clazz, int cellStyle) {
-            this(name, clazz, cellStyle, false);
+            this(name, clazz, cellStyle, true);
         }
 
         /**
@@ -360,7 +360,7 @@ public abstract class Sheet implements Cloneable {
          * @param cellStyle 样式
          */
         public Column(String name, String key, int cellStyle) {
-            this(name, key, cellStyle, false);
+            this(name, key, cellStyle, true);
         }
 
         /**
@@ -1004,9 +1004,9 @@ public abstract class Sheet implements Cloneable {
      *
      * @param path the storage path
      * @throws IOException         write error
-     * @throws ExcelWriteException others
      */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    @Override
+    public void writeTo(Path path) throws IOException {
         if (sheetWriter == null) {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
@@ -1020,7 +1020,7 @@ public abstract class Sheet implements Cloneable {
             rowBlock = new RowBlock(getRowBlockSize());
         } else rowBlock.reopen();
 
-        sheetWriter.write(path);
+        sheetWriter.writeTo(path);
     }
 
     /**

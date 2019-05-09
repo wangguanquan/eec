@@ -24,7 +24,7 @@ import java.nio.file.Path;
 /**
  * Create by guanquan.wang at 2019-04-22 16:00
  */
-public interface IWorkbookWriter {
+public interface IWorkbookWriter extends Storageable {
 
     /**
      * Setting workbook
@@ -41,31 +41,20 @@ public interface IWorkbookWriter {
     String getSuffix();
 
     /**
-     * Write the workbook file to ${path}
-     *
-     * @param path the storage path
-     * @throws IOException         if io error occur
-     * @throws ExcelWriteException if error occur when excel write to file
-     */
-    void writeTo(Path path) throws IOException, ExcelWriteException;
-
-    /**
      * Write to OutputStream ${os}
      *
      * @param os the out put stream
      * @throws IOException         if io error occur
-     * @throws ExcelWriteException if error occur when excel write to file
      */
-    void writeTo(OutputStream os) throws IOException, ExcelWriteException;
+    void writeTo(OutputStream os) throws IOException;
 
     /**
      * Write to file ${file}
      *
      * @param file the storage file
      * @throws IOException         if io error occur
-     * @throws ExcelWriteException if error occur when excel write to file
      */
-    void writeTo(File file) throws IOException, ExcelWriteException;
+    void writeTo(File file) throws IOException;
 
     /**
      * Write with template

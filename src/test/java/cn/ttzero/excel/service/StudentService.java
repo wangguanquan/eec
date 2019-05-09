@@ -18,7 +18,6 @@ package cn.ttzero.excel.service;
 
 import cn.ttzero.excel.entity.ListObjectSheetTest;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,6 +26,6 @@ import java.util.List;
 public class StudentService {
 
     public List<ListObjectSheetTest.Student> getPageData(int pageNo, int limit) {
-        return pageNo < 100 ? ListObjectSheetTest.Student.randomTestData(pageNo, limit) : Collections.emptyList();
+        return ListObjectSheetTest.Student.randomTestData(pageNo, limit);
     }
 }

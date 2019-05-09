@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * 单线种操作流，内部复用buffer
+ * 单线程操作流，内部复用buffer
  * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
@@ -74,10 +74,28 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     /**
+     * escape character
+     *
+     * @param c a character value
+     * @throws IOException if io error occur
+     */
+    public void escapeWrite(char c) throws IOException {
+        if (c > 62) {
+            write(c);
+        }
+        // Display char
+        else if (c >= 32) {
+            char[] entity = ESCAPE_CHARS[c];
+            if (entity != null) write(entity);
+            else write(c);
+        }
+    }
+
+    /**
      * escape text
      *
      * @param text string
-     * @throws IOException
+     * @throws IOException if io error occur
      */
     public void escapeWrite(String text) throws IOException {
         char[] block = text.toCharArray();

@@ -64,7 +64,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     @Override
-    public void write(Path path, Supplier<RowBlock> supplier) throws IOException {
+    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
         this.workSheetPath = path.resolve("worksheets");
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
@@ -123,7 +123,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     @Override
-    public void write(Path path) throws IOException {
+    public void writeTo(Path path) throws IOException {
         this.workSheetPath = path.resolve("worksheets");
         if (!Files.exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
@@ -344,11 +344,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<c r=\"");
             bw.write(sheet.int2Col(c++));
             bw.writeInt(row);
-            bw.write("\" t=\"inlineStr\" s=\"");
+            bw.write("\" t=\"s\" s=\"");
             bw.writeInt(defaultStyle);
-            bw.write("\"><is><t>");
-            bw.write(hc.getName());
-            bw.write("</t></is></c>");
+            bw.write("\"><v>");
+            bw.writeInt(sst.get(hc.getName()));
+            bw.write("</v></c>");
         }
         bw.write("</row>");
     }

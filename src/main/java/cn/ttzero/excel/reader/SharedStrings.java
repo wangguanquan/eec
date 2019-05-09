@@ -36,11 +36,11 @@ import java.util.*;
  * <p>
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-public class SharedString {
+public class SharedStrings {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
-    SharedString(String[] data) {
+    SharedStrings(String[] data) {
         max = data.length;
         offset_eden = 0;
         if (max <= page) {
@@ -61,7 +61,7 @@ public class SharedString {
         }
     }
 
-    SharedString(Path sstPath, int cacheSize, int hotSize) {
+    SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
             this.page = cacheSize;
@@ -108,7 +108,7 @@ public class SharedString {
     /**
      * hot world
      */
-    private Hot hot;
+    private Hot<Integer, String> hot;
     /**
      * size of hot
      */
@@ -149,7 +149,7 @@ public class SharedString {
         return max;
     }
 
-    SharedString load() throws IOException {
+    SharedStrings load() throws IOException {
         if (Files.exists(sstPath)) {
             // Get unique count
             max = uniqueCount();
@@ -163,8 +163,8 @@ public class SharedString {
                 if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
                 count_area = new HashMap<>(default_cap);
 
-                if (hotSize > 0) hot = new Hot(hotSize);
-                else hot = new Hot();
+                if (hotSize > 0) hot = new Hot<>(hotSize);
+                else hot = new Hot<>();
             }
             else {
                 eden = new String[max];
@@ -174,6 +174,7 @@ public class SharedString {
         } else {
             max = 0;
         }
+        escapeBuf = new StringBuilder();
         return this;
     }
 
@@ -464,7 +465,7 @@ public class SharedString {
             }
             for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/' || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar);
             if (nChar >= len1) break; // Not found
-            eden[n++] = nChar > a ? unescape(cb, a, nChar) : null;
+            eden[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
             nChar += 4;
             cursor = nChar;
         }
@@ -474,17 +475,17 @@ public class SharedString {
     /**
      * 反转义
      */
-    String unescape(char[] cb, int from, int to) {
+    public static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
         int idx_38 = indexOf(cb, '&', from), idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 
         if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {
             return new String(cb, from, to - from);
         }
-        if (escapeBuf != null) {
-            escapeBuf.delete(0, escapeBuf.length());
-        } else {
-            escapeBuf = new StringBuilder(to - from < 10 ? 10 : to - from);
-        }
+//        if (escapeBuf != null) {
+        escapeBuf.delete(0, escapeBuf.length());
+//        } else {
+//            escapeBuf = new StringBuilder(to - from < 10 ? 10 : to - from);
+//        }
         do {
             escapeBuf.append(cb, from, idx_38 - from);
             // ASCII值
@@ -517,7 +518,7 @@ public class SharedString {
                         escapeBuf.append(' ');
                         break;
                     default: // Unknown escape
-                        logger.warn("Unknown escape [&{}]", name);
+//                        logger.warn("Unknown escape [&{}]", name);
                         escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
                 }
             }
@@ -531,14 +532,14 @@ public class SharedString {
         return escapeBuf.toString();
     }
 
-    private int indexOf(char[] cb, char c, int from) {
+    private static int indexOf(char[] cb, char c, int from) {
         for (; from < cb.length; from++) {
             if (cb[from] == c) return from;
         }
         return -1;
     }
 
-    private int toInt(char[] cb, int a, int b) {
+    static int toInt(char[] cb, int a, int b) {
         boolean _n;
         if (_n = cb[a] == '-') a++;
         int n = cb[a++] - '0';

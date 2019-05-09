@@ -29,14 +29,14 @@ public @interface DisplayName {
     /**
      * header cell
      *
-     * @return
+     * @return the column name
      */
     String value() default "";
 
     /**
      * share body string
      *
-     * @return
+     * @return true if shared
      */
-    boolean share() default false;
+    boolean share() default true;
 }

@@ -48,7 +48,7 @@ import java.util.List;
  * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
-public class Workbook {
+public class Workbook implements Storageable {
     private Logger logger = LogManager.getLogger(getClass());
     /**
      * 工作薄名，最终反应到Excel文件名
@@ -666,9 +666,9 @@ public class Workbook {
      *
      * @param path 保存地址
      * @throws IOException         IO异常
-     * @throws ExcelWriteException 其它异常
      */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    @Override
+    public void writeTo(Path path) throws IOException {
         if (!Files.exists(path)) {
             String name = path.getFileName().toString();
             // write to file

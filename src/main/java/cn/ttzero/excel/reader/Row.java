@@ -48,7 +48,7 @@ public abstract class Row {
     int lc = -1;
     // Share cell
     Cell[] cells;
-    SharedString sst;
+    SharedStrings sst;
     // The header row
     private HeaderRow hr;
     boolean unknownLength;

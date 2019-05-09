@@ -17,7 +17,9 @@
 package cn.ttzero.excel.reader;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * 热词区
@@ -25,14 +27,22 @@ import java.util.Map;
  * <p>
  * Create by guanquan.wang at 2018-10-31 16:06
  */
-public class Hot {
-    private static class E {
-        private int k;
-        private String v;
+public class Hot<K,V> implements Iterable<Hot.E<K,V>> {
+    public static class E<K,V> {
+        private K k;
+        private V v;
 
-        private E(int k, String v) {
+        private E(K k, V v) {
             this.k = k;
             this.v = v;
+        }
+
+        public K getK() {
+            return k;
+        }
+
+        public V getV() {
+            return v;
         }
     }
 
@@ -50,7 +60,7 @@ public class Hot {
     /**
      * double linked
      */
-    private Node<E> first, last;
+    private Node<E<K,V>> first, last;
     /**
      * elements limit
      * default size 64
@@ -61,7 +71,7 @@ public class Hot {
      */
     private int size;
 
-    private Map<Integer, Node<E>> table;
+    private Map<K, Node<E<K,V>>> table;
 
     public Hot() {
         this(1 << 9);
@@ -78,8 +88,8 @@ public class Hot {
      * @param k int
      * @return value
      */
-    public String get(int k) {
-        final Node<E> o;
+    public V get(K k) {
+        final Node<E<K,V>> o;
         // Not found
         if (size == 0 || (o = table.get(k)) == null) return null;
 
@@ -106,9 +116,9 @@ public class Hot {
      *
      * @param v element
      */
-    public void push(int k, String v) {
-        final Node<E> f = first;
-        final Node<E> newNode = new Node<>(new E(k, v), null, f);
+    public void push(K k, V v) {
+        final Node<E<K,V>> f = first;
+        final Node<E<K,V>> newNode = new Node<>(new E<>(k, v), null, f);
         first = newNode;
         if (f == null) last = newNode;
         else f.prev = newNode;
@@ -120,18 +130,77 @@ public class Hot {
     }
 
     /**
-     * remove last
+     * Remove the last value
      *
-     * @return last item
+     * @return the last item
      */
-    public E remove() {
-        final Node<E> l = last;
-        final E data = l.data;
+    public E<K,V> remove() {
+        final Node<E<K,V>> l = last;
+        if (l == null) {
+            return null;
+        }
+        final E<K,V> data = l.data;
 
         last = last.prev;
-        last.next = null;
+        if (last != null) {
+            last.next = null;
+        }
 
         table.remove(data.k);
+        if (--size == 0) {
+            first = null;
+        }
         return data;
     }
+
+    /**
+     * Clear all cache data
+     */
+    public void clear() {
+        first = null;
+        last = null;
+        table.clear();
+        size = 0;
+    }
+
+    /**
+     * Returns the cache word size
+     * @return size of cache
+     */
+    public int size() {
+        return size;
+    }
+
+    private class HotIterator implements Iterator<E<K,V>> {
+        private Node<E<K,V>> first;
+        private HotIterator(Node<E<K,V>> first) {
+            this.first = first;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return first != null;
+        }
+
+        @Override
+        public E<K,V> next() {
+            E<K,V> e = first.data;
+            first = first.next;
+            return e;
+        }
+    }
+
+    @Override
+    public Iterator<E<K,V>> iterator() {
+        return new HotIterator(first);
+    }
+
+    @Override
+    public void forEach(Consumer<? super E<K,V>> action) {
+        Node<E<K,V>> f = first;
+        for (; f != null; f = f.next) {
+            action.accept(f.data);
+        }
+    }
+
 }

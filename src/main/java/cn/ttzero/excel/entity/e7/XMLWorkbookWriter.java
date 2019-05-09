@@ -97,18 +97,18 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      *
      * @param path the storage path
      */
-    public void writeTo(Path path) throws IOException, ExcelWriteException {
+    public void writeTo(Path path) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         reMarkPath(zip, path);
     }
 
     @Override
-    public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
+    public void writeTo(OutputStream os) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         Files.copy(zip, os);
     }
 
-    public void writeTo(File file) throws IOException, ExcelWriteException {
+    public void writeTo(File file) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         FileUtil.cp(zip, file);
     }
@@ -121,7 +121,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager.add(rel);
     }
 
-    private void writeXML(Path root) throws IOException, ExcelWriteException {
+    private void writeXML(Path root) throws IOException {
 
         // Content type
         ContentType contentType = new ContentType();
@@ -237,7 +237,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
 
         // write content type
-        contentType.write(root.getParent());
+        contentType.writeTo(root.getParent());
 
         TopNS topNS = getClass().getAnnotation(TopNS.class);
         String name;
@@ -254,7 +254,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         workbook.getStyles().writeTo(root.resolve("styles.xml"));
 
         // share string
-        workbook.getSst().write(root);
+        try (SharedStrings sst = workbook.getSst()) {
+            sst.writeTo(root);
+        }
     }
 
     private void madeMark(Path parent) throws IOException {
@@ -416,6 +418,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (IOException | ExcelWriteException e) {
             // remove temp path
             if (root != null) FileUtil.rm_rf(root);
+            workbook.getSst().close();
             throw e;
         }
     }
@@ -488,6 +491,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // Delete source files
         FileUtil.rm_rf(temp.toFile(), true);
         workbook.what("0005");
+
+        // Close shared string table
+        workbook.getSst().close();
 
         return zipFile;
     }
