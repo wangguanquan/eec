@@ -25,11 +25,13 @@ import cn.ttzero.excel.util.StringUtil;
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +39,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import static cn.ttzero.excel.reader.SharedString.unescape;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A workbook collects the strings of all text cells in a global list,
@@ -50,14 +52,15 @@ import static cn.ttzero.excel.reader.SharedString.unescape;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is 0.01%. When the number exceeds 1 million, it will not be
- * written to SST and will be converted to inline string.
+ * positive rate is 0.03%. When the number exceeds 1 million, it will be
+ * carried out, redistributing 2 times the length of the space, the maximum
+ * length 2^26, When the number exceeds 2^26, it will be converted to inline
+ * string.
  *
  * A hot zone is also designed internally to cache multiple occurrences,
  * the default size is 1024, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
- * cache. In order to prevent too many time-consuming searches for only the
- * first 100,000 words, will converted to inline string if not found.
+ * cache.
  *
  * Characters are handled differently. ASCII characters use the built-in array
  * cache subscript. The over 0x7F characters will be converted to strings and
@@ -73,11 +76,6 @@ public class SharedStrings implements Storageable, AutoCloseable {
      */
     private int count;
 
-//    /**
-//     * The total unique word in workbook.
-//     */
-//    private int uniqueCount;
-
     /**
      * Import google BloomFilter to check keyword not exists
      */
@@ -87,6 +85,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Cache ASCII value
      */
     private int[] ascii;
+    private Path temp;
+    private ExtBufferedWriter writer;
 
     /**
      * Cache the string which read twice and above
@@ -100,21 +100,38 @@ public class SharedStrings implements Storageable, AutoCloseable {
     private SharedStringTable sst;
 
     /**
-     * the number of expected insertions to the constructed bloom
+     * The number of expected insertions to the constructed bloom
      */
     private int expectedInsertions = 1 << 20;
 
-//    private StringBuilder buf;
+    /**
+     * The insertion limit
+     */
+    private static final int limitInsertions = 1 << 26;
 
     SharedStrings() {
         hot = new Hot<>(1 << 10);
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 2^20 expected insertions and 0.01% fpp bloom filter
-        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0001);
-        // The shared string table
-        sst = new SharedStringTable();
+        // Create a 2^20 expected insertions and 0.03% fpp bloom filter
+        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
+
+        init();
+    }
+
+    /**
+     * Create a temp file to storage all text cells
+     */
+    private void init() {
+        try {
+            temp = Files.createTempFile("~", "sst");
+            writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
+
+            sst = new SharedStringTable();
+        } catch (IOException e) {
+            throw new ExcelWriteException(e);
+        }
     }
 
     private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
@@ -131,14 +148,12 @@ public class SharedStrings implements Storageable, AutoCloseable {
             int n = ascii[c];
             // Not exists
             if (n == -1) {
-                n = sst.push(c);
-//                n = uniqueCount++;
+                n = add(c);
                 ascii[c] = n;
             }
             count++;
             return n;
         } else {
-            // TODO write as character
             char[] cs = charCache.get();
             cs[0] = c;
             return get(new String(cs));
@@ -156,41 +171,53 @@ public class SharedStrings implements Storageable, AutoCloseable {
         count++;
         // The keyword not exists
         if (!filter.mightContain(key)) {
+            // Resize if not out of insertion limit
+            if (sst.size() >= expectedInsertions) {
+                if (expectedInsertions < limitInsertions) {
+                    resizeBloomFilter();
+                } else return -1;
+            }
             // Add to bloom if not full
-            if (sst.size() < expectedInsertions) {
-                filter.put(key);
-                return sst.push(key);
-            } else return -1;
+            filter.put(key);
+            return add(key);
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
         if (n == null) {
             // Find in temp file
             n = sst.find(key);
-            // If not found in first 100,000 words
-            // append last and cache it
+            // Append to last and cache it
             if (n < 0) {
-                n = sst.push(key);
+                n = add(key);
             }
             hot.push(key, n);
         }
         return n;
     }
 
-//    private void add(String key) throws IOException {
-//        writer.write("<si><t>");
-//        writer.escapeWrite(key);
-//        writer.write("</t></si>");
-//    }
-//
-//    private void add(char c) throws IOException {
-//        writer.write("<si><t>");
-//        writer.escapeWrite(c);
-//        writer.write("</t></si>");
-//    }
+    private int add(String key) throws IOException {
+        writer.write("<si><t>");
+        writer.escapeWrite(key);
+        writer.write("</t></si>");
+
+        // Add to table
+        return sst.push(key);
+    }
+
+    private int add(char c) throws IOException {
+        writer.write("<si><t>");
+        writer.escapeWrite(c);
+        writer.write("</t></si>");
+
+        // Add to table
+        return sst.push(c);
+    }
 
     @Override
     public void writeTo(Path root) throws IOException {
+        // Close temp writer
+        FileUtil.close(writer);
+
         if (!Files.exists(root)) {
             FileUtil.mkdir(root);
         }
@@ -244,108 +271,270 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * @throws IOException if io error occur
      */
     private void transfer(FileChannel channel) throws IOException {
-        for (Iterator<String> it = sst.iterator(); it.hasNext();) {
-            // TODO
+        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
+            tempChannel.transferTo(0, tempChannel.size(), channel);
         }
-//        try (FileChannel tempChannel = FileChannel.open(temp, StandardOpenOption.READ)) {
-//            tempChannel.transferTo(0, tempChannel.size(), channel);
-//        }
     }
-//
-//    /**
-//     * Found in temp file
-//     * @param key the string value
-//     * @return the index in sst file (zero base)
-//     */
-//    private int findFromFile(String key) throws IOException {
-//        writer.flush();
-//
-//        buf = new StringBuilder();
-//
-//        try (BufferedReader reader = Files.newBufferedReader(temp, StandardCharsets.UTF_8)) {
-//            char[] cb = new char[1 << 11];
-//            int n, off = 0;
-//            O o = new O();
-//            o.cb = cb;
-//            o.key = key;
-//            while ((n = reader.read(cb, off, cb.length - off)) > 0) {
-//                o.n = n + off;
-//                findT(o);
-//                // Get it
-//                if (o.f) {
-//                    return o.index;
-//                    // search next block
-//                } else if (o.off > 0) {
-//                    System.arraycopy(cb, o.off, cb, 0, off = o.n - o.off);
-//                    o.off = 0;
-//                    // resize
-//                } else {
-//                    char[] bigCb = new char[cb.length << 1];
-//                    System.arraycopy(cb, 0, bigCb, 0, o.n);
-//                    o.cb = cb = bigCb;
-//                    off = o.n;
-//                }
-//            }
-//        }
-//
-//        return -1;
-//    }
-//
-//    private void findT(O o) {
-//        int sn = 7, ln = 9, nChar = sn;
-//        for (; nChar < o.n; ) {
-//            int next = next(o.cb, nChar, o.n);
-//            // End of block
-//            if (next >= o.n) {
-//                break;
-//            }
-//            String v = unescape(buf, o.cb, nChar, next);
-//            // Check values
-//            o.f = v.equals(o.key);
-//            if (o.f) {
-//                break;
-//            }
-//            if (next + ln > o.n) {
-//                o.off = nChar;
-//                break;
-//            }
-//            // Not found in first 100,000 words
-//            if (o.index++ >= find_limit) {
-//                o.f = true;
-//                o.index = -1;
-//                break;
-//            }
-//
-//            if (next + ln + sn > o.n) {
-//                o.off = next + ln;
-//                break;
-//            }
-//            nChar = next + ln + sn;
-//        }
-//    }
-//
-//    // found the end index of string value
-//    private int next(char[] cb, int nChar, int n) {
-//        for (; nChar < n && cb[nChar] != '<'; nChar++) ;
-//        return nChar;
-//    }
+
+    /**
+     * Resize the bloom filter
+     */
+    private void resizeBloomFilter() {
+        expectedInsertions <<= 1;
+        System.out.println("resize to " + expectedInsertions);
+        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
+        for (String key : sst) {
+            filter.put(key);
+        }
+    }
 
     @Override
     public void close() throws IOException {
-//        buf = null;
         filter = null;
         hot.clear();
         hot = null;
         sst.close();
+        FileUtil.rm(temp);
     }
 
-    private static class O {
-        private char[] cb;
-        private int n;
-        private int off;
-        private String key;
+    /**
+     * Create by guanquan.wang at 2019-05-08 15:31
+     */
+    static class SharedStringTable implements AutoCloseable, Iterable<String> {
+        /**
+         * The temp path
+         */
+        private Path temp;
 
-        private int index;
-        private boolean f;
+        /**
+         * The total unique word in workbook.
+         */
+        private int count;
+
+        private SeekableByteChannel channel;
+
+        /**
+         * Byte array buffer
+         */
+        private ByteBuffer buffer;
+
+        SharedStringTable() throws IOException {
+            temp = Files.createTempFile("+", ".sst");
+            channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+            buffer = ByteBuffer.allocate(1 << 11);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        /**
+         * Write character value into table
+         *
+         * @param c the character value
+         * @return the value index of table
+         * @throws IOException if io error occur
+         */
+        public int push(char c) throws IOException {
+            if (buffer.remaining() < 8) {
+                flush();
+            }
+            buffer.putInt(2);
+            buffer.putShort((short) 0x8000);
+            buffer.putChar(c);
+            return count++;
+        }
+
+        /**
+         * Write string value into table
+         *
+         * @param key the string value
+         * @return the value index of table
+         * @throws IOException if io error occur
+         */
+        public int push(String key) throws IOException {
+            byte[] bytes = key.getBytes(UTF_8);
+            if (buffer.remaining() < bytes.length + 6) {
+                flush();
+            }
+            buffer.putInt(bytes.length);
+            buffer.putShort((short) key.length());
+            buffer.put(bytes);
+            return count++;
+        }
+
+        public int find(char c) throws IOException {
+            // Flush before read
+            flush();
+            int index = 0;
+            long position = channel.position();
+            // Read at start position
+            channel.position(0);
+            A: for (; ;) {
+                int dist = channel.read(buffer);
+                // EOF
+                if (dist <= 0) break;
+                buffer.flip();
+                for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
+                    int a = buffer.getInt();
+                    short n = buffer.getShort();
+                    // A char value
+                    if (n == (short) 0x8000) {
+                        // Get it
+                        if (buffer.getChar() == c) {
+                            break A;
+                        }
+                    } else buffer.position(buffer.position() + a);
+                    index++;
+                }
+                buffer.compact();
+            }
+            channel.position(position);
+            buffer.rewind();
+            // Returns -1 if not found
+            return index < count ? index : -1;
+        }
+
+        public int find(String key) throws IOException {
+            // Flush before read
+            flush();
+            int index = 0;
+            long position = channel.position();
+            // Read at start position
+            channel.position(0);
+            byte[] bytes = key.getBytes(UTF_8);
+            A: for (; ;) {
+                int dist = channel.read(buffer);
+                // EOF
+                if (dist <= 0) break;
+                buffer.flip();
+                for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
+                    int a = buffer.getInt();
+                    short n = buffer.getShort();
+                    // A string value
+                    if (n != (short) 0x8000 && n == key.length()) {
+                        int i = 0;
+                        for (; i < a; ) {
+                            if (buffer.get() != bytes[i++]) break;
+                        }
+                        if (i < a) {
+                            buffer.position(buffer.position() + a - i);
+                        } else break A;
+                    } else buffer.position(buffer.position() + a);
+                    index++;
+                }
+                buffer.compact();
+            }
+            channel.position(position);
+            buffer.rewind();
+            // Returns -1 if not found
+            return index < count ? index : -1;
+        }
+
+        /**
+         * Returns the cache size
+         *
+         * @return total keyword
+         */
+        public int size() {
+            return count;
+        }
+
+        /**
+         * Write buffered data to channel
+         *
+         * @throws IOException if io error occur
+         */
+        private void flush() throws IOException {
+            buffer.flip();
+            channel.write(buffer);
+            buffer.compact();
+        }
+
+        /**
+         * Check the remaining data is complete
+         *
+         * @param buffer the ByteBuffer
+         * @return true or false
+         */
+        private static boolean hasFullValue(ByteBuffer buffer) {
+            int position = buffer.position();
+            int n = buffer.get(position)   & 0xFF;
+            n |= (buffer.get(position + 1) & 0xFF) <<  8;
+            n |= (buffer.get(position + 2) & 0xFF) << 16;
+            n |= (buffer.get(position + 3) & 0xFF) << 24;
+            return n + 6 <= buffer.remaining();
+        }
+
+        /**
+         * Close channel and delete temp files
+         *
+         * @throws IOException if io error occur
+         */
+        @Override
+        public void close() throws IOException {
+            buffer = null;
+            if (channel != null) {
+                channel.close();
+            }
+            FileUtil.rm(temp);
+        }
+
+        /**
+         * Returns an iterator over elements of type String
+         *
+         * @return an Iterator.
+         */
+        @Override
+        public Iterator<String> iterator() {
+            try {
+                flush();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return new SSTIterator(temp);
+        }
+
+        private static class SSTIterator implements Iterator<String> {
+            private SeekableByteChannel channel;
+            private ByteBuffer buffer;
+            private byte[] bytes;
+            private SSTIterator(Path temp) {
+                try {
+                    channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+                    buffer = ByteBuffer.allocate(1 << 11);
+                    buffer.order(ByteOrder.LITTLE_ENDIAN);
+                    // Read ahead
+                    channel.read(buffer);
+                    buffer.flip();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                bytes = new byte[100];
+            }
+            @Override
+            public boolean hasNext() {
+                try {
+                    if (buffer.remaining() < 6 || !hasFullValue(buffer)) {
+                        buffer.compact();
+                        channel.read(buffer);
+                        buffer.flip();
+                    }
+                    return buffer.hasRemaining();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+
+            @Override
+            public String next() {
+                int a = buffer.getInt();
+                if (a > bytes.length) {
+                    bytes = new byte[a];
+                }
+                // skip
+                buffer.position(buffer.position() + 2);
+                buffer.get(bytes, 0, a);
+                return new String(bytes, 0, a, UTF_8);
+            }
+        }
+
     }
 }
