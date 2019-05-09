@@ -22,7 +22,8 @@ import static cn.ttzero.excel.reader.Cell.FUNCTION;
 import static cn.ttzero.excel.reader.Cell.SST;
 import static cn.ttzero.excel.reader.Cell.INLINESTR;
 import static cn.ttzero.excel.reader.Cell.BLANK;
-import static cn.ttzero.excel.reader.SharedString.unescape;
+import static cn.ttzero.excel.reader.SharedStrings.toInt;
+import static cn.ttzero.excel.reader.SharedStrings.unescape;
 
 /**
  * 行数据，同一个Sheet页内的Row对象内存共享。
@@ -93,7 +94,7 @@ class XMLRow extends Row {
                 a = _f += 4;
                 for (; cb[_f] != '"' && _f < to; _f++) ;
                 if (_f > a) {
-                    index = toInt(a, _f);
+                    index = toInt(cb, a, _f);
                 }
                 break;
             }
@@ -112,10 +113,10 @@ class XMLRow extends Row {
                 for (; cb[i] != '"' && cb[i] != '>'; i++) ;
                 for (b = i - 1; cb[b] != ':'; b--) ;
                 if (++b < i) {
-                    lc = toInt(b, i);
+                    lc = toInt(cb, b, i);
                 }
                 if (j < --b) {
-                    fc = toInt(j, b);
+                    fc = toInt(cb, j, b);
                 }
             }
         }
@@ -205,13 +206,13 @@ class XMLRow extends Row {
                 break;
             case SST: // shared string lazy get
                 a = getV(e);
-                cell.setNv(toInt(a, cursor));
+                cell.setNv(toInt(cb, a, cursor));
                 cell.setT(SST);
                 break;
             case BOOL: // boolean value
                 a = getV(e);
                 if (cursor - a == 1) {
-                    cell.setBv(toInt(a, cursor) == 1);
+                    cell.setBv(toInt(cb, a, cursor) == 1);
                 }
                 break;
             case FUNCTION: // function string
@@ -238,16 +239,6 @@ class XMLRow extends Row {
         cursor = e;
 
         return cell;
-    }
-
-    private int toInt(int a, int b) {
-        boolean _n;
-        if (_n = cb[a] == '-') a++;
-        int n = cb[a++] - '0';
-        for (; b > a; ) {
-            n = n * 10 + cb[a++] - '0';
-        }
-        return _n ? -n : n;
     }
 
     private long toLong(int a, int b) {

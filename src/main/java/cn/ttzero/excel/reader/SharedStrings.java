@@ -539,7 +539,7 @@ public class SharedStrings {
         return -1;
     }
 
-    private static int toInt(char[] cb, int a, int b) {
+    static int toInt(char[] cb, int a, int b) {
         boolean _n;
         if (_n = cb[a] == '-') a++;
         int n = cb[a++] - '0';
