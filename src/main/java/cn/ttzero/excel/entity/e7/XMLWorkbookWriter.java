@@ -492,6 +492,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         FileUtil.rm_rf(temp.toFile(), true);
         workbook.what("0005");
 
+        // Close shared string table
+        workbook.getSst().close();
+
         return zipFile;
     }
 
