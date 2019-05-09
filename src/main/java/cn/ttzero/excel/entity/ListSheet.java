@@ -397,7 +397,7 @@ public class ListSheet<T> extends Sheet {
      * @return the end index
      */
     protected int getEndIndex() {
-        int blockSize = getRowBlockSize(), rowLimit = sheetWriter.getRowLimit();
+        int blockSize = getRowBlockSize(), rowLimit = sheetWriter.getRowLimit() - 1;
         if (rows + blockSize > rowLimit) {
             blockSize = rowLimit - rows;
         }
@@ -429,7 +429,6 @@ public class ListSheet<T> extends Sheet {
 
             int n = id;
             for (int i = end; i < len; ) {
-//                @SuppressWarnings({"unchecked", "rawtypes"})
                 ListSheet copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = i + limit < len ? i + limit : len);
