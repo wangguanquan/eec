@@ -21,8 +21,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -572,5 +576,120 @@ public class SharedStrings {
             count_area = null;
         }
         escapeBuf = null;
+    }
+
+    /**
+     *
+     */
+    static class IndexSharedStringTable
+        extends cn.ttzero.excel.entity.SharedStrings.SharedStringTable {
+
+        /**
+         * The index temp path
+         */
+        private Path temp;
+
+        private SeekableByteChannel channel;
+
+        /**
+         * Byte array buffer
+         */
+        private ByteBuffer buffer;
+
+        /**
+         * Record position once every 64 strings
+         */
+        private int split = 0x7FFFFFFF >> 6 << 6;
+
+        IndexSharedStringTable() throws IOException {
+            super();
+
+            temp = Files.createTempFile("+", ".idx");
+            channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+            buffer = ByteBuffer.allocate(1 << 11);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        /**
+         * Write character value into table
+         *
+         * @param c the character value
+         * @return the value index of table
+         * @throws IOException if io error occur
+         */
+        @Override
+        public int push(char c) throws IOException {
+            putsIndex();
+            return super.push(c);
+        }
+
+        /**
+         * Write string value into table
+         *
+         * @param key the string value
+         * @return the value index of table
+         * @throws IOException if io error occur
+         */
+        @Override
+        public int push(String key) throws IOException {
+            putsIndex();
+            return super.push(key);
+        }
+
+        /**
+         * Getting by index
+         *
+         * @param index the value's index in table
+         * @return the string value at index
+         */
+        public String get(int index) {
+            return null;
+        }
+
+        /**
+         * Batch getting
+         *
+         * @param fromIndex the index of the first element, inclusive, to be sorted
+         * @param len the batch size
+         * @return an array string
+         */
+        private String[] batch(int fromIndex, int len) {
+            return null;
+        }
+
+        /**
+         * Batch getting
+         *
+         * @param array Destination array
+         * @return The number of string read, or -1 if the end of the
+         *              stream has been reached
+         */
+        private int batch(String[] array) {
+            return -1;
+        }
+
+        /**
+         * Write buffered data to channel
+         *
+         * @throws IOException if io error occur
+         */
+        private void flush() throws IOException {
+            buffer.flip();
+            channel.write(buffer);
+            buffer.compact();
+        }
+
+        /**
+         * Puts the main's position into index file if need.
+         */
+        private void putsIndex() throws IOException {
+            int size = size();
+            if ((size & split) == size) {
+                if (buffer.remaining() < 4) {
+                    flush();
+                }
+                buffer.putInt(position());
+            }
+        }
     }
 }

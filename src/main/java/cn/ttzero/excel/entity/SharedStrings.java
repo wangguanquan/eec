@@ -298,9 +298,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
     }
 
     /**
-     * Create by guanquan.wang at 2019-05-08 15:31
+     *
      */
-    static class SharedStringTable implements AutoCloseable, Iterable<String> {
+    public static class SharedStringTable implements AutoCloseable, Iterable<String> {
         /**
          * The temp path
          */
@@ -318,7 +318,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
          */
         private ByteBuffer buffer;
 
-        SharedStringTable() throws IOException {
+        protected SharedStringTable() throws IOException {
             temp = Files.createTempFile("+", ".sst");
             channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
             buffer = ByteBuffer.allocate(1 << 11);
@@ -360,13 +360,32 @@ public class SharedStrings implements Storageable, AutoCloseable {
             return count++;
         }
 
+        /**
+         * Find character value from begging
+         *
+         * @param c the character to find
+         * @return the index of character in shared string table
+         * @throws IOException if io error occur
+         */
         public int find(char c) throws IOException {
+            return find(c, 0);
+        }
+
+        /**
+         * Find from the specified location
+         *
+         * @param c the character to find
+         * @param pos the buffer's position
+         * @return the index of character in shared string table
+         * @throws IOException if io error occur
+         */
+        public int find(char c, int pos) throws IOException {
             // Flush before read
             flush();
             int index = 0;
             long position = channel.position();
             // Read at start position
-            channel.position(0);
+            channel.position(pos);
             A: for (; ;) {
                 int dist = channel.read(buffer);
                 // EOF
@@ -392,13 +411,32 @@ public class SharedStrings implements Storageable, AutoCloseable {
             return index < count ? index : -1;
         }
 
+        /**
+         * Find value from begging
+         *
+         * @param key the key to find
+         * @return the index of character in shared string table
+         * @throws IOException if io error occur
+         */
         public int find(String key) throws IOException {
+            return find(key, 0);
+        }
+
+        /**
+         * Find from the specified location
+         *
+         * @param key the key to find
+         * @param pos the buffer's position
+         * @return the index of character in shared string table
+         * @throws IOException if io error occur
+         */
+        public int find(String key, int pos) throws IOException {
             // Flush before read
             flush();
             int index = 0;
             long position = channel.position();
             // Read at start position
-            channel.position(0);
+            channel.position(pos);
             byte[] bytes = key.getBytes(UTF_8);
             A: for (; ;) {
                 int dist = channel.read(buffer);
@@ -454,7 +492,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @param buffer the ByteBuffer
          * @return true or false
          */
-        private static boolean hasFullValue(ByteBuffer buffer) {
+        protected static boolean hasFullValue(ByteBuffer buffer) {
             int position = buffer.position();
             int n = buffer.get(position)   & 0xFF;
             n |= (buffer.get(position + 1) & 0xFF) <<  8;
@@ -475,6 +513,15 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 channel.close();
             }
             FileUtil.rm(temp);
+        }
+
+        /**
+         * Returns this buffer's position.
+         *
+         * @return  The position of this buffer
+         */
+        protected int position() {
+            return buffer.position();
         }
 
         /**
