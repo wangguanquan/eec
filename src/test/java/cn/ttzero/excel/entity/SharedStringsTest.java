@@ -24,36 +24,42 @@ import java.io.IOException;
  * Create by guanquan.wang at 2019-05-07 17:41
  */
 public class SharedStringsTest {
-    @Test public void testGet() throws IOException {
-        SharedStrings sst = new SharedStrings();
-        int index = sst.get("abc");
-        assert index == 0;
+    @Test public void testGet() {
+        try (SharedStrings sst = new SharedStrings()) {
+            int index = sst.get("abc");
+            assert index == 0;
 
-        index = sst.get("guanquan.wang");
-        assert index == 1;
+            index = sst.get("guanquan.wang");
+            assert index == 1;
 
-        index = sst.get("abc");
-        assert index == 0;
+            index = sst.get("abc");
+            assert index == 0;
 
-        index = sst.get("guanquan.wang");
-        assert index == 1;
+            index = sst.get("guanquan.wang");
+            assert index == 1;
 
-        index = sst.get("guanquan.wang");
-        assert index == 1;
+            index = sst.get("guanquan.wang");
+            assert index == 1;
 
-        index = sst.get("test");
-        assert index == 2;
+            index = sst.get("test");
+            assert index == 2;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    @Test public void testGetChar() throws IOException {
-        SharedStrings sst = new SharedStrings();
-        for (int i = 0; i <= 0x7F; i++) {
-            sst.get((char) i);
-        }
+    @Test public void testGetChar() {
+        try (SharedStrings sst = new SharedStrings()) {
+            for (int i = 0; i <= 0x7F; i++) {
+                sst.get((char) i);
+            }
 
-        for (int i = 0; i < 0x7FFFFFFF; i++) {
-            char c = (char) (i & 0x7F);
-            assert sst.get(c) == c;
+            for (int i = 0; i < 0x7FFFFFFF; i++) {
+                char c = (char) (i & 0x7F);
+                assert sst.get(c) == c;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
