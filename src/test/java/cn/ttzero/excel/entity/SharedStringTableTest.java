@@ -31,10 +31,10 @@ import static cn.ttzero.excel.Print.print;
  * Create by guanquan.wang at 2019-05-08 17:04
  */
 public class SharedStringTableTest {
-    private SharedStringTable sst;
+    private SharedStrings.SharedStringTable sst;
 
-    @Before public void before() {
-        sst = new SharedStringTable();
+    @Before public void before() throws IOException {
+        sst = new SharedStrings.SharedStringTable();
     }
 
     @After public void after() throws IOException {
@@ -91,12 +91,22 @@ public class SharedStringTableTest {
         for (int i = 0; i < size; i++) {
             sst.push(getRandomString());
         }
+        sst.push("abcdefghijklmn");
 
-        int index = sst.find('a');
-        println(index);
-        assert index == -1;
+        int index;
 
-        index = sst.find(getRandomString());
+        long start = System.currentTimeMillis();
+//        index = sst.find('a');
+//        println(index);
+//        assert index == -1;
+
+//        index = sst.find(getRandomString());
+//        println(index);
+
+        index = sst.find("abcdefghijklmn");
         println(index);
+        assert index == size;
+
+        println(System.currentTimeMillis() - start);
     }
 }

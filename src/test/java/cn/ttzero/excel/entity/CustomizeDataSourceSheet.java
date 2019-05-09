@@ -39,7 +39,7 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
 
     private StudentService service;
 
-    private int pageNo, limit = 64;
+    private int pageNo, limit = 1 << 9;
 
     /**
      * Do not specify the worksheet name
@@ -76,6 +76,9 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
      */
     @Override
     public List<ListObjectSheetTest.Student> more() {
+        if (pageNo >= 10) {
+            return null;
+        }
         return service.getPageData(pageNo++, limit);
     }
 
