@@ -186,6 +186,20 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     public void close() throws IOException {
+        // Maybe there has more data
+        if (!eof && rows >= sheetWriter.getRowLimit() - 1) {
+            List<T> list = more();
+            if (list != null && !list.isEmpty()) {
+                compact();
+                data.addAll(list);
+                ListSheet copy = getClass().cast(clone());
+                copy.start = 0;
+                copy.end = list.size();
+                workbook.insertSheet(id, copy);
+                // Do not close current worksheet
+                shouldClose = false;
+            }
+        }
         if (shouldClose && data != null) {
             data.clear();
             data = null;
@@ -238,7 +252,7 @@ public class ListSheet<T> extends Sheet {
      * or more than the row limit
      */
     protected void append() {
-        int rbs = getRowBlockSize(), size = size();
+        int rbs = getRowBlockSize();
         for (; ; ) {
             List<T> list = more();
             // No more data
@@ -248,19 +262,12 @@ public class ListSheet<T> extends Sheet {
             }
             // The first getting
             if (data == null) {
-//                data = new ArrayList<>(rbs);
                 setData(list);
 
                 if (list.size() < rbs) continue;
+                else break;
             }
-            // Copy the remaining data to a temporary array
-            if (start > 0 && size > 0) {
-                // append and resize
-                List<T> last = new ArrayList<>(size);
-                last.addAll(data.subList(start, end));
-                data.clear();
-                data.addAll(last);
-            } else if (start > 0) data.clear();
+            compact();
             data.addAll(list);
             start = 0;
             end = data.size();
@@ -270,6 +277,18 @@ public class ListSheet<T> extends Sheet {
                 break;
             }
         }
+    }
+
+    private void compact() {
+        // Copy the remaining data to a temporary array
+        int size = size();
+        if (start > 0 && size > 0) {
+            // append and resize
+            List<T> last = new ArrayList<>(size);
+            last.addAll(data.subList(start, end));
+            data.clear();
+            data.addAll(last);
+        } else if (start > 0) data.clear();
     }
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
