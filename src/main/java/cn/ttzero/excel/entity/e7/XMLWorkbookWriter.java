@@ -418,6 +418,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (IOException | ExcelWriteException e) {
             // remove temp path
             if (root != null) FileUtil.rm_rf(root);
+            workbook.getSst().close();
             throw e;
         }
     }
