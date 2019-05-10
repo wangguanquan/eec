@@ -379,6 +379,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         private byte[] bytes;
         @SuppressWarnings("unused")
         private int count; // ignore
+        private char[] chars;
         private SSTIterator(Path temp) {
             try {
                 channel = Files.newByteChannel(temp, StandardOpenOption.READ);
@@ -393,7 +394,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-            bytes = new byte[100];
+            bytes = new byte[128];
+            chars = new char[1];
         }
         @Override
         public boolean hasNext() {
@@ -415,10 +417,13 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             if (a > bytes.length) {
                 bytes = new byte[a];
             }
-            // skip
-            buffer.position(buffer.position() + 2);
-            buffer.get(bytes, 0, a);
-            return new String(bytes, 0, a, UTF_8);
+            if (buffer.getShort() == (short) 0x8000) {
+                chars[0] = buffer.getChar();
+                return new String(chars);
+            } else {
+                buffer.get(bytes, 0, a);
+                return new String(bytes, 0, a, UTF_8);
+            }
         }
     }
 
