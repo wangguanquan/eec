@@ -19,6 +19,10 @@ package cn.ttzero.excel.entity;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static cn.ttzero.excel.Print.println;
 
 /**
  * Create by guanquan.wang at 2019-05-07 17:41
@@ -61,5 +65,16 @@ public class SharedStringsTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test public void testIterator() throws IOException {
+        Path path = Paths.get("C:\\Users\\wangguanquan\\AppData\\Local\\Temp\\+8633905961752560043.sst");
+        SharedStrings.SharedStringTable sst = new SharedStrings.SharedStringTable(path);
+
+        int i = 0;
+        for (String s : sst) {
+            i++;
+        }
+        println(i);
     }
 }

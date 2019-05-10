@@ -33,7 +33,7 @@ public class WorkbookTest {
 
     static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
     private static char[][] cache = {new char[6], new char[7], new char[8], new char[9], new char[10]};
-    static String getRandomString() {
+    public static String getRandomString() {
         int n = random.nextInt(5), size = charArray.length;
         char[] cs = cache[n];
         for (int i = 0; i < cs.length; i++) {

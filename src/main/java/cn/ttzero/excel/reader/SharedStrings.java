@@ -16,6 +16,8 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.entity.ExcelWriteException;
+import cn.ttzero.excel.util.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,8 +28,11 @@ import java.nio.ByteOrder;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 读取sharedString数据
@@ -594,20 +599,59 @@ public class SharedStrings {
         /**
          * Byte array buffer
          */
-        private ByteBuffer buffer;
+        private ByteBuffer buffer, readBuffer;
+
+        /**
+         * The sector size
+         */
+        private int sst = 8;
+
+        /**
+         * The short sector size
+         */
+        private int ssst = 6;
 
         /**
          * Record position once every 64 strings
          */
-        private int split = 0x7FFFFFFF >> 6 << 6;
+        private int kSplit = 0x7FFFFFFF >> ssst << ssst;
+
+        /**
+         * Flush buffer each 256 keys
+         */
+        private int kFlush = 0x7FFFFFFF >> sst << sst;
+
+        /**
+         * A multiplexing byte array
+         */
+        private byte[] bytes;
+
+        /**
+         * A fix length multiplexing char array
+         */
+        private char[] chars = new char[1];
 
         IndexSharedStringTable() throws IOException {
             super();
 
-            temp = Files.createTempFile("+", ".idx");
+            Path superPath = getTemp();
+            temp = Files.createFile(Paths.get(superPath.toString() + ".idx"));
             channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
             buffer = ByteBuffer.allocate(1 << 11);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
+            readBuffer = ByteBuffer.allocate(1 << 10);
+            readBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        IndexSharedStringTable(Path path) throws IOException {
+            super(Paths.get(path.toString().substring(0, path.toString().length() - 4)));
+            temp = path;
+            channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+            channel.position(channel.size());
+            buffer = ByteBuffer.allocate(1 << 11);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            readBuffer = ByteBuffer.allocate(1 << 10);
+            readBuffer.order(ByteOrder.LITTLE_ENDIAN);
         }
 
         /**
@@ -642,30 +686,69 @@ public class SharedStrings {
          * @param index the value's index in table
          * @return the string value at index
          */
-        public String get(int index) {
-            return null;
+        public String get(int index) throws IOException {
+            checkBound(index);
+            long position = getIndexPosition(index);
+            readBuffer.clear();
+
+            super.mark();
+
+            super.skip(position);
+
+            int dist = read(readBuffer);
+
+            super.reset();
+
+            if (dist < 0) {
+                // TODO reader more data into index file
+                return null;
+            }
+            readBuffer.flip();
+
+            skipTo(index);
+
+            return hasFullValue(readBuffer) ? parse(readBuffer) : null;
         }
 
         /**
          * Batch getting
          *
          * @param fromIndex the index of the first element, inclusive, to be sorted
-         * @param len the batch size
-         * @return an array string
-         */
-        private String[] batch(int fromIndex, int len) {
-            return null;
-        }
-
-        /**
-         * Batch getting
-         *
          * @param array Destination array
          * @return The number of string read, or -1 if the end of the
          *              stream has been reached
          */
-        private int batch(String[] array) {
-            return -1;
+        public int batch(int fromIndex, String[] array) throws IOException {
+            checkBound(fromIndex);
+            long position = getIndexPosition(fromIndex);
+            readBuffer.clear();
+
+            super.mark();
+
+            super.skip(position);
+
+            int i = 0;
+            A: for (; ;) {
+                int dist = read(readBuffer);
+                if (dist < 0) {
+                    break;
+                }
+                readBuffer.flip();
+
+                if (i == 0) skipTo(fromIndex);
+
+                for ( ; hasFullValue(readBuffer); ) {
+                    array[i++] = parse(readBuffer);
+                    if (i >= array.length) break A;
+                }
+
+                readBuffer.compact();
+                position += dist;
+            }
+
+            super.reset();
+
+            return i;
         }
 
         /**
@@ -675,7 +758,9 @@ public class SharedStrings {
          */
         private void flush() throws IOException {
             buffer.flip();
-            channel.write(buffer);
+            if (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
             buffer.compact();
         }
 
@@ -684,12 +769,79 @@ public class SharedStrings {
          */
         private void putsIndex() throws IOException {
             int size = size();
-            if ((size & split) == size) {
-                if (buffer.remaining() < 4) {
+            if ((size & kSplit) == size) {
+                if ((size & kFlush) == size) {
                     flush();
                 }
-                buffer.putInt(position());
+                buffer.putLong(position());
             }
+        }
+
+        private void checkBound(int index) {
+            int size = size();
+            if (size <= index) {
+                // TODO reader more data into index file
+                throw new ExcelWriteException("index: " + index + ", size: " + size);
+            }
+        }
+
+        private long getIndexPosition(int keyIndex) throws IOException {
+            long position;
+            // Read index from buffer
+            if (size() < (1 << ssst)) {
+                buffer.mark();
+                buffer.flip();
+                buffer.position(keyIndex >> ssst << 3);
+                position = buffer.getLong();
+                buffer.reset();
+                buffer.limit(buffer.capacity());
+            } else {
+                flush();
+                long pos = channel.position();
+                readBuffer.rewind();
+                channel.position(keyIndex >> ssst << 3);
+                channel.read(readBuffer);
+                readBuffer.flip();
+                position = readBuffer.getLong();
+                channel.position(pos);
+            }
+            return position;
+        }
+
+        private String parse(ByteBuffer readBuffer) {
+            int n;
+            n = readBuffer.getInt();
+            if (bytes == null || bytes.length < n) {
+                bytes = new byte[n < 128 ? 128 : n];
+            }
+            if (readBuffer.getShort() == (short) 0x8000) {
+                char c = readBuffer.getChar();
+                chars[0] = c;
+                return new String(chars);
+            } else {
+                readBuffer.get(bytes, 0, n);
+                return new String(bytes, 0, n, UTF_8);
+            }
+        }
+
+        private void skipTo(int index) {
+            int n;
+            for (int i = index >> ssst << ssst; i < index; i++) {
+                n = readBuffer.getInt();
+                readBuffer.position(readBuffer.position() + 2 + n);
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            buffer = null;
+            readBuffer = null;
+            if (channel != null) {
+                channel.close();
+            }
+            FileUtil.rm(temp);
+
+            super.close();
         }
     }
 }

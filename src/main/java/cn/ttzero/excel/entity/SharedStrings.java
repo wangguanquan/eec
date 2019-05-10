@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.InvalidMarkException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
@@ -107,10 +108,10 @@ public class SharedStrings implements Storageable, AutoCloseable {
     /**
      * The insertion limit
      */
-    private static final int limitInsertions = 1 << 26;
+    private static final int limitInsertions = 1 << 25;
 
     SharedStrings() {
-        hot = new Hot<>(1 << 10);
+        hot = new Hot<>();
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
@@ -318,11 +319,40 @@ public class SharedStrings implements Storageable, AutoCloseable {
          */
         private ByteBuffer buffer;
 
+        /**
+         *
+         */
+        private long mark;
+
         protected SharedStringTable() throws IOException {
             temp = Files.createTempFile("+", ".sst");
             channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+            // Total keyword storage the header 4 bytes
+            channel.position(4);
             buffer = ByteBuffer.allocate(1 << 11);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
+        }
+
+        protected SharedStringTable(Path path) throws IOException {
+            this.temp = path;
+            channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+
+            buffer = ByteBuffer.allocate(1 << 11);
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+            channel.read(buffer);
+            buffer.flip();
+
+            if (buffer.remaining() > 4) {
+                this.count = buffer.getInt();
+            }
+            buffer.clear();
+            // Mark EOF
+            channel.position(channel.size());
+        }
+
+        protected Path getTemp() {
+            return temp;
         }
 
         /**
@@ -368,7 +398,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @throws IOException if io error occur
          */
         public int find(char c) throws IOException {
-            return find(c, 0);
+            return find(c, 0L);
         }
 
         /**
@@ -379,13 +409,15 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @return the index of character in shared string table
          * @throws IOException if io error occur
          */
-        public int find(char c, int pos) throws IOException {
+        public int find(char c, long pos) throws IOException {
             // Flush before read
             flush();
             int index = 0;
-            long position = channel.position();
+            mark();
+//            long position = channel.position();
             // Read at start position
-            channel.position(pos);
+//            channel.position(pos);
+            skip(pos);
             A: for (; ;) {
                 int dist = channel.read(buffer);
                 // EOF
@@ -405,7 +437,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 }
                 buffer.compact();
             }
-            channel.position(position);
+//            channel.position(position);
+            reset();
             buffer.rewind();
             // Returns -1 if not found
             return index < count ? index : -1;
@@ -419,7 +452,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @throws IOException if io error occur
          */
         public int find(String key) throws IOException {
-            return find(key, 0);
+            return find(key, 0L);
         }
 
         /**
@@ -430,13 +463,15 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @return the index of character in shared string table
          * @throws IOException if io error occur
          */
-        public int find(String key, int pos) throws IOException {
+        public int find(String key, long pos) throws IOException {
             // Flush before read
             flush();
             int index = 0;
-            long position = channel.position();
+            mark();
+//            long position = channel.position();
             // Read at start position
-            channel.position(pos);
+//            channel.position(pos);
+            skip(pos);
             byte[] bytes = key.getBytes(UTF_8);
             A: for (; ;) {
                 int dist = channel.read(buffer);
@@ -460,7 +495,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 }
                 buffer.compact();
             }
-            channel.position(position);
+//            channel.position(position);
+            reset();
             buffer.rewind();
             // Returns -1 if not found
             return index < count ? index : -1;
@@ -482,7 +518,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
          */
         private void flush() throws IOException {
             buffer.flip();
-            channel.write(buffer);
+            if (buffer.hasRemaining()) {
+                channel.write(buffer);
+            }
             buffer.compact();
         }
 
@@ -493,6 +531,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
          * @return true or false
          */
         protected static boolean hasFullValue(ByteBuffer buffer) {
+            if (buffer.remaining() < 6) return false;
             int position = buffer.position();
             int n = buffer.get(position)   & 0xFF;
             n |= (buffer.get(position + 1) & 0xFF) <<  8;
@@ -520,8 +559,52 @@ public class SharedStrings implements Storageable, AutoCloseable {
          *
          * @return  The position of this buffer
          */
-        protected int position() {
-            return buffer.position();
+        protected long position() throws IOException {
+            return channel.position() + buffer.position();
+        }
+
+//        /**
+//         * Returns a ByteBuffer data from channel position
+//         *
+//         * @param pos the buffer's position
+//         * @param buffer the byte buffer
+//         * @return the read data length
+//         */
+//        protected int read(long pos, ByteBuffer buffer) throws IOException {
+//            // Flush before read
+//            flush();
+//            long position = channel.position();
+//            // Read at start position
+//            channel.position(pos);
+//            int dist = channel.read(buffer);
+//            channel.position(position);
+//            return dist;
+//        }
+
+        /**
+         * Returns a ByteBuffer data from channel position
+         *
+         * @param buffer the byte buffer
+         * @return the read data length
+         */
+        protected int read(ByteBuffer buffer) throws IOException {
+            return channel.read(buffer);
+        }
+
+        protected void mark() throws IOException {
+            flush();
+            mark = channel.position();
+        }
+
+        protected void reset() throws IOException {
+            if (mark == -1)
+                throw new InvalidMarkException();
+            channel.position(mark);
+            mark = -1;
+        }
+
+        protected void skip(long position) throws IOException {
+            channel.position(position + 4);
         }
 
         /**
@@ -543,6 +626,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
             private SeekableByteChannel channel;
             private ByteBuffer buffer;
             private byte[] bytes;
+            private int count;
             private SSTIterator(Path temp) {
                 try {
                     channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
@@ -551,6 +635,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
                     // Read ahead
                     channel.read(buffer);
                     buffer.flip();
+                    if (buffer.remaining() > 4) {
+                        count = buffer.getInt();
+                    }
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
