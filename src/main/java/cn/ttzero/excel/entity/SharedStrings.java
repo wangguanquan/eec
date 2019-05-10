@@ -98,11 +98,6 @@ public class SharedStrings implements Storageable, AutoCloseable {
      */
     private int expectedInsertions = 1 << 20;
 
-    /**
-     * The insertion limit
-     */
-    private static final int limitInsertions = 1 << 25;
-
     SharedStrings() {
         hot = new Hot<>();
         ascii = new int[1 << 7];
@@ -165,11 +160,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
         count++;
         // The keyword not exists
         if (!filter.mightContain(key)) {
-            // Resize if not out of insertion limit
+            // Reset the filter
             if (sst.size() >= expectedInsertions) {
-                if (expectedInsertions < limitInsertions) {
-                    resizeBloomFilter();
-                } else return -1;
+                resetBloomFilter();
             }
             // Add to bloom if not full
             filter.put(key);
@@ -271,14 +264,16 @@ public class SharedStrings implements Storageable, AutoCloseable {
     }
 
     /**
-     * Resize the bloom filter
+     * Reset the bloom filter
      */
-    private void resizeBloomFilter() {
-        expectedInsertions <<= 1;
-        System.out.println("resize to " + expectedInsertions);
+    private void resetBloomFilter() {
+//        expectedInsertions <<= 1;
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
-        for (String key : sst) {
-            filter.put(key);
+//        for (String key : hot) {
+//            filter.put(key);
+//        }
+        for (Hot.E<String, Integer> e : hot) {
+            filter.put(e.getK());
         }
     }
 
