@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static cn.ttzero.excel.Print.print;
 import static cn.ttzero.excel.Print.println;
 
 /**
@@ -68,13 +69,14 @@ public class SharedStringsTest {
     }
 
     @Test public void testIterator() throws IOException {
-        Path path = Paths.get("C:\\Users\\wangguanquan\\AppData\\Local\\Temp\\+8633905961752560043.sst");
-        SharedStrings.SharedStringTable sst = new SharedStrings.SharedStringTable(path);
+        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+8037161714290441202.sst");
+        SharedStringTable sst = new SharedStringTable(path);
 
         int i = 0;
         for (String s : sst) {
-            i++;
+            print(i++);
+            print(' ');
+            println(s);
         }
-        println(i);
     }
 }

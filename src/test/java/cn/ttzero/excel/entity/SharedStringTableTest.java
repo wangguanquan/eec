@@ -31,10 +31,10 @@ import static cn.ttzero.excel.Print.print;
  * Create by guanquan.wang at 2019-05-08 17:04
  */
 public class SharedStringTableTest {
-    private SharedStrings.SharedStringTable sst;
+    private SharedStringTable sst;
 
     @Before public void before() throws IOException {
-        sst = new SharedStrings.SharedStringTable();
+        sst = new SharedStringTable();
     }
 
     @After public void after() throws IOException {

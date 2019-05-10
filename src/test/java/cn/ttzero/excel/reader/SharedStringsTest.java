@@ -61,7 +61,7 @@ public class SharedStringsTest {
     }
 
     @Test public void test5() {
-        try (SharedStrings.IndexSharedStringTable sst = new SharedStrings.IndexSharedStringTable()) {
+        try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             sst.push('a');
             sst.push('b');
 
@@ -85,7 +85,7 @@ public class SharedStringsTest {
     }
 
     @Test public void test6() {
-        try (SharedStrings.IndexSharedStringTable sst = new SharedStrings.IndexSharedStringTable()) {
+        try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             int length = 1000;
             String[] buf = new String[length];
             for (int i = 0; i < length; i++)
@@ -112,7 +112,7 @@ public class SharedStringsTest {
     }
 
     @Test public void test7() throws IOException {
-        SharedStrings.IndexSharedStringTable sst = new SharedStrings.IndexSharedStringTable();
+        IndexSharedStringTable sst = new IndexSharedStringTable();
         long start = System.currentTimeMillis();
         for (int i = 0; i < 10_000_000; i++) {
             sst.push(getRandomString());
@@ -129,7 +129,7 @@ public class SharedStringsTest {
 
     @Test public void test8() throws IOException {
         Path path = Paths.get("C:\\Users\\wangguanquan\\AppData\\Local\\Temp\\+8633905961752560043.sst.idx");
-        SharedStrings.IndexSharedStringTable sst = new SharedStrings.IndexSharedStringTable(path);
+        IndexSharedStringTable sst = new IndexSharedStringTable(path);
         long start = System.currentTimeMillis();
         int length = 512, n = 0;
         String[] array = new String[length];
