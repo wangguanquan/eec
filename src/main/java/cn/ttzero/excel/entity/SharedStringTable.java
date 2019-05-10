@@ -16,6 +16,8 @@
 
 package cn.ttzero.excel.entity;
 
+import cn.ttzero.excel.util.FileUtil;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -145,9 +147,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         flush();
         int index = 0;
         // Mark current position
-        mark();
-        // Read at start position
-        skip(pos);
+        mark().skip(pos);
+
         A: for (; ;) {
             int dist = channel.read(buffer);
             // EOF
@@ -197,9 +198,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         flush();
         int index = 0;
         // Mark current position
-        mark();
-        // Read at start position
-        skip(pos);
+        mark().skip(pos);
+
         byte[] bytes = key.getBytes(UTF_8);
         A: for (; ;) {
             int dist = channel.read(buffer);
@@ -294,8 +294,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         if (channel != null) {
             channel.close();
         }
-        // TODO for test
-//        FileUtil.rm(temp);
+        FileUtil.rm(temp);
     }
 
     /**
@@ -354,8 +353,9 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @param position the position to jump
      * @throws IOException if io error occur
      */
-    protected void skip(long position) throws IOException {
+    protected SharedStringTable skip(long position) throws IOException {
         channel.position(position + 4);
+        return this;
     }
 
     /**
