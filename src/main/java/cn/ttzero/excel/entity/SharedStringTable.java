@@ -381,7 +381,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         private int count; // ignore
         private SSTIterator(Path temp) {
             try {
-                channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
+                channel = Files.newByteChannel(temp, StandardOpenOption.READ);
                 buffer = ByteBuffer.allocate(1 << 11);
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 // Read ahead
