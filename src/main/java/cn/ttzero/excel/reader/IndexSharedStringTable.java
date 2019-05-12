@@ -77,6 +77,18 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private char[] chars = new char[1];
 
+    /**
+     * Cache the getting index
+     */
+    private int index = -1;
+
+    /**
+     * Current read/write status
+     */
+    private byte status;
+
+    private static final byte READ = 1, WRITE = 0;
+
     IndexSharedStringTable() throws IOException {
         super();
 
@@ -134,26 +146,40 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     public String get(int index) throws IOException {
         checkBound(index);
-        long position = getIndexPosition(index);
-        readBuffer.clear();
+        if (status == WRITE || index != this.index) {
+            status = READ;
+            long position = getIndexPosition(index);
+            readBuffer.clear();
 
-        super.mark();
+            super.mark();
 
-        super.skip(position);
+            super.skip(position);
 
-        int dist = read(readBuffer);
+            int dist = read(readBuffer);
 
-        super.reset();
+//            super.reset();
 
-        if (dist < 0) {
-            // TODO reader more data into index file
-            return null;
+            if (dist < 0) {
+                // TODO reader more data into index file
+                return null;
+            }
+            readBuffer.flip();
+
+            skipTo(index);
+        } else if (!hasFullValue(readBuffer)) {
+            readBuffer.compact();
+            int dist = read(readBuffer);
+            if (dist < 0) {
+                return null;
+            }
+            readBuffer.flip();
         }
-        readBuffer.flip();
 
-        skipTo(index);
-
-        return hasFullValue(readBuffer) ? parse(readBuffer) : null;
+        if (hasFullValue(readBuffer)) {
+            this.index = index + 1;
+            return parse(readBuffer);
+        }
+        return null;
     }
 
     /**
@@ -166,22 +192,27 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     public int batch(int fromIndex, String[] array) throws IOException {
         checkBound(fromIndex);
-        long position = getIndexPosition(fromIndex);
-        readBuffer.clear();
+        if (status == WRITE || fromIndex != this.index) {
+            status = READ;
+            long position = getIndexPosition(fromIndex);
+            readBuffer.clear();
 
-        super.mark();
+            super.mark();
 
-        super.skip(position);
+            super.skip(position);
 
-        int i = 0;
-        A: for (; ;) {
             int dist = read(readBuffer);
             if (dist < 0) {
-                break;
+                return 0;
             }
             readBuffer.flip();
+        }
+        int i = 0;
+        A: for (; ;) {
 
-            if (i == 0) skipTo(fromIndex);
+            if (i == 0 && fromIndex != this.index) {
+                skipTo(fromIndex);
+            }
 
             for ( ; hasFullValue(readBuffer); ) {
                 array[i++] = parse(readBuffer);
@@ -189,10 +220,17 @@ public class IndexSharedStringTable extends SharedStringTable {
             }
 
             readBuffer.compact();
-            position += dist;
+
+            int dist = read(readBuffer);
+            if (dist < 0) {
+                break;
+            }
+            readBuffer.flip();
         }
 
-        super.reset();
+        this.index = fromIndex + i;
+
+//        super.reset();
 
         return i;
     }
@@ -208,7 +246,6 @@ public class IndexSharedStringTable extends SharedStringTable {
             channel.write(buffer);
         }
         buffer.clear();
-//        buffer.compact();
     }
 
     /**
@@ -216,14 +253,24 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private void putsIndex() throws IOException {
         int size = size();
-        if ((size & kSplit) == size) {
+        if (size > 0 && (size & kSplit) == size) {
             if ((size & kFlush) == size) {
                 flush();
             }
-            buffer.putLong(position());
+            buffer.putLong(super.position() - 4);
+        }
+        // Check status
+        if (status == READ) {
+            status = WRITE;
+            super.reset();
         }
     }
 
+    /**
+     * Check the getting index
+     *
+     * @param index the getting index
+     */
     private void checkBound(int index) {
         int size = size();
         if (size <= index) {
@@ -233,31 +280,36 @@ public class IndexSharedStringTable extends SharedStringTable {
     }
 
     private long getIndexPosition(int keyIndex) throws IOException {
-        long position;
-        // Read index from buffer
-        if (size() < (1 << ssst)) {
-            buffer.mark();
-            buffer.flip();
-            buffer.position(keyIndex >> ssst << 3);
-            position = buffer.getLong();
-            buffer.reset();
-            buffer.limit(buffer.capacity());
-        } else {
+        long position = 0L;
+        if (keyIndex < (1 << ssst)) return position;
+        long index_size = channel.position();
+        // Read from file
+        if (index_size >> 3 > keyIndex) {
             flush();
             long pos = channel.position();
-            readBuffer.rewind();
             channel.position(keyIndex >> ssst << 3);
             channel.read(readBuffer);
             readBuffer.flip();
             position = readBuffer.getLong();
             channel.position(pos);
+
+            // Read from buffer
+        } else {
+            buffer.flip();
+            if (buffer.hasRemaining()) {
+                buffer.mark();
+                buffer.position((int) (keyIndex - index_size) >> ssst << 3);
+                position = buffer.getLong();
+                buffer.reset();
+            }
+            buffer.limit(buffer.capacity());
         }
+
         return position;
     }
 
     private String parse(ByteBuffer readBuffer) {
-        int n;
-        n = readBuffer.getInt();
+        int n = readBuffer.getInt();
         if (bytes == null || bytes.length < n) {
             bytes = new byte[n < 128 ? 128 : n];
         }
@@ -272,11 +324,15 @@ public class IndexSharedStringTable extends SharedStringTable {
     }
 
     private void skipTo(int index) {
-        int n;
-        for (int i = index >> ssst << ssst; i < index; i++) {
+        for (int n, i = index >> ssst << ssst; i < index; i++) {
             n = readBuffer.getInt();
             readBuffer.position(readBuffer.position() + 2 + n);
         }
+    }
+
+    @Override
+    protected void commit() throws IOException {
+        super.commit();
     }
 
     @Override
