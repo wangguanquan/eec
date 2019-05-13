@@ -96,12 +96,10 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @throws IOException if io error occur
      */
     public int push(char c) throws IOException {
-        if (buffer.remaining() < 8) {
+        if (buffer.remaining() < 4) {
             flush();
         }
-        buffer.putInt(2);
-        buffer.putShort((short) 0x8000);
-        buffer.putChar(c);
+        buffer.putInt(~c);
         return count++;
     }
 
@@ -113,12 +111,14 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @throws IOException if io error occur
      */
     public int push(String key) throws IOException {
+        if (key.length() == 1) {
+            return push(key.charAt(0));
+        }
         byte[] bytes = key.getBytes(UTF_8);
-        if (buffer.remaining() < bytes.length + 6) {
+        if (buffer.remaining() < bytes.length + 4) {
             flush();
         }
         buffer.putInt(bytes.length);
-        buffer.putShort((short) key.length());
         buffer.put(bytes);
         return count++;
     }
@@ -154,13 +154,12 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
+            for (; hasFullValue(buffer); ) {
                 int a = buffer.getInt();
-                short n = buffer.getShort();
                 // A char value
-                if (n == (short) 0x8000) {
+                if (a < 0) {
                     // Get it
-                    if (buffer.getChar() == c) {
+                    if (~a == c) {
                         break A;
                     }
                 } else buffer.position(buffer.position() + a);
@@ -206,11 +205,12 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; buffer.remaining() >= 8 && hasFullValue(buffer);) {
+            for (; hasFullValue(buffer); ) {
                 int a = buffer.getInt();
-                short n = buffer.getShort();
+                // Character value
+                if (a < 0) continue;
                 // A string value
-                if (n != (short) 0x8000 && n == key.length()) {
+                if (a == bytes.length) {
                     int i = 0;
                     for (; i < a; ) {
                         if (buffer.get() != bytes[i++]) break;
@@ -258,13 +258,13 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @return true or false
      */
     protected static boolean hasFullValue(ByteBuffer buffer) {
-        if (buffer.remaining() < 6) return false;
+        if (buffer.remaining() < 4) return false;
         int position = buffer.position();
         int n = buffer.get(position)   & 0xFF;
         n |= (buffer.get(position + 1) & 0xFF) <<  8;
         n |= (buffer.get(position + 2) & 0xFF) << 16;
         n |= (buffer.get(position + 3) & 0xFF) << 24;
-        return n + 6 <= buffer.remaining();
+        return n < 0 || n + 4 <= buffer.remaining();
     }
 
     /**
@@ -417,8 +417,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             if (a > bytes.length) {
                 bytes = new byte[a];
             }
-            if (buffer.getShort() == (short) 0x8000) {
-                chars[0] = buffer.getChar();
+            if (a < 0) {
+                chars[0] = (char) ~a;
                 return new String(chars);
             } else {
                 buffer.get(bytes, 0, a);
