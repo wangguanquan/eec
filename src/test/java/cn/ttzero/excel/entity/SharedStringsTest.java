@@ -69,14 +69,14 @@ public class SharedStringsTest {
     }
 
     @Test public void testIterator() throws IOException {
-        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+8037161714290441202.sst");
-        SharedStringTable sst = new SharedStringTable(path);
-
-        int i = 0;
-        for (String s : sst) {
-            print(i++);
-            print(' ');
-            println(s);
-        }
+//        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+8037161714290441202.sst");
+//        SharedStringTable sst = new SharedStringTable(path);
+//
+//        int i = 0;
+//        for (String s : sst) {
+//            print(i++);
+//            print(' ');
+//            println(s);
+//        }
     }
 }

@@ -21,7 +21,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import static cn.ttzero.excel.Print.println;
 import static cn.ttzero.excel.entity.WorkbookTest.getRandomString;
@@ -59,14 +58,32 @@ public class SharedStringTableTest {
         assert n == 0;
         assert sst.size() == 1;
 
+        sst.push("ab");
+
         int index = sst.find("ab");
-        assert index == -1;
+        assert index == 1;
 
         index = sst.find("abc");
         assert index == 0;
 
         index = sst.find("123");
         assert index == -1;
+
+        index = sst.push('a');
+        assert index == 2;
+
+        index = sst.push('z');
+        assert index == 3;
+
+        index = sst.push('阿');
+        assert index == 4;
+
+        assert sst.find('z') == 3;
+
+        assert sst.find('阿') == 4;
+
+        for (String s : sst)
+            println(s);
     }
 
     @Test public void testPush() throws IOException {
@@ -78,10 +95,10 @@ public class SharedStringTableTest {
 //        sst.forEach(Print::println);
 
         int i = 0;
-        for (Iterator<String> it = sst.iterator(); it.hasNext();) {
+        for (String aSst : sst) {
             print(i++);
             print(' ');
-            println(it.next());
+            println(aSst);
         }
         assert i == size;
     }

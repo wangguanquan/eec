@@ -65,9 +65,9 @@ public class IndexSharedStringTableTest {
                 sst.push(s);
             }
 
-//            for (int i = 0; i < length; i++) {
-//                assert sst.get(i).equals(buf[i]);
-//            }
+            for (int i = 0; i < length; i++) {
+                assert sst.get(i).equals(buf[i]);
+            }
 
             int fromIndex = 0, size = length;
             String[] _buf = new String[size];
@@ -97,19 +97,19 @@ public class IndexSharedStringTableTest {
         System.out.println(System.currentTimeMillis() - start);
         sst.commit();
     }
-
-    @Test public void test4() throws IOException {
-        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+579019283137212671.sst.idx");
-        IndexSharedStringTable sst = new IndexSharedStringTable(path);
-        long start = System.currentTimeMillis();
-        int length = 512, n = 0;
-        String[] array = new String[length];
-        for (int i = 0; i < 10_000_000; ) {
-            int size = sst.batch(i, array);
-            i += size;
-            n += size;
-        }
-        System.out.println(n);
-        System.out.println(System.currentTimeMillis() - start);
-    }
+//
+//    @Test public void test4() throws IOException {
+//        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+579019283137212671.sst.idx");
+//        IndexSharedStringTable sst = new IndexSharedStringTable(path);
+//        long start = System.currentTimeMillis();
+//        int length = 512, n = 0;
+//        String[] array = new String[length];
+//        for (int i = 0; i < 10_000_000; ) {
+//            int size = sst.batch(i, array);
+//            i += size;
+//            n += size;
+//        }
+//        System.out.println(n);
+//        System.out.println(System.currentTimeMillis() - start);
+//    }
 }
