@@ -313,9 +313,8 @@ public class IndexSharedStringTable extends SharedStringTable {
         if (bytes == null || bytes.length < n) {
             bytes = new byte[n < 128 ? 128 : n];
         }
-        if (readBuffer.getShort() == (short) 0x8000) {
-            char c = readBuffer.getChar();
-            chars[0] = c;
+        if (n < 0) {
+            chars[0] = (char) ~n;
             return new String(chars);
         } else {
             readBuffer.get(bytes, 0, n);
