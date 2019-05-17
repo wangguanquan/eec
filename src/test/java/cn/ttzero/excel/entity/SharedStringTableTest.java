@@ -126,4 +126,13 @@ public class SharedStringTableTest {
 
         println(System.currentTimeMillis() - start);
     }
+
+    @Test public void testNull() throws IOException {
+        int n;
+        sst.push("a");
+        n = sst.push(null);
+
+        assert n == 1;
+        assert sst.find(null) == n;
+    }
 }
