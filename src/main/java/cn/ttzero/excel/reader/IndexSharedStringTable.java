@@ -190,7 +190,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      * @return The number of string read, or -1 if the end of the
      *              stream has been reached
      */
-    public int batch(int fromIndex, String[] array) throws IOException {
+    public int get(int fromIndex, String[] array) throws IOException {
         checkBound(fromIndex);
         if (status == WRITE || fromIndex != this.index) {
             status = READ;
@@ -229,8 +229,6 @@ public class IndexSharedStringTable extends SharedStringTable {
         }
 
         this.index = fromIndex + i;
-
-//        super.reset();
 
         return i;
     }
@@ -327,11 +325,6 @@ public class IndexSharedStringTable extends SharedStringTable {
             n = readBuffer.getInt();
             readBuffer.position(readBuffer.position() + 2 + n);
         }
-    }
-
-    @Override
-    protected void commit() throws IOException {
-        super.commit();
     }
 
     @Override
