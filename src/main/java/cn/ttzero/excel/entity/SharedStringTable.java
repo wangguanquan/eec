@@ -406,6 +406,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             throw new InvalidMarkException();
         channel.position(mark);
         mark = -1;
+        buffer.clear();
         return this;
     }
 
