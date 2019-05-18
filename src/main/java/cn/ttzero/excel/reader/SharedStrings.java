@@ -259,10 +259,8 @@ public class SharedStrings implements AutoCloseable {
      * @return string
      */
     public String get(int index) {
+        checkBound(index);
         total++;
-        if (index < 0 || max > -1 && max <= index) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
-        }
 
         // Load first
         if (offset_forward == -1) {
@@ -334,6 +332,12 @@ public class SharedStrings implements AutoCloseable {
     private boolean backwardRange(int index) {
         return offset_backward >= 0 && offset_backward <= index
             && offset_backward + limit_backward > index;
+    }
+
+    private void checkBound(int index) {
+        if (index < 0 || max > -1 && max <= index) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
+        }
     }
 
     /**
