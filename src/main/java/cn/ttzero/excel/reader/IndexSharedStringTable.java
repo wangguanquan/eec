@@ -301,7 +301,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     private long getIndexPosition(int keyIndex) throws IOException {
         long position = 0L;
         if (keyIndex < (1 << ssst)) return position;
-        long index_size = channel.position();
+        long index_size = channel.size();
         // Read from file
         if (index_size >> 3 > (keyIndex >> ssst)) {
             flush();
@@ -311,16 +311,18 @@ public class IndexSharedStringTable extends SharedStringTable {
             buffer.flip();
             position = buffer.getLong();
             channel.position(pos);
+            buffer.clear();
 
             // Read from buffer
         } else {
+            int _pos = buffer.position();
             buffer.flip();
             if (buffer.hasRemaining()) {
-                buffer.mark();
                 buffer.position((int) (keyIndex - index_size) >> ssst << 3);
                 position = buffer.getLong();
-                buffer.reset();
             }
+            // Mark status WRITE
+            buffer.position(_pos);
             buffer.limit(buffer.capacity());
         }
 
