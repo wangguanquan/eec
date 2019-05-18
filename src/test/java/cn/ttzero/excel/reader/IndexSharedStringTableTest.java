@@ -45,7 +45,7 @@ public class IndexSharedStringTableTest {
             assert value.equals("b");
 
             String[] array = new String[2];
-            int n = sst.batch(0, array);
+            int n = sst.get(0, array);
             for (int i = 0; i < n; i++) {
                 println(array[i]);
             }
@@ -71,7 +71,7 @@ public class IndexSharedStringTableTest {
 
             int fromIndex = 0, size = length;
             String[] _buf = new String[size];
-            size = sst.batch(fromIndex, _buf);
+            size = sst.get(fromIndex, _buf);
             assert size == length - fromIndex;
             for (int i = 0; i < size; i++) {
                 assert _buf[i].equals(buf[fromIndex + i]);
@@ -87,15 +87,15 @@ public class IndexSharedStringTableTest {
         for (int i = 0; i < 10_000_000; i++) {
             sst.push(getRandomString());
         }
-        System.out.println(System.currentTimeMillis() - start);
+        println(System.currentTimeMillis() - start);
 
         start = System.currentTimeMillis();
 
         for (int i = 0; i < 10_000_000; i++) {
             sst.get(i);
         }
-        System.out.println(System.currentTimeMillis() - start);
-        sst.commit();
+        println(System.currentTimeMillis() - start);
+//        sst.commit();
     }
 //
 //    @Test public void test4() throws IOException {

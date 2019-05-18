@@ -27,7 +27,7 @@ public class WorkbookTest {
     /**
      * The default output path
      */
-    Path defaultTestPath = Paths.get("target/excel/");
+    static Path defaultTestPath = Paths.get("target/excel/");
     String author = "guanquan.wang";
     static Random random = new Random();
 
@@ -40,6 +40,10 @@ public class WorkbookTest {
             cs[i] = charArray[random.nextInt(size)];
         }
         return new String(cs);
+    }
+
+    public static Path getOutputTestPath() {
+        return defaultTestPath;
     }
 
 }

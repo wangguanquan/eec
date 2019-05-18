@@ -111,7 +111,11 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @throws IOException if io error occur
      */
     public int push(String key) throws IOException {
-        if (key.length() == 1) {
+        int len;
+        if (key == null || (len = key.length()) == 0) {
+            return push((char) 0xFFFF);
+        }
+        if (len == 1) {
             return push(key.charAt(0));
         }
         byte[] bytes = key.getBytes(UTF_8);
@@ -195,10 +199,60 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     public int find(String key, long pos) throws IOException {
         // Flush before read
         flush();
-        int index = 0;
         // Mark current position
         mark().skip(pos);
 
+        int index;
+        if (key != null && !key.isEmpty()) {
+            index = findKey(key);
+        } else {
+            index = findNull();
+        }
+
+        reset();
+        buffer.rewind();
+        // Returns -1 if not found
+        return index < count ? index : -1;
+    }
+
+    /**
+     * Find null or empty value in SharedStringTable
+     *
+     * @return the index of null or empty value in the SharedStringTable
+     * @throws IOException if I/O error occur.
+     */
+    private int findNull() throws IOException {
+        int index = 0;
+        int n = ~(char) 0xFFFF;
+        A: for (; ;) {
+            int dist = channel.read(buffer);
+            // EOF
+            if (dist <= 0) break;
+            buffer.flip();
+            for (; hasFullValue(buffer); ) {
+                int a = buffer.getInt();
+                // Found the first Null or Empty value
+                if (a == n) break A;
+                if (a > 0) {
+                    // A string value
+                    buffer.position(buffer.position() + a);
+                }
+                index++;
+            }
+            buffer.compact();
+        }
+        return index;
+    }
+
+    /**
+     * Find value in SharedStringTable
+     *
+     * @param key the string key
+     * @return the index in the SharedStringTable
+     * @throws IOException if I/O error occur
+     */
+    private int findKey(String key) throws IOException {
+        int index = 0;
         byte[] bytes = key.getBytes(UTF_8);
         A: for (; ;) {
             int dist = channel.read(buffer);
@@ -208,7 +262,10 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             for (; hasFullValue(buffer); ) {
                 int a = buffer.getInt();
                 // Character value
-                if (a < 0) continue;
+                if (a < 0) {
+                    index++;
+                    continue;
+                }
                 // A string value
                 if (a == bytes.length) {
                     int i = 0;
@@ -223,10 +280,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
             }
             buffer.compact();
         }
-        reset();
-        buffer.rewind();
-        // Returns -1 if not found
-        return index < count ? index : -1;
+        return index;
     }
 
     /**

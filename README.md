@@ -36,7 +36,7 @@ pom.xml添加
 <dependency>
     <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
-    <version>{eec.version}</version>
+    <version>${eec.version}</version>
 </dependency>
 ```
 
