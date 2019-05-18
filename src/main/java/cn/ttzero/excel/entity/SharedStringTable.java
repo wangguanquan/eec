@@ -480,8 +480,11 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
                 bytes = new byte[a];
             }
             if (a < 0) {
-                chars[0] = (char) ~a;
-                return new String(chars);
+                char c = (char) ~a;
+                if (c < 0xFFFF) {
+                    chars[0] = c;
+                    return new String(chars);
+                } else return "";
             } else {
                 buffer.get(bytes, 0, a);
                 return new String(bytes, 0, a, UTF_8);
