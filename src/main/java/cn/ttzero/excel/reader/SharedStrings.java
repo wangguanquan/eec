@@ -43,7 +43,7 @@ import java.util.*;
  *
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-public class SharedStrings {
+public class SharedStrings implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
@@ -612,7 +612,8 @@ public class SharedStrings {
     /**
      * close stream and free space
      */
-    void close() throws IOException {
+    @Override
+    public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
             logger.debug("total: {}, forward: {}, backward: {}, hot: {}", total, total_forward, total_backward, total_hot);
