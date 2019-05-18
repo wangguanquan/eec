@@ -58,7 +58,8 @@ public class IndexSharedStringTable extends SharedStringTable {
     private int ssst = 6;
 
     /**
-     * Record position once every 64 strings
+     * Setting how many records to split
+     * Default 64
      */
     private int kSplit = 0x7FFFFFFF >> ssst << ssst;
 
@@ -261,6 +262,10 @@ public class IndexSharedStringTable extends SharedStringTable {
             if (buffer.remaining() < 8) {
                 flush();
             }
+            /*
+            The main channel header 4 bytes to save the record size,
+             so subtract 4 here
+             */
             buffer.putLong(super.position() - 4);
         }
         // Check status
@@ -283,6 +288,16 @@ public class IndexSharedStringTable extends SharedStringTable {
         }
     }
 
+    /**
+     * Calculate the position according to the subscript recorded in
+     * the SharedStringTable.
+     * The index position is {@code keyIndex / kSplit * sizeOf(long)},
+     * get the position of the string record through the index position
+     *
+     * @param keyIndex the record's index in {@link SharedStringTable}
+     * @return the index block's position
+     * @throws IOException if I/O error occur
+     */
     private long getIndexPosition(int keyIndex) throws IOException {
         long position = 0L;
         if (keyIndex < (1 << ssst)) return position;
@@ -312,6 +327,7 @@ public class IndexSharedStringTable extends SharedStringTable {
         return position;
     }
 
+    // Parse string record
     private String parse(ByteBuffer readBuffer) {
         int n = readBuffer.getInt();
         if (bytes == null || bytes.length < n) {
