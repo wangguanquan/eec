@@ -158,20 +158,17 @@ public class IndexSharedStringTable extends SharedStringTable {
 
             super.skip(position);
 
-            int dist = read(readBuffer);
+            int dist = super.read(readBuffer);
 
-//            super.reset();
+            // EOF
+            if (dist < 0) return null;
 
-            if (dist < 0) {
-                // TODO reader more data into index file
-                return null;
-            }
             readBuffer.flip();
 
             skipTo(index);
         } else if (!hasFullValue(readBuffer)) {
             readBuffer.compact();
-            int dist = read(readBuffer);
+            int dist = super.read(readBuffer);
             if (dist < 0) {
                 return null;
             }
@@ -206,10 +203,9 @@ public class IndexSharedStringTable extends SharedStringTable {
 
             super.skip(position);
 
-            int dist = read(readBuffer);
-            if (dist < 0) {
-                return 0;
-            }
+            int dist = super.read(readBuffer);
+            // EOF
+            if (dist < 0) return 0;
             readBuffer.flip();
         }
         int i = 0;
@@ -225,11 +221,10 @@ public class IndexSharedStringTable extends SharedStringTable {
             }
 
             readBuffer.compact();
-
-            int dist = read(readBuffer);
-            if (dist < 0) {
-                break;
-            }
+            // Read more
+            int dist = super.read(readBuffer);
+            // EOF
+            if (dist < 0) break;
             readBuffer.flip();
         }
 
@@ -287,7 +282,6 @@ public class IndexSharedStringTable extends SharedStringTable {
     private void checkBound(int index) {
         int size = size();
         if (size <= index) {
-            // TODO reader more data into index file
             throw new ExcelWriteException("index: " + index + ", size: " + size);
         }
     }
