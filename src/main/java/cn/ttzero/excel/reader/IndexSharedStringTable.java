@@ -251,6 +251,11 @@ public class IndexSharedStringTable extends SharedStringTable {
      * Puts the main's position into index file if need.
      */
     private void putsIndex() throws IOException {
+        // Check status
+        if (status == READ) {
+            status = WRITE;
+            super.reset();
+        }
         int size = size();
         // Cache position every 64 records
         if ((size & kSplit) == size) {
@@ -267,11 +272,6 @@ public class IndexSharedStringTable extends SharedStringTable {
              so subtract 4 here
              */
             buffer.putLong(super.position() - 4);
-        }
-        // Check status
-        if (status == READ) {
-            status = WRITE;
-            super.reset();
         }
     }
 
