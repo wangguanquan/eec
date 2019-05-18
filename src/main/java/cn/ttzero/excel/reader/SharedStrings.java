@@ -270,11 +270,7 @@ public class SharedStrings implements AutoCloseable {
 
             if (vt < 0) vt = 0;
 
-            try {
-                readData();
-            } catch (IOException e) {
-                throw new ExcelWriteException(e);
-            }
+            loadXml();
             test(index);
         }
 
@@ -304,15 +300,15 @@ public class SharedStrings implements AutoCloseable {
             // reload data
             offset_forward = index / page * page;
             forward[0] = null;
-            try {
-                // Load from SharedStringTable
-                if (index < sst.size()) {
-                    sst.get(offset_forward, forward);
-                } else {
-                    readData();
+            if (index < sst.size()) {
+                try {
+                    // Load from SharedStringTable
+                    limit_forward = sst.get(offset_forward, forward);
+                } catch (IOException e) {
+                    throw new ExcelWriteException(e);
                 }
-            } catch (IOException e) {
-                throw new ExcelWriteException(e);
+            } else {
+                loadXml();
             }
             if (forward[0] == null) {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
@@ -354,116 +350,20 @@ public class SharedStrings implements AutoCloseable {
         return n > 1;
     }
 
-//    /**
-//     * Read or Load xml
-//     */
-//    private void loadXml() {
-//        int index = offset_forward / page;
-//        try {
-//            /*
-//             * 从cache流中读取接下来的N个数据
-//             * 如果Excel保持从上到下从左到右的写入顺序
-//             * 那么此分支命中率极高，当此分支命中时就会直接从已知句柄中直接读取N个字符
-//             * 减少读取文件的次数，同时也减少读取相同区块的次数，对于大文件读取效率非常高。
-//             */
-//            if (index == offsetM) {
-//                logger.debug("---------------Read xml area {}---------------", index);
-//                readData();
-//            }
-//            /*
-//             * 从文件读取
-//             * 文件读取时会跳过已知区块以增加速度（虽然java.io中skip方法并非跳过读取而是读取后跳过）
-//             * 如果先读取文件尾部的数据那么在skip的时候会记录每个区块的起始位置，
-//             * 接下来的读取将根据此预存的记录进行skip
-//             */
-//            else {
-//                logger.debug("---------------Load xml area {}---------------", index);
-//                loadXml(index);
-//            }
-//        } catch (IOException e) {
-//            throw new ExcelReadException(e);
-//        }
-//    }
-//
-//    /**
-//     * Segment loading data
-//     *
-//     * @param index the segment index
-//     * @throws IOException if I/O error occur
-//     */
-//    private void loadXml(int index) throws IOException {
-//        try (BufferedReader br = Files.newBufferedReader(sstPath)) {
-//            char[] cb = new char[this.cb.length];
-//            int nChar, length, n = 0, offset = 0;
-//            long skip = index_area.getOrDefault(index, 0L), skipR = skip;
-//
-//            // 跳过N个区域读取时预先记录跳过的区域起始位置
-//            if (skip <= 0L) {
-//                if (index_area.isEmpty()) {
-//                    br.skip(skipR = vt);
-//                } else {
-//                    br.skip(skipR = index_area.get(offsetR));
-//                }
-//
-//                while (offsetR < index && (length = br.read(cb, offset, cb.length - offset)) > 0) {
-//                    nChar = 0;
-//                    length += offset;
-//                    int cursor = 0;
-//                    for (int len = length - 4; nChar < len && n < page; nChar++) {
-//                        if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 't' && cb[nChar + 3] == '>') {
-//                            n++;
-//                            cursor = nChar += 4;
-//                        } else continue;
-//                        // a page
-//                        if (n == page) {
-//                            n = 0;
-//                            index_area.put(++offsetR, skipR + cursor);
-//                            if (offsetR >= index) break;
-//                        }
-//                    }
-//                    skipR += cursor;
-//                    System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
-//                }
-//                // 下一个相邻区域或者已读区域
-//            } else {
-//                br.skip(skipR); // 跳过前方N个字符从当前位置直接读取
-//            }
-//
-//            // Read forward area data
-//            n = 0;
-//            while ((length = br.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
-//                length += offset;
-//                nChar = offset &= 0;
-//                int cursor, len0 = length - 3, len1 = len0 - 1;
-//                int[] t = findT(cb, nChar, length, len0, len1, n);
-//
-//                nChar = t[0];
-//                n = t[1];
-//                cursor = t[2];
-//
-//                limit_forward = n;
-//                skipR += cursor;
-//
-//                // A page
-//                if (n == page) {
-//                    // Save next start index
-//                    if (offsetR <= index) {
-//                        index_area.put(++offsetR, skipR);
-//                    }
-//                    break;
-//                } else if (length < cb.length && nChar == len0) { // EOF
-//                    if (max == -1) { // Reset totals when unknown size
-//                        max = offsetR * page + n;
-//                    }
-//                    break;
-//                }
-//
-//                if (cursor < length) {
-//                    System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
-//                }
-//            }
-//        }
-//    }
+    /**
+     * Read or Load xml
+     */
+    private void loadXml() {
+        int index = offset_forward / page;
+        try {
+            // Read xml file string value into IndexSharedStringTable
+            for (int n = index - offsetM; n-- >= 0; ) {
+                readData();
+            }
+        } catch (IOException e) {
+            throw new ExcelReadException(e);
+        }
+    }
 
     /**
      * Read data from main reader
