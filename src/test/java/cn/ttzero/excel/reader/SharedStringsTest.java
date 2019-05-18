@@ -47,7 +47,7 @@ public class SharedStringsTest {
     }
 
     @After public void close() throws IOException {
-        Files.delete(path);
+        if (path != null) Files.delete(path);
     }
 
     @Test public void testGeneral() throws IOException {

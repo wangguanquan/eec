@@ -6,7 +6,7 @@
 
     <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <packaging>jar</packaging>
 
     <properties>
