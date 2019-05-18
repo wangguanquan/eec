@@ -334,7 +334,9 @@ public class IndexSharedStringTable extends SharedStringTable {
         if (channel != null) {
             channel.close();
         }
-        FileUtil.rm(temp);
+        if (shouldDelete) {
+            FileUtil.rm(temp);
+        }
 
         super.close();
     }

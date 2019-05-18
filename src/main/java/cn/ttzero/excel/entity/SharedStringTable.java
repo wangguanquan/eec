@@ -57,8 +57,14 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      */
     private long mark = -1;
 
+    /**
+     * Delete the temp file if create by {@link SharedStringTable}
+     */
+    protected boolean shouldDelete;
+
     protected SharedStringTable() throws IOException {
         temp = Files.createTempFile("+", ".sst");
+        shouldDelete = true;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
         // Total keyword storage the header 4 bytes
         channel.position(4);
@@ -348,7 +354,9 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         if (channel != null) {
             channel.close();
         }
-        FileUtil.rm(temp);
+        if (shouldDelete) {
+            FileUtil.rm(temp);
+        }
     }
 
     /**
