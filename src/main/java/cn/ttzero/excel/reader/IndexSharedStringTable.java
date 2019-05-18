@@ -303,7 +303,7 @@ public class IndexSharedStringTable extends SharedStringTable {
         if (keyIndex < (1 << ssst)) return position;
         long index_size = channel.position();
         // Read from file
-        if (index_size >> 3 > keyIndex) {
+        if (index_size >> 3 > (keyIndex >> ssst)) {
             flush();
             long pos = channel.position();
             channel.position(keyIndex >> ssst << 3);
