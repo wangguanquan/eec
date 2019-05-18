@@ -147,12 +147,14 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     public String get(int index) throws IOException {
         checkBound(index);
-        if (status == WRITE || index != this.index) {
-            status = READ;
+        boolean write;
+        if ((write = status == WRITE) || index != this.index) {
+            if (write) {
+                super.mark();
+                status = READ;
+            }
             long position = getIndexPosition(index);
             readBuffer.clear();
-
-            super.mark();
 
             super.skip(position);
 
@@ -193,12 +195,14 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     public int get(int fromIndex, String[] array) throws IOException {
         checkBound(fromIndex);
-        if (status == WRITE || fromIndex != this.index) {
-            status = READ;
+        boolean write;
+        if ((write = status == WRITE) || fromIndex != this.index) {
+            if (write) {
+                super.mark();
+                status = READ;
+            }
             long position = getIndexPosition(fromIndex);
             readBuffer.clear();
-
-            super.mark();
 
             super.skip(position);
 
