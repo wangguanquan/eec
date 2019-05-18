@@ -47,10 +47,10 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private ByteBuffer buffer, readBuffer;
 
-    /**
-     * The sector size
-     */
-    private int sst = 8;
+//    /**
+//     * The sector size
+//     */
+//    private int sst = 8;
 
     /**
      * The short sector size
@@ -62,10 +62,10 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private int kSplit = 0x7FFFFFFF >> ssst << ssst;
 
-    /**
-     * Flush buffer each 256 keys
-     */
-    private int kFlush = 0x7FFFFFFF >> sst << sst;
+//    /**
+//     * Flush buffer each 256 keys
+//     */
+//    private int kFlush = 1 << sst;
 
     /**
      * A multiplexing byte array
@@ -251,8 +251,14 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private void putsIndex() throws IOException {
         int size = size();
-        if (size > 0 && (size & kSplit) == size) {
-            if ((size & kFlush) == size) {
+        // Cache position every 64 records
+        if ((size & kSplit) == size) {
+            /*
+            Flush buffer when it full. The type of position in
+            channel is long, so here is compared with the length
+            of the long(8 bytes in JAVA).
+             */
+            if (buffer.remaining() < 8) {
                 flush();
             }
             buffer.putLong(super.position() - 4);
