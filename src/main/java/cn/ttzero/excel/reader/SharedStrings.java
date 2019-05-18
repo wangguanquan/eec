@@ -105,7 +105,7 @@ public class SharedStrings implements AutoCloseable {
     /**
      * The word total
      */
-    private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
+    private int max = -1, vt = 0, offsetM = 0;
     /**
      * The forward offset
      */
@@ -134,11 +134,6 @@ public class SharedStrings implements AutoCloseable {
      * Size of hot
      */
     private int hotSize;
-//    /**
-//     * 记录各段的起始位置
-//     */
-//    private Map<Integer, Long> index_area = null;
-
     /**
      * Main reader
      */
@@ -151,10 +146,6 @@ public class SharedStrings implements AutoCloseable {
      * offset of cb[]
      */
     private int offset;
-    /**
-     * current skip of Main reader
-     */
-    private long skipR;
     /**
      * escape buffer
      */
@@ -198,8 +189,6 @@ public class SharedStrings implements AutoCloseable {
             } else {
                 forward = new String[max];
             }
-//            index_area = new HashMap<>(default_cap);
-//            index_area.put(0, (long) vt);
         } else {
             max = 0;
         }
@@ -247,7 +236,6 @@ public class SharedStrings implements AutoCloseable {
 
         vt = i + 4;
         System.arraycopy(cb, vt, cb, 0, offset -= vt);
-        skipR = vt;
 
         return off;
     }
@@ -374,7 +362,7 @@ public class SharedStrings implements AutoCloseable {
      * forward only
      *
      * @return word count
-     * @throws IOException -
+     * @throws IOException if I/O error occur
      */
     private int readData() throws IOException {
         // Read forward area data
@@ -390,7 +378,6 @@ public class SharedStrings implements AutoCloseable {
             cursor = t[2];
 
             limit_forward = n;
-            skipR += cursor;
 
             if (cursor < length) {
                 System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
@@ -398,8 +385,7 @@ public class SharedStrings implements AutoCloseable {
 
             // A page
             if (n == page) {
-                // Save next start index
-//                index_area.put(++offsetM, skipR);
+                ++offsetM;
                 break;
             } else if (length < cb.length && nChar == len0) { // EOF
                 if (max == -1) { // Reset totals when unknown size
@@ -440,9 +426,9 @@ public class SharedStrings implements AutoCloseable {
     }
 
     /**
-     * 反转义
+     * unescape
      */
-    public static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
+    static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
         int idx_38 = indexOf(cb, '&', from)
             , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 
@@ -526,10 +512,6 @@ public class SharedStrings implements AutoCloseable {
         cb = null;
         forward = null;
         backward = null;
-//        if (index_area != null) {
-//            index_area.clear();
-//            index_area = null;
-//        }
         if (count_area != null) {
             count_area.clear();
             count_area = null;
