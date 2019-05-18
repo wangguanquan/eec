@@ -307,9 +307,9 @@ public class IndexSharedStringTable extends SharedStringTable {
             flush();
             long pos = channel.position();
             channel.position(keyIndex >> ssst << 3);
-            channel.read(readBuffer);
-            readBuffer.flip();
-            position = readBuffer.getLong();
+            channel.read(buffer);
+            buffer.flip();
+            position = buffer.getLong();
             channel.position(pos);
 
             // Read from buffer
