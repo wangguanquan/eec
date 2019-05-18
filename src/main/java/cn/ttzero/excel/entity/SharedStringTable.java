@@ -66,10 +66,11 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         temp = Files.createTempFile("+", ".sst");
         shouldDelete = true;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
-        // Total keyword storage the header 4 bytes
-        channel.position(4);
         buffer = ByteBuffer.allocate(1 << 11);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
+        // Total keyword storage the header 4 bytes
+        buffer.putInt(0);
+        flush();
     }
 
     protected SharedStringTable(Path path) throws IOException {
