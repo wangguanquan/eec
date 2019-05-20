@@ -91,9 +91,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     IWorksheetWriter clone();
 
     /**
-     * 测试是否为Date类型
+     * Test if it is a {@link java.util.Date} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isDate(Class<?> clazz) {
@@ -102,9 +102,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为DateTime类型
+     * Test if it is a {@link java.sql.Timestamp} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isDateTime(Class<?> clazz) {
@@ -112,9 +112,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为Int类型
+     * Test if it is a {@code int, char, byte or short} or boxing type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isInt(Class<?> clazz) {
@@ -125,7 +125,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * Test clazz is short class
+     * Test if it is a {@code short} or {@link Short} type
      *
      * @param clazz the class
      * @return boolean value
@@ -135,9 +135,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为Long类型
+     * Test if it is a {@code long} or {@link Long} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isLong(Class<?> clazz) {
@@ -145,9 +145,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为Float类型
+     * Test if it is a single-precision floating-point type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isFloat(Class<?> clazz) {
@@ -155,9 +155,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * Test clazz is double class
+     * Test if it is a double-precision floating-point type
      *
-     * @param clazz the class
+     * @param clazz the type
      * @return boolean value
      */
     static boolean isDouble(Class<?> clazz) {
@@ -165,9 +165,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为Boolean类型
+     * Test if it is a {@code boolean} or {@link Boolean} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isBool(Class<?> clazz) {
@@ -175,9 +175,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为String类型
+     * Test if it is a {@link String} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isString(Class<?> clazz) {
@@ -185,9 +185,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为Char类型
+     * Test if it is a {@code char} or {@link Character} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isChar(Class<?> clazz) {
@@ -195,9 +195,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为BigDecimal类型
+     * Test if it is a {@link BigDecimal} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isBigDecimal(Class<?> clazz) {
@@ -205,9 +205,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为LocalDate类型
+     * Test if it is a {@link LocalDate} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isLocalDate(Class<?> clazz) {
@@ -215,9 +215,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为LocalDateTime类型
+     * Test if it is a {@link LocalDateTime} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isLocalDateTime(Class<?> clazz) {
@@ -225,9 +225,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为java.sql.Time类型
+     * Test if it is a {@link java.sql.Time} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isTime(Class<?> clazz) {
@@ -235,9 +235,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * 测试是否为LocalTime类型
+     * Test if it is a {@link java.time.LocalTime} type
      *
-     * @param clazz 列类型
+     * @param clazz the type
      * @return bool
      */
     static boolean isLocalTime(Class<?> clazz) {
