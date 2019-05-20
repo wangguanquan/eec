@@ -74,6 +74,9 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     }
 
     protected SharedStringTable(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            throw new IOException("The index path [" + path + "] not exists.");
+        }
         this.temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
 

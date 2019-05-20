@@ -104,6 +104,9 @@ public class IndexSharedStringTable extends SharedStringTable {
 
     IndexSharedStringTable(Path path) throws IOException {
         super(Paths.get(path.toString().substring(0, path.toString().length() - 4)));
+        if (!Files.exists(path)) {
+            throw new IOException("The index path [" + path + "] not exists.");
+        }
         temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
         channel.position(channel.size());
