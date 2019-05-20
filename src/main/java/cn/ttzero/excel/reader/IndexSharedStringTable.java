@@ -118,6 +118,25 @@ public class IndexSharedStringTable extends SharedStringTable {
     }
 
     /**
+     * Size of a short-sector in the index stream in power-of-two (sssz),
+     * real short-sector size is short_sec_size = 2<sup>sssz</sup> bytes
+     * (maximum value is sector size ssz,
+     *
+     * @param sssz the short-sector size
+     */
+    public void setShortSectorSize(int sssz) {
+        if (sssz < 1) {
+            throw new IllegalArgumentException("The short sector size must large than 1.");
+        }
+        if (sssz > 20) {
+            throw new IllegalArgumentException("The short sector size must less than 20.");
+        }
+        this.ssst = sssz;
+        // reset split
+        this.kSplit = 0x7FFFFFFF >> sssz << sssz;
+    }
+
+    /**
      * Write character value into table
      *
      * @param c the character value

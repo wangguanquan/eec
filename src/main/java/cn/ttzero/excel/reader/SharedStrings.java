@@ -194,8 +194,8 @@ public class SharedStrings implements AutoCloseable {
         }
         escapeBuf = new StringBuilder();
         // Instance the SharedStringTable
-        // FIXME split size
         sst = new IndexSharedStringTable();
+        sst.setShortSectorSize(9);
         return this;
     }
 
