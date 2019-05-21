@@ -304,7 +304,7 @@ public class ListObjectSheetTest extends WorkbookTest{
                     .setStyleProcessor(sp)
                 )
             )
-            .writeTo(Paths.get("f:/excel"));
+            .writeTo(defaultTestPath);
     }
 
     public static class Item {
