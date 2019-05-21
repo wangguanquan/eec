@@ -22,12 +22,15 @@ import cn.ttzero.excel.annotation.NotExport;
 import cn.ttzero.excel.entity.style.Fill;
 import cn.ttzero.excel.entity.style.PatternType;
 import cn.ttzero.excel.entity.style.Styles;
+import cn.ttzero.excel.processor.IntConversionProcessor;
+import cn.ttzero.excel.processor.StyleProcessor;
 import cn.ttzero.excel.reader.ExcelReaderTest;
 import org.junit.Test;
 
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -280,6 +283,30 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    private StyleProcessor sp = (o, style, sst) -> {
+        if ((int)o < 60) {
+            style = Styles.clearFill(style)
+                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+        }
+        return style;
+    };
+
+    // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
+    private IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+
+    @Test
+    public void testStyleConversion1() throws IOException {
+        new Workbook("object style processor1", "guanquan.wang")
+            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                    , new Sheet.Column("学号", "id", int.class)
+                    , new Sheet.Column("姓名", "name", String.class)
+                    , new Sheet.Column("成绩", "score", int.class, conversion)
+                    .setStyleProcessor(sp)
+                )
+            )
+            .writeTo(Paths.get("f:/excel"));
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -431,4 +458,5 @@ public class ListObjectSheetTest extends WorkbookTest{
             return randomTestData(size);
         }
     }
+
 }
