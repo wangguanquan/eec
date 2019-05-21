@@ -53,17 +53,17 @@ public class SharedStringsTest {
     @Test public void testGeneral() throws IOException {
         List<String> list = Arrays.asList("abc", "中文");
         writeTestData(list);
-        SharedStrings sst = new SharedStrings(path, 0, 0).load();
-
-        checkTrue(sst, list);
+        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+            checkTrue(sst, list);
+        }
     }
 
     @Test public void testEscape() throws IOException {
         List<String> list = Arrays.asList("<row>", "\"abc\"", "&nbsp;");
         writeTestData(list);
-        SharedStrings sst = new SharedStrings(path, 0, 0).load();
-
-        checkTrue(sst, list);
+        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+            checkTrue(sst, list);
+        }
     }
 
     private void checkTrue(SharedStrings sst, List<String> list) {

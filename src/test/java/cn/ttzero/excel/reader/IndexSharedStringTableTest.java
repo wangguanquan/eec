@@ -81,21 +81,23 @@ public class IndexSharedStringTableTest {
         }
     }
 
-    @Test public void test3() throws IOException {
-        IndexSharedStringTable sst = new IndexSharedStringTable();
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 10_000_000; i++) {
-            sst.push(getRandomString());
-        }
-        println(System.currentTimeMillis() - start);
+    @Test public void test3() {
+        try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
+            long start = System.currentTimeMillis();
+            for (int i = 0; i < 10_000_000; i++) {
+                sst.push(getRandomString());
+            }
+            println(System.currentTimeMillis() - start);
 
-        start = System.currentTimeMillis();
+            start = System.currentTimeMillis();
 
-        for (int i = 0; i < 10_000_000; i++) {
-            sst.get(i);
+            for (int i = 0; i < 10_000_000; i++) {
+                sst.get(i);
+            }
+            println(System.currentTimeMillis() - start);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        println(System.currentTimeMillis() - start);
-//        sst.commit();
     }
 //
 //    @Test public void test4() throws IOException {
