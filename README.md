@@ -97,6 +97,9 @@ Download
 
 ### 导出示例，更多使用方法请参考test/各测试类
 
+所有测试生成的excel文件均放在target/excel目录下，可以使用`mvn clean`清空。测试命令可以使用`mvn clean test`
+清空先前文件避免找不到测试结果文件
+
 #### 1. 对象数组导出
 对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
 使用注解`@NotExport`标记不需要导出的字段。
