@@ -47,11 +47,6 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     private ByteBuffer buffer, readBuffer;
 
-//    /**
-//     * The sector size
-//     */
-//    private int sst = 8;
-
     /**
      * The short sector size
      */
@@ -62,11 +57,6 @@ public class IndexSharedStringTable extends SharedStringTable {
      * Default 64
      */
     private int kSplit = 0x7FFFFFFF >> ssst << ssst;
-
-//    /**
-//     * Flush buffer each 256 keys
-//     */
-//    private int kFlush = 1 << sst;
 
     /**
      * A multiplexing byte array
@@ -90,6 +80,11 @@ public class IndexSharedStringTable extends SharedStringTable {
 
     private static final byte READ = 1, WRITE = 0;
 
+    /**
+     * Create a temp file to storage the index
+     *
+     * @throws IOException if I/O error occur.
+     */
     IndexSharedStringTable() throws IOException {
         super();
 
@@ -102,8 +97,17 @@ public class IndexSharedStringTable extends SharedStringTable {
         readBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
+    /**
+     * Constructor a IndexSharedStringTable with a exists index file
+     *
+     * @param path the index file path
+     * @throws IOException if file not exists or I/O error occur.
+     */
     IndexSharedStringTable(Path path) throws IOException {
         super(Paths.get(path.toString().substring(0, path.toString().length() - 4)));
+        if (!Files.exists(path)) {
+            throw new IOException("The index path [" + path + "] not exists.");
+        }
         temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
         channel.position(channel.size());
@@ -111,6 +115,25 @@ public class IndexSharedStringTable extends SharedStringTable {
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         readBuffer = ByteBuffer.allocate(1 << 10);
         readBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    }
+
+    /**
+     * Size of a short-sector in the index stream in power-of-two (sssz),
+     * real short-sector size is short_sec_size = 2<sup>sssz</sup> bytes
+     * (maximum value is sector size ssz,
+     *
+     * @param sssz the short-sector size
+     */
+    public void setShortSectorSize(int sssz) {
+        if (sssz < 1) {
+            throw new IllegalArgumentException("The short sector size must large than 1.");
+        }
+        if (sssz > 20) {
+            throw new IllegalArgumentException("The short sector size must less than 20.");
+        }
+        this.ssst = sssz;
+        // reset split
+        this.kSplit = 0x7FFFFFFF >> sssz << sssz;
     }
 
     /**

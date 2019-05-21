@@ -194,8 +194,8 @@ public class SharedStrings implements AutoCloseable {
         }
         escapeBuf = new StringBuilder();
         // Instance the SharedStringTable
-        // FIXME split size
         sst = new IndexSharedStringTable();
+        sst.setShortSectorSize(9);
         return this;
     }
 
@@ -312,28 +312,26 @@ public class SharedStrings implements AutoCloseable {
         return value;
     }
 
+    // Check the forward range
     private boolean forwardRange(int index) {
         return offset_forward >= 0 && offset_forward <= index
             && offset_forward + limit_forward > index;
     }
 
+    // Check the backward range
     private boolean backwardRange(int index) {
         return offset_backward >= 0 && offset_backward <= index
             && offset_backward + limit_backward > index;
     }
 
+    // Check the current index if out of bound
     private void checkBound(int index) {
         if (index < 0 || max > -1 && max <= index) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
         }
     }
 
-    /**
-     * LRU2
-     *
-     * @param index the string value index
-     * @return
-     */
+    // Check the current index has been loaded twice
     private boolean test(int index) {
         if (max < page) return false;
         int idx = index / page;
@@ -343,7 +341,7 @@ public class SharedStrings implements AutoCloseable {
     }
 
     /**
-     * Read or Load xml
+     * Load string record from xml
      */
     private void loadXml() {
         int index = offset_forward / page;
@@ -395,7 +393,7 @@ public class SharedStrings implements AutoCloseable {
                 break;
             }
         }
-        return n; // Return word count
+        return n; // Returns the word count
     }
 
     private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) throws IOException {
@@ -506,7 +504,8 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            logger.debug("total: {}, forward: {}, backward: {}, hot: {}", total, total_forward, total_backward, total_hot);
+            logger.debug("total: {}, forward: {}, backward: {}, hot: {}"
+                , total, total_forward, total_backward, total_hot);
             reader.close();
         }
         cb = null;

@@ -62,6 +62,11 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      */
     protected boolean shouldDelete;
 
+    /**
+     * Create a temp file to storage shared strings
+     *
+     * @throws IOException if I/O error occur.
+     */
     protected SharedStringTable() throws IOException {
         temp = Files.createTempFile("+", ".sst");
         shouldDelete = true;
@@ -73,7 +78,16 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         flush();
     }
 
+    /**
+     * Constructor a SharedStringTable with a exists file
+     *
+     * @param path the file path
+     * @throws IOException if file not exists or I/O error occur.
+     */
     protected SharedStringTable(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            throw new IOException("The index path [" + path + "] not exists.");
+        }
         this.temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
 
