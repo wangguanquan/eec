@@ -135,4 +135,16 @@ public class SharedStringTableTest {
         assert n == 1;
         assert sst.find(null) == n;
     }
+
+//    @Test public void testX() throws IOException {
+//        Path path = Paths.get("C:\\Users\\wangguanquan\\AppData\\Local\\Temp\\+2698958064069533007.sst");
+//        try (SharedStringTable sst = new SharedStringTable(path)) {
+//
+//            println(sst.size());
+//
+//            for (String v : sst) {
+//                println(v);
+//            }
+//        }
+//    }
 }
