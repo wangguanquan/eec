@@ -530,6 +530,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if io error occur
      */
     protected void writeString(String s, int row, int column, int xf) throws IOException {
+        // The limit characters per cell check
+        if (s != null && s.length() > Const.Limit.MAX_CHARACTERS_PER_CELL) {
+            throw new ExcelWriteException("Characters per cell out of limit. size=" + s.length()
+                + ", limit=" + Const.Limit.MAX_CHARACTERS_PER_CELL);
+        }
         Sheet.Column hc = columns[column];
         bw.write("<c r=\"");
         bw.write(sheet.int2Col(column + 1));
