@@ -1,3 +1,11 @@
+Version 0.3.1 (2019-05-21)
+-------------
+1. SharedStringTable升级
+2. 模板导出更新以兼容Excel97~03
+3. 修改SQL别名导出表头文字错误的BUG
+4. AutoSize方法升级，现在AutoSize并不需要借助临时文件
+5. 当BloomFilter满时不扩容而进行清空
+
 Version 0.3.0 (2019-05-01)
 -------------
 1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet

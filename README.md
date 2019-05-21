@@ -18,7 +18,7 @@ eec并不是一个功能全面的excel操作工具类，它功能有限并不能
 stream或数据库。
 
 它的最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利。
-同时它的可`扩展`能力也不弱
+同时它的`可扩展`能力也不弱
 
 ## 主要功能
 
@@ -97,9 +97,9 @@ Download
 
 ### 导出示例，更多使用方法请参考test/各测试类
 
-1. 对象数组导出
+#### 1. 对象数组导出
 对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
-使用注解`@NotExport`标记不导出的字段。
+使用注解`@NotExport`标记不需要导出的字段。
 
 ```
     @NotExport("敏感信息不导出")
@@ -115,7 +115,7 @@ Download
     private Timestamp registered;
 ```
 
-默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以在`addSheet`时指定列头。
+默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以在`addSheet`时重置列头顺序。
 
 ```
 public void testWrite(List<Student> students) throws IOException {
@@ -132,7 +132,7 @@ public void testWrite(List<Student> students) throws IOException {
 }
 ```
 
-2. 高亮显示成绩低于60分的单元格
+#### 2. 高亮显示成绩低于60分的单元格
 
 高亮和int转换是通过`@FunctionalInterface`实现，目前仅提供int值转换。
 
@@ -164,8 +164,11 @@ public void testStyleConversion(List<Student> students) throws IOException {
 }
 ```
 
+内容如下图
 
-3. 自定义数据源
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b1.png)
+
+#### 3. 自定义数据源
 
 有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类
 并复写相应方法即可。如下
@@ -211,7 +214,7 @@ public void testCustomizeDataSource(Parameter params) throws IOException {
 ```
 更详细的信息请查测试类`ListObjectPagingTest.testPagingCustomizeDataSource`
 
-4. 数据源为数据库
+#### 4. 数据源为数据库
 数据源为数据库时可以直接传入`java.sql.Connection`和SQL语句，取数据的过程在EEC内部实现，
 EEC内部通过游标获取数据直接写入文件，并不会在内存保存副本，所以能极大的降低内存消耗。
 
@@ -242,10 +245,12 @@ public void testFromDatabase() {
 ```
 
 执行以上代码会在`f:\\excel`文件夹下生成一个《用户注册列表.xlsx》文件
+
 内容如下图
+
 ![用户注册列表](./images/bd89e267-1d69-40ab-af3a-4df703469361.png)
 
-5. SQL带参数测试，且将满足条件的单元格标红。
+#### 5. SQL带参数测试，且将满足条件的单元格标红。
 
 ```
 public void testFromDatabase2() {
@@ -282,9 +287,10 @@ public void testFromDatabase2() {
 ```
 
 Excel如下图
+
 ![多Sheet页](./images/6f2ffc52-f66a-4986-906a-7463d87d9fbe.png)
 
-6. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
+#### 6. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
 
 如有以下格式模板文件template.xlsx
 
@@ -325,7 +331,7 @@ Excel读取使用`ExcelReader#read`静态方法，内部采用流式操作，当
 
 下面展示一些常规的读取方法
 
-1. 使用iterator迭代每行数据
+#### 1. 使用iterator迭代每行数据
 
 ```
 /**
@@ -347,7 +353,7 @@ public void iteratorRead() {
 }
 ```
 
-2. 使用stream操作
+#### 2. 使用stream操作
 
 ```
 public void streamRead() {
@@ -359,7 +365,7 @@ public void streamRead() {
 }
 ```
 
-3. 将excel读入到数组或List中
+#### 3. 将excel读入到数组或List中
 
 ```
 /**
@@ -378,7 +384,7 @@ public void readToList() {
 }
 ```
 
-4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
+#### 4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
 ```
 reade.sheets()
@@ -390,7 +396,7 @@ reade.sheets()
 
 以上代码相当于`select * from 用户注册 where platform = 'iOS'`
 
-5. xls读取
+#### 5. xls读取
 xls读取对方法式与xlsx完全一致
 
 ```
@@ -405,6 +411,14 @@ public void testReadXLS() {
 
 
 ## CHANGELOG
+Version 0.3.1 (2019-05-21)
+-------------
+1. SharedStringTable升级
+2. 模板导出更新以兼容Excel97~03
+3. 修改SQL别名导出表头文字错误的BUG
+4. AutoSize方法升级，现在AutoSize并不需要借助临时文件
+5. 当BloomFilter满时不扩容而进行清空
+
 Version 0.3.0 (2019-05-01)
 -------------
 1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
@@ -412,16 +426,7 @@ Version 0.3.0 (2019-05-01)
 3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
       比如修改每个worksheet最大行数
 4. 修复一些已知BUG
-
-Version 0.2.9 (2019-02-22)
--------------
-1. Excel读取时增加文件格式判断(BIFF 8 or Open xml)
-2. 创建者未指定时默认取当前操作系统登录名
-3. 增加 Apache License Version 2.0
-4. Rename package (net.cua->cn.ttzero)
-   访问[ttzero](https://www.ttzero.cn)可以了解更多关于eec的信息(网站还处于建设中)
-5. ExcelReader增加返回Excel文件基本信息
-6. ExcelReader增加BIFF8(Excel97~2003)classpath加载
+5. SharedStringTable引入Google BloomFilter
 
 [更多...](./CHANGELOG)
 
