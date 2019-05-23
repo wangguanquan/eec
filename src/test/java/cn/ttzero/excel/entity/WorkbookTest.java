@@ -32,14 +32,13 @@ public class WorkbookTest {
     static Random random = new Random();
 
     static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
-    private static char[][] cache = {new char[6], new char[7], new char[8], new char[9], new char[10]};
+    private static char[] cache = new char[32];
     public static String getRandomString() {
-        int n = random.nextInt(5), size = charArray.length;
-        char[] cs = cache[n];
-        for (int i = 0; i < cs.length; i++) {
-            cs[i] = charArray[random.nextInt(size)];
+        int n = random.nextInt(cache.length) + 1, size = charArray.length;
+        for (int i = 0; i < n; i++) {
+            cache[i] = charArray[random.nextInt(size)];
         }
-        return new String(cs);
+        return new String(cache, 0, n);
     }
 
     public static Path getOutputTestPath() {
