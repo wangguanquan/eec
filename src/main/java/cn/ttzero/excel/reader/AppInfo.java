@@ -39,10 +39,6 @@ public class AppInfo {
         return app.getApplication();
     }
 
-    public String getManager() {
-        return app.getManager();
-    }
-
     public String getCompany() {
         return app.getCompany();
     }
@@ -98,7 +94,6 @@ public class AppInfo {
     @Override
     public String toString() {
         return "Application: " + getApplication()
-            + " Manager: " + getManager()
             + " Company: " + getCompany()
             + " AppVersion: " + getAppVersion()
             + " Title: " + getTitle()

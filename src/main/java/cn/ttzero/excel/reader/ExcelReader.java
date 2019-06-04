@@ -447,7 +447,6 @@ public class ExcelReader implements AutoCloseable {
         app.setCompany(root.elementText("Company"));
         app.setApplication(root.elementText("Application"));
         app.setAppVersion(root.elementText("AppVersion"));
-        app.setManager(root.elementText("Manager"));
 
         try {
             document = reader.read(Files.newInputStream(self.resolve("docProps/core.xml")));

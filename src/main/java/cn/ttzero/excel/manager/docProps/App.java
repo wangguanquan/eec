@@ -36,7 +36,6 @@ public class App extends XmlEntity {
     private int docSecurity;
     @SuppressWarnings("unused")
     private boolean scaleCrop;
-    private String manager;
     private String company;
     @SuppressWarnings("unused")
     private boolean linksUpToDate;
@@ -87,10 +86,6 @@ public class App extends XmlEntity {
         this.scaleCrop = scaleCrop;
     }
 
-    public void setManager(String manager) {
-        this.manager = manager;
-    }
-
     public void setCompany(String company) {
         this.company = company;
     }
@@ -113,10 +108,6 @@ public class App extends XmlEntity {
 
     public String getApplication() {
         return application;
-    }
-
-    public String getManager() {
-        return manager;
     }
 
     public String getCompany() {
