@@ -129,7 +129,7 @@ public class SharedStrings implements AutoCloseable {
     /**
      * High frequency word
      */
-    private Hot<Integer, String> hot;
+    private Cache<Integer, String> hot;
     /**
      * Size of hot
      */
@@ -184,8 +184,8 @@ public class SharedStrings implements AutoCloseable {
                     default_cap = max / page + 1;
                 count_area = new HashMap<>(default_cap);
 
-                if (hotSize > 0) hot = new Hot<>(hotSize);
-                else hot = new Hot<>();
+                if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
+                else hot = FixSizeLRUCache.create();
             } else {
                 forward = new String[max];
             }
@@ -302,7 +302,7 @@ public class SharedStrings implements AutoCloseable {
             value = forward[index - offset_forward];
             if (test(index)) {
                 logger.debug("put hot {}", index);
-                hot.push(index, value);
+                hot.put(index, value);
             }
             total_forward++;
         } else {
