@@ -233,7 +233,7 @@ public class ResultSetSheet extends Sheet {
                 for (; i < columns.length; i++) {
                     Column column = columns[i];
                     if (StringUtil.isEmpty(column.getName())) {
-                        column.setName(metaData.getColumnName(i + 1));
+                        column.setName(metaData.getColumnLabel(i + 1));
                     }
                     // FIXME maybe do not reset the types
                     Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
@@ -247,7 +247,7 @@ public class ResultSetSheet extends Sheet {
                 int count = metaData.getColumnCount();
                 columns = new Column[count];
                 for (; ++i <= count; ) {
-                    columns[i - 1] = new Column(metaData.getColumnName(i)
+                    columns[i - 1] = new Column(metaData.getColumnLabel(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
                 }
             }

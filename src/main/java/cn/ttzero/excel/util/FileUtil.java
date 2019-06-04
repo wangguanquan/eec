@@ -353,11 +353,7 @@ public class FileUtil {
 
     public static void writeToDisk(Document doc, Path path) throws IOException {
         if (!Files.exists(path.getParent())) {
-            try {
-                Files.createDirectories(path.getParent());
-            } catch (IOException e) {
-                throw e;
-            }
+            Files.createDirectories(path.getParent());
         }
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
             //write the created document to an arbitrary file
@@ -367,8 +363,6 @@ public class FileUtil {
             writer.write(doc);
             writer.flush();
             writer.close();
-        } catch (IOException e) {
-            throw e;
         }
     }
 
@@ -383,8 +377,6 @@ public class FileUtil {
             writer.write(doc);
             writer.flush();
             writer.close();
-        } catch (IOException e) {
-            throw e;
         }
     }
 }

@@ -24,10 +24,12 @@ import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.RelManager;
 import cn.ttzero.excel.manager.docProps.App;
 import cn.ttzero.excel.manager.docProps.Core;
+import cn.ttzero.excel.reader.ExcelReadException;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
 import cn.ttzero.excel.util.ZipUtil;
 import org.dom4j.*;
+import org.dom4j.io.SAXReader;
 
 import java.awt.*;
 import java.io.File;
@@ -131,74 +133,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         contentType.add(new ContentType.Override(Const.ContentType.WORKBOOK, "/xl/workbook.xml"));
         contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
 
-        // docProps
-        App app = new App();
-        if (StringUtil.isNotEmpty(workbook.getCompany())) {
-            app.setCompany(workbook.getCompany());
-        } else {
-            app.setCompany("cn.ttzero");
-        }
+        // Write app
+        writeApp(root, contentType);
 
-        // Read app and version from pom
-        try {
-            InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
-            Properties pom = new Properties();
-            if (is == null) {
-                // Read from target/maven-archiver/pom.properties
-                URL url = getClass().getClassLoader().getResource(".");
-                if (url != null) {
-                    Path targetPath = (FileUtil.isWindows()
-                        ? Paths.get(url.getFile().substring(1))
-                        : Paths.get(url.getFile())).getParent();
-                    is = Files.newInputStream(targetPath.resolve("maven-archiver/pom.properties"));
-                }
-            }
-            if (is != null) {
-                pom.load(is);
-                app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
-                app.setAppVersion(pom.getProperty("version"));
-            }
-        } catch (IOException e) {
-            // Nothing
-        }
-
-        int size = workbook.getSize();
-
-        List<String> titleParts = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            Sheet sheet = workbook.getSheetAt(i);
-            titleParts.add(sheet.getName());
-            addRel(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
-        }
-        app.setTitlePards(titleParts);
-
-        try {
-            app.writeTo(root.getParent() + "/docProps/app.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
-            contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
-
-        Core core = new Core();
-        core.setCreated(new Date());
-        if (StringUtil.isNotEmpty(workbook.getCreator())) {
-            core.setCreator(workbook.getCreator());
-        } else {
-            core.setCreator(System.getProperty("user.name"));
-        }
-        core.setTitle(workbook.getName());
-
-        core.setModified(new Date());
-
-        try {
-            core.writeTo(root.getParent() + "/docProps/core.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
-            contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        // Write core
+        writeCore(root, contentType);
 
         Path themeP = root.resolve("theme");
         if (!Files.exists(themeP)) {
@@ -209,12 +148,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (IOException e) {
             // Nothing
         }
-//        FileUtil.copyFile(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), new File(themeP, "theme1.xml"));
         addRel(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
 
         // style
-//        File styleFile = new File(xl, "styles.xml");
         addRel(new Relationship("styles.xml", Const.Relationship.STYLE));
         contentType.add(new ContentType.Override(Const.ContentType.STYLE, "/xl/styles.xml"));
 
@@ -224,6 +161,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         if ((waterMark = workbook.getWaterMark()) != null) {
             contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
         }
+
+        int size = workbook.getSize();
         for (int i = 0; i < size; i++) {
             WaterMark wm = workbook.getSheetAt(i).getWaterMark();
             if (wm != null) {
@@ -256,6 +195,105 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // share string
         try (SharedStrings sst = workbook.getSst()) {
             sst.writeTo(root);
+        }
+    }
+
+    private void writeApp(Path root, ContentType contentType) throws IOException {
+
+        // docProps
+        App app = new App();
+        if (StringUtil.isNotEmpty(workbook.getCompany())) {
+            app.setCompany(workbook.getCompany());
+        } else {
+            app.setCompany("cn.ttzero");
+        }
+
+        // Read app and version from pom
+        try {
+            InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
+            Properties pom = new Properties();
+            if (is == null) {
+                // Read from target/maven-archiver/pom.properties
+                URL url = getClass().getClassLoader().getResource(".");
+                if (url != null) {
+                    Path targetPath = (FileUtil.isWindows()
+                        ? Paths.get(url.getFile().substring(1))
+                        : Paths.get(url.getFile())).getParent();
+                    // On Mac or Linux
+                    Path pomPath = targetPath.resolve("maven-archiver/pom.properties");
+                    if (Files.exists(pomPath)) {
+                        is = Files.newInputStream(pomPath);
+                        // On windows
+                    } else {
+                        pomPath = targetPath.getParent().resolve("pom.xml");
+                        // load workbook.xml
+                        SAXReader reader = new SAXReader();
+                        Document document;
+                        try {
+                            document = reader.read(Files.newInputStream(pomPath));
+                        } catch (DocumentException | IOException e) {
+                            throw new ExcelReadException(e);
+                        }
+                        Element pomRoot = document.getRootElement();
+                        String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
+                        app.setAppVersion(application);
+                        String appVersion = pomRoot.elementText("version");
+                        app.setAppVersion(appVersion);
+                    }
+                }
+            }
+            if (is != null) {
+                pom.load(is);
+                app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
+                app.setAppVersion(pom.getProperty("version"));
+                // Can't read pom.xml if running as dev on window
+            }
+            if (StringUtil.isEmpty(app.getAppVersion())) {
+                app.setApplication("cn.ttzero.eec");
+                app.setAppVersion("1.0.0");
+            }
+        } catch (IOException e) {
+            // Nothing
+        }
+
+        int size = workbook.getSize();
+
+        List<String> titleParts = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+            titleParts.add(sheet.getName());
+            addRel(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
+        }
+        app.setTitlePards(titleParts);
+
+        try {
+            app.writeTo(root.getParent() + "/docProps/app.xml");
+            contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
+            contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new ExcelWriteException(e);
+        }
+    }
+
+    private void writeCore(Path root, ContentType contentType) throws IOException {
+        Core core = new Core();
+        core.setCreated(new Date());
+        if (StringUtil.isNotEmpty(workbook.getCreator())) {
+            core.setCreator(workbook.getCreator());
+        } else {
+            core.setCreator(System.getProperty("user.name"));
+        }
+        core.setTitle(workbook.getName());
+
+        core.setModified(new Date());
+
+        try {
+            core.writeTo(root.getParent() + "/docProps/core.xml");
+            contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
+            contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new ExcelWriteException(e);
         }
     }
 

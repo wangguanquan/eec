@@ -22,12 +22,15 @@ import cn.ttzero.excel.annotation.NotExport;
 import cn.ttzero.excel.entity.style.Fill;
 import cn.ttzero.excel.entity.style.PatternType;
 import cn.ttzero.excel.entity.style.Styles;
+import cn.ttzero.excel.processor.IntConversionProcessor;
+import cn.ttzero.excel.processor.StyleProcessor;
 import cn.ttzero.excel.reader.ExcelReaderTest;
 import org.junit.Test;
 
 import java.awt.*;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Paths;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -61,6 +64,14 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("annotation object", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData())
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testAnnotationAutoSize() throws IOException {
+        new Workbook("annotation object auto-size", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Student.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -102,7 +113,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Sheet.Column("学号", "id", int.class)
                 , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("年龄", "age", int.class, n -> n > 14 ? "高龄" : n)
+                , new Sheet.Column("成绩", "score", int.class, n -> n < 60 ? "不及格" : n)
             )
             .writeTo(defaultTestPath);
     }
@@ -113,10 +124,9 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Sheet.Column("学号", "id", int.class)
                 , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("年龄", "age", int.class)
+                , new Sheet.Column("成绩", "score", int.class)
                     .setStyleProcessor((o, style, sst) -> {
-                        int n = (int) o;
-                        if (n < 10) {
+                        if ((int)o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, Color.orange));
                         }
@@ -132,10 +142,9 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Sheet.Column("学号", "id", int.class)
                 , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("年龄", "age", int.class, n -> n > 14 ? "高龄" : n)
+                , new Sheet.Column("成绩", "score", int.class, n -> n < 60 ? "不及格" : n)
                     .setStyleProcessor((o, style, sst) -> {
-                        int n = (int) o;
-                        if (n > 14) {
+                        if ((int)o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
                         }
@@ -274,6 +283,30 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    private StyleProcessor sp = (o, style, sst) -> {
+        if ((int)o < 60) {
+            style = Styles.clearFill(style)
+                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+        }
+        return style;
+    };
+
+    // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
+    private IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+
+    @Test
+    public void testStyleConversion1() throws IOException {
+        new Workbook("object style processor1", "guanquan.wang")
+            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                    , new Sheet.Column("学号", "id", int.class)
+                    , new Sheet.Column("姓名", "name", String.class)
+                    , new Sheet.Column("成绩", "score", int.class, conversion)
+                    .setStyleProcessor(sp)
+                )
+            )
+            .writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -348,25 +381,22 @@ public class ListObjectSheetTest extends WorkbookTest{
      * Annotation Object
      */
     public static class Student {
-        @DisplayName("学号")
+        @NotExport
         private int id;
         @DisplayName("姓名")
         private String name;
-        @DisplayName("年龄")
-        private int age;
-        @NotExport("secret")
-        private String password;
+        @DisplayName("成绩")
+        private int score;
 
-        Student(int id, String name, int age) {
+        Student(int id, String name, int score) {
             this.id = id;
             this.name = name;
-            this.age = age;
+            this.score = score;
         }
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit; i < n; i++) {
-                Student e = new Student(i, getRandomString(), random.nextInt(15) + 5);
-                e.password = getRandomString();
+                Student e = new Student(i, getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;
@@ -428,4 +458,5 @@ public class ListObjectSheetTest extends WorkbookTest{
             return randomTestData(size);
         }
     }
+
 }

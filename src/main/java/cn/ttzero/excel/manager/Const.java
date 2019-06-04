@@ -106,6 +106,10 @@ public class Const {
          * 单个cell最多包含多少行
          */
         public static final int MAX_LINE_FEEDS_PER_CELL = 253;
+        /**
+         * Column width
+         */
+        public static final int COLUMN_WIDTH = 255;
     }
 
     /**

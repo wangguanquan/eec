@@ -16,6 +16,7 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.entity.ExcelWriteException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,41 +27,61 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * 读取sharedString数据
- * 对于大文件来说不可能全部加载到内存然后根据下标直接取值，
- * 目前做法是进行分区，将数据分为eden, old, hot三个区域，
- * 新读取的数据放入eden区，如果eden区查找不到则去old区查找，最后到hot区查找
- * 如果都没有则按下标重新读取该区块到eden区，原eden区数据复制到old区。
- * 加载两次的区块将被标记，被标记的区块有重复读取时被放入hot区，
- * hot区采用LRU页面置换算法进行淘汰。
- * <p>
+ * Read sharedString data
+ *
+ * For large files, it is impossible to load all data into the
+ * memory and get it by index. The current practice is to partition
+ * and divide the data into three areas: forward, backward, and hot.
+ * The newly read data is placed in the forward area, if not found
+ * in forward area, go to the backward area to find, finally go to
+ * the hot area to find it. If not found in the three areas, press
+ * the ward will be re-load in to the forward area. The original
+ * forwarding area data is copied to the backward area. The blocks
+ * loaded twice will be marked, the marked blocks will be placed in
+ * the hot area when they are repeatedly read, and the hot area will
+ * be eliminated by the LRU page replacement algorithm.
+ *
  * Create by guanquan.wang at 2018-09-27 14:28
  */
-public class SharedStrings {
+public class SharedStrings implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());
     private Path sstPath;
 
+    /**
+     * Constructs a SharedStrings containing the elements of the
+     * specified data array
+     *
+     * @param data the shared strings
+     */
     SharedStrings(String[] data) {
         max = data.length;
-        offset_eden = 0;
+        offset_forward = 0;
         if (max <= page) {
-            eden = new String[max];
-            System.arraycopy(data, offset_eden, eden, 0, max);
-            limit_eden = max;
+            forward = new String[max];
+            System.arraycopy(data, offset_forward, forward, 0, max);
+            limit_forward = max;
         } else {
             if (max > page << 1) {
                 page = max >> 1;
             }
-            eden = new String[page];
-            limit_eden = page;
-            System.arraycopy(data, offset_eden, eden, 0, limit_eden);
-            offset_old = page;
-            limit_old = max - page;
-            old = new String[limit_old];
-            System.arraycopy(data, offset_old, old, 0, limit_old);
+            forward = new String[page];
+            limit_forward = page;
+            System.arraycopy(data, offset_forward, forward, 0, limit_forward);
+            offset_backward = page;
+            limit_backward = max - page;
+            backward = new String[limit_backward];
+            System.arraycopy(data, offset_backward, backward, 0, limit_backward);
         }
     }
 
+    /**
+     * Constructs a SharedString with the xml path, please call
+     * {@link SharedStrings#load()} after instance
+     *
+     * @param sstPath the xml file path
+     * @param cacheSize the number of word per load
+     * @param hotSize the number of high frequency word
+     */
     SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
@@ -70,54 +91,49 @@ public class SharedStrings {
     }
 
     /**
-     * 新加载数据放入此区域
+     * Storage the new load data
      */
-    private String[] eden;
+    private String[] forward;
     /**
-     * eden区未命中时将数据复制到此区域
+     * Copy data to this area when the forward area is missing
      */
-    private String[] old;
+    private String[] backward;
     /**
-     * 每次加载的数量
+     * Number of word per load
      */
     private int page = 512;
     /**
-     * 整个文件有多少个字符串
+     * The word total
      */
-    private int max = -1, vt = 0, offsetR = 0, offsetM = 0;
+    private int max = -1, vt = 0, offsetM = 0;
     /**
-     * 新生代offset
+     * The forward offset
      */
-    private int offset_eden = -1;
+    private int offset_forward = -1;
     /**
-     * 老年代offset
+     * The backward offset
      */
-    private int offset_old = -1;
+    private int offset_backward = -1;
     /**
-     * 新生代limit
+     * The forward limit
      */
-    private int limit_eden;
+    private int limit_forward;
     /**
-     * 老年代limit
+     * The backward limit
      */
-    private int limit_old;
+    private int limit_backward;
     /**
-     * 统计各段被访问次数
+     * Count the number of visits to each segment
      */
     private Map<Integer, Integer> count_area = null;
     /**
-     * hot world
+     * High frequency word
      */
     private Hot<Integer, String> hot;
     /**
-     * size of hot
+     * Size of hot
      */
     private int hotSize;
-    /**
-     * 记录各段的起始位置
-     */
-    private Map<Integer, Long> index_area = null;
-
     /**
      * Main reader
      */
@@ -131,15 +147,13 @@ public class SharedStrings {
      */
     private int offset;
     /**
-     * current skip of Main reader
-     */
-    private long skipR;
-    /**
      * escape buffer
      */
     private StringBuilder escapeBuf;
+
+    private IndexSharedStringTable sst;
     // For debug
-    private int total, total_eden, total_old, total_hot;
+    private int total, total_forward, total_backward, total_hot;
 
     /**
      * @return the shared string unique count
@@ -149,6 +163,12 @@ public class SharedStrings {
         return max;
     }
 
+    /**
+     * Load the sharedString.xml file and instance word cache
+     *
+     * @return the {@code SharedStrings}
+     * @throws IOException if io error occur
+     */
     SharedStrings load() throws IOException {
         if (Files.exists(sstPath)) {
             // Get unique count
@@ -157,27 +177,34 @@ public class SharedStrings {
             // Unknown size or big than page
             int default_cap = 10;
             if (max < 0 || max > page) {
-                eden = new String[page];
-                old = new String[page];
+                forward = new String[page];
+                backward = new String[page];
 
-                if (max > 0 && max / page + 1 > default_cap) default_cap = max / page + 1;
+                if (max > 0 && max / page + 1 > default_cap)
+                    default_cap = max / page + 1;
                 count_area = new HashMap<>(default_cap);
 
                 if (hotSize > 0) hot = new Hot<>(hotSize);
                 else hot = new Hot<>();
+            } else {
+                forward = new String[max];
             }
-            else {
-                eden = new String[max];
-            }
-            index_area = new HashMap<>(default_cap);
-            index_area.put(0, (long) vt);
         } else {
             max = 0;
         }
         escapeBuf = new StringBuilder();
+        // Instance the SharedStringTable
+        sst = new IndexSharedStringTable();
+        sst.setShortSectorSize(9);
         return this;
     }
 
+    /**
+     * Getting the unique strings count in SharedStringTable
+     *
+     * @return the unique strings count
+     * @throws IOException if I/O error occur
+     */
     private int uniqueCount() throws IOException {
         int off = -1;
         reader = Files.newBufferedReader(sstPath);
@@ -192,7 +219,9 @@ public class SharedStrings {
         String line = new String(cb, 0, i);
         // Microsoft Excel
         String uniqueCount = " uniqueCount=";
-        int index = line.indexOf(uniqueCount), end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
+        int index = line.indexOf(uniqueCount)
+            , end = index > 0 ? line.indexOf('"'
+            , index += (uniqueCount.length() + 1)) : -1;
         if (end > 0) {
             off = Integer.parseInt(line.substring(index, end));
             // WPS
@@ -207,26 +236,23 @@ public class SharedStrings {
 
         vt = i + 4;
         System.arraycopy(cb, vt, cb, 0, offset -= vt);
-        skipR = vt;
 
         return off;
     }
 
     /**
-     * 根据下标获取字符串
+     * Getting the strings value by index
      *
-     * @param index of sharedString
+     * @param index the index of SharedStringTable
      * @return string
      */
     public String get(int index) {
+        checkBound(index);
         total++;
-        if (index < 0 || max > -1 && max <= index) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
-        }
 
         // Load first
-        if (offset_eden == -1) {
-            offset_eden = index / page * page;
+        if (offset_forward == -1) {
+            offset_forward = index / page * page;
 
             if (vt < 0) vt = 0;
 
@@ -235,17 +261,17 @@ public class SharedStrings {
         }
 
         String value;
-        // Find in eden
-        if (edenRange(index)) {
-            value = eden[index - offset_eden];
-            total_eden++;
+        // Find in forward
+        if (forwardRange(index)) {
+            value = forward[index - offset_forward];
+            total_forward++;
             return value;
         }
 
-        // Find in old
-        if (oldRange(index)) {
-            value = old[index - offset_old];
-            total_old++;
+        // Find in backward
+        if (backwardRange(index)) {
+            value = backward[index - offset_backward];
+            total_backward++;
             return value;
         }
 
@@ -254,22 +280,31 @@ public class SharedStrings {
 
         // Can't find in memory cache
         if (value == null) {
-            System.arraycopy(eden, 0, old, 0, limit_eden);
-            offset_old = offset_eden;
-            limit_old = limit_eden;
+            System.arraycopy(forward, 0, backward, 0, limit_forward);
+            offset_backward = offset_forward;
+            limit_backward = limit_forward;
             // reload data
-            offset_eden = index / page * page;
-            eden[0] = null;
-            loadXml();
-            if (eden[0] == null) {
+            offset_forward = index / page * page;
+            forward[0] = null;
+            if (index < sst.size()) {
+                try {
+                    // Load from SharedStringTable
+                    limit_forward = sst.get(offset_forward, forward);
+                } catch (IOException e) {
+                    throw new ExcelWriteException(e);
+                }
+            } else {
+                loadXml();
+            }
+            if (forward[0] == null) {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
             }
-            value = eden[index - offset_eden];
+            value = forward[index - offset_forward];
             if (test(index)) {
                 logger.debug("put hot {}", index);
                 hot.push(index, value);
             }
-            total_eden++;
+            total_forward++;
         } else {
             total_hot++;
         }
@@ -277,20 +312,26 @@ public class SharedStrings {
         return value;
     }
 
-    private boolean edenRange(int index) {
-        return offset_eden >= 0 && offset_eden <= index && offset_eden + limit_eden > index;
+    // Check the forward range
+    private boolean forwardRange(int index) {
+        return offset_forward >= 0 && offset_forward <= index
+            && offset_forward + limit_forward > index;
     }
 
-    private boolean oldRange(int index) {
-        return offset_old >= 0 && offset_old <= index && offset_old + limit_old > index;
+    // Check the backward range
+    private boolean backwardRange(int index) {
+        return offset_backward >= 0 && offset_backward <= index
+            && offset_backward + limit_backward > index;
     }
 
-    /**
-     * LRU2
-     *
-     * @param index
-     * @return
-     */
+    // Check the current index if out of bound
+    private void checkBound(int index) {
+        if (index < 0 || max > -1 && max <= index) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
+        }
+    }
+
+    // Check the current index has been loaded twice
     private boolean test(int index) {
         if (max < page) return false;
         int idx = index / page;
@@ -300,110 +341,17 @@ public class SharedStrings {
     }
 
     /**
-     * Read or Load xml
+     * Load string record from xml
      */
     private void loadXml() {
-        int index = offset_eden / page;
+        int index = offset_forward / page;
         try {
-            /*
-             * 从cache流中读取接下来的N个数据
-             * 如果Excel保持从上到下从左到右的写入顺序
-             * 那么此分支命中率极高，当此分支命中时就会直接从已知句柄中直接读取N个字符
-             * 减少读取文件的次数，同时也减少读取相同区块的次数，对于大文件读取效率非常高。
-             */
-            if (index == offsetM) {
-                logger.debug("---------------Read xml area {}---------------", index);
+            // Read xml file string value into IndexSharedStringTable
+            for (int n = index - offsetM; n-- >= 0; ) {
                 readData();
-            }
-            /*
-             * 从文件读取
-             * 文件读取时会跳过已知区块以增加速度（虽然java.io中skip方法并非跳过读取而是读取后跳过）
-             * 如果先读取文件尾部的数据那么在skip的时候会记录每个区块的起始位置，
-             * 接下来的读取将根据此预存的记录进行skip
-             */
-            else {
-                logger.debug("---------------Load xml area {}---------------", index);
-                loadXml(index);
             }
         } catch (IOException e) {
             throw new ExcelReadException(e);
-        }
-    }
-
-    /**
-     * 分段加载数据
-     */
-    private void loadXml(int index) throws IOException {
-        try (BufferedReader br = Files.newBufferedReader(sstPath)) {
-            char[] cb = new char[this.cb.length];
-            int nChar, length, n = 0, offset = 0;
-            long skip = index_area.getOrDefault(index, 0L), skipR = skip;
-
-            // 跳过N个区域读取时预先记录跳过的区域起始位置
-            if (skip <= 0L) {
-                if (index_area.isEmpty()) {
-                    br.skip(skipR = vt);
-                } else {
-                    br.skip(skipR = index_area.get(offsetR));
-                }
-
-                while (offsetR < index && (length = br.read(cb, offset, cb.length - offset)) > 0) {
-                    nChar = 0;
-                    length += offset;
-                    int cursor = 0;
-                    for (int len = length - 4; nChar < len && n < page; nChar++) {
-                        if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 't' && cb[nChar + 3] == '>') {
-                            n++;
-                            cursor = nChar += 4;
-                        } else continue;
-                        // a page
-                        if (n == page) {
-                            n = 0;
-                            index_area.put(++offsetR, skipR + cursor);
-                            if (offsetR >= index) break;
-                        }
-                    }
-                    skipR += cursor;
-                    System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
-                }
-                // 下一个相邻区域或者已读区域
-            } else {
-                br.skip(skipR); // 跳过前方N个字符从当前位置直接读取
-            }
-
-            // Read eden area data
-            n = 0;
-            while ((length = br.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
-                length += offset;
-                nChar = offset &= 0;
-                int cursor, len0 = length - 3, len1 = len0 - 1;
-                int[] t = findT(cb, nChar, length, len0, len1, n);
-
-                nChar = t[0];
-                n = t[1];
-                cursor = t[2];
-
-                limit_eden = n;
-                skipR += cursor;
-
-                // A page
-                if (n == page) {
-                    // Save next start index
-                    if (offsetR <= index) {
-                        index_area.put(++offsetR, skipR);
-                    }
-                    break;
-                } else if (length < cb.length && nChar == len0) { // EOF
-                    if (max == -1) { // Reset totals when unknown size
-                        max = offsetR * page + n;
-                    }
-                    break;
-                }
-
-                if (cursor < length) {
-                    System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
-                }
-            }
         }
     }
 
@@ -412,10 +360,10 @@ public class SharedStrings {
      * forward only
      *
      * @return word count
-     * @throws IOException -
+     * @throws IOException if I/O error occur
      */
     private int readData() throws IOException {
-        // Read eden area data
+        // Read forward area data
         int n = 0, length, nChar;
         while ((length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
             length += offset;
@@ -427,8 +375,7 @@ public class SharedStrings {
             n = t[1];
             cursor = t[2];
 
-            limit_eden = n;
-            skipR += cursor;
+            limit_forward = n;
 
             if (cursor < length) {
                 System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
@@ -436,8 +383,7 @@ public class SharedStrings {
 
             // A page
             if (n == page) {
-                // Save next start index
-                index_area.put(++offsetM, skipR);
+                ++offsetM;
                 break;
             } else if (length < cb.length && nChar == len0) { // EOF
                 if (max == -1) { // Reset totals when unknown size
@@ -447,25 +393,30 @@ public class SharedStrings {
                 break;
             }
         }
-        return n; // Return word count
+        return n; // Returns the word count
     }
 
-    private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) {
+    private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) throws IOException {
         int cursor = 0;
-        for ( ; nChar < length && n < page; ) {
-            for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't' || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar);
+        for (; nChar < length && n < page; ) {
+            for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
+                || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
+                ;
             if (nChar >= len0) break; // Not found
             cursor = nChar;
             int a = nChar += 3;
             if (cb[nChar - 1] == ' ') { // space="preserve"
-                for (; nChar < len0 && cb[nChar++] != '>'; );
+                for (; nChar < len0 && cb[nChar++] != '>'; ) ;
                 if (nChar >= len0) break; // Not found
                 cursor = nChar;
                 a = nChar;
             }
-            for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/' || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar);
+            for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
+                || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar)
+                ;
             if (nChar >= len1) break; // Not found
-            eden[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
+            forward[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
+            sst.push(forward[n - 1]);
             nChar += 4;
             cursor = nChar;
         }
@@ -473,19 +424,16 @@ public class SharedStrings {
     }
 
     /**
-     * 反转义
+     * unescape
      */
-    public static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
-        int idx_38 = indexOf(cb, '&', from), idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
+    static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
+        int idx_38 = indexOf(cb, '&', from)
+            , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 
         if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {
             return new String(cb, from, to - from);
         }
-//        if (escapeBuf != null) {
         escapeBuf.delete(0, escapeBuf.length());
-//        } else {
-//            escapeBuf = new StringBuilder(to - from < 10 ? 10 : to - from);
-//        }
         do {
             escapeBuf.append(cb, from, idx_38 - from);
             // ASCII值
@@ -552,25 +500,25 @@ public class SharedStrings {
     /**
      * close stream and free space
      */
-    void close() {
-        if (reader != null) try {
+    @Override
+    public void close() throws IOException {
+        if (reader != null) {
             // Debug hit rate
-            logger.debug("total: {}, eden: {}, old: {}, hot: {}", total, total_eden, total_old, total_hot);
+            logger.debug("total: {}, forward: {}, backward: {}, hot: {}"
+                , total, total_forward, total_backward, total_hot);
             reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         cb = null;
-        eden = null;
-        old = null;
-        if (index_area != null) {
-            index_area.clear();
-            index_area = null;
-        }
+        forward = null;
+        backward = null;
         if (count_area != null) {
             count_area.clear();
             count_area = null;
         }
         escapeBuf = null;
+        if (sst != null) {
+            sst.close();
+        }
     }
+
 }

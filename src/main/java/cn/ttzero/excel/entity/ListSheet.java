@@ -41,6 +41,7 @@ public class ListSheet<T> extends Sheet {
     private Field[] fields;
     protected int start, end;
     protected boolean eof;
+    private int size;
 
     /**
      * Constructor worksheet
@@ -408,11 +409,11 @@ public class ListSheet<T> extends Sheet {
     /**
      * Returns total rows in this worksheet
      *
-     * @return -1 if unknown
+     * @return -1 if unknown or uncertain
      */
     @Override
     public int size() {
-        return end - start;
+        return !shouldClose ? size : -1;
     }
 
     /**
@@ -421,23 +422,28 @@ public class ListSheet<T> extends Sheet {
     protected void paging() {
         int len = dataSize(), limit = sheetWriter.getRowLimit() - 1;
         // paging
-        if (len > limit) {
+        if (len + rows > limit) {
             // Reset current index
             end = limit - rows + start;
             shouldClose = false;
             eof = true;
+            size = limit;
 
             int n = id;
             for (int i = end; i < len; ) {
                 ListSheet copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = i + limit < len ? i + limit : len);
-                copy.eof = copy.size() == limit;
+                copy.size = copy.end - copy.start;
+                copy.eof = copy.size == limit;
                 workbook.insertSheet(n++, copy);
             }
             // Close on the last copy worksheet
             workbook.getSheetAt(n - 1).shouldClose = true;
-        } else end = len;
+        } else {
+            end = len;
+            size += len;
+        }
     }
 
     /**

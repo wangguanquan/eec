@@ -1128,7 +1128,7 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * Returns total rows in this worksheet
      *
-     * @return -1 if unknown
+     * @return -1 if unknown or uncertain
      */
     public int size() {
         return -1;
