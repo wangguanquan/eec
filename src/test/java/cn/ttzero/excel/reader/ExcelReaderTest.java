@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
 import static cn.ttzero.excel.Print.println;
 
@@ -52,6 +53,21 @@ public class ExcelReaderTest {
             println(appInfo);
 
             reader.sheet(0).rows().forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testColumnIndex() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
+                Row row = it.next();
+                println(row.getRowNumber()
+                    + " | " + row.getFirstColumnIndex()
+                    + " | " + row.getLastColumnIndex()
+                    + " => " + row);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
