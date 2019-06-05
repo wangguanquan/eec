@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 
 import static cn.ttzero.excel.Print.println;
+import static cn.ttzero.excel.Print.print;
 
 /**
  * Create by guanquan.wang at 2019-04-26 17:42
@@ -85,6 +86,30 @@ public class ExcelReaderTest {
 
             sheet.rows().forEach(Print::println);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testForEach() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+
+            Row header = sheet.getHeader();
+
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                if (row.getRowNumber() == 0) continue;
+
+                print(row.getRowNumber());
+                for (int start = 0, end = row.getLastColumnIndex(); start < end; start++) {
+                    print(header.getString(start));
+                    print(" : ");
+                    print(row.getString(start));
+                    print(' ');
+                }
+                println();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

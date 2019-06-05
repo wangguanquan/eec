@@ -43,6 +43,19 @@ class HeaderRow extends Row {
         for (int i = row.fc; i < row.lc; i++) {
             hr.names[i] = row.getString(i);
         }
+        // Extends from row
+        hr.fc = row.fc;
+        hr.lc = row.lc;
+        hr.index = row.index;
+        hr.cells = new Cell[hr.names.length];
+        for (int i = 0; i < row.fc; i++) {
+            hr.cells[i] = new Cell();
+        }
+        for (int i = row.fc; i < row.lc; i++) {
+            Cell cell = new Cell();
+            cell.setSv(hr.names[i]);
+            hr.cells[i] = cell;
+        }
         return hr;
     }
 
