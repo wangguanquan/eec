@@ -72,7 +72,8 @@ public abstract class Row {
     }
 
     /**
-     * Returns the index of the last column (zero base)
+     * Returns the index of the last column (zero base).
+     * The last index of column is increment the max available index
      *
      * @return the last column index
      */
