@@ -81,7 +81,9 @@ public class ExcelReaderTest {
 
             println("------------------");
 
-            sheet.reset().rows().forEach(Print::println);
+            sheet.reset(); // Reset the row index to begging
+
+            sheet.rows().forEach(Print::println);
 
         } catch (IOException e) {
             e.printStackTrace();
