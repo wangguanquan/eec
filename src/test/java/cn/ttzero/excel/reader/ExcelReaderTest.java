@@ -72,4 +72,19 @@ public class ExcelReaderTest {
             e.printStackTrace();
         }
     }
+
+    @Test public void testReset() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+
+            Sheet sheet = reader.sheet(0);
+            sheet.rows().forEach(Print::println);
+
+            println("------------------");
+
+            sheet.reset().rows().forEach(Print::println);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

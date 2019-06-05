@@ -228,6 +228,7 @@ class XMLSheet implements Sheet {
             nChar++;
             eof = true;
         } else {
+            eof = false;
             sRow = new XMLRow(sst, this.startRow > 0 ? this.startRow : 1); // share row space
         }
 
@@ -383,7 +384,18 @@ class XMLSheet implements Sheet {
         if (reader != null) {
             reader.close();
         }
-        if (sst != null)
-            sst.close();
+    }
+
+    /**
+     * Reset the {@link XMLSheet}'s row index to begging
+     *
+     * @return the unread {@link XMLSheet}
+     */
+    @Override
+    public XMLSheet reset() throws IOException {
+        // Close the opening reader
+        close();
+        // Reload
+        return load();
     }
 }

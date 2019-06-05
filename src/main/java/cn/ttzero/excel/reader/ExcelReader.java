@@ -70,6 +70,10 @@ public class ExcelReader implements AutoCloseable {
     private ExcelType type;
     private AppInfo appInfo;
 
+    /**
+     * The Shared String Table
+     */
+    private SharedStrings sst;
 
     /**
      * 实例化Reader
@@ -252,11 +256,16 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException when fail close readers
      */
     public void close() throws IOException {
-        // close sheet
+        // Close all opened sheet
         for (Sheet st : sheets) {
             st.close();
         }
-        // delete temp files
+
+        // Close Shared String Table
+        if (sst != null)
+            sst.close();
+
+        // Delete temp files
         FileUtil.rm_rf(self.toFile(), true);
         if (temp != null) {
             FileUtil.rm(temp);
@@ -313,7 +322,7 @@ public class ExcelReader implements AutoCloseable {
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        SharedStrings sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+        this.sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")

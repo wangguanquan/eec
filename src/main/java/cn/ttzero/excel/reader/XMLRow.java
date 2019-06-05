@@ -47,7 +47,8 @@ class XMLRow extends Row {
     public int getRowNumber() {
         if (index == -1)
             searchRowNumber();
-        return index;
+        // The first row index is one
+        return index - 1;
     }
 
     private XMLRow() { }
