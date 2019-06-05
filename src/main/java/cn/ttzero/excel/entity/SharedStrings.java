@@ -18,7 +18,8 @@ package cn.ttzero.excel.entity;
 
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.annotation.TopNS;
-import cn.ttzero.excel.reader.Hot;
+import cn.ttzero.excel.reader.Cache;
+import cn.ttzero.excel.reader.FixSizeLRUCache;
 import cn.ttzero.excel.util.ExtBufferedWriter;
 import cn.ttzero.excel.util.FileUtil;
 import cn.ttzero.excel.util.StringUtil;
@@ -86,7 +87,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Cache the string which read twice and above
      * Use LRU elimination algorithm
      */
-    private Hot<String, Integer> hot;
+    private Cache<String, Integer> hot;
 
     /**
      * Storage into temp file on disk
@@ -99,7 +100,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
     private int expectedInsertions = 1 << 20;
 
     SharedStrings() {
-        hot = new Hot<>();
+        hot = FixSizeLRUCache.create();
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
@@ -177,7 +178,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
             if (n < 0) {
                 n = add(key);
             }
-            hot.push(key, n);
+            hot.put(key, n);
         }
         return n;
     }
@@ -272,8 +273,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
 //        for (String key : hot) {
 //            filter.put(key);
 //        }
-        for (Hot.E<String, Integer> e : hot) {
-            filter.put(e.getK());
+        for (Cache.Entry<String, Integer> e : hot) {
+            filter.put(e.getKey());
         }
     }
 

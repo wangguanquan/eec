@@ -63,6 +63,24 @@ public abstract class Row {
     }
 
     /**
+     * Returns the index of the first column (zero base)
+     *
+     * @return the first column index
+     */
+    public int getFirstColumnIndex() {
+        return fc;
+    }
+
+    /**
+     * Returns the index of the last column (zero base)
+     *
+     * @return the last column index
+     */
+    public int getLastColumnIndex() {
+        return lc;
+    }
+
+    /**
      * Test unused row (not contains any filled or formatted or value)
      *
      * @return true if unused
