@@ -103,6 +103,15 @@ public interface Sheet extends AutoCloseable {
     Iterator<Row> dataIterator();
 
     /**
+     * Reset the {@link Sheet}'s row index to begging
+     *
+     * @return the unread {@link Sheet}
+     */
+    default Sheet reset() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Return a stream of all rows
      *
      * @return a {@code Stream<Row>} providing the lines of row
