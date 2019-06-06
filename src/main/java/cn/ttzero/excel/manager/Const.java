@@ -17,40 +17,41 @@
 package cn.ttzero.excel.manager;
 
 /**
- * 常量类
+ * The Const class
+ *
  * Created by guanquan.wang on 2017/9/30.
  */
-public class Const {
+public interface Const {
     /**
-     * open xml schema
+     * Open xml schema
      */
-    public static final String SCHEMA_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+    String SCHEMA_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     /**
-     * xml declaration
+     * Xml declaration
      */
-    public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     /**
-     * excel xml declatation
+     * Excel xml declatation
      */
-    public static final String EXCEL_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
+    String EXCEL_XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
     /**
      * "\n" in UNIX systems, "\r\n" in Windows systems.
      */
-    public static final String lineSeparator = System.lineSeparator();
+    String lineSeparator = System.lineSeparator();
     /**
-     * prefix of eec project
+     * Prefix of eec project
      */
-    public static final String EEC_PREFIX = "eec+";
+    String EEC_PREFIX = "eec+";
     /**
      * Size of row-block
      */
-    public static final int ROW_BLOCK_SIZE = 32;
+    int ROW_BLOCK_SIZE = 32;
 
     /**
      * Relation
      */
-    public static final class Relationship {
-        public static final String
+    interface Relationship {
+        String
             IMAGE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
             , APP = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties"
             , CORE = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
@@ -64,10 +65,10 @@ public class Const {
     }
 
     /**
-     * content-type
+     * Content-type
      */
-    public static final class ContentType {
-        public static final String
+    interface ContentType {
+        String
             PNG = "image/png"
             , JPG = "image/jpeg"
             , JPEG = "image/jpeg"
@@ -87,72 +88,72 @@ public class Const {
     }
 
     /**
-     * Excel 限制
+     * Excel Limit
      */
-    public static final class Limit {
+    interface Limit {
         /**
-         * Excel07 每个worksheet页最大行 1 << 20
+         * Excel07's max rows on sheet
          */
-        public static final int MAX_ROWS_ON_SHEET = 1_048_576;
+        int MAX_ROWS_ON_SHEET = 1_048_576;
         /**
-         * 每个worksheet页最大列
+         * The max columns on sheet
          */
-        public static final int MAX_COLUMNS_ON_SHEET = 16_384;
+        int MAX_COLUMNS_ON_SHEET = 16_384;
         /**
-         * 单个cell最多包含多少字符
+         * The max characters per cell
          */
-        public static final int MAX_CHARACTERS_PER_CELL = 32_767;
+        int MAX_CHARACTERS_PER_CELL = 32_767;
         /**
-         * 单个cell最多包含多少行
+         * The max line feeds per cell
          */
-        public static final int MAX_LINE_FEEDS_PER_CELL = 253;
+        int MAX_LINE_FEEDS_PER_CELL = 253;
         /**
          * Column width
          */
-        public static final int COLUMN_WIDTH = 255;
+        int COLUMN_WIDTH = 255;
     }
 
     /**
-     * 文件扩展名
+     * The file suffix
      */
-    public static final class Suffix {
+    interface Suffix {
         /**
          * Excel 07
          */
-        public static final String EXCEL_07 = ".xlsx";
+        String EXCEL_07 = ".xlsx";
         /**
          * Excel 03
          */
-        public static final String EXCEL_03 = ".xls";
+        String EXCEL_03 = ".xls";
         /**
-         * xml
+         * Xml
          */
-        public static final String XML = ".xml";
+        String XML = ".xml";
         /**
-         * relation
+         * Relation
          */
-        public static final String RELATION = ".rels";
+        String RELATION = ".rels";
         /**
-         * png
+         * Png
          */
-        public static final String PNG = ".png";
+        String PNG = ".png";
     }
 
     /**
-     * 单元格类型
+     * The cell type
      */
-    public static final class ColumnType {
+    interface ColumnType {
         /**
-         * 普通类型
+         * Standard
          */
-        public static final int NORMAL = 0;
+        int NORMAL = 0;
         /**
-         * 百分比类型
+         * Percentage
          */
-        public static final int PARENTAGE = 1;
+        int PARENTAGE = 1;
         /**
-         * 人民币类型
+         * RMB
          */
-        public static final int RMB = 2;
+        int RMB = 2;
     }
 }
