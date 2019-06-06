@@ -44,21 +44,52 @@ class XMLSheet implements Sheet {
     private int index // per sheet index of workbook
         , size = -1; // size of rows per sheet
     private Path path;
+    /**
+     * The Shared String Table
+     */
     private SharedStrings sst;
+    /**
+     * The {@link Styles}
+     */
+    private Styles styles;
     private int startRow = -1; // row index of data
     private HeaderRow header;
     private boolean hidden; // state hidden
 
+    /**
+     * Setting the worksheet name
+     *
+     * @param name the worksheet name
+     */
     void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Setting the worksheet xml path
+     *
+     * @param path the temp path
+     */
     void setPath(Path path) {
         this.path = path;
     }
 
+    /**
+     * Setting the Shared String Table
+     *
+     * @param sst the {@link SharedStrings}
+     */
     void setSst(SharedStrings sst) {
         this.sst = sst;
+    }
+
+    /**
+     * Setting {@link Styles}
+     *
+     * @param styles the {@link Styles}
+     */
+    void setStyles(Styles styles) {
+        this.styles = styles;
     }
 
     /**
@@ -314,7 +345,7 @@ class XMLSheet implements Sheet {
         }
         boolean eof = cb[nChar] == '>';
         if (eof) {
-            this.heof = eof;
+            this.heof = true;
             return null;
         }
 

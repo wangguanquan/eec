@@ -138,7 +138,7 @@ class XMLRow extends Row {
     }
 
     /**
-     * 解析每行数据
+     * Loop parse cell
      */
     private void parseCells() {
         int index = 0;
@@ -153,12 +153,13 @@ class XMLRow extends Row {
     }
 
     /**
-     * 迭代每列数据
+     * Loop parse cell
      *
-     * @return Cell
+     * @return the {@link Cell}
      */
     protected Cell nextCell() {
-        for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c' || cb[cursor + 2] != ' '); cursor++) ;
+        for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c'
+            || cb[cursor + 2] != ' '); cursor++) ;
         // end of row
         if (cursor >= to) return null;
         cursor += 2;
@@ -170,6 +171,8 @@ class XMLRow extends Row {
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
+        // The style index
+        short s = 0;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
@@ -185,7 +188,8 @@ class XMLRow extends Row {
                     t = cb[a]; // s, n, b
                 } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
                     t = FUNCTION; // function string
-                } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n' && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
+                } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n'
+                    && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
                     t = INLINESTR; // inlineStr
                 }
                 // -> other unknown case
@@ -209,7 +213,6 @@ class XMLRow extends Row {
             case INLINESTR: // inner string
                 a = getT(e);
                 if (a == cursor) { // null value
-//                    cell.setSv(null);
                     cell.setT(BLANK); // Reset type to BLANK if null value
                 } else {
                     cell.setSv(unescape(buf, cb, a, cursor));
@@ -303,37 +306,40 @@ class XMLRow extends Row {
      * inner string
      * <is><t>cell value</t></is>
      *
-     * @param e
-     * @return
+     * @param e the last index in char buffer
+     * @return the end index of string value
      */
     private int getT(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't' || cb[cursor + 2] != '>'); cursor++) ;
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't'
+            || cb[cursor + 2] != '>'); cursor++) ;
         if (cursor == e) return cursor;
         int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++) ;
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++) ;
         return a;
     }
 
     /**
-     * shared string
-     * <v>1</v>
+     * The string index in shared string table
      *
-     * @param e
-     * @return
+     * @param e the last index in char buffer
+     * @return the end index of int value
      */
     private int getV(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v' || cb[cursor + 2] != '>'); cursor++) ;
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v'
+            || cb[cursor + 2] != '>'); cursor++) ;
         if (cursor == e) return cursor;
         int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/' || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++) ;
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++) ;
         return a;
     }
 
     /**
      * function string
      *
-     * @param e
-     * @return
+     * @param e the last index in char buffer
+     * @return the end index of function value
      */
     @SuppressWarnings("unused")
     private int getF(int e) {
@@ -343,11 +349,11 @@ class XMLRow extends Row {
     }
 
     /**
-     * 26进制转10进制
+     * Convert to column index
      *
-     * @param a
-     * @param b
-     * @return
+     * @param a the start index
+     * @param b the end index
+     * @return the cell index
      */
     private int toCellIndex(int a, int b) {
         int n = 0;
