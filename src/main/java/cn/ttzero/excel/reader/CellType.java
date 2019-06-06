@@ -14,30 +14,38 @@
  * limitations under the License.
  */
 
-package cn.ttzero.excel.annotation;
-
-import java.lang.annotation.*;
+package cn.ttzero.excel.reader;
 
 /**
- * 导出对象数组时指定对象的导出信息
- * Created by guanquan.wang at 2018-01-30 13:23
+ * Create by guanquan.wang at 2019-06-06 21:17
  */
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
-@Inherited
-@Documented
-public @interface DisplayName {
-    /**
-     * header cell
-     *
-     * @return the column name
+public enum CellType {
+    /*
+    String
      */
-    String value() default "";
-
-    /**
-     * share body string
-     *
-     * @return true if shared
+    STRING
+    /*
+    int, short, character
      */
-    boolean share() default true;
+    , INTEGER
+    /*
+    long
+     */
+    , LONG
+    /*
+    float, double
+     */
+    , DOUBLE
+    /*
+    boolean
+     */
+    , BOOLEAN
+    /*
+    date, time or date-time
+     */
+    , DATE
+    /*
+    Null
+     */
+    , BLANK
 }

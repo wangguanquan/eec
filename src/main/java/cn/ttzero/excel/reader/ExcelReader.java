@@ -19,6 +19,7 @@ package cn.ttzero.excel.reader;
 import cn.ttzero.excel.annotation.NS;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.Relationship;
+import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.ExcelType;
 import cn.ttzero.excel.manager.RelManager;
@@ -74,6 +75,11 @@ public class ExcelReader implements AutoCloseable {
      * The Shared String Table
      */
     private SharedStrings sst;
+
+    /**
+     * The {@link Styles}
+     */
+    private Styles styles;
 
     /**
      * 实例化Reader
@@ -324,6 +330,9 @@ public class ExcelReader implements AutoCloseable {
         // Load SharedString
         this.sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
 
+        // Load Styles
+        this.styles = Styles.load(temp.resolve("xl/styles.xml"));
+
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
@@ -343,6 +352,8 @@ public class ExcelReader implements AutoCloseable {
             sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
             // put shared string
             sheet.setSst(sst);
+            // Setting styles
+            sheet.setStyles(styles);
             sheets.add(sheet);
         }
 
@@ -421,19 +432,20 @@ public class ExcelReader implements AutoCloseable {
         int length = Math.min(bytes.length, size);
         if (length < 4)
             return excelType;
-        int type = bytes[0] & 0xFF;
+        int type;
+        type  = bytes[0]  & 0xFF;
         type += (bytes[1] & 0xFF) << 8;
         type += (bytes[2] & 0xFF) << 16;
         type += (bytes[3] & 0xFF) << 24;
 
         int zip = 0x04034B50;
-        int b1 = 0xE011CFD0;
-        int b2 = 0xE11AB1A1;
+        int b1  = 0xE011CFD0;
+        int b2  = 0xE11AB1A1;
 
         if (type == zip) {
             excelType = ExcelType.XLSX;
         } else if (type == b1 && length >= 8) {
-            type = bytes[4] & 0xFF;
+            type  = bytes[4]  & 0xFF;
             type += (bytes[5] & 0xFF) << 8;
             type += (bytes[6] & 0xFF) << 16;
             type += (bytes[7] & 0xFF) << 24;

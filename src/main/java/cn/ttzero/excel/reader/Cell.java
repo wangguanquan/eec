@@ -54,6 +54,11 @@ public class Cell {
     public BigDecimal mv;
     public int xf;
 
+    /**
+     * The style index
+     */
+    public short s;
+
     public void setT(char t) {
         this.t = t;
     }
@@ -122,5 +127,6 @@ public class Cell {
         this.cv = '\0';
         this.mv = null;
         this.xf = 0;
+        this.s = 0;
     }
 }

@@ -213,6 +213,13 @@ public class DateUtil {
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
+    public static LocalDate toLocalDate(int n) {
+        if (n < DAYS_1900_TO_1970) {
+            throw new UncheckedTypeException("ConstantNumber " + n + " can't convert to java.util.Date");
+        }
+        return LocalDate.ofEpochDay(n - DAYS_1900_TO_1970);
+    }
+
     public static java.sql.Timestamp toTimestamp(String dateStr) {
         // check format string
         if (dateStr.indexOf('/') == 4) {

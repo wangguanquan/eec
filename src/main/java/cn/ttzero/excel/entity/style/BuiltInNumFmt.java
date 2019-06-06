@@ -31,11 +31,11 @@ import java.util.Locale;
  * load numFmt as default formats
  * Created by guanquan.wang at 2018-02-12 10:11
  */
-public final class DefaultNumFmt {
+public final class BuiltInNumFmt {
     private static NumFmt[][] data;
 
     static {
-        InputStream is = DefaultNumFmt.class.getClassLoader().getResourceAsStream("numFmt");
+        InputStream is = BuiltInNumFmt.class.getClassLoader().getResourceAsStream("numFmt");
         if (is != null) {
             List<NumFmt> list = new ArrayList<>();
             int maxLen = 0;
@@ -89,7 +89,7 @@ public final class DefaultNumFmt {
                     }
                 }
             } catch (IOException e) {
-                ; // Empty
+                // Empty
             }
 
             data = new NumFmt[maxLen + 1][]; // accept zero size
@@ -114,6 +114,12 @@ public final class DefaultNumFmt {
         return v != null ? v.id : -1;
     }
 
+    /**
+     * Getting the build-in Number format by code
+     *
+     * @param code the format code
+     * @return the {@link NumFmt}
+     */
     public static NumFmt get(String code) {
         int index = code.length();
         if (index >= data.length) return null;
@@ -127,6 +133,17 @@ public final class DefaultNumFmt {
             }
         }
         return v;
+    }
+
+    /**
+     * Getting the build-in Number format by id
+     *
+     * @param id the built-in number formats id
+     * @return the {@link NumFmt}
+     */
+    public static NumFmt get(int id) {
+        // TODO
+        return null;
     }
 
     public static class NumFmt {
