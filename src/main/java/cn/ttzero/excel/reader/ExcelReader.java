@@ -19,6 +19,7 @@ package cn.ttzero.excel.reader;
 import cn.ttzero.excel.annotation.NS;
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.Relationship;
+import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.manager.Const;
 import cn.ttzero.excel.manager.ExcelType;
 import cn.ttzero.excel.manager.RelManager;
@@ -74,6 +75,11 @@ public class ExcelReader implements AutoCloseable {
      * The Shared String Table
      */
     private SharedStrings sst;
+
+    /**
+     * The {@link Styles}
+     */
+    private Styles styles;
 
     /**
      * 实例化Reader
@@ -323,6 +329,9 @@ public class ExcelReader implements AutoCloseable {
 
         // Load SharedString
         this.sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+
+        // Load Styles
+        this.styles = Styles.load(temp.resolve("xl/styles.xml"));
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")

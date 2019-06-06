@@ -168,13 +168,13 @@ class XMLRow extends Row {
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
         for (; cb[cursor] != '>'; cursor++) {
-            // cell index
+            // Cell index
             if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
                 cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
             }
-            // cell type
+            // Cell type
             if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
                 int a = cursor += 4, n;
                 for (; cb[cursor] != '"'; cursor++) ;
@@ -186,6 +186,13 @@ class XMLRow extends Row {
                     t = INLINESTR; // inlineStr
                 }
                 // -> other unknown case
+            }
+            // Cell style
+            if (cb[cursor] == ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
+                int a = cursor += 4;
+                for (; cb[cursor] != '"'; cursor++) ;
+                int s = toInt(cb, a, cursor);
+                // TODO the styles
             }
         }
 

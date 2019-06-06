@@ -39,11 +39,12 @@ import org.dom4j.Element;
  * If you want to skip a code section and include a code section that follows it,
  * you must include the ending semicolon for the section that you skip.
  * <p>
- * https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4
- * https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)
+ * {@see https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4}
+ * {@see https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US}
+ * {@see https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)}
  * Created by guanquan.wang at 2018-02-06 08:51
  */
-public class NumFmt {
+public class NumFmt implements Comparable<NumFmt> {
     private String code;
     private int id = -1;
 
@@ -109,5 +110,10 @@ public class NumFmt {
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
             .addAttribute("numFmtId", String.valueOf(id));
+    }
+
+    @Override
+    public int compareTo(NumFmt o) {
+        return id - o.id;
     }
 }

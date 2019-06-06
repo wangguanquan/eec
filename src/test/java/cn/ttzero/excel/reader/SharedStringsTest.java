@@ -41,9 +41,6 @@ public class SharedStringsTest {
 
     @Before public void before() throws IOException {
         root = WorkbookTest.getOutputTestPath();
-        if (!Files.exists(root)) {
-            FileUtil.mkdir(root);
-        }
     }
 
     @After public void close() throws IOException {

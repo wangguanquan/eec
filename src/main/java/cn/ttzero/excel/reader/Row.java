@@ -16,6 +16,7 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.util.DateUtil;
 import cn.ttzero.excel.util.StringUtil;
 import org.apache.logging.log4j.LogManager;
@@ -48,10 +49,18 @@ public abstract class Row {
     int lc = -1;
     // Share cell
     Cell[] cells;
+    /**
+     * The Shared String Table
+     */
     SharedStrings sst;
     // The header row
     private HeaderRow hr;
     boolean unknownLength;
+
+    /**
+     * The global styles
+     */
+    Styles styles;
 
     /**
      * The number of row. (zero base)

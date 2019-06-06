@@ -18,18 +18,24 @@ package cn.ttzero.excel.entity.style;
 
 import cn.ttzero.excel.annotation.TopNS;
 import cn.ttzero.excel.entity.I18N;
+import cn.ttzero.excel.entity.Storageable;
 import cn.ttzero.excel.manager.Const;
+import cn.ttzero.excel.reader.ExcelReadException;
 import cn.ttzero.excel.util.FileUtil;
-import cn.ttzero.excel.util.StringUtil;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static cn.ttzero.excel.util.StringUtil.isEmpty;
+import static cn.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * 每个style由一个int值组成
@@ -42,7 +48,7 @@ import java.util.*;
  * Created by guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
-public class Styles {
+public class Styles implements Storageable {
 
     private Map<Integer, Integer> map;
     private Document document;
@@ -51,6 +57,12 @@ public class Styles {
     private List<NumFmt> numFmts;
     private List<Fill> fills;
     private List<Border> borders;
+
+    /**
+     * Cache the data/time format style index.
+     * It's use for fast test the cell value is a data or time value
+     */
+    private Set<Integer> dateFmtCache;
 
     private Styles() {
         map = new HashMap<>();
@@ -69,6 +81,15 @@ public class Styles {
             map.put(s, n);
         }
         return n;
+    }
+
+    /**
+     * Returns the number of styles
+     *
+     * @return the total styles
+     */
+    public int size() {
+        return map.size();
     }
 
     static final int INDEX_NUMBER_FORMAT = 24;
@@ -159,18 +180,74 @@ public class Styles {
     }
 
     /**
-     * add number format
+     * Load the style file from disk
      *
-     * @param numFmt
-     * @return
+     * @param path the style file path
+     * @return the {@link Styles} Object
+     */
+    @SuppressWarnings("unchecked")
+    public static Styles load(Path path) {
+        // load workbook.xml
+        SAXReader reader = new SAXReader();
+        Document document;
+        try {
+            document = reader.read(Files.newInputStream(path));
+        } catch (DocumentException | IOException e) {
+            throw new ExcelReadException(e);
+        }
+
+        Styles self = new Styles();
+        Element root = document.getRootElement();
+        // Number format
+        Element numFmts = root.element("numFmts");
+        List<Element> sub = numFmts.elements();
+        self.numFmts = new ArrayList<>();
+        for (Element e : sub) {
+            String id = getAttr(e, "numFmtId"), code = getAttr(e, "formatCode");
+            self.numFmts.add(new NumFmt(Integer.parseInt(id), code));
+        }
+        // Sort by id
+        self.numFmts.sort(Comparator.comparingInt(NumFmt::getId));
+
+        /*
+        Ignore other styles, there only parse number format
+        It's use for Excel reader
+         */
+
+        // Cell xf
+        Element cellXfs = root.element("cellXfs");
+        sub = cellXfs.elements();
+        int i = 0;
+        for (Element e : sub) {
+            String applyNumberFormat = getAttr(e, "applyNumberFormat");
+            if (isNotEmpty(applyNumberFormat) && Integer.parseInt(applyNumberFormat) == 1) {
+                String numFmtId = getAttr(e, "numFmtId");
+                int style = Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
+                self.map.put(i, style);
+            }
+            i++;
+        }
+        // Test number format
+        for (Integer styleIndex : self.map.keySet()) {
+            self.isDate(styleIndex);
+        }
+
+        return self;
+    }
+
+    /**
+     * Add number format
+     *
+     * @param numFmt the {@link NumFmt} entry
+     * @return the numFmt part value in style
      */
     public final int addNumFmt(NumFmt numFmt) {
         // check and search default code
         if (numFmt.getId() < 0) {
-            if (StringUtil.isEmpty(numFmt.getCode())) {
+            if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }
-            int index = DefaultNumFmt.indexOf(numFmt.getCode());
+            int index = BuiltInNumFmt.indexOf(numFmt.getCode());
             if (index > -1) { // default code
                 numFmt.setId(index);
             } else {
@@ -197,13 +274,13 @@ public class Styles {
     }
 
     /**
-     * add font
+     * Add font
      *
-     * @param font
-     * @return
+     * @param font the {@link Font} entry
+     * @return the font part value in style
      */
     public final int addFont(Font font) {
-        if (StringUtil.isEmpty(font.getName())) {
+        if (isEmpty(font.getName())) {
             throw new FontParseException("Font name not support.");
         }
         int i = fonts.indexOf(font);
@@ -327,6 +404,13 @@ public class Styles {
         return n;
     }
 
+    /**
+     * Write style to disk
+     *
+     * @param styleFile the storage path
+     * @throws IOException if I/O error occur
+     */
+    @Override
     public void writeTo(Path styleFile) throws IOException {
         if (document != null) { // Not null
             FileUtil.writeToDiskNoFormat(document, styleFile);
@@ -463,7 +547,221 @@ public class Styles {
         return borders.get(style << 20 >>> (INDEX_BORDER + 20));
     }
     public int getVertical(int style) {
-        return style <<26>>>(INDEX_VERTICAL +26);
+        return style << 26 >>> (INDEX_VERTICAL + 26);
+    }
+
+    /**
+     * Returns the attribute value from Element
+     *
+     * @param element current element
+     * @param attr the attr name
+     * @return the attr value
+     */
+    public static String getAttr(Element element, String attr) {
+        return element != null ? element.attributeValue(attr) : null;
+    }
+
+    /**
+     * Test the style is data format
+     *
+     * @param styleIndex the style index
+     * @return true if the style content data format
+     */
+    public boolean isDate(int styleIndex) {
+        // Test from cache
+        if (fastTestDateFmt(styleIndex)) return true;
+
+        Integer style = map.get(styleIndex);
+        if (style == null) return false;
+        int nf = style >> INDEX_NUMBER_FORMAT & 0xFF;
+
+        boolean isDate = false;
+        NumFmt numFmt;
+        // All indexes from 0 to 163 are reserved for built-in formats.
+        // The first user-defined format starts at 164.
+        if (nf < 164) {
+            isDate = (nf >= 14 && nf <= 22
+                || nf >= 27 && nf <= 36
+                || nf >= 45 && nf <= 47
+                || nf >= 50 && nf <= 58
+                || nf == 81);
+            // Test by numFmt code
+        } else if ((numFmt = findFmtById(nf)) != null && (isNotEmpty(numFmt.getCode()))) {
+            isDate = testCodeIsDate(numFmt.getCode());
+        }
+
+        // Put into data/time format cache
+        // Ignore the style code, Uniform use of 'yyyy-mm-dd hh:mm:ss' format output
+        if (isDate) {
+            if (dateFmtCache == null) dateFmtCache = new HashSet<>();
+            dateFmtCache.add(styleIndex);
+        }
+        return isDate;
+    }
+
+    public static boolean testCodeIsDate(String code) {
+        char[] chars = code.toCharArray();
+
+        int score = 0;
+        byte[] charScore = new byte[26];
+        for (int i = 0, size = chars.length; i < size; ) {
+            char c = chars[i];
+            // To lower case
+            if (c >= 65 && c <= 90) c += 32;
+
+            int a = ++i;
+
+            if (c == '[') {
+                // Found the end char ']'
+                for (; i < size && chars[i] != ']'; i++);
+                int len = i - a + 1;
+                // DBNum{n}
+                if (len == 6 && chars[a] == 'D' && chars[a + 1] == 'B' && chars[a + 2] == 'N'
+                    && chars[a + 3] == 'u' && chars[a + 4] == 'm') {
+                    int n = chars[a + 5] - '0';
+                    // If use "[DBNum{n}]" etc. as the Excel display format, you can use Chinese numerals.
+                    if (n != 1 && n != 2 && n != 3) break;
+                }
+                // Maybe is a LCID
+                // [$-xxyyzzzz]
+                // https://stackoverflow.com/questions/54134729/what-does-the-130000-in-excel-locale-code-130000-mean
+                else if (i - a > 2 && chars[a] == '$' && chars[a + 1] == '-') {
+                    // Language & Calendar Identifier
+//                    String lcid = new String(chars, a + 2, i - a - 2);
+                    // Maybe the format is a data
+                    score = 50;
+                }
+            } else {
+                switch (c) {
+                    case 'y':
+                    case 'm':
+                    case 'd':
+                    case 'h':
+                    case 's':
+                        for (; i < size && chars[i] == c; i++);
+                        charScore[c - 'a'] += i - a + 1;
+                        break;
+                    case 'a':
+                    case 'p':
+                        if (a < size && chars[a] == 'm')
+                            charScore[c - 'a'] += 1;
+                        break;
+                }
+            }
+        }
+
+        // Exclude case
+        // y > 4
+        // h > 4
+        // s > 4
+        // am > 1 || pm > 1
+        if (charScore[24] > 4 || charScore[7] > 4 || charScore[18] > 4 || charScore[0] > 1 || charScore[15] > 1) {
+            return false;
+        }
+
+        // Calculating the score
+        // Plus 5 points for each keywords
+        score += charScore[0]  * 5; // am
+        score += charScore[3]  * 5; // d
+        score += charScore[7]  * 5; // h
+        score += charScore[12] * 5; // m
+        score += charScore[15] * 5; // pm
+        score += charScore[18] * 5; // s
+        score += charScore[24] * 5; // y
+
+        // Addition calculation if consecutive keywords appear
+        // y + m + d
+        if (charScore[24] > 0 && charScore[12] > 0 && charScore[3] > 0
+            && charScore[24] + charScore[12] + charScore[3] >= 4) {
+            score += 70;
+            // y + m
+        } else if (charScore[24] > 0 && charScore[12] > 0 && charScore[24] + charScore[12] >= 3) {
+            score += 60;
+            // m + d
+        } else if (charScore[12] > 0 && charScore[3] > 0) {
+            score += 60;
+            // Code is yyyy or yy
+        } else if (charScore[24] == chars.length) {
+            score += 60;
+        }
+
+        // h + m + s
+        if (charScore[7] > 0 && charScore[12] > 0 && charScore[18] > 0
+            && charScore[7] + charScore[12] + charScore[18] > 3) {
+            score += 70;
+            // h + m
+        } else if (charScore[7] > 0 && charScore[12] > 0) {
+            score += 60;
+            // m + s
+        } else if (charScore[12] > 0 && charScore[18] > 0) {
+            score += 60;
+        }
+
+        // am + pm
+        if (charScore[0] + charScore[15] == 2) {
+            score += 50;
+        }
+
+        return score >= 70;
+    }
+
+    // Find the number format in array
+    private NumFmt findFmtById(int id) {
+        if (numFmts == null || numFmts.isEmpty())
+            return null;
+        NumFmt fmt = numFmts.get(0);
+        // Found it
+        if (fmt.getId() == id)
+            return fmt;
+        if (fmt.getId() < id) {
+            int size = numFmts.size();
+            if (fmt.getId() < 164) {
+                int index = 1;
+                for (; index < size;) {
+                    if ((fmt = numFmts.get(index++)).getId() >= 164)
+                        break;
+                }
+            }
+            // The format is sorted and incremented
+            // So get it by index, the index equals id subtract the first id
+            int index = id - fmt.getId();
+            if (index >= size) {
+                fmt = null;
+            } else {
+                fmt = numFmts.get(id - fmt.getId());
+                if (fmt.getId() == id) return fmt;
+                else if (fmt.getId() < id) {
+                    // Loop check forward
+                    for (; index++ < size; ) {
+                        NumFmt nf = numFmts.get(index);
+                        if (nf.getId() == id) {
+                            fmt = nf;
+                            break;
+                        }
+                    }
+                } else {
+                    // Loop check backward
+                    for (; index-- > 0; ) {
+                        NumFmt nf = numFmts.get(index);
+                        if (nf.getId() == id) {
+                            fmt = nf;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else fmt = null;
+        return fmt;
+    }
+
+    /**
+     * Fast test cell value is data/time value
+     *
+     * @param styleIndex the style index
+     * @return true if the style content data format
+     */
+    public boolean fastTestDateFmt(int styleIndex) {
+        return dateFmtCache != null && dateFmtCache.contains(styleIndex);
     }
 
 }
