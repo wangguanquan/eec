@@ -77,29 +77,29 @@ public abstract class Sheet implements Cloneable, Storageable {
     protected RelManager relManager;
     protected int id;
     /**
-     * 自动列宽
+     * To mark the cell auto-width
      */
     protected int autoSize;
     /**
-     * 默认固定宽度
+     * The default cell width
      */
     protected double width = 20;
     /**
-     * 记录已写入行数，每写一行该数加1
+     * The row number
      */
     protected int rows;
     /**
-     * 设置单元格默认隐藏
+     * Mark the cell is hidden
      */
     protected boolean hidden;
 
     protected int headStyle;
     /**
-     * 自动隔行变色
+     * Automatic interlacing color
      */
     protected int autoOdd = -1;
     /**
-     * odd row's background color
+     * Odd row's background color
      */
     protected int oddFill;
     /**
@@ -170,27 +170,27 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 伴生于Sheet用于控制头部样式和缓存列数据类型和转换
+     * 伴生于Sheet用于控制头部样式和缓存列数据the cell type和转换
      */
     public static class Column {
         /**
-         * Map的主键,object的属性名
+         * The key of Map or field name of entry
          */
         public String key;
         /**
-         * 列头名
+         * The header name
          */
         public String name;
         /**
-         * 列类型
+         * The cell type
          */
         public Class<?> clazz;
         /**
-         * 字符串是否共享
+         * The string value is shared
          */
         public boolean share = true;
         /**
-         * 0: 正常显示 1:显示百分比 2:显示人民币
+         * 0: standard 1:percentage 2:RMB
          */
         public int type;
         /**
@@ -213,19 +213,19 @@ public abstract class Sheet implements Cloneable, Storageable {
         public Styles styles;
 
         /**
-         * 指定列名和类型
+         * 指定the column name和the cell type
          *
-         * @param name  列名
-         * @param clazz 类型
+         * @param name  the column name
+         * @param clazz the cell type
          */
         public Column(String name, Class<?> clazz) {
             this(name, clazz, true);
         }
 
         /**
-         * 指定列名和对应对象中的field
+         * 指定the column name和对应对象中的field
          *
-         * @param name 列名
+         * @param name the column name
          * @param key  field
          */
         public Column(String name, String key) {
@@ -233,11 +233,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名对应对象中的field和类型，不指定类型时默认取field类型
+         * 指定the column name对应对象中的field和the cell type，不指定类型时默认取field类型
          *
-         * @param name  列名
+         * @param name  the column name
          * @param key   field
-         * @param clazz 类型
+         * @param clazz the cell type
          */
         public Column(String name, String key, Class<?> clazz) {
             this(name, key, true);
@@ -245,10 +245,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，类型和值转换
+         * 指定the column name，the cell type和值转换
          *
-         * @param name      列名
-         * @param clazz     类型
+         * @param name      the column name
+         * @param clazz     the cell type
          * @param processor 转换
          */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
@@ -256,9 +256,9 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，对象field和值转换
+         * 指定the column name，对象field和值转换
          *
-         * @param name      列名
+         * @param name      the column name
          * @param key       field
          * @param processor 转换
          */
@@ -267,12 +267,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，类型和是否设定值共享
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指定the column name，the cell type和是否设定值共享
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name  列名
-         * @param clazz 类型
+         * @param name  the column name
+         * @param clazz the cell type
          * @param share true:共享 false:非共享
          */
         public Column(String name, Class<?> clazz, boolean share) {
@@ -282,11 +282,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，field和是否共享字串
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指定the column name，field和是否共享字串
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name  列名
+         * @param name  the column name
          * @param key   filed
          * @param share true:共享 false:非共享
          */
@@ -297,12 +297,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，类型，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指定the column name，the cell type，转换和是否共享字串
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name      列名
-         * @param clazz     类型
+         * @param name      the column name
+         * @param clazz     the cell type
          * @param processor 转换
          * @param share     true:共享 false:非共享
          */
@@ -312,11 +312,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，field，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指定the column name，field，转换和是否共享字串
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name      列名
+         * @param name      the column name
          * @param key       field
          * @param clazz     type of cell
          * @param processor 转换
@@ -327,11 +327,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，field，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指定the column name，field，转换和是否共享字串
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name      列名
+         * @param name      the column name
          * @param key       field
          * @param processor 转换
          * @param share     true:共享 false:非共享
@@ -342,10 +342,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定列名，类型和单元样式
+         * 指定the column name，the cell type和单元样式
          *
-         * @param name      列名
-         * @param clazz     类型
+         * @param name      the column name
+         * @param clazz     the cell type
          * @param cellStyle 样式
          */
         public Column(String name, Class<?> clazz, int cellStyle) {
@@ -355,7 +355,7 @@ public abstract class Sheet implements Cloneable, Storageable {
         /**
          * 指定列，field 和单元样式
          *
-         * @param name      列名
+         * @param name      the column name
          * @param key       field
          * @param cellStyle 样式
          */
@@ -364,12 +364,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指事实上列名，类型，样式以及是否共享
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指事实上the column name，the cell type，样式以及是否共享
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name      列名
-         * @param clazz     类型
+         * @param name      the column name
+         * @param clazz     the cell type
          * @param cellStyle 样式
          * @param share     true:共享 false:非共享
          */
@@ -379,11 +379,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指事实上列名，field，样式以及是否共享
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 指事实上the column name，field，样式以及是否共享
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
-         * @param name      列名
+         * @param name      the column name
          * @param key       field
          * @param cellStyle 样式
          * @param share     true:共享 false:非共享
@@ -414,9 +414,9 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格类型
+         * 设置单元格the cell type
          *
-         * @param type 类型
+         * @param type the cell type
          * @return Column实例
          * @see Const.ColumnType
          */
@@ -428,16 +428,16 @@ public abstract class Sheet implements Cloneable, Storageable {
         /**
          * 获取列头名
          *
-         * @return 列名
+         * @return the column name
          */
         public String getName() {
             return name;
         }
 
         /**
-         * 设置列名
+         * 设置the column name
          *
-         * @param name 列名
+         * @param name the column name
          * @return Column实例
          */
         public Column setName(String name) {
@@ -446,18 +446,18 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 获取列类型
+         * 获取列the cell type
          *
-         * @return 类型
+         * @return the cell type
          */
         public Class<?> getClazz() {
             return clazz;
         }
 
         /**
-         * 设置列类型
+         * 设置列the cell type
          *
-         * @param clazz 类型
+         * @param clazz the cell type
          * @return Column实例
          */
         public Column setClazz(Class<?> clazz) {
@@ -677,7 +677,7 @@ public abstract class Sheet implements Cloneable, Storageable {
 
         /**
          * 设置共享
-         * 共享仅对字符串有效，转换后的类型为字符串也同样有效
+         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
          * 默认非共享以innerStr方式设值
          *
          * @param share true:共享 false:非共享
@@ -696,9 +696,9 @@ public abstract class Sheet implements Cloneable, Storageable {
             ;
 
         /**
-         * 根据类型获取默认样式
+         * 根据the cell type获取默认样式
          *
-         * @param clazz 数据类型
+         * @param clazz the cell type
          * @return 样式
          */
         public int getCellStyle(Class<?> clazz) {
