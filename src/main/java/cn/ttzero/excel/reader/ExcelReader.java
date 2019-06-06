@@ -352,6 +352,8 @@ public class ExcelReader implements AutoCloseable {
             sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
             // put shared string
             sheet.setSst(sst);
+            // Setting styles
+            sheet.setStyles(styles);
             sheets.add(sheet);
         }
 

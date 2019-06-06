@@ -17,6 +17,7 @@
 package cn.ttzero.excel.reader;
 
 import cn.ttzero.excel.entity.TooManyColumnsException;
+import cn.ttzero.excel.entity.style.Styles;
 import cn.ttzero.excel.manager.Const;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -229,7 +230,7 @@ class XMLSheet implements Sheet {
             eof = true;
         } else {
             eof = false;
-            sRow = new XMLRow(sst, this.startRow > 0 ? this.startRow : 1); // share row space
+            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1); // share row space
         }
 
         return this;
@@ -343,7 +344,7 @@ class XMLSheet implements Sheet {
         }
 
         // row
-        return new XMLRow(sst, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
+        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
     }
 
     /**

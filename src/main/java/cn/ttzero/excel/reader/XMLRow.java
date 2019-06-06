@@ -16,6 +16,8 @@
 
 package cn.ttzero.excel.reader;
 
+import cn.ttzero.excel.entity.style.Styles;
+
 import static cn.ttzero.excel.reader.Cell.BOOL;
 import static cn.ttzero.excel.reader.Cell.NUMERIC;
 import static cn.ttzero.excel.reader.Cell.FUNCTION;
@@ -53,8 +55,9 @@ class XMLRow extends Row {
 
     private XMLRow() { }
 
-    XMLRow(SharedStrings sst, int startRow) {
+    XMLRow(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
+        this.styles = styles;
         this.startRow = startRow;
         buf = new StringBuilder();
     }
@@ -191,14 +194,14 @@ class XMLRow extends Row {
             if (cb[cursor] == ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                int s = toInt(cb, a, cursor);
-                // TODO the styles
+                s = (short) (toInt(cb, a, cursor) & 0xFFFF);
             }
         }
 
         if (cell == null) return null;
 
-//        cell.setT(t);
+        // The style index
+        cell.s = s;
 
         // get value
         int a;

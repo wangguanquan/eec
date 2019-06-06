@@ -157,6 +157,11 @@ class HeaderRow extends Row {
         return clazz;
     }
 
+    @Override
+    public CellType getCellType(int columnIndex) {
+        return CellType.STRING;
+    }
+
     /**
      * Get T value by column index
      *

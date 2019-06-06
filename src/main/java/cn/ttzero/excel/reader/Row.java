@@ -27,14 +27,9 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.StringJoiner;
 
-import static cn.ttzero.excel.reader.Cell.BOOL;
-import static cn.ttzero.excel.reader.Cell.NUMERIC;
-import static cn.ttzero.excel.reader.Cell.FUNCTION;
-import static cn.ttzero.excel.reader.Cell.SST;
-import static cn.ttzero.excel.reader.Cell.INLINESTR;
-import static cn.ttzero.excel.reader.Cell.LONG;
-import static cn.ttzero.excel.reader.Cell.DOUBLE;
-import static cn.ttzero.excel.reader.Cell.BLANK;
+import static cn.ttzero.excel.reader.Cell.*;
+import static cn.ttzero.excel.util.DateUtil.toLocalDate;
+import static cn.ttzero.excel.util.DateUtil.toTimestamp;
 
 /**
  * Create by guanquan.wang at 2019-04-17 11:08
@@ -494,19 +489,19 @@ public abstract class Row {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
-                ts = DateUtil.toTimestamp(c.nv);
+                ts = toTimestamp(c.nv);
                 break;
             case DOUBLE:
-                ts = DateUtil.toTimestamp(c.dv);
+                ts = toTimestamp(c.dv);
                 break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             case INLINESTR:
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             default: throw new UncheckedTypeException("");
         }
@@ -525,6 +520,47 @@ public abstract class Row {
             return DateUtil.toTime(c.dv);
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
+    }
+
+    /**
+     * Returns the type of cell
+     *
+     * @param columnIndex the cell index from zero
+     * @return the {@link CellType}
+     */
+    public CellType getCellType(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        CellType type;
+        switch (c.t) {
+            case SST:
+            case INLINESTR:
+                type = CellType.STRING;
+                break;
+            case NUMERIC:
+            case CHARACTER:
+                type = !styles.fastTestDateFmt(c.s) ? CellType.INTEGER : CellType.DATE;
+                break;
+            case LONG:
+                type = CellType.LONG;
+                break;
+            case DOUBLE:
+                type = !styles.fastTestDateFmt(c.s) ? CellType.DOUBLE : CellType.DATE;
+                break;
+            case BOOL:
+                type = CellType.BOOLEAN;
+                break;
+            case DATETIME:
+            case DATE:
+            case TIME:
+                type = CellType.DATE;
+                break;
+            case BLANK:
+                type = CellType.BLANK;
+                break;
+
+                default: type = CellType.STRING;
+        }
+        return type;
     }
 
     /**
@@ -646,13 +682,15 @@ public abstract class Row {
                     joiner.add("<function>");
                     break;
                 case NUMERIC:
-                    joiner.add(String.valueOf(c.nv));
+                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.nv));
+                    else joiner.add(toLocalDate(c.nv).toString());
                     break;
                 case LONG:
                     joiner.add(String.valueOf(c.lv));
                     break;
                 case DOUBLE:
-                    joiner.add(String.valueOf(c.dv));
+                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.dv));
+                    else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:
                     joiner.add(StringUtil.EMPTY);
