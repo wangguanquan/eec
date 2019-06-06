@@ -432,19 +432,20 @@ public class ExcelReader implements AutoCloseable {
         int length = Math.min(bytes.length, size);
         if (length < 4)
             return excelType;
-        int type = bytes[0] & 0xFF;
+        int type;
+        type  = bytes[0]  & 0xFF;
         type += (bytes[1] & 0xFF) << 8;
         type += (bytes[2] & 0xFF) << 16;
         type += (bytes[3] & 0xFF) << 24;
 
         int zip = 0x04034B50;
-        int b1 = 0xE011CFD0;
-        int b2 = 0xE11AB1A1;
+        int b1  = 0xE011CFD0;
+        int b2  = 0xE11AB1A1;
 
         if (type == zip) {
             excelType = ExcelType.XLSX;
         } else if (type == b1 && length >= 8) {
-            type = bytes[4] & 0xFF;
+            type  = bytes[4]  & 0xFF;
             type += (bytes[5] & 0xFF) << 8;
             type += (bytes[6] & 0xFF) << 16;
             type += (bytes[7] & 0xFF) << 24;

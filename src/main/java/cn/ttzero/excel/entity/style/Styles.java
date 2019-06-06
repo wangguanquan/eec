@@ -603,7 +603,7 @@ public class Styles implements Storageable {
         char[] chars = code.toCharArray();
 
         int score = 0;
-        byte[] charScore = new byte[26];
+        byte[] byteScore = new byte[26];
         for (int i = 0, size = chars.length; i < size; ) {
             char c = chars[i];
             // To lower case
@@ -639,12 +639,12 @@ public class Styles implements Storageable {
                     case 'h':
                     case 's':
                         for (; i < size && chars[i] == c; i++);
-                        charScore[c - 'a'] += i - a + 1;
+                        byteScore[c - 'a'] += i - a + 1;
                         break;
                     case 'a':
                     case 'p':
                         if (a < size && chars[a] == 'm')
-                            charScore[c - 'a'] += 1;
+                            byteScore[c - 'a'] += 1;
                         break;
                 }
             }
@@ -655,50 +655,50 @@ public class Styles implements Storageable {
         // h > 4
         // s > 4
         // am > 1 || pm > 1
-        if (charScore[24] > 4 || charScore[7] > 4 || charScore[18] > 4 || charScore[0] > 1 || charScore[15] > 1) {
+        if (byteScore[24] > 4 || byteScore[7] > 4 || byteScore[18] > 4 || byteScore[0] > 1 || byteScore[15] > 1) {
             return false;
         }
 
         // Calculating the score
         // Plus 5 points for each keywords
-        score += charScore[0]  * 5; // am
-        score += charScore[3]  * 5; // d
-        score += charScore[7]  * 5; // h
-        score += charScore[12] * 5; // m
-        score += charScore[15] * 5; // pm
-        score += charScore[18] * 5; // s
-        score += charScore[24] * 5; // y
+        score += byteScore[0]  * 5; // am
+        score += byteScore[3]  * 5; // d
+        score += byteScore[7]  * 5; // h
+        score += byteScore[12] * 5; // m
+        score += byteScore[15] * 5; // pm
+        score += byteScore[18] * 5; // s
+        score += byteScore[24] * 5; // y
 
         // Addition calculation if consecutive keywords appear
         // y + m + d
-        if (charScore[24] > 0 && charScore[12] > 0 && charScore[3] > 0
-            && charScore[24] + charScore[12] + charScore[3] >= 4) {
+        if (byteScore[24] > 0 && byteScore[12] > 0 && byteScore[3] > 0
+            && byteScore[24] + byteScore[12] + byteScore[3] >= 4) {
             score += 70;
             // y + m
-        } else if (charScore[24] > 0 && charScore[12] > 0 && charScore[24] + charScore[12] >= 3) {
+        } else if (byteScore[24] > 0 && byteScore[12] > 0 && byteScore[24] + byteScore[12] >= 3) {
             score += 60;
             // m + d
-        } else if (charScore[12] > 0 && charScore[3] > 0) {
+        } else if (byteScore[12] > 0 && byteScore[3] > 0) {
             score += 60;
             // Code is yyyy or yy
-        } else if (charScore[24] == chars.length) {
+        } else if (byteScore[24] == chars.length) {
             score += 60;
         }
 
         // h + m + s
-        if (charScore[7] > 0 && charScore[12] > 0 && charScore[18] > 0
-            && charScore[7] + charScore[12] + charScore[18] > 3) {
+        if (byteScore[7] > 0 && byteScore[12] > 0 && byteScore[18] > 0
+            && byteScore[7] + byteScore[12] + byteScore[18] > 3) {
             score += 70;
             // h + m
-        } else if (charScore[7] > 0 && charScore[12] > 0) {
+        } else if (byteScore[7] > 0 && byteScore[12] > 0) {
             score += 60;
             // m + s
-        } else if (charScore[12] > 0 && charScore[18] > 0) {
+        } else if (byteScore[12] > 0 && byteScore[18] > 0) {
             score += 60;
         }
 
         // am + pm
-        if (charScore[0] + charScore[15] == 2) {
+        if (byteScore[0] + byteScore[15] == 2) {
             score += 50;
         }
 
