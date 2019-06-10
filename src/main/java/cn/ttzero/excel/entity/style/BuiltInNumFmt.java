@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -39,7 +40,7 @@ public final class BuiltInNumFmt {
         if (is != null) {
             List<NumFmt> list = new ArrayList<>();
             int maxLen = 0;
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(is ,StandardCharsets.UTF_8))) {
                 String v;
                 Locale locale = Locale.ROOT;
                 boolean unicode = false, damaged = false;
