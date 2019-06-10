@@ -183,7 +183,7 @@ public class ListSheet<T> extends Sheet {
     /**
      * Release resources
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void close() throws IOException {
@@ -193,7 +193,8 @@ public class ListSheet<T> extends Sheet {
             if (list != null && !list.isEmpty()) {
                 compact();
                 data.addAll(list);
-                ListSheet copy = getClass().cast(clone());
+                @SuppressWarnings("unchecked")
+				ListSheet<T> copy = getClass().cast(clone());
                 copy.start = 0;
                 copy.end = list.size();
                 workbook.insertSheet(id, copy);
@@ -431,7 +432,8 @@ public class ListSheet<T> extends Sheet {
 
             int n = id;
             for (int i = end; i < len; ) {
-                ListSheet copy = getClass().cast(clone());
+                @SuppressWarnings("unchecked")
+				ListSheet<T> copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = i + limit < len ? i + limit : len);
                 copy.size = copy.end - copy.start;
