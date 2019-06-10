@@ -312,20 +312,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (int i = n; i-->=0;) bw.write(32); // Fill space
         bw.write("/>");
 
-        // cols
-        bw.write("<cols>");
-        for (int i = 0; i < columns.length; i++) {
-            bw.write("<col customWidth=\"1\" width=\"");
-            bw.write(stringWidth);
-            bw.write('"');
-            for (int j = n; j-->0;) bw.write(32); // Fill space
-            bw.write(" max=\"");
-            bw.writeInt(i + 1);
-            bw.write("\" min=\"");
-            bw.writeInt(i + 1);
-            bw.write("\" bestFit=\"1\"/>");
+        if (!noneHeader) {
+            // cols
+            bw.write("<cols>");
+            for (int i = 0; i < columns.length; i++) {
+                bw.write("<col customWidth=\"1\" width=\"");
+                bw.write(stringWidth);
+                bw.write('"');
+                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
+                bw.write(" max=\"");
+                bw.writeInt(i + 1);
+                bw.write("\" min=\"");
+                bw.writeInt(i + 1);
+                bw.write("\" bestFit=\"1\"/>");
+            }
+            bw.write("</cols>");
         }
-        bw.write("</cols>");
 
         // Write body data
         bw.write("<sheetData>");
