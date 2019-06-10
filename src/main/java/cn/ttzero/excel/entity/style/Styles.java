@@ -646,6 +646,7 @@ public class Styles implements Storageable {
                         if (a < size && chars[a] == 'm')
                             byteScore[c - 'a'] += 1;
                         break;
+                    default:
                 }
             }
         }
