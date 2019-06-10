@@ -36,7 +36,7 @@ import java.util.List;
  * Created by guanquan.wang on 2017/9/30.
  */
 @TopNS(prefix = "", value = "Relationships", uri = "http://schemas.openxmlformats.org/package/2006/relationships")
-public class RelManager implements Serializable, Cloneable {
+public class RelManager implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private List<Relationship> relationships;
@@ -153,8 +153,7 @@ public class RelManager implements Serializable, Cloneable {
         FileUtil.writeToDiskNoFormat(doc, rels.resolve(name)); // write to desk
     }
 
-    @Override
-    public RelManager clone() {
+    public RelManager deepClone() {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
