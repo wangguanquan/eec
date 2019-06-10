@@ -53,7 +53,8 @@ class XMLRow extends Row {
         return index - 1;
     }
 
-    private XMLRow() { }
+    @SuppressWarnings("unused")
+	private XMLRow() { }
 
     XMLRow(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
