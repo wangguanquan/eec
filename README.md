@@ -1,30 +1,45 @@
 # eec介绍
 
-eec（Excel Export Core）是一个Excel读取和写入工具，目前仅支持xlsx格式的导入导出。
+eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的
+读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
 
-与传统Excel操作不同之此在于eec执行导出的时候需要用户传入`java.sql.PreparedStatement`或`java.sql.ResultSet`，取数据的过程在eec内部执行，边读取游标边写文件，省去了将数据拉取到内存的操作也降低了OOM的可能。
+与传统Excel操作不同之处在于eec并不缓存数据到内存，相反会边读数据边写文件,
+省去了将数据拉取到内存的操作也降低了OOM的可能。目前已实现worksheet类型有
+- [ListSheet](./src/main/java/cn/ttzero/excel/entity/ListSheet.java) // 对象数组
+- [ListMapSheet](./src/main/java/cn/ttzero/excel/entity/ListMapSheet.java) // Map数组
+- [StatementSheet](./src/main/java/cn/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
+- [ResultSetSheet](./src/main/java/cn/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
+- [EmptySheet](./src/main/java/cn/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 
-eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到stream或数据库。
+也可以继承已知worksheet来实现自定义数据源，比如微服务，mybatis或者其它RPC
+
+eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI
+，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到
+stream或数据库。
+
+它的最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利。
+同时它的`可扩展`能力也不弱
 
 ## 主要功能
 
-1. 支持`PreparedStatement`, `ResultSet`，导出行数无上限，如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
+1. 支持大数据量导出，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
 2. 支持 对象数组 和 Map数组 导出。
 3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
 4. int类型(byte,char,short,int)方便转可被识别文字
-5. excel隔行变色
+5. excel隔行变色，利于阅读
 6. 设置列宽自动调节（功能未完善）
 7. 设置水印（文字，本地＆网络图片）
-8. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
-9. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
-10. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
+8. 提供Watch窗口查看操作细节也可以做进度条。
+9. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
+10. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
+11. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
 
 ## 使用方法
 
 导入eec.jar即可使用
 
 ```
-git clone https://www.github.com/wangguanquan/ecc.git
+git clone https://www.github.com/wangguanquan/eec.git
 mvn source:jar install
 ```
 
@@ -33,17 +48,17 @@ pom.xml添加
 
 ```
 <dependency>
-    <groupId>net.cua</groupId>
+    <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
-    <version>{eec.version}</version>
+    <version>${eec.version}</version>
 </dependency>
 ```
 
-eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，使用如下引用
+eec内部仅依赖dom4j.1.6.1和log4j.2.11.1, 如果目标工程已包含此依赖，使用如下引用
 
 ```
 <dependency>
-    <groupId>net.cua</groupId>
+    <groupId>cn.ttzero</groupId>
     <artifactId>eec</artifactId>
     <version>{eec.version}</version>
     <exclusions>
@@ -63,46 +78,186 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
 </dependency>
 ```
 
+## xls格式支持
+
+xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源
+尝鲜的朋友可以在本项目的[beta](./beta)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
+xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文件类型，执行不同的Reader方法。
+
+示例请查找`testReadXLS()`方法。
+
+Download
+- [eec-0.3.0.jar](./beta/eec-0.3.0.jar)
+- [eec-0.3.0-sources.jar](./beta/eec-0.3.0-sources.jar)
+- [eec-e3-support-0.3.0.jar](./beta/eec-e3-support-0.3.0.jar)
+
+*注意：eec-e3-support依赖于eec不能独立存在*
+
 ## 示例
 
 ### 导出示例，更多使用方法请参考test/各测试类
 
-1. 无参SQL固定宽度导出测试,固定宽度20,也可以使用setWidth(int)来重置列宽
+所有测试生成的excel文件均放在target/excel目录下，可以使用`mvn clean`清空。测试命令可以使用`mvn clean test`
+清空先前文件避免找不到测试结果文件
+
+#### 1. 对象数组导出
+对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
+使用注解`@NotExport`标记不需要导出的字段。
 
 ```
-@Test public void t1() {
+    @NotExport("敏感信息不导出")
+    private int id; // not export
+
+    @DisplayName("渠道ID")
+    private int channelId;
+
+    @DisplayName(share = false)
+    private String account;
+
+    @DisplayName("注册时间")
+    private Timestamp registered;
+```
+
+默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以在`addSheet`时重置列头顺序。
+
+```
+public void testWrite(List<Student> students) throws IOException {
+    // 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
+    new Workbook("test object", "guanquan.wang")
+        // 添加watch窗口查看导出细节
+        .watch(System.out::println)
+        // 列宽自动调整，如果不设置此属性则默认宽度为20,也可以使用`setWidth(double)`来重置列宽
+        .setAutoSize(true)
+        // 添加一个worksheet，可以通过addSheet添加多个worksheet
+        .addSheet(new ListSheet<>("学生信息", students))
+        // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
+        .writeTo(Paths.get("f:/excel"));
+}
+```
+
+#### 2. 高亮显示成绩低于60分的单元格
+
+高亮和int转换是通过`@FunctionalInterface`实现，目前仅提供int值转换。
+
+```
+// 定义一个动态改变填充的lambda表达式，成绩低于60分标黄
+private StyleProcessor sp = (o, style, sst) -> {
+    if ((int)o < 60) {
+        style = Styles.clearFill(style)
+            | sst.addFill(new Fill(PatternType.solid, Color.orange));
+    }
+    return style;
+};
+
+// 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
+private IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+```
+
+```
+public void testStyleConversion(List<Student> students) throws IOException {
+    new Workbook("object style processor", "guanquan.wang")
+        .addSheet(new ListSheet<>("期末成绩", students
+            , new Sheet.Column("学号", "id", int.class)
+            , new Sheet.Column("姓名", "name", String.class)
+            , new Sheet.Column("成绩", "score", int.class, conversion)
+                .setStyleProcessor(sp)
+            )
+        )
+        .writeTo(Paths.get("f:/excel"));
+}
+```
+
+内容如下图
+
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b1.png)
+
+#### 3. 自定义数据源
+
+有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类
+并复写相应方法即可。如下
+
+```
+public class CustomizeDataSourceSheet extends ListSheet<Student> {
+
+    // RPC, mybatis, jpa or others service
+    private StudentService service;
+    // The paging info
+    private int pageNo, limit = 100;
+    // The query parameter
+    private Parameter params;
+
+    /**
+     * 指定worksheet名称
+     */
+    public CustomizeDataSourceSheet(String name, Parameter params) {
+        super(name);
+        this.service = new StudentService();
+        this.params = params;
+    }
+
+    /**
+     * 获取worksheet行数据，返回null或空数组表示当前worksheet写结束
+     */
+    @Override
+    public List<Student> more() {
+        return service.getPageData(params, pageNo++, limit);
+    }
+}
+
+/**
+ * 测试类
+ */
+public void testCustomizeDataSource(Parameter params) throws IOException {
+    new Workbook("customize datasource")
+        // 设置自定义数据源worksheet
+        .addSheet(new CustomizeDataSourceSheet("自定义源", params))
+        .writeTo(Paths.get("f:/excel"));
+}
+
+```
+更详细的信息请查测试类`ListObjectPagingTest.testPagingCustomizeDataSource`
+
+#### 4. 数据源为数据库
+数据源为数据库时可以直接传入`java.sql.Connection`和SQL语句，取数据的过程在EEC内部实现，
+EEC内部通过游标获取数据直接写入文件，并不会在内存保存副本，所以能极大的降低内存消耗。
+
+```
+public void testFromDatabase() {
     try (Connection con = dataSource.getConnection()) {
-        new Workbook("用户注册列表", creator) // 指定workbook名，作者
+        new Workbook("用户注册列表", author) // 指定workbook名，作者
             .setConnection(con) // 数据库连接
             .setAutoSize(true) // 列宽自动调节
+            .watch(System.out::println) // 添加watch窗口查看导出细节
             .addSheet("用户注册"
                 , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
                 , new Sheet.Column("ID", int.class)
                 , new Sheet.Column("产品ID", int.class)
                 , new Sheet.Column("渠道ID", int.class)
                 , new Sheet.Column("AID", int.class)
-                , new Sheet.Column("注册账号", String.class)
+                // 默认字符串多个worksheet共享，如果已知字符串唯一可设置为不共享
+                , new Sheet.Column("注册账号", String.class, false)
                 , new Sheet.Column("注册时间", Timestamp.class)
                 , new Sheet.Column("CPS用户ID", int.class)
                 , new Sheet.Column("渠道类型", int.class)
             ) // 添加一个sheet页
-            .writeTo(defaultPath); // 指定输出位置
-    } catch (SQLException | IOException | ExportException e) {
+            .writeTo(Paths.get("f:\\excel"));
+    } catch (SQLException | IOException e) {
         e.printStackTrace();
     }
 }
 ```
 
 执行以上代码会在`f:\\excel`文件夹下生成一个《用户注册列表.xlsx》文件
+
 内容如下图
+
 ![用户注册列表](./images/bd89e267-1d69-40ab-af3a-4df703469361.png)
 
-2. SQL带参数测试，且将满足条件的单元格标红。如果某个列字符串重复率很高时可以将其设为共享达到数据压缩的目的。
+#### 5. SQL带参数测试，且将满足条件的单元格标红。
 
 ```
-@Test public void t2() {
+public void testFromDatabase2() {
     try (Connection con = dataSource.getConnection()) {
-        boolean share = true;
         String[] cs = {"正常", "注销"};
         final Fill fill = new Fill(PatternType.solid, Color.red);
         new Workbook("多Sheet页-值转换＆样式转换", creator)
@@ -116,124 +271,29 @@ eec内部依赖dom4j.1.6.1和log4j.2.11.1如果目标工程已包含此依赖，
                     p.setString(3, "苏州市");
                 } // 设定SQL参数
                 , new Sheet.Column("用户编号", int.class)
-                , new Sheet.Column("登录名", String.class) // 登录名都是唯一的可以不设共享
+                , new Sheet.Column("登录名", String.class, false) // 登录名都是唯一的设置不共享
                 , new Sheet.Column("通行证", String.class)
-                , new Sheet.Column("状态", char.class, c -> cs[c], share) // 将0/1用户无感的数字转为文字，并共享字串
+                , new Sheet.Column("状态", char.class, c -> cs[c]) // 将0/1用户无感的数字转为文字
                     .setStyleProcessor((n, style, sst) -> {
                         if ((int) n == 1) { // 将注销的用户标记
                             style = Styles.clearFill(style) | sst.addFill(fill); // 注销标红
                         }
                         return style;
                     })
-                , new Sheet.Column("城市", String.class, share) // 共享字串
+                , new Sheet.Column("城市", String.class)
             )
-            .addSheet("用户注册"
-                , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
-                , new Sheet.Column("ID", int.class)
-                , new Sheet.Column("产品ID", int.class)
-                , new Sheet.Column("渠道ID", int.class)
-                , new Sheet.Column("AID", int.class)
-                , new Sheet.Column("注册账号", String.class)
-                , new Sheet.Column("注册时间", Timestamp.class)
-                , new Sheet.Column("CPS用户ID", int.class)
-                , new Sheet.Column("渠道类型", int.class)
-            )
-            .writeTo(defaultPath); // 输出到output，如果是web导出功能这里可以直接输出到｀response.getOutputStream()｀
-    } catch (SQLException | IOException | ExportException e) {
+            .writeTo(Paths.get("f:\\excel"));
+    } catch (SQLException | IOException e) {
         e.printStackTrace();
     }
 }
 ```
 
 Excel如下图
+
 ![多Sheet页](./images/6f2ffc52-f66a-4986-906a-7463d87d9fbe.png)
 
-3. 对象数组 & Map数组支持。对象可以通过注解@DisplayName来设置表头列或共享，敏感信息使用@NotExport来指定不导出的字段。
-
-```
-/**
- * 测试对象
- */
-public class TestExportEntity {
-    @DisplayName("渠道ID")
-    private int channelId;
-    @DisplayName(value = "游戏", share = true)
-    private String pro;
-    @DisplayName
-    private String account;
-    @DisplayName("注册时间")
-    private Timestamp registered;
-    @DisplayName("是否满30级")
-    private boolean up30;
-    @NotExport("敏感信息不导出")
-    private int id; // not export
-    private String address;
-    @DisplayName("VIP")
-    private char c;
-}
-
-@Test public void t3() {
-    // test datas
-    List<TestExportEntity> objectData = new ArrayList<>();
-    int size = random.nextInt(100) + 1;
-    String[] proArray = {"LOL", "WOW", "极品飞车", "守望先锋", "怪物世界"};
-    long start = System.currentTimeMillis();
-    TestExportEntity e;
-    while (size-->0) {
-        e = new TestExportEntity();
-        e.id = size;
-        e.channelId = random.nextInt(10) + 1;
-        e.pro = proArray[random.nextInt(5)];
-        e.account = getRandom();
-        e.registered = new Timestamp(start += random.nextInt(8000));
-        e.up30 = random.nextInt(10) > 3;
-        e.address = getRandom();
-        e.c = (char) ('A' + random.nextInt(26));
-        objectData.add(e);
-    }
-    // test datas end
-    
-    // 设置边框
-    Border border = new Border();
-    border.setBorder(BorderStyle.DOTTED, Color.red);
-    border.setBorderBottom(BorderStyle.NONE);
-    // 设置填充
-    Fill fill = new Fill();
-    fill.setPatternType(PatternType.solid);
-    fill.setFgColor(Color.GRAY);
-    fill.setBgColor(Color.decode("#ccff00"));
-    // 设置字体
-    Font font = new Font("Klee", 14, Font.Style.bold, Color.white);
-    font.setCharset(Charset.GB2312); // 字符集
-    
-    Workbook wb = new Workbook("对象数组测试", creator)
-        .setAutoSize(true) // Auto-size
-        .setWaterMark(WaterMark.of("机密 2018-10-26")) // 设置水印
-        .addSheet("Object测试", objectData)  //  方式1
-        .addSheet("Object copy", objectData  // 方式2，方式2可以重置列顺序和进行转换，方式1的列顺序与对象Filed定义顺序一致
-            , new Sheet.Column("渠道ID", "id")//.setType(Sheet.Column.TYPE_RMB) // 设置RMB样式
-            , new Sheet.Column("游戏", "pro")
-            , new Sheet.Column("账户", "account")
-            , new Sheet.Column("是否满30级", "up30")
-            , new Sheet.Column("渠道", "channelId", n -> n < 5 ? "自媒体" : "联众", true)
-            , new Sheet.Column("注册时间", "registered")
-        );
-    // 改变某个Sheet的头部样式
-    wb.getSheet("Object测试").setHeadStyle(font, fill, border); 
-    try {
-        wb.writeTo(Paths.get("f:\\excel"));
-    } catch (IOException | ExportException ex) {
-        ex.printStackTrace();
-    }
-}
-```
-
-结果如下
-![对象数组测试-Sheet1](./images/164cd014-aa3b-4db9-b2f4-3e11f85c336a.png)
-
-![对象数组测试-Sheet2](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b1.png)
-
-4. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
+#### 6. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
 
 如有以下格式模板文件template.xlsx
 
@@ -261,7 +321,7 @@ public class TestExportEntity {
         new Workbook("模板导出", creator)
             .withTemplate(fis, map) // 绑定模板
             .writeTo(Paths.get("f:\\excel")); // 写到某个文件夹
-    } catch (IOException | ExportException e) {
+    } catch (IOException e) {
         e.printStackTrace();
     }
 }
@@ -269,13 +329,18 @@ public class TestExportEntity {
 
 ### 读取示例
 
-1. 使用iterator迭代每行数据
+Excel读取使用`ExcelReader#read`静态方法，内部采用流式操作，当使用某一行数据时才会真正
+读入内存，所以即使是GB级别的excel文件也只占用少量内存。
+
+下面展示一些常规的读取方法
+
+#### 1. 使用iterator迭代每行数据
 
 ```
 /**
  * 使用iterator遍历所有行
  */
-@Test public void t4() {
+public void iteratorRead() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("单Sheet.xlsx"))) {
         // Get first sheet
         Sheet sheet = reader.sheet(0);
@@ -291,10 +356,10 @@ public class TestExportEntity {
 }
 ```
 
-2. 使用stream操作
+#### 2. 使用stream操作
 
 ```
-@Test public void t5() {
+public void streamRead() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
     } catch (IOException e) {
@@ -303,13 +368,13 @@ public class TestExportEntity {
 }
 ```
 
-3. 将excel读入到数组或List中
+#### 3. 将excel读入到数组或List中
 
 ```
 /**
  * read excel to object array
  */
-@Test public void t6() {
+public void readToList() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
         Regist[] array = reader.sheets() // 所有worksheet
             .flatMap(Sheet::dataRows) // 去掉表头和空行
@@ -322,7 +387,7 @@ public class TestExportEntity {
 }
 ```
 
-4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤等。
+#### 4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
 ```
 reade.sheets()
@@ -334,29 +399,37 @@ reade.sheets()
 
 以上代码相当于`select * from 用户注册 where platform = 'iOS'`
 
+#### 5. xls读取
+xls读取对方法式与xlsx完全一致
+
+```
+public void testReadXLS() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
+        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
 
 ## CHANGELOG
-
-Version 0.2.8 (2018-11-26)
+Version 0.3.1 (2019-05-21)
 -------------
-1. 对象数组导出时包装类报类型转换错误bug
-2. 对象数组导出类型为java.util.date时类型转换错误
-3. ExcelReader开放cacheSize和hotSize两个参数，用户可以根据实际情况重置参数以减少文件读取次数，以空间换取时间提交读取速度
-4. 暂时取消setConnection方法的过时标记
-5. 修改超过676列时Export会出现位置错误的BUG
-6. 修改列数据过多时Reader出现死循环的BUG
-7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
+1. SharedStringTable升级
+2. 模板导出更新以兼容Excel97~03
+3. 修改SQL别名导出表头文字错误的BUG
+4. AutoSize方法升级，现在AutoSize并不需要借助临时文件
+5. 当BloomFilter满时不扩容而进行清空
 
-Version 0.2.7 (2018-11-19)
+Version 0.3.0 (2019-05-01)
 -------------
-1. sharedString保留一个顺序流句柄以减少读文件次数
-2. Sheet增加isHidden, isShow方法，读取Excel时可以通过Filter过滤掉隐藏或显示的worksheet
-   `reader.sheets().filter(Sheet::isShow).flatMap(Sheet::rows).forEach(System.out::println)`
-3. BigDecimal类型支持
-4. LocalDate,LocalDateTime,LocalTime,java.sql.Time类型支持
-5. 增加读写转义（跳过不可见字符ASCII 0~31）
-6. setConnection方法被标记过时，将在0.3.x版本中删删除。传入一个数据库连接是一种不安全行为，
-   第三方可能利用此连接做其它非法的数据库操作
+1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
+2. 对Excel 97~03写入兼容支持，eec-e3-support还在开发当中
+3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
+      比如修改每个worksheet最大行数
+4. 修复一些已知BUG
+5. SharedStringTable引入Google BloomFilter
 
 [更多...](./CHANGELOG)
 
@@ -367,6 +440,5 @@ Version 0.2.7 (2018-11-19)
 3. 对excel文件设置密码 (AES-128 encrypted)
 4. 多线程支持，多个sheet数据同时写
 5. 自动列宽要考虑字体样式实现
-6. SharedString增加热词区块提高命中率
-7. wiki for eec
-8. 读取colspan/rowspan单元格
+6. wiki for eec
+7. 读取colspan/rowspan单元格
