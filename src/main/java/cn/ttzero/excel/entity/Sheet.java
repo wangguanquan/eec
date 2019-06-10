@@ -1197,7 +1197,7 @@ public abstract class Sheet implements Cloneable, Storageable {
             }
         } else {
             cell.setBlank();
-            cell.xf = getStyleIndex(hc, e);
+            cell.xf = getStyleIndex(hc, null);
         }
     }
 
