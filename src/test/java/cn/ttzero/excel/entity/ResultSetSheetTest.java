@@ -28,9 +28,11 @@ import java.sql.SQLException;
  */
 public class ResultSetSheetTest extends SQLWorkbookTest {
     @Test public void testWrite() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("result set", author)
                 .watch(Print::println)
                 .setConnection(con)
@@ -40,7 +42,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("年龄", int.class)
                 )
                 .writeTo(defaultTestPath);
-            ps.close();
         } catch (SQLException|IOException e) {
             e.printStackTrace();
         }
@@ -60,9 +61,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor2() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor2", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet().setRs(rs))
@@ -75,9 +78,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor3() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor3", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student").setRs(rs))
@@ -90,9 +95,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor4() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor4", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student"
@@ -109,9 +116,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor5() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor5", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", WaterMark.of(author)
@@ -128,9 +137,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor6() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor6", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs))
@@ -143,9 +154,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor7() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor7", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs))
@@ -158,9 +171,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor8() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor8", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs
@@ -177,9 +192,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor9() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor9", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
@@ -196,9 +213,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor10() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor10", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs, WaterMark.of(author)
@@ -215,9 +234,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testConstructor11() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet sheet Constructor11", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
@@ -234,9 +255,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testDiffTypeFromMetadata() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
             new Workbook("test ResultSet different type from metadata", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)

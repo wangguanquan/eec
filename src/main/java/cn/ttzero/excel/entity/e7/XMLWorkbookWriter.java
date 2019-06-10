@@ -393,7 +393,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     //////////////////////////////////////////////////////
     protected Path createTemp() throws IOException, ExcelWriteException {
         Sheet[] sheets = workbook.getSheets();
-        int n;
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
             IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
@@ -436,13 +435,15 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             for (int i = 0; i < workbook.getSize(); i++) {
                 Sheet e = workbook.getSheetAt(i);
                 e.writeTo(xl);
-                if (e.getWaterMark() != null && e.getWaterMark().delete()) ; // Delete template image
+                if (e.getWaterMark() != null)
+                    e.getWaterMark().delete(); // Delete template image
                 e.close();
             }
 
             // Write SharedString, Styles and workbook.xml
             writeXML(xl);
-            if (workbook.getWaterMark() != null && workbook.getWaterMark().delete()) ; // Delete template image
+            if (workbook.getWaterMark() != null)
+                workbook.getWaterMark().delete() ; // Delete template image
             workbook.what("0003");
 
             // Zip compress

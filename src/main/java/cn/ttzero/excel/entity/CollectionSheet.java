@@ -20,10 +20,13 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 
 /**
+ * FIXME unfinished
  * Create by guanquan.wang at 2019-04-30 20:45
  */
 public class CollectionSheet<T> extends Sheet {
-    private Collection<T> data;
+    @SuppressWarnings("unused")
+	private Collection<T> data;
+    @SuppressWarnings("unused")
     private Field[] fields;
 
     /**

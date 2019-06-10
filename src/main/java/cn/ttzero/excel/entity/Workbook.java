@@ -617,13 +617,13 @@ public class Workbook implements Storageable {
      *
      * @return 工作薄
      */
-    public Workbook saveAsExcel2003() {
+    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
             Class<?> clazz = Class.forName("cn.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
             Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
             workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
         } catch (Exception e) {
-            throw new ExcelWriteException(new OperationNotSupportedException("Excel97-2003 Not support now."));
+            throw new OperationNotSupportedException("Excel97-2003 Not support now.");
         }
         return this;
     }

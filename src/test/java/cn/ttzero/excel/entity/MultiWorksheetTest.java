@@ -48,9 +48,11 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
 
     @Test
     public void testMultiDataSource() {
-        try (Connection con = getConnection()) {
+        try (
+            Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student order by age limit 10");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery()
+        ) {
 
             new Workbook("test multi dataSource worksheet", author)
                 .watch(Print::println)
