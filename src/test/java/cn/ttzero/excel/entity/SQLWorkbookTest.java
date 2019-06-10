@@ -49,14 +49,18 @@ public class SQLWorkbookTest extends WorkbookTest {
      * Install test data
      */
     @Before public void init() {
-        try (Connection con = getConnection()) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = getConnection();
             String student = "create table if not exists student(id integer primary key, name text, age integer)";
-            PreparedStatement ps = con.prepareStatement(student);
+            ps = con.prepareStatement(student);
             ps.executeUpdate();
             ps.close();
 
             ps = con.prepareStatement("select id from student limit 1");
-            ResultSet rs = ps.executeQuery();
+            rs = ps.executeQuery();
             // No data in database
             if (!rs.next()) {
                 ps.close();
@@ -73,6 +77,28 @@ public class SQLWorkbookTest extends WorkbookTest {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
