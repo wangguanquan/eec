@@ -399,6 +399,11 @@ public class SharedStrings implements AutoCloseable {
     private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) throws IOException {
         int cursor = 0;
         for (; nChar < length && n < page; ) {
+            // <si> ... </si>
+            for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 's'
+                || cb[nChar + 2] != 'i' || cb[nChar + 3] != '>'); ++nChar)
+                ;
+            // Check there has tag '<r>'
             for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
                 || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
                 ;
@@ -417,7 +422,9 @@ public class SharedStrings implements AutoCloseable {
             if (nChar >= len1) break; // Not found
             forward[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
             sst.push(forward[n - 1]);
-            nChar += 4;
+            for (; nChar < len1 - 1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
+                || cb[nChar + 2] != 's' || cb[nChar + 3] != 'i' || cb[nChar + 4] != '>'); ++nChar)
+                ;
             cursor = nChar;
         }
         return new int[]{nChar, n, cursor};
