@@ -1169,7 +1169,7 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * The worksheet is written by units of row-block. The default size
      * of a row-block is 32, which means that 32 rows of data are
-     * written at a time. If the data is not enough, the {@code more}
+     * written at a time. If the data is not enough, the {@code more()}
      * method will be called to get more data.
      *
      * @return the row-block size
@@ -1460,8 +1460,8 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
-     * Call the {@code RowBlock#getRowBlockSize} method to get
-     * the row-block size, call the {@code setCellValueAndStyle}
+     * Call the {@link #getRowBlockSize()} method to get
+     * the row-block size, call the {@link #setCellValueAndStyle(Cell, Object, Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();
