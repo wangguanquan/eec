@@ -29,8 +29,8 @@ import java.util.List;
 /**
  * List is the most important data source, you can pass all
  * the data at a time, or customize the worksheet to extends
- * the {@code ListSheet}, and then override the {@code more}
- * method to achieve segmented loading of data. The {@code more}
+ * the {@code ListSheet}, and then override the {@link #more}
+ * method to achieve segmented loading of data. The {@link #more}
  * method returns NULL or an empty array to complete the current
  * worksheet write
  *
@@ -468,7 +468,7 @@ public class ListSheet<T> extends Sheet {
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
-     * this value between the speed and memory. You can refer to 2^8 ~ 2^10
+     * this value between the speed and memory. You can refer to {@code 2^8 ~ 2^10}
      * <p>
      * This method is blocked
      *
