@@ -97,7 +97,7 @@ xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文�
 
 #### 1.1 准备工作
 对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
-使用注解`@NotExport`标记不需要导出的字段。
+使用注解`@IgnoreExport`标记不需要导出的字段。
 
 ```
     @NotExport("敏感信息不导出")
