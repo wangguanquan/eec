@@ -25,7 +25,6 @@ import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
-import org.ttzero.excel.reader.ExcelReaderTest;
 
 import java.awt.*;
 import java.io.IOException;
@@ -38,6 +37,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
  * Create by guanquan.wang at 2019-04-28 19:17
@@ -85,7 +86,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testLocalPicWaterMark() throws IOException {
         new Workbook("object local pic water mark", author)
             .watch(Print::println)
-            .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
+            .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(Item.randomTestData())
             .writeTo(defaultTestPath);
     }

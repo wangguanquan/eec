@@ -18,9 +18,10 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
-import org.ttzero.excel.reader.ExcelReaderTest;
 
 import java.io.IOException;
+
+import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
  * Create by guanquan.wang at 2019-04-29 11:14
@@ -57,7 +58,7 @@ public class ListObjectPagingTest extends WorkbookTest {
     @Test public void testLocalPicWaterMark() throws IOException {
         new Workbook("paging local pic water mark", author)
             .watch(Print::println)
-            .setWaterMark(WaterMark.of(ExcelReaderTest.testResourceRoot().resolve("mark.png")))
+            .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(ListObjectSheetTest.Item.randomTestData())
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
