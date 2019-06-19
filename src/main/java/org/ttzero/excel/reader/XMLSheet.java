@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 对应Excel文件各Sheet页，包含隐藏Sheet页
+ * The open-xml format Worksheet
  * <p>
  * Create by guanquan.wang on 2018-09-22
  */
