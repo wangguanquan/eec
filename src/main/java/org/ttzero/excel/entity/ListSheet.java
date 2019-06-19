@@ -18,7 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.DisplayName;
-import org.ttzero.excel.annotation.NotExport;
+import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -320,7 +320,7 @@ public class ListSheet<T> extends Sheet {
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 String gs = field.toGenericString();
-                NotExport notExport = field.getAnnotation(NotExport.class);
+                IgnoreExport notExport = field.getAnnotation(IgnoreExport.class);
                 if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
                     fields[i] = null;
                     continue;

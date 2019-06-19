@@ -17,7 +17,7 @@
 package org.ttzero.excel.reader;
 
 import org.ttzero.excel.annotation.DisplayName;
-import org.ttzero.excel.annotation.NotImport;
+import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.util.StringUtil;
 
 import java.lang.reflect.Field;
@@ -77,7 +77,7 @@ class HeaderRow extends Row {
         for (int i = 0, n; i < fields.length; i++) {
             Field f = fields[i];
             // skip not import fields
-            NotImport nit = f.getAnnotation(NotImport.class);
+            IgnoreImport nit = f.getAnnotation(IgnoreImport.class);
             if (nit != null) {
                 fields[i] = null;
                 continue;

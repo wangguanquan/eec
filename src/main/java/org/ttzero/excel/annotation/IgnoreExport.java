@@ -24,18 +24,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 指定字段不导出
+ * Specified the field witch not exported
  * <p>
  * Created by guanquan.wang at 2018-01-30 15:09
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface NotExport {
+public @interface IgnoreExport {
     /**
-     * 添加不导出的原因，方便开发者阅读
+     * Add reasons for not exporting, for developers to read
      *
-     * @return 原因
+     * @return the reason for not export
      */
     String value() default "";
 }

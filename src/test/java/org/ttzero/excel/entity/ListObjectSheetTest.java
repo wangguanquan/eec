@@ -19,7 +19,7 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.DisplayName;
-import org.ttzero.excel.annotation.NotExport;
+import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
@@ -381,7 +381,7 @@ public class ListObjectSheetTest extends WorkbookTest{
      * Annotation Object
      */
     public static class Student {
-        @NotExport
+        @IgnoreExport
         private int id;
         @DisplayName("姓名")
         private String name;
