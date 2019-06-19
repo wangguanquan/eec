@@ -105,7 +105,14 @@ public class ExcelReaderTest {
                 for (int start = 0, end = row.getLastColumnIndex(); start < end; start++) {
                     print(header.getString(start));
                     print(" : ");
-                    print(row.getString(start));
+                    CellType type = row.getCellType(start);
+                    switch (type) {
+                        case DATE    : print(row.getTimestamp(start)); break;
+                        case INTEGER : print(row.getInt(start))      ; break;
+                        case LONG    : print(row.getLong(start))     ; break;
+                        case DOUBLE  : print(row.getDouble(start))   ; break;
+                        default      : print(row.getString(start))   ; break;
+                    }
                     print(' ');
                 }
                 println();

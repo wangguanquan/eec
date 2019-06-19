@@ -208,7 +208,7 @@ public class SharedStrings implements AutoCloseable {
     private int uniqueCount() throws IOException {
         int off = -1;
         reader = Files.newBufferedReader(sstPath);
-        cb = new char[2048];
+        cb = new char[1 << 12];
         offset = 0;
         offset = reader.read(cb);
 
@@ -359,7 +359,7 @@ public class SharedStrings implements AutoCloseable {
      * Read data from main reader
      * forward only
      *
-     * @return word count
+     * @return the word count
      * @throws IOException if I/O error occur
      */
     private int readData() throws IOException {
