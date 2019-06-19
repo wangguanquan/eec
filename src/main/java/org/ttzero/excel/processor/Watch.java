@@ -17,16 +17,16 @@
 package org.ttzero.excel.processor;
 
 /**
- * 监听操作日志
+ * Output operation logs
  * <p>
  * Create by guanquan.wang on 2018-10-13
  */
 @FunctionalInterface
 public interface Watch {
     /**
-     * 监听
+     * print operation logs
      *
-     * @param msg 输出信息
+     * @param msg the logs
      */
     void what(String msg);
 }
