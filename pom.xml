@@ -8,9 +8,9 @@
     <artifactId>eec</artifactId>
     <version>0.3.2</version>
     <packaging>jar</packaging>
-    <url>https://www.ttzero.cn</url>
+    <url>https://www.ttzero.org</url>
     <description>
-      A fast and lower memory excel export/import tool
+      A fast and lower memory excel write/read tool
     </description>
 
     <properties>

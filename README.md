@@ -5,11 +5,11 @@ eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx
 
 与传统Excel操作不同之处在于eec并不缓存数据到内存，相反会边读数据边写文件,
 省去了将数据拉取到内存的操作也降低了OOM的可能。目前已实现worksheet类型有
-- [ListSheet](./src/main/java/cn/ttzero/excel/entity/ListSheet.java) // 对象数组
-- [ListMapSheet](./src/main/java/cn/ttzero/excel/entity/ListMapSheet.java) // Map数组
-- [StatementSheet](./src/main/java/cn/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
-- [ResultSetSheet](./src/main/java/cn/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
-- [EmptySheet](./src/main/java/cn/ttzero/excel/entity/EmptySheet.java) // 空worksheet
+- [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
+- [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
+- [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
+- [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
+- [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 
 也可以继承已知worksheet来实现自定义数据源，比如微服务，mybatis或者其它RPC
 
@@ -48,7 +48,7 @@ pom.xml添加
 
 ```
 <dependency>
-    <groupId>cn.ttzero</groupId>
+    <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
     <version>${eec.version}</version>
 </dependency>
@@ -58,7 +58,7 @@ eec内部仅依赖dom4j.1.6.1和log4j.2.11.1, 如果目标工程已包含此依�
 
 ```
 <dependency>
-    <groupId>cn.ttzero</groupId>
+    <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
     <version>{eec.version}</version>
     <exclusions>
@@ -86,13 +86,6 @@ xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文�
 
 示例请查找`testReadXLS()`方法。
 
-Download
-- [eec-0.3.0.jar](./beta/eec-0.3.0.jar)
-- [eec-0.3.0-sources.jar](./beta/eec-0.3.0-sources.jar)
-- [eec-e3-support-0.3.0.jar](./beta/eec-e3-support-0.3.0.jar)
-
-*注意：eec-e3-support依赖于eec不能独立存在*
-
 ## 示例
 
 ### 导出示例，更多使用方法请参考test/各测试类
@@ -101,6 +94,8 @@ Download
 清空先前文件避免找不到测试结果文件
 
 #### 1. 对象数组导出
+
+#### 1.1 准备工作
 对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
 使用注解`@NotExport`标记不需要导出的字段。
 
@@ -414,6 +409,14 @@ public void testReadXLS() {
 
 
 ## CHANGELOG
+Version 0.3.2 (2019-06-19)
+-------------
+1. 读取Excel时可以获取单元格数据类型
+2. 支持Worksheet重复读取
+3. 修复已知BUG
+4. 修改注释准备发版到Maven中心仓库
+5. Rename package (cn.ttzero -> org.ttzero)
+
 Version 0.3.1 (2019-05-21)
 -------------
 1. SharedStringTable升级
