@@ -27,13 +27,13 @@ import java.sql.SQLException;
 
 /**
  * Statement is one of the worksheet data sources, it's
- * extends from {@code ResultSetSheet}, and will be obtained from
+ * extends from {@link ResultSetSheet}, and will be obtained from
  * MetaData if no header information is given. When MetaData
  * cannot be obtained, the header name will be setting as 1, 2,
  * and 3...
  * <p>
- * The Connection will not be actively closed, but the {@code Statement}
- * and {@code ResultSet} will be closed with worksheet.
+ * The Connection will not be actively closed, but the {@link java.sql.Statement}
+ * and {@link ResultSet} will be closed with worksheet.
  *
  * @see ResultSetSheet
  * <p>
