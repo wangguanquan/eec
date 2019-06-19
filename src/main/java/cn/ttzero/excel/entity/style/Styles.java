@@ -200,6 +200,10 @@ public class Styles implements Storageable {
         Element root = document.getRootElement();
         // Number format
         Element numFmts = root.element("numFmts");
+        // Break if there don't contains 'numFmts' tag
+        if (numFmts == null) {
+            return self;
+        }
         List<Element> sub = numFmts.elements();
         self.numFmts = new ArrayList<>();
         for (Element e : sub) {
