@@ -11,7 +11,7 @@ eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 
-也可以继承已知worksheet来实现自定义数据源，比如微服务，mybatis或者其它RPC
+也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或者其它RPC
 
 eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI
 ，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到
@@ -210,7 +210,7 @@ public void testCustomizeDataSource(Parameter params) throws IOException {
 }
 
 ```
-更详细的信息请查测试类`ListObjectPagingTest.testPagingCustomizeDataSource`
+更详细的信息请查测试类[CustomizeDataSourceSheet](./src/test/java/org/ttzero/excel/entity/CustomizeDataSourceSheet.java)`
 
 #### 4. 数据源为数据库
 数据源为数据库时可以直接传入`java.sql.Connection`和SQL语句，取数据的过程在EEC内部实现，
