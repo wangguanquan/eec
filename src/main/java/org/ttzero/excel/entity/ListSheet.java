@@ -300,11 +300,14 @@ public class ListSheet<T> extends Sheet {
     /**
      * Get the first object of the object array witch is not NULL,
      * reflect all declared fields, and then do the following steps
-     * step 1. If there is has DisplayName annotation, the value of
+     * <p>
+     * step 1. If there is has {@link DisplayName} annotation, the value of
      * this annotation is used as the column name.
-     * step 2. If the DisplayName annotation has no value or no
-     * DisplayName annotation, the field name is used as the column name.
-     * step 3. Skip this Field if field has a NotExport annotation
+     * <p>
+     * step 2. If the {@link DisplayName} annotation has no value or no
+     * {@link DisplayName} annotation, the field name is used as the column name.
+     * <p>
+     * step 3. Skip this Field if field has a {@link IgnoreExport} annotation
      * <p>
      * The column order is the same as the order in declared fields.
      *
