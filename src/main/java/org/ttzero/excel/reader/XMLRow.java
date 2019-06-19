@@ -28,11 +28,14 @@ import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.reader.SharedStrings.unescape;
 
 /**
- * 行数据，同一个Sheet页内的Row对象内存共享。
- * 行数据开始列和结束列读取的是span值，你可以使用<code>row.isEmpty()</code>方法测试行数据是否为空节点
- * 空节点定义为: 没有任何值和样式以及格式化的行. 像这样<code><row r="x"/></code>
- * 你可以像ResultSet一样通过单元格下标获取数据eq:<code>row.getInt(1) // 获取当前行第2列的数据</code>下标从0开始。
- * 也可以使用to&amp;too方法将行数据转为对象，前者会实例化每个对象，后者内存共享只会有一个实例,在流式操作中这是一个好主意。
+ * Row data, shared by the Row object in the same Sheet page.
+ * The row data start column and the end column read the span
+ * value. You can use the {@link #isEmpty()} method to
+ * test whether the row data is an empty node. The empty node
+ * is defined as: No values and styles and formats. Line like this.
+ * <code><row r="x"/></code> You can get the data eq by cell
+ * subscript like ResultSet: {@link #getInt(int)} to get the current
+ * line The data in the second column, the subscript, starts at 0.
  * <p>
  * Create by guanquan.wang on 2018-09-22
  */
@@ -284,13 +287,6 @@ class XMLRow extends Row {
         return a == b;
     }
 
-    /**
-     * FIXME check double
-     *
-     * @param a
-     * @param b
-     * @return
-     */
     private boolean isDouble(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
