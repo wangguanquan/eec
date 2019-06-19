@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ListMapSheet is a subclass of ListSheet, the difference is
+ * ListMapSheet is a subclass of {@link ListSheet}, the difference is
  * in the way the data is taken
  *
  * @see ListSheet
@@ -194,7 +194,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 if (StringUtil.isEmpty(hc.key)) {
-                    throw new ExcelWriteException(getClass() + " 类别必须指定map的key。");
+                    throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
                 if (hc.getClazz() == null) {
                     hc.setClazz(first.get(hc.key).getClass());
