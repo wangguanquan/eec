@@ -1,3 +1,11 @@
+Version 0.3.2 (2019-06-19)
+-------------
+1. 读取Excel时可以获取单元格数据类型
+2. 支持Worksheet重复读取
+3. 修复已知BUG
+4. 修改注释准备发版到Maven中心仓库
+5. Rename package (cn.ttzero -> org.ttzero)
+
 Version 0.3.1 (2019-05-21)
 -------------
 1. SharedStringTable升级
