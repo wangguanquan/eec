@@ -27,8 +27,7 @@ import static cn.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  * Create by guanquan.wang at 2019-06-12 17:26
  */
 public class MultiStyleInCellTest {
-    @Test
-    public void testMulti() {
+    @Test public void testMulti() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("multi-style In cell.xlsx"))) {
 
             reader.sheet(0).rows().forEach(Print::println);
