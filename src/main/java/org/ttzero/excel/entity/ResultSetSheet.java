@@ -46,11 +46,11 @@ import static java.sql.Types.VARCHAR;
 
 /**
  * ResultSet is one of the worksheet data sources, It has a subclass
- * {@code StatementSheet}. Most of the time it is used to get the
+ * {@link StatementSheet}. Most of the time it is used to get the
  * result of a stored procedure.
  * <p>
  * Write data to the row-block via the cursor, finished write when
- * {@code ResultSet#next} returns false
+ * {@link ResultSet#next} returns false
  *
  * @see StatementSheet
  * <p>
@@ -175,7 +175,7 @@ public class ResultSetSheet extends Sheet {
     /**
      * Release resources
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void close() throws IOException {
@@ -290,7 +290,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Convert {@code java.sql.Type} to java type
+     * Convert {@link java.sql.Types} to java type
      *
      * @param type type sql type
      * @return java class
