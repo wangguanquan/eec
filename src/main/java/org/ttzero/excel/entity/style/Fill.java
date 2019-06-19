@@ -24,8 +24,6 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
- * 单元格填充
- * <p>
  * Created by guanquan.wang at 2018-02-06 08:55
  */
 public class Fill implements Cloneable {
