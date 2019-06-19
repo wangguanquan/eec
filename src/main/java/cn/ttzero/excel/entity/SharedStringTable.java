@@ -345,7 +345,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     /**
      * Commit current index file writer
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void commit() throws IOException {
         flush();
@@ -358,7 +358,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     /**
      * Close channel and delete temp files
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void close() throws IOException {
@@ -378,6 +378,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * Returns this buffer's position.
      *
      * @return  The position of this buffer
+     * @throws IOException if I/O error occur
      */
     protected long position() throws IOException {
         return channel.position() + buffer.position();
@@ -388,6 +389,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      *
      * @param buffer the byte buffer
      * @return the read data length
+     * @throws IOException if I/O error occur
      */
     protected int read(ByteBuffer buffer) throws IOException {
         return channel.read(buffer);
@@ -397,6 +399,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * Sets this buffer's mark at its position.
      *
      * @return  This SharedStringTable
+     * @throws IOException if I/O error occur
      */
     protected SharedStringTable mark() throws IOException {
         flush();
@@ -412,8 +415,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      *
      * @return  This SharedStringTable
      *
-     * @throws  InvalidMarkException
-     *          If the mark has not been set
+     * @throws  InvalidMarkException If the mark has not been set
+     * @throws IOException if I/O error occur
      */
     protected SharedStringTable reset() throws IOException {
         if (mark == -1)
@@ -429,7 +432,8 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * will be increased by 4, the header contains an integer value.
      *
      * @param position the position to jump
-     * @throws IOException if io error occur
+     * @return the {@link SharedStringTable}
+     * @throws IOException if I/O error occur
      */
     protected SharedStringTable skip(long position) throws IOException {
         channel.position(position + 4);

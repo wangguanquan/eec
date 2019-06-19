@@ -126,18 +126,9 @@ public class FileUtil {
     }
 
     /**
-     * 如果文件存在删除文件
+     * Delete if exists file
      *
-     * @param path 文件路径
-     */
-    public static void rm(String path) {
-        rm(new File(path));
-    }
-
-    /**
-     * Remove if is file
-     *
-     * @param file
+     * @param file the file to be delete
      */
     public static void rm(File file) {
         if (file.exists()) {
@@ -155,7 +146,7 @@ public class FileUtil {
     /**
      * Remove file and sub files
      *
-     * @param root
+     * @param root the root path
      * @param rmSelf Remove self if true
      */
     public static void rm_rf(File root, boolean rmSelf) {
@@ -185,14 +176,6 @@ public class FileUtil {
         if (rmSelf) {
             rm(temp);
         }
-    }
-
-    public static void cp(Path srcFile, Path descPath) {
-        cp(srcFile.toFile(), descPath.toFile());
-    }
-
-    public static void cp(File srcFile, Path descPath) {
-        cp(srcFile, descPath.toFile());
     }
 
     public static void cp(Path srcPath, File descFile) {
@@ -238,10 +221,6 @@ public class FileUtil {
                 }
             }
         }
-    }
-
-    public static void cp(InputStream is, File descFile) {
-        cp(is, descFile.toPath());
     }
 
     public static void cp(InputStream is, Path descFile) {

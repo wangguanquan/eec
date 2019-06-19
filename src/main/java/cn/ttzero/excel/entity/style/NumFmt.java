@@ -25,8 +25,8 @@ import org.dom4j.Element;
  * <p>
  * A number format can have up to four sections of code, separated by semicolons.
  * These code sections define the format for positive numbers, negative numbers, zero values, and text, in that order.
- *
- * <POSITIVE>;<NEGATIVE>;<ZERO>;<TEXT>
+ * <p>
+ * &lt;POSITIVE&gt;;&lt;NEGATIVE&gt;;&lt;ZERO&gt;;&lt;TEXT&gt;
  * <p>
  * For example, you can use these code sections to create the following custom format:
  * <p>
@@ -39,9 +39,9 @@ import org.dom4j.Element;
  * If you want to skip a code section and include a code section that follows it,
  * you must include the ending semicolon for the section that you skip.
  * <p>
- * {@see https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4}
- * {@see https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US}
- * {@see https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)}
+ * <a href="https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4">https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4</a>
+ * <a href="https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US">https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68</a>
+ * <a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)">https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)</a>
  * Created by guanquan.wang at 2018-02-06 08:51
  */
 public class NumFmt implements Comparable<NumFmt> {
@@ -77,10 +77,10 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     /**
-     * 内置format
+     * Built-In number format
      *
-     * @param id
-     * @return
+     * @param id the built-in id
+     * @return the {@link NumFmt}
      */
     public static NumFmt valueOf(int id) {
         return new NumFmt().setId(id);

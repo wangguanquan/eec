@@ -19,7 +19,10 @@ package cn.ttzero.excel.entity.style;
 import java.awt.Color;
 
 /**
- * Reference: resources/ColorIndex.html
+ * The Build-In Color
+ * <p>
+ * <a href="/ref/ColorIndex.html">ColorIndex</a>
+ * <p>
  * Created by guanquan.wang at 2018-02-06 14:40
  */
 public class ColorIndex {

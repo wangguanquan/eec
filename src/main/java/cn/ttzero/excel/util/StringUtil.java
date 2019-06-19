@@ -18,6 +18,7 @@ package cn.ttzero.excel.util;
 
 /**
  * string util
+ * <p>
  * Created by guanquan.wang on 2017/9/30.
  */
 public class StringUtil {
@@ -70,12 +71,6 @@ public class StringUtil {
         return key;
     }
 
-    /**
-     * convert string to pascal case string
-     *
-     * @param name
-     * @return
-     */
     public static String toPascalCase(String name) {
         if (name.indexOf('_') < 0) return name;
         char[] oldValues = name.toLowerCase().toCharArray();
@@ -95,15 +90,6 @@ public class StringUtil {
         return new String(oldValues, 0, idx);
     }
 
-    /**
-     * append charsequence
-     *
-     * @param src
-     * @param a
-     * @param n
-     * @param origin
-     * @return
-     */
     public static String append(String src, String a, int n, int origin) {
         StringBuilder buf = new StringBuilder();
         // Insert header

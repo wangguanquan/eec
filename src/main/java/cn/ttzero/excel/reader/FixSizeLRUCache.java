@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * Implemented by the LRU page elimination algorithm.
  * The time complexity of the push, get, and remove is O(1).
- *
+ * <p>
  * Create by guanquan.wang at 2018-10-31 16:06
  */
 public class FixSizeLRUCache<K, V> implements Cache<K, V> {
@@ -60,7 +60,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     /**
      * Double linked
      */
-    private Node<E<K,V>> first, last;
+    private Node<E<K, V>> first, last;
 
     /**
      * The elements limit
@@ -72,7 +72,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     private int size;
 
-    private Map<K, Node<E<K,V>>> table;
+    private Map<K, Node<E<K, V>>> table;
 
     public static <K, V> FixSizeLRUCache<K, V> create() {
         return new FixSizeLRUCache<>();
@@ -83,7 +83,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * Create a fix size cache witch size is {@code 1 << 9}
+     * Create a fix size cache witch size is {@code 1 &lt;&lt; 9}
      */
     private FixSizeLRUCache() {
         this(1 << 9);
@@ -104,7 +104,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public V get(K k) {
-        final Node<E<K,V>> o;
+        final Node<E<K, V>> o;
         // Not found
         if (size == 0 || (o = table.get(k)) == null) return null;
 
@@ -137,7 +137,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public void put(K k, V v) {
-        final Node<E<K,V>> o;
+        final Node<E<K, V>> o;
         // Insert at header if not found
         if (size == 0 || (o = table.get(k)) == null) {
             final Node<E<K, V>> f = first;
@@ -168,7 +168,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public V remove(K k) {
-        final Node<E<K,V>> o;
+        final Node<E<K, V>> o;
         // Not found
         if (size == 0 || (o = table.get(k)) == null) return null;
 
@@ -203,12 +203,12 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      *
      * @return the last item
      */
-    protected E<K,V> remove() {
-        final Node<E<K,V>> l = last;
+    protected E<K, V> remove() {
+        final Node<E<K, V>> l = last;
         if (l == null) {
             return null;
         }
-        final E<K,V> data = l.data;
+        final E<K, V> data = l.data;
 
         last = last.prev;
         if (last != null) {
@@ -247,9 +247,10 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     /**
      * An inner iterator
      */
-    private class CacheIterator implements Iterator<Entry<K,V>> {
-        private Node<E<K,V>> first;
-        private CacheIterator(Node<E<K,V>> first) {
+    private class CacheIterator implements Iterator<Entry<K, V>> {
+        private Node<E<K, V>> first;
+
+        private CacheIterator(Node<E<K, V>> first) {
             this.first = first;
         }
 
@@ -259,8 +260,8 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         }
 
         @Override
-        public E<K,V> next() {
-            E<K,V> e = first.data;
+        public E<K, V> next() {
+            E<K, V> e = first.data;
             first = first.next;
             return e;
         }
@@ -284,7 +285,6 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      * is specified).  Exceptions thrown by the action are relayed to the
      * caller.
      *
-     * @implSpec
      * <p>The default implementation behaves as if:
      * <pre>{@code
      *     for (T t : this)

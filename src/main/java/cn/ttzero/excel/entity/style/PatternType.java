@@ -18,7 +18,8 @@ package cn.ttzero.excel.entity.style;
 
 /**
  * 2.4.53 ST_enmPattern
- * https://msdn.microsoft.com/en-us/library/jj661881(v=office.12).aspx
+ * <a href="https://msdn.microsoft.com/en-us/library/jj661881(v=office.12).aspx">PatternType</a>
+ * <p>
  * Created by guanquan.wang at 2018-02-06 08:55
  */
 public enum PatternType {

@@ -54,11 +54,15 @@ public interface Sheet extends AutoCloseable {
 
     /**
      * Test Worksheet is hidden
+     *
+     * @return true if current worksheet is hidden
      */
     boolean isHidden();
 
     /**
      * Test Worksheet is show
+     *
+     * @return true if current worksheet is show
      */
     default boolean isShow() {
         return !isHidden();
@@ -68,7 +72,7 @@ public interface Sheet extends AutoCloseable {
      * Returns the header of the list.
      * The first non-empty line defaults to the header information.
      *
-     * @return the HeaderRow
+     * @return the {@link HeaderRow}
      */
     Row getHeader();
 
@@ -76,15 +80,15 @@ public interface Sheet extends AutoCloseable {
      * Set the binding type
      *
      * @param clazz the binding type
-     * @return sheet
+     * @return the {@link Sheet}
      */
     Sheet bind(Class<?> clazz);
 
     /**
      * Load the sheet data
      *
-     * @return sheet
-     * @throws IOException if io error occur
+     * @return the {@link Sheet}
+     * @throws IOException if I/O error occur
      */
     Sheet load() throws IOException;
 
@@ -106,6 +110,7 @@ public interface Sheet extends AutoCloseable {
      * Reset the {@link Sheet}'s row index to begging
      *
      * @return the unread {@link Sheet}
+     * @throws IOException if I/O error occur
      */
     default Sheet reset() throws IOException {
         throw new UnsupportedOperationException();
@@ -114,8 +119,8 @@ public interface Sheet extends AutoCloseable {
     /**
      * Return a stream of all rows
      *
-     * @return a {@code Stream<Row>} providing the lines of row
-     * described by this {@code Sheet}
+     * @return a {@code Stream&lt;Row&gt;} providing the lines of row
+     * described by this {@link Sheet}
      * @since 1.8
      */
     default Stream<Row> rows() {
@@ -126,8 +131,8 @@ public interface Sheet extends AutoCloseable {
     /**
      * Return stream with out header row and empty rows
      *
-     * @return a {@code Stream<Row>} providing the lines of row
-     * described by this {@code Sheet}
+     * @return a {@code Stream&lt;Row&gt;} providing the lines of row
+     * described by this {@link Sheet}
      * @since 1.8
      */
     default Stream<Row> dataRows() {
@@ -156,7 +161,7 @@ public interface Sheet extends AutoCloseable {
     /**
      * Close resource
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     void close() throws IOException;
 }

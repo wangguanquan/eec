@@ -38,13 +38,16 @@ import static cn.ttzero.excel.util.StringUtil.isEmpty;
 import static cn.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * 每个style由一个int值组成
- * 0~ 8位 numFmt
- * 8~14位 font
- * 14~20位 fill
- * 20~26位 border
- * 26~29位 vertical
- * 29~32位 horizontal
+ * Each excel style consists of {@link NumFmt}, {@link Font},
+ * {@link Fill}, {@link Border}, {@link Verticals} and
+ * {@link Horizontals}, each Worksheet introduced by subscript.
+ * <p>
+ * EEC uses an Integer value to represent a complete pattern,
+ * 0-8 bits are stored in NumFmt, 8-14 bits are stored in Font,
+ * 14-20 bits are stored in Fill, 20-26 bits are stored in Border,
+ * 26-29 bits are stored in Vertical and 29-32 bits are stored in
+ * Horizontal. The Build-In number format does not write into styles.
+ * <p>
  * Created by guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
@@ -69,9 +72,10 @@ public class Styles implements Storageable {
     }
 
     /**
-     * 根据位编码找到style下标
+     * Returns the style index, if the style not exists it will
+     * be insert into styles
      *
-     * @param s 位编码
+     * @param s the value of style
      * @return the style index
      */
     public int of(int s) {
@@ -100,7 +104,9 @@ public class Styles implements Storageable {
     static final int INDEX_HORIZONTAL = 0;
 
     /**
-     * create general style
+     * Create a general style
+     *
+     * @param i18N the {@link I18N}
      * @return Styles
      */
     public static Styles create(I18N i18N) {
@@ -300,10 +306,10 @@ public class Styles implements Storageable {
     }
 
     /**
-     * add fill
+     * Add fill
      *
-     * @param fill
-     * @return
+     * @param fill the {@link Fill} entry
+     * @return the fill part value in style
      */
     public final int addFill(Fill fill) {
         int i = fills.indexOf(fill);
@@ -318,9 +324,10 @@ public class Styles implements Storageable {
     }
 
     /**
-     * add border
-     * @param border
-     * @return
+     * Add border
+     *
+     * @param border the {@link Border} entry
+     * @return the border part value in style
      */
     public final int addBorder(Border border) {
         int i = borders.indexOf(border);
@@ -357,6 +364,7 @@ public class Styles implements Storageable {
 
     static final String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
         , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
+
     /**
      * add style in document
      *
@@ -522,34 +530,44 @@ public class Styles implements Storageable {
     public static boolean hasNumFmt(int style) {
         return style >>> INDEX_NUMBER_FORMAT != 0;
     }
+
     public static boolean hasFont(int style) {
         return style << 8 >>> (INDEX_FONT + 8) != 0;
     }
+
     public static boolean hasFill(int style) {
         return style << 14 >>> (INDEX_FILL + 14) != 0;
     }
+
     public static boolean hasBorder(int style) {
         return style << 20 >>> (INDEX_BORDER + 20) != 0;
     }
+
     public static boolean hasVertical(int style) {
         return style << 26 >>> (INDEX_VERTICAL + 26) != 0;
     }
+
     public static boolean hasHorizontal(int style) {
         return style << 29 >>> (INDEX_HORIZONTAL + 29) != 0;
     }
+
     ////////////////////////////////To object//////////////////////////////////
     public NumFmt getNumFmt(int style) {
         return numFmts.get(style >>> INDEX_NUMBER_FORMAT);
     }
+
     public Fill getFill(int style) {
         return fills.get(style << 14 >>> (INDEX_FILL + 14));
     }
+
     public Font getFont(int style) {
         return fonts.get(style << 8 >>> (INDEX_FONT + 8));
     }
+
     public Border getBorder(int style) {
         return borders.get(style << 20 >>> (INDEX_BORDER + 20));
     }
+
     public int getVertical(int style) {
         return style << 26 >>> (INDEX_VERTICAL + 26);
     }
@@ -558,7 +576,7 @@ public class Styles implements Storageable {
      * Returns the attribute value from Element
      *
      * @param element current element
-     * @param attr the attr name
+     * @param attr    the attr name
      * @return the attr value
      */
     public static String getAttr(Element element, String attr) {
@@ -617,7 +635,7 @@ public class Styles implements Storageable {
 
             if (c == '[') {
                 // Found the end char ']'
-                for (; i < size && chars[i] != ']'; i++);
+                for (; i < size && chars[i] != ']'; i++) ;
                 int len = i - a + 1;
                 // DBNum{n}
                 if (len == 6 && chars[a] == 'D' && chars[a + 1] == 'B' && chars[a + 2] == 'N'
@@ -642,7 +660,7 @@ public class Styles implements Storageable {
                     case 'd':
                     case 'h':
                     case 's':
-                        for (; i < size && chars[i] == c; i++);
+                        for (; i < size && chars[i] == c; i++) ;
                         byteScore[c - 'a'] += i - a + 1;
                         break;
                     case 'a':
@@ -722,7 +740,7 @@ public class Styles implements Storageable {
             int size = numFmts.size();
             if (fmt.getId() < 164) {
                 int index = 1;
-                for (; index < size;) {
+                for (; index < size; ) {
                     if ((fmt = numFmts.get(index++)).getId() >= 164)
                         break;
                 }

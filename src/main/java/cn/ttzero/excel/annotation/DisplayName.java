@@ -20,6 +20,7 @@ import java.lang.annotation.*;
 
 /**
  * 导出对象数组时指定对象的导出信息
+ * <p>
  * Created by guanquan.wang at 2018-01-30 13:23
  */
 @Target({ElementType.FIELD})

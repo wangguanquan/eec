@@ -53,6 +53,7 @@ public class Row {
      * Malloc
      *
      * @param n size_t
+     * @return the cells of row
      */
     public Cell[] malloc(int n) {
         return cells = new Cell[n];
@@ -62,6 +63,7 @@ public class Row {
      * Malloc and clear
      *
      * @param n size_t
+     * @return the cells of row
      */
     public Cell[] calloc(int n) {
         malloc(n);
@@ -75,6 +77,7 @@ public class Row {
      * Resize and clear
      *
      * @param n size_t
+     * @return the cells of row
      */
     public Cell[] realloc(int n) {
         if (cells == null || cells.length < n) {

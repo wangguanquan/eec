@@ -40,7 +40,7 @@ import java.util.Arrays;
  * A workbook collects the strings of all text cells in a global list,
  * the Shared String Table. This table is located in the record SST in
  * the Workbook Globals Substream.
- *
+ * <p>
  * SST saves characters and strings sequentially. When writing a string,
  * it first determines whether it exists. If it exists, returns the index
  * in the Table (zero base), otherwise add it in to the last element of
@@ -51,16 +51,16 @@ import java.util.Arrays;
  * carried out, redistributing 2 times the length of the space, the maximum
  * length 2^26, When the number exceeds 2^26, it will be converted to inline
  * string.
- *
+ * <p>
  * A hot zone is also designed internally to cache multiple occurrences,
  * the default size is 1024, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
  * cache.
- *
+ * <p>
  * Characters are handled differently. ASCII characters use the built-in array
  * cache subscript. The over 0x7F characters will be converted to strings and
  * searched using strings.
- *
+ * <p>
  * Created by guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
@@ -131,6 +131,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
      *
      * @param c the character value
      * @return the index in ShareString
+     * @throws IOException if I/O error occur
      */
     public int get(char c) throws IOException {
         // An ASCII keyword
@@ -156,6 +157,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * @param key the string value
      * @return index of the string in the SST
      * -1 if cache full, please write as 'inlineStr'
+     * @throws IOException if I/O error occur
      */
     public int get(String key) throws IOException {
         count++;

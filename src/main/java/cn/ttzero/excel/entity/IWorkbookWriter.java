@@ -59,6 +59,7 @@ public interface IWorkbookWriter extends Storageable {
     /**
      * Write with template
      *
+     * @return the template path
      * @throws IOException if io error occur
      */
     Path template() throws IOException;

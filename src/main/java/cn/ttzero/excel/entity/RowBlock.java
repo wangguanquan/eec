@@ -24,10 +24,11 @@ import static cn.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
  * All cells in the Cell Table are divided into blocks of 32
  * consecutive rows, called Row Blocks.The first Row Block starts
  * with the first used row in that sheet.
- *
+ * <p>
  * Inside each Row Block there will occur ROW records describing
  * the properties of the rows, and cell records with all the cell
  * contents in this Row Block
+ * <p>
  * Create by guanquan.wang at 2019-04-23 08:50
  */
 public class RowBlock implements Iterator<Row> {
@@ -65,6 +66,8 @@ public class RowBlock implements Iterator<Row> {
 
     /**
      * Clear index mark
+     *
+     * @return the {@link RowBlock}
      */
     public final RowBlock clear() {
         i = n = 0;

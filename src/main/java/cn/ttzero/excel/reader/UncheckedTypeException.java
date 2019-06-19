@@ -51,9 +51,11 @@ public class UncheckedTypeException extends RuntimeException {
     /**
      * Called to read the object from a stream.
      *
+     * @param s the {@link ObjectInputStream}
      * @throws InvalidObjectException
      *          if the object is invalid or has a cause that is not
      *          an {@code IOException}
+     * @throws ClassNotFoundException if class not found
      */
     private void readObject(ObjectInputStream s)
         throws IOException, ClassNotFoundException {

@@ -20,20 +20,32 @@ import java.lang.annotation.*;
 
 /**
  * Namespace
+ * <p>
  * Created by guanquan.wang on 2017/9/18.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Documented
 public @interface NS {
+    /**
+     * The namespace value
+     *
+     * @return the value of namespace
+     */
     String value();
 
+    /**
+     * The namespace uri
+     *
+     * @return the uri of namespace
+     */
     String uri() default "";
 
     /**
-     * 数组,集合类是否将该命名空间向下引用
+     * Is Array, whether the collection class references current namespace
      *
-     * @return
+     * @return true if sub-class inherited current {@link NS}
      */
     boolean contentUse() default false;
 }

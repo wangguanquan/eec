@@ -26,7 +26,8 @@ import java.util.Date;
 import java.util.TimeZone;
 
 /**
- * For Excel
+ * A date util ror excel
+ * <p>
  * Created by guanquan.wang on 2017/9/21.
  */
 public class DateUtil {

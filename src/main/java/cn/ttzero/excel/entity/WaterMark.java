@@ -27,9 +27,10 @@ import java.lang.reflect.Field;
 import java.nio.file.*;
 
 /**
- * 水印
- * Excel 并没有水印功能，此处的水印仅设计Worksheet背景图片，
- * 打印时此设置会被忽略
+ * Excel does not have a watermark function. The watermark here
+ * only designs the Worksheet background image. This setting
+ * will be ignored when printing.
+ * <p>
  * Created by guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
@@ -54,7 +55,7 @@ public class WaterMark {
     }
 
     /**
-     * 生成文字水印
+     * Create a water mark with string value
      *
      * @param mark the mark value
      * @return WaterMark
@@ -64,7 +65,7 @@ public class WaterMark {
     }
 
     /**
-     * 本地图片水印
+     * Create a water mark with location image
      *
      * @param path the image location path
      * @return WaterMark
@@ -74,7 +75,7 @@ public class WaterMark {
     }
 
     /**
-     * 流图片水印
+     * Create a water mark with InputStream image
      *
      * @param is the image InputStream
      * @return WaterMark
@@ -85,7 +86,7 @@ public class WaterMark {
     }
 
     /**
-     * 生成水印图片
+     * Make a picture with string value
      *
      * @param watermark mark value
      * @return the temp image path
@@ -150,7 +151,7 @@ public class WaterMark {
     }
 
     /**
-     * @return 获取图片类型
+     * @return the picture suffix
      */
     public String getSuffix() {
         String suffix = null;

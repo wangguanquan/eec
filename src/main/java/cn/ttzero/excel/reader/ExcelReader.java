@@ -48,14 +48,19 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * Excel读取工具
- * 一个流式操作链，使用游标控制，游标只会向前，所以不能反复操作同一个Sheet流。
- * 同一个Sheet页内部Row对象是内存共享的，所以不要直接将Stream<Row>转为集合类.
- * 你首先应该考虑使用try-with-resource使用Reader或手动关闭ExcelReader。
+ * Excel Reader tools
+ *
+ * A streaming operation chain, using cursor control, the cursor
+ * will only move forward, so you cannot repeatedly operate the
+ * same Sheet stream. The internal Row object of the same Sheet
+ * page is memory shared, so don't directly convert Stream&lt;Row&gt;
+ * to a collection class. You should first consider using
+ * try-with-resource to use Reader or manually close the ExcelReader.
+ * <p>
  * <code>
- *     try (ExcelReader reader = ExcelReader.read(path)) {
- *         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
- *     } catch (IOException e) {}
+ * try (ExcelReader reader = ExcelReader.read(path)) {
+ *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+ * } catch (IOException e) {}
  * </code>
  * <p>
  * Create by guanquan.wang on 2018-09-22
@@ -82,78 +87,78 @@ public class ExcelReader implements AutoCloseable {
     private Styles styles;
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param path Excel路径
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
+     * @param path the excel path
+     * @return the {@link ExcelReader}
+     * @throws IOException if path not exists or I/O error occur
      */
     public static ExcelReader read(Path path) throws IOException {
         return read(path, 0, 0);
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param stream Excel文件流
-     * @return ExcelReader
-     * @throws IOException 读取文件失败
+     * @param stream the {@link InputStream} of excel
+     * @return the {@link ExcelReader}
+     * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream) throws IOException {
         return read(stream, 0, 0);
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param path      Excel路径
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
+     * @param path       the excel path
+     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
+     *                   This parameter affects the number of read times.
+     * @return the {@link ExcelReader}
+     * @throws IOException if path not exists or I/O error occur
      */
-    public static ExcelReader read(Path path, int cacheSize) throws IOException {
-        return read(path, cacheSize, 0);
+    public static ExcelReader read(Path path, int bufferSize) throws IOException {
+        return read(path, bufferSize, 0);
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param stream    Excel文件流
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @return ExcelReader
-     * @throws IOException 读取文件失败
+     * @param stream     the {@link InputStream} of excel
+     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
+     *                   This parameter affects the number of read times.
+     * @return the {@link ExcelReader}
+     * @throws IOException if I/O error occur
      */
-    public static ExcelReader read(InputStream stream, int cacheSize) throws IOException {
-        return read(stream, cacheSize, 0);
+    public static ExcelReader read(InputStream stream, int bufferSize) throws IOException {
+        return read(stream, bufferSize, 0);
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param path      Excel路径
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @param hotSize   热词区大小，默认512
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
+     * @param path       the excel path
+     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
+     *                   This parameter affects the number of read times.
+     * @param cacheSize  the {@link Cache} size, default is 512
+     * @return the {@link ExcelReader}
+     * @throws IOException if path not exists or I/O error occur
      */
-    public static ExcelReader read(Path path, int cacheSize, int hotSize) throws IOException {
-        return read(path, cacheSize, hotSize, false);
+    public static ExcelReader read(Path path, int bufferSize, int cacheSize) throws IOException {
+        return read(path, bufferSize, cacheSize, false);
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param stream    Excel文件流
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  将此参数影响读取文件次数
-     * @param hotSize   热词区大小，默认512
-     * @return ExcelReader
-     * @throws IOException 读取文件失败
+     * @param stream     the {@link InputStream} of excel
+     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
+     *                   This parameter affects the number of read times.
+     * @param cacheSize  the {@link Cache} size, default is 512
+     * @return the {@link ExcelReader}
+     * @throws IOException if I/O error occur
      */
-    public static ExcelReader read(InputStream stream, int cacheSize, int hotSize) throws IOException {
+    public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize) throws IOException {
         Path temp;
         if (FileUtil.isWindows()) {
             temp = Files.createTempFile(Const.EEC_PREFIX, null);
@@ -165,7 +170,7 @@ public class ExcelReader implements AutoCloseable {
             throw new IOException("Create temp directory error. Please check your permission");
         }
         FileUtil.cp(stream, temp);
-        return read(temp, cacheSize, hotSize, true);
+        return read(temp, bufferSize, cacheSize, true);
     }
 
     /**
@@ -180,7 +185,7 @@ public class ExcelReader implements AutoCloseable {
     /**
      * to streams
      *
-     * @return sheet流
+     * @return {@link Stream} of {@link Sheet}
      */
     public Stream<Sheet> sheets() {
         Iterator<Sheet> iter = new Iterator<Sheet>() {
@@ -294,7 +299,7 @@ public class ExcelReader implements AutoCloseable {
     // --- PRIVATE FUNCTIONS
 
 
-    private ExcelReader(Path path, int cacheSize, int hotSize) throws IOException {
+    private ExcelReader(Path path, int bufferSize, int cacheSize) throws IOException {
         // Store template stream as zip file
         Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         ZipUtil.unzip(Files.newInputStream(path), temp);
@@ -328,10 +333,10 @@ public class ExcelReader implements AutoCloseable {
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        this.sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), cacheSize, hotSize).load();
+        sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), bufferSize, cacheSize).load();
 
         // Load Styles
-        this.styles = Styles.load(temp.resolve("xl/styles.xml"));
+        styles = Styles.load(temp.resolve("xl/styles.xml"));
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")
@@ -364,33 +369,33 @@ public class ExcelReader implements AutoCloseable {
         sheets.toArray(sheets1);
 
         this.sheets = sheets1;
-        this.self = temp;
+        self = temp;
     }
 
     /**
-     * 实例化Reader
+     * Constructor Excel Reader
      *
-     * @param path      Excel路径
-     * @param cacheSize sharedString缓存大小，默认512
-     *                  此参数影响读取文件次数
-     * @param hotSize   热词区大小，默认512
-     * @param rmSource  是否删除源文件
-     * @return ExcelReader
-     * @throws IOException 文件不存在或读取文件失败
+     * @param path       the excel path
+     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
+     *                   This parameter affects the number of read times.
+     * @param cacheSize  the {@link Cache} size, default is 512
+     * @param rmSource   remove the source files
+     * @return the {@link ExcelReader}
+     * @throws IOException if path not exists or I/O error occur
      */
-    private static ExcelReader read(Path path, int cacheSize, int hotSize, boolean rmSource) throws IOException {
+    private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource) throws IOException {
         // Check document type
         ExcelType type = getType(path);
         ExcelReader er;
         switch (type) {
             case XLSX:
-                er = new ExcelReader(path, cacheSize, hotSize);
+                er = new ExcelReader(path, bufferSize, cacheSize);
                 break;
             case XLS:
                 try {
                     Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
                     Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
-                    er = (ExcelReader) constructor.newInstance(path, cacheSize, hotSize);
+                    er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize);
                 } catch (Exception e) {
                     throw new ExcelReadException("Only support read Office Open XML file.", e);
                 }

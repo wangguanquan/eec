@@ -34,7 +34,9 @@ import java.sql.SQLException;
  * <p>
  * The Connection will not be actively closed, but the {@code Statement}
  * and {@code ResultSet} will be closed with worksheet.
+ *
  * @see ResultSetSheet
+ * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
 public class StatementSheet extends ResultSetSheet {
@@ -224,6 +226,7 @@ public class StatementSheet extends ResultSetSheet {
      * Setting PreparedStatement
      *
      * @param ps PreparedStatement
+     * @return the {@link StatementSheet}
      */
     public StatementSheet setPs(PreparedStatement ps) {
         this.ps = ps;
@@ -234,7 +237,7 @@ public class StatementSheet extends ResultSetSheet {
      * Release resources
      * will close the {@code Statement} and {@code ResultSet}
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void close() throws IOException {
@@ -252,7 +255,7 @@ public class StatementSheet extends ResultSetSheet {
      * write worksheet data to path
      *
      * @param path the storage path
-     * @throws IOException         write error
+     * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path) throws IOException {

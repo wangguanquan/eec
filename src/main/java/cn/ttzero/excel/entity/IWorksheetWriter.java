@@ -55,6 +55,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     /**
      * Return a copy worksheet writer
      *
+     * @param sheet the {@link Sheet}
      * @return the copy worksheet writer
      */
     IWorksheetWriter setWorksheet(Sheet sheet);

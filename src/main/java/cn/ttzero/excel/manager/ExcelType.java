@@ -18,6 +18,7 @@ package cn.ttzero.excel.manager;
 
 /**
  * Type of excel. Biff8 or XLSX(Office open xml)
+ * <p>
  * Create by guanquan.wang at 2019-01-24 10:12
  */
 public enum ExcelType {

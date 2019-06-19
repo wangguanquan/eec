@@ -49,6 +49,7 @@ public class CollectionSheet<T> extends Sheet {
      * Constructor worksheet
      *
      * @param name the worksheet name
+     * @param columns the {@link Sheet.Column}
      */
     public CollectionSheet(String name, final Column... columns) {
         super(name, columns);
@@ -58,6 +59,8 @@ public class CollectionSheet<T> extends Sheet {
      * Constructor worksheet
      *
      * @param name the worksheet name
+     * @param waterMark the {@link WaterMark}
+     * @param columns the {@link Sheet.Column}
      */
     public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);

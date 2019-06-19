@@ -26,6 +26,7 @@ import java.util.Properties;
 
 /**
  * 国际化
+ * <p>
  * Create by guanquan.wang on 2018-10-13
  */
 public class I18N {

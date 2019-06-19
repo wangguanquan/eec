@@ -19,24 +19,26 @@ package cn.ttzero.excel.processor;
 import cn.ttzero.excel.entity.style.Styles;
 
 /**
- * 样式转换器
+ * The style conversion
+ * <p>
  * Created by guanquan.wang on 2017/10/13.
  */
 @FunctionalInterface
 public interface StyleProcessor {
     /**
-     * 样式转换器
-     * 添加样式时必须使用sst.add方法添加，然后将返回的int值做为转换器的返回值
+     * The style conversion
+     * You must add it using {@code Styles#addXXX} method before adding a style,
+     * and then use the returned int value as the return value of the converter.
      * eg:
-     * <pre><code lang='java'>
-     *    StyleProcessor sp = (o, style, sst) // 将背景改为黄色
-     *      -> style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
+     * <pre><code>
+     *    StyleProcessor sp = (o, style, sst) // Fill of 'yellow' color
+     *      -&gt; style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
      * </code></pre>
      *
-     * @param o     当前单元格值
-     * @param style 当前单元格样式
-     * @param sst   样式类，整个Workbook共享样式
-     * @return 新样式
+     * @param o     the value of cell
+     * @param style the current style of cell
+     * @param sst   the {@link Styles} entry
+     * @return new style of cell
      */
     int build(Object o, int style, Styles sst);
 }

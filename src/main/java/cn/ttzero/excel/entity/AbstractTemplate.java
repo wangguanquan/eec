@@ -47,9 +47,9 @@ public abstract class AbstractTemplate {
     }
 
     /**
-     * 文件合法性检查
+     * The open-xml legitimate check
      *
-     * @return
+     * @return true if legitimate
      */
     public boolean check() {
         // Integrity check
@@ -115,6 +115,11 @@ public abstract class AbstractTemplate {
         return !(i < len || boo);
     }
 
+    /**
+     * Replace the placeholder character with Entry
+     *
+     * @param o the entry
+     */
     public void bind(Object o) {
         if (o != null) {
             // Translate object to string hashMap
@@ -269,18 +274,18 @@ public abstract class AbstractTemplate {
     ////////////////////////////Abstract function/////////////////////////////
 
     /**
-     * 判断是否包含掩码
+     * Check the cell content has placeholder character
      *
-     * @param txt
-     * @return
+     * @param txt the content of cell
+     * @return true if the content has placeholder character
      */
     protected abstract boolean isPlaceholder(String txt);
 
     /**
-     * 替换掩码
+     * Returns the placeholder character
      *
-     * @param txt
-     * @return
+     * @param txt the content of cell
+     * @return the placeholder character
      */
     protected abstract String getValue(String txt);
 }

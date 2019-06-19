@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
  * 分别是left,right,top,bottom,diagonalDown,diagonalUp
  * 样式请参照BorderStyle
  * EEC默认边框颜色为#333333
+ * <p>
  * Created by guanquan.wang on 2018-02-06 08:55
  */
 public class Border {
@@ -43,8 +44,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格上方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setBorderTop(BorderStyle style) {
         borders[2] = new SubBorder(style, defaultColor);
@@ -54,8 +55,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格右方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setBorderRight(BorderStyle style) {
         borders[1] = new SubBorder(style, defaultColor);
@@ -65,8 +66,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格下方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setBorderBottom(BorderStyle style) {
         borders[3] = new SubBorder(style, defaultColor);
@@ -76,8 +77,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格左方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setBorderLeft(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
@@ -87,8 +88,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格左上到右下方边框[\]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setDiagonalDown(BorderStyle style) {
         borders[4] = new SubBorder(style, defaultColor);
@@ -98,8 +99,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格边框适用于上下左右4个方位
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setBorder(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
@@ -110,8 +111,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格左下到右上方边框[/]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setDiagonalUp(BorderStyle style) {
         borders[5] = new SubBorder(style, defaultColor);
@@ -121,8 +122,8 @@ public class Border {
     /**
      * 使用默认颜色设置单元格左下到右上和右下到右上方边框[X]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
      */
     public Border setDiagonal(BorderStyle style) {
         borders[4] = new SubBorder(style, defaultColor);
@@ -133,8 +134,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格上方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setBorderTop(BorderStyle style, Color color) {
         borders[2] = new SubBorder(style, color);
@@ -144,8 +146,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格右方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setBorderRight(BorderStyle style, Color color) {
         borders[1] = new SubBorder(style, color);
@@ -155,8 +158,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格下方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setBorderBottom(BorderStyle style, Color color) {
         borders[3] = new SubBorder(style, color);
@@ -166,8 +170,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格左方边框
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setBorderLeft(BorderStyle style, Color color) {
         borders[0] = new SubBorder(style, color);
@@ -177,8 +182,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格左上到右下方边框[\]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setDiagonalDown(BorderStyle style, Color color) {
         borders[4] = new SubBorder(style, color);
@@ -188,8 +194,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格左下到右上方边框[/]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setDiagonalUp(BorderStyle style, Color color) {
         borders[5] = new SubBorder(style, color);
@@ -199,8 +206,9 @@ public class Border {
     /**
      * 使用指定颜色设置单元格左下到右上和右下到右上方边框[X]
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setDiagonal(BorderStyle style, Color color) {
         borders[4] = new SubBorder(style, color);
@@ -211,8 +219,9 @@ public class Border {
     /**
      * 使用默认颜色设置单元格边框，适用于上下左右4个方位
      *
-     * @param style BorderStyle
-     * @return Border
+     * @param style the {@link BorderStyle}
+     * @param color the border color
+     * @return the {@link Border}
      */
     public Border setBorder(BorderStyle style, Color color) {
         borders[0] = new SubBorder(style, color);
@@ -272,10 +281,10 @@ public class Border {
      * medium black thick #cccccc double black hair green
      * none none thin thin
      *
-     * @param text
-     * @return
+     * @param text the border value
+     * @return the parse value of {@link Border}
      */
-    public static final Border parse(String text) {
+    public static Border parse(String text) {
         Border border = new Border();
         if (StringUtil.isEmpty(text)) return border;
         String[] values = text.split(" ");

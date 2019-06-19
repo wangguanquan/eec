@@ -129,6 +129,7 @@ public final class BloomFilter<T> implements Predicate<T>, Serializable {
    * Creates a new {@code BloomFilter} that's a copy of this instance. The new instance is equal to
    * this instance but shares no mutable state.
    *
+   * @return a {@link BloomFilter} copy from current filter
    * @since 12.0
    */
   public BloomFilter<T> copy() {

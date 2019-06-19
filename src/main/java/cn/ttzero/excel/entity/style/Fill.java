@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 
 /**
  * 单元格填充
+ * <p>
  * Created by guanquan.wang at 2018-02-06 08:55
  */
 public class Fill implements Cloneable {
@@ -108,8 +109,9 @@ public class Fill implements Cloneable {
     /**
      * fgColor bgColor patternType
      * color patternType : fgColor patternType
-     * @param text
-     * @return
+     *
+     * @param text the Fill string value
+     * @return the parse value of {@link Fill}
      */
     public static Fill parse(String text) {
         Fill fill = new Fill();

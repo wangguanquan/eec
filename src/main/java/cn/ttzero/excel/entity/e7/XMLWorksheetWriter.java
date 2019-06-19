@@ -61,7 +61,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row block
      *
      * @param supplier a row-block supplier
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
@@ -120,7 +120,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row block
      *
      * @param path the storage path
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path) throws IOException {
@@ -245,6 +245,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     /**
      * Write worksheet header data
+     *
+     * @throws IOException if I/O error occur
      */
     protected void writeBefore() throws IOException {
         // The header columns
@@ -340,7 +342,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write the header row
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeHeaderRow() throws IOException {
         // Write header
@@ -366,7 +368,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * 写尾部
+     * Write at after worksheet body
+     *
+     * @param total the total of rows
+     * @throws IOException if I/O error occur
      */
     protected void writeAfter(int total) throws IOException {
         // End target --sheetData
@@ -418,7 +423,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param rows    the row index (zero base)
      * @param columns the column length
      * @return the row index (one base)
-     * @throws IOException
+     * @throws IOException if I/O error occur
      */
     protected int startRow(int rows, int columns) throws IOException {
         // Row number
@@ -441,6 +446,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row data
      *
      * @param row a row data
+     * @throws IOException if I/O error occur
      */
     protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
@@ -489,6 +495,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row data
      *
      * @param row a row data
+     * @throws IOException if I/O error occur
      */
     protected void writeRowAutoSize(Row row) throws IOException {
         Cell[] cells = row.getCells();
@@ -539,7 +546,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeString(String s, int row, int column, int xf) throws IOException {
         // The limit characters per cell check
@@ -579,7 +586,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
         writeString(s, row, column, xf);
@@ -597,7 +604,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -617,7 +624,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeDoubleAutoSize(double d, int row, int column, int xf) throws IOException {
         writeDouble(d, row, column, xf);
@@ -635,7 +642,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -655,7 +662,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
         writeDecimal(bd, row, column, xf);
@@ -673,7 +680,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -693,7 +700,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -713,7 +720,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
         writeNumeric(l, row, column, xf);
@@ -731,7 +738,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -750,7 +757,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row    the row index
      * @param column the column index
      * @param xf     the style index
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
@@ -766,7 +773,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @param path the sheet temp path
      * @param rows total of rows
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
         // There has no column to reset width

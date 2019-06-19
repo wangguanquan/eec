@@ -20,6 +20,7 @@ import java.lang.annotation.*;
 
 /**
  * Xml Attribute
+ * <p>
  * Created by guanquan.wang on 2017/9/21.
  */
 @Target({ElementType.FIELD})
@@ -28,20 +29,23 @@ import java.lang.annotation.*;
 public @interface Attr {
     /**
      * attribute name
+     *
+     * @return the names of attr
      */
     String[] name();
 
     /**
      * attribute value
      *
-     * @return
+     * @return the values of attr
      */
     String[] value() default {};
 
     /**
      * namespace
      *
-     * @return
+     * @return the xml namespace
+     * '-' if do not have namespace
      */
     NS namespace() default @NS("-");
 }

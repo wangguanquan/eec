@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * load numFmt as default formats
+ * Load the Built-In Number Format
+ * <p>
  * Created by guanquan.wang at 2018-02-12 10:11
  */
 public final class BuiltInNumFmt {

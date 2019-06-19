@@ -44,27 +44,28 @@ import static cn.ttzero.excel.util.DateUtil.toTimeValue;
  * current position, with the name of the parent worksheet. After
  * adding "(1,2,3...n)" as the name of the copied sheet, the pagination
  * is automatic without additional settings.
- *
+ * <p>
  * Usually worksheetWriter calls the
- * {@code worksheet#nextBlock} method to load a row-block for writing.
+ * {@link #nextBlock} method to load a row-block for writing.
  * When the row-block returns the flag EOF, mean is the current worksheet
  * finished written, and the next worksheet is written.
- *
+ * <p>
  * Extends the existing worksheet to implement a custom data source worksheet.
  * The data source can be micro-services, Mybatis, JPA or any others. If
  * the data source returns an array of json objects, please convert to
  * an object ArrayList or Map ArrayList, the object ArrayList needs to
- * extends {@code ListSheet}, the Map ArrayList needs to extends
- * {@code ListMapSheet} and implement the {@code more} method.
- *
+ * extends {@link ListSheet}, the Map ArrayList needs to extends
+ * {@link ListMapSheet} and implement the {@link ListSheet#more} method.
+ * <p>
  * If other formats cannot be converted to ArrayList, you
- * need to inherit from the base class {@code Sheet} and implement the
- * {@code resetBlockData} and {@code getHeaderColumns} methods.
+ * need to inherit from the base class {@link Sheet} and implement the
+ * {@link #resetBlockData} and {@link #getHeaderColumns} methods.
  *
  * @see ListSheet
  * @see ListMapSheet
  * @see ResultSetSheet
  * @see StatementSheet
+ * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
@@ -170,7 +171,8 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 伴生于Sheet用于控制头部样式和缓存列数据the cell type和转换
+     * Associated with Worksheet for controlling head style and cache
+     * column data types and conversions
      */
     public static class Column {
         /**
@@ -194,26 +196,26 @@ public abstract class Sheet implements Cloneable, Storageable {
          */
         public int type;
         /**
-         * int值转换
+         * The int value conversion
          */
         public IntConversionProcessor processor;
         /**
-         * 样式转换
+         * The style conversion
          */
         public StyleProcessor styleProcessor;
         /**
-         * 单元格样式 -1表示未设定
+         * The style of cell, -1 if not be setting
          */
         public int cellStyle = -1;
         /**
-         * 列宽
+         * The cell width
          */
         public double width;
         public int o;
         public Styles styles;
 
         /**
-         * 指定the column name和the cell type
+         * Constructor Column
          *
          * @param name  the column name
          * @param clazz the cell type
@@ -223,7 +225,7 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name和对应对象中的field
+         * Constructor Column
          *
          * @param name the column name
          * @param key  field
@@ -233,7 +235,7 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name对应对象中的field和the cell type，不指定类型时默认取field类型
+         * Constructor Column
          *
          * @param name  the column name
          * @param key   field
@@ -245,35 +247,33 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，the cell type和值转换
+         * Constructor Column
          *
          * @param name      the column name
          * @param clazz     the cell type
-         * @param processor 转换
+         * @param processor The int value conversion
          */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
             this(name, clazz, processor, true);
         }
 
         /**
-         * 指定the column name，对象field和值转换
+         * Constructor Column
          *
          * @param name      the column name
          * @param key       field
-         * @param processor 转换
+         * @param processor The int value conversion
          */
         public Column(String name, String key, IntConversionProcessor processor) {
             this(name, key, processor, true);
         }
 
         /**
-         * 指定the column name，the cell type和是否设定值共享
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name  the column name
          * @param clazz the cell type
-         * @param share true:共享 false:非共享
+         * @param share true:shared false:inline string
          */
         public Column(String name, Class<?> clazz, boolean share) {
             this.name = name;
@@ -282,13 +282,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，field和是否共享字串
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name  the column name
          * @param key   filed
-         * @param share true:共享 false:非共享
+         * @param share true:shared false:inline string
          */
         public Column(String name, String key, boolean share) {
             this.name = name;
@@ -297,14 +295,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，the cell type，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name      the column name
          * @param clazz     the cell type
-         * @param processor 转换
-         * @param share     true:共享 false:非共享
+         * @param processor The int value conversion
+         * @param share     true:shared false:inline string
          */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
             this(name, clazz, share);
@@ -312,14 +308,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，field，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name      the column name
          * @param key       field
          * @param clazz     type of cell
-         * @param processor 转换
+         * @param processor The int value conversion
          */
         public Column(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
             this(name, key, clazz);
@@ -327,14 +321,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，field，转换和是否共享字串
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name      the column name
          * @param key       field
-         * @param processor 转换
-         * @param share     true:共享 false:非共享
+         * @param processor The int value conversion
+         * @param share     true:shared false:inline string
          */
         public Column(String name, String key, IntConversionProcessor processor, boolean share) {
             this(name, key, share);
@@ -342,36 +334,34 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指定the column name，the cell type和单元样式
+         * Constructor Column
          *
          * @param name      the column name
          * @param clazz     the cell type
-         * @param cellStyle 样式
+         * @param cellStyle the style of cell
          */
         public Column(String name, Class<?> clazz, int cellStyle) {
             this(name, clazz, cellStyle, true);
         }
 
         /**
-         * 指定列，field 和单元样式
+         * Constructor Column
          *
          * @param name      the column name
          * @param key       field
-         * @param cellStyle 样式
+         * @param cellStyle the style of cell
          */
         public Column(String name, String key, int cellStyle) {
             this(name, key, cellStyle, true);
         }
 
         /**
-         * 指事实上the column name，the cell type，样式以及是否共享
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name      the column name
          * @param clazz     the cell type
-         * @param cellStyle 样式
-         * @param share     true:共享 false:非共享
+         * @param cellStyle the style of cell
+         * @param share     true:shared false:inline string
          */
         public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
             this(name, clazz, share);
@@ -379,14 +369,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 指事实上the column name，field，样式以及是否共享
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Constructor Column
          *
          * @param name      the column name
          * @param key       field
-         * @param cellStyle 样式
-         * @param share     true:共享 false:非共享
+         * @param cellStyle the style of cell
+         * @param share     true:shared false:inline string
          */
         public Column(String name, String key, int cellStyle, boolean share) {
             this(name, key, share);
@@ -394,7 +382,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设定单元格宽度
+         * Setting the cell's width
+         *
+         * @param width the width value
+         * @return the {@link Sheet.Column}
          */
         public Column setWidth(double width) {
             if (width < 0.00000001) {
@@ -405,20 +396,19 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 单元格共享
+         * Setting the cell is shared
          *
-         * @return true:共享 false:非共享
+         * @return true:shared false:inline string
          */
         public boolean isShare() {
             return share;
         }
 
         /**
-         * 设置单元格the cell type
+         * Setting the cell type
          *
          * @param type the cell type
-         * @return Column实例
-         * @see Const.ColumnType
+         * @return the {@link Sheet.Column}
          */
         public Column setType(int type) {
             this.type = type;
@@ -426,7 +416,7 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 获取列头名
+         * Returns the column name
          *
          * @return the column name
          */
@@ -435,10 +425,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置the column name
+         * Setting the column name
          *
          * @param name the column name
-         * @return Column实例
+         * @return the {@link Sheet.Column}
          */
         public Column setName(String name) {
             this.name = name;
@@ -446,7 +436,7 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 获取列the cell type
+         * Returns the cell type
          *
          * @return the cell type
          */
@@ -455,10 +445,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置列the cell type
+         * Setting the cell type
          *
          * @param clazz the cell type
-         * @return Column实例
+         * @return the {@link Sheet.Column}
          */
         public Column setClazz(Class<?> clazz) {
             this.clazz = clazz;
@@ -466,11 +456,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置值转换
-         * 每个单元格只能有一个值转换，多次set后最后一个有效
+         * Setting the int value conversion
          *
-         * @param processor 值转换
-         * @return Column实例
+         * @param processor The int value conversion
+         * @return the {@link Sheet.Column}
          */
         public Column setProcessor(IntConversionProcessor processor) {
             this.processor = processor;
@@ -478,11 +467,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置样式转换
-         * 每个单元格只能有一个样式转换，多次set后最后一个有效
+         * Setting the style conversion
          *
-         * @param styleProcessor 样式转换
-         * @return Column实例
+         * @param styleProcessor The style conversion
+         * @return the {@link Sheet.Column}
          */
         public Column setStyleProcessor(StyleProcessor styleProcessor) {
             this.styleProcessor = styleProcessor;
@@ -490,20 +478,19 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 获得列宽
+         * Returns the width of cell
          *
-         * @return 列宽
+         * @return the cell width
          */
         public double getWidth() {
             return width;
         }
 
         /**
-         * 设置样式
-         * 样式值必须是调用style.add获取的值
+         * Setting the cell's style
          *
-         * @param cellStyle 样式值
-         * @return Column实例
+         * @param cellStyle the styles value
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(int cellStyle) {
             this.cellStyle = cellStyle;
@@ -511,11 +498,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 默认水平对齐
-         * 日期，字符，bool值居中，numeric居右其余居左
+         * Returns the default horizontal style
+         * the Date, Character, Bool has center value, the
+         * Numeric has right value, otherwise left value
          *
-         * @return int
-         * @see Horizontals
+         * @return the horizontal value
          */
         int defaultHorizontal() {
             int horizontal;
@@ -535,10 +522,10 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font 字体
-         * @return Column实例
+         * @param font the font
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font) {
             this.cellStyle = styles.of(
@@ -549,11 +536,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font       字体
-         * @param horizontal 水平对齐
-         * @return Column实例
+         * @param font       the font
+         * @param horizontal the horizontal style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, int horizontal) {
             this.cellStyle = styles.of(
@@ -564,11 +551,11 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font   字体
-         * @param border 边框
-         * @return Column实例
+         * @param font   the font
+         * @param border the border style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, Border border) {
             this.cellStyle = styles.of(
@@ -580,12 +567,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font       字体
-         * @param border     边框
-         * @param horizontal 水平对齐
-         * @return
+         * @param font       the font
+         * @param border     the border style
+         * @param horizontal the horizontal style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, Border border, int horizontal) {
             this.cellStyle = styles.of(
@@ -597,12 +584,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font   字体
-         * @param fill   填充
-         * @param border 边框
-         * @return Column实例
+         * @param font   the font
+         * @param fill   the fill style
+         * @param border the border style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, Fill fill, Border border) {
             this.cellStyle = styles.of(
@@ -615,13 +602,13 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font       字体
-         * @param fill       填充
-         * @param border     边框
-         * @param horizontal 水平对齐
-         * @return Column实例
+         * @param font       the font
+         * @param fill       the fill style
+         * @param border     the border style
+         * @param horizontal the horizontal style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
             this.cellStyle = styles.of(
@@ -634,14 +621,14 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param font       字体
-         * @param fill       填充
-         * @param border     边框
-         * @param vertical   垂直对齐
-         * @param horizontal 水平对齐
-         * @return Column实例
+         * @param font       the font
+         * @param fill       the fill style
+         * @param border     the border style
+         * @param vertical   the vertical style
+         * @param horizontal the horizontal style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
             this.cellStyle = styles.of(
@@ -654,15 +641,15 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置单元格样式
+         * Setting the cell styles
          *
-         * @param numFmt     格式化
-         * @param font       字体
-         * @param fill       填充
-         * @param border     边框
-         * @param vertical   垂直对齐
-         * @param horizontal 水平对齐
-         * @return Column实例
+         * @param numFmt     the number format
+         * @param font       the font
+         * @param fill       the fill style
+         * @param border     the border style
+         * @param vertical   the vertical style
+         * @param horizontal the horizontal style
+         * @return the {@link Sheet.Column}
          */
         public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
             this.cellStyle = styles.of(
@@ -676,12 +663,12 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 设置共享
-         * 共享仅对字符串有效，转换后的the cell type为字符串也同样有效
-         * 默认非共享以innerStr方式设值
+         * Setting cell string value is shared
+         * Shared is only valid for strings, and the converted cell type
+         * is also valid for strings.
          *
-         * @param share true:共享 false:非共享
-         * @return Column实例
+         * @param share true:shared false:inline string
+         * @return the {@link Sheet.Column}
          */
         public Column setShare(boolean share) {
             this.share = share;
@@ -696,10 +683,10 @@ public abstract class Sheet implements Cloneable, Storageable {
             ;
 
         /**
-         * 根据the cell type获取默认样式
+         * Returns default style based on cell type
          *
          * @param clazz the cell type
-         * @return 样式
+         * @return the styles value
          */
         public int getCellStyle(Class<?> clazz) {
             int style;
@@ -746,9 +733,9 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         /**
-         * 获取单元格样式
+         * Setting the cell styles
          *
-         * @return
+         * @return the styles value
          */
         public int getCellStyle() {
             if (cellStyle != -1) {
@@ -761,16 +748,17 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * Returns workbook
      *
-     * @return the workbook
+     * @return the {@link Workbook}
      */
     public Workbook getWorkbook() {
         return workbook;
     }
 
     /**
-     * Setting worksheet
+     * Setting the workbook
      *
-     * @param workbook the worksheet
+     * @param workbook the {@link Workbook}
+     * @return the {@link Sheet}
      */
     public Sheet setWorkbook(Workbook workbook) {
         this.workbook = workbook;
@@ -784,14 +772,19 @@ public abstract class Sheet implements Cloneable, Storageable {
 
 
     /**
-     * Output export info
+     * Output the export detail info
+     *
+     * @param code the message code in message properties file
      */
     public void what(String code) {
         workbook.what(code);
     }
 
     /**
-     * Output export info
+     * Output export detail info
+     *
+     * @param code the message code in message properties file
+     * @param args the placeholder values
      */
     public void what(String code, String... args) {
         workbook.what(code, args);
@@ -800,7 +793,7 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * Returns shared string
      *
-     * @return the sst
+     * @return the {@link SharedStrings}
      */
     public SharedStrings getSst() {
         return workbook.getSst();
@@ -816,9 +809,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置列宽自动调节
+     * Setting auto resize cell's width
      *
-     * @return worksheet实例
+     * @return the {@link Sheet}
      */
     public Sheet autoSize() {
         this.autoSize = 1;
@@ -826,9 +819,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 固定列宽，默认20
+     * Setting fix column width
      *
-     * @return worksheet实例
+     * @return the {@link Sheet}
      */
     public Sheet fixSize() {
         this.autoSize = 2;
@@ -836,10 +829,10 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 指定固定列宽
+     * Setting fix column width
      *
-     * @param width 列宽
-     * @return worksheet实例
+     * @param width the column width
+     * @return the {@link Sheet}
      */
     public Sheet fixSize(double width) {
         this.autoSize = 2;
@@ -853,7 +846,7 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 获取是否自动调节列宽
+     * Returns the re-size setting
      *
      * @return 1: auto-size 2:fix-size
      */
@@ -871,9 +864,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 取消隔行变色
+     * Cancel the odd row's fill style
      *
-     * @return worksheet实例
+     * @return the {@link Sheet}
      */
     public Sheet cancelOddStyle() {
         this.autoOdd = 1;
@@ -889,10 +882,10 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置偶数行填充颜色
+     * Setting the odd row's fill style
      *
-     * @param fill 填充
-     * @return worksheet实例
+     * @param fill the fill style
+     * @return the {@link Sheet}
      */
     public Sheet setOddFill(Fill fill) {
         this.oddFill = workbook.getStyles().addFill(fill);
@@ -900,19 +893,19 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 获取worksheet名
+     * Returns the worksheet name
      *
-     * @return worksheet名
+     * @return the worksheet name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * 设置worksheet名
+     * Setting the worksheet name
      *
-     * @param name sheet名
-     * @return worksheet实例
+     * @param name the worksheet name
+     * @return the {@link Sheet}
      */
     public Sheet setName(String name) {
         this.name = name;
@@ -921,7 +914,7 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     /**
      * Returns the header column info
-     *
+     * <p>
      * The copy sheet will use the parent worksheet header information.
      *
      * @return array of column
@@ -937,10 +930,10 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置列头
+     * Setting the header rows's columns
      *
-     * @param columns 列头数组
-     * @return worksheet实例
+     * @param columns the header row's columns
+     * @return the {@link Sheet}
      */
     public Sheet setColumns(final Column[] columns) {
         this.columns = columns.clone();
@@ -951,9 +944,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 获取水印
+     * Returns the {@link WaterMark}
      *
-     * @return 水印
+     * @return the {@link WaterMark}
      * @see WaterMark
      */
     public WaterMark getWaterMark() {
@@ -961,10 +954,10 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置水印
+     * Setting the {@link WaterMark}
      *
-     * @param waterMark 水印
-     * @return worksheet实例
+     * @param waterMark the {@link WaterMark}
+     * @return the {@link Sheet}
      */
     public Sheet setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -972,7 +965,7 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 单元是否隐藏
+     * Returns the worksheet is hidden
      *
      * @return true: hidden, false: not hidden
      */
@@ -981,9 +974,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置单元格隐藏
+     * Setting the worksheet status
      *
-     * @return worksheet实例
+     * @return the {@link Sheet}
      */
     public Sheet hidden() {
         this.hidden = true;
@@ -992,6 +985,8 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     /**
      * abstract method close
+     *
+     * @throws IOException if I/O error occur
      */
     public void close() throws IOException {
         if (sheetWriter != null) {
@@ -1003,7 +998,7 @@ public abstract class Sheet implements Cloneable, Storageable {
      * Write worksheet data to path
      *
      * @param path the storage path
-     * @throws IOException         write error
+     * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path) throws IOException {
@@ -1048,41 +1043,41 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 设置表头样式
+     * Setting the header column styles
      *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @return worksheet实例
+     * @param font   the font
+     * @param fill   the fill style
+     * @param border the border style
+     * @return the {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
         return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
     }
 
     /**
-     * 设置表头样式
+     * Setting the header column styles
      *
-     * @param font       字体
-     * @param fill       填允
-     * @param border     边框
-     * @param vertical   垂直对齐
-     * @param horizontal 水平对齐
-     * @return worksheet实例
+     * @param font       the font
+     * @param fill       the fill style
+     * @param border     the border style
+     * @param vertical   the vertical style
+     * @param horizontal the horizontal style
+     * @return the {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         return setHeadStyle(null, font, fill, border, vertical, horizontal);
     }
 
     /**
-     * 设置表头样式
+     * Setting the header column styles
      *
-     * @param numFmt     格式化
-     * @param font       字体
-     * @param fill       填充
-     * @param border     边框
-     * @param vertical   垂直对齐
-     * @param horizontal 水平对齐
-     * @return worksheet实例
+     * @param numFmt     the number format
+     * @param font       the font
+     * @param fill       the fill style
+     * @param border     the border style
+     * @param vertical   the vertical style
+     * @param horizontal the horizontal style
+     * @return the {@link Sheet}
      */
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
@@ -1097,10 +1092,10 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * 样式表头样式
+     * Setting the header cell styles
      *
-     * @param style 样式值
-     * @return worksheet实例
+     * @param style the styles value
+     * @return the {@link Sheet}
      */
     public Sheet setHeadStyle(int style) {
         headStyle = style;
@@ -1162,6 +1157,9 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     /**
      * Write some final info
+     *
+     * @param workSheetPath the worksheet path
+     * @throws IOException if I/O error occur
      */
     public void afterSheetAccess(Path workSheetPath) throws IOException {
         // relationship
@@ -1301,6 +1299,7 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     /**
      * Check the odd rows
+     *
      * @return true if odd rows
      */
     protected boolean isOdd() {
@@ -1376,6 +1375,7 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     /**
      * Check the header information is exist
+     *
      * @return true if exist
      */
     public boolean hasHeaderColumns() {

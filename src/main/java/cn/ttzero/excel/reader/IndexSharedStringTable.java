@@ -141,7 +141,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      *
      * @param c the character value
      * @return the value index of table
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public int push(char c) throws IOException {
@@ -154,7 +154,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      *
      * @param key the string value
      * @return the value index of table
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     @Override
     public int push(String key) throws IOException {
@@ -167,6 +167,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      *
      * @param index the value's index in table
      * @return the string value at index
+     * @throws IOException if I/O error occur
      */
     public String get(int index) throws IOException {
         checkBound(index);
@@ -212,6 +213,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      * @param array Destination array
      * @return The number of string read, or -1 if the end of the
      *              stream has been reached
+     * @throws IOException if I/O error occur
      */
     public int get(int fromIndex, String[] array) throws IOException {
         checkBound(fromIndex);
@@ -259,7 +261,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     /**
      * Write buffered data to channel
      *
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     private void flush() throws IOException {
         buffer.flip();
@@ -271,6 +273,8 @@ public class IndexSharedStringTable extends SharedStringTable {
 
     /**
      * Puts the main's position into index file if need.
+     *
+     * @throws IOException if I/O error occur
      */
     private void putsIndex() throws IOException {
         // Check status

@@ -20,16 +20,17 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * 设置SQL参数用
+ * Setting the {@link PreparedStatement} parameters
+ * <p>
  * Created by guanquan.wang on 2017/9/13.
  */
 @FunctionalInterface
 public interface ParamProcessor {
     /**
-     * 设置SQL参数
+     * Setting the {@link PreparedStatement} parameters
      *
-     * @param ps PreparedStatement
-     * @throws SQLException
+     * @param ps the {@link PreparedStatement}
+     * @throws SQLException if SQL error occur
      */
     void build(PreparedStatement ps) throws SQLException;
 }

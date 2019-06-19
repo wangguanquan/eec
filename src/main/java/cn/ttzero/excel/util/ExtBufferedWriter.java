@@ -21,7 +21,8 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * 单线程操作流，内部复用buffer
+ * Single-threaded operation stream, internal multiplexing buffer
+ * <p>
  * Created by guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
@@ -56,28 +57,42 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     /**
-     * @param n
-     * @return
+     * Write integer value
+     *
+     * @param n the integer value
+     * @throws IOException if I/O error occur
      */
     public void writeInt(int n) throws IOException {
         char[] temp = toChars(n);
         write(temp);
     }
 
+    /**
+     * Write long value
+     *
+     * @param l the long value
+     * @throws IOException if I/O error occur
+     */
     public void write(long l) throws IOException {
         char[] temp = toChars(l);
         write(temp);
     }
 
+    /**
+     * Write single-precision floating-point value
+     *
+     * @param f the single-precision floating-point value
+     * @throws IOException if I/O error occur
+     */
     public void write(float f) throws IOException {
         write(Float.toString(f));
     }
 
     /**
-     * escape character
+     * Write as escape character
      *
      * @param c a character value
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     public void escapeWrite(char c) throws IOException {
         if (c > 62) {
@@ -92,10 +107,10 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     /**
-     * escape text
+     * Write as escape text
      *
      * @param text string
-     * @throws IOException if io error occur
+     * @throws IOException if I/O error occur
      */
     public void escapeWrite(String text) throws IOException {
         char[] block = text.toCharArray();
@@ -128,8 +143,10 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     /**
-     * @param d
-     * @return
+     * Write double-precision floating-point value
+     *
+     * @param d the double-precision floating-point value
+     * @throws IOException if I/O error occur
      */
     public void write(double d) throws IOException {
         write(Double.toString(d));

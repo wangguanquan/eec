@@ -33,7 +33,9 @@ import java.util.List;
  * method to achieve segmented loading of data. The {@code more}
  * method returns NULL or an empty array to complete the current
  * worksheet write
+ *
  * @see ListMapSheet
+ * <p>
  * Created by guanquan.wang at 2018-01-26 14:48
  */
 public class ListSheet<T> extends Sheet {
@@ -194,7 +196,7 @@ public class ListSheet<T> extends Sheet {
                 compact();
                 data.addAll(list);
                 @SuppressWarnings("unchecked")
-				ListSheet<T> copy = getClass().cast(clone());
+                ListSheet<T> copy = getClass().cast(clone());
                 copy.start = 0;
                 copy.end = list.size();
                 workbook.insertSheet(id, copy);
@@ -433,7 +435,7 @@ public class ListSheet<T> extends Sheet {
             int n = id;
             for (int i = end; i < len; ) {
                 @SuppressWarnings("unchecked")
-				ListSheet<T> copy = getClass().cast(clone());
+                ListSheet<T> copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = i + limit < len ? i + limit : len);
                 copy.size = copy.end - copy.start;

@@ -40,11 +40,14 @@ import java.util.List;
  * 工作簿是Excel的基础单元，一个xlsx文件对应一个工作簿实例
  * 先设置属性和添加Sheet最后调writeTo方法执行写操作。
  * writeTo和create是一个终止语句，应该放置在未尾否则设置将不会被反应到最终的Excel文件中。
- *
- * @link https://poi.apache.org/encryption.html encrypted
- * @link https://msdn.microsoft.com/library
- * @link https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#
- * @link https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)
+ * <p>
+ * <a href="https://poi.apache.org/encryption.html">https://poi.apache.org/encryption.html</a>
+ * <p>
+ * <a href="https://msdn.microsoft.com/library">https://msdn.microsoft.com/library</a>
+ * <p>
+ * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#</a>
+ * <p>
+ * <a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)</a>
  * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
@@ -194,7 +197,6 @@ public class Workbook implements Storageable {
      *
      * @param waterMark 水印
      * @return 工作簿
-     * @link {WaterMark#of}
      */
     public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -410,7 +412,7 @@ public class Workbook implements Storageable {
     /**
      * 尾部添加Sheet，未命令名
      * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
      * </p>
      *
      * @param sql     SQL文
@@ -426,7 +428,7 @@ public class Workbook implements Storageable {
     /**
      * 尾部添加Sheet
      * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
      * </p>
      *
      * @param name    名称
@@ -488,7 +490,7 @@ public class Workbook implements Storageable {
     /**
      * 尾部添加Sheet，未命令名
      * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
      * </p>
      *
      * @param ps      PreparedStatement
@@ -504,7 +506,7 @@ public class Workbook implements Storageable {
     /**
      * 尾部添加Sheet
      * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -> ps.setString(1, "middle") ...</code>
+     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
      * </p>
      *
      * @param name    名称
@@ -613,9 +615,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 以Excel 97-2003格式保存
+     * Save as excel97~2003
+     * <p>
+     * You mast add eec-e3-support.jar into class path to support excel97~2003
      *
-     * @return 工作薄
+     * @return the {@link Workbook}
+     * @throws OperationNotSupportedException if eec-e3-support not import into class path
      */
     public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
@@ -629,7 +634,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * output export info
+     * Output the export detail info
+     *
+     * @param code the message code in message properties file
      */
     public void what(String code) {
         String msg = i18N.get(code);
@@ -640,7 +647,10 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * output export info
+     * Output export detail info
+     *
+     * @param code the message code in message properties file
+     * @param args the placeholder values
      */
     public void what(String code, String... args) {
         String msg = i18N.get(code, args);
@@ -664,8 +674,8 @@ public class Workbook implements Storageable {
      * 如果Path是文件，则将写到该文件下。
      * </p>
      *
-     * @param path 保存地址
-     * @throws IOException         IO异常
+     * @param path the output path
+     * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path) throws IOException {
@@ -690,8 +700,8 @@ public class Workbook implements Storageable {
      * 输出到指定流
      *
      * @param os OutputStream
-     * @throws IOException         IO异常
-     * @throws ExcelWriteException 其它异常
+     * @throws IOException         if I/O error occur
+     * @throws ExcelWriteException other runtime error
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
         workbookWriter.writeTo(os);
@@ -701,8 +711,8 @@ public class Workbook implements Storageable {
      * 输出到文件
      *
      * @param file 文件名
-     * @throws IOException         IO异常
-     * @throws ExcelWriteException 其它异常
+     * @throws IOException         if I/O error occur
+     * @throws ExcelWriteException other runtime error
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
         if (!file.getParentFile().exists()) {

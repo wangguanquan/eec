@@ -58,7 +58,7 @@ public class Font implements Cloneable {
      * eq: italic_bold_12_宋体 // 斜体 加粗 12号字 宋体
      * eq: bold underLine 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
      * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
-     * @return
+     * @return the {@link Font}
      */
     public static Font parse(String fontString) throws FontParseException {
         if (fontString.isEmpty()) {

@@ -28,7 +28,7 @@ import java.util.*;
 
 /**
  * Read sharedString data
- *
+ * <p>
  * For large files, it is impossible to load all data into the
  * memory and get it by index. The current practice is to partition
  * and divide the data into three areas: forward, backward, and hot.
@@ -40,7 +40,7 @@ import java.util.*;
  * loaded twice will be marked, the marked blocks will be placed in
  * the hot area when they are repeatedly read, and the hot area will
  * be eliminated by the LRU page replacement algorithm.
- *
+ * <p>
  * Create by guanquan.wang at 2018-09-27 14:28
  */
 public class SharedStrings implements AutoCloseable {
@@ -78,9 +78,9 @@ public class SharedStrings implements AutoCloseable {
      * Constructs a SharedString with the xml path, please call
      * {@link SharedStrings#load()} after instance
      *
-     * @param sstPath the xml file path
+     * @param sstPath   the xml file path
      * @param cacheSize the number of word per load
-     * @param hotSize the number of high frequency word
+     * @param hotSize   the number of high frequency word
      */
     SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
@@ -186,6 +186,9 @@ public class SharedStrings implements AutoCloseable {
 
                 if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
                 else hot = FixSizeLRUCache.create();
+                // Instance the SharedStringTable
+                sst = new IndexSharedStringTable();
+                sst.setShortSectorSize(9);
             } else {
                 forward = new String[max];
             }
@@ -193,9 +196,6 @@ public class SharedStrings implements AutoCloseable {
             max = 0;
         }
         escapeBuf = new StringBuilder();
-        // Instance the SharedStringTable
-        sst = new IndexSharedStringTable();
-        sst.setShortSectorSize(9);
         return this;
     }
 
@@ -415,7 +415,7 @@ public class SharedStrings implements AutoCloseable {
             // End of <si>
             if (nChar < len1 && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
                 forward[n++] = tmp;
-                sst.push(forward[n - 1]);
+                if (sst != null) sst.push(forward[n - 1]);
                 nChar += 5;
             } else {
                 StringBuilder buf = new StringBuilder(tmp);
@@ -440,7 +440,7 @@ public class SharedStrings implements AutoCloseable {
                     nChar += 4;
                 }
                 forward[n++] = buf.toString();
-                sst.push(forward[n - 1]);
+                if (sst != null) sst.push(forward[n - 1]);
             }
 
             // An integral page records
