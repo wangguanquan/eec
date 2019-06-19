@@ -17,7 +17,8 @@
 package org.ttzero.excel.entity;
 
 /**
- * xlsx文件最大列数为16_384，如果超出这个数将抛出此异常
+ * The maximum number of columns in the xlsx file is 16_384.
+ * If this number is exceeded, this exception will occur.
  * <p>
  * Created by guanquan.wang on 2017/10/19.
  */

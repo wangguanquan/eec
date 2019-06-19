@@ -17,7 +17,7 @@
 package org.ttzero.excel.entity.style;
 
 /**
- * 定义边框样式
+ * Border style
  * <p>
  * Created by guanquan.wang on 2018-02-06 08:55
  */

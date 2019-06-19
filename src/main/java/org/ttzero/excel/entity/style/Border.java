@@ -23,11 +23,14 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 
 /**
- * 边框
- * 边框包含方位，样式和颜色，Excel边框有6个方位，
- * 分别是left,right,top,bottom,diagonalDown,diagonalUp
- * 样式请参照BorderStyle
- * EEC默认边框颜色为#333333
+ * Border line styles and colors
+ *
+ * The border contains orientation, style and color. The Excel
+ * border has 6 orientations, which are left, right, top, bottom,
+ * diagonalDown, diagonalUp. For the style, please refer to {@link BorderStyle}.
+ * The default border color is #333333 in EEC
+ *
+ * @see BorderStyle
  * <p>
  * Created by guanquan.wang on 2018-02-06 08:55
  */
@@ -42,7 +45,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格上方边框
+     * Top line style
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -53,7 +56,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格右方边框
+     * Right line style
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -64,7 +67,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格下方边框
+     * Bottom line style
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -75,7 +78,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格左方边框
+     * Left line style
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -86,7 +89,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格左上到右下方边框[\]
+     * Top-left to bottom-right line style [\]
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -97,19 +100,7 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格边框适用于上下左右4个方位
-     *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
-     */
-    public Border setBorder(BorderStyle style) {
-        borders[0] = new SubBorder(style, defaultColor);
-        borders[1] = borders[2] = borders[3] = borders[0];
-        return this;
-    }
-
-    /**
-     * 使用默认颜色设置单元格左下到右上方边框[/]
+     * Bottom-left to top-right line style [/]
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -120,7 +111,20 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格左下到右上和右下到右上方边框[X]
+     * Setting top-right-bottom-left line style
+     *
+     * @param style the {@link BorderStyle}
+     * @return the {@link Border}
+     */
+    public Border setBorder(BorderStyle style) {
+        borders[0] = new SubBorder(style, defaultColor);
+        borders[1] = borders[2] = borders[3] = borders[0];
+        return this;
+    }
+
+
+    /**
+     * Setting top-left to bottom-right and bottom-left to top-right line style [X]
      *
      * @param style the {@link BorderStyle}
      * @return the {@link Border}
@@ -132,10 +136,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格上方边框
+     * Top line style
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setBorderTop(BorderStyle style, Color color) {
@@ -144,10 +148,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格右方边框
+     * Right line style
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setBorderRight(BorderStyle style, Color color) {
@@ -156,10 +160,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格下方边框
+     * Bottom line style
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setBorderBottom(BorderStyle style, Color color) {
@@ -168,10 +172,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格左方边框
+     * Left line style
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setBorderLeft(BorderStyle style, Color color) {
@@ -180,10 +184,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格左上到右下方边框[\]
+     * Top-left to bottom-right line style [\]
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setDiagonalDown(BorderStyle style, Color color) {
@@ -192,10 +196,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格左下到右上方边框[/]
+     * Bottom-left to top-right line style [/]
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setDiagonalUp(BorderStyle style, Color color) {
@@ -204,10 +208,10 @@ public class Border {
     }
 
     /**
-     * 使用指定颜色设置单元格左下到右上和右下到右上方边框[X]
+     * Setting top-left to bottom-right and bottom-left to top-right line style [X]
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setDiagonal(BorderStyle style, Color color) {
@@ -217,10 +221,10 @@ public class Border {
     }
 
     /**
-     * 使用默认颜色设置单元格边框，适用于上下左右4个方位
+     * Setting top-right-bottom-left line style
      *
      * @param style the {@link BorderStyle}
-     * @param color the border color
+     * @param color the border {@link Color}
      * @return the {@link Border}
      */
     public Border setBorder(BorderStyle style, Color color) {
@@ -273,14 +277,17 @@ public class Border {
     }
 
     /**
-     * 设置顺序top-right-bottom-left，属性style name - color
-     * 如果设置不完全的话，未设置的方位无边框
-     * 如果只设置方位不设置颜色时按最后一个颜色补足
+     * The setting order is top -&gt; right -&gt; bottom -&gt; left, the
+     * attribute order is style-name + color, if the orientation setting
+     * is not complete, the unset orientation has no border. If only the
+     * orientation is not set, the last color will be complemented.
+     * <p>
+     * eq:
      * thin red
      * thin red thin dashed dashed
      * medium black thick #cccccc double black hair green
      * none none thin thin
-     *
+     * </p>
      * @param text the border value
      * @return the parse value of {@link Border}
      */

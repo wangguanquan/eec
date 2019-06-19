@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.annotation;
 
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,18 +23,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 指定字段不导出
+ * Specified the field witch not imported mapping.
  * <p>
- * Created by guanquan.wang at 2018-01-30 15:09
+ * Created by guanquan.wang at 2018-10-24 09:29
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface NotExport {
+public @interface IgnoreImport {
     /**
-     * 添加不导出的原因，方便开发者阅读
+     * Add reasons for not importing, for developers to read
      *
-     * @return 原因
+     * @return the reason for not import
      */
     String value() default "";
 }

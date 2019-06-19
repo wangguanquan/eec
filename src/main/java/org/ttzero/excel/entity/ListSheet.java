@@ -18,7 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.DisplayName;
-import org.ttzero.excel.annotation.NotExport;
+import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -29,8 +29,8 @@ import java.util.List;
 /**
  * List is the most important data source, you can pass all
  * the data at a time, or customize the worksheet to extends
- * the {@code ListSheet}, and then override the {@code more}
- * method to achieve segmented loading of data. The {@code more}
+ * the {@code ListSheet}, and then override the {@link #more}
+ * method to achieve segmented loading of data. The {@link #more}
  * method returns NULL or an empty array to complete the current
  * worksheet write
  *
@@ -300,11 +300,14 @@ public class ListSheet<T> extends Sheet {
     /**
      * Get the first object of the object array witch is not NULL,
      * reflect all declared fields, and then do the following steps
-     * step 1. If there is has DisplayName annotation, the value of
+     * <p>
+     * step 1. If there is has {@link DisplayName} annotation, the value of
      * this annotation is used as the column name.
-     * step 2. If the DisplayName annotation has no value or no
-     * DisplayName annotation, the field name is used as the column name.
-     * step 3. Skip this Field if field has a NotExport annotation
+     * <p>
+     * step 2. If the {@link DisplayName} annotation has no value or no
+     * {@link DisplayName} annotation, the field name is used as the column name.
+     * <p>
+     * step 3. Skip this Field if field has a {@link IgnoreExport} annotation
      * <p>
      * The column order is the same as the order in declared fields.
      *
@@ -320,7 +323,7 @@ public class ListSheet<T> extends Sheet {
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 String gs = field.toGenericString();
-                NotExport notExport = field.getAnnotation(NotExport.class);
+                IgnoreExport notExport = field.getAnnotation(IgnoreExport.class);
                 if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
                     fields[i] = null;
                     continue;
@@ -468,7 +471,7 @@ public class ListSheet<T> extends Sheet {
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
-     * this value between the speed and memory. You can refer to 2^8 ~ 2^10
+     * this value between the speed and memory. You can refer to {@code 2^8 ~ 2^10}
      * <p>
      * This method is blocked
      *

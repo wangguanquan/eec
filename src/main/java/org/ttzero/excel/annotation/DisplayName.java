@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 导出对象数组时指定对象的导出信息
+ * Specify export information for exporting object-array
  * <p>
  * Created by guanquan.wang at 2018-01-30 13:23
  */
