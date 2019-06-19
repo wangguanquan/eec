@@ -368,24 +368,23 @@ public class SharedStrings implements AutoCloseable {
         while ((length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
             length += offset;
             nChar = offset &= 0;
-            int cursor, len0 = length - 3, len1 = len0 - 1;
+            int len0 = length - 3, len1 = len0 - 1;
             int[] t = findT(cb, nChar, length, len0, len1, n);
 
             nChar = t[0];
             n = t[1];
-            cursor = t[2];
 
             limit_forward = n;
 
-            if (cursor < length) {
-                System.arraycopy(cb, cursor, cb, 0, offset = length - cursor);
+            if (nChar < length) {
+                System.arraycopy(cb, nChar, cb, 0, offset = length - nChar);
             }
 
             // A page
             if (n == page) {
                 ++offsetM;
                 break;
-            } else if (length < cb.length && nChar == len0) { // EOF
+            } else if (length < cb.length && nChar == length - 6) { // EOF '</sst>'
                 if (max == -1) { // Reset totals when unknown size
                     max = offsetM * page + n;
                 }
@@ -397,30 +396,79 @@ public class SharedStrings implements AutoCloseable {
     }
 
     private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) throws IOException {
-        int cursor = 0;
+        int cursor;
         for (; nChar < length && n < page; ) {
-            for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
-                || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
-                ;
-            if (nChar >= len0) break; // Not found
             cursor = nChar;
-            int a = nChar += 3;
-            if (cb[nChar - 1] == ' ') { // space="preserve"
-                for (; nChar < len0 && cb[nChar++] != '>'; ) ;
-                if (nChar >= len0) break; // Not found
-                cursor = nChar;
-                a = nChar;
-            }
-            for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
-                || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar)
-                ;
-            if (nChar >= len1) break; // Not found
-            forward[n++] = nChar > a ? unescape(escapeBuf, cb, a, nChar) : null;
-            sst.push(forward[n - 1]);
+            int[] subT = subT(cb, nChar, len0, len1);
+            int a = subT[0];
+            if (a == -1) break;
+            nChar = subT[1];
+
+            String tmp = unescape(escapeBuf, cb, a, nChar);
+
+             // Skip the end tag of 't'
             nChar += 4;
-            cursor = nChar;
+
+            // Test the next tag
+            for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'); ++nChar);
+
+            // End of <si>
+            if (nChar < len1 && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
+                forward[n++] = tmp;
+                sst.push(forward[n - 1]);
+                nChar += 5;
+            } else {
+                StringBuilder buf = new StringBuilder(tmp);
+                int t = nChar;
+                // Find the end tag of 'si'
+                for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
+                    || cb[nChar + 2] != 's' || cb[nChar + 3] != 'i' || cb[nChar + 4] != '>'); ++nChar);
+                if (nChar >= len1) {
+                    nChar = cursor;
+                    break;
+                }
+                int end = nChar;
+                nChar = t;
+                // Loop and join
+                for (; ; ) {
+                    subT = subT(cb, nChar, end, end);
+                    a = subT[0];
+                    if (a == -1) break;
+                    nChar = subT[1];
+
+                    buf.append(unescape(escapeBuf, cb, a, nChar));
+                    nChar += 4;
+                }
+                forward[n++] = buf.toString();
+                sst.push(forward[n - 1]);
+            }
+
+            // An integral page records
+            if (n == page) break;
         }
-        return new int[]{nChar, n, cursor};
+        // DEBUG the last character
+//        logger.info("---------{}---------", new String(cb, nChar, length - nChar));
+        return new int[] { nChar, n };
+    }
+
+    private int[] subT(char[] cb, int nChar, int len0, int len1) {
+
+        for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
+            || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
+            ;
+        if (nChar >= len0) return new int[]{ -1 }; // Not found
+        int a = nChar += 3;
+        if (cb[nChar - 1] == ' ') { // space="preserve"
+            for (; nChar < len0 && cb[nChar++] != '>'; ) ;
+            if (nChar >= len0) return new int[] { -1 }; // Not found
+            a = nChar;
+        }
+        for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
+            || cb[nChar + 2] != 't' || cb[nChar + 3] != '>'); ++nChar)
+            ;
+        if (nChar >= len1) return new int[] { -1 }; // Not found
+
+        return new int[] { a, nChar };
     }
 
     /**
