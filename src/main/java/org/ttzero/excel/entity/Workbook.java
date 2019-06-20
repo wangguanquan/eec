@@ -42,54 +42,95 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 工作簿是Excel的基础单元，一个xlsx文件对应一个工作簿实例
- * 先设置属性和添加Sheet最后调writeTo方法执行写操作。
- * writeTo和create是一个终止语句，应该放置在未尾否则设置将不会被反应到最终的Excel文件中。
+ * The workbook is the basic unit of Excel, and an 'xlsx' or 'xls' file
+ * corresponds to a workbook instance.
  * <p>
- * <a href="https://poi.apache.org/encryption.html">https://poi.apache.org/encryption.html</a>
+ * When writing an Excel file, you must setting the property first and
+ * then add {@link Sheet} into Workbook, finally call the {@link #writeTo}
+ * method to perform the write operation. The default file format is open-xml(xlsx).
+ * You can also call the {@link #saveAsExcel2003()} method to output as 'xls'
+ * format (only supported BIFF8 format, ie excel 97~2003).
  * <p>
- * <a href="https://msdn.microsoft.com/library">https://msdn.microsoft.com/library</a>
+ * The property contains {@link #setName(String)}, {@link #setCreator(String)},
+ * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setOddFill(Fill)}
+ * You can also call {@link #setWorkbookWriter(IWorkbookWriter)} method to setting
+ * a custom WorkbookWriter to achieve special demand.
  * <p>
- * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#</a>
+ * The {@link #writeTo} method is a terminating statement, and all settings
+ * placed after this statement will not be reflected in the final Excel file.
  * <p>
- * <a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)</a>
+ * A typical example as follow:
+ * <code>
+ *     new Workbook("{name}", "{author}")
+ *         // Print debug logs
+ *         .watch(System.out::println)
+ *         // Auto size the column width
+ *         .setAutoSize(true)
+ *         // Add a Worksheet
+ *         .addSheet(new ListSheet<ListObjectSheetTest.Item>("{worksheet name}").setData(new ArrayList<>()))
+ *         // Add an other Worksheet
+ *         .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList<>()))
+ *         // Write to absolute path '/tmp/{name}.xlsx'
+ *         .writeTo(Paths.get("/tmp/"));
+ * </code>
+ * <p>
+ * <a href="https://poi.apache.org">POI</a>&nbsp;|&nbsp;
+ * <a href="https://msdn.microsoft.com/library">Office 365</a>&nbsp;|&nbsp;
+ * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">DocumentFormat.OpenXml.Spreadsheet Namespace</a>&nbsp;|&nbsp;
+ * <a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">介绍 Microsoft Office (2007) Open XML 文件格式</a>
  * <p>
  * Created by guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storageable {
     private Logger logger = LogManager.getLogger(getClass());
     /**
-     * 工作薄名，最终反应到Excel文件名
+     * The Workbook name, reaction to the Excel file name
      */
     private String name;
     private Sheet[] sheets;
-    private WaterMark waterMark; // workbook背景，应用于所有sheet页
+    private WaterMark waterMark;
     private int size;
     private Connection con;
-    private boolean autoSize; // 自动列宽
-    private int autoOdd = 0; // 自动隔行变色
-    private String creator, company; // 创建者，公司
-    private Fill oddFill; // 偶数行的填充
-    private Watch watch; // A debug watcher
+    /**
+     * Auto size flag
+     */
+    private boolean autoSize;
+    /**
+     * Automatic interlacing fill, default fill color is '#E2EDDA'
+     */
+    private int autoOdd = 0;
+    private String creator, company;
+    /**
+     * The fill
+     */
+    private Fill oddFill;
+    /**
+     * A windows to debug
+     */
+    private Watch watch;
     private I18N i18N;
 
-    private SharedStrings sst; // 共享字符区
-    private Styles styles; // 共享样式
+    private SharedStrings sst;
+    private Styles styles;
 
     private IWorkbookWriter workbookWriter;
 
     /**
-     * 创建未命名工作簿
+     * Create a unnamed workbook
+     *
+     * EEC finds the 'non-name-file' keyword under the {@code resources/I18N/message.XXX.properties}
+     * file first. If there contains the keyword, use this value as the default file name,
+     * otherwise use 'Non name' as the name.
      */
     public Workbook() {
         this(null);
     }
 
     /**
-     * 创建工作簿
-     * 保存时以此名称为文件名
+     * Create a workbook with the specified name. Use this name as
+     * the file name when saving to disk
      *
-     * @param name 名称
+     * @param name the workbook name
      */
     public Workbook(String name) {
         this(name, null);
@@ -128,7 +169,7 @@ public class Workbook implements Storageable {
      * 设置工作簿名称
      *
      * @param name 名称
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setName(String name) {
         this.name = name;
@@ -177,7 +218,7 @@ public class Workbook implements Storageable {
      * 设置Sheet页
      *
      * @param sheets Sheet数组
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setSheets(final Sheet[] sheets) {
         this.sheets = sheets.clone();
@@ -190,7 +231,7 @@ public class Workbook implements Storageable {
      * ，此水印打印的时候并不会被打印。
      * </p>
      *
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public WaterMark getWaterMark() {
         return waterMark;
@@ -201,7 +242,7 @@ public class Workbook implements Storageable {
      * <p>可使用<code>WaterMark.of()</code>创建水印</p>
      *
      * @param waterMark 水印
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -214,7 +255,7 @@ public class Workbook implements Storageable {
      * 此eec内部产生的Statement和ResultSet会主动关闭</p>
      *
      * @param con 连接
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setConnection(Connection con) {
         this.con = con;
@@ -255,7 +296,7 @@ public class Workbook implements Storageable {
      * 设置作者
      *
      * @param creator 作者
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setCreator(String creator) {
         this.creator = creator;
@@ -266,7 +307,7 @@ public class Workbook implements Storageable {
      * 设置公司名
      *
      * @param company 公司名
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setCompany(String company) {
         this.company = company;
@@ -276,7 +317,7 @@ public class Workbook implements Storageable {
     /**
      * 取消隔行变色
      *
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook cancelOddFill() {
         this.autoOdd = 1;
@@ -287,7 +328,7 @@ public class Workbook implements Storageable {
      * 设置隔行变色的背景色，默认为#e2edda
      *
      * @param fill 偶数行背景色
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setOddFill(Fill fill) {
         this.oddFill = fill;
@@ -298,7 +339,7 @@ public class Workbook implements Storageable {
      * 尾部添加Sheet
      *
      * @param sheet Sheet
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
@@ -312,7 +353,7 @@ public class Workbook implements Storageable {
      *
      * @param data    数据，Map数组/对象数组
      * @param columns 表头
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook addSheet(List<?> data, Sheet.Column... columns) {
         return addSheet(null, data, columns);
@@ -324,7 +365,7 @@ public class Workbook implements Storageable {
      * @param name    名称
      * @param data    数据，Map数组/对象数组
      * @param columns 表头
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Workbook addSheet(String name, List<?> data, Sheet.Column... columns) {
@@ -358,7 +399,7 @@ public class Workbook implements Storageable {
      *
      * @param rs      ResultSet
      * @param columns 表头
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook addSheet(ResultSet rs, Sheet.Column... columns) {
         return addSheet(null, rs, columns);
@@ -370,7 +411,7 @@ public class Workbook implements Storageable {
      * @param name    名称
      * @param rs      ResultSet
      * @param columns 表头
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook addSheet(String name, ResultSet rs, Sheet.Column... columns) {
         ResultSetSheet sheet = new ResultSetSheet(name, columns);
@@ -384,8 +425,8 @@ public class Workbook implements Storageable {
      *
      * @param sql     SQL文
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String sql, Sheet.Column... columns) throws SQLException {
         return addSheet(null, sql, columns);
@@ -397,8 +438,8 @@ public class Workbook implements Storageable {
      * @param name    名称
      * @param sql     SQL文
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, String sql, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
@@ -423,8 +464,8 @@ public class Workbook implements Storageable {
      * @param sql     SQL文
      * @param pp      参数
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
@@ -440,8 +481,8 @@ public class Workbook implements Storageable {
      * @param sql     SQL文
      * @param pp      参数
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
@@ -463,8 +504,8 @@ public class Workbook implements Storageable {
      *
      * @param ps      PreparedStatement
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(PreparedStatement ps, Sheet.Column... columns) throws SQLException {
         return addSheet(null, ps, columns);
@@ -476,8 +517,8 @@ public class Workbook implements Storageable {
      * @param name    名称
      * @param ps      PreparedStatement
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
@@ -501,8 +542,8 @@ public class Workbook implements Storageable {
      * @param ps      PreparedStatement
      * @param pp      参数
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         return addSheet(null, ps, pp, columns);
@@ -518,8 +559,8 @@ public class Workbook implements Storageable {
      * @param ps      PreparedStatement
      * @param pp      参数
      * @param columns 列头
-     * @return 工作簿
-     * @throws SQLException SQL异常
+     * @return the {@link Workbook}
+     * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
         ensureCapacityInternal();
@@ -541,7 +582,7 @@ public class Workbook implements Storageable {
      *
      * @param index 下标从0开始
      * @param sheet 要插入的Sheet
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook insertSheet(int index, Sheet sheet) {
         ensureCapacityInternal();
@@ -563,7 +604,7 @@ public class Workbook implements Storageable {
      * 移除指定下标的Sheet
      *
      * @param index 下标从0开始
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook remove(int index) {
         if (index < 0 || index >= size) {
@@ -612,7 +653,7 @@ public class Workbook implements Storageable {
      * 添加观察者
      *
      * @param watch 观察者
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook watch(Watch watch) {
         this.watch = watch;
