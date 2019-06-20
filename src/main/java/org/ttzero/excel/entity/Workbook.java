@@ -137,10 +137,11 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 创建工作簿
+     * Create a workbook with the specified name and author.
      *
-     * @param name    名称
-     * @param creator 作者
+     * @param name    the workbook name
+     * @param creator the author, it will getting the
+     *      {@code System.getProperty("user.name")} if it not be setting.
      */
     public Workbook(String name, String creator) {
         this.name = name;
@@ -149,7 +150,7 @@ public class Workbook implements Storageable {
 
         sst = new SharedStrings();
         i18N = new I18N();
-        // create styles
+        // Create a global styles
         styles = Styles.create(i18N);
 
         // Default writer
@@ -157,18 +158,18 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 返回工作簿名称
+     * Returns the workbook name
      *
-     * @return name
+     * @return the workbook name
      */
     public String getName() {
         return name;
     }
 
     /**
-     * 设置工作簿名称
+     * Setting the workbook name
      *
-     * @param name 名称
+     * @param name the workbook name
      * @return the {@link Workbook}
      */
     public Workbook setName(String name) {
@@ -176,60 +177,81 @@ public class Workbook implements Storageable {
         return this;
     }
 
+    /**
+     * Returns the autoOdd setting
+     *
+     * @return 1 if odd-fill
+     */
     public int getAutoOdd() {
         return autoOdd;
     }
 
+    /**
+     * Returns the excel author
+     *
+     * @return the author
+     */
     public String getCreator() {
         return creator;
     }
 
+    /**
+     * Returns the company name where the author is employed
+     *
+     * @return the company name
+     */
     public String getCompany() {
         return company;
     }
 
+    /**
+     * Returns the odd-fill style
+     *
+     * @return the {@link Fill} style
+     */
     public Fill getOddFill() {
         return oddFill;
     }
 
+    /**
+     * Returns the {@link I18N} util
+     *
+     * @return the {@link I18N} util
+     */
     public I18N getI18N() {
         return i18N;
     }
 
+    /**
+     * Returns the size of {@link Sheet} in this workbook
+     *
+     * @return ths size of Worksheet
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Returns the Shared String Table
+     *
+     * @return the global {@link SharedStrings}
+     */
     public SharedStrings getSst() {
         return sst;
     }
 
 
     /**
-     * 返回所有Sheet页
+     * Returns all {@link Sheet} in this workbook
      *
-     * @return Sheet数组
+     * @return array of {@link Sheet}
      */
     public final Sheet[] getSheets() {
         return Arrays.copyOf(sheets, size);
     }
 
     /**
-     * 设置Sheet页
-     *
-     * @param sheets Sheet数组
-     * @return the {@link Workbook}
-     */
-    public Workbook setSheets(final Sheet[] sheets) {
-        this.sheets = sheets.clone();
-        return this;
-    }
-
-    /**
-     * 返回水印
-     * <p>标准excel文件中没有水印，所谓水印就是设置图片背景然后平铺以达到效果
-     * ，此水印打印的时候并不会被打印。
-     * </p>
+     * Returns the {@link WaterMark}
      *
      * @return the {@link Workbook}
      */
@@ -238,10 +260,10 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 设置水印
-     * <p>可使用<code>WaterMark.of()</code>创建水印</p>
+     * Setting {@link WaterMark}
+     * <p>Use {@link WaterMark#of} method to create a water mark.</p>
      *
-     * @param waterMark 水印
+     * @param waterMark the water mark
      * @return the {@link Workbook}
      */
     public Workbook setWaterMark(WaterMark waterMark) {
@@ -250,11 +272,14 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 设置数据库连接
-     * <p>工作簿内部不会主动关闭数据库连接，需要外部手动关闭，
-     * 此eec内部产生的Statement和ResultSet会主动关闭</p>
+     * Setting the database {@link Connection}
+     * <p>
+     * EEC does not actively close the database connection,
+     * and needs to be manually closed externally. The {@link java.sql.Statement}
+     * and {@link ResultSet} generated inside this EEC will
+     * be actively closed.
      *
-     * @param con 连接
+     * @param con the database connection
      * @return the {@link Workbook}
      */
     public Workbook setConnection(Connection con) {
@@ -263,10 +288,10 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 设置列宽自动调整
+     * Setting auto-adjust the column width
      *
      * @param autoSize boolean value
-     * @return 工作簿
+     * @return the {@link Workbook}
      */
     public Workbook setAutoSize(boolean autoSize) {
         this.autoSize = autoSize;
@@ -274,9 +299,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 返回列宽是否自动调整
+     * Returns whether to auto-adjust the column width
      *
-     * @return boolean value
+     * @return true if auto-adjust the column width
      */
     public boolean isAutoSize() {
         return autoSize;
@@ -284,18 +309,18 @@ public class Workbook implements Storageable {
 
 
     /**
-     * 返回所有样式
+     * Returns the global {@link Styles}
      *
-     * @return Styles
+     * @return the Styles
      */
     public Styles getStyles() {
         return styles;
     }
 
     /**
-     * 设置作者
+     * Setting the excel author name
      *
-     * @param creator 作者
+     * @param creator the author name
      * @return the {@link Workbook}
      */
     public Workbook setCreator(String creator) {
@@ -304,9 +329,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 设置公司名
+     * Setting the name of the company where the author is employed
      *
-     * @param company 公司名
+     * @param company the company name
      * @return the {@link Workbook}
      */
     public Workbook setCompany(String company) {
@@ -315,7 +340,7 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 取消隔行变色
+     * Cancel the odd-fill style
      *
      * @return the {@link Workbook}
      */
@@ -325,9 +350,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 设置隔行变色的背景色，默认为#e2edda
+     * Setting the odd-fill style, default fill color is #E2EDDA
      *
-     * @param fill 偶数行背景色
+     * @param fill the {@link Fill} style
      * @return the {@link Workbook}
      */
     public Workbook setOddFill(Fill fill) {
@@ -336,9 +361,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
+     * Add a {@link Sheet} to the tail
      *
-     * @param sheet Sheet
+     * @param sheet a Worksheet
      * @return the {@link Workbook}
      */
     public Workbook addSheet(Sheet sheet) {
@@ -349,10 +374,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，默认名称
+     * Add a {@link ListSheet} to the tail with header {@link Sheet.Column} setting.
+     * Also you can use {@code addSheet(new ListSheet&lt;&gt;(data, columns)}
+     * to achieve the same effect.
      *
-     * @param data    数据，Map数组/对象数组
-     * @param columns 表头
+     * @param data    List&lt;?&gt; data
+     * @param columns the header columns
      * @return the {@link Workbook}
      */
     public Workbook addSheet(List<?> data, Sheet.Column... columns) {
@@ -360,11 +387,14 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
+     * Add a {@link ListSheet} to the tail with Worksheet name
+     * and header {@link Sheet.Column} setting. Also you can use
+     * {@code addSheet(new ListSheet&lt;&gt;(name, data, columns)}
+     * to achieve the same effect.
      *
-     * @param name    名称
-     * @param data    数据，Map数组/对象数组
-     * @param columns 表头
+     * @param name    the name of worksheet
+     * @param data    List&lt;?&gt; data
+     * @param columns the header columns
      * @return the {@link Workbook}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -383,6 +413,7 @@ public class Workbook implements Storageable {
         return this;
     }
 
+    // Find the first not null data
     private Object getFirst(List<?> data) {
         if (data == null) return null;
         Object first = data.get(0);
@@ -395,10 +426,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，未命名
+     * Add a {@link ResultSetSheet} to the tail with header {@link Sheet.Column} setting.
+     * Also you can use {@code addSheet(new ResultSetSheet(rs, columns)}
+     * to achieve the same effect.
      *
-     * @param rs      ResultSet
-     * @param columns 表头
+     * @param rs      the {@link ResultSet}
+     * @param columns the header columns
      * @return the {@link Workbook}
      */
     public Workbook addSheet(ResultSet rs, Sheet.Column... columns) {
@@ -406,11 +439,13 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
+     * Add a {@link ResultSetSheet} to the tail with worksheet name
+     * and header {@link Sheet.Column} setting. Also you can use
+     * {@code addSheet(new ResultSetSheet(name, rs, columns)}
      *
-     * @param name    名称
-     * @param rs      ResultSet
-     * @param columns 表头
+     * @param name    the worksheet name
+     * @param rs      the {@link ResultSet}
+     * @param columns the header columns
      * @return the {@link Workbook}
      */
     public Workbook addSheet(String name, ResultSet rs, Sheet.Column... columns) {
@@ -421,10 +456,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，未命名
+     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
+     * Also you can use {@code addSheet(new StatementSheet(connection, sql, columns)}
+     * to achieve the same effect.
      *
-     * @param sql     SQL文
-     * @param columns 列头
+     * @param sql     the query SQL string
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -433,11 +470,14 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
+     * Add a {@link StatementSheet} to the tail with worksheet name
+     * and header {@link Sheet.Column} setting. Also you can use
+     * {@code addSheet(new StatementSheet(name, connection, sql, columns)}
+     * to achieve the same effect.
      *
-     * @param name    名称
-     * @param sql     SQL文
-     * @param columns 列头
+     * @param name    the worksheet name
+     * @param sql     the query SQL string
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -456,14 +496,21 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，未命令名
-     * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
-     * </p>
+     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column}
+     * setting. The {@link ParamProcessor} is a sql parameter replacement
+     * function-interface to replace "?" in the sql string.
+     * <p>
+     * Also you can use {@code addSheet(new StatementSheet(connection, sql, paramProcessor, columns)}
+     * to achieve the same effect.
+     * <p>eq:
+     * <code>
+     *     workbook.addSheet("users", "select id, name from users where `class` = ?"
+     *          , ps -&gt; ps.setString(1, "middle") ...
+     * </code>
      *
-     * @param sql     SQL文
-     * @param pp      参数
-     * @param columns 列头
+     * @param sql     the query SQL string
+     * @param pp      the sql parameter replacement function-interface
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -472,21 +519,31 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
-     * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
-     * </p>
+     * Add a {@link StatementSheet} to the tail with worksheet name
+     * and header {@link Sheet.Column} setting. The {@link ParamProcessor}
+     * is a sql parameter replacement function-interface to replace "?" in
+     * the sql string.
+     * <p>
+     * Also you can use {@code addSheet(new StatementSheet(name, connection, sql, paramProcessor, columns)}
+     * to achieve the same effect.
+     * <p>eq:
+     * <code>
+     *     workbook.addSheet("users", "select id, name from users where `class` = ?"
+     *          , ps -&gt; ps.setString(1, "middle") ...
+     * </code>
      *
-     * @param name    名称
-     * @param sql     SQL文
-     * @param pp      参数
-     * @param columns 列头
+     * @param name    the worksheet name
+     * @param sql     the query SQL string
+     * @param pp      the sql parameter replacement function-interface
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String name, String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String name, String sql, ParamProcessor pp
+        , Sheet.Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
-        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        PreparedStatement ps = con.prepareStatement(sql
+            , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
@@ -500,10 +557,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，未命名
+     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
+     * Also you can use {@code addSheet(new StatementSheet(null, columns).setPs(ps)}
+     * to achieve the same effect.
      *
-     * @param ps      PreparedStatement
-     * @param columns 列头
+     * @param ps      the {@link PreparedStatement}
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -512,11 +571,14 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
+     * Add a {@link StatementSheet} to the tail with worksheet name
+     * and header {@link Sheet.Column} setting. Also you can use
+     * {@code addSheet(new StatementSheet(name, columns).setPs(ps)}
+     * to achieve the same effect.
      *
-     * @param name    名称
-     * @param ps      PreparedStatement
-     * @param columns 列头
+     * @param name    the worksheet name
+     * @param ps      the {@link PreparedStatement}
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -534,14 +596,11 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet，未命令名
-     * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
-     * </p>
+     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
      *
-     * @param ps      PreparedStatement
-     * @param pp      参数
-     * @param columns 列头
+     * @param ps      the {@link PreparedStatement}
+     * @param pp      the sql parameter replacement function-interface
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -550,15 +609,17 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 尾部添加Sheet
-     * <p>采用jdbc方式设置SQL参数
-     * eq: <code>workbook.addSheet("users", "select id, name from users where `class` = ?", ps -&gt; ps.setString(1, "middle") ...</code>
-     * </p>
+     * Add a {@link StatementSheet} to the tail with worksheet name
+     * and header {@link Sheet.Column} setting.
+     * <p>eq:
+     * <code>
+     *     workbook.addSheet("users", ps, ps -&gt; ps.setString(1, "middle") ...
+     * </code>
      *
-     * @param name    名称
+     * @param name    the worksheet name
      * @param ps      PreparedStatement
-     * @param pp      参数
-     * @param columns 列头
+     * @param pp      the sql parameter replacement function-interface
+     * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
@@ -578,10 +639,10 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 在指定位置上插入Sheet
+     * Insert a {@link Sheet} at the specified index
      *
-     * @param index 下标从0开始
-     * @param sheet 要插入的Sheet
+     * @param index the index (zero-base) to insert at
+     * @param sheet a worksheet
      * @return the {@link Workbook}
      */
     public Workbook insertSheet(int index, Sheet sheet) {
@@ -601,9 +662,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 移除指定下标的Sheet
+     * Remove the {@link Sheet} from the specified index
      *
-     * @param index 下标从0开始
+     * @param index the index (zero-base) to be delete
      * @return the {@link Workbook}
      */
     public Workbook remove(int index) {
@@ -623,10 +684,12 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 返回指定下标的Sheet
+     * Returns the Sheet of the specified index
      *
-     * @param index 下标从0开始
-     * @return Sheet
+     * @param index the index (zero-base)
+     * @return the {@link Sheet}
+     * @throws IndexOutOfBoundsException if index is negative number
+     * or greater than the worksheet size in current workbook
      */
     public Sheet getSheetAt(int index) {
         if (index < 0 || index >= size)
@@ -635,10 +698,10 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 返回指定名称的Sheet
+     * Return a {@link Sheet} with the specified name
      *
-     * @param sheetName sheet name
-     * @return Sheet, 未打到时返回null
+     * @param sheetName the sheet name
+     * @return the {@link Sheet}, returns null if not found
      */
     public Sheet getSheet(String sheetName) {
         for (Sheet sheet : sheets) {
@@ -650,9 +713,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 添加观察者
+     * Setting a {@link Watch}
      *
-     * @param watch 观察者
+     * @param watch a debug watch
      * @return the {@link Workbook}
      */
     public Workbook watch(Watch watch) {
@@ -715,12 +778,15 @@ public class Workbook implements Storageable {
     //////////////////////////Print Out/////////////////////////////
 
     /**
-     * 输出工作簿到指定文件夹下
-     * <p>如果Path是文件夹，则将工作簿保存到该文件夹下，
-     * 如果Path是文件，则将写到该文件下。
-     * </p>
+     * Export the workbook to the specified folder
+     * <p>
+     * If the path is a folder, save the workbook to that folder,
+     * if there has duplicate file name, add '(n)' after the output
+     * file name to avoid overwriting the original file.
+     * If it is a file, overwrite the file.
      *
-     * @param path the output path
+     * @param path the output pat, It can be a directory or a
+     *             full file path
      * @throws IOException if I/O error occur
      */
     @Override
@@ -743,9 +809,22 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 输出到指定流
+     * Export the workbook to the specified {@link OutputStream}.
+     * It mostly used for small excel file export and download
+     * <p>
+     * <code>
+     *     public void export(HttpServletResponse response) throws IOException {
+     *         String fileName = java.net.URLEncoder.encode("{name}.xlsx", "UTF-8");
+     *         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"; filename*=utf-8''" + fileName);
+     *         new Workbook("{name}", "{author}")
+     *         .setAutoSize(true)
+     *         .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}", new ArrayList<>()))
+     *         // Write to HttpServletResponse
+     *         .writeTo(response.getOutputStream());
+     *     }
+     * </code>
      *
-     * @param os OutputStream
+     * @param os the OutputStream
      * @throws IOException         if I/O error occur
      * @throws ExcelWriteException other runtime error
      */
@@ -754,9 +833,9 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * 输出到文件
+     * Export the workbook to the specified folder
      *
-     * @param file 文件名
+     * @param file                 the output file name
      * @throws IOException         if I/O error occur
      * @throws ExcelWriteException other runtime error
      */
@@ -767,48 +846,35 @@ public class Workbook implements Storageable {
         workbookWriter.writeTo(file);
     }
 
-//    /**
-//     * 执行创建操作，然后再执行DownProcessor
-//     * eq;<code>workbook.create(path -> ... temp excel path)</code>
-//     * @param processor DownProcessor
-//     * @throws IOException IO异常
-//     * @throws ExcelWriteException 其它异常
-//     */
-//    public void create(DownProcessor processor) throws IOException, ExcelWriteException {
-//        Path zip = createTemp();
-//        processor.exec(zip);
-//    }
-
-
     /////////////////////////////////Template///////////////////////////////////
     private InputStream is;
     private Object o;
 
+    /**
+     * Returns the template io-stream
+     *
+     * @return the io-stream of template
+     */
     public InputStream getTemplate() {
         return is;
     }
 
+    /**
+     * Returns the replacement object
+     *
+     * @return the object
+     */
     public Object getBind() {
         return o;
     }
 
     /**
-     * 设置模版
+     * Bind a excel template and set an object to replace the
+     * placeholder character in template
      *
-     * @param is 从流中读取模版
-     * @return 工作簿
-     */
-    public Workbook withTemplate(InputStream is) {
-        this.is = is;
-        return this;
-    }
-
-    /**
-     * 设置模版和绑定对象
-     *
-     * @param is 从流中读取模版
-     * @param o  绑定对象
-     * @return 工作簿
+     * @param is the template io-stream
+     * @param o  bind a replacement object
+     * @return the {@link Workbook}
      */
     public Workbook withTemplate(InputStream is, Object o) {
         this.is = is;
@@ -820,7 +886,12 @@ public class Workbook implements Storageable {
         return workbookWriter.template();
     }
 
-    // --- Customize workbook writer
+    /**
+     * Setting a customize workbook writer
+     *
+     * @param workbookWriter a customize {@link IWorkbookWriter}
+     * @return the {@link Workbook}
+     */
     public Workbook setWorkbookWriter(IWorkbookWriter workbookWriter) {
         this.workbookWriter = workbookWriter;
         this.workbookWriter.setWorkbook(this);
