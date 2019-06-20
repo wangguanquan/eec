@@ -477,7 +477,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     protected void reMarkPath(Path zip, Path path) throws IOException {
         String name;
         if (StringUtil.isEmpty(name = workbook.getName())) {
-            name = workbook.getI18N().getOrElse("no-name-file", "No name");
+            name = workbook.getI18N().getOrElse("non-name-file", "Non name");
         }
 
         reMarkPath(zip, path, name);
