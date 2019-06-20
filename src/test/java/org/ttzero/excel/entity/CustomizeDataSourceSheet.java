@@ -25,13 +25,13 @@ import java.util.List;
  * micro-services, Mybatis, JPA or any other source. If
  * the data source returns an array of json objects, please
  * convert to an object ArrayList or Map ArrayList, the object
- * ArrayList needs to inherit {@code ListSheet}, the Map ArrayList
- * needs to inherit {@code ListMapSheet} and implement
- * the {@code method} method.
+ * ArrayList needs to inherit {@link ListSheet}, the Map ArrayList
+ * needs to inherit {@link ListMapSheet} and implement
+ * the {@link #more()} method.
  *
  * If other formats cannot be converted to ArrayList, you
- * need to inherit from the base class {@code Sheet} and implement the
- * {@code resetBlockData} and {@code getHeaderColumns} methods.
+ * need to inherit from the base class {@link Sheet} and implement the
+ * {@link Sheet#resetBlockData()} and {@link Sheet#getHeaderColumns()} methods.
  *
  * Create by guanquan.wang at 2019-04-30 15:12
  */
@@ -67,7 +67,7 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
      * The more data you get each time, the faster write speed. You
      * should minimize the database query or network request, but the
      * excessive data will put pressure on the memory. Please balance
-     * this value before the speed and memory. You can refer to 2^8 ~ 2^10
+     * this value before the speed and memory. You can refer to {@code 2^8 ~ 2^10}
      *
      * This method is blocked
      *
@@ -85,7 +85,7 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
     /**
      * The worksheet is written by units of row-block. The default size
      * of a row-block is 32, which means that 32 rows of data are
-     * written at a time. If the data is not enough, the {@code more}
+     * written at a time. If the data is not enough, the {@link #more()}
      * method will be called to get more data.
      *
      * @return the row-block size

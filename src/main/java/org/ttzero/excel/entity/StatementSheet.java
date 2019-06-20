@@ -83,7 +83,7 @@ public class StatementSheet extends ResultSetSheet {
      * Constructor worksheet
      *
      * @param con the Connection
-     * @param sql the sql string
+     * @param sql the query SQL string
      */
     public StatementSheet(Connection con, String sql) {
         this(null, con, sql);
@@ -94,7 +94,7 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param name the worksheet name
      * @param con  the Connection
-     * @param sql  the sql string
+     * @param sql  the query SQL string
      */
     public StatementSheet(String name, Connection con, String sql) {
         super(name);
@@ -116,21 +116,20 @@ public class StatementSheet extends ResultSetSheet {
      * Constructor worksheet
      *
      * @param con the Connection
-     * @param sql the sql string
-     * @param pp  the ParamProcessor
+     * @param sql the query SQL string
+     * @param pp  the sql parameter replacement function-interface
      */
     public StatementSheet(Connection con, String sql, ParamProcessor pp) {
         this(null, con, sql, pp);
     }
-
 
     /**
      * Constructor worksheet
      *
      * @param name the worksheet name
      * @param con  the Connection
-     * @param sql  the sql string
-     * @param pp   the ParamProcessor
+     * @param sql  the query SQL string
+     * @param pp   the sql parameter replacement function-interface
      */
     public StatementSheet(String name, Connection con, String sql, ParamProcessor pp) {
         super(name);
@@ -183,7 +182,7 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param con     the Connection
      * @param sql     the sql string
-     * @param pp      the ParamProcessor
+     * @param pp      the sql parameter replacement function-interface
      * @param columns the header column
      */
     public StatementSheet(Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
@@ -196,7 +195,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param name    the worksheet name
      * @param con     the Connection
      * @param sql     the sql string
-     * @param pp      the ParamProcessor
+     * @param pp      the sql parameter replacement function-interface
      * @param columns the header column
      */
     public StatementSheet(String name, Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
