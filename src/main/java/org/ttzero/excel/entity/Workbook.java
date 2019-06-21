@@ -318,7 +318,16 @@ public class Workbook implements Storageable {
     }
 
     /**
-     * Setting the excel author name
+     * Setting the excel author name.
+     * <p>
+     * If you do not set the creator it will get the current OS login user name,
+     * usually this is not a good idea. Applications are usually publish on server
+     * or cloud server, getting the system login user name doesn't make sense.
+     * If you don't want to set it and default setting the system login user name,
+     * you can set it to an empty string ("").
+     * <p>
+     * Does anyone agree with this idea? If anyone agrees, I will consider removing
+     * this setting.
      *
      * @param creator the author name
      * @return the {@link Workbook}
