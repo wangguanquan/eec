@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.annotation;
 
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -25,19 +24,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify export information for exporting object-array
+ * Specify export information
  * <p>
- * The annotation name is awkward, please use the new annotation
- * {@link ExcelColumn}
- * <p>
- * Created by guanquan.wang at 2018-01-30 13:23
+ * Create by guanquan.wang at 2019-06-21 09:53
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Deprecated
-public @interface DisplayName {
+public @interface ExcelColumn {
     /**
      * header cell
      *

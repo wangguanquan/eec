@@ -17,12 +17,15 @@
 package org.ttzero.excel.reader;
 
 import org.ttzero.excel.annotation.DisplayName;
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.StringJoiner;
+
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Create by guanquan.wang at 2019-04-17 11:55
@@ -84,7 +87,15 @@ class HeaderRow extends Row {
             }
             // field has display name
             DisplayName ano = f.getAnnotation(DisplayName.class);
-            if (ano != null && StringUtil.isNotEmpty(ano.value())) {
+            ExcelColumn ec = f.getAnnotation(ExcelColumn.class);
+            if (ec != null && isNotEmpty(ec.value())) {
+                n = StringUtil.indexOf(names, ec.value());
+                if (n == -1) {
+                    logger.warn(clazz + " field [" + ec.value() + "] can't find in header" + Arrays.toString(names));
+                    fields[i] = null;
+                    continue;
+                }
+            } else if (ano != null && isNotEmpty(ano.value())) {
                 n = StringUtil.indexOf(names, ano.value());
                 if (n == -1) {
                     logger.warn(clazz + " field [" + ano.value() + "] can't find in header" + Arrays.toString(names));

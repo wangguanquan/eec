@@ -18,7 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
-import org.ttzero.excel.annotation.DisplayName;
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
@@ -383,9 +383,9 @@ public class ListObjectSheetTest extends WorkbookTest{
     public static class Student {
         @IgnoreExport
         private int id;
-        @DisplayName("姓名")
+        @ExcelColumn("姓名")
         private String name;
-        @DisplayName("成绩")
+        @ExcelColumn("成绩")
         private int score;
 
         Student(int id, String name, int score) {

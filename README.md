@@ -96,20 +96,20 @@ xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文�
 #### 1. 对象数组导出
 
 #### 1.1 准备工作
-对象数组导出时可以在对象上使用注解`@DisplayName("column name")`来设置excel头部信息，
+对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，
 使用注解`@IgnoreExport`标记不需要导出的字段。
 
 ```
     @NotExport("敏感信息不导出")
     private int id; // not export
 
-    @DisplayName("渠道ID")
+    @ExcelColumn("渠道ID")
     private int channelId;
 
-    @DisplayName(share = false)
+    @ExcelColumn(share = false)
     private String account;
 
-    @DisplayName("注册时间")
+    @ExcelColumn("注册时间")
     private Timestamp registered;
 ```
 
