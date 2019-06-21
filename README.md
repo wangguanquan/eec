@@ -435,13 +435,3 @@ Version 0.3.0 (2019-05-01)
 5. SharedStringTable引入Google BloomFilter
 
 [更多...](./CHANGELOG)
-
-## TODO LIST
-
-1. excel文件增加导出scripts功能
-2. list data with template
-3. 对excel文件设置密码 (AES-128 encrypted)
-4. 多线程支持，多个sheet数据同时写
-5. 自动列宽要考虑字体样式实现
-6. wiki for eec
-7. 读取colspan/rowspan单元格
