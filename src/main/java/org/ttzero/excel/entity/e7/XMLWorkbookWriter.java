@@ -290,7 +290,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     private void writeCore(Path root, ContentType contentType) throws IOException {
         Core core = new Core();
         core.setCreated(new Date());
-        if (StringUtil.isNotEmpty(workbook.getCreator())) {
+        if (workbook.getCreator() != null) {
             core.setCreator(workbook.getCreator());
         } else {
             core.setCreator(System.getProperty("user.name"));
