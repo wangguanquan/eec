@@ -33,6 +33,7 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1128,7 +1129,9 @@ public abstract class Sheet implements Cloneable, Storageable {
     public int defaultHeadStyle() {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
-            headStyle = styles.of(styles.addFont(Font.parse("bold 11 微软雅黑 white"))
+            Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
+                , 11, Font.Style.bold, Color.white);
+            headStyle = styles.of(styles.addFont(font)
                 | styles.addFill(Fill.parse("solid #666699"))
                 | styles.addBorder(Border.parse("thin black"))
                 | Verticals.CENTER
