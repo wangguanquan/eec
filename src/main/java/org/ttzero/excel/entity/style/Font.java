@@ -53,7 +53,7 @@ public class Font implements Cloneable {
     }
 
     /**
-     * 字体大小和family必须 颜色默认黑色
+     * Create a Font from font-string
      * italic_bold_underLine_size_family_color or italic bold underLine size family color
      * eq: italic_bold_12_宋体 // 斜体 加粗 12号字 宋体
      * eq: bold underLine 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
@@ -86,7 +86,7 @@ public class Font implements Cloneable {
         }
 
         Font font = new Font();
-        // size family 必须同时存在并且位置不变
+        // The size and family must exist at the same time and the position is unchanged
         boolean beforeSize = true;
         for (int i = 0; i < values.length; i++) {
             String temp = values[i].trim(), v;
@@ -115,7 +115,7 @@ public class Font implements Cloneable {
                         throw new FontParseException("Property " + v + " not support.");
                     }
                 } else if (size > 0) {
-                    font.size = size.intValue();
+                    font.size = size;
                     if (i + 1 < values.length) {
                         font.name = values[++i].trim().replace('+', ' ');
                     } else {
