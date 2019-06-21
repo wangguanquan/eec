@@ -214,10 +214,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         // docProps
         App app = new App();
+        // Write company name if set
         if (StringUtil.isNotEmpty(workbook.getCompany())) {
             app.setCompany(workbook.getCompany());
-        } else {
-            app.setCompany("cn.ttzero");
         }
 
         // Read app and version from pom
