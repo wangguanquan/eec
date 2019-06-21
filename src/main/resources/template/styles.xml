@@ -34,7 +34,7 @@
             <b/>
             <sz val="11"/>
             <color indexed="9"/>
-            <name val="微软雅黑"/>
+            <name val="Arial"/>
             <family val="2"/>
             <charset val="134"/>
         </font>
@@ -47,7 +47,7 @@
         <font>
             <sz val="11"/>
             <color indexed="8"/>
-            <name val="微软雅黑"/>
+            <name val="Arial"/>
             <family val="2"/>
             <charset val="134"/>
         </font>
