@@ -60,20 +60,19 @@ import java.util.Map;
  * placed after this statement will not be reflected in the final Excel file.
  * <p>
  * A typical example as follow:
- * <code>
- *     new Workbook("{name}", "{author}")
- *         // Print debug logs
- *         .watch(System.out::println)
- *         // Auto size the column width
- *         .setAutoSize(true)
- *         // Add a Worksheet
- *         .addSheet(new ListSheet<ListObjectSheetTest.Item>("{worksheet name}").setData(new ArrayList<>()))
- *         // Add an other Worksheet
- *         .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList<>()))
- *         // Write to absolute path '/tmp/{name}.xlsx'
- *         .writeTo(Paths.get("/tmp/"));
- * </code>
- * <p>
+ * <blockquote><pre>
+ * new Workbook("{name}", "{author}")
+ *     // Print debug logs
+ *     .watch(System.out::println)
+ *     // Auto size the column width
+ *     .setAutoSize(true)
+ *     // Add a Worksheet
+ *     .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
+ *     // Add an other Worksheet
+ *     .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList&lt;&gt;()))
+ *     // Write to absolute path '/tmp/{name}.xlsx'
+ *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
+ * <p>Some referer links:
  * <a href="https://poi.apache.org">POI</a>&nbsp;|&nbsp;
  * <a href="https://msdn.microsoft.com/library">Office 365</a>&nbsp;|&nbsp;
  * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">DocumentFormat.OpenXml.Spreadsheet Namespace</a>&nbsp;|&nbsp;
@@ -511,11 +510,9 @@ public class Workbook implements Storageable {
      * <p>
      * Also you can use {@code addSheet(new StatementSheet(connection, sql, paramProcessor, columns)}
      * to achieve the same effect.
-     * <p>eq:
-     * <code>
-     *     workbook.addSheet("users", "select id, name from users where `class` = ?"
-     *          , ps -&gt; ps.setString(1, "middle") ...
-     * </code>
+     * <blockquote><pre>
+     * workbook.addSheet("users", "select id, name from users where `class` = ?"
+     *      , ps -&gt; ps.setString(1, "middle") ...</pre></blockquote>
      *
      * @param sql     the query SQL string
      * @param pp      the sql parameter replacement function-interface
@@ -535,11 +532,9 @@ public class Workbook implements Storageable {
      * <p>
      * Also you can use {@code addSheet(new StatementSheet(name, connection, sql, paramProcessor, columns)}
      * to achieve the same effect.
-     * <p>eq:
-     * <code>
-     *     workbook.addSheet("users", "select id, name from users where `class` = ?"
-     *          , ps -&gt; ps.setString(1, "middle") ...
-     * </code>
+     * <blockquote><pre>
+     * workbook.addSheet("users", "select id, name from users where `class` = ?"
+     *      , ps -&gt; ps.setString(1, "middle") ...</pre></blockquote>
      *
      * @param name    the worksheet name
      * @param sql     the query SQL string
@@ -620,10 +615,9 @@ public class Workbook implements Storageable {
     /**
      * Add a {@link StatementSheet} to the tail with worksheet name
      * and header {@link Sheet.Column} setting.
-     * <p>eq:
-     * <code>
-     *     workbook.addSheet("users", ps, ps -&gt; ps.setString(1, "middle") ...
-     * </code>
+     * <blockquote><pre>
+     * workbook.addSheet("users", ps, ps -&gt; ps.setString(1, "middle") ...
+     * </pre></blockquote>
      *
      * @param name    the worksheet name
      * @param ps      PreparedStatement
@@ -820,18 +814,16 @@ public class Workbook implements Storageable {
     /**
      * Export the workbook to the specified {@link OutputStream}.
      * It mostly used for small excel file export and download
-     * <p>
-     * <code>
-     *     public void export(HttpServletResponse response) throws IOException {
-     *         String fileName = java.net.URLEncoder.encode("{name}.xlsx", "UTF-8");
-     *         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"; filename*=utf-8''" + fileName);
-     *         new Workbook("{name}", "{author}")
-     *         .setAutoSize(true)
-     *         .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}", new ArrayList<>()))
-     *         // Write to HttpServletResponse
-     *         .writeTo(response.getOutputStream());
-     *     }
-     * </code>
+     * <blockquote><pre>
+     * public void export(HttpServletResponse response) throws IOException {
+     *     String fileName = java.net.URLEncoder.encode("{name}.xlsx", "UTF-8");
+     *     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"; filename*=utf-8''" + fileName);
+     *     new Workbook("{name}", "{author}")
+     *     .setAutoSize(true)
+     *     .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}", new ArrayList&lt;&gt;()))
+     *     // Write to HttpServletResponse
+     *     .writeTo(response.getOutputStream());
+     * }</pre></blockquote>
      *
      * @param os the OutputStream
      * @throws IOException         if I/O error occur
