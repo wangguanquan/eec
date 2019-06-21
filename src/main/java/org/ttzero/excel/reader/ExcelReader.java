@@ -66,13 +66,10 @@ import java.util.stream.StreamSupport;
  * page is memory shared, so don't directly convert Stream&lt;Row&gt;
  * to a collection class. You should first consider using
  * try-with-resource to use Reader or manually close the ExcelReader.
- * <p>
- * <code>
+ * <blockquote><pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
  *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
- * } catch (IOException e) {}
- * </code>
- * <p>
+ * } catch (IOException e) {}</pre></blockquote>
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {

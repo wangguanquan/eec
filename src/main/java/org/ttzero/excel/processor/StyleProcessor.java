@@ -29,11 +29,10 @@ public interface StyleProcessor {
      * The style conversion
      * You must add it using {@code Styles#addXXX} method before adding a style,
      * and then use the returned int value as the return value of the converter.
-     * eg:
-     * <pre><code>
-     *    StyleProcessor sp = (o, style, sst) // Fill of 'yellow' color
-     *      -&gt; style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
-     * </code></pre>
+     * <blockquote><pre>
+     * StyleProcessor sp = (o, style, sst) // Fill of 'yellow' color
+     *     -&gt; style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
+     * </pre></blockquote>
      *
      * @param o     the value of cell
      * @param style the current style of cell
