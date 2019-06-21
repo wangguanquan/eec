@@ -42,7 +42,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 文件操作工具类
+ * File operation util.
+ * Ignore the {@link IOException} and output error logs
  * <p>
  * Created by guanquan.wang on 2017-9-10
  */
@@ -54,9 +55,9 @@ public class FileUtil {
 
 
     /**
-     * 关闭输入流
+     * Close the {@link InputStream}
      *
-     * @param inputStream 文件输入流
+     * @param inputStream the in stream
      */
     public static void close(InputStream inputStream) {
         if (inputStream != null) try {
@@ -67,9 +68,9 @@ public class FileUtil {
     }
 
     /**
-     * 关闭输出流
+     * Close the {@link OutputStream}
      *
-     * @param outputStream 文件输出流
+     * @param outputStream the out stream
      */
     public static void close(OutputStream outputStream) {
         if (outputStream != null) {
@@ -82,9 +83,9 @@ public class FileUtil {
     }
 
     /**
-     * 关闭BufferedReader
+     * Close the {@link Reader}
      *
-     * @param br BufferedReader
+     * @param br the reader
      */
     public static void close(Reader br) {
         if (br != null) {
@@ -97,9 +98,9 @@ public class FileUtil {
     }
 
     /**
-     * 关闭BufferedWriter
+     * Close the {@link Writer}
      *
-     * @param bw BufferedWriter
+     * @param bw the writer
      */
     public static void close(Writer bw) {
         if (bw != null) {
@@ -112,9 +113,9 @@ public class FileUtil {
     }
 
     /**
-     * 关闭Channel
+     * Close the {@link Channel}
      *
-     * @param channel 通道
+     * @param channel the channel
      */
     public static void close(Channel channel) {
         if (channel != null) {
@@ -126,6 +127,11 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Delete if exists file
+     *
+     * @param path the file path to be delete
+     */
     public static void rm(Path path) {
         rm(path.toFile());
     }
@@ -144,15 +150,20 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Remove file and sub-files if it a directory
+     *
+     * @param root the root path
+     */
     public static void rm_rf(Path root) {
         rm_rf(root.toFile(), true);
     }
 
     /**
-     * Remove file and sub files
+     * Remove file and sub-files if it a directory
      *
      * @param root the root path
-     * @param rmSelf Remove self if true
+     * @param rmSelf remove self if true
      */
     public static void rm_rf(File root, boolean rmSelf) {
         File temp = root;
@@ -183,15 +194,21 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Copy a single file
+     *
+     * @param srcPath  the source path
+     * @param descFile the destination file
+     */
     public static void cp(Path srcPath, File descFile) {
         cp(srcPath.toFile(), descFile);
     }
 
     /**
-     * 复制单个文件
+     * Copy a single file
      *
-     * @param srcFile  源文件
-     * @param descFile 目标文件
+     * @param srcFile  the source file
+     * @param descFile the destination file
      */
     public static void cp(File srcFile, File descFile) {
         if (srcFile.length() == 0L) {
@@ -203,31 +220,21 @@ public class FileUtil {
             } catch (IOException e) {
             }
         }
-        FileChannel inChannel = null, outChannel = null;
-        try (FileInputStream fis = new FileInputStream(srcFile);
-             FileOutputStream fos = new FileOutputStream(descFile)) {
-            inChannel = fis.getChannel();
-            outChannel = fos.getChannel();
+        try (FileChannel inChannel = new FileInputStream(srcFile).getChannel();
+             FileChannel outChannel = new FileOutputStream(descFile).getChannel()) {
 
             inChannel.transferTo(0, inChannel.size(), outChannel);
         } catch (IOException e) {
             logger.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
-        } finally {
-            if (inChannel != null) {
-                try {
-                    inChannel.close();
-                } catch (IOException e) {
-                }
-            }
-            if (outChannel != null) {
-                try {
-                    outChannel.close();
-                } catch (IOException e) {
-                }
-            }
         }
     }
 
+    /**
+     * Copy a single file
+     *
+     * @param is  the source input stream
+     * @param descFile the destination path
+     */
     public static void cp(InputStream is, Path descFile) {
         try {
             Files.copy(is, descFile, StandardCopyOption.REPLACE_EXISTING);
@@ -236,40 +243,64 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Copy a directory to a new path
+     *
+     * @param srcPath       the source path string
+     * @param descPath      the destination path string
+     * @param moveSubFolder need move sub-folders
+     */
     public static void cp_R(String srcPath, String descPath, boolean moveSubFolder) {
         copyFolder(srcPath, descPath, moveSubFolder);
     }
 
+    /**
+     * Copy a directory to a new path
+     *
+     * @param srcPath       the source path
+     * @param descPath      the destination path
+     * @param moveSubFolder need move sub-folders
+     */
     public static void cp_R(Path srcPath, Path descPath, boolean moveSubFolder) {
         copyFolder(srcPath.toString(), descPath.toString(), moveSubFolder);
     }
 
+    /**
+     * Copy a directory to a new path
+     *
+     * @param srcPath       the source path string
+     * @param descPath      the destination path string
+     */
     public static void cp_R(String srcPath, String descPath) {
         copyFolder(srcPath, descPath, true);
     }
 
+    /**
+     * Copy a directory to a new path
+     *
+     * @param srcPath       the source path
+     * @param descPath      the destination path
+     */
     public static void cp_R(Path srcPath, Path descPath) {
         copyFolder(srcPath.toString(), descPath.toString(), true);
     }
 
     /**
-     * 复制整个文件夹的内容
+     * Copy a directory to a new path
      *
-     * @param srcPath       源目录
-     * @param descPath      目标目录
-     * @param moveSubFolder 是否需要移动子文件夹
+     * @param srcPath       the source path string
+     * @param descPath      the destination path string
+     * @param moveSubFolder need move sub-folders
      */
     public static void copyFolder(String srcPath, String descPath, boolean moveSubFolder) {
         File src = new File(srcPath), desc = new File(descPath);
-        // 源文件夹不存在
         if (!src.exists() || !src.isDirectory()) {
-            throw new RuntimeException("源目录[" + srcPath + "]不是存在或者不是一个文件夹.");
+            throw new RuntimeException("The source path [" + srcPath + "] not exists or not a directory.");
         }
-        // 目标文件夹不存在
         if (!desc.exists()) {
             boolean boo = desc.mkdirs();
             if (!boo) {
-                throw new RuntimeException("目标文件夹[" + descPath + "]无法创建.");
+                throw new RuntimeException("Create destination path [" + descPath + "] failed.");
             }
         }
 
@@ -284,31 +315,41 @@ public class FileUtil {
         }
         ss = null;
         int src_path_len = srcPath.length();
-        // 如果需要复制子文件夹并且源文件夹有子文件夹
+        // If the source folder is not empty and need to copy sub-folders
+        // Scan all sub-folders
         if (moveSubFolder && !folders.isEmpty()) {
-            // 1. 扫描所有子文件夹, 这里不采取递归
+            // 1. Scan all sub-folders, do not take recursion here
             while (!folders.isEmpty()) {
-                File f = folders.pollLast(), df = new File(desc, f.getPath().substring(src_path_len));
-                // 1.1 扫描的同时为目标文件夹创建目录
+                File f = folders.pollLast();
+                if (f == null) continue;
+                File df = new File(desc, f.getPath().substring(src_path_len));
+                // 1.1 Scan all sub-folders and create destination folders
                 if (!df.exists() && !df.mkdir()) {
-                    logger.warn("创建子文件夹[{}]失败跳过.", df.getPath());
+                    logger.warn("Create sub-folder [{}] error skip it.", df.getPath());
                     continue;
                 }
                 File[] fs = f.listFiles();
                 if (fs == null) continue;
-                // 1.2 将文件及目标目录保存
+                // 1.2 Storage the files witch need to copy
                 for (File _f : fs) {
                     if (_f.isFile()) files.add(_f);
                     else folders.push(_f);
                 }
             }
         }
-        logger.debug("扫描完成. 共计[{}]个文件. 开始复制文件...", files.size());
-        // 2. 复制文件
+        logger.debug("Finished Scan. There contains {} files. Ready to copy them...", files.size());
+        // 2. Copy files
         files.parallelStream().forEach(f -> cp(f, new File(descPath + f.getPath().substring(src_path_len))));
-        logger.debug("复制结束.");
+        logger.debug("Copy all files in path {} finished.", srcPath);
     }
 
+    /**
+     * Create a directory
+     *
+     * @param destPath the destination directory path
+     * @return the temp directory path
+     * @throws IOException if I/O error occur
+     */
     public static Path mkdir(Path destPath) throws IOException {
         Path path;
         if (isWindows()) {
@@ -320,6 +361,13 @@ public class FileUtil {
         return path;
     }
 
+    /**
+     * Create a temp directory
+     *
+     * @param prefix the directory prefix
+     * @return the temp directory path
+     * @throws IOException if I/O error occur
+     */
     public static Path mktmp(String prefix) throws IOException {
         Path path;
         if (isWindows()) {
@@ -331,10 +379,23 @@ public class FileUtil {
         return path;
     }
 
+    /**
+     * Test current OS system is windows family
+     *
+     * @return true if OS is windows family
+     */
     public static boolean isWindows() {
         return System.getProperty("os.name").toUpperCase().startsWith("WINDOWS");
     }
 
+    /**
+     * Write the {@link org.dom4j.Document} to a specify {@link Path}
+     * with xml format
+     *
+     * @param doc the {@link org.dom4j.Document}
+     * @param path the output path
+     * @throws IOException if I/O error occur
+     */
     public static void writeToDisk(Document doc, Path path) throws IOException {
         if (!Files.exists(path.getParent())) {
             Files.createDirectories(path.getParent());
@@ -350,6 +411,13 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Write the {@link org.dom4j.Document} to a specify {@link Path}
+     *
+     * @param doc the {@link org.dom4j.Document}
+     * @param path the output path
+     * @throws IOException if I/O error occur
+     */
     public static void writeToDiskNoFormat(Document doc, Path path) throws IOException {
         if (!Files.exists(path.getParent())) {
             mkdir(path.getParent());
