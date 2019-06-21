@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.IgnoreExport;
@@ -25,6 +26,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * List is the most important data source, you can pass all
@@ -301,11 +304,11 @@ public class ListSheet<T> extends Sheet {
      * Get the first object of the object array witch is not NULL,
      * reflect all declared fields, and then do the following steps
      * <p>
-     * step 1. If there is has {@link DisplayName} annotation, the value of
+     * step 1. If there is has {@link ExcelColumn} annotation, the value of
      * this annotation is used as the column name.
      * <p>
-     * step 2. If the {@link DisplayName} annotation has no value or no
-     * {@link DisplayName} annotation, the field name is used as the column name.
+     * step 2. If the {@link ExcelColumn} annotation has no value or no
+     * {@link ExcelColumn} annotation, the field name is used as the column name.
      * <p>
      * step 3. Skip this Field if field has a {@link IgnoreExport} annotation
      * <p>
@@ -329,7 +332,11 @@ public class ListSheet<T> extends Sheet {
                     continue;
                 }
                 DisplayName dn = field.getAnnotation(DisplayName.class);
-                if (dn != null && StringUtil.isNotEmpty(dn.value())) {
+                ExcelColumn ec = field.getAnnotation(ExcelColumn.class);
+                if (ec != null && isNotEmpty(ec.value())) {
+                    list.add(new Column(ec.value(), field.getName()
+                        , field.getType()).setShare(ec.share()));
+                } else if (dn != null && isNotEmpty(dn.value())) {
                     list.add(new Column(dn.value(), field.getName()
                         , field.getType()).setShare(dn.share()));
                 } else {
