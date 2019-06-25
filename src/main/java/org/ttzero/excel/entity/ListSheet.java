@@ -208,7 +208,8 @@ public class ListSheet<T> extends Sheet {
             }
         }
         if (shouldClose && data != null) {
-            data.clear();
+            // Some Collection not support #remove
+//            data.clear();
             data = null;
         }
         super.close();
