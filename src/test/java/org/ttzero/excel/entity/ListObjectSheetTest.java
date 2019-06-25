@@ -35,6 +35,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -280,6 +282,22 @@ public class ListObjectSheetTest extends WorkbookTest{
                 , WaterMark.of(author)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testArray() throws IOException {
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListSheet<>()
+                .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testSingleList() throws IOException {
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListSheet<>()
+                .setData(Collections.singletonList(new Item(1, "abc"))))
             .writeTo(defaultTestPath);
     }
 

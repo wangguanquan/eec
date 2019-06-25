@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -214,6 +216,31 @@ public class ListMapSheetTest extends WorkbookTest {
                 , WaterMark.of(author)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testArray() throws IOException {
+        Map<String, Object> data1 = new HashMap<>();
+        data1.put("id", 1);
+        data1.put("name", "abc");
+
+        Map<String, Object> data2 = new HashMap<>();
+        data2.put("id", 2);
+        data2.put("name", "xyz");
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListMapSheet().setData(Arrays.asList(data1, data2)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testSingleList() throws IOException {
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", 1);
+        data.put("name", "abc");
+
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListMapSheet().setData(Collections.singletonList(data)))
             .writeTo(defaultTestPath);
     }
 
