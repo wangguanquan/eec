@@ -172,6 +172,9 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         // Not found
         if (size == 0 || (o = table.get(k)) == null) return null;
 
+        // Remove the keyword from the hash table to make them unsearchable
+        table.remove(k);
+
         final Node<E<K, V>> prev = o.prev, next = o.next;
 
         if (prev == null) {
