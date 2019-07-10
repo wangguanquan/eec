@@ -110,4 +110,15 @@ public class CacheTest {
         assert hot.size() == 0;
         hot.forEach(e -> println(e.getKey() + ": " + e.getValue()));
     }
+
+    @Test public void testRemoveAndAdd() {
+        Cache<String, Integer> cache = FixSizeLRUCache.create();
+        cache.put("a", 1);
+        cache.put("b", 2);
+
+        cache.remove("a");
+        cache.put("a", 5);
+
+        cache.forEach(e -> println(e.getKey() + ": " + e.getValue()));
+    }
 }
