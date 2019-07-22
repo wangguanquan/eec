@@ -77,8 +77,8 @@ public class ExcelReader implements AutoCloseable {
 
     protected ExcelReader() { }
 
-    private Path self;
-    private Sheet[] sheets;
+    protected Path self;
+    protected Sheet[] sheets;
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
