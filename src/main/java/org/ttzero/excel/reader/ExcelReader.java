@@ -77,8 +77,8 @@ public class ExcelReader implements AutoCloseable {
 
     protected ExcelReader() { }
 
-    private Path self;
-    private Sheet[] sheets;
+    protected Path self;
+    protected Sheet[] sheets;
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
@@ -400,7 +400,7 @@ public class ExcelReader implements AutoCloseable {
                 break;
             case XLS:
                 try {
-                    Class<?> clazz = Class.forName("cn.ttzero.excel.reader.BIFF8Reader");
+                    Class<?> clazz = Class.forName("org.ttzero.excel.reader.BIFF8Reader");
                     Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize);
                 } catch (Exception e) {

@@ -222,7 +222,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // Read app and version from pom
         try {
             InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("META-INF/maven/cn.ttzero/eec/pom.properties");
+                .getResourceAsStream("META-INF/maven/org.ttzero/eec/pom.properties");
             Properties pom = new Properties();
             if (is == null) {
                 // Read from target/maven-archiver/pom.properties
@@ -261,7 +261,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 // Can't read pom.xml if running as dev on window
             }
             if (StringUtil.isEmpty(app.getAppVersion())) {
-                app.setApplication("cn.ttzero.eec");
+                app.setApplication("org.ttzero.eec");
                 app.setAppVersion("1.0.0");
             }
         } catch (IOException e) {
