@@ -240,11 +240,6 @@ public class ListSheet<T> extends Sheet {
                     cell.clear();
 
                     Object e = field.get(data.get(start));
-                    // blank cell
-                    if (e == null) {
-                        cell.setBlank();
-                        continue;
-                    }
 
                     setCellValueAndStyle(cell, e, columns[i]);
                 }

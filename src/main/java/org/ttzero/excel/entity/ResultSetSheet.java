@@ -210,12 +210,6 @@ public class ResultSetSheet extends Sheet {
 
                     Object e = rs.getObject(i);
 
-                    // blank cell
-                    if (e == null) {
-                        cell.setBlank();
-                        continue;
-                    }
-
                     setCellValueAndStyle(cell, e, hc);
                 }
             }

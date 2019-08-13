@@ -17,11 +17,12 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.util.StringUtil;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import static org.ttzero.excel.util.StringUtil.isEmpty;
 
 /**
  * ListMapSheet is a subclass of {@link ListSheet}, the difference is
@@ -157,12 +158,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 Cell cell = cells[i];
                 cell.clear();
 
-                // blank cell
-                if (e == null) {
-                    cell.setBlank();
-                    continue;
-                }
-
                 setCellValueAndStyle(cell, e, hc);
             }
         }
@@ -188,12 +183,15 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
-                columns[i++] = new Column(entry.getKey(), entry.getKey(), entry.getValue().getClass());
+                // Ignore the null key
+                if (isEmpty(entry.getKey())) continue;
+                Object value = entry.getValue();
+                columns[i++] = new Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
             }
         } else {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
-                if (StringUtil.isEmpty(hc.key)) {
+                if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
                 if (hc.getClazz() == null) {
