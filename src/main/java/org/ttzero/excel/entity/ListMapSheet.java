@@ -157,12 +157,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 Cell cell = cells[i];
                 cell.clear();
 
-                // blank cell
-                if (e == null) {
-                    cell.setBlank();
-                    continue;
-                }
-
                 setCellValueAndStyle(cell, e, hc);
             }
         }

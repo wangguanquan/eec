@@ -244,6 +244,13 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testNullValue() throws IOException {
+        new Workbook("test map null value", author)
+            .watch(Print::println)
+            .addSheet(createNullTestData(10))
+            .writeTo(defaultTestPath);
+    }
+
     static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
@@ -284,6 +291,17 @@ public class ListMapSheetTest extends WorkbookTest {
             map.put("ldv", LocalDate.now());
             map.put("ldtv", LocalDateTime.now());
             map.put("ltv", LocalTime.now());
+            list.add(map);
+        }
+        return list;
+    }
+
+    static List<Map<String, ?>> createNullTestData(int size) {
+        List<Map<String, ?>> list = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", random.nextInt());
+            map.put("name", null);
             list.add(map);
         }
         return list;

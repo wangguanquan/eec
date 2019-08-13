@@ -1248,6 +1248,10 @@ public abstract class Sheet implements Cloneable, Storageable {
      * @param clazz the cell value type
      */
     protected void setCellValue(Cell cell, Object e, Column hc, Class<?> clazz) {
+        if (e == null) {
+            setNullValue(cell, hc);
+            return;
+        }
         boolean hasIntProcessor = hc.processor != null;
         if (isString(clazz)) {
             cell.setSv(e.toString());
@@ -1288,6 +1292,20 @@ public abstract class Sheet implements Cloneable, Storageable {
         } else {
             cell.setSv(e.toString());
         }
+    }
+
+    /**
+     * Setting cell value as null
+     *
+     * @param cell  the cell
+     * @param hc    the header column
+     */
+    protected void setNullValue(Cell cell, Column hc) {
+        boolean hasIntProcessor = hc.processor != null;
+        if (hasIntProcessor) {
+             conversion(cell, 0, hc);
+        } else
+            cell.setBlank();
     }
 
     /**

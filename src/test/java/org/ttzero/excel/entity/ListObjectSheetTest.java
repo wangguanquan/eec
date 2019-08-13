@@ -325,6 +325,18 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testNullValue() throws IOException {
+        new Workbook("test null value", author)
+            .watch(Print::println)
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)
+                , new Sheet.Column("学号", "id", Integer.class, i -> i == 0 ? -1 : i)
+                , new Sheet.Column("姓名", "name", String.class)
+                , new Sheet.Column("妮称", "nice", String.class))
+            )
+            .writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -474,6 +486,24 @@ public class ListObjectSheetTest extends WorkbookTest{
         public static List<AllType> randomTestData() {
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
+        }
+    }
+
+    public static class ExtItem {
+        private Integer id;
+        private String name;
+        private String nice;
+
+        ExtItem(String name) {
+            this.name = name;
+        }
+
+        public static List<ExtItem> randomTestData(int n) {
+            List<ExtItem> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new ExtItem(getRandomString()));
+            }
+            return list;
         }
     }
 
