@@ -26,7 +26,10 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
-import java.awt.*;
+import java.awt.Color;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -40,6 +43,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -337,6 +341,13 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testReflect() throws IntrospectionException {
+        PropertyDescriptor[] array = Introspector.getBeanInfo(ExtItem.class).getPropertyDescriptors();
+        for (PropertyDescriptor pd : array) {
+            println(pd);
+        }
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -344,6 +355,14 @@ public class ListObjectSheetTest extends WorkbookTest{
         Item(int id, String name) {
             this.id = id;
             this.name = name;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public static List<Item> randomTestData(int n) {
@@ -423,6 +442,31 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.name = name;
             this.score = score;
         }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public void setScore(int score) {
+            this.score = score;
+        }
+
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit; i < n; i++) {
@@ -489,19 +533,21 @@ public class ListObjectSheetTest extends WorkbookTest{
         }
     }
 
-    public static class ExtItem {
-        private Integer id;
-        private String name;
+    public static class ExtItem extends Item {
         private String nice;
 
-        ExtItem(String name) {
-            this.name = name;
+        ExtItem(int id, String name) {
+            super(id, name);
         }
 
-        public static List<ExtItem> randomTestData(int n) {
-            List<ExtItem> list = new ArrayList<>(n);
+        public String getNice() {
+            return nice;
+        }
+
+        public static List<Item> randomTestData(int n) {
+            List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new ExtItem(getRandomString()));
+                list.add(new ExtItem(i,  getRandomString()));
             }
             return list;
         }
