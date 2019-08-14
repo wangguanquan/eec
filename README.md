@@ -1,5 +1,7 @@
 # eec介绍
 
+[![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
+
 eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的
 读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
 
@@ -432,3 +434,12 @@ Version 0.3.1 (2019-05-21)
 5. 当BloomFilter满时不扩容而进行清空
 
 [更多...](./CHANGELOG)
+
+[travis]: https://travis-ci.org/wangguanquan/eec
+[travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
+
+[releases]: https://github.com/wangguanquan/eec/releases
+[release-image]: http://img.shields.io/badge/release-0.3.3-blue.svg?style=flat
+
+[license]: http://www.apache.org/licenses/LICENSE-2.0
+[license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
