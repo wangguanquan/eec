@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * <p>
  * Create by guanquan.wang at 2019-06-21 09:53
  */
-@Target({ElementType.FIELD})
+@Target({ ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
