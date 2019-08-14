@@ -297,7 +297,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook()
             .watch(Print::println)
             .addSheet(new ListSheet<>()
-                .setData(Collections.singletonList(new Item(1, "abc"))))
+                .setData(Collections.singletonList(new Item(1, "a b c"))))
             .writeTo(defaultTestPath);
     }
 

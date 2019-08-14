@@ -49,7 +49,8 @@ public class ExtBufferedWriter extends BufferedWriter {
 //        for (int i = 1; i < 32; i++) {
 //            ESCAPE_CHARS[i] = ("&#" + i + ";").toCharArray();
 //        }
-        ESCAPE_CHARS[' '] = "&nbsp;".toCharArray();
+        // Fix#72 delete space escape
+//        ESCAPE_CHARS[' '] = "&nbsp;".toCharArray();
         ESCAPE_CHARS['<'] = "&lt;".toCharArray();
         ESCAPE_CHARS['>'] = "&gt;".toCharArray();
         ESCAPE_CHARS['&'] = "&amp;".toCharArray();
