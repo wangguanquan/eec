@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * <p>
  * Created by guanquan.wang at 2018-01-30 15:09
  */
-@Target({ElementType.FIELD})
+@Target({ ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface IgnoreExport {
