@@ -409,6 +409,12 @@ public void testReadXLS() {
 
 
 ## CHANGELOG
+Version 0.3.3 (2019-08-14)
+-------------
+1. 修复导出null值时丢失样式
+2. 修复导出空格时打开文件提示错误
+3. 修复excel03加载包错误
+
 Version 0.3.2 (2019-06-19)
 -------------
 1. 读取Excel时可以获取单元格数据类型
@@ -424,14 +430,5 @@ Version 0.3.1 (2019-05-21)
 3. 修改SQL别名导出表头文字错误的BUG
 4. AutoSize方法升级，现在AutoSize并不需要借助临时文件
 5. 当BloomFilter满时不扩容而进行清空
-
-Version 0.3.0 (2019-05-01)
--------------
-1. 写入Excel进行重构以提升扩展能力，现在支持自定义数据源worksheet
-2. 对Excel 97~03写入兼容支持，eec-e3-support还在开发当中
-3. 支持自定义WorkbookWriter或WorksheetWriter以满足个性化需求，
-      比如修改每个worksheet最大行数
-4. 修复一些已知BUG
-5. SharedStringTable引入Google BloomFilter
 
 [更多...](./CHANGELOG)
