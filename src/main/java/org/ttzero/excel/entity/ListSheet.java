@@ -22,11 +22,18 @@ import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.util.StringUtil;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -44,6 +51,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class ListSheet<T> extends Sheet {
     protected List<T> data;
     private Field[] fields;
+    private Method[] methods;
     protected int start, end;
     protected boolean eof;
     private int size;
@@ -306,7 +314,8 @@ public class ListSheet<T> extends Sheet {
      * step 2. If the {@link ExcelColumn} annotation has no value or no
      * {@link ExcelColumn} annotation, the field name is used as the column name.
      * <p>
-     * step 3. Skip this Field if field has a {@link IgnoreExport} annotation
+     * step 3. Skip this Field if field has a {@link IgnoreExport} annotation,
+     * or the field which has not getter method and has not {@link ExcelColumn} annotation.
      * <p>
      * The column order is the same as the order in declared fields.
      *
@@ -317,16 +326,31 @@ public class ListSheet<T> extends Sheet {
         T o = getFirst();
         if (o == null) return null;
         if (!hasHeaderColumns()) {
-            Field[] fields = o.getClass().getDeclaredFields();
+            Field[] fields = listDeclaredFields(o.getClass()
+                , field -> field.getAnnotation(ExcelColumn.class) != null);
+            PropertyDescriptor[] propertyDescriptors = null;
+            try {
+                propertyDescriptors = Introspector.getBeanInfo(o.getClass()).getPropertyDescriptors();
+            } catch (IntrospectionException e) {
+                what("Get " + o.getClass() + " property descriptor failed.");
+            }
+            // TODO get ExcelColumn annotation method
+            Method[] methods = new Method[Math.max(propertyDescriptors != null ? propertyDescriptors.length : 1, fields.length)];
             List<Column> list = new ArrayList<>(fields.length);
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
+                field.setAccessible(true);
                 String gs = field.toGenericString();
+                // Ignore annotation on field
                 IgnoreExport notExport = field.getAnnotation(IgnoreExport.class);
                 if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
                     fields[i] = null;
                     continue;
                 }
+                // Ignore annotation on read method
+//                Method method = readMethod.get(gs);
+//                if (method !)
+
                 DisplayName dn = field.getAnnotation(DisplayName.class);
                 ExcelColumn ec = field.getAnnotation(ExcelColumn.class);
                 if (ec != null && isNotEmpty(ec.value())) {
