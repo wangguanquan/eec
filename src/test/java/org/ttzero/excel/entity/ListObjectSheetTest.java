@@ -31,6 +31,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -333,18 +334,22 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("test null value", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)
-                , new Sheet.Column("学号", "id", Integer.class, i -> i == 0 ? -1 : i)
-                , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("妮称", "nice", String.class))
-            )
+            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
             .writeTo(defaultTestPath);
     }
 
-    @Test public void testReflect() throws IntrospectionException {
+    @Test public void testReflect() throws IntrospectionException, IllegalAccessException {
         PropertyDescriptor[] array = Introspector.getBeanInfo(ExtItem.class).getPropertyDescriptors();
         for (PropertyDescriptor pd : array) {
             println(pd);
+        }
+        ExtItem item = new ExtItem(1, "guanquan.wang");
+        item.nice = "colvin";
+
+        Field[] fields = item.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            println(field + ": " + field.get(item));
         }
     }
 
