@@ -22,9 +22,9 @@ import java.beans.MethodDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
-
-import static jdk.nashorn.internal.objects.Global.println;
 
 /**
  * Create by guanquan.wang at 2019-08-15 21:02
@@ -96,15 +96,32 @@ public class ReflectUtil {
     public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass, Predicate<Field> predicate) {
         Field[] fields = listDeclaredFields(beanClass, stopClass);
 
-        int n = 0;
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            if (predicate.test(field) && i != n) {
-                fields[n++] = field;
-            }
-        }
+        return fieldFielter(fields, predicate);
+    }
 
-        return n < fields.length ? Arrays.copyOf(fields, n) : fields;
+    /**
+     * List all declared methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @return all declared method
+     */
+    public static Method[] listDeclaredMethods(Class<?> beanClass)
+        throws IntrospectionException {
+        return listDeclaredMethods(beanClass, Object.class);
+    }
+
+    /**
+     * List all declared methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listDeclaredMethods(Class<?> beanClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listDeclaredMethods(beanClass);
+
+        return methodFilter(methods, predicate);
     }
 
     /**
@@ -128,5 +145,188 @@ public class ReflectUtil {
         } else methods = new Method[0];
 
         return methods;
+    }
+
+    /**
+     * List all declared methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listDeclaredMethods(beanClass, stopClass);
+
+        return methodFilter(methods, predicate);
+    }
+
+    /**
+     * List all declared read methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @return all declared method
+     */
+    public static Method[] listReadMethods(Class<?> beanClass) throws IntrospectionException {
+        return listReadMethods(beanClass, Object.class);
+    }
+
+    /**
+     * List all declared read methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @return all declared method
+     */
+    public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass)
+        throws IntrospectionException {
+        Method[] methods = listDeclaredMethods(beanClass, stopClass);
+
+        int n = 0;
+        for ( int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            if (method.getParameterCount() == 0) {
+                Class<?> returnType = method.getReturnType();
+                if (returnType != void.class && returnType != Void.class) {
+                    methods[n++] = method;
+                }
+            }
+        }
+
+        return n < methods.length ? Arrays.copyOf(methods, n) : methods;
+    }
+
+    /**
+     * List all declared read methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listReadMethods(Class<?> beanClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listReadMethods(beanClass);
+
+        return methodFilter(methods, predicate);
+    }
+
+    /**
+     * List all declared read methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listReadMethods(beanClass, stopClass);
+
+        return methodFilter(methods, predicate);
+    }
+
+    /**
+     * List all declared write methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @return all declared method
+     */
+    public static Method[] listWriteMethods(Class<?> beanClass) throws IntrospectionException {
+        return listWriteMethods(beanClass, Object.class);
+    }
+
+    /**
+     * List all declared write methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @return all declared method
+     */
+    public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass)
+        throws IntrospectionException {
+        Method[] methods = listDeclaredMethods(beanClass, stopClass);
+        Field[] fields = listDeclaredFields(beanClass, stopClass);
+        Set<String> tmp = new HashSet<>();
+        for (Field field : fields)
+            tmp.add("set" + field.getName().toLowerCase());
+
+        int n = 0;
+        for ( int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            Class<?> returnType = method.getReturnType();
+            if (method.getParameterCount() == 1 && (returnType == void.class || returnType == Void.class)
+                && tmp.contains(method.getName().toLowerCase())) {
+                methods[n++] = method;
+            }
+        }
+
+        return n < methods.length ? Arrays.copyOf(methods, n) : methods;
+    }
+
+    /**
+     * List all declared methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listWriteMethods(Class<?> beanClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listWriteMethods(beanClass);
+
+        return methodFilter(methods, predicate);
+    }
+
+    /**
+     * List all declared methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @param predicate A method filter
+     * @return all declared method
+     */
+    public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+        throws IntrospectionException {
+        Method[] methods = listWriteMethods(beanClass, stopClass);
+
+        return methodFilter(methods, predicate);
+    }
+
+    // Do Filter
+    private static Method[] methodFilter(Method[] methods, Predicate<Method> predicate) {
+        int n = 0;
+        for (int i = 0; i < methods.length; i++) {
+            Method method = methods[i];
+            if (predicate.test(method)) {
+                if (i != n) methods[n] = method;
+                n++;
+            }
+        }
+
+        return n < methods.length ? Arrays.copyOf(methods, n) : methods;
+    }
+
+    private static Field[] fieldFielter(Field[] fields, Predicate<Field> predicate) {
+        int n = 0;
+        for (int i = 0; i < fields.length; i++) {
+            Field field = fields[i];
+            if (predicate.test(field)) {
+                if (i != n) fields[n] = field;
+                n++;
+            }
+        }
+
+        return n < fields.length ? Arrays.copyOf(fields, n) : fields;
     }
 }

@@ -323,7 +323,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Sheet.Column("学号", "id", int.class)
                     , new Sheet.Column("姓名", "name", String.class)
-                    , new Sheet.Column("成绩", "score", int.class, conversion)
+                    , new Sheet.Column("成绩", "scre", int.class, conversion)
                     .setStyleProcessor(sp)
                 )
             )

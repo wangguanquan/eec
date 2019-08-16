@@ -18,6 +18,8 @@ package org.ttzero.excel.util;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.IgnoreImport;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -68,6 +70,82 @@ public class ReflectUtilTest {
         assert fields[0].getName().equals("a");
     }
 
+    @Test public void testListDeclaredMethod1() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listDeclaredMethods(C.class);
+
+        assert methods.length == 4;
+    }
+
+    @Test public void testListDeclaredMethod2() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listDeclaredMethods(C.class, B.class);
+
+        assert methods.length == 2;
+    }
+
+    @Test public void testListDeclaredMethod3() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listDeclaredMethods(C.class, method -> method.getName().startsWith("set"));
+
+        assert methods.length == 2;
+    }
+
+    @Test public void testListDeclaredMethod4() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listDeclaredMethods(C.class, B.class, method -> method.getName().startsWith("set"));
+
+        assert methods.length == 1;
+    }
+
+    @Test public void testListReadMethod1() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listReadMethods(C.class);
+
+        assert methods.length == 2;
+    }
+
+    @Test public void testListReadMethod2() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listReadMethods(C.class, A.class);
+
+        assert methods.length == 1;
+    }
+
+    @Test public void testListReadMethod3() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listReadMethods(C.class
+            , method -> method.getAnnotation(ExcelColumn.class) != null);
+
+        assert methods.length == 1;
+    }
+
+    @Test public void testListReadMethod4() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listReadMethods(C.class, A.class
+            , method -> method.getAnnotation(IgnoreExport.class) != null);
+
+        assert methods.length == 0;
+    }
+
+    @Test public void testListWriteMethod1() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listWriteMethods(C.class);
+
+        assert methods.length == 2;
+    }
+
+    @Test public void testListWriteMethod2() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listWriteMethods(C.class, A.class);
+
+        assert methods.length == 1;
+    }
+
+    @Test public void testListWriteMethod3() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listWriteMethods(C.class
+            , method -> method.getAnnotation(ExcelColumn.class) != null);
+
+        assert methods.length == 0;
+    }
+
+    @Test public void testListWriteMethod4() throws IntrospectionException {
+        Method[] methods = ReflectUtil.listWriteMethods(C.class
+            , method -> method.getAnnotation(IgnoreImport.class) != null);
+
+        assert methods.length == 1;
+    }
+
     @Test public void test() throws IntrospectionException {
         MethodDescriptor[] methods = Introspector.getBeanInfo(C.class, Object.class).getMethodDescriptors();
         for (MethodDescriptor method : methods) {
@@ -85,6 +163,7 @@ public class ReflectUtilTest {
             return a;
         }
 
+        @IgnoreImport
         public void setA(int a) {
             this.a = a;
         }
@@ -97,6 +176,7 @@ public class ReflectUtilTest {
     public static class C extends B {
         private long c;
 
+        @ExcelColumn
         public long getC() {
             return c;
         }

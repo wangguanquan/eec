@@ -30,10 +30,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -334,6 +333,14 @@ public class ListSheet<T> extends Sheet {
             } catch (IntrospectionException e) {
                 what("Get " + o.getClass() + " property descriptor failed.");
             }
+
+            Method[] readMethods = null;
+            try {
+                readMethods = listReadMethods(o.getClass(), method -> method.getAnnotation(ExcelColumn.class) != null);
+            } catch (IntrospectionException e) {
+                what("Get " + o.getClass() + " read declared failed.");
+            }
+
             // TODO get ExcelColumn annotation method
             Method[] methods = new Method[Math.max(propertyDescriptors != null ? propertyDescriptors.length : 1, fields.length)];
             List<Column> list = new ArrayList<>(fields.length);
