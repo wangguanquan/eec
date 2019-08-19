@@ -417,8 +417,6 @@ public class ListSheet<T> extends Sheet {
                 // Ignore annotation on read method
                 Method method = tmp.get(gs);
                 if (method != null) {
-                    method.setAccessible(true);
-
                     if (method.getAnnotation(IgnoreExport.class) != null) {
                         declaredFields[i] = null;
                         continue;
@@ -449,7 +447,7 @@ public class ListSheet<T> extends Sheet {
                 } else if (dn != null && isNotEmpty(dn.value())) {
                     list.add(new Column(dn.value(), field.getName(), field.getType())
                         .setShare(dn.share()));
-                } else {
+                } else if (method != null) {
                     list.add(new Column(field.getName(), field.getName(), field.getType())
                         .setShare(dn == null || dn.share()));
                 }
