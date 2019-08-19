@@ -136,11 +136,13 @@ public class ReflectUtil {
     public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
         MethodDescriptor[] methodDescriptors = Introspector.getBeanInfo(beanClass, stopClass).getMethodDescriptors();
+        Method[] allMethods = beanClass.getMethods();
         Method[] methods;
         if (methodDescriptors.length > 0) {
             methods = new Method[methodDescriptors.length];
             for (int i = 0; i < methodDescriptors.length; i++) {
-                methods[i] = methodDescriptors[i].getMethod();
+                int index = indexOf(allMethods, methodDescriptors[i].getMethod());
+                methods[i] = index >= 0 ? allMethods[index] : methodDescriptors[i].getMethod();
             }
         } else methods = new Method[0];
 
@@ -301,6 +303,26 @@ public class ReflectUtil {
         Method[] methods = listWriteMethods(beanClass, stopClass);
 
         return methodFilter(methods, predicate);
+    }
+
+    public static int indexOf(Method[] methods, Method source) {
+        int i = 0;
+        for (Method method : methods) {
+            if (method == null) {
+                i++;
+                continue;
+            }
+            if (method.equals(source)) {
+                return i;
+            }
+            if (method.getName().equals(source.getName())
+                && method.getReturnType() == source.getReturnType()
+                && parameterDeepEquals(method.getParameters(), source.getParameters())) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
     }
 
     // Do Filter
