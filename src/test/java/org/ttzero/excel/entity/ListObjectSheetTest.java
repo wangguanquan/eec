@@ -323,7 +323,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Sheet.Column("学号", "id", int.class)
                     , new Sheet.Column("姓名", "name", String.class)
-                    , new Sheet.Column("成绩", "scre", int.class, conversion)
+                    , new Sheet.Column("成绩", "score", int.class, conversion)
                     .setStyleProcessor(sp)
                 )
             )
@@ -351,6 +351,52 @@ public class ListObjectSheetTest extends WorkbookTest{
             field.setAccessible(true);
             println(field + ": " + field.get(item));
         }
+    }
+
+    @Test public void testFieldUnDeclare() throws IOException {
+        try {
+            new Workbook("field un-declare", author)
+                .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                        , new Sheet.Column("学号", "id")
+                        , new Sheet.Column("姓名", "name")
+                        , new Sheet.Column("成绩", "sore") // un-declare field
+                    )
+                )
+                .writeTo(defaultTestPath);
+        } catch (ExcelWriteException e) {
+            assert true;
+        }
+    }
+
+    @Test public void testResetMethod() throws IOException {
+        new Workbook("重写期末成绩", author)
+            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
+                    @Override
+                    public int getScore() {
+                        return 100;
+                    }
+                }))
+            )
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testMethodAnnotation() throws IOException {
+        new Workbook("重写方法注解", author)
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, author, 0) {
+                @Override
+                @ExcelColumn("ID")
+                public int getId() {
+                    return super.id;
+                }
+
+                @Override
+                @ExcelColumn("SCORE")
+                public int getScore() {
+                    return 97;
+                }
+            }))
+            )
+            .writeTo(defaultTestPath);
     }
 
     public static class Item {

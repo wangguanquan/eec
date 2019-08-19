@@ -27,9 +27,13 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
@@ -238,20 +242,23 @@ public class ListSheet<T> extends Sheet {
             for (; start < end; rows++, start++) {
                 Row row = rowBlock.next();
                 row.index = rows;
-                Field field;
                 Cell[] cells = row.realloc(len);
+                T o = data.get(start);
                 for (int i = 0; i < len; i++) {
-                    field = fields[i];
                     // clear cells
                     Cell cell = cells[i];
                     cell.clear();
 
-                    Object e = field.get(data.get(start));
+                    Object e;
+                    if (methods[i] != null)
+                        e = methods[i].invoke(o);
+                    else
+                        e = fields[i].get(o);
 
                     setCellValueAndStyle(cell, e, columns[i]);
                 }
             }
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ExcelWriteException(e);
         }
     }
@@ -303,6 +310,17 @@ public class ListSheet<T> extends Sheet {
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
 
+    static int indexOf(Method[] methods, Method source) {
+        int i = 0;
+        for (Method method : methods) {
+            if (method.equals(source)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
+
     /**
      * Get the first object of the object array witch is not NULL,
      * reflect all declared fields, and then do the following steps
@@ -320,90 +338,160 @@ public class ListSheet<T> extends Sheet {
      *
      * @return the field array
      */
-    private Field[] init() {
-        // Get the first not NULL object
-        T o = getFirst();
-        if (o == null) return null;
+    private int init() {
+        Class<?> clazz;
+        if (getClass().getGenericSuperclass() instanceof  ParameterizedType) {
+            @SuppressWarnings({"unchecked", "retype"})
+            Class<?> tClass = (Class<T>) ((ParameterizedType) getClass()
+                .getGenericSuperclass()).getActualTypeArguments()[0];
+            clazz = tClass;
+        } else {
+            T o = getFirst();
+            if (o == null) return 0;
+            clazz = o.getClass();
+        }
+
+        // The main source
+        Field[] declaredFields = listDeclaredFields(clazz);
+
+        Method[] readMethods = null;
+        int readLength = 0;
+        try {
+            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null);
+        } catch (IntrospectionException e) {
+            what("Get " + clazz + " read declared failed.");
+        }
+        Map<String, Method> tmp = new LinkedHashMap<>();
+        try {
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
+                .getPropertyDescriptors();
+            if (readMethods == null) {
+                for (int i = 1; i < propertyDescriptors.length; i++) {
+                    PropertyDescriptor pd = propertyDescriptors[i];
+                    tmp.put(pd.getName(), pd.getReadMethod());
+                }
+            } else {
+                int i;
+                for (PropertyDescriptor pd : propertyDescriptors) {
+                    i = indexOf(readMethods, pd.getReadMethod());
+                    if (i >= 0) {
+                        readMethods[i] = null;
+                    }
+                    tmp.put(pd.getName(), pd.getReadMethod());
+                }
+
+                i = 0;
+                for (int j = 0; j < readMethods.length; j++) {
+                    if (readMethods[j] != null) {
+                        readMethods[i++] = readMethods[j];
+                    }
+                }
+                readLength = i;
+            }
+        } catch (IntrospectionException e) {
+            what("Get " + clazz + " property descriptor failed.");
+        }
+
         if (!hasHeaderColumns()) {
-            Field[] fields = listDeclaredFields(o.getClass()
-                , field -> field.getAnnotation(ExcelColumn.class) != null);
-            PropertyDescriptor[] propertyDescriptors = null;
-            try {
-                propertyDescriptors = Introspector.getBeanInfo(o.getClass()).getPropertyDescriptors();
-            } catch (IntrospectionException e) {
-                what("Get " + o.getClass() + " property descriptor failed.");
-            }
-
-            Method[] readMethods = null;
-            try {
-                readMethods = listReadMethods(o.getClass(), method -> method.getAnnotation(ExcelColumn.class) != null);
-            } catch (IntrospectionException e) {
-                what("Get " + o.getClass() + " read declared failed.");
-            }
-
-            // TODO get ExcelColumn annotation method
-            Method[] methods = new Method[Math.max(propertyDescriptors != null ? propertyDescriptors.length : 1, fields.length)];
-            List<Column> list = new ArrayList<>(fields.length);
-            for (int i = 0; i < fields.length; i++) {
-                Field field = fields[i];
+            // Get ExcelColumn annotation method
+            methods = new Method[declaredFields.length + readLength];
+            List<Column> list = new ArrayList<>(declaredFields.length);
+            int i = 0;
+            for (; i < declaredFields.length; i++) {
+                Field field = declaredFields[i];
                 field.setAccessible(true);
-                String gs = field.toGenericString();
+                String gs = field.getName();
+
+                // Ignore annotation on read method
+                Method method = tmp.get(gs);
+                if (method != null) {
+                    method.setAccessible(true);
+
+                    if (method.getAnnotation(IgnoreExport.class) != null) {
+                        declaredFields[i] = null;
+                        continue;
+                    }
+
+                    methods[i] = method;
+                    ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
+                    if (mec != null && isNotEmpty(mec.value())) {
+                        list.add(new Column(mec.value(), field.getName(), method.getReturnType())
+                            .setShare(mec.share()));
+                        continue;
+                    }
+                }
+
                 // Ignore annotation on field
                 IgnoreExport notExport = field.getAnnotation(IgnoreExport.class);
                 if (notExport != null || StringUtil.indexOf(exclude, gs.substring(gs.lastIndexOf('.') + 1)) >= 0) {
-                    fields[i] = null;
+                    declaredFields[i] = null;
                     continue;
                 }
-                // Ignore annotation on read method
-//                Method method = readMethod.get(gs);
-//                if (method !)
 
-                DisplayName dn = field.getAnnotation(DisplayName.class);
                 ExcelColumn ec = field.getAnnotation(ExcelColumn.class);
+                DisplayName dn = field.getAnnotation(DisplayName.class);
+
                 if (ec != null && isNotEmpty(ec.value())) {
-                    list.add(new Column(ec.value(), field.getName()
-                        , field.getType()).setShare(ec.share()));
+                    list.add(new Column(ec.value(), field.getName(), field.getType())
+                        .setShare(ec.share()));
                 } else if (dn != null && isNotEmpty(dn.value())) {
-                    list.add(new Column(dn.value(), field.getName()
-                        , field.getType()).setShare(dn.share()));
+                    list.add(new Column(dn.value(), field.getName(), field.getType())
+                        .setShare(dn.share()));
                 } else {
-                    list.add(new Column(field.getName(), field.getName()
-                        , field.getType()).setShare(dn == null || dn.share()));
+                    list.add(new Column(field.getName(), field.getName(), field.getType())
+                        .setShare(dn == null || dn.share()));
+                }
+            }
+            if (readLength > 0) {
+                for (Method method : readMethods) {
+                    methods[i++] = method;
+                    ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
+                    list.add(new Column(mec.value(), method.getName(), method.getReturnType())
+                        .setShare(mec.share()));
                 }
             }
             columns = new Column[list.size()];
             list.toArray(columns);
-            for (int i = 0; i < columns.length; i++) {
+            for (i = 0; i < columns.length; i++) {
                 columns[i].styles = workbook.getStyles();
             }
-            // clear not export fields
-            for (int len = fields.length, n = len - 1; n >= 0; n--) {
-                if (fields[n] != null) {
-                    fields[n].setAccessible(true);
-                    continue;
+            // Clear not export fields
+            i = 0;
+            fields = new Field[columns.length];
+            for (int j = 0; j < declaredFields.length; j++) {
+                if (declaredFields[j] != null) {
+                    declaredFields[j].setAccessible(true);
+                    fields[i] = declaredFields[j];
+                    methods[i] = methods[j];
+                    i++;
                 }
-                if (n < len - 1) {
-                    System.arraycopy(fields, n + 1, fields, n, len - n - 1);
-                }
-                len--;
             }
-            return fields;
+            return i + readLength;
         } else {
-            Field[] fields = new Field[columns.length];
-            Class<?> clazz = o.getClass();
+            fields = new Field[columns.length];
+            methods = new Method[columns.length];
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
-                try {
-                    fields[i] = clazz.getDeclaredField(hc.key);
-                    fields[i].setAccessible(true);
-                    if (hc.getClazz() == null) {
-                        hc.setClazz(fields[i].getType());
+                methods[i] = tmp.get(hc.key);
+
+                for (Field field : declaredFields) {
+                    if (hc.key.equals(field.getName())) {
+                        field.setAccessible(true);
+                        fields[i] = field;
+                        break;
                     }
-                } catch (NoSuchFieldException e) {
-                    throw new ExcelWriteException("Column " + hc.getName() + " not declare in class " + clazz);
+                }
+
+                if (methods[i] == null && fields[i] == null) {
+                    throw new ExcelWriteException("Column [" + hc.getName() + "(" + hc.key + ")"
+                        + "] not declare in class " + clazz);
+                }
+
+                if (hc.getClazz() == null) {
+                    hc.setClazz(methods[i] != null ? methods[i].getReturnType() : fields[i].getType());
                 }
             }
-            return fields;
+            return columns.length;
         }
 
     }
@@ -420,8 +508,8 @@ public class ListSheet<T> extends Sheet {
 //                columns = new Column[0];
 //            }
             // create header columns
-            fields = init();
-            if (fields == null || fields.length == 0 || fields[0] == null) {
+            int size = init();
+            if (size <= 0) {
                 columns = new Column[0];
             } else {
                 // Check the header column limit
