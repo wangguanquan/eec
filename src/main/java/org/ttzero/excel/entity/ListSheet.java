@@ -460,6 +460,10 @@ public class ListSheet<T> extends Sheet {
                         .setShare(mec.share()));
                 }
             }
+            if (list.isEmpty()) {
+                headerReady = true;
+                return 0;
+            }
             columns = new Column[list.size()];
             list.toArray(columns);
             for (i = 0; i < columns.length; i++) {
