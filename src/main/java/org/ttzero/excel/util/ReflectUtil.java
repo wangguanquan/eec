@@ -344,6 +344,7 @@ public class ReflectUtil {
         int n = 0;
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
+            field.setAccessible(true);
             if (predicate.test(field)) {
                 if (i != n) fields[n] = field;
                 n++;
