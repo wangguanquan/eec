@@ -394,6 +394,12 @@ public class ListObjectSheetTest extends WorkbookTest{
                 public int getScore() {
                     return 97;
                 }
+
+                @Override
+                @ExcelColumn
+                public String toString() {
+                    return "abc";
+                }
             }))
             )
             .writeTo(defaultTestPath);

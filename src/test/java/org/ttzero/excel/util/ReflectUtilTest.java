@@ -25,9 +25,12 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import static org.ttzero.excel.Print.println;
+import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 
 /**
  * Create by guanquan.wang at 2019-08-15 21:46
@@ -73,13 +76,13 @@ public class ReflectUtilTest {
     @Test public void testListDeclaredMethod1() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class);
 
-        assert methods.length == 4;
+        assert methods.length == 6;
     }
 
     @Test public void testListDeclaredMethod2() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class, B.class);
 
-        assert methods.length == 2;
+        assert methods.length == 4;
     }
 
     @Test public void testListDeclaredMethod3() throws IntrospectionException {
@@ -97,13 +100,13 @@ public class ReflectUtilTest {
     @Test public void testListReadMethod1() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class);
 
-        assert methods.length == 2;
+        assert methods.length == 3;
     }
 
     @Test public void testListReadMethod2() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class, A.class);
 
-        assert methods.length == 1;
+        assert methods.length == 2;
     }
 
     @Test public void testListReadMethod3() throws IntrospectionException {
@@ -143,6 +146,8 @@ public class ReflectUtilTest {
         Method[] methods = ReflectUtil.listWriteMethods(C.class
             , method -> method.getAnnotation(IgnoreImport.class) != null);
 
+        for (Method method : methods)
+            println(method);
         assert methods.length == 1;
     }
 
@@ -152,6 +157,30 @@ public class ReflectUtilTest {
             println(method);
             Class<?> returnType = method.getMethod().getReturnType();
             println(returnType);
+        }
+    }
+
+    @Test public void testRewriteMethod() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+        C c = new C() {
+            @Override
+            @IgnoreImport
+            @ExcelColumn("name")
+            public void setC(long c) {
+                super.c = c;
+            }
+
+            @Override
+            @IgnoreExport("CODE")
+            @ExcelColumn("CODE")
+            public long getC() {
+                return 9527L;
+            }
+        };
+
+        Method[] methods = listReadMethods(c.getClass());
+        for (Method method : methods) {
+            println(method);
+            println(Arrays.toString(method.getAnnotations()));
         }
     }
 
@@ -170,7 +199,14 @@ public class ReflectUtilTest {
     }
 
     static class B extends A {
+        @Override
+        public String toString() {
+            return "B <- A";
+        }
 
+        public int doIt(int a) {
+            return 0;
+        }
     }
 
     public static class C extends B {
@@ -183,6 +219,11 @@ public class ReflectUtilTest {
 
         public void setC(long c) {
             this.c = c;
+        }
+
+        @Override
+        public int doIt(int a) {
+            return 0;
         }
     }
 }
