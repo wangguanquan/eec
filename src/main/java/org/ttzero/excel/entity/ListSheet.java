@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.ttzero.excel.util.ReflectUtil.indexOf;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -310,15 +311,62 @@ public class ListSheet<T> extends Sheet {
 
     private static final String[] exclude = {"serialVersionUID", "this$0"};
 
-    static int indexOf(Method[] methods, Method source) {
-        int i = 0;
-        for (Method method : methods) {
-            if (method.equals(source)) {
+    // Returns the reflect <T> type
+    private Class<?> getTClass() {
+        Class<?> clazz;
+        if (getClass().getGenericSuperclass() instanceof  ParameterizedType) {
+            @SuppressWarnings({"unchecked", "retype"})
+            Class<?> tClass = (Class<T>) ((ParameterizedType) getClass()
+                .getGenericSuperclass()).getActualTypeArguments()[0];
+            clazz = tClass;
+        } else {
+            T o = getFirst();
+            if (o == null) return null;
+            clazz = o.getClass();
+        }
+        return clazz;
+    }
+
+    private int methodMapping(Class<?> clazz, Method[] readMethods, Map<String, Method> tmp) {
+        try {
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
+                .getPropertyDescriptors();
+            Method[] allMethods = clazz.getMethods()
+                , mergedMethods = new Method[propertyDescriptors.length];
+            for (int i = 0; i < propertyDescriptors.length; i++) {
+                Method method = propertyDescriptors[i].getReadMethod();
+                if (method == null) continue;
+                int index = indexOf(allMethods, method);
+                mergedMethods[i] = index >= 0 ? allMethods[index] : method;
+            }
+
+            if (readMethods == null) {
+                for (int i = 1; i < propertyDescriptors.length; i++) {
+                    PropertyDescriptor pd = propertyDescriptors[i];
+                    tmp.put(pd.getName(), mergedMethods[i]);
+                }
+            } else {
+                int i;
+                for (int j = 0; j < mergedMethods.length; j++) {
+                    i = mergedMethods[j] != null ? indexOf(readMethods, mergedMethods[j]) : -1;
+                    if (i >= 0) {
+                        readMethods[i] = null;
+                    }
+                    tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
+                }
+
+                i = 0;
+                for (int j = 0; j < readMethods.length; j++) {
+                    if (readMethods[j] != null) {
+                        readMethods[i++] = readMethods[j];
+                    }
+                }
                 return i;
             }
-            i++;
+        } catch (IntrospectionException e) {
+            what("Get " + clazz + " property descriptor failed.");
         }
-        return -1;
+        return 0;
     }
 
     /**
@@ -339,58 +387,22 @@ public class ListSheet<T> extends Sheet {
      * @return the field array
      */
     private int init() {
-        Class<?> clazz;
-        if (getClass().getGenericSuperclass() instanceof  ParameterizedType) {
-            @SuppressWarnings({"unchecked", "retype"})
-            Class<?> tClass = (Class<T>) ((ParameterizedType) getClass()
-                .getGenericSuperclass()).getActualTypeArguments()[0];
-            clazz = tClass;
-        } else {
-            T o = getFirst();
-            if (o == null) return 0;
-            clazz = o.getClass();
-        }
+        Class<?> clazz = getTClass();
+        if (clazz == null) return 0;
 
         // The main source
         Field[] declaredFields = listDeclaredFields(clazz);
 
         Method[] readMethods = null;
-        int readLength = 0;
         try {
             readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null);
         } catch (IntrospectionException e) {
             what("Get " + clazz + " read declared failed.");
         }
-        Map<String, Method> tmp = new LinkedHashMap<>();
-        try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
-                .getPropertyDescriptors();
-            if (readMethods == null) {
-                for (int i = 1; i < propertyDescriptors.length; i++) {
-                    PropertyDescriptor pd = propertyDescriptors[i];
-                    tmp.put(pd.getName(), pd.getReadMethod());
-                }
-            } else {
-                int i;
-                for (PropertyDescriptor pd : propertyDescriptors) {
-                    i = indexOf(readMethods, pd.getReadMethod());
-                    if (i >= 0) {
-                        readMethods[i] = null;
-                    }
-                    tmp.put(pd.getName(), pd.getReadMethod());
-                }
 
-                i = 0;
-                for (int j = 0; j < readMethods.length; j++) {
-                    if (readMethods[j] != null) {
-                        readMethods[i++] = readMethods[j];
-                    }
-                }
-                readLength = i;
-            }
-        } catch (IntrospectionException e) {
-            what("Get " + clazz + " property descriptor failed.");
-        }
+        Map<String, Method> tmp = new LinkedHashMap<>();
+
+        int readLength = methodMapping(clazz, readMethods, tmp);
 
         if (!hasHeaderColumns()) {
             // Get ExcelColumn annotation method
