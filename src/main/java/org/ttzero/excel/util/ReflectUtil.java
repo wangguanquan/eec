@@ -96,7 +96,7 @@ public class ReflectUtil {
     public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass, Predicate<Field> predicate) {
         Field[] fields = listDeclaredFields(beanClass, stopClass);
 
-        return fieldFielter(fields, predicate);
+        return fieldFilter(fields, predicate);
     }
 
     /**
@@ -317,7 +317,7 @@ public class ReflectUtil {
         return n < methods.length ? Arrays.copyOf(methods, n) : methods;
     }
 
-    private static Field[] fieldFielter(Field[] fields, Predicate<Field> predicate) {
+    private static Field[] fieldFilter(Field[] fields, Predicate<Field> predicate) {
         int n = 0;
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
