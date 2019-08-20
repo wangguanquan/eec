@@ -334,7 +334,7 @@ public class ListSheet<T> extends Sheet {
                 .getPropertyDescriptors();
             Method[] allMethods = clazz.getMethods()
                 , mergedMethods = new Method[propertyDescriptors.length];
-            for (int i = 1; i < propertyDescriptors.length; i++) {
+            for (int i = 0; i < propertyDescriptors.length; i++) {
                 Method method = propertyDescriptors[i].getReadMethod();
                 if (method == null) continue;
                 int index = indexOf(allMethods, method);
