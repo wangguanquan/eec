@@ -26,8 +26,12 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
-import java.awt.*;
+import java.awt.Color;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -40,6 +44,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -113,9 +118,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("test int conversion", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id", int.class)
-                , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("成绩", "score", int.class, n -> n < 60 ? "不及格" : n)
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
             )
             .writeTo(defaultTestPath);
     }
@@ -124,9 +129,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("object style processor", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id", int.class)
-                , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("成绩", "score", int.class)
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -142,9 +147,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("object style and style processor", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id", int.class)
-                , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("成绩", "score", int.class, n -> n < 60 ? "不及格" : n)
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -209,8 +214,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item"
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name"))
                 .setData(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
     }
@@ -220,8 +225,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name"))
                 .setData(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
     }
@@ -247,8 +252,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class)))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -257,8 +262,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class)))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -268,8 +273,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
                 , WaterMark.of(author)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class)))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -280,8 +285,8 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(new ListSheet<>("ITEM"
                 , Item.randomTestData(10)
                 , WaterMark.of(author)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class)))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -316,9 +321,9 @@ public class ListObjectSheetTest extends WorkbookTest{
     public void testStyleConversion1() throws IOException {
         new Workbook("object style processor1", "guanquan.wang")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Sheet.Column("学号", "id", int.class)
-                    , new Sheet.Column("姓名", "name", String.class)
-                    , new Sheet.Column("成绩", "score", int.class, conversion)
+                    , new Sheet.Column("学号", "id")
+                    , new Sheet.Column("姓名", "name")
+                    , new Sheet.Column("成绩", "score", conversion)
                     .setStyleProcessor(sp)
                 )
             )
@@ -329,10 +334,67 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("test null value", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)
-                , new Sheet.Column("学号", "id", Integer.class, i -> i == 0 ? -1 : i)
-                , new Sheet.Column("姓名", "name", String.class)
-                , new Sheet.Column("妮称", "nice", String.class))
+            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testReflect() throws IntrospectionException, IllegalAccessException {
+        PropertyDescriptor[] array = Introspector.getBeanInfo(ExtItem.class).getPropertyDescriptors();
+        for (PropertyDescriptor pd : array) {
+            println(pd);
+        }
+        ExtItem item = new ExtItem(1, "guanquan.wang");
+        item.nice = "colvin";
+
+        Field[] fields = item.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            println(field + ": " + field.get(item));
+        }
+    }
+
+    @Test public void testFieldUnDeclare() throws IOException {
+        try {
+            new Workbook("field un-declare", author)
+                .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                        , new Sheet.Column("学号", "id")
+                        , new Sheet.Column("姓名", "name")
+                        , new Sheet.Column("成绩", "sore") // un-declare field
+                    )
+                )
+                .writeTo(defaultTestPath);
+        } catch (ExcelWriteException e) {
+            assert true;
+        }
+    }
+
+    @Test public void testResetMethod() throws IOException {
+        new Workbook("重写期末成绩", author)
+            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
+                    @Override
+                    public int getScore() {
+                        return 100;
+                    }
+                }))
+            )
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testMethodAnnotation() throws IOException {
+        new Workbook("重写方法注解", author)
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, author, 0) {
+                @Override
+                @ExcelColumn("ID")
+                public int getId() {
+                    return super.id;
+                }
+
+                @Override
+                @ExcelColumn("SCORE")
+                public int getScore() {
+                    return 97;
+                }
+            }))
             )
             .writeTo(defaultTestPath);
     }
@@ -344,6 +406,14 @@ public class ListObjectSheetTest extends WorkbookTest{
         Item(int id, String name) {
             this.id = id;
             this.name = name;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public static List<Item> randomTestData(int n) {
@@ -405,6 +475,66 @@ public class ListObjectSheetTest extends WorkbookTest{
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
+
+        public boolean isBv() {
+            return bv;
+        }
+
+        public char getCv() {
+            return cv;
+        }
+
+        public short getSv() {
+            return sv;
+        }
+
+        public int getNv() {
+            return nv;
+        }
+
+        public long getLv() {
+            return lv;
+        }
+
+        public float getFv() {
+            return fv;
+        }
+
+        public double getDv() {
+            return dv;
+        }
+
+        public String getS() {
+            return s;
+        }
+
+        public BigDecimal getMv() {
+            return mv;
+        }
+
+        public Date getAv() {
+            return av;
+        }
+
+        public Timestamp getIv() {
+            return iv;
+        }
+
+        public Time getTv() {
+            return tv;
+        }
+
+        public LocalDate getLdv() {
+            return ldv;
+        }
+
+        public LocalDateTime getLdtv() {
+            return ldtv;
+        }
+
+        public LocalTime getLtv() {
+            return ltv;
+        }
     }
 
     /**
@@ -423,6 +553,31 @@ public class ListObjectSheetTest extends WorkbookTest{
             this.name = name;
             this.score = score;
         }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public void setScore(int score) {
+            this.score = score;
+        }
+
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit; i < n; i++) {
@@ -439,6 +594,12 @@ public class ListObjectSheetTest extends WorkbookTest{
         public static List<Student> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        @ExcelColumn
+        public String toString() {
+            return "id: " + id + ", name: " + name + ", score: " + score;
         }
     }
 
@@ -487,21 +648,83 @@ public class ListObjectSheetTest extends WorkbookTest{
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
-    }
 
-    public static class ExtItem {
-        private Integer id;
-        private String name;
-        private String nice;
-
-        ExtItem(String name) {
-            this.name = name;
+        public Boolean getBv() {
+            return bv;
         }
 
-        public static List<ExtItem> randomTestData(int n) {
-            List<ExtItem> list = new ArrayList<>(n);
+        public Character getCv() {
+            return cv;
+        }
+
+        public Short getSv() {
+            return sv;
+        }
+
+        public Integer getNv() {
+            return nv;
+        }
+
+        public Long getLv() {
+            return lv;
+        }
+
+        public Float getFv() {
+            return fv;
+        }
+
+        public Double getDv() {
+            return dv;
+        }
+
+        public String getS() {
+            return s;
+        }
+
+        public BigDecimal getMv() {
+            return mv;
+        }
+
+        public Date getAv() {
+            return av;
+        }
+
+        public Timestamp getIv() {
+            return iv;
+        }
+
+        public Time getTv() {
+            return tv;
+        }
+
+        public LocalDate getLdv() {
+            return ldv;
+        }
+
+        public LocalDateTime getLdtv() {
+            return ldtv;
+        }
+
+        public LocalTime getLtv() {
+            return ltv;
+        }
+    }
+
+    public static class ExtItem extends Item {
+        private String nice;
+
+        ExtItem(int id, String name) {
+            super(id, name);
+        }
+
+        public String getNice() {
+            return nice;
+        }
+
+        public static List<Item> randomTestData(int n) {
+            List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new ExtItem(getRandomString()));
+                list.add(new ExtItem(i,  getRandomString()));
             }
             return list;
         }
