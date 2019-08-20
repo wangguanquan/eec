@@ -453,10 +453,11 @@ public class ListSheet<T> extends Sheet {
                 }
             }
             if (readLength > 0) {
-                for (Method method : readMethods) {
-                    methods[i++] = method;
-                    ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
-                    list.add(new Column(mec.value(), method.getName(), method.getReturnType())
+                for (int j = 0; j < readLength; j++) {
+                    Method readMethod = readMethods[j];
+                    methods[i++] = readMethod;
+                    ExcelColumn mec = readMethod.getAnnotation(ExcelColumn.class);
+                    list.add(new Column(mec.value(), readMethod.getName(), readMethod.getReturnType())
                         .setShare(mec.share()));
                 }
             }
