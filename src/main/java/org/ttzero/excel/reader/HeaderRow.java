@@ -19,12 +19,24 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
+import org.ttzero.excel.util.ReflectUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.listWriteMethods;
+import static org.ttzero.excel.util.ReflectUtil.mapping;
+import static org.ttzero.excel.util.StringUtil.indexOf;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -34,6 +46,7 @@ class HeaderRow extends Row {
     private String[] names;
     private Class<?> clazz;
     private Field[] fields;
+    private Method[] methods;
     private int[] columns;
     private Class<?>[] fieldClazz;
     private Object t;
@@ -74,63 +87,141 @@ class HeaderRow extends Row {
      */
     final HeaderRow setClass(Class<?> clazz) {
         this.clazz = clazz;
-        Field[] fields = clazz.getDeclaredFields();
-        int[] index = new int[fields.length];
+        Field[] declaredFields = listDeclaredFields(clazz);
+
+        Method[] writeMethods = null;
+        try {
+            writeMethods = listWriteMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null);
+        } catch (IntrospectionException e) {
+            logger.warn("Get [" + clazz + "] read declared failed.", e);
+        }
+
+        Map<String, Method> tmp = new LinkedHashMap<>();
+
+        int writeLength = methodMapping(clazz, writeMethods, tmp);
+        methods = new Method[declaredFields.length + writeLength];
+
+
+        int[] index = new int[declaredFields.length];
         int count = 0;
-        for (int i = 0, n; i < fields.length; i++) {
-            Field f = fields[i];
+        for (int i = 0, n; i < declaredFields.length; i++) {
+            Field f = declaredFields[i];
+            f.setAccessible(true);
+            String gs = f.getName();
+
+            // Ignore annotation on read method
+            Method method = tmp.get(gs);
+            if (method != null) {
+                if (method.getAnnotation(IgnoreImport.class) != null) {
+                    declaredFields[i] = null;
+                    continue;
+                }
+
+                methods[i] = method;
+                ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
+                if (mec != null && isNotEmpty(mec.value())) {
+                    n = check(mec.value(), gs);
+                    if (n == -1) {
+                        declaredFields[i] = null;
+                    } else {
+                        index[i] = n;
+                        count++;
+                    }
+                    continue;
+                }
+            }
+
             // skip not import fields
             IgnoreImport nit = f.getAnnotation(IgnoreImport.class);
             if (nit != null) {
-                fields[i] = null;
+                declaredFields[i] = null;
                 continue;
             }
             // field has display name
-            DisplayName ano = f.getAnnotation(DisplayName.class);
             ExcelColumn ec = f.getAnnotation(ExcelColumn.class);
+            DisplayName ano = f.getAnnotation(DisplayName.class);
             if (ec != null && isNotEmpty(ec.value())) {
-                n = StringUtil.indexOf(names, ec.value());
+                n = check(ec.value(), gs);
                 if (n == -1) {
-                    logger.warn(clazz + " field [" + ec.value() + "] can't find in header" + Arrays.toString(names));
-                    fields[i] = null;
+                    declaredFields[i] = null;
                     continue;
                 }
             } else if (ano != null && isNotEmpty(ano.value())) {
-                n = StringUtil.indexOf(names, ano.value());
+                n = check(ano.value(), gs);
                 if (n == -1) {
-                    logger.warn(clazz + " field [" + ano.value() + "] can't find in header" + Arrays.toString(names));
-                    fields[i] = null;
+                    declaredFields[i] = null;
                     continue;
                 }
             }
-            // no annotation or annotation value is null
-            else {
+            // Annotation value is null
+            else if (ec != null || ano != null || methods[i] != null) {
                 String name = f.getName();
-                n = StringUtil.indexOf(names, name);
-                if (n == -1 && (n = StringUtil.indexOf(names, StringUtil.toPascalCase(name))) == -1) {
-                    fields[i] = null;
+                n = indexOf(names, name);
+                if (n == -1 && (n = indexOf(names, StringUtil.toPascalCase(name))) == -1) {
+                    declaredFields[i] = null;
                     continue;
                 }
+            } else {
+                declaredFields[i] = null;
+                continue;
             }
 
             index[i] = n;
             count++;
         }
 
+        if (writeLength > 0) {
+            System.arraycopy(writeMethods, 0, methods, declaredFields.length, writeLength);
+            count += writeLength;
+//            for (int i = declaredFields.length, j = 0; j < writeLength; j++) {
+//                index[i++] =
+//            }
+        }
+
         this.fields = new Field[count];
         this.columns = new int[count];
         this.fieldClazz = new Class<?>[count];
 
-        for (int i = fields.length - 1; i >= 0; i--) {
-            if (fields[i] != null) {
-                count--;
-                this.fields[count] = fields[i];
-                this.fields[count].setAccessible(true);
-                this.columns[count] = index[i];
-                this.fieldClazz[count] = fields[i].getType();
+        for (int i = 0, j = 0; i < declaredFields.length; i++) {
+            if (declaredFields[i] != null) {
+                fields[j] = declaredFields[i];
+                columns[j] = index[i];
+                methods[j] = methods[i];
+                fieldClazz[j] = methods[i] != null ? methods[i].getParameterTypes()[0] : declaredFields[i].getType();
+                j++;
             }
         }
+
         return this;
+    }
+
+    private int methodMapping(Class<?> clazz, Method[] writeMethods, Map<String, Method> tmp) {
+        try {
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
+                .getPropertyDescriptors();
+            Method[] allMethods = clazz.getMethods()
+                , mergedMethods = new Method[propertyDescriptors.length];
+            for (int i = 0; i < propertyDescriptors.length; i++) {
+                Method method = propertyDescriptors[i].getWriteMethod();
+                if (method == null) continue;
+                int index = ReflectUtil.indexOf(allMethods, method);
+                mergedMethods[i] = index >= 0 ? allMethods[index] : method;
+            }
+
+            return mapping(writeMethods, tmp, propertyDescriptors, mergedMethods);
+        } catch (IntrospectionException e) {
+            logger.warn("Get " + clazz + " property descriptor failed.");
+        }
+        return 0;
+    }
+
+    private int check(String first, String second) {
+        int n = indexOf(names, first);
+        if (n == -1) n = indexOf(names, second);
+        if (n == -1) {
+            logger.warn(clazz + " field [" + first + "] can't find in header" + Arrays.toString(names));
+        }
+        return n;
     }
 
     /**
@@ -195,32 +286,66 @@ class HeaderRow extends Row {
         return joiner.toString();
     }
 
-    void put(Row row, Object t) throws IllegalAccessException {
+    void put(Row row, Object t) throws IllegalAccessException, InvocationTargetException {
         for (int i = 0; i < columns.length; i++) {
-            int c = columns[i];
-            if (fieldClazz[i] == String.class) {
-                fields[i].set(t, row.getString(c));
-            } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
-                fields[i].set(t, row.getInt(c));
-            } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
-                fields[i].set(t, row.getLong(c));
-            } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
-                fields[i].set(t, row.getDate(c));
-            } else if (fieldClazz[i] == java.sql.Timestamp.class) {
-                fields[i].set(t, row.getTimestamp(c));
-            } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
-                fields[i].set(t, row.getDouble(c));
-            } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
-                fields[i].set(t, row.getFloat(c));
-            } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
-                fields[i].set(t, row.getBoolean(c));
-            } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
-                fields[i].set(t, row.getChar(c));
-            } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
-                fields[i].set(t, row.getByte(c));
-            } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
-                fields[i].set(t, row.getShort(c));
-            }
+            if (methods[i] != null)
+                methodPut(i, row, t);
+            else
+                fieldPut(i, row, t);
+        }
+    }
+
+    private void fieldPut(int i, Row row, Object t) throws IllegalAccessException {
+        int c = columns[i];
+        if (fieldClazz[i] == String.class) {
+            fields[i].set(t, row.getString(c));
+        } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
+            fields[i].set(t, row.getInt(c));
+        } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
+            fields[i].set(t, row.getLong(c));
+        } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
+            fields[i].set(t, row.getDate(c));
+        } else if (fieldClazz[i] == java.sql.Timestamp.class) {
+            fields[i].set(t, row.getTimestamp(c));
+        } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
+            fields[i].set(t, row.getDouble(c));
+        } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
+            fields[i].set(t, row.getFloat(c));
+        } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
+            fields[i].set(t, row.getBoolean(c));
+        } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
+            fields[i].set(t, row.getChar(c));
+        } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
+            fields[i].set(t, row.getByte(c));
+        } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
+            fields[i].set(t, row.getShort(c));
+        }
+    }
+
+    private void methodPut(int i, Row row, Object t) throws IllegalAccessException, InvocationTargetException {
+        int c = columns[i];
+        if (fieldClazz[i] == String.class) {
+            methods[i].invoke(t, row.getString(c));
+        } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
+            methods[i].invoke(t, row.getInt(c));
+        } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
+            methods[i].invoke(t, row.getLong(c));
+        } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
+            methods[i].invoke(t, row.getDate(c));
+        } else if (fieldClazz[i] == java.sql.Timestamp.class) {
+            methods[i].invoke(t, row.getTimestamp(c));
+        } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
+            methods[i].invoke(t, row.getDouble(c));
+        } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
+            methods[i].invoke(t, row.getFloat(c));
+        } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
+            methods[i].invoke(t, row.getBoolean(c));
+        } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
+            methods[i].invoke(t, row.getChar(c));
+        } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
+            methods[i].invoke(t, row.getByte(c));
+        } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
+            methods[i].invoke(t, row.getShort(c));
         }
     }
 }

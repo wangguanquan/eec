@@ -22,6 +22,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -587,7 +588,7 @@ public abstract class Row {
             try {
                 t = (T) hr.getClazz().newInstance();
                 hr.put(this, t);
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new UncheckedTypeException(hr.getClazz() + " new instance error.", e);
             }
             return t;
@@ -606,7 +607,7 @@ public abstract class Row {
             T t = hr.getT();
             try {
                 hr.put(this, t);
-            } catch (IllegalAccessException e) {
+            } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new UncheckedTypeException("call set method error.", e);
             }
             return t;
@@ -633,7 +634,7 @@ public abstract class Row {
         try {
             t = clazz.newInstance();
             hr.put(this, t);
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new UncheckedTypeException(clazz + " new instance error.", e);
         }
         return t;
@@ -662,7 +663,7 @@ public abstract class Row {
         T t = hr.getT();
         try {
             hr.put(this, t);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             throw new UncheckedTypeException("call set method error.", e);
         }
         return t;
