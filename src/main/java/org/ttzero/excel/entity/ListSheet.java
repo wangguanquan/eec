@@ -38,6 +38,7 @@ import java.util.Map;
 import static org.ttzero.excel.util.ReflectUtil.indexOf;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
+import static org.ttzero.excel.util.ReflectUtil.mapping;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -333,36 +334,14 @@ public class ListSheet<T> extends Sheet {
                 .getPropertyDescriptors();
             Method[] allMethods = clazz.getMethods()
                 , mergedMethods = new Method[propertyDescriptors.length];
-            for (int i = 0; i < propertyDescriptors.length; i++) {
+            for (int i = 1; i < propertyDescriptors.length; i++) {
                 Method method = propertyDescriptors[i].getReadMethod();
                 if (method == null) continue;
                 int index = indexOf(allMethods, method);
                 mergedMethods[i] = index >= 0 ? allMethods[index] : method;
             }
 
-            if (readMethods == null) {
-                for (int i = 1; i < propertyDescriptors.length; i++) {
-                    PropertyDescriptor pd = propertyDescriptors[i];
-                    tmp.put(pd.getName(), mergedMethods[i]);
-                }
-            } else {
-                int i;
-                for (int j = 0; j < mergedMethods.length; j++) {
-                    i = mergedMethods[j] != null ? indexOf(readMethods, mergedMethods[j]) : -1;
-                    if (i >= 0) {
-                        readMethods[i] = null;
-                    }
-                    tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
-                }
-
-                i = 0;
-                for (int j = 0; j < readMethods.length; j++) {
-                    if (readMethods[j] != null) {
-                        readMethods[i++] = readMethods[j];
-                    }
-                }
-                return i;
-            }
+            return mapping(readMethods, tmp, propertyDescriptors, mergedMethods);
         } catch (IntrospectionException e) {
             what("Get " + clazz + " property descriptor failed.");
         }

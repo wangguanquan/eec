@@ -19,11 +19,13 @@ package org.ttzero.excel.util;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.MethodDescriptor;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -306,6 +308,14 @@ public class ReflectUtil {
         return methodFilter(methods, predicate);
     }
 
+    /**
+     * Found source method in methods array witch the source method
+     * equals it or the has a same method name and return-type and same parameters
+     *
+     * @param methods the array methods to be found
+     * @param source the source method
+     * @return the index in method array
+     */
     public static int indexOf(Method[] methods, Method source) {
         int i = 0;
         for (Method method : methods) {
@@ -324,6 +334,34 @@ public class ReflectUtil {
             i++;
         }
         return -1;
+    }
+
+    public static int mapping(Method[] writeMethods, Map<String, Method> tmp
+        , PropertyDescriptor[] propertyDescriptors, Method[] mergedMethods) {
+        if (writeMethods == null) {
+            for (int i = 1; i < propertyDescriptors.length; i++) {
+                PropertyDescriptor pd = propertyDescriptors[i];
+                tmp.put(pd.getName(), mergedMethods[i]);
+            }
+        } else {
+            int i;
+            for (int j = 0; j < mergedMethods.length; j++) {
+                i = mergedMethods[j] != null ? indexOf(writeMethods, mergedMethods[j]) : -1;
+                if (i >= 0) {
+                    writeMethods[i] = null;
+                }
+                tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
+            }
+
+            i = 0;
+            for (int j = 0; j < writeMethods.length; j++) {
+                if (writeMethods[j] != null) {
+                    writeMethods[i++] = writeMethods[j];
+                }
+            }
+            return i;
+        }
+        return 0;
     }
 
     // Do Filter
