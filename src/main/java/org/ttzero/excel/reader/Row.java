@@ -671,7 +671,7 @@ public abstract class Row {
 
     @Override
     public String toString() {
-        if (isEmpty()) return null;
+        if (isEmpty()) return "";
         StringJoiner joiner = new StringJoiner(" | ");
         // show row number
 //        joiner.add(String.valueOf(getRowNumber()));
