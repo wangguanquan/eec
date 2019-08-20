@@ -648,6 +648,66 @@ public class ListObjectSheetTest extends WorkbookTest{
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
+
+        public Boolean getBv() {
+            return bv;
+        }
+
+        public Character getCv() {
+            return cv;
+        }
+
+        public Short getSv() {
+            return sv;
+        }
+
+        public Integer getNv() {
+            return nv;
+        }
+
+        public Long getLv() {
+            return lv;
+        }
+
+        public Float getFv() {
+            return fv;
+        }
+
+        public Double getDv() {
+            return dv;
+        }
+
+        public String getS() {
+            return s;
+        }
+
+        public BigDecimal getMv() {
+            return mv;
+        }
+
+        public Date getAv() {
+            return av;
+        }
+
+        public Timestamp getIv() {
+            return iv;
+        }
+
+        public Time getTv() {
+            return tv;
+        }
+
+        public LocalDate getLdv() {
+            return ldv;
+        }
+
+        public LocalDateTime getLdtv() {
+            return ldtv;
+        }
+
+        public LocalTime getLtv() {
+            return ltv;
+        }
     }
 
     public static class ExtItem extends Item {
