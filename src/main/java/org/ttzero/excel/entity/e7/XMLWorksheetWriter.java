@@ -74,6 +74,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Create by guanquan.wang at 2019-04-22 16:31
@@ -396,7 +397,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\" t=\"s\" s=\"");
             bw.writeInt(defaultStyle);
             bw.write("\"><v>");
-            bw.writeInt(sst.get(hc.getName()));
+            bw.writeInt(sst.get(isNotEmpty(hc.getName()) ? hc.getName() : hc.key));
             bw.write("</v></c>");
         }
         bw.write("</row>");
