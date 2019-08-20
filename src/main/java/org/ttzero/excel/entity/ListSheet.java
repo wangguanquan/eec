@@ -461,8 +461,11 @@ public class ListSheet<T> extends Sheet {
                         .setShare(mec.share()));
                 }
             }
+            // No column to write
             if (list.isEmpty()) {
-                headerReady = true;
+                headerReady = eof = shouldClose = true;
+                this.end = 0;
+                what("Class [" + clazz + "] do not contains getter method and ExcelColumn annotation.");
                 return 0;
             }
             columns = new Column[list.size()];

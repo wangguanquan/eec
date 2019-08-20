@@ -475,6 +475,66 @@ public class ListObjectSheetTest extends WorkbookTest{
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
+
+        public boolean isBv() {
+            return bv;
+        }
+
+        public char getCv() {
+            return cv;
+        }
+
+        public short getSv() {
+            return sv;
+        }
+
+        public int getNv() {
+            return nv;
+        }
+
+        public long getLv() {
+            return lv;
+        }
+
+        public float getFv() {
+            return fv;
+        }
+
+        public double getDv() {
+            return dv;
+        }
+
+        public String getS() {
+            return s;
+        }
+
+        public BigDecimal getMv() {
+            return mv;
+        }
+
+        public Date getAv() {
+            return av;
+        }
+
+        public Timestamp getIv() {
+            return iv;
+        }
+
+        public Time getTv() {
+            return tv;
+        }
+
+        public LocalDate getLdv() {
+            return ldv;
+        }
+
+        public LocalDateTime getLdtv() {
+            return ldtv;
+        }
+
+        public LocalTime getLtv() {
+            return ltv;
+        }
     }
 
     /**
@@ -537,7 +597,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         }
 
         @Override
-        @ExcelColumn("学生")
+        @ExcelColumn
         public String toString() {
             return "id: " + id + ", name: " + name + ", score: " + score;
         }
