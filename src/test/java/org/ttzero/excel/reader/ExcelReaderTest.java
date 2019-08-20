@@ -294,7 +294,6 @@ public class ExcelReaderTest {
             this.pro = pro;
         }
 
-        @ExcelColumn
         public void setAccount(String account) {
             this.account = account;
         }
@@ -313,7 +312,6 @@ public class ExcelReaderTest {
             this.id = id;
         }
 
-        @ExcelColumn("address")
         public void setAddress(String address) {
             this.address = address;
         }
