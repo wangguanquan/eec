@@ -394,12 +394,6 @@ public class ListObjectSheetTest extends WorkbookTest{
                 public int getScore() {
                     return 97;
                 }
-
-                @Override
-                @ExcelColumn
-                public String toString() {
-                    return "abc";
-                }
             }))
             )
             .writeTo(defaultTestPath);
@@ -540,6 +534,12 @@ public class ListObjectSheetTest extends WorkbookTest{
         public static List<Student> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        @ExcelColumn("学生")
+        public String toString() {
+            return "id: " + id + ", name: " + name + ", score: " + score;
         }
     }
 

@@ -481,6 +481,10 @@ public class ListSheet<T> extends Sheet {
                     i++;
                 }
             }
+            if (declaredFields.length < methods.length) {
+                System.arraycopy(methods, declaredFields.length, methods, i, methods.length - declaredFields.length);
+                i += methods.length - declaredFields.length;
+            }
             return i + readLength;
         } else {
             fields = new Field[columns.length];
