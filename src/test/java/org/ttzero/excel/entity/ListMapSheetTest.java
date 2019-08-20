@@ -202,8 +202,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createTestData(10)
                 , WaterMark.of(author)
-                , new Sheet.Column("ID", "id", int.class)
-                , new Sheet.Column("NAME", "name", String.class)))
+                , new Sheet.Column("ID", "id")
+                , new Sheet.Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
