@@ -18,6 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
@@ -145,7 +146,7 @@ public class Workbook implements Storageable {
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
-        sheets = new Sheet[3]; // 默认建3个sheet页
+        sheets = new Sheet[3]; // Create three worksheet
 
         sst = new SharedStrings();
         i18N = new I18N();
@@ -742,6 +743,17 @@ public class Workbook implements Storageable {
         } catch (Exception e) {
             throw new OperationNotSupportedException("Excel97-2003 Not support now.");
         }
+        return this;
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook saveAsCSV() {
+        workbookWriter = new CSVWorkbookWriter(this);
         return this;
     }
 
