@@ -67,7 +67,7 @@ import java.util.Properties;
 public class XMLWorkbookWriter implements IWorkbookWriter {
 
     private Workbook workbook;
-    private RelManager relManager; // 关联管理
+    private RelManager relManager;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();
@@ -421,7 +421,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (sheet.getAutoOdd() == -1) {
                 sheet.setAutoOdd(workbook.getAutoOdd());
             }
-            // 默认隔行变色
+            // Interlace changes color as default
             if (sheet.getAutoOdd() == 0) {
                 sheet.setOddFill(workbook.getOddFill() == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : workbook.getOddFill());
             }
@@ -431,18 +431,18 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 sheet.setName("Sheet" + (i + 1));
             }
         }
-        workbook.what("0001"); // 初始化完成
+        workbook.what("0001");
 
         Path root = null;
         try {
-            root = FileUtil.mktmp(Const.EEC_PREFIX); // 创建临时文件
+            root = FileUtil.mktmp(Const.EEC_PREFIX);
             workbook.what("0002", root.toString());
 
             Path xl = Files.createDirectory(root.resolve("xl"));
-            // 最先做水印, 写各sheet时需要使用
+            // Create  watermark first, it need to use when writing each sheet
             madeMark(xl);
 
-            // 写各worksheet内容
+            // Write worksheet data one by one
             for (int i = 0; i < workbook.getSize(); i++) {
                 Sheet e = workbook.getSheetAt(i);
                 e.writeTo(xl);
@@ -483,7 +483,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     }
 
     protected void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
-        // 如果文件存在则在文件名后加下标
+        // If the file exists, add the subscript after the file name.
         Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
         if (Files.exists(o)) {
             final String fname = fileName;
