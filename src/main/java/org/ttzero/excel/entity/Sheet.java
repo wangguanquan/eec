@@ -1063,8 +1063,13 @@ public abstract class Sheet implements Cloneable, Storageable {
         return relManager.likeByTarget(key);
     }
 
+    /**
+     * Returns the worksheet name
+     *
+     * @return name of worksheet
+     */
     public String getFileName() {
-        return "sheet" + id + Const.Suffix.XML;
+        return "sheet" + id + workbook.getWorkbookWriter().getSuffix();
     }
 
     /**

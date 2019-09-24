@@ -370,6 +370,15 @@ public class Workbook implements Storageable {
     }
 
     /**
+     * Returns the {@link IWorkbookWriter}
+     *
+     * @return the workbook writer
+     */
+    public IWorkbookWriter getWorkbookWriter() {
+        return workbookWriter;
+    }
+
+    /**
      * Add a {@link Sheet} to the tail
      *
      * @param sheet a Worksheet
