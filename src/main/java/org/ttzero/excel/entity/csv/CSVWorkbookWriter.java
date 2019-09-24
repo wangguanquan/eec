@@ -96,7 +96,17 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
 
     @Override
     public void writeTo(Path root) throws IOException {
+        reMarkPath(createTemp(), root);
+    }
 
+    protected void reMarkPath(Path src, Path path) throws IOException {
+        String name;
+        if (StringUtil.isEmpty(name = workbook.getName())) {
+            name = workbook.getI18N().getOrElse("non-name-file", "Non name");
+        }
+
+        Path resultPath = reMarkPath(src, path, name);
+        workbook.what("0006", resultPath.toString());
     }
 
     // Create csv file

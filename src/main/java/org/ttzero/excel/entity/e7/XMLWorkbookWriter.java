@@ -479,43 +479,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             name = workbook.getI18N().getOrElse("non-name-file", "Non name");
         }
 
-        reMarkPath(zip, path, name);
+        Path resultPath = reMarkPath(zip, path, name);
+        workbook.what("0006", resultPath.toString());
     }
-
-    protected void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
-        // If the file exists, add the subscript after the file name.
-        Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
-        if (Files.exists(o)) {
-            final String fname = fileName;
-            Path parent = o.getParent();
-            if (parent != null && Files.exists(parent)) {
-                String[] os = parent.toFile().list((dir, name) ->
-                    new File(dir, name).isFile()
-                        && name.startsWith(fname)
-                        && name.endsWith(Const.Suffix.EXCEL_07)
-                );
-                String new_name;
-                if (os != null) {
-                    int len = os.length, n;
-                    do {
-                        new_name = fname + " (" + len++ + ")" + Const.Suffix.EXCEL_07;
-                        n = StringUtil.indexOf(os, new_name);
-                    } while (n > -1);
-                } else {
-                    new_name = fname + Const.Suffix.EXCEL_07;
-                }
-                o = parent.resolve(new_name);
-            } else {
-                // Rename to xlsx
-                Files.move(zip, o, StandardCopyOption.REPLACE_EXISTING);
-                return;
-            }
-        }
-        // Rename to xlsx
-        Files.move(zip, o);
-        workbook.what("0006", o.toString());
-    }
-
 
     // --- TEMPLATE
 
