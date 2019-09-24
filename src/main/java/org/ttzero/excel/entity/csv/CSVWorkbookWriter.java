@@ -71,7 +71,9 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        Files.copy(createTemp(), os);
+        Path path = createTemp();
+        Files.copy(path, os);
+        FileUtil.rm_rf(path.toFile(), true);
     }
 
     /**
@@ -82,7 +84,9 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public void writeTo(File file) throws IOException {
-        FileUtil.cp(createTemp(), file);
+        Path path = createTemp();
+        FileUtil.cp(path, file);
+        FileUtil.rm_rf(path.toFile(), true);
     }
 
     /**
@@ -98,7 +102,9 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
 
     @Override
     public void writeTo(Path root) throws IOException {
-        reMarkPath(createTemp(), root);
+        Path path = createTemp();
+        reMarkPath(path, root);
+        FileUtil.rm_rf(path.toFile(), true);
     }
 
     protected void reMarkPath(Path src, Path path) throws IOException {
