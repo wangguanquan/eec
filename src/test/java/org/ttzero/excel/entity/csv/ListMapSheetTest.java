@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.entity;
+package org.ttzero.excel.entity.csv;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.ListMapSheet;
+import org.ttzero.excel.entity.Sheet;
+import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.Workbook;
+import org.ttzero.excel.entity.WorkbookTest;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -26,13 +31,15 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import static org.ttzero.excel.entity.ListMapSheetTest.createAllTypeData;
+import static org.ttzero.excel.entity.ListMapSheetTest.createNullTestData;
+import static org.ttzero.excel.entity.ListMapSheetTest.createTestData;
 
 /**
  * Create by guanquan.wang at 2019-04-28 19:16
@@ -43,7 +50,9 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook("test map", author)
             .watch(Print::println)
             .addSheet(createTestData())
-            .writeTo(defaultTestPath);
+            .addSheet(createTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testAllType() throws IOException {
@@ -51,7 +60,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(createAllTypeData())
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testHeaderColumn() throws IOException {
@@ -74,7 +84,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Sheet.Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Sheet.Column("LocalTime", "ltv", LocalTime.class)
             )
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testHeaderColumnBox() throws IOException {
@@ -88,7 +99,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Sheet.Column("Float", "fv", Float.class)
                 , new Sheet.Column("Double", "dv", Double.class)
             )
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor1() throws IOException {
@@ -96,7 +108,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet())
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor2() throws IOException {
@@ -104,7 +117,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map").setData(createTestData(10)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor3() throws IOException {
@@ -129,7 +143,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Sheet.Column("LocalTime", "ltv", LocalTime.class)
             )
                 .setData(createAllTypeData(10)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor4() throws IOException {
@@ -153,7 +168,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Sheet.Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Sheet.Column("LocalTime", "ltv", LocalTime.class))
                 .setData(createAllTypeData(10)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor5() throws IOException {
@@ -161,7 +177,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData(10)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor6() throws IOException {
@@ -169,7 +186,7 @@ public class ListMapSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map", createAllTypeData(10)))
-            .writeTo(defaultTestPath);
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor7() throws IOException {
@@ -183,7 +200,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Sheet.Column("Long", "lv", Long.class)
                 , new Sheet.Column("Float", "fv", Float.class)
                 , new Sheet.Column("Double", "dv", Double.class)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor8() throws IOException {
@@ -193,7 +211,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .addSheet(new ListMapSheet("MAP", createTestData(10)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor9() throws IOException {
@@ -204,7 +223,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , WaterMark.of(author)
                 , new Sheet.Column("ID", "id")
                 , new Sheet.Column("NAME", "name")))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor10() throws IOException {
@@ -216,7 +236,8 @@ public class ListMapSheetTest extends WorkbookTest {
                 , WaterMark.of(author)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testArray() throws IOException {
@@ -230,7 +251,8 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook()
             .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Arrays.asList(data1, data2)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testSingleList() throws IOException {
@@ -241,69 +263,15 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook()
             .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Collections.singletonList(data)))
-            .writeTo(defaultTestPath);
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 
     @Test public void testNullValue() throws IOException {
         new Workbook("test map null value", author)
             .watch(Print::println)
             .addSheet(createNullTestData(10))
-            .writeTo(defaultTestPath);
-    }
-
-    public static List<Map<String, ?>> createTestData() {
-        int size = random.nextInt(100) + 1;
-        return createTestData(size);
-    }
-
-    public static List<Map<String, ?>> createTestData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", random.nextInt());
-            map.put("name", getRandomString());
-            list.add(map);
-        }
-        return list;
-    }
-
-    public static List<Map<String, ?>> createAllTypeData() {
-        int size = random.nextInt(100) + 1;
-        return createAllTypeData(size);
-    }
-
-    public static List<Map<String, ?>> createAllTypeData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("bv", random.nextInt(10) == 6);
-            map.put("cv", charArray[random.nextInt(charArray.length)]);
-            map.put("sv", (short) (random.nextInt() & 0xFFFF));
-            map.put("nv", random.nextInt());
-            map.put("lv", random.nextLong());
-            map.put("fv", random.nextFloat());
-            map.put("dv", random.nextDouble());
-            map.put("s", getRandomString());
-            map.put("mv", BigDecimal.valueOf(random.nextDouble()));
-            map.put("av", new Date());
-            map.put("iv", new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)));
-            map.put("tv", new Time(random.nextLong()));
-            map.put("ldv", LocalDate.now());
-            map.put("ldtv", LocalDateTime.now());
-            map.put("ltv", LocalTime.now());
-            list.add(map);
-        }
-        return list;
-    }
-
-    public static List<Map<String, ?>> createNullTestData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", random.nextInt());
-            map.put("name", null);
-            list.add(map);
-        }
-        return list;
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
     }
 }
