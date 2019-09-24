@@ -88,7 +88,9 @@ public class CSVUtil {
      *
      * @param path the csv file path
      * @param clazz the class convert to
+     * @param <T> the result type
      * @return ArrayList of clazz
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz) throws IOException {
@@ -100,6 +102,7 @@ public class CSVUtil {
      *
      * @param path the csv file path
      * @return ArrayList of string
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static List<String[]> read(Path path) throws IOException {
@@ -112,6 +115,7 @@ public class CSVUtil {
      * @param path the csv file path
      * @param separator the separator character
      * @return ArrayList of string
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static List<String[]> read(Path path, char separator) throws IOException {
@@ -124,7 +128,9 @@ public class CSVUtil {
      * @param path the csv file path
      * @param clazz the class convert to
      * @param charset the charset to use for encoding
+     * @param <T> the result type
      * @return ArrayList of clazz
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz, Charset charset) throws IOException {
@@ -137,6 +143,7 @@ public class CSVUtil {
      * @param path the csv file path
      * @param charset the charset to use for encoding
      * @return ArrayList of string
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static List<String[]> read(Path path, Charset charset) throws IOException {
@@ -150,6 +157,7 @@ public class CSVUtil {
      * @param separator the separator character
      * @param charset the charset to use for encoding
      * @return ArrayList of string
+     * @throws IOException if I/O error occur
      * @since 1.7
      */
     public static List<String[]> read(Path path, char separator, Charset charset) throws IOException {
@@ -226,6 +234,7 @@ public class CSVUtil {
      *
      * @param data the vector object to be save
      * @param path the save path
+     * @throws IOException if I/O error occur
      */
     public static void writeTo(List<?> data, Path path) throws IOException {
         throw new UnsupportedOperationException();
@@ -236,7 +245,7 @@ public class CSVUtil {
      *
      * @param path the storage path
      * @return a CSV format writer
-     * @throws IOException no permission or other io exception.
+     * @throws IOException no permission or other I/O error occur
      */
     public static Writer newWriter(Path path) throws IOException {
         testOrCreate(path);
@@ -249,7 +258,7 @@ public class CSVUtil {
      * @param path the storage path
      * @param charset the charset to use for encoding
      * @return a CSV format writer
-     * @throws IOException no permission or other io exception.
+     * @throws IOException no permission or other I/O error occur
      */
     public static Writer newWriter(Path path, Charset charset) throws IOException {
         testOrCreate(path);
@@ -262,7 +271,7 @@ public class CSVUtil {
      * @param path the storage path
      * @param separator the separator character
      * @return a CSV format writer
-     * @throws IOException no permission or other io exception.
+     * @throws IOException no permission or other I/O error occur
      */
     public static Writer newWriter(Path path, char separator) throws IOException {
         testOrCreate(path);
@@ -278,7 +287,7 @@ public class CSVUtil {
      * @param separator the separator character
      * @param charset the charset to use for encoding
      * @return a CSV format writer
-     * @throws IOException no permission or other io exception.
+     * @throws IOException no permission or other I/O error occur
      */
     public static Writer newWriter(Path path, char separator, Charset charset) throws IOException {
         testOrCreate(path);
@@ -317,6 +326,7 @@ public class CSVUtil {
          * Read csv format file.
          *
          * @param clazz the class convert to
+         * @param <T> the result type
          * @return a stream of clazz array
          * @since 1.8
          */
@@ -1030,6 +1040,8 @@ public class CSVUtil {
          * - A (double) quote character in a field must be represented by two (double) quote characters.
          *
          * @param chars the char sequence to be written
+         * @param offset the offset index
+         * @param size size of characters
          * @throws IOException If an I/O error occurs
          */
         public void write(char[] chars, int offset, int size) throws IOException {

@@ -107,6 +107,7 @@ public class ReflectUtil {
      *
      * @param beanClass The bean class to be analyzed.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass)
         throws IntrospectionException {
@@ -119,6 +120,7 @@ public class ReflectUtil {
      * @param beanClass The bean class to be analyzed.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass, Predicate<Method> predicate)
         throws IntrospectionException {
@@ -135,6 +137,7 @@ public class ReflectUtil {
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
@@ -161,6 +164,7 @@ public class ReflectUtil {
      *                  will be ignored in the analysis.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
         throws IntrospectionException {
@@ -174,6 +178,7 @@ public class ReflectUtil {
      *
      * @param beanClass The bean class to be analyzed.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listReadMethods(Class<?> beanClass) throws IntrospectionException {
         return listReadMethods(beanClass, Object.class);
@@ -187,6 +192,7 @@ public class ReflectUtil {
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
@@ -212,6 +218,7 @@ public class ReflectUtil {
      * @param beanClass The bean class to be analyzed.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listReadMethods(Class<?> beanClass, Predicate<Method> predicate)
         throws IntrospectionException {
@@ -229,6 +236,7 @@ public class ReflectUtil {
      *                  will be ignored in the analysis.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
         throws IntrospectionException {
@@ -242,6 +250,7 @@ public class ReflectUtil {
      *
      * @param beanClass The bean class to be analyzed.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listWriteMethods(Class<?> beanClass) throws IntrospectionException {
         return listWriteMethods(beanClass, Object.class);
@@ -255,6 +264,7 @@ public class ReflectUtil {
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
@@ -283,6 +293,7 @@ public class ReflectUtil {
      * @param beanClass The bean class to be analyzed.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listWriteMethods(Class<?> beanClass, Predicate<Method> predicate)
         throws IntrospectionException {
@@ -300,6 +311,7 @@ public class ReflectUtil {
      *                  will be ignored in the analysis.
      * @param predicate A method filter
      * @return all declared method
+     * @throws IntrospectionException happens during introspection error
      */
     public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
         throws IntrospectionException {
