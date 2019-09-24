@@ -17,19 +17,35 @@
 package org.ttzero.excel.entity.csv;
 
 import org.ttzero.excel.entity.IWorksheetWriter;
+import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.RowBlock;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.util.CSVUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
+
+import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.CHARACTER;
+import static org.ttzero.excel.reader.Cell.DATE;
+import static org.ttzero.excel.reader.Cell.DATETIME;
+import static org.ttzero.excel.reader.Cell.DECIMAL;
+import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.LONG;
+import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.SST;
+import static org.ttzero.excel.reader.Cell.TIME;
 
 /**
  * Create by guanquan.wang at 2019-08-21 22:19
  */
 public class CSVWorksheetWriter implements IWorksheetWriter {
     private Sheet sheet;
+    private CSVUtil.Writer writer;
 
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
@@ -57,7 +73,23 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+        Path workSheetPath = initWriter(path);
+        // Get the first block
+        RowBlock rowBlock = supplier.get();
 
+        // write before
+        writeBefore();
+
+        if (rowBlock != null && rowBlock.hasNext()) {
+            do {
+                // write row-block data
+                writeRow(rowBlock.next());
+                // end of row
+                if (rowBlock.isEof()) break;
+            } while ((rowBlock = supplier.get()) != null);
+        }
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
     }
 
     @Override
@@ -72,11 +104,96 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public void close() throws IOException {
-
+        if (writer != null)
+            writer.close();
     }
 
     @Override
     public void writeTo(Path root) throws IOException {
+        Path workSheetPath = initWriter(root);
+        // Get the first block
+        RowBlock rowBlock = sheet.nextBlock();
 
+        // write before
+        writeBefore();
+
+        if (rowBlock.hasNext()) {
+            for (; ; ) {
+                // write row-block data
+                for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
+                // end of row
+                if (rowBlock.isEof()) break;
+                // Get the next block
+                rowBlock = sheet.nextBlock();
+            }
+        }
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
+    }
+
+    protected Path initWriter(Path root) throws IOException {
+        Path workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
+        writer = CSVUtil.newWriter(workSheetPath);
+        return workSheetPath;
+    }
+
+    /**
+     * Write worksheet header data
+     *
+     * @throws IOException if I/O error occur
+     */
+    protected void writeBefore() throws IOException {
+        // The header columns
+        Sheet.Column[] columns = sheet.getHeaderColumns();
+        boolean noneHeader = columns == null || columns.length == 0;
+
+        if (!noneHeader) {
+            for (Sheet.Column hc : columns) {
+                writer.write(hc.name);
+            }
+            writer.newLine();
+        }
+    }
+
+    /**
+     * Write a row data
+     *
+     * @param row a row data
+     * @throws IOException if I/O error occur
+     */
+    protected void writeRow(Row row) throws IOException {
+        Cell[] cells = row.getCells();
+        for (Cell cell : cells) {
+            switch (cell.t) {
+                case INLINESTR:
+                case SST:
+                case DATETIME:
+                case TIME:
+                    writer.write(cell.sv);
+                    break;
+                case DATE:
+                case NUMERIC:
+                    writer.write(cell.nv);
+                    break;
+                case LONG:
+                    writer.write(cell.lv);
+                    break;
+                case DOUBLE:
+                    writer.write(cell.dv);
+                    break;
+                case BOOL:
+                    writer.write(cell.bv);
+                    break;
+                case DECIMAL:
+                    writer.write(cell.mv.toString());
+                    break;
+                case CHARACTER:
+                    writer.writeChar(cell.cv);
+                    break;
+                default:
+                    writer.writeEmpty();
+            }
+        }
+        writer.newLine();
     }
 }
