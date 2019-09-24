@@ -101,16 +101,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     @Override
     public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        this.workSheetPath = path.resolve("worksheets");
-        if (!Files.exists(this.workSheetPath)) {
-            FileUtil.mkdir(workSheetPath);
-        }
-        sheet.what("0010", sheet.getName());
-
-        Path sheetPath = workSheetPath.resolve(sheet.getFileName());
-
-        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
-            sheetPath, StandardCharsets.UTF_8));
+        Path sheetPath = initWriter(path);
 
         // Get the first block
         RowBlock rowBlock = supplier.get();
@@ -160,16 +151,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        this.workSheetPath = path.resolve("worksheets");
-        if (!Files.exists(this.workSheetPath)) {
-            FileUtil.mkdir(workSheetPath);
-        }
-        sheet.what("0010", sheet.getName());
-
-        Path sheetPath = workSheetPath.resolve(sheet.getFileName());
-
-        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
-            sheetPath, StandardCharsets.UTF_8));
+        Path sheetPath = initWriter(path);
 
         // Get the first block
         RowBlock rowBlock = sheet.nextBlock();
@@ -211,6 +193,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             close();
             resizeColumnWidth(sheetPath.toFile(), rowBlock.getTotal());
         }
+    }
+
+    protected Path initWriter(Path root) throws IOException {
+        this.workSheetPath = root.resolve("worksheets");
+        if (!Files.exists(this.workSheetPath)) {
+            FileUtil.mkdir(workSheetPath);
+        }
+        sheet.what("0010", sheet.getName());
+
+        Path sheetPath = workSheetPath.resolve(sheet.getFileName());
+
+        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
+            sheetPath, StandardCharsets.UTF_8));
+
+        return sheetPath;
     }
 
     /**
