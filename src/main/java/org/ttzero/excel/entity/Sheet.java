@@ -18,6 +18,7 @@ package org.ttzero.excel.entity;
 
 
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -1189,7 +1190,9 @@ public abstract class Sheet implements Cloneable, Storageable {
      */
     public void afterSheetAccess(Path workSheetPath) throws IOException {
         // relationship
-        relManager.write(workSheetPath, getFileName());
+        if (sheetWriter instanceof XMLWorksheetWriter) {
+            relManager.write(workSheetPath, getFileName());
+        }
 
         // others ...
     }
