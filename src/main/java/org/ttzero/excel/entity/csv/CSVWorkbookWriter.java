@@ -39,6 +39,8 @@ import java.nio.file.Path;
  */
 public class CSVWorkbookWriter implements IWorkbookWriter {
     private Workbook workbook;
+    // The csv suffix
+    private String suffix = Const.Suffix.CSV;
 
     public CSVWorkbookWriter() { }
 
@@ -58,7 +60,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public String getSuffix() {
-        return Const.Suffix.CSV;
+        return suffix;
     }
 
     /**
@@ -137,7 +139,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             }
 
             // Zip compress if multi worksheet occur
-            if (workbook.getSize() > 0) {
+            if (workbook.getSize() > 1) {
+                suffix = Const.Suffix.ZIP;
                 Path zipFile = ZipUtil.zipExcludeRoot(root, root);
                 workbook.what("0004", zipFile.toString());
                 return zipFile;

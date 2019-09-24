@@ -141,6 +141,10 @@ public interface Const {
          * CSV
          */
         String CSV = ".csv";
+        /**
+         * Zip
+         */
+        String ZIP = ".zip";
     }
 
     /**
