@@ -67,7 +67,7 @@ import java.util.Properties;
 public class XMLWorkbookWriter implements IWorkbookWriter {
 
     private Workbook workbook;
-    private RelManager relManager; // 关联管理
+    private RelManager relManager;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();
@@ -421,7 +421,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (sheet.getAutoOdd() == -1) {
                 sheet.setAutoOdd(workbook.getAutoOdd());
             }
-            // 默认隔行变色
+            // Interlace changes color as default
             if (sheet.getAutoOdd() == 0) {
                 sheet.setOddFill(workbook.getOddFill() == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : workbook.getOddFill());
             }
@@ -430,19 +430,21 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (StringUtil.isEmpty(sheet.getName())) {
                 sheet.setName("Sheet" + (i + 1));
             }
+            // Set cell value and style processor
+            sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
         }
-        workbook.what("0001"); // 初始化完成
+        workbook.what("0001");
 
         Path root = null;
         try {
-            root = FileUtil.mktmp(Const.EEC_PREFIX); // 创建临时文件
+            root = FileUtil.mktmp(Const.EEC_PREFIX);
             workbook.what("0002", root.toString());
 
             Path xl = Files.createDirectory(root.resolve("xl"));
-            // 最先做水印, 写各sheet时需要使用
+            // Create  watermark first, it need to use when writing each sheet
             madeMark(xl);
 
-            // 写各worksheet内容
+            // Write worksheet data one by one
             for (int i = 0; i < workbook.getSize(); i++) {
                 Sheet e = workbook.getSheetAt(i);
                 e.writeTo(xl);
@@ -479,43 +481,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             name = workbook.getI18N().getOrElse("non-name-file", "Non name");
         }
 
-        reMarkPath(zip, path, name);
+        Path resultPath = reMarkPath(zip, path, name);
+        workbook.what("0006", resultPath.toString());
     }
-
-    protected void reMarkPath(Path zip, Path rootPath, String fileName) throws IOException {
-        // 如果文件存在则在文件名后加下标
-        Path o = rootPath.resolve(fileName + Const.Suffix.EXCEL_07);
-        if (Files.exists(o)) {
-            final String fname = fileName;
-            Path parent = o.getParent();
-            if (parent != null && Files.exists(parent)) {
-                String[] os = parent.toFile().list((dir, name) ->
-                    new File(dir, name).isFile()
-                        && name.startsWith(fname)
-                        && name.endsWith(Const.Suffix.EXCEL_07)
-                );
-                String new_name;
-                if (os != null) {
-                    int len = os.length, n;
-                    do {
-                        new_name = fname + " (" + len++ + ")" + Const.Suffix.EXCEL_07;
-                        n = StringUtil.indexOf(os, new_name);
-                    } while (n > -1);
-                } else {
-                    new_name = fname + Const.Suffix.EXCEL_07;
-                }
-                o = parent.resolve(new_name);
-            } else {
-                // Rename to xlsx
-                Files.move(zip, o, StandardCopyOption.REPLACE_EXISTING);
-                return;
-            }
-        }
-        // Rename to xlsx
-        Files.move(zip, o);
-        workbook.what("0006", o.toString());
-    }
-
 
     // --- TEMPLATE
 

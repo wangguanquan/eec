@@ -32,10 +32,10 @@ public class WorkbookTest {
      * The default output path
      */
     static Path defaultTestPath = Paths.get("target/excel/");
-    String author = "guanquan.wang";
-    static Random random = new Random();
+    public static String author = "guanquan.wang";
+    public static Random random = new Random();
 
-    static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
+    public static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
     private static char[] cache = new char[32];
     public static String getRandomString() {
         int n = random.nextInt(cache.length) + 1, size = charArray.length;

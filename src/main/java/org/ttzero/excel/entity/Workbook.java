@@ -18,6 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
@@ -145,15 +146,8 @@ public class Workbook implements Storageable {
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
-        sheets = new Sheet[3]; // 默认建3个sheet页
-
-        sst = new SharedStrings();
+        sheets = new Sheet[3]; // Create three worksheet
         i18N = new I18N();
-        // Create a global styles
-        styles = Styles.create(i18N);
-
-        // Default writer
-        workbookWriter = new XMLWorkbookWriter(this);
     }
 
     /**
@@ -236,9 +230,11 @@ public class Workbook implements Storageable {
      * @return the global {@link SharedStrings}
      */
     public SharedStrings getSst() {
+        // CSV do not need SharedStringTable
+        if (!(workbookWriter instanceof CSVWorkbookWriter) && sst == null)
+            sst = new SharedStrings();
         return sst;
     }
-
 
     /**
      * Returns all {@link Sheet} in this workbook
@@ -313,6 +309,9 @@ public class Workbook implements Storageable {
      * @return the Styles
      */
     public Styles getStyles() {
+        // CSV do not need Styles
+        if (!(workbookWriter instanceof CSVWorkbookWriter) && styles == null)
+            styles = Styles.create(i18N);
         return styles;
     }
 
@@ -366,6 +365,17 @@ public class Workbook implements Storageable {
     public Workbook setOddFill(Fill fill) {
         this.oddFill = fill;
         return this;
+    }
+
+    /**
+     * Returns the {@link IWorkbookWriter}
+     *
+     * @return the workbook writer
+     */
+    public IWorkbookWriter getWorkbookWriter() {
+        if (workbookWriter == null)
+            workbookWriter = new XMLWorkbookWriter(this);
+        return workbookWriter;
     }
 
     /**
@@ -490,17 +500,9 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, String sql, Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
-        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        PreparedStatement ps = con.prepareStatement(sql
+            , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        return addSheet(name, ps, null, columns);
     }
 
     /**
@@ -545,19 +547,9 @@ public class Workbook implements Storageable {
      */
     public Workbook addSheet(String name, String sql, ParamProcessor pp
         , Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql
             , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        pp.build(ps);
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        return addSheet(name, ps, pp, columns);
     }
 
     /**
@@ -587,16 +579,7 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        return addSheet(name, ps, null, columns);
     }
 
     /**
@@ -627,7 +610,6 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
-        ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
@@ -635,7 +617,7 @@ public class Workbook implements Storageable {
         } catch (SQLException e) {
             watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
-        pp.build(ps);
+        if (pp != null) pp.build(ps);
         sheet.setPs(ps);
         addSheet(sheet);
         return this;
@@ -736,12 +718,24 @@ public class Workbook implements Storageable {
      */
     public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
+            // Create Styles and SharedStringTable
             Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
             Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
             workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
         } catch (Exception e) {
             throw new OperationNotSupportedException("Excel97-2003 Not support now.");
         }
+        return this;
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook saveAsCSV() {
+        workbookWriter = new CSVWorkbookWriter(this);
         return this;
     }
 
@@ -794,6 +788,7 @@ public class Workbook implements Storageable {
      */
     @Override
     public void writeTo(Path path) throws IOException {
+        checkAndInitWriter();
         if (!Files.exists(path)) {
             String name = path.getFileName().toString();
             // write to file
@@ -830,6 +825,7 @@ public class Workbook implements Storageable {
      * @throws ExcelWriteException other runtime error
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
+        checkAndInitWriter();
         workbookWriter.writeTo(os);
     }
 
@@ -841,6 +837,7 @@ public class Workbook implements Storageable {
      * @throws ExcelWriteException other runtime error
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
+        checkAndInitWriter();
         if (!file.getParentFile().exists()) {
             FileUtil.mkdir(file.toPath().getParent());
         }
@@ -897,5 +894,30 @@ public class Workbook implements Storageable {
         this.workbookWriter = workbookWriter;
         this.workbookWriter.setWorkbook(this);
         return this;
+    }
+
+    /**
+     * Create some global entry.
+     */
+    protected void init() {
+        // Create SharedStringTable
+        if (sst == null) {
+            sst = new SharedStrings();
+        }
+        // Create a global styles
+        if (styles == null) {
+            styles = Styles.create(i18N);
+        }
+    }
+
+    /**
+     * Check and Create {@link IWorkbookWriter}
+     */
+    protected void checkAndInitWriter() {
+        if (workbookWriter == null) {
+            // Create Styles and SharedStringTable
+            init();
+            workbookWriter = new XMLWorkbookWriter(this);
+        }
     }
 }

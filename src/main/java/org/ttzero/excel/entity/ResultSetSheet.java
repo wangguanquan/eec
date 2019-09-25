@@ -210,7 +210,7 @@ public class ResultSetSheet extends Sheet {
 
                     Object e = rs.getObject(i);
 
-                    setCellValueAndStyle(cell, e, hc);
+                    cellValueAndStyle.reset(rows, cell, e, hc);
                 }
             }
         } catch (SQLException e) {

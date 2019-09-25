@@ -19,7 +19,11 @@ package org.ttzero.excel.entity;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
+import static org.ttzero.excel.util.StringUtil.indexOf;
 
 /**
  * Create by guanquan.wang at 2019-04-22 16:00
@@ -63,4 +67,48 @@ public interface IWorkbookWriter extends Storageable {
      * @throws IOException if io error occur
      */
     Path template() throws IOException;
+
+    /**
+     * Move src file into output path
+     *
+     * @param src the src file
+     * @param rootPath the output root path
+     * @param fileName the output file name
+     * @return the output file path
+     * @throws IOException if I/O error occur
+     */
+    default Path reMarkPath(Path src, Path rootPath, String fileName) throws IOException {
+        // If the file exists, add the subscript after the file name.
+        String suffix = getSuffix();
+        Path o = rootPath.resolve(fileName + suffix);
+        if (Files.exists(o)) {
+            final String fname = fileName;
+            Path parent = o.getParent();
+            if (parent != null && Files.exists(parent)) {
+                String[] os = parent.toFile().list((dir, name) ->
+                    new File(dir, name).isFile()
+                        && name.startsWith(fname)
+                        && name.endsWith(suffix)
+                );
+                String new_name;
+                if (os != null) {
+                    int len = os.length, n;
+                    do {
+                        new_name = fname + " (" + len++ + ")" + suffix;
+                        n = indexOf(os, new_name);
+                    } while (n > -1);
+                } else {
+                    new_name = fname + suffix;
+                }
+                o = parent.resolve(new_name);
+            } else {
+                // Rename to
+                Files.move(src, o, StandardCopyOption.REPLACE_EXISTING);
+                return o;
+            }
+        }
+        // Rename to xlsx
+        Files.move(src, o);
+        return o;
+    }
 }

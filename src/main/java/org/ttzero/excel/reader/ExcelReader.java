@@ -44,7 +44,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -166,13 +165,7 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize) throws IOException {
-        Path temp;
-        if (FileUtil.isWindows()) {
-            temp = Files.createTempFile(Const.EEC_PREFIX, null);
-        } else {
-            temp = Files.createTempFile(Const.EEC_PREFIX, null
-                , PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-x---")));
-        }
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         if (temp == null) {
             throw new IOException("Create temp directory error. Please check your permission");
         }

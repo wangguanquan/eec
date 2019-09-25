@@ -137,6 +137,14 @@ public interface Const {
          * Png
          */
         String PNG = ".png";
+        /**
+         * CSV
+         */
+        String CSV = ".csv";
+        /**
+         * Zip
+         */
+        String ZIP = ".zip";
     }
 
     /**

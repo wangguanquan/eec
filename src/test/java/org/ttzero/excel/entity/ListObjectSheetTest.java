@@ -306,7 +306,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
-    private StyleProcessor sp = (o, style, sst) -> {
+    public static StyleProcessor sp = (o, style, sst) -> {
         if ((int)o < 60) {
             style = Styles.clearFill(style)
                 | sst.addFill(new Fill(PatternType.solid, Color.orange));
@@ -315,7 +315,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     };
 
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-    private IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+    public static IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
 
     @Test
     public void testStyleConversion1() throws IOException {
@@ -403,7 +403,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         private int id;
         private String name;
 
-        Item(int id, String name) {
+        public Item(int id, String name) {
             this.id = id;
             this.name = name;
         }
@@ -548,7 +548,7 @@ public class ListObjectSheetTest extends WorkbookTest{
         @ExcelColumn("成绩")
         private int score;
 
-        Student(int id, String name, int score) {
+        protected Student(int id, String name, int score) {
             this.id = id;
             this.name = name;
             this.score = score;
@@ -713,12 +713,16 @@ public class ListObjectSheetTest extends WorkbookTest{
     public static class ExtItem extends Item {
         private String nice;
 
-        ExtItem(int id, String name) {
+        public ExtItem(int id, String name) {
             super(id, name);
         }
 
         public String getNice() {
             return nice;
+        }
+
+        public void setNice(String nice) {
+            this.nice = nice;
         }
 
         public static List<Item> randomTestData(int n) {

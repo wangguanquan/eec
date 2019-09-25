@@ -158,7 +158,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 Cell cell = cells[i];
                 cell.clear();
 
-                setCellValueAndStyle(cell, e, hc);
+                cellValueAndStyle.reset(rows, cell, e, hc);
             }
         }
     }

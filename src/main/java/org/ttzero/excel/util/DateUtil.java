@@ -26,8 +26,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Date;
 import java.util.TimeZone;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
  * A date util ror excel
@@ -47,6 +52,16 @@ public class DateUtil {
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
     static final ThreadLocal<SimpleDateFormat> dateFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+    public static final DateTimeFormatter LOCAL_DATE_TIME;
+
+    static {
+        LOCAL_DATE_TIME = new DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .append(ISO_LOCAL_DATE)
+            .appendLiteral(' ')
+            .append(ISO_LOCAL_TIME)
+            .toFormatter();
+    }
 
     public static String toString(Date date) {
         return dateTimeFormat.get().format(date);

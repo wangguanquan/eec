@@ -41,8 +41,8 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     private char[][] cache_char_array = new char[25][];
-    private static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
-    private static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
+    static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
+    static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];
 
     static {
@@ -172,7 +172,7 @@ public class ExtBufferedWriter extends BufferedWriter {
                 return i + 1;
     }
 
-    private static void getChars(int i, int index, char[] buf) {
+    static void getChars(int i, int index, char[] buf) {
         int q, r;
         int charPos = index;
         char sign = 0;
@@ -234,7 +234,7 @@ public class ExtBufferedWriter extends BufferedWriter {
      * <p>
      * Will fail if i == Long.MIN_VALUE
      */
-    private static void getChars(long i, int index, char[] buf) {
+    static void getChars(long i, int index, char[] buf) {
         long q;
         int r;
         int charPos = index;
