@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -36,7 +37,6 @@ import java.util.StringJoiner;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listWriteMethods;
 import static org.ttzero.excel.util.ReflectUtil.mapping;
-import static org.ttzero.excel.util.StringUtil.indexOf;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -50,14 +50,18 @@ class HeaderRow extends Row {
     private int[] columns;
     private Class<?>[] fieldClazz;
     private Object t;
+    /* The column name and column position mapping */
+    private Map<String, Integer> mapping;
 
     private HeaderRow() { }
 
     static HeaderRow with(Row row) {
         HeaderRow hr = new HeaderRow();
         hr.names = new String[row.lc];
+        hr.mapping = new HashMap<>();
         for (int i = row.fc; i < row.lc; i++) {
             hr.names[i] = row.getString(i);
+            hr.mapping.put(hr.names[i], i);
         }
         // Extends from row
         hr.fc = row.fc;
@@ -157,8 +161,8 @@ class HeaderRow extends Row {
             // Annotation value is null
             else if (ec != null || ano != null || methods[i] != null) {
                 String name = f.getName();
-                n = indexOf(names, name);
-                if (n == -1 && (n = indexOf(names, StringUtil.toPascalCase(name))) == -1) {
+                n = getIndex(name);
+                if (n == -1 && (n = getIndex(StringUtil.toPascalCase(name))) == -1) {
                     declaredFields[i] = null;
                     continue;
                 }
@@ -193,6 +197,8 @@ class HeaderRow extends Row {
             }
         }
 
+
+
         return this;
     }
 
@@ -217,8 +223,8 @@ class HeaderRow extends Row {
     }
 
     private int check(String first, String second) {
-        int n = indexOf(names, first);
-        if (n == -1) n = indexOf(names, second);
+        int n = getIndex(first);
+        if (n == -1) n = getIndex(second);
         if (n == -1) {
             logger.warn(clazz + " field [" + first + "] can't find in header" + Arrays.toString(names));
         }
@@ -266,14 +272,25 @@ class HeaderRow extends Row {
     }
 
     /**
-     * Get T value by column index
+     * Get the column name by column index
      *
      * @param columnIndex the cell index
-     * @return T
+     * @return name of column
      */
     public String get(int columnIndex) {
         rangeCheck(columnIndex);
         return names[columnIndex];
+    }
+
+    /**
+     * Returns the position in cell range
+     *
+     * @param columnName the column name
+     * @return the position if found otherwise -1
+     */
+    public int getIndex(String columnName) {
+        Integer index = mapping.get(columnName);
+        return index != null ? index : -1;
     }
 
     @Override

@@ -150,6 +150,22 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testReaderByName() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).dataIterator().forEachRemaining(row -> {
+                print(row.getInt("渠道ID")); print(" | ");
+                print(row.getString("游戏")); print(" | ");
+                print(row.getString("account")); print(" | ");
+                print(row.getDate("注册时间")); print(" | ");
+                print(row.getBoolean("是否满30级")); print(" | ");
+                print(row.getChar("VIP"));
+                println();
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Entry {
         @ExcelColumn("渠道ID")
         private Integer channelId;
