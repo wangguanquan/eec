@@ -73,7 +73,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     public void writeTo(OutputStream os) throws IOException {
         Path path = createTemp();
         Files.copy(path, os);
-        FileUtil.rm_rf(path.toFile(), true);
+        cleanTmp(path);
     }
 
     /**
@@ -86,7 +86,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     public void writeTo(File file) throws IOException {
         Path path = createTemp();
         FileUtil.cp(path, file);
-        FileUtil.rm_rf(path.toFile(), true);
+        cleanTmp(path);
     }
 
     /**
@@ -104,7 +104,26 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     public void writeTo(Path root) throws IOException {
         Path path = createTemp();
         reMarkPath(path, root);
-        FileUtil.rm_rf(path.toFile(), true);
+        cleanTmp(path);
+    }
+
+    /**
+     * Clean tmp folders
+     *
+     * @param path the tmp path
+     */
+    private void cleanTmp(Path path) {
+        int i = 0;
+        for (Path sub : path) {
+            i++;
+            if (sub.toString().startsWith(Const.EEC_PREFIX)) {
+                break;
+            }
+        }
+        if (i < path.getNameCount()) {
+            FileUtil.rm_rf(path.getRoot().resolve(path.subpath(0, i)).toFile(), true);
+            workbook.what("0005");
+        }
     }
 
     protected void reMarkPath(Path src, Path path) throws IOException {
@@ -151,9 +170,10 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
                 suffix = Const.Suffix.ZIP;
                 Path zipFile = ZipUtil.zipExcludeRoot(root, root);
                 workbook.what("0004", zipFile.toString());
+                FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
             } else {
-                return root.resolve(workbook.getSheetAt(0).getFileName());
+                return root.resolve(workbook.getSheetAt(0).getName() + Const.Suffix.CSV);
             }
         } catch (IOException | ExcelWriteException e) {
             // remove temp path
