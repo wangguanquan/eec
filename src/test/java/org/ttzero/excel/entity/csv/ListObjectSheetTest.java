@@ -214,7 +214,7 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test public void testResetMethod() throws IOException {
         new Workbook("重写期末成绩")
-            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, 0) {
+            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
                     @Override
                     public int getScore() {
                         return 100;
@@ -227,7 +227,7 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test public void testMethodAnnotation() throws IOException {
         new Workbook("重写方法注解")
-            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, 0) {
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, author, 0) {
                 @Override
                 @ExcelColumn("ID")
                 public int getId() {

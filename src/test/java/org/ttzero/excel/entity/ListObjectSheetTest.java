@@ -548,10 +548,6 @@ public class ListObjectSheetTest extends WorkbookTest{
         @ExcelColumn("成绩")
         private int score;
 
-        public Student(int id, int score) {
-            this(id, null, score);
-        }
-
         protected Student(int id, String name, int score) {
             this.id = id;
             this.name = name;
