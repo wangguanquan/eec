@@ -391,7 +391,7 @@ public void readToList() {
 #### 4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
 ```
-reade.sheets()
+reader.sheets()
     .flatMap(Sheet::dataRows)
     .map(row -> row.to(Regist.class))
     .filter(e -> "iOS".equals(e.platform()))
@@ -399,6 +399,26 @@ reade.sheets()
 ```
 
 以上代码相当于`select * from 用户注册 where platform = 'iOS'`
+
+
+#### 4.1 根据列名过滤列
+
+```
+@Test public void testFilter() {
+    try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+        String[] games = reader.sheet(0)
+            .dataRows()
+            .map(row -> row.getString("游戏"))
+            .distinct()
+            .toArray(String[]::new);
+        print(Arrays.toString(games));
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+以上方法获取excel文件的"游戏"列的不重复值
 
 #### 5. xls读取
 xls读取对方法式与xlsx完全一致

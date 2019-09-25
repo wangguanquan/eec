@@ -111,11 +111,28 @@ public abstract class Row {
     }
 
     protected void rangeCheck(int index) {
-        if (index >= lc)
+        if (index >= lc || index < 0)
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
     }
 
+    /**
+     * Returns {@link Cell}
+     * @param i the position of cell
+     * @return the {@link Cell}
+     */
     protected Cell getCell(int i) {
+        rangeCheck(i);
+        return cells[i];
+    }
+
+    /**
+     * Search {@link Cell} by column name
+     *
+     * @param name the column name
+     * @return the {@link Cell}
+     */
+    protected Cell getCell(String name) {
+        int i = hr.getIndex(name);
         rangeCheck(i);
         return cells[i];
     }
@@ -144,6 +161,27 @@ public abstract class Row {
      */
     public boolean getBoolean(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getBoolean(c);
+    }
+
+    /**
+     * Get boolean value by column name
+     *
+     * @param columnName the cell name
+     * @return boolean
+     */
+    public boolean getBoolean(String columnName) {
+        Cell c = getCell(columnName);
+        return getBoolean(c);
+    }
+
+    /**
+     * Get boolean value
+     *
+     * @param c the {@link Cell}
+     * @return boolean
+     */
+    protected boolean getBoolean(Cell c) {
         boolean v;
         switch (c.t) {
             case BOOL:
@@ -176,6 +214,27 @@ public abstract class Row {
      */
     public byte getByte(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getByte(c);
+    }
+
+    /**
+     * Get byte value by column name
+     *
+     * @param columnName the cell name
+     * @return byte
+     */
+    public byte getByte(String columnName) {
+        Cell c = getCell(columnName);
+        return getByte(c);
+    }
+
+    /**
+     * Get byte value
+     *
+     * @param c the {@link Cell}
+     * @return byte
+     */
+    protected byte getByte(Cell c) {
         byte b = 0;
         switch (c.t) {
             case NUMERIC:
@@ -203,6 +262,27 @@ public abstract class Row {
      */
     public char getChar(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getChar(c);
+    }
+
+    /**
+     * Get char value by column name
+     *
+     * @param columnName the cell name
+     * @return char
+     */
+    public char getChar(String columnName) {
+        Cell c = getCell(columnName);
+        return getChar(c);
+    }
+
+    /**
+     * Get char value
+     *
+     * @param c the {@link Cell}
+     * @return char
+     */
+    protected char getChar(Cell c) {
         char cc = 0;
         switch (c.t) {
             case SST:
@@ -245,6 +325,27 @@ public abstract class Row {
      */
     public short getShort(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getShort(c);
+    }
+
+    /**
+     * Get short value by column name
+     *
+     * @param columnName the cell name
+     * @return short
+     */
+    public short getShort(String columnName) {
+        Cell c = getCell(columnName);
+        return getShort(c);
+    }
+
+    /**
+     * Get short value
+     *
+     * @param c the {@link Cell}
+     * @return short
+     */
+    protected short getShort(Cell c) {
         short s = 0;
         switch (c.t) {
             case NUMERIC:
@@ -272,6 +373,27 @@ public abstract class Row {
      */
     public int getInt(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getInt(c);
+    }
+
+    /**
+     * Get int value by column name
+     *
+     * @param columnName the cell name
+     * @return int
+     */
+    public int getInt(String columnName) {
+        Cell c = getCell(columnName);
+        return getInt(c);
+    }
+
+    /**
+     * Get int value
+     *
+     * @param c the {@link Cell}
+     * @return int
+     */
+    protected int getInt(Cell c) {
         int n;
         switch (c.t) {
             case NUMERIC:
@@ -317,6 +439,27 @@ public abstract class Row {
      */
     public long getLong(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getLong(c);
+    }
+
+    /**
+     * Get long value by column name
+     *
+     * @param columnName the cell name
+     * @return long
+     */
+    public long getLong(String columnName) {
+        Cell c = getCell(columnName);
+        return getLong(c);
+    }
+
+    /**
+     * Get long value
+     *
+     * @param c the {@link Cell}
+     * @return long
+     */
+    protected long getLong(Cell c) {
         long l;
         switch (c.t) {
             case LONG:
@@ -361,6 +504,27 @@ public abstract class Row {
      */
     public String getString(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getString(c);
+    }
+
+    /**
+     * Get string value by column name
+     *
+     * @param columnName the cell name
+     * @return string
+     */
+    public String getString(String columnName) {
+        Cell c = getCell(columnName);
+        return getString(c);
+    }
+
+    /**
+     * Get string value
+     *
+     * @param c the {@link Cell}
+     * @return string
+     */
+    protected String getString(Cell c) {
         String s;
         switch (c.t) {
             case SST:
@@ -403,6 +567,16 @@ public abstract class Row {
     }
 
     /**
+     * Get float value by column index
+     *
+     * @param columnName the cell index
+     * @return float
+     */
+    public float getFloat(String columnName) {
+        return (float) getDouble(columnName);
+    }
+
+    /**
      * Get double value by column index
      *
      * @param columnIndex the cell index
@@ -410,6 +584,27 @@ public abstract class Row {
      */
     public double getDouble(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getDouble(c);
+    }
+
+    /**
+     * Get double value by column name
+     *
+     * @param columnName the cell name
+     * @return double
+     */
+    public double getDouble(String columnName) {
+        Cell c = getCell(columnName);
+        return getDouble(c);
+    }
+
+    /**
+     * Get double value
+     *
+     * @param c the {@link Cell}
+     * @return double
+     */
+    protected double getDouble(Cell c) {
         double d;
         switch (c.t) {
             case DOUBLE:
@@ -446,6 +641,27 @@ public abstract class Row {
      */
     public BigDecimal getDecimal(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getDecimal(c);
+    }
+
+    /**
+     * Get BigDecimal value by column name
+     *
+     * @param columnName the cell name
+     * @return BigDecimal
+     */
+    public BigDecimal getDecimal(String columnName) {
+        Cell c = getCell(columnName);
+        return getDecimal(c);
+    }
+
+    /**
+     * Get BigDecimal value
+     *
+     * @param c the {@link Cell}
+     * @return BigDecimal
+     */
+    protected BigDecimal getDecimal(Cell c) {
         BigDecimal bd;
         switch (c.t) {
             case DOUBLE:
@@ -468,6 +684,27 @@ public abstract class Row {
      */
     public Date getDate(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getDate(c);
+    }
+
+    /**
+     * Get date value by column name
+     *
+     * @param columnName the cell name
+     * @return Date
+     */
+    public Date getDate(String columnName) {
+        Cell c = getCell(columnName);
+        return getDate(c);
+    }
+
+    /**
+     * Get date value
+     *
+     * @param c the {@link Cell}
+     * @return BigDecimal
+     */
+    protected Date getDate(Cell c) {
         Date date;
         switch (c.t) {
             case NUMERIC:
@@ -498,6 +735,27 @@ public abstract class Row {
      */
     public Timestamp getTimestamp(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getTimestamp(c);
+    }
+
+    /**
+     * Get timestamp value by column name
+     *
+     * @param columnName the cell name
+     * @return java.sql.Timestamp
+     */
+    public Timestamp getTimestamp(String columnName) {
+        Cell c = getCell(columnName);
+        return getTimestamp(c);
+    }
+
+    /**
+     * Get timestamp value
+     *
+     * @param c the {@link Cell}
+     * @return java.sql.Timestamp
+     */
+    protected Timestamp getTimestamp(Cell c) {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
@@ -535,6 +793,20 @@ public abstract class Row {
     }
 
     /**
+     * Get time value by column name
+     *
+     * @param columnName the cell name
+     * @return java.sql.Time
+     */
+    public java.sql.Time getTime(String columnName) {
+        Cell c = getCell(columnName);
+        if (c.t == DOUBLE) {
+            return DateUtil.toTime(c.dv);
+        }
+        throw new UncheckedTypeException("can't convert to java.sql.Time");
+    }
+
+    /**
      * Returns the type of cell
      *
      * @param columnIndex the cell index from zero
@@ -542,6 +814,27 @@ public abstract class Row {
      */
     public CellType getCellType(int columnIndex) {
         Cell c = getCell(columnIndex);
+        return getCellType(c);
+    }
+
+    /**
+     * Returns the type of cell
+     *
+     * @param columnName the cell name
+     * @return the {@link CellType}
+     */
+    public CellType getCellType(String columnName) {
+        Cell c = getCell(columnName);
+        return getCellType(c);
+    }
+
+    /**
+     * Returns the type of cell
+     *
+     * @param c the {@link Cell}
+     * @return the {@link CellType}
+     */
+    protected CellType getCellType(Cell c) {
         CellType type;
         switch (c.t) {
             case SST:
@@ -570,7 +863,7 @@ public abstract class Row {
                 type = CellType.BLANK;
                 break;
 
-                default: type = CellType.STRING;
+            default: type = CellType.STRING;
         }
         return type;
     }
