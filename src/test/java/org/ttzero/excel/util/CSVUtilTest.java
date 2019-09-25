@@ -482,11 +482,6 @@ public class CSVUtilTest {
             types[i] = random.nextInt(5);
         }
 
-        char[][] cache_char_array = new char[25][];
-        for (int i = 0; i < cache_char_array.length; i++) {
-            cache_char_array[i] = new char[i + 1];
-        }
-
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             for (int i = 0; i < row; i++) {
                 for (int c = 0; c < column; c++) {
