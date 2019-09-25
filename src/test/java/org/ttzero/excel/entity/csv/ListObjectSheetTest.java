@@ -1,0 +1,247 @@
+/*
+ * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.ttzero.excel.entity.csv;
+
+import org.junit.Test;
+import org.ttzero.excel.Print;
+import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.CustomizeDataSourceSheet;
+import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.ListSheet;
+import org.ttzero.excel.entity.Sheet;
+import org.ttzero.excel.entity.Workbook;
+import org.ttzero.excel.entity.WorkbookTest;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.entity.ListObjectSheetTest.AllType;
+import org.ttzero.excel.entity.ListObjectSheetTest.Item;
+import org.ttzero.excel.entity.ListObjectSheetTest.Student;
+import org.ttzero.excel.entity.ListObjectSheetTest.BoxAllType;
+import org.ttzero.excel.entity.ListObjectSheetTest.ExtItem;
+
+import java.awt.Color;
+import java.io.IOException;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+
+import static org.ttzero.excel.entity.ListObjectSheetTest.sp;
+import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
+
+/**
+ * Create by guanquan.wang at 2019-04-28 19:17
+ */
+public class ListObjectSheetTest extends WorkbookTest{
+
+    @Test
+    public void testWrite() throws IOException {
+        new Workbook("test object")
+            .watch(Print::println)
+            .addSheet(Item.randomTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testAllTypeWrite() throws IOException {
+        new Workbook("all type object")
+            .watch(Print::println)
+            .addSheet(AllType.randomTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testAnnotation() throws IOException {
+        new Workbook("annotation object")
+            .watch(Print::println)
+            .addSheet(Student.randomTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testAnnotationAutoSize() throws IOException {
+        new Workbook("annotation object auto-size")
+            .watch(Print::println)
+            .addSheet(new ListSheet<>(Student.randomTestData()))
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testAutoSize() throws IOException {
+        new Workbook("all type auto size")
+            .watch(Print::println)
+            .addSheet(AllType.randomTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testIntConversion() throws IOException {
+        new Workbook("test int conversion")
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testStyleConversion() throws IOException {
+        new Workbook("object style processor")
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score")
+                    .setStyleProcessor((o, style, sst) -> {
+                        if ((int)o < 60) {
+                            style = Styles.clearFill(style)
+                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                        }
+                        return style;
+                    })
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testConvertAndStyleConversion() throws IOException {
+        new Workbook("object style and style processor")
+            .watch(Print::println)
+            .addSheet(Student.randomTestData()
+                , new Sheet.Column("学号", "id")
+                , new Sheet.Column("姓名", "name")
+                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                    .setStyleProcessor((o, style, sst) -> {
+                        if ((int)o < 60) {
+                            style = Styles.clearFill(style)
+                                | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
+                        }
+                        return style;
+                    })
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testCustomizeDataSource() throws IOException {
+        new Workbook("customize datasource")
+            .watch(Print::println)
+            .addSheet(new CustomizeDataSourceSheet())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testBoxAllTypeWrite() throws IOException {
+        new Workbook("box all type object")
+            .watch(Print::println)
+            .addSheet(BoxAllType.randomTestData())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testArray() throws IOException {
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListSheet<>()
+                .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testSingleList() throws IOException {
+        new Workbook()
+            .watch(Print::println)
+            .addSheet(new ListSheet<>()
+                .setData(Collections.singletonList(new Item(1, "a b c"))))
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test
+    public void testStyleConversion1() throws IOException {
+        new Workbook("object style processor1", "guanquan.wang")
+            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                    , new Sheet.Column("学号", "id")
+                    , new Sheet.Column("姓名", "name")
+                    , new Sheet.Column("成绩", "score", conversion)
+                    .setStyleProcessor(sp)
+                )
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testNullValue() throws IOException {
+        new Workbook("test null value")
+            .watch(Print::println)
+            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testFieldUnDeclare() throws IOException {
+        try {
+            new Workbook("field un-declare")
+                .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                        , new Sheet.Column("学号", "id")
+                        , new Sheet.Column("姓名", "name")
+                        , new Sheet.Column("成绩", "sore") // un-declare field
+                    )
+                )
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+        } catch (ExcelWriteException e) {
+            assert true;
+        }
+    }
+
+    @Test public void testResetMethod() throws IOException {
+        new Workbook("重写期末成绩")
+            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, 0) {
+                    @Override
+                    public int getScore() {
+                        return 100;
+                    }
+                }))
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testMethodAnnotation() throws IOException {
+        new Workbook("重写方法注解")
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, 0) {
+                @Override
+                @ExcelColumn("ID")
+                public int getId() {
+                    return super.getId();
+                }
+
+                @Override
+                @ExcelColumn("SCORE")
+                public int getScore() {
+                    return 97;
+                }
+            }))
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath());
+    }
+}

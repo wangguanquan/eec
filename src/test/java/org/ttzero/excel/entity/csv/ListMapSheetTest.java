@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.Sheet;
-import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 
@@ -47,7 +46,7 @@ import static org.ttzero.excel.entity.ListMapSheetTest.createTestData;
 public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrite() throws IOException {
-        new Workbook("test map", author)
+        new Workbook("test map")
             .watch(Print::println)
             .addSheet(createTestData())
             .addSheet(createTestData())
@@ -56,16 +55,15 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testAllType() throws IOException {
-        new Workbook("test all type map", author)
+        new Workbook("test all type map")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(createAllTypeData())
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
 
     @Test public void testHeaderColumn() throws IOException {
-        new Workbook("test header column map", author)
+        new Workbook("test header column map")
             .watch(Print::println)
             .addSheet(createAllTypeData()
                 , new Sheet.Column("boolean", "bv", boolean.class)
@@ -89,7 +87,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testHeaderColumnBox() throws IOException {
-        new Workbook("test header column box type map", author)
+        new Workbook("test header column box type map")
             .watch(Print::println)
             .addSheet(createAllTypeData()
                 , new Sheet.Column("Character", "cv", Character.class)
@@ -104,27 +102,24 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testConstructor1() throws IOException {
-        new Workbook("test list map sheet Constructor1", author)
+        new Workbook("test list map sheet Constructor1")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet())
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor2() throws IOException {
-        new Workbook("test list map sheet Constructor2", author)
+        new Workbook("test list map sheet Constructor2")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet("Map").setData(createTestData(10)))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor3() throws IOException {
-        new Workbook("test list map sheet Constructor3", author)
+        new Workbook("test list map sheet Constructor3")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet("Map"
                 , new Sheet.Column("boolean", "bv", boolean.class)
                 , new Sheet.Column("char", "cv", char.class)
@@ -147,52 +142,24 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(getOutputTestPath());
     }
 
-    @Test public void testConstructor4() throws IOException {
-        new Workbook("test list map sheet Constructor4", author)
-            .watch(Print::println)
-            .setAutoSize(true)
-            .addSheet(new ListMapSheet("Map", WaterMark.of(author)
-                , new Sheet.Column("boolean", "bv", boolean.class)
-                , new Sheet.Column("char", "cv", char.class)
-                , new Sheet.Column("short", "sv", short.class)
-                , new Sheet.Column("int", "nv", int.class)
-                , new Sheet.Column("long", "lv", long.class)
-                , new Sheet.Column("float", "fv", float.class)
-                , new Sheet.Column("double", "dv", double.class)
-                , new Sheet.Column("string", "s", String.class)
-                , new Sheet.Column("decimal", "mv", BigDecimal.class)
-                , new Sheet.Column("date", "av", Date.class)
-                , new Sheet.Column("timestamp", "iv", Timestamp.class)
-                , new Sheet.Column("time", "tv", Time.class)
-                , new Sheet.Column("LocalDate", "ldv", LocalDate.class)
-                , new Sheet.Column("LocalDateTime", "ldtv", LocalDateTime.class)
-                , new Sheet.Column("LocalTime", "ltv", LocalTime.class))
-                .setData(createAllTypeData(10)))
-            .saveAsCSV()
-            .writeTo(getOutputTestPath());
-    }
-
     @Test public void testConstructor5() throws IOException {
-        new Workbook("test list map sheet Constructor5", author)
+        new Workbook("test list map sheet Constructor5")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData(10)))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor6() throws IOException {
-        new Workbook("test list map sheet Constructor6", author)
+        new Workbook("test list map sheet Constructor6")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet("Map", createAllTypeData(10)))
             .writeTo(getOutputTestPath());
     }
 
     @Test public void testConstructor7() throws IOException {
-        new Workbook("test list map sheet Constructor7", author)
+        new Workbook("test list map sheet Constructor7")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData(10)
                 , new Sheet.Column("Character", "cv", Character.class)
                 , new Sheet.Column("Short", "sv", Short.class)
@@ -205,9 +172,8 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testConstructor8() throws IOException {
-        new Workbook("test list map sheet Constructor8", author)
+        new Workbook("test list map sheet Constructor8")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet("MAP", createTestData(10)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
@@ -216,11 +182,9 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testConstructor9() throws IOException {
-        new Workbook("test list map sheet Constructor9", author)
+        new Workbook("test list map sheet Constructor9")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet(createTestData(10)
-                , WaterMark.of(author)
                 , new Sheet.Column("ID", "id")
                 , new Sheet.Column("NAME", "name")))
             .saveAsCSV()
@@ -228,12 +192,10 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testConstructor10() throws IOException {
-        new Workbook("test list map sheet Constructor10", author)
+        new Workbook("test list map sheet Constructor10")
             .watch(Print::println)
-            .setAutoSize(true)
             .addSheet(new ListMapSheet("MAP"
                 , createTestData(10)
-                , WaterMark.of(author)
                 , new Sheet.Column("ID", "id", int.class)
                 , new Sheet.Column("NAME", "name", String.class)))
             .saveAsCSV()
@@ -268,7 +230,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testNullValue() throws IOException {
-        new Workbook("test map null value", author)
+        new Workbook("test map null value")
             .watch(Print::println)
             .addSheet(createNullTestData(10))
             .saveAsCSV()
