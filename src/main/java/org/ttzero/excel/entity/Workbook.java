@@ -147,14 +147,7 @@ public class Workbook implements Storageable {
         this.name = name;
         this.creator = creator;
         sheets = new Sheet[3]; // Create three worksheet
-
-        sst = new SharedStrings();
         i18N = new I18N();
-        // Create a global styles
-        styles = Styles.create(i18N);
-
-        // Default writer
-        workbookWriter = new XMLWorkbookWriter(this);
     }
 
     /**
@@ -237,6 +230,8 @@ public class Workbook implements Storageable {
      * @return the global {@link SharedStrings}
      */
     public SharedStrings getSst() {
+        // CSV do not need SharedStringTable
+        if (sst == null) sst = new SharedStrings();
         return sst;
     }
 
@@ -314,6 +309,8 @@ public class Workbook implements Storageable {
      * @return the Styles
      */
     public Styles getStyles() {
+        // CSV do not need Styles
+        if (styles == null) styles = Styles.create(i18N);
         return styles;
     }
 
@@ -375,6 +372,8 @@ public class Workbook implements Storageable {
      * @return the workbook writer
      */
     public IWorkbookWriter getWorkbookWriter() {
+        if (workbookWriter == null)
+            workbookWriter = new XMLWorkbookWriter(this);
         return workbookWriter;
     }
 
@@ -746,6 +745,8 @@ public class Workbook implements Storageable {
      */
     public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
+            // Create Styles and SharedStringTable
+            init();
             Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
             Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
             workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
@@ -815,6 +816,7 @@ public class Workbook implements Storageable {
      */
     @Override
     public void writeTo(Path path) throws IOException {
+        checkAndInitWriter();
         if (!Files.exists(path)) {
             String name = path.getFileName().toString();
             // write to file
@@ -851,6 +853,7 @@ public class Workbook implements Storageable {
      * @throws ExcelWriteException other runtime error
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
+        checkAndInitWriter();
         workbookWriter.writeTo(os);
     }
 
@@ -862,6 +865,7 @@ public class Workbook implements Storageable {
      * @throws ExcelWriteException other runtime error
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
+        checkAndInitWriter();
         if (!file.getParentFile().exists()) {
             FileUtil.mkdir(file.toPath().getParent());
         }
@@ -918,5 +922,30 @@ public class Workbook implements Storageable {
         this.workbookWriter = workbookWriter;
         this.workbookWriter.setWorkbook(this);
         return this;
+    }
+
+    /**
+     * Create some global entry.
+     */
+    protected void init() {
+        // Create SharedStringTable
+        if (sst == null) {
+            sst = new SharedStrings();
+        }
+        // Create a global styles
+        if (styles == null) {
+            styles = Styles.create(i18N);
+        }
+    }
+
+    /**
+     * Check and Create {@link IWorkbookWriter}
+     */
+    protected void checkAndInitWriter() {
+        // Create Styles and SharedStringTable
+        init();
+        if (workbookWriter == null) {
+            workbookWriter = new XMLWorkbookWriter(this);
+        }
     }
 }
