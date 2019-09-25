@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -161,6 +162,19 @@ public class ExcelReaderTest {
                 print(row.getChar("VIP"));
                 println();
             });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testFilter() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            String[] games = reader.sheet(0)
+                .dataRows()
+                .map(row -> row.getString("游戏"))
+                .distinct()
+                .toArray(String[]::new);
+            print(Arrays.toString(games));
         } catch (IOException e) {
             e.printStackTrace();
         }
