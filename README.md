@@ -88,6 +88,10 @@ xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文�
 
 示例请查找`testReadXLS()`方法。
 
+## CSV格式支持
+
+ExcelWriter支持csv格式，只需要在`writeTo`方法前添加`saveAsCSV()`即可。[测试代码参考](./src/test/java/org/ttzero/excel/entity/csv)
+
 ## 示例
 
 ### 导出示例，更多使用方法请参考test/各测试类
