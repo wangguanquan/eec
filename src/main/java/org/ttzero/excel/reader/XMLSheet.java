@@ -427,6 +427,7 @@ class XMLSheet implements Sheet {
     public XMLSheet reset() throws IOException {
         // Close the opening reader
         close();
+        header = null;
         // Reload
         return load();
     }
