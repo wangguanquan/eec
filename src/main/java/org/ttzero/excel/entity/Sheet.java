@@ -145,6 +145,8 @@ public abstract class Sheet implements Cloneable, Storageable {
      */
     protected boolean shouldClose = true;
 
+    protected ICellValueAndStyle cellValueAndStyle;
+
     public int getId() {
         return id;
     }
@@ -155,6 +157,10 @@ public abstract class Sheet implements Cloneable, Storageable {
 
     public void setSheetWriter(IWorksheetWriter sheetWriter) {
         this.sheetWriter = sheetWriter;
+    }
+
+    public void setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
+        this.cellValueAndStyle = cellValueAndStyle;
     }
 
     public Sheet() {
@@ -795,7 +801,6 @@ public abstract class Sheet implements Cloneable, Storageable {
         return this;
     }
 
-
     /**
      * Output the export detail info
      *
@@ -915,6 +920,15 @@ public abstract class Sheet implements Cloneable, Storageable {
     public Sheet setOddFill(Fill fill) {
         this.oddFill = workbook.getStyles().addFill(fill);
         return this;
+    }
+
+    /**
+     * Returns the odd columns fill style
+     *
+     * @return the fill style value
+     */
+    public int getOddFill() {
+        return oddFill;
     }
 
     /**
@@ -1069,7 +1083,7 @@ public abstract class Sheet implements Cloneable, Storageable {
      * @return name of worksheet
      */
     public String getFileName() {
-        return "sheet" + id + workbook.getWorkbookWriter().getSuffix();
+        return "sheet" + id + cellValueAndStyle.getFileSuffix();
     }
 
     /**
@@ -1200,162 +1214,6 @@ public abstract class Sheet implements Cloneable, Storageable {
         }
 
         // others ...
-    }
-
-    /**
-     * Int value conversion to others
-     *
-     * @param cell the cell
-     * @param n    the cell value
-     * @param hc   the header column
-     */
-    protected void conversion(Cell cell, int n, Column hc) {
-        Object e = hc.processor.conversion(n);
-        if (e != null) {
-            Class<?> clazz = e.getClass();
-            if (isInt(clazz)) {
-                if (isChar(clazz)) {
-                    cell.setCv((Character) e);
-                } else if (isShort(clazz)) {
-                    cell.setNv((Short) e);
-                } else {
-                    cell.setNv((Integer) e);
-                }
-                cell.xf = getStyleIndex(hc, e);
-            } else {
-                setCellValue(cell, e, hc, clazz);
-                int style = hc.getCellStyle(clazz);
-                cell.xf = getStyleIndex(hc, n, style);
-            }
-        } else {
-            cell.setBlank();
-            cell.xf = getStyleIndex(hc, null);
-        }
-    }
-
-    /**
-     * Setting cell value and cell styles
-     *
-     * @param cell the cell
-     * @param e    the cell value
-     * @param hc   the header column
-     */
-    protected void setCellValueAndStyle(Cell cell, Object e, Column hc) {
-        setCellValue(cell, e, hc, hc.getClazz());
-        if (hc.processor == null) {
-            cell.xf = getStyleIndex(hc, e);
-        }
-    }
-
-    /**
-     * Setting cell value
-     *
-     * @param cell  the cell
-     * @param e     the cell value
-     * @param hc    the header column
-     * @param clazz the cell value type
-     */
-    protected void setCellValue(Cell cell, Object e, Column hc, Class<?> clazz) {
-        if (e == null) {
-            setNullValue(cell, hc);
-            return;
-        }
-        boolean hasIntProcessor = hc.processor != null;
-        if (isString(clazz)) {
-            cell.setSv(e.toString());
-        } else if (isDate(clazz)) {
-            cell.setAv(DateUtil.toDateValue((java.util.Date) e));
-        } else if (isDateTime(clazz)) {
-            cell.setIv(DateUtil.toDateTimeValue((Timestamp) e));
-        } else if (isChar(clazz)) {
-            Character c = (Character) e;
-            if (hasIntProcessor) conversion(cell, c, hc);
-            else cell.setCv(c);
-        } else if (isShort(clazz)) {
-            Short t = (Short) e;
-            if (hasIntProcessor) conversion(cell, t, hc);
-            else cell.setNv(t);
-        } else if (isInt(clazz)) {
-            Integer n = (Integer) e;
-            if (hasIntProcessor) conversion(cell, n, hc);
-            else cell.setNv(n);
-        } else if (isLong(clazz)) {
-            cell.setLv((Long) e);
-        } else if (isFloat(clazz)) {
-            cell.setDv((Float) e);
-        } else if (isDouble(clazz)) {
-            cell.setDv((Double) e);
-        } else if (isBool(clazz)) {
-            cell.setBv((Boolean) e);
-        } else if (isBigDecimal(clazz)) {
-            cell.setMv((BigDecimal) e);
-        } else if (isLocalDate(clazz)) {
-            cell.setAv(DateUtil.toDateValue((java.time.LocalDate) e));
-        } else if (isLocalDateTime(clazz)) {
-            cell.setIv(DateUtil.toDateTimeValue((java.time.LocalDateTime) e));
-        } else if (isTime(clazz)) {
-            cell.setTv(DateUtil.toTimeValue((java.sql.Time) e));
-        } else if (isLocalTime(clazz)) {
-            cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
-        } else {
-            cell.setSv(e.toString());
-        }
-    }
-
-    /**
-     * Setting cell value as null
-     *
-     * @param cell  the cell
-     * @param hc    the header column
-     */
-    protected void setNullValue(Cell cell, Column hc) {
-        boolean hasIntProcessor = hc.processor != null;
-        if (hasIntProcessor) {
-             conversion(cell, 0, hc);
-        } else
-            cell.setBlank();
-    }
-
-    /**
-     * Returns the cell style index
-     *
-     * @param hc    the header column
-     * @param o     the cell value
-     * @param style the default style
-     * @return the style index in xf
-     */
-    private int getStyleIndex(Column hc, Object o, int style) {
-        // Interlaced discoloration
-        if (autoOdd == 0 && isOdd() && !Styles.hasFill(style)) {
-            style |= oddFill;
-        }
-        int styleIndex = hc.styles.of(style);
-        if (hc.styleProcessor != null) {
-            style = hc.styleProcessor.build(o, style, hc.styles);
-            styleIndex = hc.styles.of(style);
-        }
-        return styleIndex;
-    }
-
-    /**
-     * Returns the cell style index
-     *
-     * @param hc the header column
-     * @param o  the cell value
-     * @return the style index in xf
-     */
-    protected int getStyleIndex(Column hc, Object o) {
-        int style = hc.getCellStyle();
-        return getStyleIndex(hc, o, style);
-    }
-
-    /**
-     * Check the odd rows
-     *
-     * @return true if odd rows
-     */
-    protected boolean isOdd() {
-        return (rows & 1) == 1;
     }
 
     /**
@@ -1490,7 +1348,7 @@ public abstract class Sheet implements Cloneable, Storageable {
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link #setCellValueAndStyle(Cell, Object, Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();

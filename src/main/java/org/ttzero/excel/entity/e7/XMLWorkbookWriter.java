@@ -430,6 +430,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (StringUtil.isEmpty(sheet.getName())) {
                 sheet.setName("Sheet" + (i + 1));
             }
+            // Set cell value and style processor
+            sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
         }
         workbook.what("0001");
 

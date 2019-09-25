@@ -129,6 +129,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             if (StringUtil.isEmpty(sheet.getName())) {
                 sheet.setName("Sheet" + (i + 1));
             }
+            // Set cell value and style processor
+            sheet.setCellValueAndStyle(new CSVCellValueAndStyle());
         }
         workbook.what("0001");
 
@@ -156,7 +158,6 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         } catch (IOException | ExcelWriteException e) {
             // remove temp path
             if (root != null) FileUtil.rm_rf(root);
-            workbook.getSst().close();
             throw e;
         }
     }

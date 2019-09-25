@@ -257,7 +257,7 @@ public class ListSheet<T> extends Sheet {
                     else
                         e = fields[i].get(o);
 
-                    setCellValueAndStyle(cell, e, columns[i]);
+                    cellValueAndStyle.reset(rows, cell, e, columns[i]);
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
