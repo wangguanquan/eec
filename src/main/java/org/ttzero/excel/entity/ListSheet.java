@@ -401,6 +401,7 @@ public class ListSheet<T> extends Sheet {
                         continue;
                     }
 
+                    method.setAccessible(true);
                     methods[i] = method;
                     ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
                     if (mec != null && isNotEmpty(mec.value())) {
@@ -434,6 +435,7 @@ public class ListSheet<T> extends Sheet {
             if (readLength > 0) {
                 for (int j = 0; j < readLength; j++) {
                     Method readMethod = readMethods[j];
+                    readMethod.setAccessible(true);
                     methods[i++] = readMethod;
                     ExcelColumn mec = readMethod.getAnnotation(ExcelColumn.class);
                     list.add(new Column(mec.value(), readMethod.getName(), readMethod.getReturnType())
@@ -474,6 +476,7 @@ public class ListSheet<T> extends Sheet {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
                 methods[i] = tmp.get(hc.key);
+                if (methods[i] != null) methods[i].setAccessible(true);
 
                 for (Field field : declaredFields) {
                     if (hc.key.equals(field.getName())) {
