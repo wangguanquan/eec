@@ -40,6 +40,7 @@ import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Create by guanquan.wang at 2019-08-21 22:19
@@ -150,7 +151,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
         if (!noneHeader) {
             for (Sheet.Column hc : columns) {
-                writer.write(hc.name);
+                writer.write(isNotEmpty(hc.getName()) ? hc.getName() : hc.key);
             }
             writer.newLine();
         }
