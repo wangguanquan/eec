@@ -198,6 +198,7 @@ class XMLSheet implements Sheet {
     private char[] cb; // buffer
     private int nChar, length;
     private boolean eof = false, heof = false; // OPTIONS = false
+    private long mark;
 
     private XMLRow sRow;
 
@@ -264,6 +265,7 @@ class XMLSheet implements Sheet {
             sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1); // share row space
         }
 
+        mark = nChar;
         return this;
     }
 
@@ -426,9 +428,16 @@ class XMLSheet implements Sheet {
     @Override
     public XMLSheet reset() throws IOException {
         // Close the opening reader
-        close();
-        header = null;
+        if (reader != null) {
+            reader.close();
+        }
         // Reload
-        return load();
+        reader = Files.newBufferedReader(path);
+        reader.skip(mark);
+        length = reader.read(cb);
+        nChar = 0;
+        eof = length <= 0;
+
+        return this;
     }
 }
