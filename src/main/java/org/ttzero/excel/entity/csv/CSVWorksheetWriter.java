@@ -23,6 +23,7 @@ import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.CSVUtil;
+import org.ttzero.excel.util.DateUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -167,11 +168,8 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
             switch (cell.t) {
                 case INLINESTR:
                 case SST:
-                case DATETIME:
-                case TIME:
                     writer.write(cell.sv);
                     break;
-                case DATE:
                 case NUMERIC:
                     writer.write(cell.nv);
                     break;
@@ -189,6 +187,15 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
                     break;
                 case CHARACTER:
                     writer.writeChar(cell.cv);
+                    break;
+                case DATE:
+                    writer.write(DateUtil.toDateString(DateUtil.toDate(cell.nv)));
+                    break;
+                case DATETIME:
+                    writer.write(DateUtil.toString(DateUtil.toDate(cell.dv)));
+                    break;
+                case TIME:
+                    writer.write(DateUtil.toDate(cell.dv).toString());
                     break;
                 default:
                     writer.writeEmpty();
