@@ -499,17 +499,9 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, String sql, Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
-        PreparedStatement ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        PreparedStatement ps = con.prepareStatement(sql
+            , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        return addSheet(name, ps, null, columns);
     }
 
     /**
@@ -554,19 +546,9 @@ public class Workbook implements Storageable {
      */
     public Workbook addSheet(String name, String sql, ParamProcessor pp
         , Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
         PreparedStatement ps = con.prepareStatement(sql
             , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        pp.build(ps);
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        return addSheet(name, ps, pp, columns);
     }
 
     /**
@@ -596,16 +578,7 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        sheet.setPs(ps);
-        addSheet(sheet);
-        return this;
+        return addSheet(name, ps, null, columns);
     }
 
     /**
@@ -636,7 +609,6 @@ public class Workbook implements Storageable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
-        ensureCapacityInternal();
         StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);
@@ -644,7 +616,7 @@ public class Workbook implements Storageable {
         } catch (SQLException e) {
             watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
-        pp.build(ps);
+        if (pp != null) pp.build(ps);
         sheet.setPs(ps);
         addSheet(sheet);
         return this;
