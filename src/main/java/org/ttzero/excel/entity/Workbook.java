@@ -231,10 +231,10 @@ public class Workbook implements Storageable {
      */
     public SharedStrings getSst() {
         // CSV do not need SharedStringTable
-        if (sst == null) sst = new SharedStrings();
+        if (!(workbookWriter instanceof CSVWorkbookWriter) && sst == null)
+            sst = new SharedStrings();
         return sst;
     }
-
 
     /**
      * Returns all {@link Sheet} in this workbook
@@ -310,7 +310,8 @@ public class Workbook implements Storageable {
      */
     public Styles getStyles() {
         // CSV do not need Styles
-        if (styles == null) styles = Styles.create(i18N);
+        if (!(workbookWriter instanceof CSVWorkbookWriter) && styles == null)
+            styles = Styles.create(i18N);
         return styles;
     }
 
@@ -718,7 +719,6 @@ public class Workbook implements Storageable {
     public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
             // Create Styles and SharedStringTable
-            init();
             Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
             Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
             workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
@@ -914,9 +914,9 @@ public class Workbook implements Storageable {
      * Check and Create {@link IWorkbookWriter}
      */
     protected void checkAndInitWriter() {
-        // Create Styles and SharedStringTable
-        init();
         if (workbookWriter == null) {
+            // Create Styles and SharedStringTable
+            init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
     }
