@@ -117,6 +117,7 @@ class HeaderRow extends Row {
                     continue;
                 }
 
+                method.setAccessible(true);
                 methods[i] = method;
                 ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
                 if (mec != null && isNotEmpty(mec.value())) {
