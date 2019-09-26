@@ -71,7 +71,7 @@ import static org.ttzero.excel.util.FileUtil.mkdir;
  * Create by guanquan.wang at 2019-02-12 17:27
  */
 public class CSVUtil {
-    private static Logger logger = LogManager.getLogger(FileUtil.class);
+    private static Logger logger = LogManager.getLogger(CSVUtil.class);
 
     private CSVUtil() { }
     private static final char QUOTE = '"';
