@@ -203,6 +203,9 @@ public class CSVSheet extends Sheet {
      */
     @Override
     public boolean hasNonHeader() {
-        return !hasHeader || super.hasNonHeader();
+        if (!hasHeader) {
+            hasHeader = !super.hasNonHeader();
+        }
+        return !hasHeader;
     }
 }
