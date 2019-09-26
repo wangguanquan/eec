@@ -394,6 +394,44 @@ public class CSVUtil {
                 iterator, Spliterator.ORDERED | Spliterator.NONNULL), false);
         }
 
+        /**
+         * Read csv format file.
+         *
+         * @return an iterator
+         * @throws IOException file not exists or read file error.
+         */
+        public RowsIterator iterator() throws IOException {
+            // Check comma character and column
+            // FileNotFoundException will be occur
+            O o = init(path, separator, charset);
+            // Empty file
+            if (o == null) {
+                return RowsIterator.creatEmptyIterator();
+            }
+
+            // Use iterator
+            return new RowsIterator(o, path, charset);
+        }
+
+        /**
+         * Read csv format file.
+         *
+         * @return an iterator
+         * @throws IOException file not exists or read file error.
+         */
+        public RowsIterator sharedIterator() throws IOException {
+            // Check comma character and column
+            // FileNotFoundException will be occur
+            O o = init(path, separator, charset);
+            // Empty file
+            if (o == null) {
+                return SharedRowsIterator.creatEmptyIterator();
+            }
+
+            // Use iterator
+            return new SharedRowsIterator(o, path, charset);
+        }
+
         @Override
         public void close() throws IOException {
             if (iterator != null) {
@@ -441,7 +479,7 @@ public class CSVUtil {
     /**
      * Rows iterator
      */
-    private static class RowsIterator implements AutoCloseable, Iterator<String[]> {
+    public static class RowsIterator implements AutoCloseable, Iterator<String[]> {
         private int column;
         private final char comma;
         private BufferedReader reader;
@@ -453,6 +491,10 @@ public class CSVUtil {
         private static final int length = 8192;
         private O o;
         boolean EOF, load;
+
+        RowsIterator() {
+            this.comma = COMMA;
+        }
 
         RowsIterator(O o, Path path, Charset charset) throws IOException {
             this.column = o.offset;
@@ -557,16 +599,27 @@ public class CSVUtil {
             chars = null;
             nextRow = null;
         }
+
+        static RowsIterator creatEmptyIterator() {
+            RowsIterator iterator = new RowsIterator();
+            iterator.EOF = true;
+            iterator.nextRow = new String[0];
+            return iterator;
+        }
     }
 
     /**
      * Shared Row iterator
      */
-    private static class SharedRowsIterator extends RowsIterator {
+    public static class SharedRowsIterator extends RowsIterator {
         /*
          A flag to mark the next row is ready.
          */
         private boolean produced;
+
+        protected SharedRowsIterator() {
+            super();
+        }
 
         SharedRowsIterator(O o, Path path, Charset charset) throws IOException {
             super(o, path, charset);
