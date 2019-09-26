@@ -641,6 +641,13 @@ public class CSVUtil {
                 throw new NoSuchElementException();
             }
         }
+
+        /**
+         * Retain current row data
+         */
+        public void retain() {
+            produced = true;
+        }
     }
 
     /**
