@@ -457,7 +457,7 @@ public class CSVUtilTest {
     @Test public void testEuropeanComma() {
         // A comma and the value separator is a semicolon
         char comma = ';';
-        int n = random.nextInt(10) + 1;
+        int n = random.nextInt(10) + 10;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
             src[i] = randomString();
