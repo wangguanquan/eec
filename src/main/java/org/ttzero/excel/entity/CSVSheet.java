@@ -79,7 +79,7 @@ public class CSVSheet extends Sheet {
      */
     public CSVSheet(String name, InputStream is) throws IOException {
         super(name);
-        path = FileUtil.mktmp(Const.EEC_PREFIX).resolve(getName() + id);
+        path = Files.createTempFile(Const.EEC_PREFIX, getName() + id);
         Files.copy(is, path);
         shouldClean = true;
     }
@@ -99,7 +99,7 @@ public class CSVSheet extends Sheet {
      */
     public CSVSheet(String name, Reader reader) throws IOException {
         super(name);
-        path = FileUtil.mktmp(Const.EEC_PREFIX).resolve(getName() + id);
+        path = Files.createTempFile(Const.EEC_PREFIX, getName() + id);
         shouldClean = true;
         char[] chars = new char[8192];
         int n;
@@ -129,7 +129,7 @@ public class CSVSheet extends Sheet {
     public void close() throws IOException {
         iterator.close();
         if (shouldClean) {
-            FileUtil.rm_rf(path.getParent());
+            FileUtil.rm_rf(path);
         }
         super.close();
     }
