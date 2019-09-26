@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Create by guanquan.wang at 2019-09-26 08:33
@@ -79,8 +80,8 @@ public class CSVSheet extends Sheet {
      */
     public CSVSheet(String name, InputStream is) throws IOException {
         super(name);
-        path = Files.createTempFile(Const.EEC_PREFIX, getName() + id);
-        Files.copy(is, path);
+        path = Files.createTempFile(Const.EEC_PREFIX, String.valueOf(id));
+        Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
         shouldClean = true;
     }
 
@@ -99,7 +100,7 @@ public class CSVSheet extends Sheet {
      */
     public CSVSheet(String name, Reader reader) throws IOException {
         super(name);
-        path = Files.createTempFile(Const.EEC_PREFIX, getName() + id);
+        path = Files.createTempFile(Const.EEC_PREFIX, String.valueOf(id));
         shouldClean = true;
         char[] chars = new char[8192];
         int n;
