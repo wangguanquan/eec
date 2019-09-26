@@ -628,6 +628,7 @@ public class CSVUtil {
         @Override
         public boolean hasNext() {
             if (produced) return true;
+            nextRow[0] = null;
             return produced = super.hasNext();
         }
 
