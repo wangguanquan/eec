@@ -33,6 +33,7 @@ import java.util.Iterator;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
+import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 
 /**
  * Create by guanquan.wang at 2019-04-26 17:42
@@ -145,6 +146,14 @@ public class ExcelReaderTest {
     @Test public void testToAnnotationObject() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(AnnotationEntry.class)).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testToCSV() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).saveAsCSV(getOutputTestPath());
         } catch (IOException e) {
             e.printStackTrace();
         }

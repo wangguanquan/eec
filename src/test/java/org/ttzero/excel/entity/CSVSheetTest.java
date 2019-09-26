@@ -110,7 +110,7 @@ public class CSVSheetTest extends WorkbookTest {
     }
 
     @Test public void testHasHeaderFromPath() throws IOException {
-        new Workbook("csv path test", author)
+        new Workbook("csv header path test", author)
             .addSheet(new CSVSheet(path).setHasHeader(true))
             .writeTo(getOutputTestPath());
     }

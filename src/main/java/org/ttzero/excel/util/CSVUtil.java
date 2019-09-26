@@ -23,6 +23,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -294,6 +296,26 @@ public class CSVUtil {
         Writer writer = new Writer(path, charset);
         writer.separator = separator;
         return writer;
+    }
+
+    /**
+     * Create a CSV writer
+     *
+     * @param writer the {@link BufferedWriter}
+     * @return a CSV format writer
+     */
+    public static Writer newWriter(BufferedWriter writer) {
+        return new Writer(writer);
+    }
+
+    /**
+     * Create a CSV writer
+     *
+     * @param os the {@link OutputStream}
+     * @return a CSV format writer
+     */
+    public static Writer newWriter(OutputStream os) {
+        return new Writer(new BufferedWriter(new OutputStreamWriter(os)));
     }
 
     private static void testOrCreate(Path path) throws IOException {
@@ -963,6 +985,16 @@ public class CSVUtil {
          */
         private Writer(Path path, Charset charset) throws IOException {
             this.writer = Files.newBufferedWriter(path, charset);
+            init();
+        }
+
+        /**
+         * Create a CSV format writer
+         *
+         * @param writer the output
+         */
+        private Writer(BufferedWriter writer) {
+            this.writer = writer;
             init();
         }
 

@@ -47,7 +47,6 @@ mvn source:jar install
 
 pom.xml添加
 
-
 ```
 <dependency>
     <groupId>org.ttzero</groupId>
@@ -91,6 +90,28 @@ xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文�
 ## CSV格式支持
 
 ExcelWriter支持csv格式，只需要在`writeTo`方法前添加`saveAsCSV()`即可。[测试代码参考](./src/test/java/org/ttzero/excel/entity/csv)
+
+#### CSV与Excel格式互转
+
+- CSV => Excel 向Workbook中添加一个`CSVSheet`即可
+- Excel => CSV 读Excel后通过Worksheet调用`saveAsCSV`
+
+代码示例
+
+```
+// CSV转Excel
+new Workbook("csv path test", author)
+    .addSheet(new CSVSheet(csvPath)) // 添加CSVSheet并指定csv路径
+    .writeTo(getOutputTestPath());
+    
+// Excel转CSV
+try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+    // 读取Excel并保存为CSV格式
+    reader.sheet(0).saveAsCSV(getOutputTestPath());
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
 
 ## 示例
 
