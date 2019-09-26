@@ -123,4 +123,15 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
             cell.setSv(e.toString());
         }
     }
+
+    /**
+     * Returns the cell style index
+     *
+     * @param hc the header column
+     * @param o  the cell value
+     * @return const zero (general style)
+     */
+    public int getStyleIndex(int rows, Sheet.Column hc, Object o) {
+        return 0;
+    }
 }

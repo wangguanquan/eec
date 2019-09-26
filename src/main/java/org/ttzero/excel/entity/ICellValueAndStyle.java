@@ -59,6 +59,15 @@ public interface ICellValueAndStyle {
     String getFileSuffix();
 
     /**
+     * Returns the cell style index
+     *
+     * @param hc the header column
+     * @param o  the cell value
+     * @return the style index in xf
+     */
+    int getStyleIndex(int rows, Sheet.Column hc, Object o);
+
+    /**
      * Setting cell value
      *
      * @param cell  the cell

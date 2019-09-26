@@ -119,7 +119,8 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param o  the cell value
      * @return the style index in xf
      */
-    private int getStyleIndex(int rows, Sheet.Column hc, Object o) {
+    @Override
+    public int getStyleIndex(int rows, Sheet.Column hc, Object o) {
         int style = hc.getCellStyle();
         return getStyleIndex(rows, hc, o, style);
     }

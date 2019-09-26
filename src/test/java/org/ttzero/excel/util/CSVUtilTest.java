@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.util.FileUtil.isWindows;
 
 /**
@@ -62,7 +63,7 @@ public class CSVUtilTest {
     @Test public void testReader() {
         try {
             List<String[]> rows = CSVUtil.read(path);
-            rows.forEach(t -> System.out.println(Arrays.toString(t)));
+            rows.forEach(t -> println(Arrays.toString(t)));
         } catch (IOException e) {
             e.printStackTrace();
             assert false;
@@ -72,7 +73,7 @@ public class CSVUtilTest {
     @Test public void testStream() {
         try (CSVUtil.Reader reader = CSVUtil.newReader(path)) {
             reader.stream()
-                .forEach(t -> System.out.println(Arrays.toString(t)));
+                .forEach(t -> println(Arrays.toString(t)));
         } catch (IOException e) {
             e.printStackTrace();
             assert false;
@@ -82,7 +83,31 @@ public class CSVUtilTest {
     @Test public void testStreamShare() {
         try (CSVUtil.Reader reader = CSVUtil.newReader(path)) {
             reader.sharedStream()
-                .forEach(t -> System.out.println(Arrays.toString(t)));
+                .forEach(t -> println(Arrays.toString(t)));
+        } catch (IOException e) {
+            e.printStackTrace();
+            assert false;
+        }
+    }
+
+    @Test public void testIterator() {
+        try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).iterator()) {
+            for (; iterator.hasNext(); ) {
+                String[] rows = iterator.next();
+                println(Arrays.toString(rows));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            assert false;
+        }
+    }
+
+    @Test public void testSharedIterator() {
+        try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).sharedIterator()) {
+            for (; iterator.hasNext(); ) {
+                String[] rows = iterator.next();
+                println(Arrays.toString(rows));
+            }
         } catch (IOException e) {
             e.printStackTrace();
             assert false;
@@ -432,12 +457,12 @@ public class CSVUtilTest {
     @Test public void testEuropeanComma() {
         // A comma and the value separator is a semicolon
         char comma = ';';
-        int n = random.nextInt(10) + 1;
+        int n = random.nextInt(10) + 10;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
             src[i] = randomString();
         }
-        System.out.println(Arrays.toString(src));
+        println(Arrays.toString(src));
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path, comma)) {
             for (String s : src) {
                 writer.write(s);
@@ -450,7 +475,7 @@ public class CSVUtilTest {
         try {
             List<String[]> strings = CSVUtil.read(path, comma);
             assert strings.size() == 1;
-            System.out.println(Arrays.toString(strings.get(0)));
+            println(Arrays.toString(strings.get(0)));
             assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
         } catch (IOException e) {
             e.printStackTrace();
@@ -460,7 +485,7 @@ public class CSVUtilTest {
         try {
             List<String[]> strings = CSVUtil.read(path);
             assert strings.size() == 1;
-            System.out.println(Arrays.toString(strings.get(0)));
+            println(Arrays.toString(strings.get(0)));
             assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
         } catch (IOException e) {
             e.printStackTrace();

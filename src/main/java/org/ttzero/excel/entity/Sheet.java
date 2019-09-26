@@ -31,7 +31,6 @@ import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 
 import java.awt.Color;
@@ -41,9 +40,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigDecimal;
 import java.nio.file.Path;
-import java.sql.Timestamp;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
 import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
@@ -57,10 +54,10 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
-import static org.ttzero.excel.entity.IWorksheetWriter.isShort;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static org.ttzero.excel.util.StringUtil.isEmpty;
 
 /**
  * Each worksheet corresponds to one or more sheet.xml of physical.
@@ -1340,6 +1337,25 @@ public abstract class Sheet implements Cloneable, Storageable {
             c[2] = (char) (w - 1 + A);
         }
         return c;
+    }
+
+    /**
+     * Check empty header row
+     *
+     * @return true if none header row
+     */
+    public boolean hasNonHeader() {
+        columns = getHeaderColumns();
+        boolean noneHeader = columns == null || columns.length == 0;
+        if (!noneHeader) {
+            int n = 0;
+            for (Column column : columns) {
+                if (isEmpty(column.name)) n++;
+            }
+            noneHeader = n == columns.length;
+        }
+        if (noneHeader) rows--;
+        return noneHeader;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
