@@ -103,7 +103,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public IWorksheetWriter clone() {
-        return null;
+        throw new ExcelWriteException("Overflow the max row limit.");
     }
 
     @Override
