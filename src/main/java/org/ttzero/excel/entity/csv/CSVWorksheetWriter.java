@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.entity.csv;
 
+import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.RowBlock;
@@ -96,7 +97,8 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public IWorksheetWriter setWorksheet(Sheet sheet) {
-        return null;
+        this.sheet = sheet;
+        return this;
     }
 
     @Override
