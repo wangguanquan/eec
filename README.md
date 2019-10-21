@@ -38,13 +38,6 @@ stream或数据库。
 
 ## 使用方法
 
-导入eec.jar即可使用
-
-```
-git clone https://www.github.com/wangguanquan/eec.git
-mvn source:jar install
-```
-
 pom.xml添加
 
 ```
@@ -454,8 +447,12 @@ public void testReadXLS() {
 }
 ```
 
-
 ## CHANGELOG
+Version 0.3.4 (2019-10-21)
+-------------
+1. 支持CSV <=> Excel 格式互转
+2. 支持通过列名(非空列第一行)获取数据
+
 Version 0.3.3 (2019-08-14)
 -------------
 1. 修复导出null值时丢失样式
@@ -470,21 +467,13 @@ Version 0.3.2 (2019-06-19)
 4. 修改注释准备发版到Maven中心仓库
 5. Rename package (cn.ttzero -> org.ttzero)
 
-Version 0.3.1 (2019-05-21)
--------------
-1. SharedStringTable升级
-2. 模板导出更新以兼容Excel97~03
-3. 修改SQL别名导出表头文字错误的BUG
-4. AutoSize方法升级，现在AutoSize并不需要借助临时文件
-5. 当BloomFilter满时不扩容而进行清空
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.3.3-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.3.4-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
