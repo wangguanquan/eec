@@ -111,7 +111,7 @@ class XMLRow extends Row {
     }
 
     private int searchSpan() {
-        int i = from;
+        int i = from, _lc = lc;
         for (; cb[i] != '>'; i++) {
             if (cb[i] == ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
                 && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
@@ -134,7 +134,7 @@ class XMLRow extends Row {
             cells = new Cell[lc > 0 ? lc : 100]; // default array length 100
         }
         // clear and share
-        for (int n = 0, len = lc > 0 ? lc : cells.length; n < len; n++) {
+        for (int n = 0, len = lc > 0 ? Math.max(lc, _lc) : cells.length; n < len; n++) {
             if (cells[n] != null) cells[n].clear();
             else cells[n] = new Cell();
         }

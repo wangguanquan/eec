@@ -31,6 +31,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
@@ -186,6 +188,44 @@ public class ExcelReaderTest {
             reader.sheet(0).saveAsCSV(getOutputTestPath());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Test public void test() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
+            List<Customer> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Customer.class)).collect(Collectors.toList());
+
+            for (Customer c : list) System.out.println(c);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static class Customer {
+        @ExcelColumn("客户编码")
+        private String code;
+        @ExcelColumn("人员工号")
+        private String name;
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return code + ": " + name;
         }
     }
 
