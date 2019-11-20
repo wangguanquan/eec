@@ -448,6 +448,10 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.3.5 (2019-11-20)
+-------------
+1. 修复读取空单元格时抛数组越界异常
+
 Version 0.3.4 (2019-10-21)
 -------------
 1. 支持CSV <=> Excel 格式互转
@@ -459,21 +463,13 @@ Version 0.3.3 (2019-08-14)
 2. 修复导出空格时打开文件提示错误
 3. 修复excel03加载包错误
 
-Version 0.3.2 (2019-06-19)
--------------
-1. 读取Excel时可以获取单元格数据类型
-2. 支持Worksheet重复读取
-3. 修复已知BUG
-4. 修改注释准备发版到Maven中心仓库
-5. Rename package (cn.ttzero -> org.ttzero)
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.3.4-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.3.5-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
