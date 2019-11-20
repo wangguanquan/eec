@@ -61,7 +61,7 @@ public abstract class Row {
      */
     SharedStrings sst;
     // The header row
-    private HeaderRow hr;
+    protected HeaderRow hr;
     boolean unknownLength;
 
     /**
