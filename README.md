@@ -448,6 +448,10 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.3.6 (2019-11-21)
+-------------
+1. Hotfix读取空单元格下可能抛NPE异常
+
 Version 0.3.5 (2019-11-20)
 -------------
 1. 修复读取空单元格时抛数组越界异常
@@ -469,7 +473,7 @@ Version 0.3.3 (2019-08-14)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.3.5-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.3.6-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
