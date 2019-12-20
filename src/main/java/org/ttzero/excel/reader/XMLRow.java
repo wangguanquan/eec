@@ -275,7 +275,7 @@ class XMLRow extends Row {
     }
 
     private double toDouble(int a, int b) {
-        return Double.valueOf(toString(a, b));
+        return Double.parseDouble(toString(a, b));
     }
 
     private boolean isNumber(int a, int b) {
