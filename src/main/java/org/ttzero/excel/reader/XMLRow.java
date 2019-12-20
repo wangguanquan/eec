@@ -98,7 +98,7 @@ class XMLRow extends Row {
     private int searchRowNumber() {
         int _f = from + 4, a; // skip '<row '
         for (; cb[_f] != '>' && _f < to; _f++) {
-            if (cb[_f] == ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
+            if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
                 a = _f += 4;
                 for (; cb[_f] != '"' && _f < to; _f++) ;
                 if (_f > a) {
@@ -113,7 +113,7 @@ class XMLRow extends Row {
     private int searchSpan() {
         int i = from, _lc = lc;
         for (; cb[i] != '>'; i++) {
-            if (cb[i] == ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
+            if (cb[i] <= ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
                 && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
                 && cb[i + 6] == '=') {
                 i += 8;
@@ -164,13 +164,13 @@ class XMLRow extends Row {
      */
     protected Cell nextCell() {
         for (; cursor < to && (cb[cursor] != '<' || cb[cursor + 1] != 'c'
-            || cb[cursor + 2] != ' '); cursor++) ;
+            || cb[cursor + 2] > ' '); cursor++) ;
         // end of row
         if (cursor >= to) return null;
         cursor += 2;
         // find end of cell
         int e = cursor;
-        for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] != ' '); e++) ;
+        for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] > ' '); e++) ;
 
         Cell cell = null;
         // find type
@@ -180,13 +180,13 @@ class XMLRow extends Row {
         short s = 0;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
-            if (cb[cursor] == ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
+            if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
                 cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
             }
             // Cell type
-            if (cb[cursor] == ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
+            if (cb[cursor] <= ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
                 int a = cursor += 4, n;
                 for (; cb[cursor] != '"'; cursor++) ;
                 if ((n = cursor - a) == 1) {
@@ -200,7 +200,7 @@ class XMLRow extends Row {
                 // -> other unknown case
             }
             // Cell style
-            if (cb[cursor] == ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
+            if (cb[cursor] <= ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
                 s = (short) (toInt(cb, a, cursor) & 0xFFFF);
