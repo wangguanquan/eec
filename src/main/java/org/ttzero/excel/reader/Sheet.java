@@ -63,9 +63,21 @@ public interface Sheet extends AutoCloseable {
      * size of rows.
      *
      * @return size of rows
-     * -1: unknown size
+     *      -1: unknown size
+     * @deprecated use {@link #getDimension()} to getting full range address
      */
+    @Deprecated
     int getSize();
+
+    /**
+     * Returns The range address of the used area in
+     * the current sheet
+     * <p>
+     * NOTE: This method can only guarantee accurate row ranges
+     *
+     * @return worksheet {@link Dimension} ranges
+     */
+    Dimension getDimension();
 
     /**
      * Test Worksheet is hidden
