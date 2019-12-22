@@ -24,8 +24,13 @@ import org.ttzero.excel.manager.Const;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,8 +46,8 @@ class XMLSheet implements Sheet {
     XMLSheet() { }
 
     private String name;
-    private int index // per sheet index of workbook
-        , size = -1; // size of rows per sheet
+    private int index; // per sheet index of workbook
+//        , size = -1; // size of rows per sheet
     private Path path;
     /**
      * The Shared String Table
@@ -55,6 +60,17 @@ class XMLSheet implements Sheet {
     private int startRow = -1; // row index of data
     private HeaderRow header;
     private boolean hidden; // state hidden
+    /*
+     The range address of the used area in the current sheet
+     Offset | Size | Contents
+     -------|------|----------
+        0   |   4  | Index to first used row
+        4   |   4  | Index to last used row, increased by 1
+        8   |   2  | Index to first used column
+       10   |   2  | Index to last used column, increased by 1
+     */
+    private long dimension;
+    private int rc; // Range of column
 
     /**
      * Setting the worksheet name
@@ -124,7 +140,28 @@ class XMLSheet implements Sheet {
      */
     @Override
     public int getSize() {
-        return size;
+        if (dimension == 0) return -1;
+        return (int) ((dimension >>> 32) - (dimension & 0x7FFFFFFF));
+    }
+
+    /**
+     * Returns The range address of the used area in
+     * the current sheet
+     * <p>
+     * NOTE: This method can only guarantee accurate row ranges
+     *
+     * @return worksheet {@link Dimension} ranges
+     */
+    @Override
+    public Dimension getDimension() {
+        // Read last rows info
+        if (dimension == 0 || ((dimension >> 32) & 0x7FFFFFFF) == 0) {
+            parseDimension();
+        }
+        return new Dimension((int)(dimension & 0x7FFFFFFF)
+            , (int) (dimension >>> 32)
+            , (short) (rc & 0x7FFF)
+            , (short) (rc >> 16));
     }
 
     /**
@@ -190,7 +227,7 @@ class XMLSheet implements Sheet {
 
     @Override
     public String toString() {
-        return "Sheet name: " + name + " has " + size + " rows.";
+        return "Sheet name: " + name + " has " + getDimension();
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
@@ -227,19 +264,26 @@ class XMLSheet implements Sheet {
                     Matcher mat = pat.matcher(l_);
                     if (mat.matches()) {
                         int from = Integer.parseInt(mat.group(2)), to = Integer.parseInt(mat.group(4));
+                        dimension = ((long) to << 32) | from;
                         this.startRow = from;
-                        this.size = to - from + 1;
+//                        this.size = to - from + 1;
                         int c1 = col2Int(mat.group(1)), c2 = col2Int(mat.group(3)), columnSize = c2 - c1 + 1;
                         if (columnSize > Const.Limit.MAX_COLUMNS_ON_SHEET) {
                             throw new TooManyColumnsException(columnSize, Const.Limit.MAX_COLUMNS_ON_SHEET);
                         }
-                        logger.debug("column size: {}", columnSize);
+                        rc = (c2 << 16) | c1 & 0x7FFF;
+                        logger.debug("Dimension-Range: {\"first-row\": {}, \"last-row\": {}" +
+                            ", \"first-column\": {}, \"last-column\": {}}", from, to, c1, c2);
 //                        OPTIONS = columnSize > 128; // size more than DX
                     } else {
-                        pat = Pattern.compile("[A-Z]+(\\d+)");
+                        pat = Pattern.compile("([A-Z]+)(\\d+)");
                         mat = pat.matcher(l_);
                         if (mat.matches()) {
-                            this.startRow = Integer.parseInt(mat.group(1));
+                            this.startRow = Integer.parseInt(mat.group(2));
+                            dimension = this.startRow;
+                            rc = col2Int(mat.group(1));
+                            logger.debug("Dimension-Range: {\"first-row\": {}" +
+                                ", \"first-column\": {}}", this.startRow, rc);
                         }
                     }
                     nChar += end;
@@ -351,12 +395,13 @@ class XMLSheet implements Sheet {
             return null;
         }
 
-        boolean endTag;
+        boolean endTag = false;
         int start;
         // find the first not null row
         loopB: while (true) {
             start = nChar;
             for (; cb[++nChar] != '>' && nChar < length; ) ;
+            if (nChar >= length - 6) break;
             // Empty Row
             if (cb[nChar++ - 1] != '/') {
                 // find end of row tag
@@ -439,5 +484,113 @@ class XMLSheet implements Sheet {
         eof = length <= 0;
 
         return this;
+    }
+
+    /*
+    If the Dimension information is missing from the header,
+    you can skip to the end of the file and look at the line
+    number of the last line to confirm the scope of the entire worksheet.
+     */
+    private void parseDimension() {
+        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+            long fileSize = Files.size(path);
+            int block = (int) Math.min(1 << 11, fileSize);
+            ByteBuffer buffer = ByteBuffer.allocate(block);
+            byte[] left = null;
+            int left_size = 0;
+            for (; ;) {
+                channel.position(fileSize - block + left_size);
+                channel.read(buffer);
+                fileSize -= buffer.limit();
+                if (left_size > 0) {
+                    buffer.limit(block);
+                    buffer.put(left, 0, left_size);
+                    left_size = 0;
+                }
+                buffer.flip();
+
+                CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                int limit = charBuffer.limit(), i = limit - 1;
+                // <row r="
+                for (; i >= 7 && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
+                    || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
+                    || charBuffer.get(i - 4) != 'w' || charBuffer.get(i - 5) != 'o'
+                    || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--);
+
+                // Not Found
+                if (i < 7) {
+                    for (; i < limit && charBuffer.get(i) != '>'; i++);
+                    i++;
+                    if (i < limit - 1) {
+                        charBuffer.position(i);
+                        int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
+                        int last_size = buffer.limit() - newLimit;
+                        if (left == null || last_size > left.length) {
+                            left = new byte[last_size];
+                        }
+                        buffer.position(0);
+                        buffer.get(left, 0, last_size);
+                        left_size = last_size;
+                    }
+                }
+                // Found the last row
+                else {
+                    int[] info = innerParse(charBuffer, ++i);
+                    rc = (info[2] << 16) | (info[1] & 0x7FFF);
+                    dimension = ((long) info[0]) << 32;
+                    break;
+                }
+                buffer.position(0);
+                buffer.limit(buffer.capacity() - left_size);
+            }
+            // Skip if the first row is known
+            if ((dimension & 0x7FFFFFFF) > 0L) return;
+            if (mark > 0) {
+                channel.position(mark);
+                buffer.clear();
+                channel.read(buffer);
+                buffer.flip();
+
+                CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                int i = 0;
+                for (; charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'r'
+                    || charBuffer.get(i + 2) != 'o' || charBuffer.get(i + 3) != 'w'
+                    || charBuffer.get(i + 4) > ' ' || charBuffer.get(i + 5) != 'r'
+                    || charBuffer.get(i + 6) != '=' || charBuffer.get(i + 7) != '"'; i++);
+                i += 8;
+
+                int[] info = innerParse(charBuffer, i);
+                dimension |= info[0];
+                if (info[1] > (rc & 0x7FFF)) {
+                    rc |= info[1] & 0x7FFF;
+                }
+                if (info[2] < (rc >>> 16)) {
+                    rc |= info[2] << 16;
+                }
+            } else dimension |= 1;
+        } catch (IOException e) {
+            // Ignore error
+            logger.debug("", e);
+        }
+    }
+
+    private int[] innerParse(CharBuffer charBuffer, int i) {
+        int row = 0;
+        for (; charBuffer.get(i) != '"'; i++)
+            row = row * 10 + (charBuffer.get(i) - '0');
+        // spans="
+        i++;
+        for (; charBuffer.get(i) != 's' || charBuffer.get(i + 1) != 'p'
+            || charBuffer.get(i + 2) != 'a' || charBuffer.get(i + 3) != 'n'
+            || charBuffer.get(i + 4) != 's' || charBuffer.get(i + 5) != '='
+            || charBuffer.get(i + 6) != '"'; i++);
+        i += 7;
+        int cs = 0, ls = 0;
+        for (; charBuffer.get(i) != ':'; i++)
+            cs = cs * 10 + (charBuffer.get(i) - '0');
+        i++;
+        for (; charBuffer.get(i) != '"'; i++)
+            ls = ls * 10 + (charBuffer.get(i) - '0');
+        return new int[] {row, cs, ls};
     }
 }

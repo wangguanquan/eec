@@ -201,6 +201,14 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testDimension() {
+        try (ExcelReader reader = ExcelReader.read(Paths.get("/Users/guanquan.wang/Downloads/#81.xlsx"))) {
+            System.out.println(reader.sheet(0).getDimension());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Customer {
         @ExcelColumn("客户编码")
         private String code;
