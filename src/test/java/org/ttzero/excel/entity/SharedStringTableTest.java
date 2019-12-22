@@ -94,13 +94,13 @@ public class SharedStringTableTest {
 
 //        sst.forEach(Print::println);
 
-        int i = 0;
-        for (String aSst : sst) {
-            print(i++);
-            print(' ');
-            println(aSst);
-        }
-        assert i == size;
+//        int i = 0;
+//        for (String aSst : sst) {
+//            print(i++);
+//            print(' ');
+//            println(aSst);
+//        }
+        assert sst.size() == size;
     }
 
     @Test public void testFind() throws IOException {
