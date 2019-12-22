@@ -32,6 +32,22 @@ public class Dimension {
         this.lastColumn = lastColumn;
     }
 
+    public int getFirstRow() {
+        return firstRow;
+    }
+
+    public int getLastRow() {
+        return lastRow;
+    }
+
+    public short getFirstColumn() {
+        return firstColumn;
+    }
+
+    public short getLastColumn() {
+        return lastColumn;
+    }
+
     @Override
     public String toString() {
         return "{\"first-row\": " + firstRow + ", \"last-row\": " + lastRow
