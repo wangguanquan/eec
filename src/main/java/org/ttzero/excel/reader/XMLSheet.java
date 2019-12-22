@@ -543,6 +543,8 @@ class XMLSheet implements Sheet {
                 buffer.position(0);
                 buffer.limit(buffer.capacity() - left_size);
             }
+            // Skip if the first row is known
+            if ((dimension & 0x7FFFFFFF) > 0L) return;
             if (mark > 0) {
                 channel.position(mark);
                 buffer.clear();
