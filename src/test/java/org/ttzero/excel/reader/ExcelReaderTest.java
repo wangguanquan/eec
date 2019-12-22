@@ -202,7 +202,7 @@ public class ExcelReaderTest {
     }
 
     @Test public void testDimension() {
-        try (ExcelReader reader = ExcelReader.read(Paths.get("/Users/guanquan.wang/Downloads/#81.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             System.out.println(reader.sheet(0).getDimension());
         } catch (IOException e) {
             e.printStackTrace();
