@@ -486,6 +486,11 @@ class XMLSheet implements Sheet {
         return this;
     }
 
+    /*
+    If the Dimension information is missing from the header,
+    you can skip to the end of the file and look at the line
+    number of the last line to confirm the scope of the entire worksheet.
+     */
     private void parseDimension() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             long fileSize = Files.size(path);
