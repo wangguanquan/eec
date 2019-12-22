@@ -562,7 +562,7 @@ class XMLSheet implements Sheet {
                 int[] info = innerParse(charBuffer, i);
                 dimension |= info[0];
                 if (info[1] > (rc & 0x7FFF)) {
-                    rc |= info[i] & 0x7FFF;
+                    rc |= info[1] & 0x7FFF;
                 }
                 if (info[2] < (rc >>> 16)) {
                     rc |= info[2] << 16;
