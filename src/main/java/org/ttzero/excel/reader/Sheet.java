@@ -137,9 +137,9 @@ public interface Sheet extends AutoCloseable {
      * Reset the {@link Sheet}'s row index to begging
      *
      * @return the unread {@link Sheet}
-     * @throws IOException if I/O error occur
+     * @throws ExcelReadException if I/O error occur.
      */
-    default Sheet reset() throws IOException {
+    default Sheet reset() {
         throw new UnsupportedOperationException();
     }
 

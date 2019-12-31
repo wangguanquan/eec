@@ -474,17 +474,21 @@ class XMLSheet implements Sheet {
      * @return the unread {@link XMLSheet}
      */
     @Override
-    public XMLSheet reset() throws IOException {
-        // Close the opening reader
-        if (reader != null) {
-            reader.close();
+    public XMLSheet reset() {
+        try {
+            // Close the opening reader
+            if (reader != null) {
+                reader.close();
+            }
+            // Reload
+            reader = Files.newBufferedReader(path);
+            reader.skip(mark);
+            length = reader.read(cb);
+            nChar = 0;
+            eof = length <= 0;
+        } catch (IOException e) {
+            throw new ExcelReadException("Reset worksheet[" + getName() + "] error occur.", e);
         }
-        // Reload
-        reader = Files.newBufferedReader(path);
-        reader.skip(mark);
-        length = reader.read(cb);
-        nChar = 0;
-        eof = length <= 0;
 
         return this;
     }
