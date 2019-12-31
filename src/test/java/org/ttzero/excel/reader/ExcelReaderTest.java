@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
+import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 
 /**
  * Create by guanquan.wang at 2019-04-26 17:42
@@ -207,6 +208,38 @@ public class ExcelReaderTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test public void testFormula() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+            // Read formula
+            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        System.out.print(row.getFormula(i));
+                        System.out.print('|');
+                    }
+                }
+                System.out.println();
+            });
+
+            // Reset
+            reader.sheets().forEach(Sheet::reset);
+
+            // Read value
+            reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testSearch() {
+        long[] array = { 131075L, 327683L };
+        int column = 2, row = 3;
+        boolean h = Arrays.binarySearch(array, ((column + 1) & 0x7FFF) | ((long) row) << 16) >= 0;
+        println(h);
+
+        print(cellRangeToLong("AA10"));
     }
 
     public static class Customer {

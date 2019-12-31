@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,9 @@ public class Cell {
     public char cv;
     public BigDecimal mv;
     public int xf;
+    // Formula string
+    public String fv;
+    public boolean f;
 
     /**
      * The style index
@@ -128,5 +131,6 @@ public class Cell {
         this.mv = null;
         this.xf = 0;
         this.s = 0;
+        this.fv = null;
     }
 }

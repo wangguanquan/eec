@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -55,6 +56,8 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Excel Reader tools
@@ -364,11 +367,24 @@ public class ExcelReader implements AutoCloseable {
             sheets.add(sheet);
         }
 
+        // Formula string if exists
+        Path calcPath = temp.resolve("xl/calcChain.xml");
+        long[][] calcArray = null;
+        if (Files.exists(calcPath)) {
+            calcArray = parseCalcChain(calcPath, sheets.size());
+        }
+
         // sort by sheet index
         sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
+        if (calcArray != null) {
+            i = 0;
+            for (; i < sheets1.length; i++) {
+                ((XMLSheet) sheets1[i]).setCalc(calcArray[i]);
+            }
+        }
 
         this.sheets = sheets1;
         self = temp;
@@ -516,4 +532,87 @@ public class ExcelReader implements AutoCloseable {
 
         return new AppInfo(app, core);
     }
+
+    /* Parse `calcChain` */
+    private long[][] parseCalcChain(Path path, int n) {
+        Element calcChain;
+        try {
+            SAXReader reader = new SAXReader();
+            calcChain = reader.read(Files.newInputStream(path)).getRootElement();
+        } catch (DocumentException | IOException e) {
+            logger.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        Iterator<Element> ite = calcChain.elementIterator();
+        int i = 1;
+        long[][] array = new long[n][];
+        int[] indices = new int[n];
+        for (; ite.hasNext(); ) {
+            Element e = ite.next();
+            String si = e.attributeValue("i"), r = e.attributeValue("r");
+            if (isNotEmpty(si)) {
+                i = Integer.parseInt(si);
+            }
+            if (isNotEmpty(r)) {
+                long[] sub = array[i - 1];
+                if (sub == null) {
+                    sub = new long[10];
+                    array[i - 1] = sub;
+                }
+
+                if (++indices[i - 1] > sub.length) {
+                    long[] _sub = new long[sub.length << 1];
+                    System.arraycopy(sub, 0, _sub, 0, sub.length);
+                    array[i - 1] = sub = _sub;
+                }
+                sub[indices[i - 1] - 1] = cellRangeToLong(r);
+            }
+        }
+
+        i = 0;
+        for (; i < n; i++) {
+            if (indices[i] > 0) {
+                long[] a = Arrays.copyOf(array[i], indices[i]);
+                Arrays.sort(a);
+                array[i] = a;
+            } else array[i] = null;
+        }
+        return array;
+    }
+
+    /**
+     * Cell range string convert to long
+     * 0-16: column number
+     * 17-48: row number
+     * <p>
+     * range string| long value
+     * ------------|------------
+     * A1          | 65537
+     * AA10        | 655387
+     *
+     * @param r the range string of cell
+     * @return long value
+     */
+    public static long cellRangeToLong(String r) {
+        char[] values = r.toCharArray();
+        long v = 0L;
+        int n = 0;
+        for (char value : values) {
+            if (value >= 'A' && value <= 'Z') {
+                v = v * 26 + value - 'A' + 1;
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
+            }
+            else if (value >= '0') {
+                n = n * 10 + value - '0';
+            }
+            else
+                throw new ExcelReadException("Column mark out of range: " + r);
+        }
+        return (v & 0x7FFF) | ((long) n) << 16;
+    }
+
 }

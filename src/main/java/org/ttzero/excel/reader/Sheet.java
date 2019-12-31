@@ -229,13 +229,11 @@ public interface Sheet extends AutoCloseable {
                             writer.write(c.sv);
                             break;
                         case INLINESTR:
+                        case FUNCTION: // Formula string value
                             writer.write(c.sv);
                             break;
                         case BOOL:
                             writer.write(c.bv);
-                            break;
-                        case FUNCTION:
-                            writer.write("<function>");
                             break;
                         case NUMERIC:
                             if (!row.styles.fastTestDateFmt(c.s)) writer.write(c.nv);

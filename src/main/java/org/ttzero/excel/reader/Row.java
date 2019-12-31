@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
-import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
@@ -807,6 +806,48 @@ public abstract class Row {
     }
 
     /**
+     * Returns formula if exists
+     *
+     * @param columnIndex the cell index
+     * @return the formula string if exists, otherwise return null
+     */
+    public String getFormula(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return c.fv;
+    }
+
+    /**
+     * Returns formula if exists
+     *
+     * @param columnName the cell name
+     * @return the formula string if exists, otherwise return null
+     */
+    public String getFormula(String columnName) {
+        Cell c = getCell(columnName);
+        return c.fv;
+    }
+
+    /**
+     * Check cell has formula
+     *
+     * @param columnIndex the cell index
+     * @return the formula string if exists, otherwise return null
+     */
+    public boolean hasFormula(int columnIndex) {
+        return getCell(columnIndex).f;
+    }
+
+    /**
+     * Check cell has formula
+     *
+     * @param columnName the cell name
+     * @return the formula string if exists, otherwise return null
+     */
+    public boolean hasFormula(String columnName) {
+        return getCell(columnName).f;
+    }
+
+    /**
      * Returns the type of cell
      *
      * @param columnIndex the cell index from zero
@@ -983,9 +1024,9 @@ public abstract class Row {
                 case BOOL:
                     joiner.add(String.valueOf(c.bv));
                     break;
-                case FUNCTION:
-                    joiner.add("<function>");
-                    break;
+//                case FUNCTION: // convert to inner string
+//                    joiner.add("<function>");
+//                    break;
                 case NUMERIC:
                     if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.nv));
                     else joiner.add(toLocalDate(c.nv).toString());

@@ -1,3 +1,8 @@
+Version 0.3.7 ()
+-------------
+1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法
+2. 支持获取单元格公式
+
 Version 0.3.6 (2019-11-21)
 -------------
 1. Hotfix读取空单元格下可能抛NPE异常

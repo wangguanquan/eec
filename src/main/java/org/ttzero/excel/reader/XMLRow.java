@@ -42,6 +42,7 @@ import static org.ttzero.excel.reader.SharedStrings.unescape;
 class XMLRow extends Row {
     private int startRow;
     private StringBuilder buf;
+    private MergeCalc calcFun;
 
     /**
      * The number of row. (zero base)
@@ -57,13 +58,14 @@ class XMLRow extends Row {
     }
 
     @SuppressWarnings("unused")
-	private XMLRow() { }
+    private XMLRow() { }
 
-    XMLRow(SharedStrings sst, Styles styles, int startRow) {
+    XMLRow(SharedStrings sst, Styles styles, int startRow, MergeCalc calcFun) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
         buf = new StringBuilder();
+        this.calcFun = calcFun;
     }
 
     /////////////////////////unsafe////////////////////////
@@ -150,6 +152,7 @@ class XMLRow extends Row {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
+        calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
@@ -212,7 +215,12 @@ class XMLRow extends Row {
         // The style index
         cell.s = s;
 
-        // get value
+        // FIXME Maybe it will be ignore Formula string
+        if (cell.f) {
+            int a = getF(e);
+            cell.fv = unescape(buf, cb, a, cursor);
+        }
+        // Get value
         int a;
         switch (t) {
             case INLINESTR: // inner string
@@ -235,6 +243,12 @@ class XMLRow extends Row {
                 }
                 break;
             case FUNCTION: // function string
+                a = getV(e);
+                if (a == cursor) { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
+                } else {
+                    cell.setSv(unescape(buf, cb, a, cursor));
+                }
                 break;
             default:
                 a = getV(e);
@@ -358,11 +372,9 @@ class XMLRow extends Row {
      * @param e the last index in char buffer
      * @return the end index of function value
      */
-    @SuppressWarnings("unused")
     private int getF(int e) {
-        // undo
-        // return end index of row
-        return e;
+        // TODO if formula shared
+        return get(e, 'f');
     }
 
     /**

@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,6 +72,8 @@ class XMLSheet implements Sheet {
      */
     private long dimension;
     private int rc; // Range of column
+    private long[] calc; // Array of formula
+    private boolean nonCalc = true;
 
     /**
      * Setting the worksheet name
@@ -106,6 +109,16 @@ class XMLSheet implements Sheet {
      */
     void setStyles(Styles styles) {
         this.styles = styles;
+    }
+
+    /**
+     * Setting formula array
+     *
+     * @param calc array of formula
+     */
+    void setCalc(long[] calc) {
+        this.calc = calc;
+        this.nonCalc = calc == null || calc.length == 0;
     }
 
     /**
@@ -306,7 +319,7 @@ class XMLSheet implements Sheet {
             eof = true;
         } else {
             eof = false;
-            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1); // share row space
+            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc); // share row space
         }
 
         mark = nChar;
@@ -425,7 +438,7 @@ class XMLSheet implements Sheet {
         }
 
         // row
-        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
+        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, nChar - start);
     }
 
     /**
@@ -599,5 +612,29 @@ class XMLSheet implements Sheet {
         for (; charBuffer.get(i) != '"'; i++)
             ls = ls * 10 + (charBuffer.get(i) - '0');
         return new int[] {row, cs, ls};
+    }
+
+    /* Found calc */
+    private void findCalc(int row, Cell[] cells, int n) {
+        if (nonCalc) return;
+        int rr = row + 1;
+        long r = ((long) rr) << 16;
+        int i = Arrays.binarySearch(calc, r);
+        if (i < 0) {
+            i = ~i;
+            if (i >= calc.length) return;
+        }
+        long a = calc[i];
+        if ((int) (a >> 16) != rr) return;
+
+        cells[(((int) a) & 0x7FFF) - 1].f = true;
+        int j = 1;
+        if (n == -1) n = cells.length;
+        n = Math.min(n, calc.length - i);
+        for (; j < n; j++) {
+            if ((calc[i + j] >> 16) == rr)
+                cells[(((int) calc[i + j]) & 0x7FFF) - 1].f = true;
+            else break;
+        }
     }
 }
