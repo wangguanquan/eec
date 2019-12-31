@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -300,6 +300,37 @@ class XMLRow extends Row {
         return true;
     }
 
+    /* Found specify target  */
+    private int get(int e, char c) {
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
+            || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
+        if (cursor == e) return cursor;
+
+        int a;
+        if (cb[cursor + 2] == '>') {
+            a = cursor += 3;
+        }
+        // Some other attributes
+        else if (cb[cursor + 2] == ' ') {
+            for (; cursor < e && cb[cursor] != '>'; cursor++) ;
+            cursor++;
+            if (cb[cursor - 2] == '/' || cursor == e) return cursor;
+            a = cursor;
+        }
+        // Empty tag
+        else if (cb[cursor + 2] == '/') {
+            cursor += 3;
+            return cursor;
+        }
+        else {
+            a = cursor += 3;
+        }
+
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != c || cb[cursor + 3] != '>'); cursor++) ;
+        return a;
+    }
+
     /**
      * inner string
      * <is><t>cell value</t></is>
@@ -308,13 +339,7 @@ class XMLRow extends Row {
      * @return the end index of string value
      */
     private int getT(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't'
-            || cb[cursor + 2] != '>'); cursor++) ;
-        if (cursor == e) return cursor;
-        int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
-            || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++) ;
-        return a;
+        return get(e, 't');
     }
 
     /**
@@ -324,13 +349,7 @@ class XMLRow extends Row {
      * @return the end index of int value
      */
     private int getV(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v'
-            || cb[cursor + 2] != '>'); cursor++) ;
-        if (cursor == e) return cursor;
-        int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
-            || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++) ;
-        return a;
+        return get(e, 'v');
     }
 
     /**
