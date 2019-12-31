@@ -96,7 +96,7 @@ class XMLRow extends Row {
     }
 
     private int searchRowNumber() {
-        int _f = from + 4, a; // skip '<row '
+        int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
                 a = _f += 4;
@@ -111,7 +111,7 @@ class XMLRow extends Row {
     }
 
     private int searchSpan() {
-        int i = from, _lc = lc;
+        int i = from + 4, _lc = lc;
         for (; cb[i] != '>'; i++) {
             if (cb[i] <= ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
                 && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
