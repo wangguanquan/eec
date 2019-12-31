@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,11 @@ package org.ttzero.excel.reader;
 import java.io.IOException;
 
 /**
+ * @deprecated unused function, it will be remove at next release version
+ *
  * Created by guanquan.wang on 2018/6/13.
  */
+@Deprecated
 @FunctionalInterface
 interface RowSetProcessor {
     /**

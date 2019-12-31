@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,20 @@
 
 package org.ttzero.excel.reader;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Supplier;
 
 /**
  * Create by guanquan.wang at 2019-04-17 19:03
  */
 class RowSetIterator implements Iterator<Row> {
     private boolean onlyDataRow;
-    private RowSetProcessor processor;
+    private Supplier<Row> supplier;
     private Row nextRow = null;
 
-    public RowSetIterator(RowSetProcessor processor, boolean onlyDataRow) {
-        this.processor = processor;
+    public RowSetIterator(Supplier<Row> supplier, boolean onlyDataRow) {
+        this.supplier = supplier;
         this.onlyDataRow = onlyDataRow;
     }
 
@@ -39,17 +38,13 @@ class RowSetIterator implements Iterator<Row> {
         if (nextRow != null) {
             return true;
         } else {
-            try {
-                if (onlyDataRow) {
-                    // Skip empty rows
-                    for (; (nextRow = processor.next()) != null && nextRow.isEmpty(); ) ;
-                } else {
-                    nextRow = processor.next();
-                }
-                return (nextRow != null);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+            if (onlyDataRow) {
+                // Skip empty rows
+                for (; (nextRow = supplier.get()) != null && nextRow.isEmpty(); ) ;
+            } else {
+                nextRow = supplier.get();
             }
+            return (nextRow != null);
         }
     }
 

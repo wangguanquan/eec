@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -317,9 +317,8 @@ class XMLSheet implements Sheet {
      * iterator rows
      *
      * @return Row
-     * @throws IOException if io error occur
      */
-    private XMLRow nextRow() throws IOException {
+    private XMLRow nextRow() {
         if (eof) return null;
         boolean endTag = false;
         int start = nChar;
@@ -349,14 +348,18 @@ class XMLSheet implements Sheet {
             } else {
                 System.arraycopy(cb, start, cb, 0, n = length - start);
             }
-            length = reader.read(cb, n, cb.length - n);
-            // end of file
-            if (length < 0) {
-                eof = true;
-                reader.close(); // close reader
-                reader = null; // wait GC
-                logger.debug("end of file.");
-                return null;
+            try {
+                length = reader.read(cb, n, cb.length - n);
+                // end of file
+                if (length < 0) {
+                    eof = true;
+                    reader.close(); // close reader
+                    reader = null; // wait GC
+                    logger.debug("end of file.");
+                    return null;
+                }
+            } catch (IOException e) {
+                throw new ExcelReadException("Parse row data error", e);
             }
             nChar = 0;
             length += n;
