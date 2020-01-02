@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.reader;
 
-import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.util.DateUtil;
@@ -32,12 +31,10 @@ import java.util.Date;
 public class AppInfo {
     private final App app;
     private final Core core;
-    private final ExcelType type;
 
-    AppInfo(App app, Core core, ExcelType type) {
+    AppInfo(App app, Core core) {
         this.app = app;
         this.core = core;
-        this.type = type;
     }
 
     /**
@@ -166,19 +163,9 @@ public class AppInfo {
         return core.getModified();
     }
 
-    /**
-     * Returns the file type
-     *
-     * @return the file {@link ExcelType}
-     */
-    public ExcelType getType() {
-        return type;
-    }
-
     @Override
     public String toString() {
-        return "Type: " + type
-            + System.lineSeparator() + "Application: " + getApplication()
+        return "Application: " + getApplication()
             + System.lineSeparator() + "Company: " + getCompany()
             + System.lineSeparator() + "AppVersion: " + getAppVersion()
             + System.lineSeparator() + "Title: " + getTitle()

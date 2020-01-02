@@ -58,7 +58,6 @@ public class ExcelReaderTest {
             assert reader.getType() == ExcelType.XLSX;
 
             AppInfo appInfo = reader.getAppInfo();
-            assert ExcelType.XLSX == appInfo.getType();
             assert "对象数组测试".equals(appInfo.getTitle());
             assert "guanquan.wang".equals(appInfo.getCreator());
             println(appInfo);
