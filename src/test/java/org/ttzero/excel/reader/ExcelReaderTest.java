@@ -248,6 +248,32 @@ public class ExcelReaderTest {
         print(cellRangeToLong("AA10"));
     }
 
+    @Test public void testClassBind() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
+                // Use bind...get...
+                // Getting and convert to specify Entry
+                Entry entry = row.get();
+                System.out.println(entry.toString());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testClassSharedBind() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
+                // Use bind...geet...
+                // Getting and convert to specify Entry, the entry is shared in memory
+                Entry entry = row.geet();
+                System.out.println(entry.toString());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Customer {
         @ExcelColumn("客户编码")
         private String code;
