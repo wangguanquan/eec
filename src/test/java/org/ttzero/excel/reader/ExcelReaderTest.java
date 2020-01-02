@@ -204,7 +204,13 @@ public class ExcelReaderTest {
 
     @Test public void testDimension() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
-            System.out.println(reader.sheet(0).getDimension());
+            Dimension dimension = reader.sheet(0).getDimension();
+            System.out.println(dimension);
+
+            assert dimension.firstRow == 1;
+            assert dimension.lastRow == 6;
+            assert dimension.firstColumn == 1;
+            assert dimension.lastColumn == 2;
         } catch (IOException e) {
             e.printStackTrace();
         }
