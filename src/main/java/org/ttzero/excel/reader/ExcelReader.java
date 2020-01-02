@@ -550,7 +550,7 @@ public class ExcelReader implements AutoCloseable {
             }
         }
 
-        return new AppInfo(app, core, ExcelType.XLSX);
+        return new AppInfo(app, core);
     }
 
     /* Parse `calcChain` */
