@@ -134,4 +134,17 @@ public class StringUtil {
 
         return buf.toString();
     }
+
+    /**
+     * Wrap value in string array
+     *
+     * @param values the array to warp
+     * @param a from index
+     * @param b to index
+     */
+    public static void swap(String[] values, int a, int b) {
+        String t = values[a];
+        values[a] = values[b];
+        values[b] = t;
+    }
 }
