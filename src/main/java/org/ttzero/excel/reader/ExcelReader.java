@@ -78,7 +78,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private Logger logger = LogManager.getLogger(getClass());
+    private Logger LOGGER = LogManager.getLogger(getClass());
 
     protected ExcelReader() { }
 
@@ -295,9 +295,6 @@ public class ExcelReader implements AutoCloseable {
      * @return the information
      */
     public AppInfo getAppInfo() {
-        if (appInfo == null) {
-            appInfo = getGeneralInfo();
-        }
         return appInfo;
     }
 
@@ -307,17 +304,25 @@ public class ExcelReader implements AutoCloseable {
 
     private ExcelReader(Path path, int bufferSize, int cacheSize) throws IOException {
         // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(Files.newInputStream(path), temp);
+        Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), tmp);
+
+        // Check the file format and parse general information
+        try {
+            appInfo = getGeneralInfo(tmp);
+        } catch (Exception e) {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw e;
+        }
 
         // load workbook.xml
         SAXReader reader = new SAXReader();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
+            document = reader.read(Files.newInputStream(tmp.resolve("xl/_rels/workbook.xml.rels")));
         } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
         }
         @SuppressWarnings("unchecked")
         List<Element> list = document.getRootElement().elements();
@@ -329,20 +334,29 @@ public class ExcelReader implements AutoCloseable {
         RelManager relManager = RelManager.of(rels);
 
         try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("xl/workbook.xml")));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/workbook.xml]");
         }
         Element root = document.getRootElement();
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), bufferSize, cacheSize).load();
+        Path ss = tmp.resolve("xl/sharedStrings.xml");
+        if (Files.exists(ss)) {
+            sst = new SharedStrings(ss, bufferSize, cacheSize).load();
+        }
 
         // Load Styles
-        styles = Styles.load(temp.resolve("xl/styles.xml"));
+        Path s = tmp.resolve("xl/styles.xml");
+        if (Files.exists(s)) {
+            styles = Styles.load(s);
+        } else {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+        }
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")
@@ -356,11 +370,11 @@ public class ExcelReader implements AutoCloseable {
             sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
-                FileUtil.rm_rf(temp.toFile(), true);
+                FileUtil.rm_rf(tmp.toFile(), true);
                 sheet.close();
-                throw new ExcelReadException("File has be destroyed");
+                throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
-            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
+            sheet.setPath(tmp.resolve("xl").resolve(r.getTarget()));
             // put shared string
             sheet.setSst(sst);
             // Setting styles
@@ -368,8 +382,13 @@ public class ExcelReader implements AutoCloseable {
             sheets.add(sheet);
         }
 
+        if (sheets.isEmpty()) {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [There has no worksheet]");
+        }
+
         // Formula string if exists
-        Path calcPath = temp.resolve("xl/calcChain.xml");
+        Path calcPath = tmp.resolve("xl/calcChain.xml");
         long[][] calcArray = null;
         if (Files.exists(calcPath)) {
             calcArray = parseCalcChain(calcPath, sheets.size());
@@ -388,7 +407,7 @@ public class ExcelReader implements AutoCloseable {
         }
 
         this.sheets = sheets1;
-        self = temp;
+        self = tmp;
     }
 
     /**
@@ -478,14 +497,14 @@ public class ExcelReader implements AutoCloseable {
         return excelType;
     }
 
-    protected AppInfo getGeneralInfo() {
+    protected AppInfo getGeneralInfo(Path tmp) {
         // load workbook.xml
         SAXReader reader = new SAXReader();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(self.resolve("docProps/app.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("docProps/app.xml")));
         } catch (DocumentException | IOException e) {
-            throw new ExcelReadException(e);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/app.xml]");
         }
         Element root = document.getRootElement();
         App app = new App();
@@ -494,9 +513,9 @@ public class ExcelReader implements AutoCloseable {
         app.setAppVersion(root.elementText("AppVersion"));
 
         try {
-            document = reader.read(Files.newInputStream(self.resolve("docProps/core.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("docProps/core.xml")));
         } catch (DocumentException | IOException e) {
-            throw new ExcelReadException(e);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/core.xml]");
         }
         root = document.getRootElement();
         Core core = new Core();
@@ -511,27 +530,27 @@ public class ExcelReader implements AutoCloseable {
 
             f.setAccessible(true);
             int nsIndex = StringUtil.indexOf(prefixs, ns.value());
-            if (nsIndex > -1) {
-                Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
-                Class<?> type = f.getType();
-                String v = root.elementText(new QName(f.getName(), namespace));
-                if (type == String.class) {
-                    try {
-                        f.set(core, v);
-                    } catch (IllegalAccessException e) {
-                        logger.warn("Set field (" + f + ") error.");
-                    }
-                } else if (type == Date.class) {
-                    try {
-                        f.set(core, format.parse(v));
-                    } catch (ParseException | IllegalAccessException e) {
-                        logger.warn("Set field (" + f + ") error.");
-                    }
+            if (nsIndex < 0) continue;
+
+            Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+            Class<?> type = f.getType();
+            String v = root.elementText(new QName(f.getName(), namespace));
+            if (type == String.class) {
+                try {
+                    f.set(core, v);
+                } catch (IllegalAccessException e) {
+                    LOGGER.warn("Set field ({}) error.", f);
+                }
+            } else if (type == Date.class) {
+                try {
+                    f.set(core, format.parse(v));
+                } catch (ParseException | IllegalAccessException e) {
+                    LOGGER.warn("Set field ({}) error.", f);
                 }
             }
         }
 
-        return new AppInfo(app, core);
+        return new AppInfo(app, core, ExcelType.XLSX);
     }
 
     /* Parse `calcChain` */
@@ -541,7 +560,7 @@ public class ExcelReader implements AutoCloseable {
             SAXReader reader = new SAXReader();
             calcChain = reader.read(Files.newInputStream(path)).getRootElement();
         } catch (DocumentException | IOException e) {
-            logger.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
+            LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
             return null;
         }
 
