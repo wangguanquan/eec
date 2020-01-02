@@ -18,6 +18,8 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.entity.style.Styles;
 
+import java.util.Arrays;
+
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
@@ -222,7 +224,13 @@ class XMLRow extends Row {
         // Ignore Formula string default
         if (hasCalc) {
             int a = getF(e);
-            cell.fv = unescape(buf, cb, a, cursor);
+            // inner text
+            if (a < cursor) {
+                cell.fv = unescape(buf, cb, a, cursor);
+                // Function string is shared
+            } else {
+                // TODO get from ref
+            }
         }
         // Get value
         int a;
@@ -320,6 +328,11 @@ class XMLRow extends Row {
 
     /* Found specify target  */
     private int get(int e, char c) {
+        // Ignore all attributes
+        return get(e, c, null);
+    }
+
+    private int get(int e, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -330,9 +343,15 @@ class XMLRow extends Row {
         }
         // Some other attributes
         else if (cb[cursor + 2] == ' ') {
+            int i = cursor + 3;
             for (; cursor < e && cb[cursor] != '>'; cursor++) ;
+            // If parse attributes
+            if (attrConsumer != null) attrConsumer.accept(cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
+
             cursor++;
-            if (cb[cursor - 2] == '/' || cursor == e) return cursor;
+            if (cb[cursor - 2] == '/' || cursor == e) {
+                return cursor;
+            }
             a = cursor;
         }
         // Empty tag
@@ -371,14 +390,13 @@ class XMLRow extends Row {
     }
 
     /**
-     * function string
+     * Function string
      *
      * @param e the last index in char buffer
      * @return the end index of function value
      */
     private int getF(int e) {
-        // TODO if formula shared
-        return get(e, 'f');
+        return get(e, 'f', this::parseFunAttr);
     }
 
     /**
@@ -400,4 +418,41 @@ class XMLRow extends Row {
         return n;
     }
 
+    /* Parse function tag's attribute */
+    private void parseFunAttr(char[] cb, int a, int b) {
+        // t="shared" ref="B2:B3" si="0"
+        String[] values = new String[10];
+        int index = 0;
+        boolean sv = false;
+        for (int i = a ; ; ) {
+            // Found key
+            for (; a < b && cb[a] > ' ' && cb[a] != '='; a++) ;
+            values[index++] = new String(cb, i, sv ? a - i - 1 : a - i);
+            sv = false;
+
+            if (a + 1 < b) {
+                // String value
+                if (cb[a + 1] == '"') {
+                    a += 2;
+                    sv = true;
+                }
+                // Boolean value
+                else if (cb[a + 1] == ' ') {
+                    values[index++] = "1";
+                    a++;
+                }
+                else a++;
+                i = a;
+            } else break;
+        }
+
+        // TODO sort as t, si, ref
+        System.out.println(Arrays.toString(values));
+        // Type
+    }
+
+    @FunctionalInterface
+    private interface Attribute {
+        void accept(char[] cb, int a, int b);
+    }
 }
