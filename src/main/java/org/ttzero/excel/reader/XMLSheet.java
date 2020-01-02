@@ -497,7 +497,8 @@ class XMLSheet implements Sheet {
             int block = (int) Math.min(1 << 11, fileSize);
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
-            int left_size = 0;
+            int left_size = 0, i;
+            CharBuffer charBuffer;
             for (; ;) {
                 channel.position(fileSize - block + left_size);
                 channel.read(buffer);
@@ -509,8 +510,9 @@ class XMLSheet implements Sheet {
                 }
                 buffer.flip();
 
-                CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                int limit = charBuffer.limit(), i = limit - 1;
+                charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                int limit = charBuffer.limit();
+                i = limit - 1;
                 // <row r="
                 for (; i >= 7 && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
                     || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
@@ -537,12 +539,53 @@ class XMLSheet implements Sheet {
                 else {
                     int[] info = innerParse(charBuffer, ++i);
                     rc = (info[2] << 16) | (info[1] & 0x7FFF);
-                    dimension = ((long) info[0]) << 32;
+                    dimension |= ((long) info[0]) << 32;
                     break;
                 }
                 buffer.position(0);
                 buffer.limit(buffer.capacity() - left_size);
             }
+            StringBuilder buf = new StringBuilder();
+            // mergeCells
+            for (; ;) {
+                fileSize += buffer.limit();
+                int limit = charBuffer.limit();
+                for (; i < limit - 12 && (charBuffer.get(i) != '<' && charBuffer.get(i + 1) != 'm'
+                    && charBuffer.get(i + 2) != 'e' && charBuffer.get(i + 3) != 'r'
+                    && charBuffer.get(i + 4) != 'g' && charBuffer.get(i + 5) != 'e'
+                    && charBuffer.get(i + 6) != 'C' && charBuffer.get(i + 7) != 'e'
+                    && charBuffer.get(i + 8) != 'l' && charBuffer.get(i + 9) != 'l'
+                    && charBuffer.get(i + 10) != 's' && charBuffer.get(i + 11) <= ' '); i++);
+
+                // Not found
+                if (i > limit - 12) {
+                    charBuffer.position(i);
+                    int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
+                    int last_size = buffer.limit() - newLimit;
+                    if (last_size > 0) {
+                        if (left == null || last_size > left.length) {
+                            left = new byte[last_size];
+                        }
+                        buffer.get(left, block - last_size, last_size);
+                        buffer.position(0);
+                        buffer.limit(block);
+                        buffer.put(left, 0, last_size);
+                    }
+
+                    channel.position(fileSize - block);
+                    channel.read(buffer);
+                    buffer.flip();
+                    // EOF
+                    if (buffer.limit() <= 0) {
+                        break;
+                    }
+                    charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                } else {
+                    i += 12;
+                    // TODO
+                }
+            }
+
             // Skip if the first row is known
             if ((dimension & 0x7FFFFFFF) > 0L) return;
             if (mark > 0) {
@@ -551,8 +594,8 @@ class XMLSheet implements Sheet {
                 channel.read(buffer);
                 buffer.flip();
 
-                CharBuffer charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                int i = 0;
+                charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                i = 0;
                 for (; charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'r'
                     || charBuffer.get(i + 2) != 'o' || charBuffer.get(i + 3) != 'w'
                     || charBuffer.get(i + 4) > ' ' || charBuffer.get(i + 5) != 'r'
