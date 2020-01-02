@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,20 @@
 package org.ttzero.excel.reader;
 
 /**
+ * Worksheet dimension
+ * <p>
+ * This record contains the range address of the used area in the current sheet.
+ * <p>
  * Create by guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
+    // Index to first used row
     public final int firstRow;
+    // Index to last used row, increased by 1
     public final int lastRow;
+    // Index to first used column
     public final short firstColumn;
+    // Index to last used column, increased by 1
     public final short lastColumn;
 
     Dimension(int firstRow, int lastRow, short firstColumn, short lastColumn) {
@@ -32,18 +40,40 @@ public class Dimension {
         this.lastColumn = lastColumn;
     }
 
+    /**
+     * Returns the index to first used row, the min value is 1
+     *
+     * @return the first row number
+     */
     public int getFirstRow() {
         return firstRow;
     }
 
+    /**
+     * Returns the index to last used row, the max value
+     * is 1,048,576 in office 2007 or later and 65,536 in office 2003
+     *
+     * @return the last row number
+     */
     public int getLastRow() {
         return lastRow;
     }
 
+    /**
+     * Returns the index to first used column, the min value is 1
+     *
+     * @return the first column number
+     */
     public short getFirstColumn() {
         return firstColumn;
     }
 
+    /**
+     * Returns the index to last used column, the max value
+     * is 16,384 in office 2007 or later and 256 in office 2003
+     *
+     * @return the last column number
+     */
     public short getLastColumn() {
         return lastColumn;
     }
