@@ -152,7 +152,9 @@ class XMLRow extends Row {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
-        calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+        if (calcFun != null) {
+            calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+        }
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
