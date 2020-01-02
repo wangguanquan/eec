@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -156,7 +155,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Files.createDirectory(themeP);
         }
         try {
-            Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), themeP.resolve("theme1.xml"));
+            InputStream theme = getClass().getClassLoader().getResourceAsStream("template/theme1.xml");
+            if (theme != null) {
+                Files.copy(theme, themeP.resolve("theme1.xml"));
+            }
         } catch (IOException e) {
             // Nothing
         }
