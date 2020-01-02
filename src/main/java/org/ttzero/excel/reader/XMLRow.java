@@ -43,6 +43,7 @@ class XMLRow extends Row {
     private int startRow;
     private StringBuilder buf;
     private MergeCalc calcFun;
+    private boolean hasCalc;
 
     /**
      * The number of row. (zero base)
@@ -66,6 +67,7 @@ class XMLRow extends Row {
         this.startRow = startRow;
         buf = new StringBuilder();
         this.calcFun = calcFun;
+        this.hasCalc = calcFun != null;
     }
 
     /////////////////////////unsafe////////////////////////
@@ -152,7 +154,7 @@ class XMLRow extends Row {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
-        if (calcFun != null) {
+        if (hasCalc) {
             calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
         }
         if (unknownLength) {
@@ -217,8 +219,8 @@ class XMLRow extends Row {
         // The style index
         cell.s = s;
 
-        // FIXME Maybe it will be ignore Formula string
-        if (cell.f) {
+        // Ignore Formula string default
+        if (hasCalc) {
             int a = getF(e);
             cell.fv = unescape(buf, cb, a, cursor);
         }

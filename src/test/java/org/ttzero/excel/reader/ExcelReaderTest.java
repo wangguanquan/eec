@@ -222,18 +222,29 @@ public class ExcelReaderTest {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
                     if (row.hasFormula(i)) {
-                        System.out.print(row.getFormula(i));
-                        System.out.print('|');
+                        print(row.getFormula(i));
+                        println('|');
                     }
                 }
-                System.out.println();
             });
 
             // Reset
             reader.sheets().forEach(Sheet::reset);
 
             // Read value
-            reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+
+            if (reader.hasFormula()) {
+                // Reset and parse formula
+                reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(row -> {
+                    for (int i = row.fc; i < row.lc; i++) {
+                        if (row.hasFormula(i)) {
+                            print(row.getFormula(i));
+                            println('|');
+                        }
+                    }
+                });
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

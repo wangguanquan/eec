@@ -254,4 +254,9 @@ public interface Sheet extends AutoCloseable {
             }
         }
     }
+
+    /**
+     * Make reader parse the formula
+     */
+    void parseFormula();
 }

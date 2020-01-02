@@ -73,7 +73,8 @@ class XMLSheet implements Sheet {
     private long dimension;
     private int rc; // Range of column
     private long[] calc; // Array of formula
-    private boolean nonCalc = true;
+    private boolean hasCalc;
+    private boolean parseFormula;
 
     /**
      * Setting the worksheet name
@@ -118,7 +119,7 @@ class XMLSheet implements Sheet {
      */
     void setCalc(long[] calc) {
         this.calc = calc;
-        this.nonCalc = calc == null || calc.length == 0;
+        this.hasCalc = calc != null && calc.length > 0;
     }
 
     /**
@@ -321,7 +322,8 @@ class XMLSheet implements Sheet {
             eof = true;
         } else {
             eof = false;
-            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc); // share row space
+            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1
+                , parseFormula && hasCalc ? this::findCalc : null); // share row space
         }
 
         mark = nChar;
@@ -440,7 +442,8 @@ class XMLSheet implements Sheet {
         }
 
         // row
-        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, nChar - start);
+        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1
+            , parseFormula && hasCalc ? this::findCalc : null).with(cb, start, nChar - start);
     }
 
     /**
@@ -481,6 +484,14 @@ class XMLSheet implements Sheet {
         if (reader != null) {
             reader.close();
         }
+    }
+
+    /**
+     * Make reader parse the formula
+     */
+    @Override
+    public void parseFormula() {
+        this.parseFormula = true;
     }
 
     /**
@@ -618,7 +629,6 @@ class XMLSheet implements Sheet {
 
     /* Found calc */
     private void findCalc(int row, Cell[] cells, int n) {
-        if (nonCalc) return;
         int rr = row + 1;
         long r = ((long) rr) << 16;
         int i = Arrays.binarySearch(calc, r);

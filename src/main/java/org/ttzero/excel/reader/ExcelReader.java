@@ -308,6 +308,18 @@ public class ExcelReader implements AutoCloseable {
         return hasFormula;
     }
 
+    /**
+     * Make the reader parse formula
+     *
+     * @return self
+     */
+    public ExcelReader parseFormula() {
+        for (Sheet sheet : sheets) {
+            sheet.parseFormula();
+        }
+        return this;
+    }
+
     // --- PRIVATE FUNCTIONS
 
 
