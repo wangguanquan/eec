@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ public class ExcelReaderTest {
             assert reader.getType() == ExcelType.XLSX;
 
             AppInfo appInfo = reader.getAppInfo();
+            assert ExcelType.XLSX == appInfo.getType();
             assert "对象数组测试".equals(appInfo.getTitle());
             assert "guanquan.wang".equals(appInfo.getCreator());
             println(appInfo);
@@ -272,6 +273,17 @@ public class ExcelReaderTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test public void testVersionFilter() {
+        char[] chars = "..0...3...7.SNAPSHOT.".toCharArray();
+        int i = 0;
+        for (int j = 0; j < chars.length; j++) {
+            if (chars[j] >= '0' && chars[j] <= '9' || chars[j] == '.' && i > 0 && chars[i - 1] != '.')
+                chars[i++] = chars[j];
+        }
+        String version = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
+        assert "0.3.7".equals(version);
     }
 
     public static class Customer {
