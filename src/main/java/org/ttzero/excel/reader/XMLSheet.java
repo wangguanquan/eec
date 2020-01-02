@@ -149,8 +149,10 @@ class XMLSheet implements Sheet {
      * size of rows.
      *
      * @return size of rows
-     * -1: unknown size
+     *      -1: unknown size
+     * @deprecated use {@link #getDimension()} to getting full range address
      */
+    @Deprecated
     @Override
     public int getSize() {
         if (dimension == 0) return -1;
