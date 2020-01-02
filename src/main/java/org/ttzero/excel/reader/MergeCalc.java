@@ -17,9 +17,19 @@
 package org.ttzero.excel.reader;
 
 /**
+ * Test and merge formula each rows.
+ *
  * Create by guanquan.wang at 2019-12-31 15:42
  */
 @FunctionalInterface
 interface MergeCalc {
+
+    /**
+     * Merge formula in rows
+     *
+     * @param row thr row number
+     * @param cells the cells in row
+     * @param n count of cells
+     */
     void accept(int row, Cell[] cells, int n);
 }
