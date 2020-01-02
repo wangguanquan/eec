@@ -347,7 +347,7 @@ Excel如下图
 Excel读取使用`ExcelReader#read`静态方法，内部采用流式操作，当使用某一行数据时才会真正
 读入内存，所以即使是GB级别的excel文件也只占用少量内存。
 
-默认的ExcelReader仅读取单元格的值而忽略单元格的公式，可以使用`ExcelReader#parseFormula`方法使解析单元格的公式。
+默认的ExcelReader仅读取单元格的值而忽略单元格的公式，可以使用`ExcelReader#parseFormula`方法使Reader解析单元格的公式。
 
 下面展示一些常规的读取方法
 
