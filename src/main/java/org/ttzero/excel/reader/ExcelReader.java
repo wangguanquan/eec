@@ -87,6 +87,7 @@ public class ExcelReader implements AutoCloseable {
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
+    boolean hasFormula;
 
     /**
      * The Shared String Table
@@ -298,6 +299,14 @@ public class ExcelReader implements AutoCloseable {
         return appInfo;
     }
 
+    /**
+     * Check current workbook has formula
+     *
+     * @return boolean
+     */
+    public boolean hasFormula() {
+        return hasFormula;
+    }
 
     // --- PRIVATE FUNCTIONS
 
@@ -404,6 +413,7 @@ public class ExcelReader implements AutoCloseable {
             for (; i < sheets1.length; i++) {
                 ((XMLSheet) sheets1[i]).setCalc(calcArray[i]);
             }
+            hasFormula = true;
         }
 
         this.sheets = sheets1;
