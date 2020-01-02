@@ -57,6 +57,7 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -553,7 +554,7 @@ public class ExcelReader implements AutoCloseable {
             Element e = ite.next();
             String si = e.attributeValue("i"), r = e.attributeValue("r");
             if (isNotEmpty(si)) {
-                i = Integer.parseInt(si);
+                i = toInt(si.toCharArray(), 0, si.length());
             }
             if (isNotEmpty(r)) {
                 long[] sub = array[i - 1];
