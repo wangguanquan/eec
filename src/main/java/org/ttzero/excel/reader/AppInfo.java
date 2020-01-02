@@ -178,20 +178,20 @@ public class AppInfo {
     @Override
     public String toString() {
         return "Type: " + type
-            + "Application: " + getApplication()
-            + " Company: " + getCompany()
-            + " AppVersion: " + getAppVersion()
-            + " Title: " + getTitle()
-            + " Subject: " + getSubject()
-            + " Creator: " + getCreator()
-            + " Description: " + getDescription()
-            + " Keywords: " + getKeywords()
-            + " LastModifiedBy: " + getLastModifiedBy()
-            + " Version: " + getVersion()
-            + " Revision: " + getRevision()
-            + " Category: " + getCategory()
-            + " Created: " + (getCreated() != null ? DateUtil.toString(getCreated()) : StringUtil.EMPTY)
-            + " Modified: " + (getModified() != null ? DateUtil.toString(getModified()) : StringUtil.EMPTY)
+            + System.lineSeparator() + "Application: " + getApplication()
+            + System.lineSeparator() + "Company: " + getCompany()
+            + System.lineSeparator() + "AppVersion: " + getAppVersion()
+            + System.lineSeparator() + "Title: " + getTitle()
+            + System.lineSeparator() + "Subject: " + getSubject()
+            + System.lineSeparator() + "Creator: " + getCreator()
+            + System.lineSeparator() + "Description: " + getDescription()
+            + System.lineSeparator() + "Keywords: " + getKeywords()
+            + System.lineSeparator() + "LastModifiedBy: " + getLastModifiedBy()
+            + System.lineSeparator() + "Version: " + getVersion()
+            + System.lineSeparator() + "Revision: " + getRevision()
+            + System.lineSeparator() + "Category: " + getCategory()
+            + System.lineSeparator() + "Created: " + (getCreated() != null ? DateUtil.toString(getCreated()) : StringUtil.EMPTY)
+            + System.lineSeparator() + "Modified: " + (getModified() != null ? DateUtil.toString(getModified()) : StringUtil.EMPTY)
             ;
     }
 }
