@@ -138,6 +138,7 @@ public interface Sheet extends AutoCloseable {
      *
      * @return the unread {@link Sheet}
      * @throws ExcelReadException if I/O error occur.
+     * @throws UnsupportedOperationException if sub-class un-implement this function.
      */
     default Sheet reset() {
         throw new UnsupportedOperationException();
@@ -196,6 +197,7 @@ public interface Sheet extends AutoCloseable {
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
      * @param path the output storage path
+     * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(Path path) throws IOException {
         // Create path if not exists
@@ -213,6 +215,7 @@ public interface Sheet extends AutoCloseable {
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
      * @param os the output
+     * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(OutputStream os) throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(os)) {

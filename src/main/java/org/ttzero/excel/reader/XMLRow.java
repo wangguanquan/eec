@@ -369,8 +369,9 @@ class XMLRow extends Row {
     }
 
     /**
-     * inner string
-     * <is><t>cell value</t></is>
+     * Found text tag range
+     *
+     * Code like this {@code <is><t>cell value</t></is>}
      *
      * @param e the last index in char buffer
      * @return the end index of string value
@@ -380,7 +381,9 @@ class XMLRow extends Row {
     }
 
     /**
-     * The string index in shared string table
+     * Found value tag range
+     *
+     * Code like this {@code <v>0</v>
      *
      * @param e the last index in char buffer
      * @return the end index of int value
@@ -390,7 +393,8 @@ class XMLRow extends Row {
     }
 
     /**
-     * Function string
+     * Found the Function tag range
+     * Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f>
      *
      * @param e the last index in char buffer
      * @return the end index of function value
@@ -423,9 +427,8 @@ class XMLRow extends Row {
         // t="shared" ref="B2:B3" si="0"
         String[] values = new String[10];
         int index = 0;
-        boolean sv = false;
+        boolean sv = false; // is string value
         for (int i = a ; ; ) {
-            // Found key
             for (; a < b && cb[a] > ' ' && cb[a] != '='; a++) ;
             values[index++] = new String(cb, i, sv ? a - i - 1 : a - i);
             sv = false;
