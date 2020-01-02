@@ -38,6 +38,7 @@ import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
  * Create by guanquan.wang at 2019-04-26 17:42
@@ -295,6 +296,32 @@ public class ExcelReaderTest {
         String version = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
         assert "0.3.7".equals(version);
     }
+
+    @Test public void testSort() {
+        int index = 6;
+        String[] values = {"ref", "B2:B8", "t", "shared","si", "0"};
+        // Sort like t, si, ref
+        for (int i = 0, len = index >> 1; i < len; i++) {
+            int _i = i << 1;
+            int vl = values[_i].length();
+            if (vl - 1 == i) {
+                continue;
+            }
+            // Will be sort
+            int _n = vl - 1;
+            swap(values, _n << 1, _i);
+            swap(values, (_n << 1) + 1, _i + 1);
+        }
+
+        assert "t".equals(values[0]);
+        assert "shared".equals(values[1]);
+        assert "si".equals(values[2]);
+        assert "0".equals(values[3]);
+        assert "ref".equals(values[4]);
+        assert "B2:B8".equals(values[5]);
+    }
+
+
 
     public static class Customer {
         @ExcelColumn("客户编码")

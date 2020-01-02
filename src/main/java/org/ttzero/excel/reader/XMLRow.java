@@ -28,6 +28,7 @@ import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.reader.SharedStrings.unescape;
+import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
  * Row data, shared by the Row object in the same Sheet page.
@@ -449,9 +450,30 @@ class XMLRow extends Row {
             } else break;
         }
 
-        // TODO sort as t, si, ref
+        if (index < 2 || (index & 1) == 1) {
+            logger.warn("The function format error.[{}]", new String(cb, a, b - a));
+            return;
+        }
+
+        // Sort like t, si, ref
+        for (int i = 0, len = index >> 1; i < len; i++) {
+            int _i = i << 1, vl = values[_i].length();
+            if (vl - 1 == i) {
+                continue;
+            }
+            // Will be sort
+            int _n = vl - 1;
+            if (_n > index - 1) {
+                logger.warn("Unknown attribute on function tag.[{}]", values[_i]);
+                return;
+            }
+            swap(values, _n << 1, _i);
+            swap(values, (_n << 1) + 1, _i + 1);
+        }
+
         System.out.println(Arrays.toString(values));
-        // Type
+
+        // TODO
     }
 
     @FunctionalInterface
