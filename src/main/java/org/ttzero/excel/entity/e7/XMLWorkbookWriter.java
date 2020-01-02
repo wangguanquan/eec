@@ -396,9 +396,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
         }
 
-        // Calculation Properties
-        rootElement.addElement("calcPr").addAttribute("calcId", "124519");
-
         Document doc = factory.createDocument(rootElement);
         FileUtil.writeToDiskNoFormat(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
