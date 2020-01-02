@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,11 @@ import org.ttzero.excel.entity.NameValue;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ttzero.excel.util.StringUtil.isEmpty;
+
 /**
+ * The creation information
+ *
  * Created by guanquan.wang on 2017/9/21.
  */
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
@@ -102,8 +106,24 @@ public class App extends XmlEntity {
         this.hyperlinksChanged = hyperlinksChanged;
     }
 
+    /**
+     * Setting the app version, it must not be null
+     *
+     * @param appVersion the app version
+     */
     public void setAppVersion(String appVersion) {
-        this.appVersion = appVersion;
+        if (isEmpty(appVersion)) {
+            this.appVersion = "1.0.0";
+        } else {
+            // Filter other character but number and `.`
+            char[] chars = appVersion.toCharArray();
+            int i = 0;
+            for (int j = 0; j < chars.length; j++) {
+                if (chars[j] >= '0' && chars[j] <= '9' || chars[j] == '.' && i > 0 && chars[i - 1] != '.')
+                    chars[i++] = chars[j];
+            }
+            this.appVersion = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
+        }
     }
 
     public String getApplication() {

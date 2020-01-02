@@ -245,14 +245,14 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                         Document document;
                         try {
                             document = reader.read(Files.newInputStream(pomPath));
+                            Element pomRoot = document.getRootElement();
+                            String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
+                            app.setApplication(application);
+                            String appVersion = pomRoot.elementText("version");
+                            app.setAppVersion(appVersion);
                         } catch (DocumentException | IOException e) {
-                            throw new ExcelReadException(e);
+                            // Nothing
                         }
-                        Element pomRoot = document.getRootElement();
-                        String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
-                        app.setAppVersion(application);
-                        String appVersion = pomRoot.elementText("version");
-                        app.setAppVersion(appVersion);
                     }
                 }
             }
@@ -262,12 +262,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 app.setAppVersion(pom.getProperty("version"));
                 // Can't read pom.xml if running as dev on window
             }
-            if (StringUtil.isEmpty(app.getAppVersion())) {
-                app.setApplication("org.ttzero.eec");
-                app.setAppVersion("1.0.0");
-            }
         } catch (IOException e) {
             // Nothing
+        }
+        if (StringUtil.isEmpty(app.getAppVersion())) {
+            app.setApplication("org.ttzero.eec");
+            app.setAppVersion("1.0.0");
         }
 
         int size = workbook.getSize();
