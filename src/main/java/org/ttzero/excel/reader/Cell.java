@@ -161,6 +161,7 @@ public class Cell {
         this.mv = null;
         this.xf = 0;
         this.fv = null;
+        this.f = false;
         this.si = -1;
     }
 }
