@@ -37,7 +37,6 @@ import java.util.StringJoiner;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listWriteMethods;
 import static org.ttzero.excel.util.ReflectUtil.mapping;
-import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -53,8 +52,6 @@ class HeaderRow extends Row {
     private Object t;
     /* The column name and column position mapping */
     private Map<String, Integer> mapping;
-    private long[] sharedDimension;
-    private String[] sharedCalc;
 
     private HeaderRow() { }
 
@@ -305,77 +302,6 @@ class HeaderRow extends Row {
             joiner.add(names[i]);
         }
         return joiner.toString();
-    }
-
-    /**
-     * Add function shared ref
-     * <blockquote><pre>
-     * 63   : Not used
-     * 42-62: First row number
-     * 28-41: First column number
-     * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
-     * 1-7/1-13: Not used
-     * 0    : Axis, 0: y-axis 1: x-axis
-     * </pre></blockquote>
-     *
-     * @param i the ref id
-     * @param ref ref value, a range dimension string
-     * @param calc the calc string
-     */
-    void addRef(int i, String ref, String calc) {
-        if (StringUtil.isEmpty(ref) || ref.indexOf(':') < 0)
-            return;
-        if (sharedDimension == null) {
-            sharedDimension = new long[Math.max(10, i + 1)];
-            sharedCalc = new String[sharedDimension.length];
-        } else if (i >= sharedDimension.length) {
-            sharedDimension = Arrays.copyOf(sharedDimension, i + 10);
-            sharedCalc = Arrays.copyOf(sharedCalc, i + 10);
-        }
-        Dimension dim = Dimension.from(ref);
-
-        long l = 0;
-        l |= (long) (dim.firstRow & (1 << 20) - 1) << 42;
-        l |= (long) (dim.firstColumn & (1 << 14) - 1) << 28;
-
-        if (dim.firstColumn == dim.lastColumn) {
-            l |= ((dim.lastRow - dim.firstRow) & (1 << 20) - 1) << 8;
-        }
-        else if (dim.firstRow == dim.lastRow) {
-            l |= ((dim.lastColumn - dim.firstColumn) & (1 << 14) - 1) << 14;
-            l |= 1;
-        }
-        sharedDimension[i] = l;
-        sharedCalc[i] = calc;
-    }
-
-    /**
-     * Setting calc string
-     *
-     * @param i the ref id
-     * @param calc the calc string
-     */
-    void setCalc(int i, String calc) {
-        if (sharedDimension == null || sharedDimension.length <= i)
-            return;
-        sharedCalc[i] = calc;
-    }
-
-    /**
-     * Get calc string by ref id and coordinate
-     *
-     * @param i the ref id
-     * @param coordinate the cell coordinate
-     * @return calc string
-     */
-    String getCalc(int i, long coordinate) {
-        // Index out of range
-        if (sharedDimension == null || sharedDimension.length <= i)
-            return EMPTY;
-        long dim = sharedDimension[i];
-        String calc = sharedCalc[i];
-        // TODO calc string
-        return calc;
     }
 
     void put(Row row, Object t) throws IllegalAccessException, InvocationTargetException {
