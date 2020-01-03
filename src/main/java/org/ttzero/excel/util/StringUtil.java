@@ -77,7 +77,13 @@ public class StringUtil {
         return -1;
     }
 
-
+    /**
+     * Turn the first character into an upper case. It means if the first
+     * character is between 97 and 122, it will be minus {@code 32}.
+     *
+     * @param key a string to processor
+     * @return a string witch the first character is upper case
+     */
     public static String uppFirstKey(String key) {
         char first = key.charAt(0);
         if (first >= 97 && first <= 122) {
@@ -88,6 +94,13 @@ public class StringUtil {
         return key;
     }
 
+    /**
+     * Turn the first character into an lower case. It means if the first
+     * character is between 65 and 90, it will be plus {@code 32}.
+     *
+     * @param key a string to processor
+     * @return a string witch the first character is lower case
+     */
     public static String lowFirstKey(String key) {
         char first = key.charAt(0);
         if (first >= 65 && first <= 90) {
@@ -98,6 +111,12 @@ public class StringUtil {
         return key;
     }
 
+    /**
+     * Convert to camel case string.
+     *
+     * @param name a string to processor
+     * @return a camel case string
+     */
     public static String toPascalCase(String name) {
         if (name.indexOf('_') < 0) return name;
         char[] oldValues = name.toLowerCase().toCharArray();
@@ -117,23 +136,23 @@ public class StringUtil {
         return new String(oldValues, 0, idx);
     }
 
-    public static String append(String src, String a, int n, int origin) {
-        StringBuilder buf = new StringBuilder();
-        // Insert header
-        if (origin == -1) {
-            for (; n-- > 0; ) {
-                buf.append(a);
-            }
-            buf.append(src);
-        } else {
-            buf.append(src);
-            for (; n-- > 0; ) {
-                buf.append(a);
-            }
-        }
-
-        return buf.toString();
-    }
+//    public static String append(String src, String a, int n, int origin) {
+//        StringBuilder buf = new StringBuilder();
+//        // Insert header
+//        if (origin == -1) {
+//            for (; n-- > 0; ) {
+//                buf.append(a);
+//            }
+//            buf.append(src);
+//        } else {
+//            buf.append(src);
+//            for (; n-- > 0; ) {
+//                buf.append(a);
+//            }
+//        }
+//
+//        return buf.toString();
+//    }
 
     /**
      * Wrap value in string array
