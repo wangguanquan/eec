@@ -232,15 +232,12 @@ class XMLRow extends Row {
             // Inner text
             if (a < cursor) {
                 cell.fv = unescape(buf, cb, a, cursor);
-                // TODO header row is null
-                if (hr != null && cell.si != -1)
-                    hr.setCalc(cell.si, cell.fv);
+                if (cell.si > -1) setCalc(cell.si, cell.fv);
             }
-            // TODO header row is null
             // Function string is shared
-            else if (hr != null && cell.si > -1) {
+            else if (cell.si > -1) {
                 // Get from ref
-                cell.fv = hr.getCalc(cell.si, (getRowNumber() << 16) | i);
+                cell.fv = getCalc(cell.si, (getRowNumber() << 16) | i);
             }
         }
         // Get value
@@ -384,8 +381,10 @@ class XMLRow extends Row {
             a = cursor += 3;
         }
 
+        // Found end tag
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
             || cb[cursor + 2] != c || cb[cursor + 3] != '>'); cursor++) ;
+
         return a;
     }
 
@@ -495,7 +494,7 @@ class XMLRow extends Row {
 
         // Append and share href
         if (index > 4) {
-            hr.addRef(si, values[5], null);
+            addRef(si, values[5]);
         }
 
         // Storage formula shared id
