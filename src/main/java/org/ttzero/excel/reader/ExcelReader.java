@@ -628,12 +628,12 @@ public class ExcelReader implements AutoCloseable {
      * Cell range string convert to long
      * 0-16: column number
      * 17-48: row number
-     * <p>
+     * <blockquote><pre>
      * range string| long value
      * ------------|------------
      * A1          | 65537
      * AA10        | 655387
-     *
+     * </pre></blockquote>
      * @param r the range string of cell
      * @return long value
      */

@@ -32,6 +32,7 @@ public class StringUtil {
     /**
      * Returns {@code true} if it is null or {@link String#length()} is {@code 0}.
      *
+     * @param s string value to check
      * @return {@code true} if null or {@link String#length()} is {@code 0}, otherwise
      * {@code false}
      */
@@ -42,6 +43,7 @@ public class StringUtil {
     /**
      * Returns {@code true} if, and only if, {@link String#length()} greater than {@code 0}.
      *
+     * @param s string value to check
      * @return {@code true} if {@link String#length()} greater than {@code 0}, otherwise
      * {@code false}
      */

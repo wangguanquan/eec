@@ -36,25 +36,60 @@ public class Cell {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
-    // n=numeric
-    // s=string
-    // b=boolean
-    // f=function string
-    // r=inlineStr
-    // l=long
-    // d=double
+    /**
+     * Value type
+     * n=numeric
+     * s=string
+     * b=boolean
+     * f=function string
+     * r=inlineStr
+     * l=long
+     * d=double
+     */
     public char t; // type
-    // value
+    /**
+     * String value
+     */
     public String sv;
+    /**
+     * Integer value contain short
+     */
     public int nv;
+    /**
+     * Long value
+     */
     public long lv;
+    /**
+     * Double value contain float
+     */
     public double dv;
+    /**
+     * Boolean value
+     */
     public boolean bv;
+    /**
+     * Char value
+     */
     public char cv;
+    /**
+     * Decimal value
+     */
     public BigDecimal mv;
+    /**
+     * Style index
+     */
     public int xf;
-    // Formula string
+    /**
+     * Formula string
+     */
     public String fv;
+    /**
+     * Shared calc id
+     */
+    public int si;
+    /**
+     * Has formula
+     */
     public boolean f;
 
     /**
@@ -132,5 +167,6 @@ public class Cell {
         this.xf = 0;
         this.s = 0;
         this.fv = null;
+        this.si = -1;
     }
 }
