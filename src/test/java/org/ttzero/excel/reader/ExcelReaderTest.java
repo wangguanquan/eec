@@ -253,6 +253,9 @@ public class ExcelReaderTest {
                 }).forEach(row -> {
                     for (int i = row.fc; i < row.lc; i++) {
                         if (row.hasFormula(i)) {
+                            print(org.ttzero.excel.entity.Sheet.int2Col(i));
+                            print(row.getRowNumber());
+                            print("=> ");
                             print(row.getFormula(i));
                             println('|');
                         }
