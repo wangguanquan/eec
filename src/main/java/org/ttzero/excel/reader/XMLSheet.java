@@ -175,8 +175,8 @@ class XMLSheet implements Sheet {
             parseDimension();
         }
         return new Dimension((int)(dimension & 0x7FFFFFFF)
-            , (int) (dimension >>> 32)
             , (short) (rc & 0x7FFF)
+            , (int) (dimension >>> 32)
             , (short) (rc >> 16));
     }
 
