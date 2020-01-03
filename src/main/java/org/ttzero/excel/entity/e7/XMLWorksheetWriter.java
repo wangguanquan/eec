@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.function.Supplier;
 
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -319,7 +320,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (size > 0) {
             bw.write(':');
             n--;
-            char[] col = sheet.int2Col(columns.length);
+            char[] col = int2Col(columns.length);
             bw.write(col);
             n -= col.length;
             bw.writeInt(size + 1);
@@ -387,7 +388,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         int c = 1, defaultStyle = sheet.defaultHeadStyle();
         for (Sheet.Column hc : columns) {
             bw.write("<c r=\"");
-            bw.write(sheet.int2Col(c++));
+            bw.write(int2Col(c++));
             bw.writeInt(row);
             bw.write("\" t=\"s\" s=\"");
             bw.writeInt(defaultStyle);
@@ -587,7 +588,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         Sheet.Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         int i;
         if (StringUtil.isEmpty(s)) {
@@ -639,7 +640,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -677,7 +678,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -715,7 +716,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" t=\"s\" s=\"");
         bw.writeInt(xf);
@@ -735,7 +736,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -773,7 +774,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" t=\"b\" s=\"");
         bw.writeInt(xf);
@@ -792,7 +793,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(sheet.int2Col(column + 1));
+        bw.write(int2Col(column + 1));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -878,7 +879,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 int fill = 11; // fill 11 space
                 buffer.put((byte) ':');
                 fill--;
-                char[] col = sheet.int2Col(columns.length);
+                char[] col = int2Col(columns.length);
                 buffer.put((new String(col) + (rows + 1)).getBytes(StandardCharsets.US_ASCII));
                 fill -= col.length;
                 fill -= stringSize(rows + 1);
