@@ -92,11 +92,6 @@ public class Cell {
      */
     public boolean f;
 
-    /**
-     * The style index
-     */
-    public short s;
-
     public void setT(char t) {
         this.t = t;
     }
@@ -165,7 +160,6 @@ public class Cell {
         this.cv = '\0';
         this.mv = null;
         this.xf = 0;
-        this.s = 0;
         this.fv = null;
         this.si = -1;
     }

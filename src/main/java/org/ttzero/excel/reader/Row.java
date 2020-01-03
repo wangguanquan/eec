@@ -884,13 +884,13 @@ public abstract class Row {
                 break;
             case NUMERIC:
             case CHARACTER:
-                type = !styles.fastTestDateFmt(c.s) ? CellType.INTEGER : CellType.DATE;
+                type = !styles.fastTestDateFmt(c.xf) ? CellType.INTEGER : CellType.DATE;
                 break;
             case LONG:
                 type = CellType.LONG;
                 break;
             case DOUBLE:
-                type = !styles.fastTestDateFmt(c.s) ? CellType.DOUBLE : CellType.DATE;
+                type = !styles.fastTestDateFmt(c.xf) ? CellType.DOUBLE : CellType.DATE;
                 break;
             case BOOL:
                 type = CellType.BOOLEAN;
@@ -1028,14 +1028,14 @@ public abstract class Row {
 //                    joiner.add("<function>");
 //                    break;
                 case NUMERIC:
-                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.nv));
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.nv));
                     else joiner.add(toLocalDate(c.nv).toString());
                     break;
                 case LONG:
                     joiner.add(String.valueOf(c.lv));
                     break;
                 case DOUBLE:
-                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.dv));
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.dv));
                     else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:

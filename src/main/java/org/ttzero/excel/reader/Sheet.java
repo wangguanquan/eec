@@ -239,14 +239,14 @@ public interface Sheet extends AutoCloseable {
                             writer.write(c.bv);
                             break;
                         case NUMERIC:
-                            if (!row.styles.fastTestDateFmt(c.s)) writer.write(c.nv);
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.nv);
                             else writer.write(toLocalDate(c.nv).toString());
                             break;
                         case LONG:
                             writer.write(c.lv);
                             break;
                         case DOUBLE:
-                            if (!row.styles.fastTestDateFmt(c.s)) writer.write(c.dv);
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.dv);
                             else writer.write(toTimestamp(c.dv).toString());
                             break;
                         default:
