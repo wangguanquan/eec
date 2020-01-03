@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.reader;
 
+import static org.ttzero.excel.entity.Sheet.int2Col;
+
 /**
  * Worksheet dimension
  * <p>
@@ -80,7 +82,7 @@ public class Dimension {
 
     @Override
     public String toString() {
-        return "{\"first-row\": " + firstRow + ", \"last-row\": " + lastRow
-            + ", \"first-column\": " + firstColumn + ", \"last-column\": " + lastColumn + "}";
+        return new String(int2Col(firstColumn)) + this.firstRow
+            + ":" + new String(int2Col(lastColumn)) + this.lastRow;
     }
 }
