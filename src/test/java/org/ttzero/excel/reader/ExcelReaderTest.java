@@ -247,7 +247,10 @@ public class ExcelReaderTest {
 
             if (reader.hasFormula()) {
                 // Reset and parse formula
-                reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(row -> {
+                reader.parseFormula().sheets().flatMap(sheet -> {
+                    println("----------------" + sheet.getName() + "----------------");
+                    return sheet.dataRows();
+                }).forEach(row -> {
                     for (int i = row.fc; i < row.lc; i++) {
                         if (row.hasFormula(i)) {
                             print(row.getFormula(i));

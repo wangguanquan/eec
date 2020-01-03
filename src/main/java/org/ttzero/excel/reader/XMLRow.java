@@ -186,14 +186,14 @@ class XMLRow extends Row {
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
-        // The style index
-        short s = 0;
+        int xf = 0, i = 1;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
+                i = unknownLength ? (lc = toCellIndex(a, cursor)) : toCellIndex(a, cursor);
+                cell = cells[i - 1];
             }
             // Cell type
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
@@ -213,24 +213,30 @@ class XMLRow extends Row {
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                s = (short) (toInt(cb, a, cursor) & 0xFFFF);
+                xf = toInt(cb, a, cursor);
             }
         }
 
         if (cell == null) return null;
 
         // The style index
-        cell.s = s;
+        cell.xf = xf;
 
         // Ignore Formula string default
         if (hasCalc) {
-            int a = getF(e);
+            int a = getF(cell, e);
             // inner text
             if (a < cursor) {
                 cell.fv = unescape(buf, cb, a, cursor);
-                // Function string is shared
-            } else {
-                // TODO get from ref
+                // TODO header row is null
+                if (hr != null && cell.si != -1)
+                    hr.setCalc(cell.si, cell.fv);
+            }
+            // TODO header row is null
+            // Function string is shared
+            else if (hr != null && cell.si > -1) {
+                // Get from ref
+                cell.fv = hr.getCalc(cell.si, (getRowNumber() << 16) | i);
             }
         }
         // Get value
@@ -330,10 +336,10 @@ class XMLRow extends Row {
     /* Found specify target  */
     private int get(int e, char c) {
         // Ignore all attributes
-        return get(e, c, null);
+        return get(null, e, c, null);
     }
 
-    private int get(int e, char c, Attribute attrConsumer) {
+    private int get(Cell cell, int e, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -347,7 +353,8 @@ class XMLRow extends Row {
             int i = cursor + 3;
             for (; cursor < e && cb[cursor] != '>'; cursor++) ;
             // If parse attributes
-            if (attrConsumer != null) attrConsumer.accept(cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
+            if (attrConsumer != null)
+                attrConsumer.accept(cell, cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
 
             cursor++;
             if (cb[cursor - 2] == '/' || cursor == e) {
@@ -400,8 +407,8 @@ class XMLRow extends Row {
      * @param e the last index in char buffer
      * @return the end index of function value
      */
-    private int getF(int e) {
-        return get(e, 'f', this::parseFunAttr);
+    private int getF(Cell cell, int e) {
+        return get(cell, e, 'f', this::parseFunAttr);
     }
 
     /**
@@ -424,7 +431,7 @@ class XMLRow extends Row {
     }
 
     /* Parse function tag's attribute */
-    private void parseFunAttr(char[] cb, int a, int b) {
+    private void parseFunAttr(Cell cell, char[] cb, int a, int b) {
         // t="shared" ref="B2:B3" si="0"
         String[] values = new String[10];
         int index = 0;
@@ -471,13 +478,18 @@ class XMLRow extends Row {
             swap(values, (_n << 1) + 1, _i + 1);
         }
 
-        System.out.println(Arrays.toString(values));
+//        System.out.println(Arrays.toString(values));
 
-        // TODO
+        int si = Integer.parseInt(values[3]);
+        // Has ref
+        if (index > 4) {
+            hr.addRef(si, values[5], null);
+        }
+        cell.si = si;
     }
 
     @FunctionalInterface
     private interface Attribute {
-        void accept(char[] cb, int a, int b);
+        void accept(Cell cell, char[] cb, int a, int b);
     }
 }

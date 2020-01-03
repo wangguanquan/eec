@@ -384,7 +384,11 @@ class XMLSheet implements Sheet {
         }
 
         // share row
-        return sRow.with(cb, start, nChar - start);
+        sRow.with(cb, start, nChar - start);
+        if (header == null && !sRow.isEmpty()) {
+            header = sRow.asHeader();
+        }
+        return sRow;
     }
 
     protected XMLRow findRow0() {
