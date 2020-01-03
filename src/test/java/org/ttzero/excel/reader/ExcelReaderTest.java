@@ -217,6 +217,16 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testDimensionConstructor() {
+        Dimension dimension = Dimension.from("A1:C5");
+        assert "A1:C5".equals(dimension.toString());
+
+        assert dimension.firstRow == 1;
+        assert dimension.firstColumn == 1;
+        assert dimension.lastRow == 5;
+        assert dimension.lastColumn == 3;
+    }
+
     @Test public void testFormula() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
             // Read formula

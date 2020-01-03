@@ -17,6 +17,7 @@
 package org.ttzero.excel.reader;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 
 /**
  * Worksheet dimension
@@ -35,11 +36,27 @@ public class Dimension {
     // Index to last used column, increased by 1
     public final short lastColumn;
 
-    Dimension(int firstRow, int lastRow, short firstColumn, short lastColumn) {
+    public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
         this.firstRow = firstRow;
-        this.lastRow = lastRow;
         this.firstColumn = firstColumn;
+        this.lastRow = lastRow;
         this.lastColumn = lastColumn;
+    }
+
+    /**
+     * Create {@link Dimension} from a range string
+     *
+     * @param range range string like {@code A2:B2}
+     * @return the {@link Dimension} entry
+     */
+    public static Dimension from(String range) {
+        int i = range.indexOf(':');
+        if (i < 0 || i == range.length() - 1)
+            throw new IllegalArgumentException(range + " can't convert to Dimension.");
+
+        long f = cellRangeToLong(range.substring(0, i))
+            , t = cellRangeToLong(range.substring(i + 1));
+        return new Dimension((int) (f >> 16), (short) f, (int) (t >> 16), (short) t);
     }
 
     /**
