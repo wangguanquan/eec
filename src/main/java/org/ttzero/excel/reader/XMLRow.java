@@ -157,9 +157,13 @@ class XMLRow extends Row {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
+
+        // Parse formula if exists and can parse
         if (hasCalc) {
             calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
         }
+
+        // Parse cell value
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
@@ -225,7 +229,7 @@ class XMLRow extends Row {
         // Ignore Formula string default
         if (hasCalc) {
             int a = getF(cell, e);
-            // inner text
+            // Inner text
             if (a < cursor) {
                 cell.fv = unescape(buf, cb, a, cursor);
                 // TODO header row is null
@@ -339,6 +343,15 @@ class XMLRow extends Row {
         return get(null, e, c, null);
     }
 
+    /**
+     * Parses the value and attributes of the specified tag
+     *
+     * @param cell current cell
+     * @param e the last character index
+     * @param c the specified tag
+     * @param attrConsumer an attribute consumer
+     * @return the start index of value
+     */
     private int get(Cell cell, int e, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
@@ -478,18 +491,30 @@ class XMLRow extends Row {
             swap(values, (_n << 1) + 1, _i + 1);
         }
 
-//        System.out.println(Arrays.toString(values));
-
         int si = Integer.parseInt(values[3]);
-        // Has ref
+
+        // Append and share href
         if (index > 4) {
             hr.addRef(si, values[5], null);
         }
+
+        // Storage formula shared id
         cell.si = si;
     }
 
+    /**
+     * Attribute consumer
+     */
     @FunctionalInterface
     private interface Attribute {
+        /**
+         * Performs this operation on the given argument.
+         *
+         * @param cell current cell
+         * @param cb characters for the entire attribute
+         * @param a start index
+         * @param b end index
+         */
         void accept(Cell cell, char[] cb, int a, int b);
     }
 }
