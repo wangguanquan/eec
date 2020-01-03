@@ -19,7 +19,6 @@ package org.ttzero.excel.reader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.lang.reflect.InvocationTargetException;
@@ -40,9 +39,12 @@ import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Create by guanquan.wang at 2019-04-17 11:08
@@ -65,6 +67,7 @@ public abstract class Row {
     protected HeaderRow hr;
     boolean unknownLength;
 
+    // Cache formulas
     private long[] sharedDimension;
     private String[] sharedCalc;
 
@@ -199,10 +202,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                v = StringUtil.isNotEmpty(c.sv);
+                v = isNotEmpty(c.sv);
                 break;
             case INLINESTR:
-                v = StringUtil.isNotEmpty(c.sv);
+                v = isNotEmpty(c.sv);
                 break;
 
             default: v = false;
@@ -293,15 +296,13 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                String s = c.sv;
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
+                if (isNotEmpty(c.sv)) {
+                    cc |= c.sv.charAt(0);
                 }
                 break;
             case INLINESTR:
-                s = c.sv;
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
+                if (isNotEmpty(c.sv)) {
+                    cc |= c.sv.charAt(0);
                 }
                 break;
             case NUMERIC:
@@ -416,18 +417,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                try {
-                    n = Integer.parseInt(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to int");
-                }
+                n = Integer.parseInt(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    n = Integer.parseInt(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to int");
-                }
+                n = Integer.parseInt(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("unknown type");
@@ -479,18 +472,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                try {
-                    l = Long.parseLong(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to long");
-                }
+                l = Long.parseLong(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    l = Long.parseLong(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to long");
-                }
+                l = Long.parseLong(c.sv);
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
@@ -541,7 +526,7 @@ public abstract class Row {
                 s = c.sv;
                 break;
             case BLANK:
-                s = StringUtil.EMPTY;
+                s = EMPTY;
                 break;
             case LONG:
                 s = String.valueOf(c.lv);
@@ -618,18 +603,13 @@ public abstract class Row {
                 d = c.nv;
                 break;
             case SST:
-                try {
-                    d = Double.valueOf(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to double");
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
                 }
+                d = Double.valueOf(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    d = Double.valueOf(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to double");
-                }
+                d = Double.valueOf(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("unknown type");
@@ -712,19 +692,19 @@ public abstract class Row {
         Date date;
         switch (c.t) {
             case NUMERIC:
-                date = DateUtil.toDate(c.nv);
+                date = toDate(c.nv);
                 break;
             case DOUBLE:
-                date = DateUtil.toDate(c.dv);
+                date = toDate(c.dv);
                 break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                date = DateUtil.toDate(c.sv);
+                date = toDate(c.sv);
                 break;
             case INLINESTR:
-                date = DateUtil.toDate(c.sv);
+                date = toDate(c.sv);
                 break;
             default: throw new UncheckedTypeException("");
         }
@@ -763,19 +743,19 @@ public abstract class Row {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
-                ts = DateUtil.toTimestamp(c.nv);
+                ts = toTimestamp(c.nv);
                 break;
             case DOUBLE:
-                ts = DateUtil.toTimestamp(c.dv);
+                ts = toTimestamp(c.dv);
                 break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             case INLINESTR:
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             default: throw new UncheckedTypeException("");
         }
@@ -791,7 +771,7 @@ public abstract class Row {
     public java.sql.Time getTime(int columnIndex) {
         Cell c = getCell(columnIndex);
         if (c.t == DOUBLE) {
-            return DateUtil.toTime(c.dv);
+            return toTime(c.dv);
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
     }
@@ -805,7 +785,7 @@ public abstract class Row {
     public java.sql.Time getTime(String columnName) {
         Cell c = getCell(columnName);
         if (c.t == DOUBLE) {
-            return DateUtil.toTime(c.dv);
+            return toTime(c.dv);
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
     }
@@ -1044,7 +1024,7 @@ public abstract class Row {
                     else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:
-                    joiner.add(StringUtil.EMPTY);
+                    joiner.add(EMPTY);
                 default:
                     joiner.add(null);
             }
