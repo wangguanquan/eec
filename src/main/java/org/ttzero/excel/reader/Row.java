@@ -68,8 +68,7 @@ public abstract class Row {
     boolean unknownLength;
 
     // Cache formulas
-    private long[] sharedDimension;
-    private String[] sharedCalc;
+    private PreCalc[] sharedCalc;
 
     /**
      * The global styles
@@ -1039,40 +1038,20 @@ public abstract class Row {
      * 42-62: First row number
      * 28-41: First column number
      * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
-     * 1-7/1-13: Not used
-     * 0    : Axis, 0: y-axis 1: x-axis
-     * </pre></blockquote>
-     *
-     * @param i the ref id
-     * @param ref ref value, a range dimension string
-     */
-    void addRef(int i, String ref) {
-        addRef(i, ref, null);
-    }
-
-    /**
-     * Add function shared ref
-     * <blockquote><pre>
-     * 63   : Not used
-     * 42-62: First row number
-     * 28-41: First column number
-     * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
      * 2-7/2-13: Not used
      * 0-1    : Axis, 00: range 01: y-axis 10: x-axis
      * </pre></blockquote>
      *
      * @param i the ref id
      * @param ref ref value, a range dimension string
-     * @param calc the calc string
      */
-    void addRef(int i, String ref, String calc) {
+    void addRef(int i, String ref) {
         if (StringUtil.isEmpty(ref) || ref.indexOf(':') < 0)
             return;
-        if (sharedDimension == null) {
-            sharedDimension = new long[Math.max(10, i + 1)];
-            sharedCalc = new String[sharedDimension.length];
-        } else if (i >= sharedDimension.length) {
-            sharedDimension = Arrays.copyOf(sharedDimension, i + 10);
+
+        if (sharedCalc == null) {
+            sharedCalc = new PreCalc[Math.max(10, i + 1)];
+        } else if (i >= sharedCalc.length) {
             sharedCalc = Arrays.copyOf(sharedCalc, i + 10);
         }
         Dimension dim = Dimension.from(ref);
@@ -1089,8 +1068,7 @@ public abstract class Row {
             l |= ((dim.lastColumn - dim.firstColumn) & (1 << 14) - 1) << 14;
             l |= 1;
         }
-        sharedDimension[i] = l;
-        setCalc(i, calc);
+        sharedCalc[i] = new PreCalc(l);
     }
 
     /**
@@ -1100,22 +1078,11 @@ public abstract class Row {
      * @param calc the calc string
      */
     void setCalc(int i, String calc) {
-        if (sharedDimension == null || sharedDimension.length <= i
-            || StringUtil.isEmpty(calc))
+        if (sharedCalc == null || sharedCalc.length <= i
+            || sharedCalc[i] == null || StringUtil.isEmpty(calc))
             return;
-        // Preprocessed
-        long dim = sharedDimension[i];
-        int t = (int) (dim & 0x03);
-        switch (t) {
-            case 0x01:
 
-                break;
-            case 0x02:
-                break;
-            case 0x0:
-                break;
-        }
-        sharedCalc[i] = calc;
+        sharedCalc[i].setCalc(calc.toCharArray());
     }
 
     /**
@@ -1127,26 +1094,11 @@ public abstract class Row {
      */
     String getCalc(int i, long coordinate) {
         // Index out of range
-        if (sharedDimension == null || sharedDimension.length <= i)
+        if (sharedCalc == null || sharedCalc.length <= i
+            || sharedCalc[i] == null)
             return EMPTY;
-        long dim = sharedDimension[i];
-        int t = (int) (dim & 0x03);
 
-        // Offset from first calc cell
-        int offset_x = (int) ((coordinate & (1 << 14) - 1) - (dim >> 28));
-        int offset_y = (int) (((coordinate >> 16) & (1 << 20) - 1) - (dim >> 42 & (1 << 20) - 1));
-
-        String calc = sharedCalc[i];
-        switch (t) {
-            case 0x01:
-                break;
-            case 0x02:
-                break;
-            case 0x0:
-                break;
-        }
-        // TODO calc string
-        return calc;
+        return sharedCalc[i].get(coordinate);
     }
 
     /**

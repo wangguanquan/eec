@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.util.StringUtil.swap;
@@ -253,11 +254,11 @@ public class ExcelReaderTest {
                 }).forEach(row -> {
                     for (int i = row.fc; i < row.lc; i++) {
                         if (row.hasFormula(i)) {
-                            print(org.ttzero.excel.entity.Sheet.int2Col(i));
+                            print(int2Col(i + 1));
                             print(row.getRowNumber());
-                            print("=> ");
+                            print("=");
                             print(row.getFormula(i));
-                            println('|');
+                            println();
                         }
                     }
                 });

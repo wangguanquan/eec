@@ -18,8 +18,6 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.entity.style.Styles;
 
-import java.util.Arrays;
-
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
@@ -237,7 +235,7 @@ class XMLRow extends Row {
             // Function string is shared
             else if (cell.si > -1) {
                 // Get from ref
-                cell.fv = getCalc(cell.si, (getRowNumber() << 16) | i);
+                cell.fv = getCalc(cell.si, (getRowNumber() << 14) | i);
             }
         }
         // Get value
