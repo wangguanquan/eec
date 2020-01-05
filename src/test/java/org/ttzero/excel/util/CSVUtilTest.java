@@ -411,8 +411,8 @@ public class CSVUtilTest {
     }
 
     @Test public void testGBKCharset() {
-        String s1 = "打造中国千亿级MRO供应链平台";
-        String s2 = "让工业用品采购更简单";
+        String s1 = "双引号或单引号中间的一切都是字符串";
+        String s2 = "中文测试使用GBK";
 
         Charset GBK = Charset.forName("GBK");
 

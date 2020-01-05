@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,28 +36,61 @@ public class Cell {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
-    // n=numeric
-    // s=string
-    // b=boolean
-    // f=function string
-    // r=inlineStr
-    // l=long
-    // d=double
-    public char t; // type
-    // value
-    public String sv;
-    public int nv;
-    public long lv;
-    public double dv;
-    public boolean bv;
-    public char cv;
-    public BigDecimal mv;
-    public int xf;
-
     /**
-     * The style index
+     * Value type
+     * n=numeric
+     * s=string
+     * b=boolean
+     * f=function string
+     * r=inlineStr
+     * l=long
+     * d=double
      */
-    public short s;
+    public char t; // type
+    /**
+     * String value
+     */
+    public String sv;
+    /**
+     * Integer value contain short
+     */
+    public int nv;
+    /**
+     * Long value
+     */
+    public long lv;
+    /**
+     * Double value contain float
+     */
+    public double dv;
+    /**
+     * Boolean value
+     */
+    public boolean bv;
+    /**
+     * Char value
+     */
+    public char cv;
+    /**
+     * Decimal value
+     */
+    public BigDecimal mv;
+    /**
+     * Style index
+     */
+    public int xf;
+    /**
+     * Formula string
+     */
+    public String fv;
+    /**
+     * Shared calc id
+     */
+    public int si;
+    /**
+     * Has formula
+     */
+    public boolean f;
 
     public void setT(char t) {
         this.t = t;
@@ -127,6 +160,8 @@ public class Cell {
         this.cv = '\0';
         this.mv = null;
         this.xf = 0;
-        this.s = 0;
+        this.fv = null;
+        this.f = false;
+        this.si = -1;
     }
 }

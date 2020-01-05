@@ -45,6 +45,7 @@ public interface ICellValueAndStyle {
     /**
      * Setting cell value and cell styles
      *
+     * @param row  the row number
      * @param cell the cell
      * @param e    the cell value
      * @param hc   the header column
@@ -61,6 +62,7 @@ public interface ICellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param rows the row number
      * @param hc the header column
      * @param o  the cell value
      * @return the style index in xf
@@ -70,6 +72,7 @@ public interface ICellValueAndStyle {
     /**
      * Setting cell value
      *
+     * @param row the row number
      * @param cell  the cell
      * @param e     the cell value
      * @param hc    the header column
@@ -125,6 +128,7 @@ public interface ICellValueAndStyle {
     /**
      * Setting cell value as null
      *
+     * @param row the row number
      * @param cell  the cell
      * @param hc    the header column
      */
@@ -139,6 +143,7 @@ public interface ICellValueAndStyle {
     /**
      * Int value conversion to others
      *
+     * @param row the row number
      * @param cell the cell
      * @param n    the cell value
      * @param hc   the header column

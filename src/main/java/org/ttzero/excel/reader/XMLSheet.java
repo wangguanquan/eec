@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,6 +72,9 @@ class XMLSheet implements Sheet {
      */
     private long dimension;
     private int rc; // Range of column
+    private long[] calc; // Array of formula
+    private boolean hasCalc;
+    private boolean parseFormula;
 
     /**
      * Setting the worksheet name
@@ -109,6 +113,16 @@ class XMLSheet implements Sheet {
     }
 
     /**
+     * Setting formula array
+     *
+     * @param calc array of formula
+     */
+    void setCalc(long[] calc) {
+        this.calc = calc;
+        this.hasCalc = calc != null && calc.length > 0;
+    }
+
+    /**
      * The worksheet name
      *
      * @return the sheet name
@@ -136,8 +150,10 @@ class XMLSheet implements Sheet {
      * size of rows.
      *
      * @return size of rows
-     * -1: unknown size
+     *      -1: unknown size
+     * @deprecated use {@link #getDimension()} to getting full range address
      */
+    @Deprecated
     @Override
     public int getSize() {
         if (dimension == 0) return -1;
@@ -159,8 +175,8 @@ class XMLSheet implements Sheet {
             parseDimension();
         }
         return new Dimension((int)(dimension & 0x7FFFFFFF)
-            , (int) (dimension >>> 32)
             , (short) (rc & 0x7FFF)
+            , (int) (dimension >>> 32)
             , (short) (rc >> 16));
     }
 
@@ -306,7 +322,8 @@ class XMLSheet implements Sheet {
             eof = true;
         } else {
             eof = false;
-            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1); // share row space
+            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1
+                , parseFormula && hasCalc ? this::findCalc : null); // share row space
         }
 
         mark = nChar;
@@ -317,9 +334,8 @@ class XMLSheet implements Sheet {
      * iterator rows
      *
      * @return Row
-     * @throws IOException if io error occur
      */
-    private XMLRow nextRow() throws IOException {
+    private XMLRow nextRow() {
         if (eof) return null;
         boolean endTag = false;
         int start = nChar;
@@ -349,14 +365,18 @@ class XMLSheet implements Sheet {
             } else {
                 System.arraycopy(cb, start, cb, 0, n = length - start);
             }
-            length = reader.read(cb, n, cb.length - n);
-            // end of file
-            if (length < 0) {
-                eof = true;
-                reader.close(); // close reader
-                reader = null; // wait GC
-                logger.debug("end of file.");
-                return null;
+            try {
+                length = reader.read(cb, n, cb.length - n);
+                // end of file
+                if (length < 0) {
+                    eof = true;
+                    reader.close(); // close reader
+                    reader = null; // wait GC
+                    logger.debug("end of file.");
+                    return null;
+                }
+            } catch (IOException e) {
+                throw new ExcelReadException("Parse row data error", e);
             }
             nChar = 0;
             length += n;
@@ -422,7 +442,8 @@ class XMLSheet implements Sheet {
         }
 
         // row
-        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, nChar - start);
+        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1
+            , parseFormula && hasCalc ? this::findCalc : null).with(cb, start, nChar - start);
     }
 
     /**
@@ -466,22 +487,34 @@ class XMLSheet implements Sheet {
     }
 
     /**
+     * Make reader parse the formula
+     */
+    @Override
+    public void parseFormula() {
+        this.parseFormula = true;
+    }
+
+    /**
      * Reset the {@link XMLSheet}'s row index to begging
      *
      * @return the unread {@link XMLSheet}
      */
     @Override
-    public XMLSheet reset() throws IOException {
-        // Close the opening reader
-        if (reader != null) {
-            reader.close();
+    public XMLSheet reset() {
+        try {
+            // Close the opening reader
+            if (reader != null) {
+                reader.close();
+            }
+            // Reload
+            reader = Files.newBufferedReader(path);
+            reader.skip(mark);
+            length = reader.read(cb);
+            nChar = 0;
+            eof = length <= 0;
+        } catch (IOException e) {
+            throw new ExcelReadException("Reset worksheet[" + getName() + "] error occur.", e);
         }
-        // Reload
-        reader = Files.newBufferedReader(path);
-        reader.skip(mark);
-        length = reader.read(cb);
-        nChar = 0;
-        eof = length <= 0;
 
         return this;
     }
@@ -592,5 +625,27 @@ class XMLSheet implements Sheet {
         for (; charBuffer.get(i) != '"'; i++)
             ls = ls * 10 + (charBuffer.get(i) - '0');
         return new int[] {row, cs, ls};
+    }
+
+    /* Found calc */
+    private void findCalc(int row, Cell[] cells, int n) {
+        long r = ((long) row) << 16;
+        int i = Arrays.binarySearch(calc, r);
+        if (i < 0) {
+            i = ~i;
+            if (i >= calc.length) return;
+        }
+        long a = calc[i];
+        if ((int) (a >> 16) != row) return;
+
+        cells[(((int) a) & 0x7FFF) - 1].f = true;
+        int j = 1;
+        if (n == -1) n = cells.length;
+        n = Math.min(n, calc.length - i);
+        for (; j < n; j++) {
+            if ((calc[i + j] >> 16) == row)
+                cells[(((int) calc[i + j]) & 0x7FFF) - 1].f = true;
+            else break;
+        }
     }
 }
