@@ -72,7 +72,7 @@ class PreCalc {
             for (; f < len && cb[f] >= 'A' && cb[f] <= 'Z'; f++) ;
 
             int c = toCellIndex(cb, n, f);
-            if (c > Const.Limit.MAX_COLUMNS_ON_SHEET) {
+            if (c < 0 || c > Const.Limit.MAX_COLUMNS_ON_SHEET) {
                 continue;
             }
 
