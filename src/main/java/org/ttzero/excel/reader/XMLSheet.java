@@ -629,22 +629,21 @@ class XMLSheet implements Sheet {
 
     /* Found calc */
     private void findCalc(int row, Cell[] cells, int n) {
-        int rr = row + 1;
-        long r = ((long) rr) << 16;
+        long r = ((long) row) << 16;
         int i = Arrays.binarySearch(calc, r);
         if (i < 0) {
             i = ~i;
             if (i >= calc.length) return;
         }
         long a = calc[i];
-        if ((int) (a >> 16) != rr) return;
+        if ((int) (a >> 16) != row) return;
 
         cells[(((int) a) & 0x7FFF) - 1].f = true;
         int j = 1;
         if (n == -1) n = cells.length;
         n = Math.min(n, calc.length - i);
         for (; j < n; j++) {
-            if ((calc[i + j] >> 16) == rr)
+            if ((calc[i + j] >> 16) == row)
                 cells[(((int) calc[i + j]) & 0x7FFF) - 1].f = true;
             else break;
         }
