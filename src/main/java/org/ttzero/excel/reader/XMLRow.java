@@ -49,7 +49,7 @@ class XMLRow extends Row {
     private boolean hasCalc;
 
     /**
-     * The number of row. (zero base)
+     * The number of row. (one base)
      *
      * @return int value
      */
@@ -58,7 +58,7 @@ class XMLRow extends Row {
         if (index == -1)
             searchRowNumber();
         // The first row index is one
-        return index - 1;
+        return index;
     }
 
     @SuppressWarnings("unused")

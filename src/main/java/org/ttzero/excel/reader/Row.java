@@ -77,7 +77,7 @@ public abstract class Row {
     Styles styles;
 
     /**
-     * The number of row. (zero base)
+     * The number of row. (one base)
      *
      * @return int value
      */
