@@ -196,7 +196,7 @@ class XMLRow extends Row {
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                i = unknownLength ? (lc = toCellIndex(a, cursor)) : toCellIndex(a, cursor);
+                i = unknownLength ? (lc = toCellIndex(cb, a, cursor)) : toCellIndex(cb, a, cursor);
                 cell = cells[i - 1];
             }
             // Cell type
@@ -421,25 +421,6 @@ class XMLRow extends Row {
      */
     private int getF(Cell cell, int e) {
         return get(cell, e, 'f', this::parseFunAttr);
-    }
-
-    /**
-     * Convert to column index
-     *
-     * @param a the start index
-     * @param b the end index
-     * @return the cell index
-     */
-    private int toCellIndex(int a, int b) {
-        int n = 0;
-        for (; a <= b; a++) {
-            if (cb[a] <= 'Z' && cb[a] >= 'A') {
-                n = n * 26 + cb[a] - '@';
-            } else if (cb[a] <= 'z' && cb[a] >= 'a') {
-                n = n * 26 + cb[a] - '、';
-            } else break;
-        }
-        return n;
     }
 
     /* Parse function tag's attribute */

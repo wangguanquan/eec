@@ -1149,4 +1149,23 @@ public abstract class Row {
         return calc;
     }
 
+    /**
+     * Convert to column index
+     *
+     * @param cb character buffer
+     * @param a the start index
+     * @param b the end index
+     * @return the cell index
+     */
+    public static int toCellIndex(char[] cb, int a, int b) {
+        int n = 0;
+        for (; a <= b; a++) {
+            if (cb[a] <= 'Z' && cb[a] >= 'A') {
+                n = n * 26 + cb[a] - '@';
+            } else if (cb[a] <= 'z' && cb[a] >= 'a') {
+                n = n * 26 + cb[a] - '、';
+            } else break;
+        }
+        return n;
+    }
 }
