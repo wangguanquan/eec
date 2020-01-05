@@ -449,6 +449,35 @@ public void testReadXLS() {
 }
 ```
 
+#### 6. 读取单元格公式
+
+```
+@Test public void testFormula() {
+    try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+        if (reader.hasFormula()) {
+        
+            // Call `parseFormula` to parse formula
+            reader.parseFormula().sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                return sheet.dataRows();
+            }).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        print(int2Col(i + 1));
+                        print(row.getRowNumber());
+                        print("=");
+                        print(row.getFormula(i)); // Getting formula string
+                        println();
+                    }
+                }
+            });
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
 ## CHANGELOG
 Version 0.3.6 (2019-11-21)
 -------------
