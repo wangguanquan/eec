@@ -1045,6 +1045,24 @@ public abstract class Row {
      *
      * @param i the ref id
      * @param ref ref value, a range dimension string
+     */
+    void addRef(int i, String ref) {
+        addRef(i, ref, null);
+    }
+
+    /**
+     * Add function shared ref
+     * <blockquote><pre>
+     * 63   : Not used
+     * 42-62: First row number
+     * 28-41: First column number
+     * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
+     * 2-7/2-13: Not used
+     * 0-1    : Axis, 00: range 01: y-axis 10: x-axis
+     * </pre></blockquote>
+     *
+     * @param i the ref id
+     * @param ref ref value, a range dimension string
      * @param calc the calc string
      */
     void addRef(int i, String ref, String calc) {
@@ -1065,13 +1083,14 @@ public abstract class Row {
 
         if (dim.firstColumn == dim.lastColumn) {
             l |= ((dim.lastRow - dim.firstRow) & (1 << 20) - 1) << 8;
+            l |= (1 << 1);
         }
         else if (dim.firstRow == dim.lastRow) {
             l |= ((dim.lastColumn - dim.firstColumn) & (1 << 14) - 1) << 14;
             l |= 1;
         }
         sharedDimension[i] = l;
-        sharedCalc[i] = calc;
+        setCalc(i, calc);
     }
 
     /**
@@ -1081,8 +1100,21 @@ public abstract class Row {
      * @param calc the calc string
      */
     void setCalc(int i, String calc) {
-        if (sharedDimension == null || sharedDimension.length <= i)
+        if (sharedDimension == null || sharedDimension.length <= i
+            || StringUtil.isEmpty(calc))
             return;
+        // Preprocessed
+        long dim = sharedDimension[i];
+        int t = (int) (dim & 0x03);
+        switch (t) {
+            case 0x01:
+
+                break;
+            case 0x02:
+                break;
+            case 0x0:
+                break;
+        }
         sharedCalc[i] = calc;
     }
 
@@ -1098,7 +1130,21 @@ public abstract class Row {
         if (sharedDimension == null || sharedDimension.length <= i)
             return EMPTY;
         long dim = sharedDimension[i];
+        int t = (int) (dim & 0x03);
+
+        // Offset from first calc cell
+        int offset_x = (int) ((coordinate & (1 << 14) - 1) - (dim >> 28));
+        int offset_y = (int) (((coordinate >> 16) & (1 << 20) - 1) - (dim >> 42 & (1 << 20) - 1));
+
         String calc = sharedCalc[i];
+        switch (t) {
+            case 0x01:
+                break;
+            case 0x02:
+                break;
+            case 0x0:
+                break;
+        }
         // TODO calc string
         return calc;
     }
