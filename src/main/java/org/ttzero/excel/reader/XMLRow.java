@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.reader.SharedStrings.unescape;
+import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
  * Row data, shared by the Row object in the same Sheet page.
@@ -42,9 +43,11 @@ import static org.ttzero.excel.reader.SharedStrings.unescape;
 class XMLRow extends Row {
     private int startRow;
     private StringBuilder buf;
+    private MergeCalc calcFun;
+    private boolean hasCalc;
 
     /**
-     * The number of row. (zero base)
+     * The number of row. (one base)
      *
      * @return int value
      */
@@ -53,17 +56,19 @@ class XMLRow extends Row {
         if (index == -1)
             searchRowNumber();
         // The first row index is one
-        return index - 1;
+        return index;
     }
 
     @SuppressWarnings("unused")
-	private XMLRow() { }
+    private XMLRow() { }
 
-    XMLRow(SharedStrings sst, Styles styles, int startRow) {
+    XMLRow(SharedStrings sst, Styles styles, int startRow, MergeCalc calcFun) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
         buf = new StringBuilder();
+        this.calcFun = calcFun;
+        this.hasCalc = calcFun != null;
     }
 
     /////////////////////////unsafe////////////////////////
@@ -96,7 +101,7 @@ class XMLRow extends Row {
     }
 
     private int searchRowNumber() {
-        int _f = from + 4, a; // skip '<row '
+        int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
                 a = _f += 4;
@@ -111,7 +116,7 @@ class XMLRow extends Row {
     }
 
     private int searchSpan() {
-        int i = from, _lc = lc;
+        int i = from + 4, _lc = lc;
         for (; cb[i] != '>'; i++) {
             if (cb[i] <= ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
                 && cb[i + 3] == 'a' && cb[i + 4] == 'n' && cb[i + 5] == 's'
@@ -150,6 +155,13 @@ class XMLRow extends Row {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
+
+        // Parse formula if exists and can parse
+        if (hasCalc) {
+            calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+        }
+
+        // Parse cell value
         if (unknownLength) {
             while (nextCell() != null) index++;
         } else {
@@ -176,14 +188,14 @@ class XMLRow extends Row {
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
-        // The style index
-        short s = 0;
+        int xf = 0, i = 1;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                cell = cells[unknownLength ? (lc = toCellIndex(a, cursor)) - 1 : toCellIndex(a, cursor) - 1];
+                i = unknownLength ? (lc = toCellIndex(cb, a, cursor)) : toCellIndex(cb, a, cursor);
+                cell = cells[i - 1];
             }
             // Cell type
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 't' && cb[cursor + 2] == '=') {
@@ -203,16 +215,30 @@ class XMLRow extends Row {
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                s = (short) (toInt(cb, a, cursor) & 0xFFFF);
+                xf = toInt(cb, a, cursor);
             }
         }
 
         if (cell == null) return null;
 
         // The style index
-        cell.s = s;
+        cell.xf = xf;
 
-        // get value
+        // Ignore Formula string default
+        if (hasCalc) {
+            int a = getF(cell, e);
+            // Inner text
+            if (a < cursor) {
+                cell.fv = unescape(buf, cb, a, cursor);
+                if (cell.si > -1) setCalc(cell.si, cell.fv);
+            }
+            // Function string is shared
+            else if (cell.si > -1) {
+                // Get from ref
+                cell.fv = getCalc(cell.si, (getRowNumber() << 14) | i);
+            }
+        }
+        // Get value
         int a;
         switch (t) {
             case INLINESTR: // inner string
@@ -235,6 +261,12 @@ class XMLRow extends Row {
                 }
                 break;
             case FUNCTION: // function string
+                a = getV(e);
+                if (a == cursor) { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
+                } else {
+                    cell.setSv(unescape(buf, cb, a, cursor));
+                }
                 break;
             default:
                 a = getV(e);
@@ -300,69 +332,167 @@ class XMLRow extends Row {
         return true;
     }
 
+    /* Found specify target  */
+    private int get(int e, char c) {
+        // Ignore all attributes
+        return get(null, e, c, null);
+    }
+
     /**
-     * inner string
-     * <is><t>cell value</t></is>
+     * Parses the value and attributes of the specified tag
+     *
+     * @param cell current cell
+     * @param e the last character index
+     * @param c the specified tag
+     * @param attrConsumer an attribute consumer
+     * @return the start index of value
+     */
+    private int get(Cell cell, int e, char c, Attribute attrConsumer) {
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
+            || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
+        if (cursor == e) return cursor;
+
+        int a;
+        if (cb[cursor + 2] == '>') {
+            a = cursor += 3;
+        }
+        // Some other attributes
+        else if (cb[cursor + 2] == ' ') {
+            int i = cursor + 3;
+            for (; cursor < e && cb[cursor] != '>'; cursor++) ;
+            // If parse attributes
+            if (attrConsumer != null)
+                attrConsumer.accept(cell, cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
+
+            cursor++;
+            if (cb[cursor - 2] == '/' || cursor == e) {
+                return cursor;
+            }
+            a = cursor;
+        }
+        // Empty tag
+        else if (cb[cursor + 2] == '/') {
+            cursor += 3;
+            return cursor;
+        }
+        else {
+            a = cursor += 3;
+        }
+
+        // Found end tag
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != c || cb[cursor + 3] != '>'); cursor++) ;
+
+        return a;
+    }
+
+    /**
+     * Found text tag range
+     *
+     * Code like this {@code <is><t>cell value</t></is>}
      *
      * @param e the last index in char buffer
      * @return the end index of string value
      */
     private int getT(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 't'
-            || cb[cursor + 2] != '>'); cursor++) ;
-        if (cursor == e) return cursor;
-        int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
-            || cb[cursor + 2] != 't' || cb[cursor + 3] != '>'); cursor++) ;
-        return a;
+        return get(e, 't');
     }
 
     /**
-     * The string index in shared string table
+     * Found value tag range
+     *
+     * Code like this {@code <v>0</v>
      *
      * @param e the last index in char buffer
      * @return the end index of int value
      */
     private int getV(int e) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'v'
-            || cb[cursor + 2] != '>'); cursor++) ;
-        if (cursor == e) return cursor;
-        int a = cursor += 3;
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
-            || cb[cursor + 2] != 'v' || cb[cursor + 3] != '>'); cursor++) ;
-        return a;
+        return get(e, 'v');
     }
 
     /**
-     * function string
+     * Found the Function tag range
+     * Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f>
      *
      * @param e the last index in char buffer
      * @return the end index of function value
      */
-    @SuppressWarnings("unused")
-    private int getF(int e) {
-        // undo
-        // return end index of row
-        return e;
+    private int getF(Cell cell, int e) {
+        return get(cell, e, 'f', this::parseFunAttr);
+    }
+
+    /* Parse function tag's attribute */
+    private void parseFunAttr(Cell cell, char[] cb, int a, int b) {
+        // t="shared" ref="B2:B3" si="0"
+        String[] values = new String[10];
+        int index = 0;
+        boolean sv = false; // is string value
+        for (int i = a ; ; ) {
+            for (; a < b && cb[a] > ' ' && cb[a] != '='; a++) ;
+            values[index++] = new String(cb, i, sv ? a - i - 1 : a - i);
+            sv = false;
+
+            if (a + 1 < b) {
+                // String value
+                if (cb[a + 1] == '"') {
+                    a += 2;
+                    sv = true;
+                }
+                // Boolean value
+                else if (cb[a + 1] == ' ') {
+                    values[index++] = "1";
+                    a++;
+                }
+                else a++;
+                i = a;
+            } else break;
+        }
+
+        if (index < 2 || (index & 1) == 1) {
+            logger.warn("The function format error.[{}]", new String(cb, a, b - a));
+            return;
+        }
+
+        // Sort like t, si, ref
+        for (int i = 0, len = index >> 1; i < len; i++) {
+            int _i = i << 1, vl = values[_i].length();
+            if (vl - 1 == i) {
+                continue;
+            }
+            // Will be sort
+            int _n = vl - 1;
+            if (_n > index - 1) {
+                logger.warn("Unknown attribute on function tag.[{}]", values[_i]);
+                return;
+            }
+            swap(values, _n << 1, _i);
+            swap(values, (_n << 1) + 1, _i + 1);
+        }
+
+        int si = Integer.parseInt(values[3]);
+
+        // Append and share href
+        if (index > 4) {
+            addRef(si, values[5]);
+        }
+
+        // Storage formula shared id
+        cell.si = si;
     }
 
     /**
-     * Convert to column index
-     *
-     * @param a the start index
-     * @param b the end index
-     * @return the cell index
+     * Attribute consumer
      */
-    private int toCellIndex(int a, int b) {
-        int n = 0;
-        for (; a <= b; a++) {
-            if (cb[a] <= 'Z' && cb[a] >= 'A') {
-                n = n * 26 + cb[a] - '@';
-            } else if (cb[a] <= 'z' && cb[a] >= 'a') {
-                n = n * 26 + cb[a] - '、';
-            } else break;
-        }
-        return n;
+    @FunctionalInterface
+    private interface Attribute {
+        /**
+         * Performs this operation on the given argument.
+         *
+         * @param cell current cell
+         * @param cb characters for the entire attribute
+         * @param a start index
+         * @param b end index
+         */
+        void accept(Cell cell, char[] cb, int a, int b);
     }
-
 }

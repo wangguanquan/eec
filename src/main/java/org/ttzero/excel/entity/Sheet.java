@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1293,8 +1293,8 @@ public abstract class Sheet implements Cloneable, Storageable {
     /**
      * Int conversion to column string number
      * The max column on sheet is 16_384
-     * <p>
-     * int  | column number
+     * <blockquote><pre>
+     * int    | column number
      * -------|---------
      * 1      | A
      * 10     | J
@@ -1303,10 +1303,11 @@ public abstract class Sheet implements Cloneable, Storageable {
      * 28     | AB
      * 53     | BA
      * 16_384 | XFD
+     * </pre></blockquote>
+     * @param n the column number
+     * @return column string
      */
-    private ThreadLocal<char[][]> cache = ThreadLocal.withInitial(() -> new char[][]{{65}, {65, 65}, {65, 65, 65}});
-
-    public char[] int2Col(int n) {
+    public static char[] int2Col(int n) {
         char[][] cache_col = cache.get();
         char[] c;
         char A = 'A';
@@ -1340,6 +1341,9 @@ public abstract class Sheet implements Cloneable, Storageable {
         return c;
     }
 
+    private static ThreadLocal<char[][]> cache
+        = ThreadLocal.withInitial(() -> new char[][]{ {65}, {65, 65}, {65, 65, 65} });
+
     /**
      * Check empty header row
      *
@@ -1365,7 +1369,7 @@ public abstract class Sheet implements Cloneable, Storageable {
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Sheet.Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();

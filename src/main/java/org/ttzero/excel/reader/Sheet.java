@@ -137,9 +137,10 @@ public interface Sheet extends AutoCloseable {
      * Reset the {@link Sheet}'s row index to begging
      *
      * @return the unread {@link Sheet}
-     * @throws IOException if I/O error occur
+     * @throws ExcelReadException if I/O error occur.
+     * @throws UnsupportedOperationException if sub-class un-implement this function.
      */
-    default Sheet reset() throws IOException {
+    default Sheet reset() {
         throw new UnsupportedOperationException();
     }
 
@@ -196,6 +197,7 @@ public interface Sheet extends AutoCloseable {
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
      * @param path the output storage path
+     * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(Path path) throws IOException {
         // Create path if not exists
@@ -213,6 +215,7 @@ public interface Sheet extends AutoCloseable {
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
      * @param os the output
+     * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(OutputStream os) throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(os)) {
@@ -229,23 +232,21 @@ public interface Sheet extends AutoCloseable {
                             writer.write(c.sv);
                             break;
                         case INLINESTR:
+                        case FUNCTION: // Formula string value
                             writer.write(c.sv);
                             break;
                         case BOOL:
                             writer.write(c.bv);
                             break;
-                        case FUNCTION:
-                            writer.write("<function>");
-                            break;
                         case NUMERIC:
-                            if (!row.styles.fastTestDateFmt(c.s)) writer.write(c.nv);
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.nv);
                             else writer.write(toLocalDate(c.nv).toString());
                             break;
                         case LONG:
                             writer.write(c.lv);
                             break;
                         case DOUBLE:
-                            if (!row.styles.fastTestDateFmt(c.s)) writer.write(c.dv);
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.dv);
                             else writer.write(toTimestamp(c.dv).toString());
                             break;
                         default:
@@ -256,4 +257,9 @@ public interface Sheet extends AutoCloseable {
             }
         }
     }
+
+    /**
+     * Make reader parse the formula
+     */
+    void parseFormula();
 }

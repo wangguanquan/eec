@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -156,7 +155,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Files.createDirectory(themeP);
         }
         try {
-            Files.copy(getClass().getClassLoader().getResourceAsStream("template/theme1.xml"), themeP.resolve("theme1.xml"));
+            InputStream theme = getClass().getClassLoader().getResourceAsStream("template/theme1.xml");
+            if (theme != null) {
+                Files.copy(theme, themeP.resolve("theme1.xml"));
+            }
         } catch (IOException e) {
             // Nothing
         }
@@ -243,14 +245,14 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                         Document document;
                         try {
                             document = reader.read(Files.newInputStream(pomPath));
+                            Element pomRoot = document.getRootElement();
+                            String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
+                            app.setApplication(application);
+                            String appVersion = pomRoot.elementText("version");
+                            app.setAppVersion(appVersion);
                         } catch (DocumentException | IOException e) {
-                            throw new ExcelReadException(e);
+                            // Nothing
                         }
-                        Element pomRoot = document.getRootElement();
-                        String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
-                        app.setAppVersion(application);
-                        String appVersion = pomRoot.elementText("version");
-                        app.setAppVersion(appVersion);
                     }
                 }
             }
@@ -260,12 +262,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 app.setAppVersion(pom.getProperty("version"));
                 // Can't read pom.xml if running as dev on window
             }
-            if (StringUtil.isEmpty(app.getAppVersion())) {
-                app.setApplication("org.ttzero.eec");
-                app.setAppVersion("1.0.0");
-            }
         } catch (IOException e) {
             // Nothing
+        }
+        if (StringUtil.isEmpty(app.getAppVersion())) {
+            app.setApplication("org.ttzero.eec");
+            app.setAppVersion("1.0.0");
         }
 
         int size = workbook.getSize();
@@ -393,9 +395,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
             }
         }
-
-        // Calculation Properties
-        rootElement.addElement("calcPr").addAttribute("calcId", "124519");
 
         Document doc = factory.createDocument(rootElement);
         FileUtil.writeToDiskNoFormat(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk

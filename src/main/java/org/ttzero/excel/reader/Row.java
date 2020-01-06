@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ package org.ttzero.excel.reader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.StringJoiner;
 
@@ -34,14 +34,17 @@ import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
-import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
+import static org.ttzero.excel.util.StringUtil.EMPTY;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Create by guanquan.wang at 2019-04-17 11:08
@@ -64,13 +67,16 @@ public abstract class Row {
     protected HeaderRow hr;
     boolean unknownLength;
 
+    // Cache formulas
+    private PreCalc[] sharedCalc;
+
     /**
      * The global styles
      */
     Styles styles;
 
     /**
-     * The number of row. (zero base)
+     * The number of row. (one base)
      *
      * @return int value
      */
@@ -195,10 +201,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                v = StringUtil.isNotEmpty(c.sv);
+                v = isNotEmpty(c.sv);
                 break;
             case INLINESTR:
-                v = StringUtil.isNotEmpty(c.sv);
+                v = isNotEmpty(c.sv);
                 break;
 
             default: v = false;
@@ -289,15 +295,13 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                String s = c.sv;
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
+                if (isNotEmpty(c.sv)) {
+                    cc |= c.sv.charAt(0);
                 }
                 break;
             case INLINESTR:
-                s = c.sv;
-                if (StringUtil.isNotEmpty(s)) {
-                    cc |= s.charAt(0);
+                if (isNotEmpty(c.sv)) {
+                    cc |= c.sv.charAt(0);
                 }
                 break;
             case NUMERIC:
@@ -412,18 +416,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                try {
-                    n = Integer.parseInt(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to int");
-                }
+                n = Integer.parseInt(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    n = Integer.parseInt(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to int");
-                }
+                n = Integer.parseInt(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("unknown type");
@@ -475,18 +471,10 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                try {
-                    l = Long.parseLong(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to long");
-                }
+                l = Long.parseLong(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    l = Long.parseLong(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to long");
-                }
+                l = Long.parseLong(c.sv);
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
@@ -537,7 +525,7 @@ public abstract class Row {
                 s = c.sv;
                 break;
             case BLANK:
-                s = StringUtil.EMPTY;
+                s = EMPTY;
                 break;
             case LONG:
                 s = String.valueOf(c.lv);
@@ -614,18 +602,13 @@ public abstract class Row {
                 d = c.nv;
                 break;
             case SST:
-                try {
-                    d = Double.valueOf(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to double");
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
                 }
+                d = Double.valueOf(c.sv);
                 break;
             case INLINESTR:
-                try {
-                    d = Double.valueOf(c.sv);
-                } catch (NumberFormatException e) {
-                    throw new UncheckedTypeException("String value " + c.sv + " can't convert to double");
-                }
+                d = Double.valueOf(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("unknown type");
@@ -708,19 +691,19 @@ public abstract class Row {
         Date date;
         switch (c.t) {
             case NUMERIC:
-                date = DateUtil.toDate(c.nv);
+                date = toDate(c.nv);
                 break;
             case DOUBLE:
-                date = DateUtil.toDate(c.dv);
+                date = toDate(c.dv);
                 break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                date = DateUtil.toDate(c.sv);
+                date = toDate(c.sv);
                 break;
             case INLINESTR:
-                date = DateUtil.toDate(c.sv);
+                date = toDate(c.sv);
                 break;
             default: throw new UncheckedTypeException("");
         }
@@ -759,19 +742,19 @@ public abstract class Row {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
-                ts = DateUtil.toTimestamp(c.nv);
+                ts = toTimestamp(c.nv);
                 break;
             case DOUBLE:
-                ts = DateUtil.toTimestamp(c.dv);
+                ts = toTimestamp(c.dv);
                 break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             case INLINESTR:
-                ts = DateUtil.toTimestamp(c.sv);
+                ts = toTimestamp(c.sv);
                 break;
             default: throw new UncheckedTypeException("");
         }
@@ -787,7 +770,7 @@ public abstract class Row {
     public java.sql.Time getTime(int columnIndex) {
         Cell c = getCell(columnIndex);
         if (c.t == DOUBLE) {
-            return DateUtil.toTime(c.dv);
+            return toTime(c.dv);
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
     }
@@ -801,9 +784,51 @@ public abstract class Row {
     public java.sql.Time getTime(String columnName) {
         Cell c = getCell(columnName);
         if (c.t == DOUBLE) {
-            return DateUtil.toTime(c.dv);
+            return toTime(c.dv);
         }
         throw new UncheckedTypeException("can't convert to java.sql.Time");
+    }
+
+    /**
+     * Returns formula if exists
+     *
+     * @param columnIndex the cell index
+     * @return the formula string if exists, otherwise return null
+     */
+    public String getFormula(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return c.fv;
+    }
+
+    /**
+     * Returns formula if exists
+     *
+     * @param columnName the cell name
+     * @return the formula string if exists, otherwise return null
+     */
+    public String getFormula(String columnName) {
+        Cell c = getCell(columnName);
+        return c.fv;
+    }
+
+    /**
+     * Check cell has formula
+     *
+     * @param columnIndex the cell index
+     * @return the formula string if exists, otherwise return null
+     */
+    public boolean hasFormula(int columnIndex) {
+        return getCell(columnIndex).f;
+    }
+
+    /**
+     * Check cell has formula
+     *
+     * @param columnName the cell name
+     * @return the formula string if exists, otherwise return null
+     */
+    public boolean hasFormula(String columnName) {
+        return getCell(columnName).f;
     }
 
     /**
@@ -843,13 +868,13 @@ public abstract class Row {
                 break;
             case NUMERIC:
             case CHARACTER:
-                type = !styles.fastTestDateFmt(c.s) ? CellType.INTEGER : CellType.DATE;
+                type = !styles.fastTestDateFmt(c.xf) ? CellType.INTEGER : CellType.DATE;
                 break;
             case LONG:
                 type = CellType.LONG;
                 break;
             case DOUBLE:
-                type = !styles.fastTestDateFmt(c.s) ? CellType.DOUBLE : CellType.DATE;
+                type = !styles.fastTestDateFmt(c.xf) ? CellType.DOUBLE : CellType.DATE;
                 break;
             case BOOL:
                 type = CellType.BOOLEAN;
@@ -983,26 +1008,116 @@ public abstract class Row {
                 case BOOL:
                     joiner.add(String.valueOf(c.bv));
                     break;
-                case FUNCTION:
-                    joiner.add("<function>");
-                    break;
+//                case FUNCTION: // convert to inner string
+//                    joiner.add("<function>");
+//                    break;
                 case NUMERIC:
-                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.nv));
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.nv));
                     else joiner.add(toLocalDate(c.nv).toString());
                     break;
                 case LONG:
                     joiner.add(String.valueOf(c.lv));
                     break;
                 case DOUBLE:
-                    if (!styles.fastTestDateFmt(c.s)) joiner.add(String.valueOf(c.dv));
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.dv));
                     else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:
-                    joiner.add(StringUtil.EMPTY);
+                    joiner.add(EMPTY);
                 default:
                     joiner.add(null);
             }
         }
         return joiner.toString();
+    }
+
+    /**
+     * Add function shared ref
+     * <blockquote><pre>
+     * 63   : Not used
+     * 42-62: First row number
+     * 28-41: First column number
+     * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
+     * 2-7/2-13: Not used
+     * 0-1    : Axis, 00: range 01: y-axis 10: x-axis
+     * </pre></blockquote>
+     *
+     * @param i the ref id
+     * @param ref ref value, a range dimension string
+     */
+    void addRef(int i, String ref) {
+        if (StringUtil.isEmpty(ref) || ref.indexOf(':') < 0)
+            return;
+
+        if (sharedCalc == null) {
+            sharedCalc = new PreCalc[Math.max(10, i + 1)];
+        } else if (i >= sharedCalc.length) {
+            sharedCalc = Arrays.copyOf(sharedCalc, i + 10);
+        }
+        Dimension dim = Dimension.from(ref);
+
+        long l = 0;
+        l |= (long) (dim.firstRow & (1 << 20) - 1) << 42;
+        l |= (long) (dim.firstColumn & (1 << 14) - 1) << 28;
+
+        if (dim.firstColumn == dim.lastColumn) {
+            l |= ((dim.lastRow - dim.firstRow) & (1 << 20) - 1) << 8;
+            l |= (1 << 1);
+        }
+        else if (dim.firstRow == dim.lastRow) {
+            l |= ((dim.lastColumn - dim.firstColumn) & (1 << 14) - 1) << 14;
+            l |= 1;
+        }
+        sharedCalc[i] = new PreCalc(l);
+    }
+
+    /**
+     * Setting calc string
+     *
+     * @param i the ref id
+     * @param calc the calc string
+     */
+    void setCalc(int i, String calc) {
+        if (sharedCalc == null || sharedCalc.length <= i
+            || sharedCalc[i] == null || StringUtil.isEmpty(calc))
+            return;
+
+        sharedCalc[i].setCalc(calc.toCharArray());
+    }
+
+    /**
+     * Get calc string by ref id and coordinate
+     *
+     * @param i the ref id
+     * @param coordinate the cell coordinate
+     * @return calc string
+     */
+    String getCalc(int i, long coordinate) {
+        // Index out of range
+        if (sharedCalc == null || sharedCalc.length <= i
+            || sharedCalc[i] == null)
+            return EMPTY;
+
+        return sharedCalc[i].get(coordinate);
+    }
+
+    /**
+     * Convert to column index
+     *
+     * @param cb character buffer
+     * @param a the start index
+     * @param b the end index
+     * @return the cell index
+     */
+    public static int toCellIndex(char[] cb, int a, int b) {
+        int n = 0;
+        for (; a <= b; a++) {
+            if (cb[a] <= 'Z' && cb[a] >= 'A') {
+                n = n * 26 + cb[a] - '@';
+            } else if (cb[a] <= 'z' && cb[a] >= 'a') {
+                n = n * 26 + cb[a] - '、';
+            } else break;
+        }
+        return n;
     }
 }

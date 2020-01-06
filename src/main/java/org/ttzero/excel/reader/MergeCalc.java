@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,20 @@
 
 package org.ttzero.excel.reader;
 
-import java.io.IOException;
-
 /**
- * Created by guanquan.wang on 2018/6/13.
+ * Test and merge formula each rows.
+ *
+ * Create by guanquan.wang at 2019-12-31 15:42
  */
 @FunctionalInterface
-interface RowSetProcessor {
+interface MergeCalc {
+
     /**
-     * The row set
+     * Merge formula in rows
      *
-     * @return the row data
+     * @param row thr row number
+     * @param cells the cells in row
+     * @param n count of cells
      */
-    Row next() throws IOException;
+    void accept(int row, Cell[] cells, int n);
 }

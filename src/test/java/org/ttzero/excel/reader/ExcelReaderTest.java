@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,10 @@ import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
+import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
  * Create by guanquan.wang at 2019-04-26 17:42
@@ -203,11 +206,139 @@ public class ExcelReaderTest {
 
     @Test public void testDimension() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
-            System.out.println(reader.sheet(0).getDimension());
+            Dimension dimension = reader.sheet(0).getDimension();
+            System.out.println(dimension);
+
+            assert dimension.firstRow == 1;
+            assert dimension.lastRow == 6;
+            assert dimension.firstColumn == 1;
+            assert dimension.lastColumn == 2;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    @Test public void testDimensionConstructor() {
+        Dimension dimension = Dimension.from("A1:C5");
+        assert "A1:C5".equals(dimension.toString());
+
+        assert dimension.firstRow == 1;
+        assert dimension.firstColumn == 1;
+        assert dimension.lastRow == 5;
+        assert dimension.lastColumn == 3;
+    }
+
+    @Test public void testFormula() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+            // Read formula
+            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        print(row.getFormula(i));
+                        println('|');
+                    }
+                }
+            });
+
+            // Reset
+            reader.sheets().forEach(Sheet::reset);
+
+            // Read value
+            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+
+            if (reader.hasFormula()) {
+                // Reset and parse formula
+                reader.parseFormula().sheets().flatMap(sheet -> {
+                    println("----------------" + sheet.getName() + "----------------");
+                    return sheet.dataRows();
+                }).forEach(row -> {
+                    for (int i = row.fc; i < row.lc; i++) {
+                        if (row.hasFormula(i)) {
+                            print(int2Col(i + 1));
+                            print(row.getRowNumber());
+                            print("=");
+                            print(row.getFormula(i));
+                            println();
+                        }
+                    }
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testSearch() {
+        long[] array = { 131075L, 327683L };
+        int column = 2, row = 3;
+        boolean h = Arrays.binarySearch(array, ((column + 1) & 0x7FFF) | ((long) row) << 16) >= 0;
+        println(h);
+
+        print(cellRangeToLong("AA10"));
+    }
+
+    @Test public void testClassBind() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
+                // Use bind...get...
+                // Getting and convert to specify Entry
+                Entry entry = row.get();
+                System.out.println(entry.toString());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testClassSharedBind() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
+                // Use bind...geet...
+                // Getting and convert to specify Entry, the entry is shared in memory
+                Entry entry = row.geet();
+                System.out.println(entry.toString());
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testVersionFilter() {
+        char[] chars = "..0...3...7.SNAPSHOT.".toCharArray();
+        int i = 0;
+        for (int j = 0; j < chars.length; j++) {
+            if (chars[j] >= '0' && chars[j] <= '9' || chars[j] == '.' && i > 0 && chars[i - 1] != '.')
+                chars[i++] = chars[j];
+        }
+        String version = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
+        assert "0.3.7".equals(version);
+    }
+
+    @Test public void testSort() {
+        int index = 6;
+        String[] values = {"ref", "B2:B8", "t", "shared","si", "0"};
+        // Sort like t, si, ref
+        for (int i = 0, len = index >> 1; i < len; i++) {
+            int _i = i << 1;
+            int vl = values[_i].length();
+            if (vl - 1 == i) {
+                continue;
+            }
+            // Will be sort
+            int _n = vl - 1;
+            swap(values, _n << 1, _i);
+            swap(values, (_n << 1) + 1, _i + 1);
+        }
+
+        assert "t".equals(values[0]);
+        assert "shared".equals(values[1]);
+        assert "si".equals(values[2]);
+        assert "0".equals(values[3]);
+        assert "ref".equals(values[4]);
+        assert "B2:B8".equals(values[5]);
+    }
+
+
 
     public static class Customer {
         @ExcelColumn("客户编码")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -55,6 +56,9 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static org.ttzero.excel.reader.SharedStrings.toInt;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Excel Reader tools
@@ -74,7 +78,7 @@ import java.util.stream.StreamSupport;
  * Create by guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private Logger logger = LogManager.getLogger(getClass());
+    private Logger LOGGER = LogManager.getLogger(getClass());
 
     protected ExcelReader() { }
 
@@ -83,6 +87,7 @@ public class ExcelReader implements AutoCloseable {
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
+    boolean hasFormula;
 
     /**
      * The Shared String Table
@@ -291,29 +296,54 @@ public class ExcelReader implements AutoCloseable {
      * @return the information
      */
     public AppInfo getAppInfo() {
-        if (appInfo == null) {
-            appInfo = getGeneralInfo();
-        }
         return appInfo;
     }
 
+    /**
+     * Check current workbook has formula
+     *
+     * @return boolean
+     */
+    public boolean hasFormula() {
+        return hasFormula;
+    }
+
+    /**
+     * Make the reader parse formula
+     *
+     * @return self
+     */
+    public ExcelReader parseFormula() {
+        for (Sheet sheet : sheets) {
+            sheet.parseFormula();
+        }
+        return this;
+    }
 
     // --- PRIVATE FUNCTIONS
 
 
     private ExcelReader(Path path, int bufferSize, int cacheSize) throws IOException {
         // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(Files.newInputStream(path), temp);
+        Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
+        ZipUtil.unzip(Files.newInputStream(path), tmp);
+
+        // Check the file format and parse general information
+        try {
+            appInfo = getGeneralInfo(tmp);
+        } catch (Exception e) {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw e;
+        }
 
         // load workbook.xml
         SAXReader reader = new SAXReader();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/_rels/workbook.xml.rels")));
+            document = reader.read(Files.newInputStream(tmp.resolve("xl/_rels/workbook.xml.rels")));
         } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
         }
         @SuppressWarnings("unchecked")
         List<Element> list = document.getRootElement().elements();
@@ -325,20 +355,29 @@ public class ExcelReader implements AutoCloseable {
         RelManager relManager = RelManager.of(rels);
 
         try {
-            document = reader.read(Files.newInputStream(temp.resolve("xl/workbook.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("xl/workbook.xml")));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            FileUtil.rm_rf(temp.toFile(), true);
-            throw new ExcelReadException(e);
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/workbook.xml]");
         }
         Element root = document.getRootElement();
         Namespace ns = root.getNamespaceForPrefix("r");
 
         // Load SharedString
-        sst = new SharedStrings(temp.resolve("xl/sharedStrings.xml"), bufferSize, cacheSize).load();
+        Path ss = tmp.resolve("xl/sharedStrings.xml");
+        if (Files.exists(ss)) {
+            sst = new SharedStrings(ss, bufferSize, cacheSize).load();
+        }
 
         // Load Styles
-        styles = Styles.load(temp.resolve("xl/styles.xml"));
+        Path s = tmp.resolve("xl/styles.xml");
+        if (Files.exists(s)) {
+            styles = Styles.load(s);
+        } else {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+        }
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")
@@ -352,11 +391,11 @@ public class ExcelReader implements AutoCloseable {
             sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
-                FileUtil.rm_rf(temp.toFile(), true);
+                FileUtil.rm_rf(tmp.toFile(), true);
                 sheet.close();
-                throw new ExcelReadException("File has be destroyed");
+                throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
-            sheet.setPath(temp.resolve("xl").resolve(r.getTarget()));
+            sheet.setPath(tmp.resolve("xl").resolve(r.getTarget()));
             // put shared string
             sheet.setSst(sst);
             // Setting styles
@@ -364,14 +403,33 @@ public class ExcelReader implements AutoCloseable {
             sheets.add(sheet);
         }
 
+        if (sheets.isEmpty()) {
+            FileUtil.rm_rf(tmp.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [There has no worksheet]");
+        }
+
+        // Formula string if exists
+        Path calcPath = tmp.resolve("xl/calcChain.xml");
+        long[][] calcArray = null;
+        if (Files.exists(calcPath)) {
+            calcArray = parseCalcChain(calcPath, sheets.size());
+        }
+
         // sort by sheet index
         sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
+        if (calcArray != null) {
+            i = 0;
+            for (; i < sheets1.length; i++) {
+                ((XMLSheet) sheets1[i]).setCalc(calcArray[i]);
+            }
+            hasFormula = true;
+        }
 
         this.sheets = sheets1;
-        self = temp;
+        self = tmp;
     }
 
     /**
@@ -461,14 +519,14 @@ public class ExcelReader implements AutoCloseable {
         return excelType;
     }
 
-    protected AppInfo getGeneralInfo() {
+    protected AppInfo getGeneralInfo(Path tmp) {
         // load workbook.xml
         SAXReader reader = new SAXReader();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(self.resolve("docProps/app.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("docProps/app.xml")));
         } catch (DocumentException | IOException e) {
-            throw new ExcelReadException(e);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/app.xml]");
         }
         Element root = document.getRootElement();
         App app = new App();
@@ -477,9 +535,9 @@ public class ExcelReader implements AutoCloseable {
         app.setAppVersion(root.elementText("AppVersion"));
 
         try {
-            document = reader.read(Files.newInputStream(self.resolve("docProps/core.xml")));
+            document = reader.read(Files.newInputStream(tmp.resolve("docProps/core.xml")));
         } catch (DocumentException | IOException e) {
-            throw new ExcelReadException(e);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/core.xml]");
         }
         root = document.getRootElement();
         Core core = new Core();
@@ -494,26 +552,109 @@ public class ExcelReader implements AutoCloseable {
 
             f.setAccessible(true);
             int nsIndex = StringUtil.indexOf(prefixs, ns.value());
-            if (nsIndex > -1) {
-                Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
-                Class<?> type = f.getType();
-                String v = root.elementText(new QName(f.getName(), namespace));
-                if (type == String.class) {
-                    try {
-                        f.set(core, v);
-                    } catch (IllegalAccessException e) {
-                        logger.warn("Set field (" + f + ") error.");
-                    }
-                } else if (type == Date.class) {
-                    try {
-                        f.set(core, format.parse(v));
-                    } catch (ParseException | IllegalAccessException e) {
-                        logger.warn("Set field (" + f + ") error.");
-                    }
+            if (nsIndex < 0) continue;
+
+            Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+            Class<?> type = f.getType();
+            String v = root.elementText(new QName(f.getName(), namespace));
+            if (type == String.class) {
+                try {
+                    f.set(core, v);
+                } catch (IllegalAccessException e) {
+                    LOGGER.warn("Set field ({}) error.", f);
+                }
+            } else if (type == Date.class) {
+                try {
+                    f.set(core, format.parse(v));
+                } catch (ParseException | IllegalAccessException e) {
+                    LOGGER.warn("Set field ({}) error.", f);
                 }
             }
         }
 
         return new AppInfo(app, core);
     }
+
+    /* Parse `calcChain` */
+    private long[][] parseCalcChain(Path path, int n) {
+        Element calcChain;
+        try {
+            SAXReader reader = new SAXReader();
+            calcChain = reader.read(Files.newInputStream(path)).getRootElement();
+        } catch (DocumentException | IOException e) {
+            LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
+            return null;
+        }
+
+        @SuppressWarnings("unchecked")
+        Iterator<Element> ite = calcChain.elementIterator();
+        int i = 1;
+        long[][] array = new long[n][];
+        int[] indices = new int[n];
+        for (; ite.hasNext(); ) {
+            Element e = ite.next();
+            String si = e.attributeValue("i"), r = e.attributeValue("r");
+            if (isNotEmpty(si)) {
+                i = toInt(si.toCharArray(), 0, si.length());
+            }
+            if (isNotEmpty(r)) {
+                long[] sub = array[i - 1];
+                if (sub == null) {
+                    sub = new long[10];
+                    array[i - 1] = sub;
+                }
+
+                if (++indices[i - 1] > sub.length) {
+                    long[] _sub = new long[sub.length << 1];
+                    System.arraycopy(sub, 0, _sub, 0, sub.length);
+                    array[i - 1] = sub = _sub;
+                }
+                sub[indices[i - 1] - 1] = cellRangeToLong(r);
+            }
+        }
+
+        i = 0;
+        for (; i < n; i++) {
+            if (indices[i] > 0) {
+                long[] a = Arrays.copyOf(array[i], indices[i]);
+                Arrays.sort(a);
+                array[i] = a;
+            } else array[i] = null;
+        }
+        return array;
+    }
+
+    /**
+     * Cell range string convert to long
+     * 0-16: column number
+     * 17-48: row number
+     * <blockquote><pre>
+     * range string| long value
+     * ------------|------------
+     * A1          | 65537
+     * AA10        | 655387
+     * </pre></blockquote>
+     * @param r the range string of cell
+     * @return long value
+     */
+    public static long cellRangeToLong(String r) {
+        char[] values = r.toCharArray();
+        long v = 0L;
+        int n = 0;
+        for (char value : values) {
+            if (value >= 'A' && value <= 'Z') {
+                v = v * 26 + value - 'A' + 1;
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
+            }
+            else if (value >= '0') {
+                n = n * 10 + value - '0';
+            }
+            else
+                throw new ExcelReadException("Column mark out of range: " + r);
+        }
+        return (v & 0x7FFF) | ((long) n) << 16;
+    }
+
 }

@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.ttzero.excel.util.StringUtil.EMPTY;
+
 /**
  * Read sharedString data
  * <p>
@@ -476,6 +478,7 @@ public class SharedStrings implements AutoCloseable {
      * unescape
      */
     static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
+        if (from == to) return EMPTY;
         int idx_38 = indexOf(cb, '&', from)
             , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
 

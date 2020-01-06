@@ -347,6 +347,8 @@ Excel如下图
 Excel读取使用`ExcelReader#read`静态方法，内部采用流式操作，当使用某一行数据时才会真正
 读入内存，所以即使是GB级别的excel文件也只占用少量内存。
 
+默认的ExcelReader仅读取单元格的值而忽略单元格的公式，可以使用`ExcelReader#parseFormula`方法使Reader解析单元格的公式。
+
 下面展示一些常规的读取方法
 
 #### 1. 使用iterator迭代每行数据
@@ -441,6 +443,35 @@ xls读取对方法式与xlsx完全一致
 public void testReadXLS() {
     try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
         reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+#### 6. 读取单元格公式
+
+```
+@Test public void testFormula() {
+    try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+        if (reader.hasFormula()) {
+        
+            // Call `parseFormula` to parse formula
+            reader.parseFormula().sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                return sheet.dataRows();
+            }).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        print(int2Col(i + 1));
+                        print(row.getRowNumber());
+                        print("=");
+                        print(row.getFormula(i)); // Getting formula string
+                        println();
+                    }
+                }
+            });
+        }
     } catch (IOException e) {
         e.printStackTrace();
     }

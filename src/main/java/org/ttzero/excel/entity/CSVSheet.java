@@ -68,6 +68,7 @@ public class CSVSheet extends Sheet {
     /**
      * Constructor worksheet
      * @param is the csv source InputStream
+     * @throws IOException if I/O error occur.
      */
     public CSVSheet(InputStream is) throws IOException {
         this(null, is);
@@ -77,6 +78,7 @@ public class CSVSheet extends Sheet {
      * Constructor worksheet
      * @param name the worksheet name
      * @param is the csv source InputStream
+     * @throws IOException if I/O error occur.
      */
     public CSVSheet(String name, InputStream is) throws IOException {
         super(name);
@@ -88,6 +90,7 @@ public class CSVSheet extends Sheet {
     /**
      * Constructor worksheet
      * @param reader the csv source InputStream
+     * @throws IOException if I/O error occur.
      */
     public CSVSheet(Reader reader) throws IOException {
         this(null, reader);
@@ -97,6 +100,7 @@ public class CSVSheet extends Sheet {
      * Constructor worksheet
      * @param name the worksheet name
      * @param reader the csv source InputStream
+     * @throws IOException if I/O error occur.
      */
     public CSVSheet(String name, Reader reader) throws IOException {
         super(name);
@@ -115,6 +119,7 @@ public class CSVSheet extends Sheet {
      * Setting header flag
      *
      * @param hasHeader boolean value
+     * @return {@link CSVSheet}
      */
     public CSVSheet setHasHeader(boolean hasHeader) {
         this.hasHeader = hasHeader;
