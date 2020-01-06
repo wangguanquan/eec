@@ -12,7 +12,7 @@
     <url>https://www.ttzero.org</url>
     <description>
       A fast and lower memory excel write/read tool
-        一个高效、低内存支持GB级别Excel读写工具，非POI底层支持流式读取
+        一个高效、低内存支持GB级别Excel读写工具，非POI底层，支持流式读取
     </description>
 
     <properties>
