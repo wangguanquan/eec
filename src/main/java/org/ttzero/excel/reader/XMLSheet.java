@@ -29,8 +29,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -502,16 +504,15 @@ class XMLSheet implements Sheet {
             int block = (int) Math.min(1 << 11, fileSize);
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
-            int left_size = 0, i;
+            int left_size = 0, i = 0;
 
-            long rr = 0L;
-            int rc;
-
-            CharBuffer charBuffer;
-            for (; ;) {
+            CharBuffer charBuffer = null;
+            boolean eof = false;
+            for (; !eof;) {
                 channel.position(fileSize - block + left_size);
                 channel.read(buffer);
                 fileSize -= buffer.limit();
+                eof = buffer.limit() < block;
                 if (left_size > 0) {
                     buffer.limit(block);
                     buffer.put(left, 0, left_size);
@@ -523,22 +524,15 @@ class XMLSheet implements Sheet {
                 int limit = charBuffer.limit();
                 i = limit - 1;
 
-//                for (; i < limit - 12 && (charBuffer.get(i) != '<' && charBuffer.get(i + 1) != 'm'
-//                    && charBuffer.get(i + 2) != 'e' && charBuffer.get(i + 3) != 'r'
-//                    && charBuffer.get(i + 4) != 'g' && charBuffer.get(i + 5) != 'e'
-//                    && charBuffer.get(i + 6) != 'C' && charBuffer.get(i + 7) != 'e'
-//                    && charBuffer.get(i + 8) != 'l' && charBuffer.get(i + 9) != 'l'
-//                    && charBuffer.get(i + 10) != 's' && charBuffer.get(i + 11) <= ' '); i++);
-
                 // <row r="
                 for (; i >= 7 && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
                     || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
                     || charBuffer.get(i - 4) != 'w' || charBuffer.get(i - 5) != 'o'
-                    || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--);
+                    || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--) ;
 
                 // Not Found
                 if (i < 7) {
-                    for (; i < limit && charBuffer.get(i) != '>'; i++);
+                    for (; i < limit && charBuffer.get(i) != '>'; i++) ;
                     i++;
                     if (i < limit - 1) {
                         charBuffer.position(i);
@@ -554,47 +548,98 @@ class XMLSheet implements Sheet {
                 }
                 // Found the last row
                 else {
-                    // Dimension
-                    if (dimension == null) {
-                        int[] info = innerParse(charBuffer, ++i);
-                        rc = (info[2] << 16) | (info[1] & 0x7FFF);
-                        rr |= ((long) info[0]) << 32;
-
-                        // Skip if the first row is known
-                        if (mark > 0) {
-                            channel.position(mark);
-                            buffer.clear();
-                            channel.read(buffer);
-                            buffer.flip();
-
-                            charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                            i = 0;
-                            for (; charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'r'
-                                || charBuffer.get(i + 2) != 'o' || charBuffer.get(i + 3) != 'w'
-                                || charBuffer.get(i + 4) > ' ' || charBuffer.get(i + 5) != 'r'
-                                || charBuffer.get(i + 6) != '=' || charBuffer.get(i + 7) != '"'; i++);
-                            i += 8;
-
-                            info = innerParse(charBuffer, i);
-                            rr |= info[0];
-                            if (info[1] > (rc & 0x7FFF)) {
-                                rc |= info[1] & 0x7FFF;
-                            }
-                            if (info[2] < (rc >>> 16)) {
-                                rc |= info[2] << 16;
-                            }
-                        } else rr |= 1;
-
-                        dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
-                    }
-                    // TODO mergeCells
-                    else {
-
-                    }
                     break;
                 }
                 buffer.position(0);
                 buffer.limit(buffer.capacity() - left_size);
+            }
+
+            if (eof) return;
+
+            // Dimension
+            if (dimension == null) {
+                long rr = 0L;
+                int rc;
+
+                int[] info = innerParse(charBuffer, ++i);
+                rc = (info[2] << 16) | (info[1] & 0x7FFF);
+                rr |= ((long) info[0]) << 32;
+
+                // Skip if the first row is known
+                if (mark > 0) {
+                    channel.position(mark);
+                    buffer.clear();
+                    channel.read(buffer);
+                    buffer.flip();
+
+                    charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                    i = 0;
+                    for (; charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'r'
+                        || charBuffer.get(i + 2) != 'o' || charBuffer.get(i + 3) != 'w'
+                        || charBuffer.get(i + 4) > ' ' || charBuffer.get(i + 5) != 'r'
+                        || charBuffer.get(i + 6) != '=' || charBuffer.get(i + 7) != '"'; i++) ;
+                    i += 8;
+
+                    info = innerParse(charBuffer, i);
+                    rr |= info[0];
+                    if (info[1] > (rc & 0x7FFF)) {
+                        rc |= info[1] & 0x7FFF;
+                    }
+                    if (info[2] < (rc >>> 16)) {
+                        rc |= info[2] << 16;
+                    }
+                } else rr |= 1;
+
+                dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
+            }
+
+            // Find mergeCells tag
+            int limit = charBuffer.limit();
+            List<Dimension> mergeCells = null;
+            for (; ;) {
+                for (; i < limit - 11 && (charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'm'
+                    || charBuffer.get(i + 2) != 'e' || charBuffer.get(i + 3) != 'r'
+                    || charBuffer.get(i + 4) != 'g' || charBuffer.get(i + 5) != 'e'
+                    || charBuffer.get(i + 6) != 'C' || charBuffer.get(i + 7) != 'e'
+                    || charBuffer.get(i + 8) != 'l' || charBuffer.get(i + 9) != 'l'
+                    || charBuffer.get(i + 10) > ' '); i++) ;
+
+                if (i >= limit - 11) {
+                    if (eof) break;
+                    for (; i >= 0 && charBuffer.get(i) != '<'; i--) ;
+                    if (i > 0) channel.position(channel.position() + i);
+
+                    buffer.clear();
+                    channel.read(buffer);
+                    buffer.flip();
+                    if (buffer.limit() <= 0) break;
+
+                    charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                    limit = charBuffer.limit();
+                    i = 0;
+                    eof = limit < block;
+                } else {
+                    i += 11;
+                    for (; i < limit - 5 && (charBuffer.get(i) != 'r' || charBuffer.get(i + 1) != 'e'
+                        || charBuffer.get(i + 2) != 'f' || charBuffer.get(i + 3) != '='
+                        || charBuffer.get(i + 4) != '"'); i++) ;
+                    if (i > limit - 5) continue;
+                    int f = i += 5;
+                    for (; charBuffer.get(i) != '"'; i++) ;
+                    if (i > limit) continue;
+                    char[] chars = new char[i - f];
+                    charBuffer.position(f);
+                    charBuffer.get(chars, 0, i - f);
+                    if (mergeCells == null) mergeCells = new ArrayList<>();
+                    mergeCells.add(Dimension.from(new String(chars)));
+                    charBuffer.position(++i);
+                }
+            }
+            // TODO merge
+            if (mergeCells != null) {
+                for (Dimension dimension : mergeCells) {
+                    logger.info(dimension);
+                }
             }
         } catch (IOException e) {
             // Ignore error
@@ -611,7 +656,7 @@ class XMLSheet implements Sheet {
         for (; charBuffer.get(i) != 's' || charBuffer.get(i + 1) != 'p'
             || charBuffer.get(i + 2) != 'a' || charBuffer.get(i + 3) != 'n'
             || charBuffer.get(i + 4) != 's' || charBuffer.get(i + 5) != '='
-            || charBuffer.get(i + 6) != '"'; i++);
+            || charBuffer.get(i + 6) != '"'; i++) ;
         i += 7;
         int cs = 0, ls = 0;
         for (; charBuffer.get(i) != ':'; i++)

@@ -338,6 +338,17 @@ public class ExcelReaderTest {
         assert "B2:B8".equals(values[5]);
     }
 
+    @Test public void testMerge() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.sheets().flatMap(s -> {
+                println("----------------" + s.getName() + "----------------");
+                println("dimension: " + s.getDimension());
+                return s.rows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static class Customer {
