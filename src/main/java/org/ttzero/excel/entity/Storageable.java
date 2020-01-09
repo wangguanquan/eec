@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Create by guanquan.wang at 2019-05-08 13:13
+ * @author guanquan.wang at 2019-05-08 13:13
  */
 public interface Storageable {
     /**

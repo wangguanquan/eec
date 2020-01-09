@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
  * Inside each Row Block there will occur ROW records describing
  * the properties of the rows, and cell records with all the cell
  * contents in this Row Block
- * <p>
- * Create by guanquan.wang at 2019-04-23 08:50
+ *
+ * @author guanquan.wang at 2019-04-23 08:50
  */
 public class RowBlock implements Iterator<Row> {
     private Row[] rows;

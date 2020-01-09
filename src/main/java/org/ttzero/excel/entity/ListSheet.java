@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * worksheet write
  *
  * @see ListMapSheet
- * <p>
- * Created by guanquan.wang at 2018-01-26 14:48
+ *
+ * @author guanquan.wang at 2018-01-26 14:48
  */
 public class ListSheet<T> extends Sheet {
     protected List<T> data;

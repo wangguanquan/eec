@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.Map;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
- * Create by guanquan.wang at 2019-05-05 10:53
+ * @author guanquan.wang at 2019-05-05 10:53
  */
 public class TemplateTest extends WorkbookTest {
 

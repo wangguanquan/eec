@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 
 /**
- * Create by guanquan.wang at 2019-04-17 11:36
+ * @author guanquan.wang at 2019-04-17 11:36
  */
 public interface Sheet extends AutoCloseable {
 

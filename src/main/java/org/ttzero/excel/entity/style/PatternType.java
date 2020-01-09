@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.ttzero.excel.entity.style;
 /**
  * 2.4.53 ST_enmPattern
  * <a href="https://msdn.microsoft.com/en-us/library/jj661881(v=office.12).aspx">PatternType</a>
- * <p>
- * Created by guanquan.wang at 2018-02-06 08:55
+ *
+ * @author guanquan.wang at 2018-02-06 08:55
  */
 public enum PatternType {
     none,

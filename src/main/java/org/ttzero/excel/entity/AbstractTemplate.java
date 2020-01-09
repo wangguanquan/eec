@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by guanquan.wang at 2018-02-26 13:45
+ * @author guanquan.wang at 2018-02-26 13:45
  */
 public abstract class AbstractTemplate {
     static final String inlineStr = "inlineStr";

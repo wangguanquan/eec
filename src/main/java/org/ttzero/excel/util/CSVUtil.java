@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,8 +69,8 @@ import static org.ttzero.excel.util.FileUtil.mkdir;
  * 5. Fields containing a line-break, double-quote or commas should be quoted. (If they are not,
  * the file will likely be impossible to process correctly).
  * 6. A (double) quote character in a field must be represented by two (double) quote characters.
- * <p>
- * Create by guanquan.wang at 2019-02-12 17:27
+ *
+ * @author guanquan.wang at 2019-02-12 17:27
  */
 public class CSVUtil {
     private static Logger logger = LogManager.getLogger(CSVUtil.class);

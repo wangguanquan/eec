@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
- * Create by guanquan.wang at 2019-04-26 17:42
+ * @author guanquan.wang at 2019-04-26 17:42
  */
 public class ExcelReaderTest {
     public static Path testResourceRoot() {

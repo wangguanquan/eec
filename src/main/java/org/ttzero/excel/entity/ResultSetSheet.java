@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,8 +53,8 @@ import static java.sql.Types.VARCHAR;
  * {@link ResultSet#next} returns false
  *
  * @see StatementSheet
- * <p>
- * Created by guanquan.wang on 2017/9/27.
+ *
+ * @author guanquan.wang on 2017/9/27.
  */
 public class ResultSetSheet extends Sheet {
     protected ResultSet rs;

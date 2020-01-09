@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,8 +78,8 @@ import java.util.Map;
  * <a href="https://msdn.microsoft.com/library">Office 365</a>&nbsp;|&nbsp;
  * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">DocumentFormat.OpenXml.Spreadsheet Namespace</a>&nbsp;|&nbsp;
  * <a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">介绍 Microsoft Office (2007) Open XML 文件格式</a>
- * <p>
- * Created by guanquan.wang on 2017/9/26.
+ *
+ * @author guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storageable {
     private Logger logger = LogManager.getLogger(getClass());

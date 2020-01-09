@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 /**
- * Create by guanquan.wang at 2019-08-15 21:02
+ * @author guanquan.wang at 2019-08-15 21:02
  */
 public class ReflectUtil {
     private ReflectUtil() {

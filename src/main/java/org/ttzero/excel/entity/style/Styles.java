@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 14-20 bits are stored in Fill, 20-26 bits are stored in Border,
  * 26-29 bits are stored in Vertical and 29-32 bits are stored in
  * Horizontal. The Build-In number format does not write into styles.
- * <p>
- * Created by guanquan.wang on 2017/10/13.
+ *
+ * @author guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles implements Storageable {

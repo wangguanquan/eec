@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.ttzero.excel.reader;
 import java.math.BigDecimal;
 
 /**
- * Create by guanquan.wang on 2018-09-22
+ * @author guanquan.wang on 2018-09-22
  */
 public class Cell {
     public Cell() { }

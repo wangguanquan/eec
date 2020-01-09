@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +23,19 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Create by guanquan.wang at 2019-05-06 16:44
+ * @author guanquan.wang at 2019-05-06 16:44
  */
 public class BloomFilterTest {
     @Test public void test() {
         BloomFilter<String> filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100000, 0.0003);
 
-        // 2. 将一部分数据添加进去
         for (int index = 0; index < 50000; index++) {
             filter.put("abc_test_" + index);
         }
         System.out.println("write all...");
-        // 3. 测试结果
         int n = 0;
         for (int i = 3; i < 1000; i++) {
             if (filter.mightContain("abc_test_" + i)) {
-//                System.out.println("yes");
                 n++;
             }
         }

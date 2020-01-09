@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import java.util.Locale;
 
 /**
  * Load the Built-In Number Format
- * <p>
- * Created by guanquan.wang at 2018-02-12 10:11
+ *
+ * @author guanquan.wang at 2018-02-12 10:11
  */
 public final class BuiltInNumFmt {
     private static NumFmt[][] data;
