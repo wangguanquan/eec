@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Create by guanquan.wang at 2019-04-28 19:16
+ * @author guanquan.wang at 2019-04-28 19:16
  */
 public class ListMapSheetTest extends WorkbookTest {
 

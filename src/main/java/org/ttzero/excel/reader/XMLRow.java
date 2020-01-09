@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ import static org.ttzero.excel.util.StringUtil.swap;
  * <code><row r="x"/></code> You can get the data eq by cell
  * subscript like ResultSet: {@link #getInt(int)} to get the current
  * line The data in the second column, the subscript, starts at 0.
- * <p>
- * Create by guanquan.wang on 2018-09-22
+ *
+ * @author guanquan.wang on 2018-09-22
  */
 class XMLRow extends Row {
     private int startRow;

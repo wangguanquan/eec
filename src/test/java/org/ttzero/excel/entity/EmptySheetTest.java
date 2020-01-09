@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +22,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 /**
- * Create by guanquan.wang at 2019-04-29 21:36
+ * @author guanquan.wang at 2019-04-29 21:36
  */
 public class EmptySheetTest extends WorkbookTest {
     @Test

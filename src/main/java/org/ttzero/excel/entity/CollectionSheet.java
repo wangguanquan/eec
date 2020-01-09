@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.util.Collection;
 
 /**
  * FIXME unfinished
- * Create by guanquan.wang at 2019-04-30 20:45
+ * @author guanquan.wang at 2019-04-30 20:45
  */
 public class CollectionSheet<T> extends Sheet {
     @SuppressWarnings("unused")

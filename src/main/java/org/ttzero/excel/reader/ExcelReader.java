@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * try (ExcelReader reader = ExcelReader.read(path)) {
  *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
  * } catch (IOException e) {}</pre></blockquote>
- * Create by guanquan.wang on 2018-09-22
+ *
+ * @author guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
     private Logger LOGGER = LogManager.getLogger(getClass());

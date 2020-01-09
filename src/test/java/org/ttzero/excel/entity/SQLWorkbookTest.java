@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 
 package org.ttzero.excel.entity;
 
@@ -25,7 +28,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Create by guanquan.wang at 2019-04-28 21:50
+ * @author guanquan.wang at 2019-04-28 21:50
  */
 public class SQLWorkbookTest extends WorkbookTest {
     private static Properties pro;

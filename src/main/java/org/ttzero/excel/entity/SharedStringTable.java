@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import java.util.Iterator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * Create by guanquan.wang at 2019-05-10 20:04
+ * @author guanquan.wang at 2019-05-10 20:04
  */
 public class SharedStringTable implements AutoCloseable, Iterable<String> {
     /**
@@ -58,7 +58,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     private long mark = -1;
 
     /**
-     * Delete the temp file if create by {@link SharedStringTable}
+     * Delete the temp file if @author {@link SharedStringTable}
      */
     protected boolean shouldDelete;
 

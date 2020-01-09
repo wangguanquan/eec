@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import static org.ttzero.excel.entity.style.Styles.INDEX_NUMBER_FORMAT;
 import static org.ttzero.excel.entity.style.Styles.testCodeIsDate;
 
 /**
- * Create by guanquan.wang at 2019-06-06 16:00
+ * @author guanquan.wang at 2019-06-06 16:00
  */
 public class StylesTest {
 

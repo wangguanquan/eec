@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.ttzero.excel.annotation.TopNS;
 import java.util.Date;
 
 /**
- * Created by guanquan.wang on 2017/9/18.
+ * @author guanquan.wang on 2017/9/18.
  */
 @TopNS(prefix = {"dc", "cp", "dcterms"}
     , uri = {"http://purl.org/dc/elements/1.1/"

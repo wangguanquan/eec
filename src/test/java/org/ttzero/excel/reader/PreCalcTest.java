@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2020, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.junit.Test;
 import static org.ttzero.excel.Print.println;
 
 /**
- * Create by guanquan.wang at 2020-01-05 20:35
+ * @author guanquan.wang at 2020-01-05 20:35
  */
 public class PreCalcTest {
     @Test public void testSimple() {

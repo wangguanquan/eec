@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 import static org.ttzero.excel.Print.print;
 
 /**
- * Create by guanquan.wang at 2019-05-08 17:04
+ * @author guanquan.wang at 2019-05-08 17:04
  */
 public class SharedStringTableTest {
     private SharedStringTable sst;

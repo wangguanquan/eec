@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package org.ttzero.excel.entity.style;
 
 /**
- * Created by guanquan.wang at 2018-02-11 15:02
+ * @author guanquan.wang at 2018-02-11 15:02
  */
 public class Horizontals {
     // General Horizontal Alignment( Text data is left-aligned. Numbers

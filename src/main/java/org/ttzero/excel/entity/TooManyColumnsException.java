@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.ttzero.excel.entity;
 /**
  * The maximum number of columns in the xlsx file is 16_384.
  * If this number is exceeded, this exception will occur.
- * <p>
- * Created by guanquan.wang on 2017/10/19.
+ *
+ * @author guanquan.wang on 2017/10/19.
  */
 public class TooManyColumnsException extends ExcelWriteException {
 

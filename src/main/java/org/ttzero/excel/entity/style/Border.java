@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,7 @@ import java.lang.reflect.Field;
  * The default border color is #333333 in EEC
  *
  * @see BorderStyle
- * <p>
- * Created by guanquan.wang on 2018-02-06 08:55
+ * @author guanquan.wang on 2018-02-06 08:55
  */
 public class Border {
 

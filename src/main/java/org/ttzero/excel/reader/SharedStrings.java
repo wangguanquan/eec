@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
  * loaded twice will be marked, the marked blocks will be placed in
  * the hot area when they are repeatedly read, and the hot area will
  * be eliminated by the LRU page replacement algorithm.
- * <p>
- * Create by guanquan.wang at 2018-09-27 14:28
+ *
+ * @author guanquan.wang at 2018-09-27 14:28
  */
 public class SharedStrings implements AutoCloseable {
     private Logger logger = LogManager.getLogger(getClass());

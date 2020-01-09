@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
  * A date util ror excel
- * <p>
- * Created by guanquan.wang on 2017/9/21.
+ *
+ * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
     static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;

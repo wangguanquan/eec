@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 
 /**
- * Create by guanquan.wang at 2019-08-15 21:46
+ * @author guanquan.wang at 2019-08-15 21:46
  */
 public class ReflectUtilTest {
     @Test public void testListDeclaredFields() {

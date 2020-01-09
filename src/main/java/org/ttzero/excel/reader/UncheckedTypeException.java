@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.io.ObjectInputStream;
 import java.util.Objects;
 
 /**
- * Create by guanquan.wang at 2018-09-30 11:59
+ * @author guanquan.wang at 2018-09-30 11:59
  */
 public class UncheckedTypeException extends RuntimeException {
     private static final long serialVersionUID = -8134305061645241065L;

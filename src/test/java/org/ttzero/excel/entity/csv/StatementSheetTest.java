@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,13 +27,13 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Create by guanquan.wang at 2019-04-28 22:47
+ * @author guanquan.wang at 2019-04-28 22:47
  */
 public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testWrite() {
