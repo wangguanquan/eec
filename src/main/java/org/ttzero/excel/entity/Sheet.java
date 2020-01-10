@@ -1291,8 +1291,8 @@ public abstract class Sheet implements Cloneable, Storageable {
     }
 
     /**
-     * Int conversion to column string number
-     * The max column on sheet is 16_384
+     * Int conversion to column string number.
+     * The max column on sheet is 16_384 after office 2007 and 256 in office 2003
      * <blockquote><pre>
      * int    | column number
      * -------|---------
