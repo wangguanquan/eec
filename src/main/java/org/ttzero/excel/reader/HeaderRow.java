@@ -297,7 +297,7 @@ class HeaderRow extends Row {
     public String toString() {
         StringJoiner joiner = new StringJoiner(" | ");
         int i = 0;
-        for (; names[i++] == null; ) ;
+        for (; names[i] == null; i++) ;
         for (; i < names.length; i++) {
             joiner.add(names[i]);
         }
