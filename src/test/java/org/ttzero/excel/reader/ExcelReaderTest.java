@@ -303,6 +303,31 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testHeaderString() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                println(sheet.getHeader());
+                return sheet.dataRows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testHeaderString2() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                sheet.bind(Entry.class);
+                println(sheet.getHeader());
+                return sheet.dataRows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test public void testVersionFilter() {
         char[] chars = "..0...3...7.SNAPSHOT.".toCharArray();
         int i = 0;
