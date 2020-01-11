@@ -23,6 +23,7 @@ import java.math.BigDecimal;
  */
 public class Cell {
     public Cell() { }
+    public Cell(short i) { this.i = i; }
     public static final char SST         = 's';
     public static final char BOOL        = 'b';
     public static final char FUNCTION    = 'f';
@@ -91,6 +92,10 @@ public class Cell {
      * Has formula
      */
     public boolean f;
+    /**
+     * y-axis of cell in row
+     */
+    public short i;
 
     public void setT(char t) {
         this.t = t;

@@ -41,10 +41,8 @@ import static org.ttzero.excel.util.StringUtil.swap;
  * @author guanquan.wang on 2018-09-22
  */
 class XMLRow extends Row {
-    private int startRow;
-    private StringBuilder buf;
-    private MergeCalc calcFun;
-    private boolean hasCalc;
+    int startRow;
+    StringBuilder buf;
 
     /**
      * The number of row. (one base)
@@ -60,21 +58,19 @@ class XMLRow extends Row {
     }
 
     @SuppressWarnings("unused")
-    private XMLRow() { }
+    XMLRow() { }
 
-    XMLRow(SharedStrings sst, Styles styles, int startRow, MergeCalc calcFun) {
+    XMLRow(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
         buf = new StringBuilder();
-        this.calcFun = calcFun;
-        this.hasCalc = calcFun != null;
     }
 
     /////////////////////////unsafe////////////////////////
-    private char[] cb;
-    private int from, to;
-    private int cursor;
+    char[] cb;
+    int from, to;
+    int cursor, e;
 
     ///////////////////////////////////////////////////////
     XMLRow with(char[] cb, int from, int size) {
@@ -115,7 +111,7 @@ class XMLRow extends Row {
         return _f;
     }
 
-    private int searchSpan() {
+    int searchSpan() {
         int i = from + 4, _lc = lc;
         for (; cb[i] != '>'; i++) {
             if (cb[i] <= ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
@@ -142,7 +138,7 @@ class XMLRow extends Row {
         // clear and share
         for (int n = 0, len = lc > 0 ? Math.max(lc, _lc) : cells.length; n < len; n++) {
             if (cells[n] != null) cells[n].clear();
-            else cells[n] = new Cell();
+            else cells[n] = new Cell((short) (n + 1));
         }
         return i;
     }
@@ -150,22 +146,18 @@ class XMLRow extends Row {
     /**
      * Loop parse cell
      */
-    private void parseCells() {
-        int index = 0;
+    void parseCells() {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
 
-        // Parse formula if exists and can parse
-        if (hasCalc) {
-            calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
-        }
-
+        Cell cell;
+        int index = 0;
         // Parse cell value
         if (unknownLength) {
-            while (nextCell() != null) index++;
+            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
         } else {
-            while (index < lc && nextCell() != null) ;
+            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
         }
     }
 
@@ -181,14 +173,14 @@ class XMLRow extends Row {
         if (cursor >= to) return null;
         cursor += 2;
         // find end of cell
-        int e = cursor;
+        e = cursor;
         for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] > ' '); e++) ;
 
         Cell cell = null;
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
-        int xf = 0, i = 1;
+        int xf = 0, i;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
@@ -223,71 +215,7 @@ class XMLRow extends Row {
 
         // The style index
         cell.xf = xf;
-
-        // Ignore Formula string default
-        if (hasCalc) {
-            int a = getF(cell, e);
-            // Inner text
-            if (a < cursor) {
-                cell.fv = unescape(buf, cb, a, cursor);
-                if (cell.si > -1) setCalc(cell.si, cell.fv);
-            }
-            // Function string is shared
-            else if (cell.si > -1) {
-                // Get from ref
-                cell.fv = getCalc(cell.si, (getRowNumber() << 14) | i);
-            }
-        }
-        // Get value
-        int a;
-        switch (t) {
-            case INLINESTR: // inner string
-                a = getT(e);
-                if (a == cursor) { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
-                } else {
-                    cell.setSv(unescape(buf, cb, a, cursor));
-                }
-                break;
-            case SST: // shared string lazy get
-                a = getV(e);
-                cell.setNv(toInt(cb, a, cursor));
-                cell.setT(SST);
-                break;
-            case BOOL: // boolean value
-                a = getV(e);
-                if (cursor - a == 1) {
-                    cell.setBv(toInt(cb, a, cursor) == 1);
-                }
-                break;
-            case FUNCTION: // function string
-                a = getV(e);
-                if (a == cursor) { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
-                } else {
-                    cell.setSv(unescape(buf, cb, a, cursor));
-                }
-                break;
-            default:
-                a = getV(e);
-                if (a < cursor) {
-                    if (isNumber(a, cursor)) {
-                        long l = toLong(a, cursor);
-                        if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
-                            cell.setNv((int) l);
-                        } else {
-                            cell.setLv(l);
-                        }
-                    } else if (isDouble(a, cursor)) {
-                        cell.setDv(toDouble(a, cursor));
-                    } else {
-                        cell.setSv(toString(a, cursor));
-                    }
-                }
-        }
-
-        // end of cell
-        cursor = e;
+        cell.t = t;
 
         return cell;
     }
@@ -348,7 +276,7 @@ class XMLRow extends Row {
      * @param attrConsumer an attribute consumer
      * @return the start index of value
      */
-    private int get(Cell cell, int e, char c, Attribute attrConsumer) {
+    int get(Cell cell, int e, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -412,13 +340,179 @@ class XMLRow extends Row {
     }
 
     /**
+     * Parse cell value
+     *
+     * @param cell current {@link Cell}
+     */
+    void parseCellValue(Cell cell) {
+        // @Mark: Ignore Formula string default
+
+        // Get value
+        int a;
+        switch (cell.t) {
+            case INLINESTR: // inner string
+                a = getT(e);
+                if (a == cursor) { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
+                } else {
+                    cell.setSv(unescape(buf, cb, a, cursor));
+                }
+                break;
+            case SST: // shared string lazy get
+                a = getV(e);
+                cell.setNv(toInt(cb, a, cursor));
+                cell.setT(SST);
+                break;
+            case BOOL: // boolean value
+                a = getV(e);
+                if (cursor - a == 1) {
+                    cell.setBv(toInt(cb, a, cursor) == 1);
+                }
+                break;
+            case FUNCTION: // function string
+                a = getV(e);
+                if (a == cursor) { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
+                } else {
+                    cell.setSv(unescape(buf, cb, a, cursor));
+                }
+                break;
+            default:
+                a = getV(e);
+                if (a < cursor) {
+                    if (isNumber(a, cursor)) {
+                        long l = toLong(a, cursor);
+                        if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
+                            cell.setNv((int) l);
+                        } else {
+                            cell.setLv(l);
+                        }
+                    } else if (isDouble(a, cursor)) {
+                        cell.setDv(toDouble(a, cursor));
+                    } else {
+                        cell.setSv(toString(a, cursor));
+                    }
+                }
+        }
+
+        // end of cell
+        cursor = e;
+    }
+
+    XMLCalcRow asCalcRow() {
+        return !(this instanceof XMLCalcRow) ? new XMLCalcRow(this) : (XMLCalcRow) this;
+    }
+
+    XMLMergeRow asMergeRow() {
+        return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
+    }
+
+    /**
+     * Attribute consumer
+     */
+    @FunctionalInterface
+    interface Attribute {
+        /**
+         * Performs this operation on the given argument.
+         *
+         * @param cell current cell
+         * @param cb characters for the entire attribute
+         * @param a start index
+         * @param b end index
+         */
+        void accept(Cell cell, char[] cb, int a, int b);
+    }
+}
+
+/**
+ * Cell with Calc
+ */
+class XMLCalcRow extends XMLRow {
+    private MergeCalc calcFun;
+
+    XMLCalcRow(SharedStrings sst, Styles styles, int startRow, MergeCalc calcFun) {
+        this.sst = sst;
+        this.styles = styles;
+        this.startRow = startRow;
+        this.buf = new StringBuilder();
+        this.calcFun = calcFun;
+    }
+
+    XMLCalcRow(XMLRow row) {
+        this.sst = row.sst;
+        this.styles = row.styles;
+        this.startRow = row.startRow;
+        this.buf = row.buf;
+    }
+
+    XMLCalcRow setCalcFun(MergeCalc calcFun) {
+        this.calcFun = calcFun;
+        return this;
+    }
+
+    /**
+     * Loop parse cell
+     */
+    void parseCells() {
+        int index = 0;
+        cursor = searchSpan();
+        for (; cb[cursor++] != '>'; ) ;
+        unknownLength = lc < 0;
+
+        // Parse formula if exists and can parse
+        calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+
+        Cell cell;
+        // Parse cell value
+        if (unknownLength) {
+            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
+        } else {
+            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
+        }
+    }
+
+    /**
+     * Parse cell value
+     *
+     * @param cell current {@link Cell}
+     */
+    @Override
+    void parseCellValue(Cell cell) {
+        // Parse calc
+        parseCalcFunc(cell);
+
+        // Parse value
+        super.parseCellValue(cell);
+    }
+
+    /**
+     * Parse calc on reader cells
+     *
+     * @param cell current {@link Cell}
+     */
+    private void parseCalcFunc(Cell cell) {
+        int a = getF(cell);
+        // Inner text
+        if (a < cursor) {
+            cell.fv = unescape(buf, cb, a, cursor);
+            if (cell.si > -1) setCalc(cell.si, cell.fv);
+        }
+        // Function string is shared
+        else if (cell.si > -1) {
+            // Get from ref
+            cell.fv = getCalc(cell.si, (getRowNumber() << 14) | cell.i);
+        }
+    }
+
+
+    /**
      * Found the Function tag range
      * Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f>
      *
-     * @param e the last index in char buffer
+     * @param cell current {@link Cell}
      * @return the end index of function value
      */
-    private int getF(Cell cell, int e) {
+    private int getF(Cell cell) {
         return get(cell, e, 'f', this::parseFunAttr);
     }
 
@@ -480,20 +574,11 @@ class XMLRow extends Row {
         // Storage formula shared id
         cell.si = si;
     }
+}
 
-    /**
-     * Attribute consumer
-     */
-    @FunctionalInterface
-    private interface Attribute {
-        /**
-         * Performs this operation on the given argument.
-         *
-         * @param cell current cell
-         * @param cb characters for the entire attribute
-         * @param a start index
-         * @param b end index
-         */
-        void accept(Cell cell, char[] cb, int a, int b);
+class XMLMergeRow extends XMLRow {
+
+    XMLMergeRow(XMLRow row) {
+
     }
 }

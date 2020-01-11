@@ -38,6 +38,7 @@ import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
+import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.util.StringUtil.swap;
 
@@ -364,7 +365,7 @@ public class ExcelReaderTest {
     }
 
     @Test public void testMerge() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"), COPY_ON_MERGED)) {
             reader.sheets().flatMap(s -> {
                 println("----------------" + s.getName() + "----------------");
                 println("dimension: " + s.getDimension());

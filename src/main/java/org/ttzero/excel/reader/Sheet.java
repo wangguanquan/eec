@@ -259,7 +259,24 @@ public interface Sheet extends AutoCloseable {
     }
 
     /**
-     * Make reader parse the formula
+     * Make worksheets parse formulas
+     *
+     * @return a empty {@link CalcSheet}
      */
-    void parseFormula();
+    CalcSheet asCalcSheet();
+
+    /**
+     * Make worksheets copy value on merge cells
+     *
+     * @return a empty {@link MergeSheet}
+     */
+    MergeSheet asMergeSheet();
+
+//    FullSheet asFullSheet();
 }
+
+interface CalcSheet extends Sheet { }
+
+interface MergeSheet extends Sheet { }
+
+//interface FullSheet extends CalcSheet, MergeSheet { }

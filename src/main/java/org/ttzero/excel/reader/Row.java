@@ -148,7 +148,7 @@ public abstract class Row {
      *
      * @return header Row
      */
-    public HeaderRow asHeader() {
+    HeaderRow asHeader() {
         HeaderRow hr = HeaderRow.with(this);
         this.hr = hr;
         return hr;

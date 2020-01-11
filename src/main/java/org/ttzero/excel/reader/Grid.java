@@ -40,6 +40,21 @@ interface Grid {
      * @param to the end index
      */
     void mark(char[] chars, int from, int to);
+
+    /**
+     * Mark `1` at the specified {@link Dimension}
+     *
+     * @param dimension range {@link Dimension}
+     */
+    void mark(Dimension dimension);
+}
+
+class GridFactory {
+    private GridFactory() { }
+    static Grid create(Dimension dim) {
+        // TODO
+        return new FractureGrid();
+    }
 }
 
 abstract class AbstractGrid implements Grid {
@@ -53,12 +68,22 @@ class FractureGrid implements Grid {
     public void mark(char[] chars, int from, int to) {
 
     }
+
+    @Override
+    public void mark(Dimension dimension) {
+
+    }
 }
 
 class LongGrid extends AbstractGrid {
 
     @Override
     public void mark(char[] chars, int from, int to) {
+
+    }
+
+    @Override
+    public void mark(Dimension dimension) {
 
     }
 }
@@ -69,12 +94,22 @@ class IntegerGrid extends AbstractGrid {
     public void mark(char[] chars, int from, int to) {
 
     }
+
+    @Override
+    public void mark(Dimension dimension) {
+
+    }
 }
 
 class ShortGrid extends AbstractGrid {
 
     @Override
     public void mark(char[] chars, int from, int to) {
+
+    }
+
+    @Override
+    public void mark(Dimension dimension) {
 
     }
 }
