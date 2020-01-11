@@ -323,11 +323,12 @@ class XMLRow extends Row {
     private boolean isDouble(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
-        for (char i = 0; a < b; ) {
+        for (char i = 0, e = 0; a < b; ) {
             char c = cb[a++];
-            if (i > 1) return false;
-            if (c >= '0' && c <= '9') continue;
+            if (i > 1 || e > 1) return false;
             if (c == '.') i++;
+            else if (c == 'e' || c == 'E') e++;
+            else if (c < '0' || c > '9') return false;
         }
         return true;
     }

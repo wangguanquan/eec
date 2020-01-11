@@ -19,6 +19,7 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.ReflectUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -34,6 +35,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
+import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
+import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
+import static org.ttzero.excel.entity.IWorksheetWriter.isDate;
+import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
+import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
+import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
+import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listWriteMethods;
 import static org.ttzero.excel.util.ReflectUtil.mapping;
@@ -296,12 +304,53 @@ class HeaderRow extends Row {
     @Override
     public String toString() {
         StringJoiner joiner = new StringJoiner(" | ");
+        StringBuilder buf = new StringBuilder();
         int i = 0;
-        for (; names[i++] == null; ) ;
-        for (; i < names.length; i++) {
+        for (; names[i] == null; i++) ;
+        char[] chars = new char[10];
+        Arrays.fill(chars, 0, chars.length, '-');
+        for (int j = i; i < names.length; i++) {
             joiner.add(names[i]);
+            int n = simpleTestLength(names[i]) + (j == i || i == names.length - 1 ? 1 : 2);
+            if (n > chars.length) {
+                chars = new char[n];
+                Arrays.fill(chars, 0, n, '-');
+            } else {
+                Arrays.fill(chars, 0, n, '-');
+            }
+
+            if (fieldClazz != null) {
+                Class<?> c = fieldClazz[i];
+
+                // Align Center
+                if (isDate(c) || isLocalDate(c) || isLocalDateTime(c) || isLocalTime(c) || isChar(c) || isBool(c)) {
+                    chars[0] = chars[n - 1] = ':';
+                }
+                // Align Right
+                else if (isInt(c)) {
+                    chars[n - 1] = ':';
+                }
+                // Align Left
+//            else;
+            }
+            buf.append(chars, 0, n).append('|');
+
         }
-        return joiner.toString();
+
+        buf.insert(0, joiner.toString() + Const.lineSeparator);
+
+        return buf.toString();
+    }
+
+    int simpleTestLength(String name) {
+        if (name == null) return 4;
+        char[] chars = name.toCharArray();
+        double d = 0.0;
+        for (char c : chars) {
+            if (c < 0x80) d++;
+            else d += 1.75;
+        }
+        return (int) d;
     }
 
     void put(Row row, Object t) throws IllegalAccessException, InvocationTargetException {

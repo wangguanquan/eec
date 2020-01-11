@@ -54,7 +54,6 @@ class PreCalc {
         int len = cb.length;
         int f = 0, m = f, n;
         for (; f < len; ) {
-            // FIXME maybe include quote and double quotes
             for (; f < len && (cb[f] < 'A' || cb[f] > 'Z') && cb[f] != '"'; f++) ;
             // EOF
             if (f >= len) break;

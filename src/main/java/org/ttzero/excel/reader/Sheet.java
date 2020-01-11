@@ -174,7 +174,7 @@ public interface Sheet extends AutoCloseable {
      * @param col column mark
      * @return int value
      */
-    default int col2Int(String col) {
+    static int col2Int(String col) {
         if (StringUtil.isEmpty(col)) return 1;
         char[] values = col.toCharArray();
         int n = 0;

@@ -113,7 +113,9 @@ public class ZipUtil {
             if (j < array[index]) {
                 String name;
                 if (paths.get(j).equals(srcPath[index])) {
-                    name = paths.get(j).toString().substring(paths.get(j).getParent().toString().length() + 1);
+                    name = paths.get(j).getNameCount() > 1
+                        ? paths.get(j).toString().substring(paths.get(j).getParent().toString().length() + 1)
+                        : paths.get(j).toString();
                 } else {
                     name = paths.get(j).toString().substring(len + 1);
                 }

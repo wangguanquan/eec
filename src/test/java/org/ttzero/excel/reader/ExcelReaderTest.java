@@ -303,6 +303,31 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testHeaderString() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                println(sheet.getHeader());
+                return sheet.dataRows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testHeaderString2() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            reader.sheets().flatMap(sheet -> {
+                println("----------------" + sheet.getName() + "----------------");
+                sheet.bind(Entry.class);
+                println(sheet.getHeader());
+                return sheet.dataRows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test public void testVersionFilter() {
         char[] chars = "..0...3...7.SNAPSHOT.".toCharArray();
         int i = 0;
@@ -338,6 +363,17 @@ public class ExcelReaderTest {
         assert "B2:B8".equals(values[5]);
     }
 
+    @Test public void testMerge() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.sheets().flatMap(s -> {
+                println("----------------" + s.getName() + "----------------");
+                println("dimension: " + s.getDimension());
+                return s.rows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static class Customer {
