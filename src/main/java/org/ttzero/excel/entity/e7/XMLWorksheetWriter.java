@@ -385,16 +385,16 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.writeInt(columns.length);
         bw.write("\">");
 
-        int c = 1, defaultStyle = sheet.defaultHeadStyle();
-        for (Sheet.Column hc : columns) {
-            bw.write("<c r=\"");
-            bw.write(int2Col(c++));
-            bw.writeInt(row);
-            bw.write("\" t=\"s\" s=\"");
-            bw.writeInt(defaultStyle);
-            bw.write("\"><v>");
-            bw.writeInt(sst.get(isNotEmpty(hc.getName()) ? hc.getName() : hc.key));
-            bw.write("</v></c>");
+        int c = 0, defaultStyle = sheet.defaultHeadStyle();
+
+        if (sheet.isAutoSize()) {
+            for (Sheet.Column hc : columns) {
+                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, defaultStyle);
+            }
+        } else {
+            for (Sheet.Column hc : columns) {
+                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, defaultStyle);
+            }
         }
         bw.write("</row>");
     }
