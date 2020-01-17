@@ -516,7 +516,9 @@ public class ExcelReader implements AutoCloseable {
         this.sheets = sheets1;
         self = tmp;
 
-        parseFormula();
+        if ((option >> 1 & 1) == 1) {
+            parseFormula();
+        }
     }
 
     /**
