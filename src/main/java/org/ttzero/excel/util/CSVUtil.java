@@ -428,7 +428,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return RowsIterator.creatEmptyIterator();
+                return RowsIterator.createEmptyIterator();
             }
 
             // Use iterator
@@ -447,7 +447,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return SharedRowsIterator.creatEmptyIterator();
+                return SharedRowsIterator.createEmptyIterator();
             }
 
             // Use iterator
@@ -622,7 +622,7 @@ public class CSVUtil {
             nextRow = null;
         }
 
-        static RowsIterator creatEmptyIterator() {
+        static RowsIterator createEmptyIterator() {
             RowsIterator iterator = new RowsIterator();
             iterator.EOF = true;
             iterator.nextRow = new String[0];
