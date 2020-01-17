@@ -174,7 +174,7 @@ class XMLRow extends Row {
         cursor += 2;
         // find end of cell
         e = cursor;
-        for (; e < to && (cb[e] != '<' || cb[e + 1] != 'c' || cb[e + 2] > ' '); e++) ;
+        for (; e < to && (cb[e] != '<' || cb[e + 1] != '/' || cb[e + 2] != 'c' || cb[e + 3] != '>'); e++) ;
 
         Cell cell = null;
         // find type
