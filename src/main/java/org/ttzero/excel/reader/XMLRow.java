@@ -262,21 +262,20 @@ class XMLRow extends Row {
     }
 
     /* Found specify target  */
-    private int get(int e, char c) {
+    private int get(char c) {
         // Ignore all attributes
-        return get(null, e, c, null);
+        return get(null, c, null);
     }
 
     /**
      * Parses the value and attributes of the specified tag
      *
      * @param cell current cell
-     * @param e the last character index
      * @param c the specified tag
      * @param attrConsumer an attribute consumer
      * @return the start index of value
      */
-    int get(Cell cell, int e, char c, Attribute attrConsumer) {
+    int get(Cell cell, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -320,11 +319,10 @@ class XMLRow extends Row {
      *
      * Code like this {@code <is><t>cell value</t></is>}
      *
-     * @param e the last index in char buffer
      * @return the end index of string value
      */
-    private int getT(int e) {
-        return get(e, 't');
+    private int getT() {
+        return get('t');
     }
 
     /**
@@ -332,11 +330,10 @@ class XMLRow extends Row {
      *
      * Code like this {@code <v>0</v>
      *
-     * @param e the last index in char buffer
      * @return the end index of int value
      */
-    private int getV(int e) {
-        return get(e, 'v');
+    private int getV() {
+        return get('v');
     }
 
     /**
@@ -351,7 +348,7 @@ class XMLRow extends Row {
         int a;
         switch (cell.t) {
             case INLINESTR: // inner string
-                a = getT(e);
+                a = getT();
                 if (a == cursor) { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
                 } else {
@@ -359,18 +356,18 @@ class XMLRow extends Row {
                 }
                 break;
             case SST: // shared string lazy get
-                a = getV(e);
+                a = getV();
                 cell.setNv(toInt(cb, a, cursor));
                 cell.setT(SST);
                 break;
             case BOOL: // boolean value
-                a = getV(e);
+                a = getV();
                 if (cursor - a == 1) {
                     cell.setBv(toInt(cb, a, cursor) == 1);
                 }
                 break;
             case FUNCTION: // function string
-                a = getV(e);
+                a = getV();
                 if (a == cursor) { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
                 } else {
@@ -378,7 +375,7 @@ class XMLRow extends Row {
                 }
                 break;
             default:
-                a = getV(e);
+                a = getV();
                 if (a < cursor) {
                     if (isNumber(a, cursor)) {
                         long l = toLong(a, cursor);
@@ -513,7 +510,7 @@ class XMLCalcRow extends XMLRow {
      * @return the end index of function value
      */
     private int getF(Cell cell) {
-        return get(cell, e, 'f', this::parseFunAttr);
+        return get(cell, 'f', this::parseFunAttr);
     }
 
     /* Parse function tag's attribute */
