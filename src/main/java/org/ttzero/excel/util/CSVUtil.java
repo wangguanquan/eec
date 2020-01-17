@@ -957,7 +957,7 @@ public class CSVUtil {
         private int i;
         private char[] cb;
         private int offset;
-        private final int length = 8192;
+        private final static int length = 8192;
 
         /**
          * Line separator string.  This is the value of the line.separator
