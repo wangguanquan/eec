@@ -199,7 +199,7 @@ public class ReflectUtil {
         Method[] methods = listDeclaredMethods(beanClass, stopClass);
 
         int n = 0;
-        for ( int i = 0; i < methods.length; i++) {
+        for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
             if (method.getParameterCount() == 0) {
                 Class<?> returnType = method.getReturnType();
@@ -275,7 +275,7 @@ public class ReflectUtil {
             tmp.add("set" + field.getName().toLowerCase());
 
         int n = 0;
-        for ( int i = 0; i < methods.length; i++) {
+        for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
             Class<?> returnType = method.getReturnType();
             if (method.getParameterCount() == 1 && (returnType == void.class || returnType == Void.class)
@@ -325,7 +325,7 @@ public class ReflectUtil {
      * equals it or the has a same method name and return-type and same parameters
      *
      * @param methods the array methods to be found
-     * @param source the source method
+     * @param source  the source method
      * @return the index in method array
      */
     public static int indexOf(Method[] methods, Method source) {
@@ -411,7 +411,7 @@ public class ReflectUtil {
             for (int i = 0; i < aClass.length; i++) {
                 if (!(equals = aClass[i].equals(bClass[i])
                     || aClass[i].getType() == bClass[i].getType())
-                    ) {
+                ) {
                     break;
                 }
             }
