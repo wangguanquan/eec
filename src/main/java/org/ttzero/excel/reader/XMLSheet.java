@@ -484,7 +484,7 @@ class XMLSheet implements Sheet {
     you can skip to the end of the file and look at the line
     number of the last line to confirm the scope of the entire worksheet.
      */
-    void parseDimension() {
+    private void parseDimension() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             long fileSize = Files.size(path);
             int block = (int) Math.min(1 << 11, fileSize);
@@ -577,7 +577,7 @@ class XMLSheet implements Sheet {
         return new int[] {row, cs, ls};
     }
 
-    int parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
+    private int parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
         long rr = 0L;
         int rc, i = charBuffer.position();
 
@@ -615,7 +615,8 @@ class XMLSheet implements Sheet {
         return i;
     }
 
-    void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block) throws IOException { }
+    void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block)
+        throws IOException { }
 
     Row createHeader(char[] cb, int start, int n) {
         return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
