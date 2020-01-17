@@ -1129,7 +1129,7 @@ public abstract class Row {
  * @author guanquan.wang at 2019-12-31 15:42
  */
 @FunctionalInterface
-interface MergeCalc {
+interface MergeCalcFunc {
 
     /**
      * Merge formula in rows
@@ -1139,4 +1139,21 @@ interface MergeCalc {
      * @param n count of cells
      */
     void accept(int row, Cell[] cells, int n);
+}
+
+/**
+ * Test and copy value on merged cells
+ *
+ * @author guanquan.wang at 2020-01-17 11:36
+ */
+@FunctionalInterface
+interface MergeValueFunc {
+
+    /**
+     * Copy merged values
+     *
+     * @param row thr row number
+     * @param cell all cell in row
+     */
+    void accept(int row, Cell cell);
 }

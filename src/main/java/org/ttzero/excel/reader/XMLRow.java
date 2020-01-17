@@ -96,7 +96,7 @@ class XMLRow extends Row {
         return this;
     }
 
-    private int searchRowNumber() {
+    private void searchRowNumber() {
         int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
@@ -108,7 +108,6 @@ class XMLRow extends Row {
                 break;
             }
         }
-        return _f;
     }
 
     int searchSpan() {
@@ -349,10 +348,10 @@ class XMLRow extends Row {
         switch (cell.t) {
             case INLINESTR: // inner string
                 a = getT();
-                if (a == cursor) { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
-                } else {
+                if (a > cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
+                } else { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
                 }
                 break;
             case SST: // shared string lazy get
@@ -364,14 +363,14 @@ class XMLRow extends Row {
                 a = getV();
                 if (cursor - a == 1) {
                     cell.setBv(toInt(cb, a, cursor) == 1);
-                }
+                } else cell.setBv(false);
                 break;
             case FUNCTION: // function string
                 a = getV();
-                if (a == cursor) { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
-                } else {
+                if (a > cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
+                } else { // null value
+                    cell.setT(BLANK); // Reset type to BLANK if null value
                 }
                 break;
             default:
@@ -389,7 +388,9 @@ class XMLRow extends Row {
                     } else {
                         cell.setSv(toString(a, cursor));
                     }
-                } else cell.setT(BLANK);
+                }
+                // Maybe the cell is merged
+                else cell.setT(BLANK);
         }
 
         // end of cell
@@ -425,9 +426,9 @@ class XMLRow extends Row {
  * Cell with Calc
  */
 class XMLCalcRow extends XMLRow {
-    private MergeCalc calcFun;
+    private MergeCalcFunc calcFun;
 
-    XMLCalcRow(SharedStrings sst, Styles styles, int startRow, MergeCalc calcFun) {
+    XMLCalcRow(SharedStrings sst, Styles styles, int startRow, MergeCalcFunc calcFun) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
@@ -442,7 +443,7 @@ class XMLCalcRow extends XMLRow {
         this.buf = row.buf;
     }
 
-    XMLCalcRow setCalcFun(MergeCalc calcFun) {
+    XMLCalcRow setCalcFun(MergeCalcFunc calcFun) {
         this.calcFun = calcFun;
         return this;
     }
@@ -573,9 +574,37 @@ class XMLCalcRow extends XMLRow {
     }
 }
 
+/**
+ * Copy value on merge cells
+ */
 class XMLMergeRow extends XMLRow {
+    // InterfaceFunction
+    private MergeValueFunc func;
 
     XMLMergeRow(XMLRow row) {
+        this.sst = row.sst;
+        this.styles = row.styles;
+        this.startRow = row.startRow;
+        this.buf = row.buf;
+    }
 
+    XMLMergeRow setCopyValueFunc(MergeValueFunc func) {
+        this.func = func;
+        return this;
+    }
+
+    /**
+     * Parse cell value
+     *
+     * @param cell current {@link Cell}
+     */
+    @Override
+    void parseCellValue(Cell cell) {
+
+        // Parse value
+        super.parseCellValue(cell);
+
+        // Setting/copy value if merged
+        func.accept(getRowNumber(), cell);
     }
 }

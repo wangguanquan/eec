@@ -22,7 +22,11 @@ import org.junit.Test;
  * @author guanquan.wang at 2020-01-09 17:19
  */
 public class GridTest {
-    @Test public void testLongGrid() {
-        LongGrid grid = new LongGrid();
+    @Test public void testGrid() {
+        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 100, (short) 62));
+
+        grid.mark(new Dimension(1, (short) 1, 10, (short) 6));
+
+        System.out.println(grid);
     }
 }

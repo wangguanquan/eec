@@ -484,7 +484,7 @@ class XMLSheet implements Sheet {
     you can skip to the end of the file and look at the line
     number of the last line to confirm the scope of the entire worksheet.
      */
-    private void parseDimension() {
+    void parseDimension() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             long fileSize = Files.size(path);
             int block = (int) Math.min(1 << 11, fileSize);
@@ -577,7 +577,7 @@ class XMLSheet implements Sheet {
         return new int[] {row, cs, ls};
     }
 
-    private int parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
+    private void parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
         long rr = 0L;
         int rc, i = charBuffer.position();
 
@@ -611,8 +611,6 @@ class XMLSheet implements Sheet {
         } else rr |= 1;
 
         dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
-
-        return i;
     }
 
     void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block)
@@ -640,6 +638,9 @@ class XMLSheet implements Sheet {
     }
 }
 
+/**
+ * A sub {@link XMLSheet} to parse cell calc
+ */
 class XMLCalcSheet extends XMLSheet implements CalcSheet {
     private long[] calc; // Array of formula
     XMLCalcSheet() { }
@@ -661,7 +662,7 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
     public XMLCalcSheet load() throws IOException {
         super.load();
 
-        if (!eof && !(sRow instanceof XMLCalcRow)) {
+        if (!eof && !(sRow instanceof XMLCalcRow) && calc != null) {
             sRow = sRow.asCalcRow().setCalcFun(this::findCalc);
         }
         return this;
@@ -705,6 +706,9 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
 
 }
 
+/**
+ * A sub {@link XMLSheet} to copy value on merge cells
+ */
 class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
     // A merge cells grid
@@ -728,13 +732,16 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     public XMLMergeSheet load() throws IOException {
         super.load();
 
-        if (!eof && !(sRow instanceof XMLMergeRow)) {
-            sRow = sRow.asMergeRow();
+        if (mergeCells == null && !eof) {
+            parseDimension();
+        }
+
+        if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
+            sRow = sRow.asMergeRow().setCopyValueFunc(this::mergeCell);
         }
 
         return this;
     }
-
 
     /*
     Parse `mergeCells` tag
@@ -799,12 +806,16 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
             // TODO
             Grid grid = GridFactory.create(dim);
-            for (Dimension d : mergeCells)
+            for (Dimension d : mergeCells) {
                 grid.mark(d);
+                System.out.println(d);
+            }
 
             this.mergeCells = grid;
         }
     }
 
-
+    private void mergeCell(int row, Cell cell) {
+        // TODO
+    }
 }
