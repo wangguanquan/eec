@@ -389,7 +389,7 @@ class XMLRow extends Row {
                     } else {
                         cell.setSv(toString(a, cursor));
                     }
-                }
+                } else cell.setT(BLANK);
         }
 
         // end of cell
