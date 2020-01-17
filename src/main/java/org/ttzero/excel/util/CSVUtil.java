@@ -315,7 +315,7 @@ public class CSVUtil {
      * @return a CSV format writer
      */
     public static Writer newWriter(OutputStream os) {
-        return new Writer(new BufferedWriter(new OutputStreamWriter(os)));
+        return new Writer(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
     }
 
     private static void testOrCreate(Path path) throws IOException {
