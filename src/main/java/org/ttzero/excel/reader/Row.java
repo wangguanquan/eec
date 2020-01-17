@@ -1024,6 +1024,7 @@ public abstract class Row {
                     break;
                 case BLANK:
                     joiner.add(EMPTY);
+                    break;
                 default:
                     joiner.add(null);
             }
