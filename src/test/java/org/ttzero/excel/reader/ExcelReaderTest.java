@@ -223,7 +223,7 @@ public class ExcelReaderTest {
     }
 
     @Test public void testDimensionConstructor() {
-        Dimension dimension = Dimension.from("A1:C5");
+        Dimension dimension = Dimension.of("A1:C5");
         assert "A1:C5".equals(dimension.toString());
 
         assert dimension.firstRow == 1;

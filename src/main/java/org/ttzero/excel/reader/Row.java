@@ -1055,7 +1055,7 @@ public abstract class Row {
         } else if (i >= sharedCalc.length) {
             sharedCalc = Arrays.copyOf(sharedCalc, i + 10);
         }
-        Dimension dim = Dimension.from(ref);
+        Dimension dim = Dimension.of(ref);
 
         long l = 0;
         l |= (long) (dim.firstRow & (1 << 20) - 1) << 42;

@@ -49,7 +49,7 @@ public class Dimension {
      * @param range range string like {@code A2:B2}
      * @return the {@link Dimension} entry
      */
-    public static Dimension from(String range) {
+    public static Dimension of(String range) {
         int i = range.indexOf(':');
         if (i < 0 || i == range.length() - 1)
             throw new IllegalArgumentException(range + " can't convert to Dimension.");

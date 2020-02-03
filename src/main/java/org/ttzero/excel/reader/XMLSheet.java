@@ -254,7 +254,7 @@ class XMLSheet implements Sheet {
                     Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
                     Matcher mat = pat.matcher(l_);
                     if (mat.matches()) {
-                        dimension = Dimension.from(l_);
+                        dimension = Dimension.of(l_);
                         this.startRow = dimension.firstRow;
                     } else {
                         pat = Pattern.compile("([A-Z]+)(\\d+)");
