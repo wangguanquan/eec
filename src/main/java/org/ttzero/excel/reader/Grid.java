@@ -63,36 +63,25 @@ interface Grid {
      * @return true if the specified dimension has be marked
      */
     boolean test(int r, int c);
-}
 
-class GridFactory {
-    private GridFactory() { }
+    final class FastGrid implements Grid {
+        private int fr, fc, lr, lc; // Start index of Row and Column(One base)
+        private long[] g;
 
-    static Grid create(Dimension dim) {
-        int r = dim.lastRow - dim.firstRow + 1
-            , c = dim.lastColumn - dim.firstColumn + 1;
+        private int b // Power of two minus 1
+            , c;
 
-        return c <= 128 && r < 1 << 14 ? new FastGrid(dim) : new FractureGrid();
-    }
-}
+        FastGrid(Dimension dim) {
+            fr = dim.firstRow;
+            lr = dim.lastRow;
+            fc = dim.firstColumn;
+            lc = dim.lastColumn;
 
-class FastGrid implements Grid {
-    private int fr, fc, lr, lc; // Start index of Row and Column(One base)
-    private long[] g;
-
-    private int b // Power of two minus 1
-        , c;
-    FastGrid(Dimension dim) {
-        fr = dim.firstRow;
-        lr = dim.lastRow;
-        fc = dim.firstColumn;
-        lc = dim.lastColumn;
-
-        b = powerOneBit(lc - fc + 1);
-        c = numberOfTrailingZeros(b + 1) + (isPowerOfTwo(lc - fc + 1) ? -1 : 0);
-        int n = 6 - c, len = (lr - fr + 1) >> n;
-        g = new long[len != (len >> n << n) ? (lr - fr + 1 >> n) + 1 : (lr - fr + 1) >> n];
-    }
+            b = powerOneBit(lc - fc + 1);
+            c = numberOfTrailingZeros(b + 1) + (isPowerOfTwo(lc - fc + 1) ? -1 : 0);
+            int n = 6 - c, len = (lr - fr + 1) >> n;
+            g = new long[len > 0 ? len != (len >> n << n) ? len + 1 : len : 1];
+        }
 
     static int powerOneBit(int i) {
         i |= (i >>  1);
@@ -103,134 +92,93 @@ class FastGrid implements Grid {
         return i;
     }
 
-    static boolean isPowerOfTwo(int n) {
-        return (n & -n) == n;
-    }
+        static boolean isPowerOfTwo(int n) {
+            return (n & -n) == n; // OR (n & n - 1) == 0;
+        }
 
-    @Override
-    public void mark(char[] chars, int from, int to) {
+        @Override
+        public void mark(char[] chars, int from, int to) {
 
-    }
+        }
 
-    @Override
-    public void mark(Dimension dimension) {
-        int n = dimension.lastColumn - dimension.firstColumn + 1;
-        for (int i = dimension.firstRow; i <= dimension.lastRow; i++) {
-            long l = ~(~0 >> n << n);
-            g[getRow(i - fr)] |= l;
+        @Override
+        public void mark(Dimension dimension) {
+            int n = dimension.lastColumn - dimension.firstColumn + 1
+                , p = 1 << (6 - c);
+            long l = ~(~0L >> n << n) << (dimension.firstColumn - fc);
+            for (int i = dimension.firstRow; i <= dimension.lastRow; i++)
+                g[getRow(i)] |= l << ((p - ((i - fr + 1) & (p - 1))) << c);
+        }
+
+        @Override
+        public boolean test(int r, int c) {
+            if (!range(r, c)) return false;
+            long l = g[getRow(r)];
+            int p = 1 << (6 - this.c);
+            l >>= ((p - ((r - fr + 1) & (p - 1))) << this.c);
+            l >>= (c - fc);
+            return (l & 1) == 1;
+        }
+
+        boolean range(int r, int c) {
+            return r >= fr && r <= lr && c >= fc && c <= lc;
+        }
+
+        int getRow(int i) {
+            return (i - fr) >> (6 - c);
+        }
+
+        @Override
+        public String toString() {
+            StringJoiner joiner = new StringJoiner("\n");
+            int last = lr - fr + 1, j = 0;
+            A: for (long l : g) {
+                String s = append(Long.toBinaryString(l));
+                for (int i = 0, n = 1 << 6 - c; i < n; i++) {
+                    joiner.add(s.substring(i << c, (i + 1) << c));
+                    if (++j >= last) break A;
+                }
+            }
+            return joiner.toString();
+        }
+
+        private char[] chars = new char[64];
+
+        private String append(String s) {
+            int n = s.length();
+            s.getChars(0, n, chars, chars.length - n);
+            Arrays.fill(chars, 0, chars.length - n, '0');
+            return new String(chars);
         }
     }
 
-    @Override
-    public boolean test(int r, int c) {
-//        return range(r, c) && g[getRow(r - fr)];
-        return false;
-    }
+    final class FractureGrid implements Grid {
 
-    boolean range(int r, int c) {
-        return r >= fr && r <= lr && c >= fc && c <= lc;
-    }
+        @Override
+        public void mark(char[] chars, int from, int to) {
 
-    int getRow(int i) {
-        return i >> (6 - c);
-    }
-
-    @Override
-    public String toString() {
-        StringJoiner joiner = new StringJoiner("\n");
-        for (long l : g) {
-            joiner.add(append(Long.toBinaryString(l)));
         }
-        return joiner.toString();
+
+        @Override
+        public void mark(Dimension dimension) {
+
+        }
+
+        @Override
+        public boolean test(int r, int c) {
+            return false;
+        }
     }
 
-    private char[] chars = new char[64];
-    private String append(String s) {
-        int n = s.length();
-        s.getChars(0, n, chars, chars.length - n);
-        Arrays.fill(chars, 0, chars.length - n, '0');
-        return new String(chars);
-    }
 }
 
-class FractureGrid implements Grid {
+final class GridFactory {
+    private GridFactory() { }
 
-    @Override
-    public void mark(char[] chars, int from, int to) {
+    static Grid create(Dimension dim) {
+        int r = dim.lastRow - dim.firstRow + 1
+            , c = dim.lastColumn - dim.firstColumn + 1;
 
-    }
-
-    @Override
-    public void mark(Dimension dimension) {
-
-    }
-
-    @Override
-    public boolean test(int r, int c) {
-        return false;
+        return c <= 64 && r < 1 << 14 ? new Grid.FastGrid(dim) : new Grid.FractureGrid();
     }
 }
-//
-//class LongLongGrid extends FastGrid {
-//
-//    LongLongGrid(Dimension dim) {
-//        super(dim);
-//    }
-//
-//    @Override
-//    int lg() {
-//        return (lr - fr + 1) << 1;
-//    }
-//}
-//
-//class LongGrid extends FastGrid {
-//
-//    LongGrid(Dimension dim) {
-//        super(dim);
-//    }
-//
-//    @Override
-//    int lg() {
-//        return lr - fr + 1;
-//    }
-//}
-//
-//class IntegerGrid extends FastGrid {
-//
-//    IntegerGrid(Dimension dim) {
-//        super(dim);
-//    }
-//
-//    @Override
-//    int lg() {
-//        int i = lr - fr + 1;
-//        return (i >> 1) + (i & 1);
-//    }
-//}
-//
-//class ShortGrid extends FastGrid {
-//
-//    ShortGrid(Dimension dim) {
-//        super(dim);
-//    }
-//
-//    @Override
-//    int lg() {
-//        int i = lr - fr + 1;
-//        return i != (i >> 2 << 2) ? (i >> 2) + 1 : i >> 2;
-//    }
-//}
-//
-//class ByteGrid extends FastGrid {
-//
-//    ByteGrid(Dimension dim) {
-//        super(dim);
-//    }
-//
-//    @Override
-//    int lg() {
-//        int i = lr - fr + 1;
-//        return i != (i >> 3 << 3) ? (i >> 3) + 1 : i >> 3;
-//    }
-//
-//}

@@ -38,8 +38,6 @@ import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
-import static org.ttzero.excel.reader.FastGrid.isPowerOfTwo;
-import static org.ttzero.excel.reader.FastGrid.powerOneBit;
 import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
@@ -407,24 +405,6 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testInteger() {
-        println(powerOneBit(2));
-
-        println(Integer.numberOfTrailingZeros(2));
-        println(Integer.toBinaryString(16));
-
-        for (int i = 0; i < 1000; i++) {
-            if (isPowerOfTwo(i))
-                println(i);
-        }
-
-
-        println(n(34));
-    }
-
-    int n(int n) {
-        return (n & n - 1) ^ n;
-    }
 
     public static class Customer {
         @ExcelColumn("客户编码")
