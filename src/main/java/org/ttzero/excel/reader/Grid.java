@@ -83,14 +83,14 @@ interface Grid {
             g = new long[len > 0 ? len != (len >> n << n) ? len + 1 : len : 1];
         }
 
-    static int powerOneBit(int i) {
-        i |= (i >>  1);
-        i |= (i >>  2);
-        i |= (i >>  4);
-        i |= (i >>  8);
-        i |= (i >> 16);
-        return i;
-    }
+        static int powerOneBit(int i) {
+            i |= (i >>  1);
+            i |= (i >>  2);
+            i |= (i >>  4);
+            i |= (i >>  8);
+            i |= (i >> 16);
+            return i;
+        }
 
         static boolean isPowerOfTwo(int n) {
             return (n & -n) == n; // OR (n & n - 1) == 0;
