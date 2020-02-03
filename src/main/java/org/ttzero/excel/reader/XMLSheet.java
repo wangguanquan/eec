@@ -787,7 +787,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 charBuffer.position(f);
                 charBuffer.get(chars, 0, i - f);
                 if (mergeCells == null) mergeCells = new ArrayList<>();
-                mergeCells.add(Dimension.from(new String(chars)));
+                mergeCells.add(Dimension.of(new String(chars)));
                 charBuffer.position(++i);
             }
         }
