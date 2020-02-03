@@ -30,7 +30,8 @@ interface Grid {
      * Mark `1` at the specified coordinates
      *
      * @param coordinate the excel coordinate string,
-     *                   it's a coordinate or range coordinates like `A1` or `A1:C4`
+     *                   it's a coordinate or range coordinates
+     *                   like `A1` or `A1:C4`
      */
     default void mark(String coordinate) {
         mark(coordinate.toCharArray(), 0, coordinate.length());
@@ -40,7 +41,8 @@ interface Grid {
      * Mark `1` at the specified coordinates
      *
      * @param chars the excel coordinate buffer,
-     *              it's a coordinate or range coordinates like `A1` or `A1:C4`
+     *              it's a coordinate or range coordinates
+     *              like `A1` or `A1:C4`
      * @param from  the begin index
      * @param to    the end index
      */
@@ -53,6 +55,13 @@ interface Grid {
      */
     void mark(Dimension dimension);
 
+    /**
+     * Test the specified {@link Dimension} has be marked.
+     *
+     * @param r row number (from one)
+     * @param c column number (from one)
+     * @return true if the specified dimension has be marked
+     */
     boolean test(int r, int c);
 }
 
