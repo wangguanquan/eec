@@ -753,7 +753,7 @@ public class ExcelReader implements AutoCloseable {
             else if (value >= 'a' && value <= 'z') {
                 v = v * 26 + value - 'a' + 1;
             }
-            else if (value >= '0') {
+            else if (value >= '0' && value <= '9') {
                 n = n * 10 + value - '0';
             }
             else
