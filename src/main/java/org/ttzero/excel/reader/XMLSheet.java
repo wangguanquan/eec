@@ -804,7 +804,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 if (lc < dim.lastColumn)  lc = dim.lastColumn;
             }
 
-            Grid grid = GridFactory.create(dim);
+            Grid grid = GridFactory.create(new Dimension(fr, fc, lr, lc));
             for (Dimension d : mergeCells) {
                 grid.mark(d);
                 logger.info(d); // FOR DEBUG
