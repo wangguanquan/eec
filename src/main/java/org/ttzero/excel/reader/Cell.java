@@ -16,12 +16,14 @@
 
 package org.ttzero.excel.reader;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * @author guanquan.wang on 2018-09-22
  */
-public class Cell {
+public class Cell implements Serializable, Cloneable {
+    private static final long serialVersionUID = 1L;
     public Cell() { }
     public Cell(short i) { this.i = i; }
     public static final char SST         = 's';
@@ -95,7 +97,7 @@ public class Cell {
     /**
      * y-axis of cell in row
      */
-    public short i;
+    public transient short i;
 
     public void setT(char t) {
         this.t = t;
@@ -156,7 +158,7 @@ public class Cell {
     }
 
     public void clear() {
-        this.t = '\0';
+        this.t  = '\0';
         this.sv = null;
         this.nv = 0;
         this.dv = 0.0;
@@ -166,7 +168,46 @@ public class Cell {
         this.mv = null;
         this.xf = 0;
         this.fv = null;
-        this.f = false;
+        this.f  = false;
         this.si = -1;
+    }
+
+    public Cell clone() {
+        Cell cell;
+        try {
+            cell = (Cell) super.clone();
+        } catch (CloneNotSupportedException e) {
+            cell = new Cell();
+            cell.t  = t;
+            cell.sv = sv;
+            cell.nv = nv;
+            cell.dv = dv;
+            cell.bv = bv;
+            cell.lv = lv;
+            cell.cv = cv;
+            cell.mv = mv;
+            cell.xf = xf;
+            cell.fv = fv;
+            cell.f  = f;
+            cell.si = si;
+        }
+        return cell;
+    }
+
+    public Cell from(Cell cell) {
+        this.t  = cell.t;
+        this.sv = cell.sv;
+        this.nv = cell.nv;
+        this.dv = cell.dv;
+        this.bv = cell.bv;
+        this.lv = cell.lv;
+        this.cv = cell.cv;
+        this.mv = cell.mv;
+        this.xf = cell.xf;
+        this.fv = cell.fv;
+        this.f  = cell.f;
+        this.si = cell.si;
+
+        return this;
     }
 }

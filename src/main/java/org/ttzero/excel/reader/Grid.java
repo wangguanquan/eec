@@ -17,6 +17,8 @@
 package org.ttzero.excel.reader;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
@@ -34,7 +36,7 @@ interface Grid {
      *                   like `A1` or `A1:C4`
      */
     default void mark(String coordinate) {
-        mark(coordinate.toCharArray(), 0, coordinate.length());
+        mark(Dimension.of(coordinate));
     }
 
     /**
@@ -46,7 +48,9 @@ interface Grid {
      * @param from  the begin index
      * @param to    the end index
      */
-    void mark(char[] chars, int from, int to);
+    default void mark(char[] chars, int from, int to) {
+        mark(Dimension.of(new String(chars, from, to - from + 1)));
+    }
 
     /**
      * Mark `1` at the specified {@link Dimension}
@@ -64,12 +68,21 @@ interface Grid {
      */
     boolean test(int r, int c);
 
+    /**
+     * Merge cell in range cells
+     *
+     * @param r row number (from one)
+     * @param cell column number (from one)
+     */
+    void merge(int r, Cell cell);
+
+
     final class FastGrid implements Grid {
         private int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private long[] g;
 
-        private int b // Power of two minus 1
-            , c;
+        private int c;
+        private final Map<Long, Cell> firstCells;
 
         FastGrid(Dimension dim) {
             fr = dim.firstRow;
@@ -77,10 +90,13 @@ interface Grid {
             fc = dim.firstColumn;
             lc = dim.lastColumn;
 
-            b = powerOneBit(lc - fc + 1);
+            // Power of two minus 1
+            int b = powerOneBit(lc - fc + 1);
             c = numberOfTrailingZeros(b + 1) + (isPowerOfTwo(lc - fc + 1) ? -1 : 0);
             int n = 6 - c, len = (lr - fr + 1) >> n;
             g = new long[len > 0 ? len != (len >> n << n) ? len + 1 : len : 1];
+
+            firstCells = new HashMap<>();
         }
 
         static int powerOneBit(int i) {
@@ -97,17 +113,15 @@ interface Grid {
         }
 
         @Override
-        public void mark(char[] chars, int from, int to) {
-
-        }
-
-        @Override
         public void mark(Dimension dimension) {
             int n = dimension.lastColumn - dimension.firstColumn + 1
                 , p = 1 << (6 - c);
             long l = ~(~0L >> n << n) << (dimension.firstColumn - fc);
             for (int i = dimension.firstRow; i <= dimension.lastRow; i++)
                 g[getRow(i)] |= l << ((p - ((i - fr + 1) & (p - 1))) << c);
+
+            // Create index on the first axis
+            firstCells.put((dimension.firstColumn & 0x7FFF) | ((long) dimension.firstRow) << 16, new Cell());
         }
 
         @Override
@@ -118,6 +132,20 @@ interface Grid {
             l >>= ((p - ((r - fr + 1) & (p - 1))) << this.c);
             l >>= (c - fc);
             return (l & 1) == 1;
+        }
+
+        @Override
+        public void merge(int r, Cell cell) {
+            if (!range(r, cell.i)) return;
+            long l = g[getRow(r)];
+            int p = 1 << (6 - this.c);
+            l >>= ((p - ((r - fr + 1) & (p - 1))) << this.c);
+            l >>= (cell.i - fc);
+
+            // Test the cell is merged
+            if ((l & 1) == 0) return;
+
+            // TODO find the first axis
         }
 
         boolean range(int r, int c) {
@@ -155,11 +183,6 @@ interface Grid {
     final class FractureGrid implements Grid {
 
         @Override
-        public void mark(char[] chars, int from, int to) {
-
-        }
-
-        @Override
         public void mark(Dimension dimension) {
 
         }
@@ -167,6 +190,11 @@ interface Grid {
         @Override
         public boolean test(int r, int c) {
             return false;
+        }
+
+        @Override
+        public void merge(int r, Cell cell) {
+
         }
     }
 
