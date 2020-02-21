@@ -25,6 +25,19 @@ import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
  * @author guanquan.wang at 2020-01-09 17:19
  */
 public class GridTest {
+    @Test public void testGridType() {
+        Grid grid = GridFactory.create(Dimension.of("A1:BM10"));
+
+        assert grid instanceof Grid.IndexGrid;
+
+        grid = GridFactory.create(Dimension.of("A1:B16383"));
+        assert grid instanceof Grid.FastGrid;
+
+        grid = GridFactory.create(Dimension.of("A1:B16384"));
+        assert grid instanceof Grid.FractureGrid;
+
+    }
+
     @Test public void testGrid1() {
         Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 1));
 
@@ -246,5 +259,30 @@ public class GridTest {
         scanner.get(8, 6);
 
         assert "B2:C2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
+    }
+
+    @Test public void testIndexGrid() {
+        Grid grid = GridFactory.create(Dimension.of("A1:BM10"));
+
+        grid.mark(Dimension.of("B2:E2"));
+
+        assert !grid.test(1, 1);
+        assert grid.test(2, 2);
+        assert grid.test(2, 5);
+        assert !grid.test(3, 3);
+        assert !grid.test(6, 2);
+    }
+
+    @Test public void testFractureGrid() {
+        Grid grid = GridFactory.create(Dimension.of("A1:E16384"));
+
+        grid.mark(Dimension.of("B1:C3"));
+
+        assert !grid.test(1, 1);
+        assert grid.test(1, 2);
+        assert grid.test(2, 2);
+        assert grid.test(3, 3);
+        assert !grid.test(4, 2);
+        assert !grid.test(3, 4);
     }
 }
