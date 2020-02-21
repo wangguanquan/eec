@@ -807,10 +807,10 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             Grid grid = GridFactory.create(new Dimension(fr, fc, lr, lc));
             for (Dimension d : mergeCells) {
                 grid.mark(d);
-                logger.debug(d); // FOR DEBUG
+                logger.debug("merged cells range {}", d);
             }
 
-            logger.debug(grid); // FOR DEBUG
+            logger.debug("Grid: {}", grid);
             this.mergeCells = grid;
         }
     }
