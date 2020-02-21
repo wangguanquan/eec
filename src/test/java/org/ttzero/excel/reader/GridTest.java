@@ -18,8 +18,6 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
-import java.util.Iterator;
-
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
 
@@ -74,6 +72,105 @@ public class GridTest {
         grid.mark(new Dimension(3, (short) 4, 7, (short) 4));
 
         println(grid);
+    }
+
+    @Test public void testGrid8_2() {
+        Grid grid = GridFactory.create(Dimension.of("A1:H71"));
+
+        grid.mark(Dimension.of("C10:D10"));
+        grid.mark(Dimension.of("C5:D5"));
+        grid.mark(Dimension.of("C6:D6"));
+        grid.mark(Dimension.of("C7:D7"));
+        grid.mark(Dimension.of("C8:D8"));
+        grid.mark(Dimension.of("C9:D9"));
+        grid.mark(Dimension.of("A39:A71"));
+        grid.mark(Dimension.of("D1:E1"));
+        grid.mark(Dimension.of("A1:A26"));
+        grid.mark(Dimension.of("A27:A38"));
+        grid.mark(Dimension.of("E20:H20"));
+        grid.mark(Dimension.of("E21:H21"));
+        grid.mark(Dimension.of("E22:H22"));
+        grid.mark(Dimension.of("E23:H23"));
+        grid.mark(Dimension.of("E24:H24"));
+        grid.mark(Dimension.of("E25:H25"));
+        grid.mark(Dimension.of("C11:D11"));
+        grid.mark(Dimension.of("C12:D12"));
+        grid.mark(Dimension.of("C13:D13"));
+        grid.mark(Dimension.of("C14:D14"));
+        grid.mark(Dimension.of("C15:D15"));
+        grid.mark(Dimension.of("C16:D16"));
+
+        assert grid.toString().equals("00011001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00001101\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "11110001\n" +
+            "11110001\n" +
+            "11110001\n" +
+            "11110001\n" +
+            "11110001\n" +
+            "11110001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001\n" +
+            "00000001");
     }
 
     @Test public void testGrid16() {
@@ -131,10 +228,9 @@ public class GridTest {
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("A13:A20"), null));
 
         // Test iterator
-        for (Iterator<Grid.Scanner.Entry> ite = scanner.iterator(); ite.hasNext();) {
-            println(ite.next().getDim());
+        for (Grid.Scanner.Entry entry : scanner) {
+            println(entry.getDim());
         }
-        println("------------------");
 
         assert "B2:C2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
 
