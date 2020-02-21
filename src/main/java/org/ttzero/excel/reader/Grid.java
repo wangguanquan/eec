@@ -96,10 +96,10 @@ interface Grid {
             lc = dim.lastColumn;
 
             // Power of two minus 1
-            int b = powerOneBit(lc - fc + 1);
-            c = numberOfTrailingZeros(b + 1) + (isPowerOfTwo(lc - fc + 1) ? -1 : 0);
-            int n = 6 - c, len = (lr - fr + 1) >> n;
-            g = new long[len > 0 ? len != (len >> n << n) ? len + 1 : len : 1];
+            int nc = lc - fc + 1, nr = lr - fr + 1, b = powerOneBit(nc);
+            c = numberOfTrailingZeros(b + 1) + (isPowerOfTwo(nc) ? -1 : 0);
+            int n = 6 - c, len = nr >> n;
+            g = new long[len > 0 ? nr > (len << n) ? len + 1 : len : 1];
 
             scanner = new LinkedScanner();
         }
@@ -351,8 +351,8 @@ interface Grid {
         public String toString() {
             StringJoiner joiner = new StringJoiner("->");
 
-            for (Iterator<Grid.LinkedScanner.Entry> ite = iterator(); ite.hasNext();) {
-                joiner.add(ite.next().getDim().toString());
+            for (Entry entry : this) {
+                joiner.add(entry.getDim().toString());
             }
 
             return joiner.toString();
