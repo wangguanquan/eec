@@ -17,11 +17,11 @@
 package org.ttzero.excel.reader;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 
 /**
  * @author guanquan.wang at 2020-01-09 16:54
@@ -77,12 +77,17 @@ interface Grid {
     void merge(int r, Cell cell);
 
 
+    /**
+     * Use binary to mark whether the cells are `merged` and set
+     * them accordingly if they are merged, so that you can quickly
+     * mark and check the cell status and save space.
+     */
     final class FastGrid implements Grid {
         private int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private long[] g;
 
         private int c;
-        private final Map<Long, Cell> firstCells;
+        private final Scanner scanner;
 
         FastGrid(Dimension dim) {
             fr = dim.firstRow;
@@ -96,7 +101,7 @@ interface Grid {
             int n = 6 - c, len = (lr - fr + 1) >> n;
             g = new long[len > 0 ? len != (len >> n << n) ? len + 1 : len : 1];
 
-            firstCells = new HashMap<>();
+            scanner = new LinkedScanner();
         }
 
         static int powerOneBit(int i) {
@@ -121,7 +126,7 @@ interface Grid {
                 g[getRow(i)] |= l << ((p - ((i - fr + 1) & (p - 1))) << c);
 
             // Create index on the first axis
-            firstCells.put((dimension.firstColumn & 0x7FFF) | ((long) dimension.firstRow) << 16, new Cell());
+            scanner.put(new LinkedScanner.E(dimension, new Cell()));
         }
 
         @Override
@@ -136,16 +141,17 @@ interface Grid {
 
         @Override
         public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
-            long l = g[getRow(r)];
-            int p = 1 << (6 - this.c);
-            l >>= ((p - ((r - fr + 1) & (p - 1))) << this.c);
-            l >>= (cell.i - fc);
+            if (!test(r, cell.i)) return;
 
-            // Test the cell is merged
-            if ((l & 1) == 0) return;
-
-            // TODO find the first axis
+            Scanner.Entry e = scanner.get(r, cell.i);
+            if (cell.t == EMPTY_TAG) {
+                // Copy value from the first merged cell
+                cell.from(e.getCell());
+            }
+            // Current cell has value
+            else {
+                e.getCell().from(cell);
+            }
         }
 
         boolean range(int r, int c) {
@@ -195,6 +201,161 @@ interface Grid {
         @Override
         public void merge(int r, Cell cell) {
 
+        }
+    }
+
+
+    interface Scanner extends Iterable<Scanner.Entry> {
+
+        void put(Entry entry);
+
+        Entry get(int r, int c);
+
+        int size();
+
+        interface Entry {
+            Dimension getDim();
+
+            Cell getCell();
+        }
+    }
+
+
+    final class LinkedScanner implements Scanner {
+
+        final static class E implements Entry {
+            private Dimension dim;
+            private Cell cell;
+            private int n;
+
+            E(Dimension dim, Cell cell) {
+                this.dim = dim;
+                this.cell = cell;
+                n = (dim.lastRow - dim.firstRow + 1) * (dim.lastColumn - dim.firstColumn + 1);
+            }
+
+            @Override
+            public Dimension getDim() {
+                return dim;
+            }
+
+            @Override
+            public Cell getCell() {
+                return cell;
+            }
+        }
+
+        private static class Node {
+            private Node next;
+            private E entry;
+
+            Node(E entry, Node next) {
+                this.entry = entry;
+                this.next = next;
+            }
+        }
+
+        private Node head, tail;
+        private int size;
+
+        @Override
+        public void put(Entry entry) {
+            E e;
+            if (entry instanceof E) e = (E) entry;
+            else e = new E(entry.getDim(), entry.getCell());
+
+            if (head != null) {
+                Node f = head, bf = null;
+                for (; f != null; f = f.next) {
+                    if (f.entry.getDim().firstRow > entry.getDim().firstRow) {
+                        Node newNode = new Node(e, f);
+                        if (f == head) head = newNode;
+                        else bf.next = newNode;
+                        break;
+                    }
+                    bf = f;
+                }
+
+                if (f == null) {
+                    tail = bf.next = new Node(e, null);
+                }
+            } else {
+                head = tail = new Node(e, null);
+            }
+            size++;
+        }
+
+        public Entry get(int r, int c) {
+            Node val = null;
+            if (head == null) return null;
+            if (size == 1) return head.entry;
+            Node f = head, bf = null;
+            for (; f != null; f = f.next) {
+                if (f.entry.getDim().checkRange(r, c)) {
+                    val = f;
+                    break;
+                }
+                bf = f;
+            }
+
+            if (val != null) {
+                int n = --val.entry.n;
+                // Insert entry ahead
+                if (n > 0 && val != head) {
+                    bf.next = val.next;
+                    val.next = head;
+                    head = val;
+                    // Move entry back
+                } else if (n == 0) {
+                    head = val.next;
+                    val.next = null;
+                    tail.next = val;
+                    tail = val;
+                }
+            }
+            // Not Found, it never occur
+            else return null;
+
+            return val.entry;
+        }
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public Iterator<Entry> iterator() {
+            return new ForwardIterator(head);
+        }
+
+        private static class ForwardIterator implements Iterator<LinkedScanner.Entry> {
+            private Node first;
+            ForwardIterator(Node first) {
+                this.first = first;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return first != null;
+            }
+            @Override
+            public Entry next() {
+                Entry e = first.entry;
+                first = first.next;
+                return e;
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringJoiner joiner = new StringJoiner("->");
+
+            for (Iterator<Grid.LinkedScanner.Entry> ite = iterator(); ite.hasNext();) {
+                joiner.add(ite.next().getDim().toString());
+            }
+
+            return joiner.toString();
         }
     }
 

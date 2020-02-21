@@ -102,4 +102,15 @@ public class Dimension {
         return new String(int2Col(firstColumn)) + this.firstRow
             + ":" + new String(int2Col(lastColumn)) + this.lastRow;
     }
+
+    /**
+     * Determine whether the specified coordinates are within the {@link Dimension}
+     *
+     * @param r row number
+     * @param c column number
+     * @return true if axis is in {@link Dimension}
+     */
+    public boolean checkRange(int r, int c) {
+        return r >= firstRow && r <= lastRow && c >= firstColumn && c <= lastColumn;
+    }
 }

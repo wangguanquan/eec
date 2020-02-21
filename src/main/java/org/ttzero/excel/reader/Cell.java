@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 /**
  * @author guanquan.wang on 2018-09-22
  */
-public class Cell implements Serializable, Cloneable {
+public class Cell implements Serializable {
     private static final long serialVersionUID = 1L;
     public Cell() { }
     public Cell(short i) { this.i = i; }
@@ -39,6 +39,7 @@ public class Cell implements Serializable, Cloneable {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
+    public static final char EMPTY_TAG   = 'e';
     /**
      * Value type
      * n=numeric
@@ -170,28 +171,6 @@ public class Cell implements Serializable, Cloneable {
         this.fv = null;
         this.f  = false;
         this.si = -1;
-    }
-
-    public Cell clone() {
-        Cell cell;
-        try {
-            cell = (Cell) super.clone();
-        } catch (CloneNotSupportedException e) {
-            cell = new Cell();
-            cell.t  = t;
-            cell.sv = sv;
-            cell.nv = nv;
-            cell.dv = dv;
-            cell.bv = bv;
-            cell.lv = lv;
-            cell.cv = cv;
-            cell.mv = mv;
-            cell.xf = xf;
-            cell.fv = fv;
-            cell.f  = f;
-            cell.si = si;
-        }
-        return cell;
     }
 
     public Cell from(Cell cell) {

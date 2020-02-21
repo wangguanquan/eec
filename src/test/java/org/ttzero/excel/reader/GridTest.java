@@ -18,6 +18,8 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
 
@@ -119,5 +121,34 @@ public class GridTest {
         assert isPowerOfTwo(1024);
         assert !isPowerOfTwo(3);
         assert !isPowerOfTwo(6);
+    }
+
+    @Test public void testLinkedScanner() {
+        Grid.Scanner scanner = new Grid.LinkedScanner();
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("E5:F8"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B16:E17"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("A13:A20"), null));
+
+        // Test iterator
+        for (Iterator<Grid.Scanner.Entry> ite = scanner.iterator(); ite.hasNext();) {
+            println(ite.next().getDim());
+        }
+        println("------------------");
+
+        assert "B2:C2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
+
+        scanner.get(5, 5);
+        assert "E5:F8->B2:C2->A13:A20->B16:E17".equals(scanner.toString());
+
+        scanner.get(5, 6);
+        scanner.get(6, 5);
+        scanner.get(6, 6);
+        scanner.get(7, 5);
+        scanner.get(7, 6);
+        scanner.get(8, 5);
+        scanner.get(8, 6);
+
+        assert "B2:C2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
     }
 }

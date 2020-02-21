@@ -34,6 +34,7 @@ import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
@@ -1023,6 +1024,7 @@ public abstract class Row {
                     else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:
+                case EMPTY_TAG:
                     joiner.add(EMPTY);
                     break;
                 default:

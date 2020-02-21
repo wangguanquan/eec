@@ -406,6 +406,18 @@ public class ExcelReaderTest {
     }
 
 
+    @Test public void testMergeExcel() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.sheets().flatMap(s -> {
+                println("----------------" + s.getName() + "----------------");
+                println("dimension: " + s.getDimension());
+                return s.rows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Customer {
         @ExcelColumn("客户编码")
         private String code;

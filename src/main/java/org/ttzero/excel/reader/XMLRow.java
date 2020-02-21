@@ -19,6 +19,7 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.entity.style.Styles;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.SST;
@@ -389,8 +390,8 @@ class XMLRow extends Row {
                         cell.setSv(toString(a, cursor));
                     }
                 }
-                // Maybe the cell is merged
-                else cell.setT(BLANK);
+                // Maybe the cell should be merged
+                else cell.setT(EMPTY_TAG);
         }
 
         // end of cell
