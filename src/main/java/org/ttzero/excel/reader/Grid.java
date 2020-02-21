@@ -17,7 +17,9 @@
 package org.ttzero.excel.reader;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
@@ -83,10 +85,10 @@ interface Grid {
      * mark and check the cell status and save space.
      */
     final class FastGrid implements Grid {
-        private int fr, fc, lr, lc; // Start index of Row and Column(One base)
-        private long[] g;
+        private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
+        private final long[] g;
 
-        private int c;
+        private final int c;
         private final Scanner scanner;
 
         FastGrid(Dimension dim) {
@@ -101,7 +103,7 @@ interface Grid {
             int n = 6 - c, len = nr >> n;
             g = new long[len > 0 ? nr > (len << n) ? len + 1 : len : 1];
 
-            scanner = new LinkedScanner();
+            scanner = new FastLinkedScanner();
         }
 
         static int powerOneBit(int i) {
@@ -184,23 +186,103 @@ interface Grid {
             Arrays.fill(chars, 0, chars.length - n, '0');
             return new String(chars);
         }
+
+        private static class FastLinkedScanner extends LinkedScanner {
+            public Entry get(int r, int c) {
+                if (size() == 1) return head.entry;
+                return super.get(r, c);
+            }
+        }
     }
 
-    final class FractureGrid implements Grid {
+    final class IndexGrid implements Grid {
+        private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
+        private final Map<Long, Cell> index;
+        IndexGrid(Dimension dim, int n) {
+            fr = dim.firstRow;
+            lr = dim.lastRow;
+            fc = dim.firstColumn;
+            lc = dim.lastColumn;
+
+            index = new HashMap<>(n);
+        }
 
         @Override
-        public void mark(Dimension dimension) {
-
+        public void mark(Dimension dim) {
+            Cell cell = new Cell();
+            for (int i = dim.firstRow; i <= dim.lastRow; i++) {
+                for (int j = dim.firstColumn; j <= dim.lastColumn; j++) {
+                    index.put(((long) i) << 16 | j, cell);
+                }
+            }
         }
 
         @Override
         public boolean test(int r, int c) {
-            return false;
+            return range(r, c) && index.containsKey(((long) r) << 16 | c);
         }
 
         @Override
         public void merge(int r, Cell cell) {
+            if (!range(r, cell.i)) return;
+            Cell c = index.get(((long) r) << 16 | cell.i);
 
+            if (cell.t == EMPTY_TAG) {
+                // Copy value from the first merged cell
+                cell.from(c);
+            }
+            // Current cell has value
+            else {
+                c.from(cell);
+            }
+        }
+
+        boolean range(int r, int c) {
+            return r >= fr && r <= lr && c >= fc && c <= lc;
+        }
+    }
+
+    final class FractureGrid implements Grid {
+        private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
+        private final LinkedScanner scanner;
+
+        FractureGrid(Dimension dim) {
+            fr = dim.firstRow;
+            lr = dim.lastRow;
+            fc = dim.firstColumn;
+            lc = dim.lastColumn;
+
+            scanner = new LinkedScanner();
+        }
+
+        @Override
+        public void mark(Dimension dim) {
+            scanner.put(new LinkedScanner.E(dim, new Cell()));
+        }
+
+        @Override
+        public boolean test(int r, int c) {
+            return range(r, c) && scanner.get(r, c) != null;
+        }
+
+        @Override
+        public void merge(int r, Cell cell) {
+            if (!range(r, cell.i)) return;
+            Scanner.Entry e = scanner.get(r, cell.i);
+            if (e == null) return;
+
+            if (cell.t == EMPTY_TAG) {
+                // Copy value from the first merged cell
+                cell.from(e.getCell());
+            }
+            // Current cell has value
+            else {
+                e.getCell().from(cell);
+            }
+        }
+
+        boolean range(int r, int c) {
+            return r >= fr && r <= lr && c >= fc && c <= lc;
         }
     }
 
@@ -221,7 +303,7 @@ interface Grid {
     }
 
 
-    final class LinkedScanner implements Scanner {
+    class LinkedScanner implements Scanner {
 
         final static class E implements Entry {
             private Dimension dim;
@@ -255,7 +337,7 @@ interface Grid {
             }
         }
 
-        private Node head, tail;
+        Node head, tail;
         private int size;
 
         @Override
@@ -288,7 +370,6 @@ interface Grid {
         public Entry get(int r, int c) {
             Node val = null;
             if (head == null) return null;
-            if (size == 1) return head.entry;
             Node f = head, bf = null;
             for (; f != null; f = f.next) {
                 if (f.entry.getDim().checkRange(r, c)) {
@@ -358,16 +439,22 @@ interface Grid {
             return joiner.toString();
         }
     }
-
 }
 
 final class GridFactory {
     private GridFactory() { }
-
     static Grid create(Dimension dim) {
         int r = dim.lastRow - dim.firstRow + 1
             , c = dim.lastColumn - dim.firstColumn + 1;
 
-        return c <= 64 && r < 1 << 14 ? new Grid.FastGrid(dim) : new Grid.FractureGrid();
+        return create(dim, r * c);
+    }
+
+    static Grid create(Dimension dim, int n) {
+        int r = dim.lastRow - dim.firstRow + 1
+            , c = dim.lastColumn - dim.firstColumn + 1;
+
+        return c <= 64 && r < 1 << 14 ? new Grid.FastGrid(dim)
+            : n > 1 << 10 ? new Grid.FractureGrid(dim) : new Grid.IndexGrid(dim, n);
     }
 }
