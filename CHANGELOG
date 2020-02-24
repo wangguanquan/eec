@@ -1,4 +1,4 @@
-Version 0.3.7 ()
+Version 0.4.0 (2020-02-24)
 -------------
 1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法
 2. 支持获取单元格公式
