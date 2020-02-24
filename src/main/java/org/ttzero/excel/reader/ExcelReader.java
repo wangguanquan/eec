@@ -81,6 +81,19 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class ExcelReader implements AutoCloseable {
     private Logger LOGGER = LogManager.getLogger(getClass());
 
+    /**
+     * Specify {@link ExcelReader} only parse cell value (Default)
+     */
+    public static final int VALUE_ONLY = 0;
+    /**
+     * Parse cell value and calc
+     */
+    public static final int VALUE_AND_CALC = 1 << 1;
+    /**
+     * Copy value on merge cells
+     */
+    public static final int COPY_ON_MERGED = 1 << 2;
+
     protected ExcelReader() { }
 
     protected Path self;
@@ -88,7 +101,6 @@ public class ExcelReader implements AutoCloseable {
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
-    boolean hasFormula;
 
     /**
      * The Shared String Table
@@ -96,9 +108,20 @@ public class ExcelReader implements AutoCloseable {
     private SharedStrings sst;
 
     /**
-     * The {@link Styles}
+     * Reader Option
+     * 0: only parse cell value (default)
+     * 2: parse cell value and calc
+     * 4: copy value on merge cells
+     *
+     * These attributes can be combined via `|`,
+     * like: VALUE_ONLY|COPY_ON_MERGED
      */
-    private Styles styles;
+    int option;
+
+    /**
+     * A formula flag
+     */
+    boolean hasFormula;
 
     /**
      * Constructor Excel Reader
@@ -108,7 +131,7 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException if path not exists or I/O error occur
      */
     public static ExcelReader read(Path path) throws IOException {
-        return read(path, 0, 0);
+        return read(path, 0, 0, VALUE_ONLY);
     }
 
     /**
@@ -119,7 +142,31 @@ public class ExcelReader implements AutoCloseable {
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream) throws IOException {
-        return read(stream, 0, 0);
+        return read(stream, 0, 0, VALUE_ONLY);
+    }
+
+    /**
+     * Constructor Excel Reader
+     *
+     * @param path the excel path
+     * @param option the reader option.
+     * @return the {@link ExcelReader}
+     * @throws IOException if path not exists or I/O error occur
+     */
+    public static ExcelReader read(Path path, int option) throws IOException {
+        return read(path, 0, 0, option);
+    }
+
+    /**
+     * Constructor Excel Reader
+     *
+     * @param stream the {@link InputStream} of excel
+     * @param option the reader option.
+     * @return the {@link ExcelReader}
+     * @throws IOException if I/O error occur
+     */
+    public static ExcelReader read(InputStream stream, int option) throws IOException {
+        return read(stream, 0, 0, option);
     }
 
     /**
@@ -128,11 +175,12 @@ public class ExcelReader implements AutoCloseable {
      * @param path       the excel path
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
+     * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
-    public static ExcelReader read(Path path, int bufferSize) throws IOException {
-        return read(path, bufferSize, 0);
+    public static ExcelReader read(Path path, int bufferSize, int option) throws IOException {
+        return read(path, bufferSize, 0, option);
     }
 
     /**
@@ -141,11 +189,12 @@ public class ExcelReader implements AutoCloseable {
      * @param stream     the {@link InputStream} of excel
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
+     * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
-    public static ExcelReader read(InputStream stream, int bufferSize) throws IOException {
-        return read(stream, bufferSize, 0);
+    public static ExcelReader read(InputStream stream, int bufferSize, int option) throws IOException {
+        return read(stream, bufferSize, 0, option);
     }
 
     /**
@@ -155,11 +204,12 @@ public class ExcelReader implements AutoCloseable {
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
      * @param cacheSize  the {@link Cache} size, default is 512
+     * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
-    public static ExcelReader read(Path path, int bufferSize, int cacheSize) throws IOException {
-        return read(path, bufferSize, cacheSize, false);
+    public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+        return read(path, bufferSize, cacheSize, false, option);
     }
 
     /**
@@ -169,16 +219,17 @@ public class ExcelReader implements AutoCloseable {
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
      * @param cacheSize  the {@link Cache} size, default is 512
+     * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
-    public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize) throws IOException {
+    public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
         Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         if (temp == null) {
             throw new IOException("Create temp directory error. Please check your permission");
         }
         FileUtil.cp(stream, temp);
-        return read(temp, bufferSize, cacheSize, true);
+        return read(temp, bufferSize, cacheSize, true, option);
     }
 
     /**
@@ -306,17 +357,59 @@ public class ExcelReader implements AutoCloseable {
      * @return boolean
      */
     public boolean hasFormula() {
-        return hasFormula;
+        return this.hasFormula;
     }
 
     /**
      * Make the reader parse formula
      *
-     * @return self
+     * @return {@link ExcelReader}
      */
     public ExcelReader parseFormula() {
-        for (Sheet sheet : sheets) {
-            sheet.parseFormula();
+        if (!hasFormula()) return this;
+        // Formula string if exists
+        Path calcPath = self.resolve("xl/calcChain.xml");
+        long[][] calcArray = parseCalcChain(calcPath, sheets[sheets.length - 1].getIndex());
+
+        if (calcArray == null) return this;
+        int i = 0;
+        for (int n; i < sheets.length; i++) {
+            n = sheets[i].getIndex();
+            if (calcArray[n - 1] == null) continue;
+            if (!(sheets[i] instanceof  CalcSheet)) {
+                sheets[i] = sheets[i].asCalcSheet();
+            }
+            if (sheets[i] instanceof XMLCalcSheet) {
+                ((XMLCalcSheet) sheets[i]).setCalc(calcArray[n - 1]);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Copy values when reading merged cells.
+     * <p>
+     * By default, the values of the merged cells are only
+     * stored in the first Cell, and other cells have no values.
+     * Call this method to copy the value to other cells in the merge.
+     * <blockquote><pre>
+     * |---------|     |---------|     |---------|
+     * |         |     |  1 |    |     |  1 |  1 |
+     * |    1    |  =&gt; |----|----|  =&gt; |----|----|
+     * |         |     |    |    |     |  1 |  1 |
+     * |---------|     |---------|     |---------|
+     * Merged(A1:B2)     Default           Copy
+     *                  Value in A1
+     *                  others are
+     *                  `null`
+     * </pre></blockquote>
+     *
+     * @return {@link ExcelReader}
+     */
+    public ExcelReader copyOnMergeCells() {
+        for (int i = 0; i < sheets.length; i++) {
+            if (sheets[i] instanceof MergeSheet) continue;
+            sheets[i] = sheets[i].asMergeSheet();
         }
         return this;
     }
@@ -324,7 +417,7 @@ public class ExcelReader implements AutoCloseable {
     // --- PRIVATE FUNCTIONS
 
 
-    private ExcelReader(Path path, int bufferSize, int cacheSize) throws IOException {
+    private ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         // Store template stream as zip file
         Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
         ZipUtil.unzip(Files.newInputStream(path), tmp);
@@ -373,6 +466,8 @@ public class ExcelReader implements AutoCloseable {
 
         // Load Styles
         Path s = tmp.resolve("xl/styles.xml");
+
+        Styles styles;
         if (Files.exists(s)) {
             styles = Styles.load(s);
         } else {
@@ -380,12 +475,15 @@ public class ExcelReader implements AutoCloseable {
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
         }
 
+        this.option = option;
+        hasFormula = Files.exists(tmp.resolve("xl/calcChain.xml"));
+
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
-            XMLSheet sheet = new XMLSheet();
+            XMLSheet sheet = sheetFactory(option);
             sheet.setName(e.attributeValue("name"));
             sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
@@ -409,28 +507,18 @@ public class ExcelReader implements AutoCloseable {
             throw new ExcelReadException("The file format is incorrect or corrupted. [There has no worksheet]");
         }
 
-        // Formula string if exists
-        Path calcPath = tmp.resolve("xl/calcChain.xml");
-        long[][] calcArray = null;
-        if (Files.exists(calcPath)) {
-            calcArray = parseCalcChain(calcPath, sheets.size());
-        }
-
         // sort by sheet index
         sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
-        if (calcArray != null) {
-            i = 0;
-            for (; i < sheets1.length; i++) {
-                ((XMLSheet) sheets1[i]).setCalc(calcArray[i]);
-            }
-            hasFormula = true;
-        }
 
         this.sheets = sheets1;
         self = tmp;
+
+        if ((option >> 1 & 1) == 1) {
+            parseFormula();
+        }
     }
 
     /**
@@ -441,16 +529,17 @@ public class ExcelReader implements AutoCloseable {
      *                   This parameter affects the number of read times.
      * @param cacheSize  the {@link Cache} size, default is 512
      * @param rmSource   remove the source files
+     * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
-    private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource) throws IOException {
+    private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource, int option) throws IOException {
         // Check document type
         ExcelType type = getType(path);
         ExcelReader er;
         switch (type) {
             case XLSX:
-                er = new ExcelReader(path, bufferSize, cacheSize);
+                er = new ExcelReader(path, bufferSize, cacheSize, option);
                 break;
             case XLS:
                 try {
@@ -472,6 +561,21 @@ public class ExcelReader implements AutoCloseable {
         }
 
         return er;
+    }
+
+    private XMLSheet sheetFactory(int option) {
+        XMLSheet sheet;
+        switch (option) {
+            // Value only
+            case VALUE_ONLY: sheet = new XMLSheet(); break;
+            case VALUE_AND_CALC:
+                sheet = hasFormula() ? new XMLCalcSheet() : new XMLSheet(); break;
+            case COPY_ON_MERGED: sheet = new XMLMergeSheet(); break;
+            // TODO full reader
+//            case VALUE_AND_CALC|COPY_ON_MERGED: break;
+            default: sheet = new XMLSheet();
+        }
+        return sheet;
     }
 
     /**
@@ -649,7 +753,7 @@ public class ExcelReader implements AutoCloseable {
             else if (value >= 'a' && value <= 'z') {
                 v = v * 26 + value - 'a' + 1;
             }
-            else if (value >= '0') {
+            else if (value >= '0' && value <= '9') {
                 n = n * 10 + value - '0';
             }
             else

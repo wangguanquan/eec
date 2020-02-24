@@ -34,6 +34,7 @@ import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
@@ -148,7 +149,7 @@ public abstract class Row {
      *
      * @return header Row
      */
-    public HeaderRow asHeader() {
+    HeaderRow asHeader() {
         HeaderRow hr = HeaderRow.with(this);
         this.hr = hr;
         return hr;
@@ -1023,7 +1024,9 @@ public abstract class Row {
                     else joiner.add(toTimestamp(c.dv).toString());
                     break;
                 case BLANK:
+                case EMPTY_TAG:
                     joiner.add(EMPTY);
+                    break;
                 default:
                     joiner.add(null);
             }
@@ -1054,7 +1057,7 @@ public abstract class Row {
         } else if (i >= sharedCalc.length) {
             sharedCalc = Arrays.copyOf(sharedCalc, i + 10);
         }
-        Dimension dim = Dimension.from(ref);
+        Dimension dim = Dimension.of(ref);
 
         long l = 0;
         l |= (long) (dim.firstRow & (1 << 20) - 1) << 42;
@@ -1120,4 +1123,39 @@ public abstract class Row {
         }
         return n;
     }
+}
+
+/**
+ * Test and merge formula each rows.
+ *
+ * @author guanquan.wang at 2019-12-31 15:42
+ */
+@FunctionalInterface
+interface MergeCalcFunc {
+
+    /**
+     * Merge formula in rows
+     *
+     * @param row thr row number
+     * @param cells the cells in row
+     * @param n count of cells
+     */
+    void accept(int row, Cell[] cells, int n);
+}
+
+/**
+ * Test and copy value on merged cells
+ *
+ * @author guanquan.wang at 2020-01-17 11:36
+ */
+@FunctionalInterface
+interface MergeValueFunc {
+
+    /**
+     * Copy merged values
+     *
+     * @param row thr row number
+     * @param cell all cell in row
+     */
+    void accept(int row, Cell cell);
 }

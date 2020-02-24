@@ -210,9 +210,9 @@ public class IndexSharedStringTable extends SharedStringTable {
      * Batch getting
      *
      * @param fromIndex the index of the first element, inclusive, to be sorted
-     * @param array Destination array
+     * @param array     Destination array
      * @return The number of string read, or -1 if the end of the
-     *              stream has been reached
+     * stream has been reached
      * @throws IOException if I/O error occur
      */
     public int get(int fromIndex, String[] array) throws IOException {
@@ -234,7 +234,7 @@ public class IndexSharedStringTable extends SharedStringTable {
             readBuffer.flip();
         }
         int i = 0;
-        A: for (; ;) {
+        A: for ( ; ; ) {
 
             if (i == 0 && fromIndex != this.index) {
                 skipTo(fromIndex);
@@ -316,6 +316,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     /**
      * Calculate the position according to the subscript recorded in
      * the SharedStringTable.
+     * <p>
      * The index position is {@code keyIndex / kSplit * sizeOf(long)},
      * get the position of the string record through the index position
      *

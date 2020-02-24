@@ -315,7 +315,7 @@ public class CSVUtil {
      * @return a CSV format writer
      */
     public static Writer newWriter(OutputStream os) {
-        return new Writer(new BufferedWriter(new OutputStreamWriter(os)));
+        return new Writer(new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8)));
     }
 
     private static void testOrCreate(Path path) throws IOException {
@@ -428,7 +428,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return RowsIterator.creatEmptyIterator();
+                return RowsIterator.createEmptyIterator();
             }
 
             // Use iterator
@@ -447,7 +447,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return SharedRowsIterator.creatEmptyIterator();
+                return SharedRowsIterator.createEmptyIterator();
             }
 
             // Use iterator
@@ -622,7 +622,7 @@ public class CSVUtil {
             nextRow = null;
         }
 
-        static RowsIterator creatEmptyIterator() {
+        static RowsIterator createEmptyIterator() {
             RowsIterator iterator = new RowsIterator();
             iterator.EOF = true;
             iterator.nextRow = new String[0];
@@ -957,7 +957,7 @@ public class CSVUtil {
         private int i;
         private char[] cb;
         private int offset;
-        private final int length = 8192;
+        private final static int length = 8192;
 
         /**
          * Line separator string.  This is the value of the line.separator

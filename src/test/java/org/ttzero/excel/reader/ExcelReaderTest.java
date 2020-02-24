@@ -38,6 +38,8 @@ import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
+import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
+import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.util.StringUtil.swap;
 
@@ -219,7 +221,7 @@ public class ExcelReaderTest {
     }
 
     @Test public void testDimensionConstructor() {
-        Dimension dimension = Dimension.from("A1:C5");
+        Dimension dimension = Dimension.of("A1:C5");
         assert "A1:C5".equals(dimension.toString());
 
         assert dimension.firstRow == 1;
@@ -263,6 +265,22 @@ public class ExcelReaderTest {
                     }
                 });
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testFormulaOption() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"), VALUE_AND_CALC)) {
+            // Read formula
+            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        print(row.getFormula(i));
+                        println('|');
+                    }
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -363,8 +381,8 @@ public class ExcelReaderTest {
         assert "B2:B8".equals(values[5]);
     }
 
-    @Test public void testMerge() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+    @Test public void testMergeOption() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"), COPY_ON_MERGED)) {
             reader.sheets().flatMap(s -> {
                 println("----------------" + s.getName() + "----------------");
                 println("dimension: " + s.getDimension());
@@ -375,6 +393,30 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testMergeFunc() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.copyOnMergeCells().sheets().flatMap(s -> {
+                println("----------------" + s.getName() + "----------------");
+                println("dimension: " + s.getDimension());
+                return s.rows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test public void testMergeExcel() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.sheets().flatMap(s -> {
+                println("----------------" + s.getName() + "----------------");
+                println("dimension: " + s.getDimension());
+                return s.rows();
+            }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static class Customer {
         @ExcelColumn("客户编码")

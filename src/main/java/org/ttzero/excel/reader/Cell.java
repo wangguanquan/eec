@@ -23,6 +23,7 @@ import java.math.BigDecimal;
  */
 public class Cell {
     public Cell() { }
+    public Cell(short i) { this.i = i; }
     public static final char SST         = 's';
     public static final char BOOL        = 'b';
     public static final char FUNCTION    = 'f';
@@ -36,6 +37,7 @@ public class Cell {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
+    public static final char EMPTY_TAG   = 'e';
     /**
      * Value type
      * n=numeric
@@ -91,6 +93,10 @@ public class Cell {
      * Has formula
      */
     public boolean f;
+    /**
+     * y-axis of cell in row
+     */
+    public transient short i;
 
     public void setT(char t) {
         this.t = t;
@@ -151,7 +157,7 @@ public class Cell {
     }
 
     public void clear() {
-        this.t = '\0';
+        this.t  = '\0';
         this.sv = null;
         this.nv = 0;
         this.dv = 0.0;
@@ -161,7 +167,24 @@ public class Cell {
         this.mv = null;
         this.xf = 0;
         this.fv = null;
-        this.f = false;
+        this.f  = false;
         this.si = -1;
+    }
+
+    public Cell from(Cell cell) {
+        this.t  = cell.t;
+        this.sv = cell.sv;
+        this.nv = cell.nv;
+        this.dv = cell.dv;
+        this.bv = cell.bv;
+        this.lv = cell.lv;
+        this.cv = cell.cv;
+        this.mv = cell.mv;
+        this.xf = cell.xf;
+        this.fv = cell.fv;
+        this.f  = cell.f;
+        this.si = cell.si;
+
+        return this;
     }
 }
