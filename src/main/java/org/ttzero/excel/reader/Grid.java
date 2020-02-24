@@ -167,6 +167,7 @@ interface Grid {
         @Override
         public String toString() {
             StringJoiner joiner = new StringJoiner("\n");
+            joiner.add(getClass().getSimpleName());
             int last = lr - fr + 1, j = 0;
             A: for (long l : g) {
                 String s = append(Long.toBinaryString(l));
@@ -240,6 +241,11 @@ interface Grid {
         boolean range(int r, int c) {
             return r >= fr && r <= lr && c >= fc && c <= lc;
         }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + " has " + index.size() +" keys";
+        }
     }
 
     final class FractureGrid implements Grid {
@@ -283,6 +289,11 @@ interface Grid {
 
         boolean range(int r, int c) {
             return r >= fr && r <= lr && c >= fc && c <= lc;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + " has " + scanner.size() +" dimensions";
         }
     }
 
