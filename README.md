@@ -479,6 +479,13 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.4.0 (2020-02-24)
+-------------
+1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法
+2. 支持获取单元格公式
+3. 修复SNAPSHOT版导出excel文件无法正常打开的错误
+4. ExcelReader增加打开模式，可以指定读取单元格公式或者`合并单元格`的值。
+
 Version 0.3.6 (2019-11-21)
 -------------
 1. Hotfix读取空单元格下可能抛NPE异常
@@ -492,19 +499,13 @@ Version 0.3.4 (2019-10-21)
 1. 支持CSV <=> Excel 格式互转
 2. 支持通过列名(非空列第一行)获取数据
 
-Version 0.3.3 (2019-08-14)
--------------
-1. 修复导出null值时丢失样式
-2. 修复导出空格时打开文件提示错误
-3. 修复excel03加载包错误
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.3.6-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.0-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
