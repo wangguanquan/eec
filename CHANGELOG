@@ -3,7 +3,7 @@ Version 0.3.7 ()
 1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法
 2. 支持获取单元格公式
 3. 修复SNAPSHOT版导出excel文件无法正常打开的错误
-4. ExcelReader增加打开默式，可以指定读取单元格公式或者`合并单元格`的值。
+4. ExcelReader增加打开模式，可以指定读取单元格公式或者`合并单元格`的值。
 
 Version 0.3.6 (2019-11-21)
 -------------
