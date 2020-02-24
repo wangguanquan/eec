@@ -507,17 +507,30 @@ class XMLSheet implements Sheet {
                 buffer.flip();
 
                 charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                int limit = charBuffer.limit();
+                int limit = charBuffer.limit(), c;
                 i = limit - 1;
 
-                // <row r="
-                for (; i >= 7 && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
-                    || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
-                    || charBuffer.get(i - 4) != 'w' || charBuffer.get(i - 5) != 'o'
-                    || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--) ;
-
+                if(dimension == null) {
+                    c = 7;
+                    // <row r="
+                    for (; i >= c && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
+                        || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
+                        || charBuffer.get(i - 4) != 'w' || charBuffer.get(i - 5) != 'o'
+                        || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--)
+                        ;
+                } else {
+                    // <mergeCells
+                    c = 12;
+                    for (; i >= c && (charBuffer.get(i) > ' ' || charBuffer.get(i - 1) != 's'
+                        || charBuffer.get(i - 2) != 'l' || charBuffer.get(i - 3) != 'l'
+                        || charBuffer.get(i - 4) != 'e' || charBuffer.get(i - 5) != 'C'
+                        || charBuffer.get(i - 6) != 'e' || charBuffer.get(i - 7) != 'g'
+                        || charBuffer.get(i - 8) != 'r' || charBuffer.get(i - 9) != 'e'
+                        || charBuffer.get(i - 10) != 'm' || charBuffer.get(i - 11) != '<'); i--)
+                        ;
+                }
                 // Not Found
-                if (i < 7) {
+                if (i < c) {
                     for (; i < limit && charBuffer.get(i) != '>'; i++) ;
                     i++;
                     if (i < limit - 1) {
