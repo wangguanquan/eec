@@ -16,14 +16,12 @@
 
 package org.ttzero.excel.reader;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * @author guanquan.wang on 2018-09-22
  */
-public class Cell implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Cell {
     public Cell() { }
     public Cell(short i) { this.i = i; }
     public static final char SST         = 's';
