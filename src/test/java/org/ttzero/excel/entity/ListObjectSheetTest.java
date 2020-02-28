@@ -399,6 +399,17 @@ public class ListObjectSheetTest extends WorkbookTest{
             .writeTo(defaultTestPath);
     }
 
+    // Issue #93
+    @Test public void testListSheet_93() throws IOException {
+        new Workbook("Issue#93 List Object").addSheet(new ListSheet<Student>() {
+            private int i;
+            @Override
+            protected List<Student> more() {
+                return i++ < 10 ? Student.randomTestData(100) : null;
+            }
+        }).writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;

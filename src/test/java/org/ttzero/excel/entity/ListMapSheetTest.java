@@ -251,6 +251,17 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    // Issue #93
+    @Test public void testListMapSheet_93() throws IOException {
+        new Workbook("Issue#93 List Map").addSheet(new ListMapSheet() {
+            private int i;
+            @Override
+            protected List<Map<String, ?>> more() {
+                return i++ < 10 ? createAllTypeData(30) : null;
+            }
+        }).writeTo(defaultTestPath);
+    }
+
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
