@@ -410,6 +410,23 @@ public class ListObjectSheetTest extends WorkbookTest{
         }).writeTo(defaultTestPath);
     }
 
+    // Issue #95
+    @Test public void testIssue_95() throws IOException {
+        new Workbook("Issue #95").addSheet(new ListSheet<NotSharedObject>() {
+            private boolean c = true;
+            @Override
+            protected List<NotSharedObject> more() {
+                if (!c) return null;
+                c = false;
+                List<NotSharedObject> list = new ArrayList<>();
+                for (int i = 0; i < 10; i++) {
+                    list.add(new NotSharedObject(getRandomString()));
+                }
+                return list;
+            }
+        }).writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
@@ -745,4 +762,20 @@ public class ListObjectSheetTest extends WorkbookTest{
         }
     }
 
+    public static class NotSharedObject {
+        @ExcelColumn(share = false)
+        private String name;
+
+        public NotSharedObject(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 }
