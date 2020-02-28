@@ -233,7 +233,7 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        if (!eof && size() < getRowBlockSize()) {
+        if (!eof && left() < getRowBlockSize()) {
             append();
         }
 
@@ -300,7 +300,7 @@ public class ListSheet<T> extends Sheet {
 
     private void compact() {
         // Copy the remaining data to a temporary array
-        int size = size();
+        int size = left();
         if (start > 0 && size > 0) {
             // append and resize
             List<T> last = new ArrayList<>(size);
@@ -546,6 +546,15 @@ public class ListSheet<T> extends Sheet {
     @Override
     public int size() {
         return !shouldClose ? size : -1;
+    }
+
+    /**
+     * Returns left data in array to be write
+     *
+     * @return the left number
+     */
+    protected int left() {
+        return end - start;
     }
 
     /**
