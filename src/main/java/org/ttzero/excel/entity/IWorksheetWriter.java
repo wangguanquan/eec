@@ -75,7 +75,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
     }
 
     /**
-     * TO check rows out of workshee
+     * TO check rows out of worksheet
      *
      * @param row row number
      * @return true if rows large than limit
