@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.entity;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
@@ -82,7 +82,7 @@ import java.util.Map;
  * @author guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storageable {
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
      * The Workbook name, reaction to the Excel file name
      */
@@ -746,7 +746,7 @@ public class Workbook implements Storageable {
      */
     public void what(String code) {
         String msg = i18N.get(code);
-        logger.debug(msg);
+        LOGGER.debug(msg);
         if (watch != null) {
             watch.what(msg);
         }
@@ -760,7 +760,7 @@ public class Workbook implements Storageable {
      */
     public void what(String code, String... args) {
         String msg = i18N.get(code, args);
-        logger.debug(msg);
+        LOGGER.debug(msg);
         if (watch != null) {
             watch.what(msg);
         }
