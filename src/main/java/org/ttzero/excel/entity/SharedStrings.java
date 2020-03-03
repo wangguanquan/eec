@@ -47,18 +47,16 @@ import java.util.Arrays;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is 0.03%. When the number exceeds 1 million, it will be
- * carried out, redistributing 2 times the length of the space, the maximum
- * length 2^26, When the number exceeds 2^26, it will be converted to inline
- * string.
+ * positive rate is {@code 0.03%}. When the number exceeds {@code 2^20},
+ * it will be converted to inline string.
  * <p>
  * A hot zone is also designed internally to cache multiple occurrences,
- * the default size is 1024, and the LRU elimination algorithm is used.
+ * the default size is {@code 65,536}, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
  * cache.
  * <p>
  * Characters are handled differently. ASCII characters use the built-in array
- * cache subscript. The over 0x7F characters will be converted to strings and
+ * cache subscript. The over {@code 0x7F} characters will be converted to strings and
  * searched using strings.
  *
  * @author guanquan.wang on 2017/10/10.
