@@ -1,3 +1,8 @@
+Version 0.4.1 (2020-03-03)
+-------------
+1. 修复ListObject导出文件时数据比实际数据少的BUG
+2. 修复ExcelColumn注解只有`share`属性时share值无效的BUG
+
 Version 0.4.0 (2020-02-24)
 -------------
 1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法

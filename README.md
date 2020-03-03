@@ -479,6 +479,11 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.4.1 (2020-03-03)
+-------------
+1. 修复ListObject导出文件时数据比实际数据少的BUG
+2. 修复ExcelColumn注解只有`share`属性时share值无效的BUG
+
 Version 0.4.0 (2020-02-24)
 -------------
 1. Worksheet增加`getDimension`方法返回单元格范围，替换原`getSize`方法
@@ -490,22 +495,13 @@ Version 0.3.6 (2019-11-21)
 -------------
 1. Hotfix读取空单元格下可能抛NPE异常
 
-Version 0.3.5 (2019-11-20)
--------------
-1. 修复读取空单元格时抛数组越界异常
-
-Version 0.3.4 (2019-10-21)
--------------
-1. 支持CSV <=> Excel 格式互转
-2. 支持通过列名(非空列第一行)获取数据
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.0-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.1-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
