@@ -18,6 +18,8 @@ package org.ttzero.excel.entity;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cache;
@@ -63,6 +65,7 @@ import java.util.Arrays;
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings implements Storageable, AutoCloseable {
+    private Logger LOGGER = LogManager.getLogger(getClass());
 
     /**
      * The total word in workbook.
@@ -295,6 +298,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
+        LOGGER.debug("total: {}, hot: {}, sst: {}, cache: {}"
+            , count, total_hot, total_sst_find, total_char_cache);
         filter = null;
         hot.clear();
         hot = null;
