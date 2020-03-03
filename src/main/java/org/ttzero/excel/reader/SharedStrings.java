@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.reader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 
 import java.io.BufferedReader;
@@ -47,7 +47,7 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
  * @author guanquan.wang at 2018-09-27 14:28
  */
 public class SharedStrings implements AutoCloseable {
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Path sstPath;
 
     /**
@@ -176,7 +176,7 @@ public class SharedStrings implements AutoCloseable {
         if (Files.exists(sstPath)) {
             // Get unique count
             max = uniqueCount();
-            logger.debug("Size of SharedString: {}", max);
+            LOGGER.debug("Size of SharedString: {}", max);
             // Unknown size or big than page
             int default_cap = 10;
             if (max < 0 || max > page) {
@@ -304,7 +304,7 @@ public class SharedStrings implements AutoCloseable {
             }
             value = forward[index - offset_forward];
             if (test(index)) {
-                logger.debug("put hot {}", index);
+                LOGGER.debug("put hot {}", index);
                 hot.put(index, value);
             }
             total_forward++;
@@ -450,7 +450,7 @@ public class SharedStrings implements AutoCloseable {
             if (n == page) break;
         }
         // DEBUG the last character
-//        logger.info("---------{}---------", new String(cb, nChar, length - nChar));
+//        LOGGER.info("---------{}---------", new String(cb, nChar, length - nChar));
         return new int[] { nChar, n };
     }
 
@@ -493,7 +493,7 @@ public class SharedStrings implements AutoCloseable {
                 int n = toInt(cb, idx_38 + 2, idx_59);
                 // byte range
 //                if (n < 0 || n > 127) {
-//                    logger.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
+//                    LOGGER.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
 //                }
                 // Unicode char
                 escapeBuf.append((char) n);
@@ -518,7 +518,7 @@ public class SharedStrings implements AutoCloseable {
                         escapeBuf.append(' ');
                         break;
                     default: // Unknown escape
-//                        logger.warn("Unknown escape [&{}]", name);
+//                        LOGGER.warn("Unknown escape [&{}]", name);
                         escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
                 }
             }
@@ -556,7 +556,7 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            logger.debug("total: {}, forward: {}, backward: {}, hot: {}"
+            LOGGER.debug("total: {}, forward: {}, backward: {}, hot: {}"
                 , total, total_forward, total_backward, total_hot);
             reader.close();
         }

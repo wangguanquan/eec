@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -73,7 +73,7 @@ import static org.ttzero.excel.util.FileUtil.mkdir;
  * @author guanquan.wang at 2019-02-12 17:27
  */
 public class CSVUtil {
-    private static Logger logger = LogManager.getLogger(CSVUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CSVUtil.class);
 
     private CSVUtil() { }
     private static final char QUOTE = '"';
@@ -692,7 +692,7 @@ public class CSVUtil {
                 charset = bom;
                 // Print a warring log or reset charset
             } else if (!charset.equals(bom)) {
-                logger.warn("Maybe the charset is " + bom);
+                LOGGER.warn("Maybe the charset is " + bom);
             }
         }
 
@@ -712,7 +712,7 @@ public class CSVUtil {
             }
             // No enough information to judge the separator
             if (n < 10) {
-                logger.warn("No enough information to judge the separator.");
+                LOGGER.warn("No enough information to judge the separator.");
             }
 
             // USA/UK CSV file almost use ',' or '\t'
@@ -1221,7 +1221,7 @@ public class CSVUtil {
             i++;
             if (column > 0 && i > column) {
                 // FIXME maybe throw an exception
-                logger.warn("Each record should contain the same number of comma-separated fields.");
+                LOGGER.warn("Each record should contain the same number of comma-separated fields.");
             }
             if (!first) {
                 checkBound(1);

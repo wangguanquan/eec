@@ -16,14 +16,14 @@
 
 package org.ttzero.excel.reader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.Relationship;
@@ -79,7 +79,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(ExcelReader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
     /**
      * Specify {@link ExcelReader} only parse cell value (Default)
