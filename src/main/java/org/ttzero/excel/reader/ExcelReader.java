@@ -79,7 +79,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements AutoCloseable {
-    private Logger LOGGER = LogManager.getLogger(getClass());
+    private static final Logger LOGGER = LogManager.getLogger(ExcelReader.class);
 
     /**
      * Specify {@link ExcelReader} only parse cell value (Default)
@@ -420,7 +420,9 @@ public class ExcelReader implements AutoCloseable {
     private ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         // Store template stream as zip file
         Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
+        LOGGER.debug("Unzip file to：{}", tmp);
         ZipUtil.unzip(Files.newInputStream(path), tmp);
+        LOGGER.debug("Finished decompress. start to check the file integrity.");
 
         // Check the file format and parse general information
         try {
@@ -536,6 +538,7 @@ public class ExcelReader implements AutoCloseable {
     private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource, int option) throws IOException {
         // Check document type
         ExcelType type = getType(path);
+        LOGGER.debug("File type: {}", type);
         ExcelReader er;
         switch (type) {
             case XLSX:
@@ -742,7 +745,7 @@ public class ExcelReader implements AutoCloseable {
      * @param r the range string of cell
      * @return long value
      */
-    public static long cellRangeToLong(String r) {
+    static long cellRangeToLong(String r) {
         char[] values = r.toCharArray();
         long v = 0L;
         int n = 0;

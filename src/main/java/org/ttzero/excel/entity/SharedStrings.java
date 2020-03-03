@@ -18,6 +18,8 @@ package org.ttzero.excel.entity;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cache;
@@ -47,24 +49,23 @@ import java.util.Arrays;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is 0.03%. When the number exceeds 1 million, it will be
- * carried out, redistributing 2 times the length of the space, the maximum
- * length 2^26, When the number exceeds 2^26, it will be converted to inline
- * string.
+ * positive rate is {@code 0.03%}. When the number exceeds {@code 2^20},
+ * it will be converted to inline string.
  * <p>
  * A hot zone is also designed internally to cache multiple occurrences,
- * the default size is 1024, and the LRU elimination algorithm is used.
+ * the default size is {@code 65,536}, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
  * cache.
  * <p>
  * Characters are handled differently. ASCII characters use the built-in array
- * cache subscript. The over 0x7F characters will be converted to strings and
+ * cache subscript. The over {@code 0x7F} characters will be converted to strings and
  * searched using strings.
  *
  * @author guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings implements Storageable, AutoCloseable {
+    private Logger LOGGER = LogManager.getLogger(getClass());
 
     /**
      * The total word in workbook.
@@ -93,6 +94,10 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Storage into temp file on disk
      */
     private SharedStringTable sst;
+
+    private int j;
+    // For debug
+    private int total_char_cache, total_sst_find, total_hot;
 
     /**
      * The number of expected insertions to the constructed bloom
@@ -143,6 +148,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 ascii[c] = n;
             }
             count++;
+            total_char_cache++;
             return n;
         } else {
             char[] cs = charCache.get();
@@ -164,23 +170,32 @@ public class SharedStrings implements Storageable, AutoCloseable {
         // The keyword not exists
         if (!filter.mightContain(key)) {
             // Reset the filter
-            if (sst.size() >= expectedInsertions) {
+            if (j >= expectedInsertions) {
                 resetBloomFilter();
             }
             // Add to bloom if not full
             filter.put(key);
+            j++;
             return add(key);
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
         if (n == null) {
-            // Find in temp file
-            n = sst.find(key);
-            // Append to last and cache it
-            if (n < 0) {
+            if (sst.size() <= expectedInsertions) {
+                // Find in temp file
+                n = sst.find(key);
+                total_sst_find++;
+                // Append to last and cache it
+                if (n < 0) {
+                    n = add(key);
+                }
+                hot.put(key, n);
+            } else {
+                // Convert to inline string
                 n = add(key);
             }
-            hot.put(key, n);
+        } else {
+            total_hot++;
         }
         return n;
     }
@@ -278,10 +293,13 @@ public class SharedStrings implements Storageable, AutoCloseable {
         for (Cache.Entry<String, Integer> e : hot) {
             filter.put(e.getKey());
         }
+        j = hot.size();
     }
 
     @Override
     public void close() throws IOException {
+        LOGGER.debug("total: {}, hot: {}, sst: {}, cache: {}"
+            , count, total_hot, total_sst_find, total_char_cache);
         filter = null;
         hot.clear();
         hot = null;
