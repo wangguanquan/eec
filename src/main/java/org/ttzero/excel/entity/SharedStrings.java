@@ -94,6 +94,10 @@ public class SharedStrings implements Storageable, AutoCloseable {
      */
     private SharedStringTable sst;
 
+    private int j;
+    // For debug
+    private int total_char_cache, total_sst_find, total_hot;
+
     /**
      * The number of expected insertions to the constructed bloom
      */
@@ -143,6 +147,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 ascii[c] = n;
             }
             count++;
+            total_char_cache++;
             return n;
         } else {
             char[] cs = charCache.get();
@@ -164,23 +169,32 @@ public class SharedStrings implements Storageable, AutoCloseable {
         // The keyword not exists
         if (!filter.mightContain(key)) {
             // Reset the filter
-            if (sst.size() >= expectedInsertions) {
+            if (j >= expectedInsertions) {
                 resetBloomFilter();
             }
             // Add to bloom if not full
             filter.put(key);
+            j++;
             return add(key);
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
         if (n == null) {
-            // Find in temp file
-            n = sst.find(key);
-            // Append to last and cache it
-            if (n < 0) {
+            if (sst.size() <= expectedInsertions) {
+                // Find in temp file
+                n = sst.find(key);
+                total_sst_find++;
+                // Append to last and cache it
+                if (n < 0) {
+                    n = add(key);
+                }
+                hot.put(key, n);
+            } else {
+                // Convert to inline string
                 n = add(key);
             }
-            hot.put(key, n);
+        } else {
+            total_hot++;
         }
         return n;
     }
@@ -278,6 +292,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
         for (Cache.Entry<String, Integer> e : hot) {
             filter.put(e.getKey());
         }
+        j = hot.size();
     }
 
     @Override
