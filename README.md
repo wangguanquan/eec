@@ -48,30 +48,6 @@ pom.xml添加
 </dependency>
 ```
 
-eec内部仅依赖dom4j.1.6.1和log4j.2.11.1, 如果目标工程已包含此依赖，使用如下引用
-
-```
-<dependency>
-    <groupId>org.ttzero</groupId>
-    <artifactId>eec</artifactId>
-    <version>{eec.version}</version>
-    <exclusions>
-        <exclusion>
-            <groupId>dom4j</groupId>
-            <artifactId>dom4j</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-        </exclusion>
-    </exclusions>
-</dependency>
-```
-
 ## xls格式支持
 
 xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源
