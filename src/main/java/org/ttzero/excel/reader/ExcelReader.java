@@ -745,7 +745,7 @@ public class ExcelReader implements AutoCloseable {
      * @param r the range string of cell
      * @return long value
      */
-    public static long cellRangeToLong(String r) {
+    static long cellRangeToLong(String r) {
         char[] values = r.toCharArray();
         long v = 0L;
         int n = 0;
