@@ -41,6 +41,7 @@ import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -413,6 +414,16 @@ public class ExcelReaderTest {
                 println("dimension: " + s.getDimension());
                 return s.rows();
             }).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Issue #99
+    @Test public void testInnerString() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("inner string.xlsx"))) {
+            long n = reader.sheets().flatMap(Sheet::rows).filter(row -> isNotEmpty(row.getString(0))).count();
+            assert n == 11;
         } catch (IOException e) {
             e.printStackTrace();
         }
