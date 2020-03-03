@@ -349,7 +349,7 @@ class XMLRow extends Row {
         switch (cell.t) {
             case INLINESTR: // inner string
                 a = getT();
-                if (a > cursor) {
+                if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
@@ -368,7 +368,7 @@ class XMLRow extends Row {
                 break;
             case FUNCTION: // function string
                 a = getV();
-                if (a > cursor) {
+                if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
