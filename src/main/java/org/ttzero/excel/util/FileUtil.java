@@ -16,11 +16,11 @@
 
 package org.ttzero.excel.util;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,7 +49,7 @@ import java.util.List;
  */
 
 public class FileUtil {
-    private static Logger logger = LogManager.getLogger(FileUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileUtil.class);
 
     private FileUtil() { }
 
@@ -63,7 +63,7 @@ public class FileUtil {
         if (inputStream != null) try {
             inputStream.close();
         } catch (IOException e) {
-            logger.error("close InputStream fail.", e);
+            LOGGER.error("close InputStream fail.", e);
         }
     }
 
@@ -77,7 +77,7 @@ public class FileUtil {
             try {
                 outputStream.close();
             } catch (IOException e) {
-                logger.error("close OutputStream fail.", e);
+                LOGGER.error("close OutputStream fail.", e);
             }
         }
     }
@@ -92,7 +92,7 @@ public class FileUtil {
             try {
                 br.close();
             } catch (IOException e) {
-                logger.error("close Reader fail.", e);
+                LOGGER.error("close Reader fail.", e);
             }
         }
     }
@@ -107,7 +107,7 @@ public class FileUtil {
             try {
                 bw.close();
             } catch (IOException e) {
-                logger.error("close Writer fail.", e);
+                LOGGER.error("close Writer fail.", e);
             }
         }
     }
@@ -122,7 +122,7 @@ public class FileUtil {
             try {
                 channel.close();
             } catch (IOException e) {
-                logger.error("close Channel fail.", e);
+                LOGGER.error("close Channel fail.", e);
             }
         }
     }
@@ -145,7 +145,7 @@ public class FileUtil {
         if (file.exists()) {
             boolean boo = file.delete();
             if (!boo) {
-                logger.error("Delete file [{}] fail.", file.getPath());
+                LOGGER.error("Delete file [{}] fail.", file.getPath());
             }
         }
     }
@@ -215,7 +215,7 @@ public class FileUtil {
             try {
                 boolean boo = descFile.createNewFile();
                 if (!boo)
-                    logger.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
+                    LOGGER.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
                 return;
             } catch (IOException e) {
             }
@@ -225,7 +225,7 @@ public class FileUtil {
 
             inChannel.transferTo(0, inChannel.size(), outChannel);
         } catch (IOException e) {
-            logger.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
+            LOGGER.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
         }
     }
 
@@ -239,7 +239,7 @@ public class FileUtil {
         try {
             Files.copy(is, descFile, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            logger.error("Copy file to [{}] failed...", descFile);
+            LOGGER.error("Copy file to [{}] failed...", descFile);
         }
     }
 
@@ -325,7 +325,7 @@ public class FileUtil {
                 File df = new File(desc, f.getPath().substring(src_path_len));
                 // 1.1 Scan all sub-folders and create destination folders
                 if (!df.exists() && !df.mkdir()) {
-                    logger.warn("Create sub-folder [{}] error skip it.", df.getPath());
+                    LOGGER.warn("Create sub-folder [{}] error skip it.", df.getPath());
                     continue;
                 }
                 File[] fs = f.listFiles();
@@ -337,10 +337,10 @@ public class FileUtil {
                 }
             }
         }
-        logger.debug("Finished Scan. There contains {} files. Ready to copy them...", files.size());
+        LOGGER.debug("Finished Scan. There contains {} files. Ready to copy them...", files.size());
         // 2. Copy files
         files.parallelStream().forEach(f -> cp(f, new File(descPath + f.getPath().substring(src_path_len))));
-        logger.debug("Copy all files in path {} finished.", srcPath);
+        LOGGER.debug("Copy all files in path {} finished.", srcPath);
     }
 
     /**

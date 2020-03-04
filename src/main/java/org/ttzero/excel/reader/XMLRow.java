@@ -75,7 +75,7 @@ class XMLRow extends Row {
 
     ///////////////////////////////////////////////////////
     XMLRow with(char[] cb, int from, int size) {
-//        logger.info(new String(cb, from, size));
+//        LOGGER.info(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
         this.to = from + size;
@@ -87,7 +87,7 @@ class XMLRow extends Row {
 
     /* empty row*/
     XMLRow empty(char[] cb, int from, int size) {
-//        logger.info(new String(cb, from, size));
+//        LOGGER.info(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
         this.to = from + size;
@@ -349,7 +349,7 @@ class XMLRow extends Row {
         switch (cell.t) {
             case INLINESTR: // inner string
                 a = getT();
-                if (a > cursor) {
+                if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
@@ -368,7 +368,7 @@ class XMLRow extends Row {
                 break;
             case FUNCTION: // function string
                 a = getV();
-                if (a > cursor) {
+                if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
                     cell.setT(BLANK); // Reset type to BLANK if null value
@@ -543,7 +543,7 @@ class XMLCalcRow extends XMLRow {
         }
 
         if (index < 2 || (index & 1) == 1) {
-            logger.warn("The function format error.[{}]", new String(cb, a, b - a));
+            LOGGER.warn("The function format error.[{}]", new String(cb, a, b - a));
             return;
         }
 
@@ -556,7 +556,7 @@ class XMLCalcRow extends XMLRow {
             // Will be sort
             int _n = vl - 1;
             if (_n > index - 1) {
-                logger.warn("Unknown attribute on function tag.[{}]", values[_i]);
+                LOGGER.warn("Unknown attribute on function tag.[{}]", values[_i]);
                 return;
             }
             swap(values, _n << 1, _i);

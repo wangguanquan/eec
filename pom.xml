@@ -6,7 +6,7 @@
 
     <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
-    <version>0.4.0</version>
+    <version>0.4.2-SNAPSHOT</version>
     <name>Excel Write/Read Framework</name>
     <packaging>jar</packaging>
     <url>https://www.ttzero.org</url>
@@ -22,7 +22,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <dom4j.version>1.6.1</dom4j.version>
-        <log4j.version>2.11.1</log4j.version>
+        <slf4j.version>1.7.30</slf4j.version>
     </properties>
 
     <dependencies>
@@ -32,14 +32,15 @@
             <version>${dom4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

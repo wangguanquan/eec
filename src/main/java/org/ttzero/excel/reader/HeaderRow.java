@@ -105,7 +105,7 @@ class HeaderRow extends Row {
         try {
             writeMethods = listWriteMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null);
         } catch (IntrospectionException e) {
-            logger.warn("Get [" + clazz + "] read declared failed.", e);
+            LOGGER.warn("Get [" + clazz + "] read declared failed.", e);
         }
 
         Map<String, Method> tmp = new LinkedHashMap<>();
@@ -225,7 +225,7 @@ class HeaderRow extends Row {
 
             return mapping(writeMethods, tmp, propertyDescriptors, mergedMethods);
         } catch (IntrospectionException e) {
-            logger.warn("Get " + clazz + " property descriptor failed.");
+            LOGGER.warn("Get " + clazz + " property descriptor failed.");
         }
         return 0;
     }
@@ -234,7 +234,7 @@ class HeaderRow extends Row {
         int n = getIndex(first);
         if (n == -1) n = getIndex(second);
         if (n == -1) {
-            logger.warn(clazz + " field [" + first + "] can't find in header" + Arrays.toString(names));
+            LOGGER.warn(clazz + " field [" + first + "] can't find in header" + Arrays.toString(names));
         }
         return n;
     }

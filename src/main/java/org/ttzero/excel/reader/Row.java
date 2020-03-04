@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.reader;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.util.StringUtil;
 
@@ -51,7 +51,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang at 2019-04-17 11:08
  */
 public abstract class Row {
-    protected Logger logger = LogManager.getLogger(getClass());
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
     int index = -1;
     // Index to first column (zero base)
