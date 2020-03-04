@@ -69,6 +69,12 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     public static Path zipExcludeRoot(Path destPath, Path... srcPath) throws IOException {
+        if (!destPath.toString().endsWith(suffix)) {
+            destPath = Paths.get(destPath.toString() + suffix);
+        }
+        if (!Files.exists(destPath.getParent())) {
+            FileUtil.mkdir(destPath.getParent());
+        }
         return zip(destPath, false, srcPath);
     }
 
@@ -83,12 +89,6 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     private static Path zip(Path destPath, boolean compressRoot, Path... srcPath) throws IOException {
-        if (!destPath.toString().endsWith(suffix)) {
-            destPath = Paths.get(destPath.toString() + suffix);
-        }
-        if (!Files.exists(destPath.getParent())) {
-            FileUtil.mkdir(destPath.getParent());
-        }
         ZipOutputStream zos = new ZipOutputStream(new CheckedOutputStream(
             Files.newOutputStream(destPath, StandardOpenOption.CREATE), new Adler32()));
         zos.setLevel(MIDDLE_COMPRESSION);
@@ -177,4 +177,19 @@ public class ZipUtil {
         return destPath;
     }
 
+    /**
+     * zip files exclude root path
+     * command: zip destPath srcPath1 srcPath2 ...
+     *
+     * @param destPath the destination path
+     * @param srcPath  the source path
+     * @return the result zip file path
+     * @throws IOException if error occur.
+     */
+    public static Path xlsx(Path destPath, Path... srcPath) throws IOException {
+        if (!Files.exists(destPath.getParent())) {
+            FileUtil.mkdir(destPath.getParent());
+        }
+        return zip(destPath, false, srcPath);
+    }
 }
