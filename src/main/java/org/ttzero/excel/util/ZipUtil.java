@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.CRC32;
+import java.util.zip.Adler32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -39,6 +39,10 @@ import java.util.zip.ZipOutputStream;
  */
 public class ZipUtil {
     private static final String suffix = ".zip";
+    /**
+     * Compression level for middle compression.
+     */
+    public static final int MIDDLE_COMPRESSION = 5;
 
     private ZipUtil() { }
 
@@ -86,7 +90,8 @@ public class ZipUtil {
             FileUtil.mkdir(destPath.getParent());
         }
         ZipOutputStream zos = new ZipOutputStream(new CheckedOutputStream(
-            Files.newOutputStream(destPath, StandardOpenOption.CREATE), new CRC32()));
+            Files.newOutputStream(destPath, StandardOpenOption.CREATE), new Adler32()));
+        zos.setLevel(MIDDLE_COMPRESSION);
         List<Path> paths = new ArrayList<>();
         int i = 0, index = 0;
         int[] array = new int[srcPath.length];
