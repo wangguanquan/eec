@@ -490,14 +490,14 @@ class XMLSheet implements Sheet {
             int block = (int) Math.min(1 << 11, fileSize);
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
-            int left_size = 0, i = 0;
+            int left_size = 0, i;
 
-            CharBuffer charBuffer = null;
-            boolean eof = false;
-            for (; !eof;) {
+            CharBuffer charBuffer;
+            boolean eof;
+            for (; ;) {
                 channel.position(fileSize - block + left_size);
                 channel.read(buffer);
-                eof = fileSize == block || buffer.limit() < block;
+                eof = buffer.limit() < block;
                 fileSize -= buffer.limit();
                 if (left_size > 0) {
                     buffer.limit(block);
@@ -531,6 +531,7 @@ class XMLSheet implements Sheet {
                 }
                 // Not Found
                 if (i < c) {
+                    if (eof || (eof = fileSize <= 0)) break;
                     for (; i < limit && charBuffer.get(i) != '>'; i++) ;
                     i++;
                     if (i < limit - 1) {
@@ -545,7 +546,7 @@ class XMLSheet implements Sheet {
                         left_size = last_size;
                     }
                 }
-                // Found the last row
+                // Found the last row or empty worksheet
                 else {
                     break;
                 }
