@@ -655,81 +655,31 @@ public class ExcelReaderTest {
     }
 
     public static class LargeData {
-        @ExcelColumn(share = true)
         private String str1;
-        @ExcelColumn(share = true)
         private String str2;
-        @ExcelColumn(share = true)
         private String str3;
-        @ExcelColumn(share = true)
         private String str4;
-        @ExcelColumn(share = true)
         private String str5;
-        @ExcelColumn(share = true)
         private String str6;
-        @ExcelColumn(share = true)
         private String str7;
-        @ExcelColumn(share = true)
         private String str8;
-        @ExcelColumn(share = true)
         private String str9;
-        @ExcelColumn(share = true)
         private String str10;
-        @ExcelColumn(share = true)
         private String str11;
-        @ExcelColumn(share = true)
         private String str12;
-        @ExcelColumn(share = true)
         private String str13;
-        @ExcelColumn(share = true)
         private String str14;
-        @ExcelColumn(share = true)
         private String str15;
-        @ExcelColumn(share = true)
         private String str16;
-        @ExcelColumn(share = true)
         private String str17;
-        @ExcelColumn(share = true)
         private String str18;
-        @ExcelColumn(share = true)
         private String str19;
-        @ExcelColumn(share = true)
         private String str20;
-        @ExcelColumn(share = true)
         private String str21;
-        @ExcelColumn(share = true)
         private String str22;
-        @ExcelColumn(share = true)
         private String str23;
-        @ExcelColumn(share = true)
         private String str24;
-        @ExcelColumn(share = true)
         private String str25;
-//        private String str1;
-//        private String str2;
-//        private String str3;
-//        private String str4;
-//        private String str5;
-//        private String str6;
-//        private String str7;
-//        private String str8;
-//        private String str9;
-//        private String str10;
-//        private String str11;
-//        private String str12;
-//        private String str13;
-//        private String str14;
-//        private String str15;
-//        private String str16;
-//        private String str17;
-//        private String str18;
-//        private String str19;
-//        private String str20;
-//        private String str21;
-//        private String str22;
-//        private String str23;
-//        private String str24;
-//        private String str25;
 
         public String getStr1() {
             return str1;
