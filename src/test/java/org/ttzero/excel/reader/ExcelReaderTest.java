@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
@@ -424,6 +425,15 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("inner string.xlsx"))) {
             long n = reader.sheets().flatMap(Sheet::rows).filter(row -> isNotEmpty(row.getString(0))).count();
             assert n == 11;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testReaderLarge() {
+        try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
+            long n = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(LargeData.class)).count();
+            LOGGER.debug("Data rows: {}", n);
         } catch (IOException e) {
             e.printStackTrace();
         }

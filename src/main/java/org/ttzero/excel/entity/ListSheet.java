@@ -429,7 +429,7 @@ public class ListSheet<T> extends Sheet {
                         .setShare(dn.share()));
                 } else if (method != null) {
                     list.add(new Column(field.getName(), field.getName(), field.getType())
-                        .setShare(ec == null || ec.share()));
+                        .setShare(ec != null && ec.share()));
                 }
             }
             if (readLength > 0) {

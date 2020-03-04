@@ -30,7 +30,7 @@ public class MultiStyleInCellTest {
     @Test public void testMulti() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("multi-style In cell.xlsx"))) {
 
-            reader.sheet(0).rows().forEach(Print::println);
+            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
