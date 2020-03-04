@@ -318,13 +318,13 @@ public class SharedStrings implements AutoCloseable {
     // Check the forward range
     private boolean forwardRange(int index) {
         return offset_forward >= 0 && offset_forward <= index
-            && offset_forward + limit_forward > index;
+            && offset_forward + limit_forward >= index;
     }
 
     // Check the backward range
     private boolean backwardRange(int index) {
         return offset_backward >= 0 && offset_backward <= index
-            && offset_backward + limit_backward > index;
+            && offset_backward + limit_backward >= index;
     }
 
     // Check the current index if out of bound
