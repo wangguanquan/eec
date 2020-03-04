@@ -455,6 +455,14 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.4.2 (2020-03-04)
+-------------
+1. 修复读poi生成的excel文件内容转对象时值为空的异常
+2. 修复读取某些空worksheet时抛IllegalArgumentException异常
+3. 使用slf4j统一日志接口，不强制用户使用log4j
+4. 字符串值默认使用innerStr方式而非SharedString里从而提升一些写入速度
+5. 调整压缩等级提升一些压缩速度，最终文件比以前有所增加
+
 Version 0.4.1 (2020-03-03)
 -------------
 1. 修复ListObject导出文件时数据比实际数据少的BUG
@@ -467,17 +475,13 @@ Version 0.4.0 (2020-02-24)
 3. 修复SNAPSHOT版导出excel文件无法正常打开的错误
 4. ExcelReader增加打开模式，可以指定读取单元格公式或者`合并单元格`的值。
 
-Version 0.3.6 (2019-11-21)
--------------
-1. Hotfix读取空单元格下可能抛NPE异常
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.1-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.2-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
