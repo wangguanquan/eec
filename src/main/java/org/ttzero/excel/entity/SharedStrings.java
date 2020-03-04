@@ -176,7 +176,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
             // Add to bloom if not full
             filter.put(key);
             j++;
-            return add(key);
+            int n = add(key);
+            hot.put(key, n);
+            return n;
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
