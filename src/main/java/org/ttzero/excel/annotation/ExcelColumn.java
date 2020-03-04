@@ -45,5 +45,5 @@ public @interface ExcelColumn {
      *
      * @return true if shared
      */
-    boolean share() default true;
+    boolean share() default false;
 }

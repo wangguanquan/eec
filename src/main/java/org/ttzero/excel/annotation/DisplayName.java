@@ -50,5 +50,5 @@ public @interface DisplayName {
      *
      * @return true if shared
      */
-    boolean share() default true;
+    boolean share() default false;
 }
