@@ -497,8 +497,8 @@ class XMLSheet implements Sheet {
             for (; !eof;) {
                 channel.position(fileSize - block + left_size);
                 channel.read(buffer);
+                eof = fileSize == block || buffer.limit() < block;
                 fileSize -= buffer.limit();
-                eof = buffer.limit() < block;
                 if (left_size > 0) {
                     buffer.limit(block);
                     buffer.put(left, 0, left_size);
