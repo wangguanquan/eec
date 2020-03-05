@@ -209,6 +209,11 @@ public class DateUtil {
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
+    public static LocalTime toLocalTime(double d) {
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        return LocalTime.ofSecondOfDay(m);
+    }
+
     public static java.sql.Timestamp toTimestamp(double d) {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");

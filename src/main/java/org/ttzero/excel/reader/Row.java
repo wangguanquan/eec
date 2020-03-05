@@ -42,6 +42,7 @@ import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -773,6 +774,7 @@ public abstract class Row {
         if (c.t == DOUBLE) {
             return toTime(c.dv);
         }
+        // TODO string -> time
         throw new UncheckedTypeException("can't convert to java.sql.Time");
     }
 
@@ -787,6 +789,7 @@ public abstract class Row {
         if (c.t == DOUBLE) {
             return toTime(c.dv);
         }
+        // TODO string -> time
         throw new UncheckedTypeException("can't convert to java.sql.Time");
     }
 
@@ -1021,7 +1024,8 @@ public abstract class Row {
                     break;
                 case DOUBLE:
                     if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.dv));
-                    else joiner.add(toTimestamp(c.dv).toString());
+                    else if (c.dv > 1.00001) joiner.add(toTimestamp(c.dv).toString());
+                    else joiner.add(toLocalTime(c.dv).toString());
                     break;
                 case BLANK:
                 case EMPTY_TAG:
