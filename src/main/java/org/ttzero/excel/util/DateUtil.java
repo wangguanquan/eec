@@ -28,6 +28,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -209,9 +210,22 @@ public class DateUtil {
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
+    public static java.sql.Time toTime(String s) {
+        LocalTime time = toLocalTime(s);
+        return time != null ? java.sql.Time.valueOf(time) : null;
+    }
+
     public static LocalTime toLocalTime(double d) {
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
         return LocalTime.ofSecondOfDay(m);
+    }
+
+    public static LocalTime toLocalTime(String s) {
+        try {
+            return LocalTime.parse(s);
+        } catch (DateTimeParseException | NullPointerException e) {
+            return null;
+        }
     }
 
     public static java.sql.Timestamp toTimestamp(double d) {

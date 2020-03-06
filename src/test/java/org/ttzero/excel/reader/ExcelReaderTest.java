@@ -441,6 +441,14 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testReadAllType() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
+            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Customer {
         @ExcelColumn("客户编码")
         private String code;

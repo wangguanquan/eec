@@ -758,7 +758,7 @@ public abstract class Row {
             case INLINESTR:
                 ts = toTimestamp(c.sv);
                 break;
-            default: throw new UncheckedTypeException("");
+            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ts;
     }
@@ -770,12 +770,7 @@ public abstract class Row {
      * @return java.sql.Time
      */
     public java.sql.Time getTime(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        if (c.t == DOUBLE) {
-            return toTime(c.dv);
-        }
-        // TODO string -> time
-        throw new UncheckedTypeException("can't convert to java.sql.Time");
+        return getTime(getCell(columnIndex));
     }
 
     /**
@@ -785,12 +780,30 @@ public abstract class Row {
      * @return java.sql.Time
      */
     public java.sql.Time getTime(String columnName) {
-        Cell c = getCell(columnName);
-        if (c.t == DOUBLE) {
-            return toTime(c.dv);
+        return getTime(getCell(columnName));
+    }
+
+    /**
+     * Get time value by column name
+     *
+     * @param c the {@link Cell}
+     * @return java.sql.Time
+     */
+    protected java.sql.Time getTime(Cell c) {
+        java.sql.Time t;
+        switch (c.t) {
+            case DOUBLE: t = toTime(c.dv); break;
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                t = toTime(c.sv);
+                break;
+            case INLINESTR: t = toTime(c.sv); break;
+            default:
+                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
         }
-        // TODO string -> time
-        throw new UncheckedTypeException("can't convert to java.sql.Time");
+        return t;
     }
 
     /**
