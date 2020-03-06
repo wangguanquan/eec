@@ -42,6 +42,7 @@ import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -757,7 +758,7 @@ public abstract class Row {
             case INLINESTR:
                 ts = toTimestamp(c.sv);
                 break;
-            default: throw new UncheckedTypeException("");
+            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ts;
     }
@@ -769,11 +770,7 @@ public abstract class Row {
      * @return java.sql.Time
      */
     public java.sql.Time getTime(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        if (c.t == DOUBLE) {
-            return toTime(c.dv);
-        }
-        throw new UncheckedTypeException("can't convert to java.sql.Time");
+        return getTime(getCell(columnIndex));
     }
 
     /**
@@ -783,11 +780,30 @@ public abstract class Row {
      * @return java.sql.Time
      */
     public java.sql.Time getTime(String columnName) {
-        Cell c = getCell(columnName);
-        if (c.t == DOUBLE) {
-            return toTime(c.dv);
+        return getTime(getCell(columnName));
+    }
+
+    /**
+     * Get time value by column name
+     *
+     * @param c the {@link Cell}
+     * @return java.sql.Time
+     */
+    protected java.sql.Time getTime(Cell c) {
+        java.sql.Time t;
+        switch (c.t) {
+            case DOUBLE: t = toTime(c.dv); break;
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                t = toTime(c.sv);
+                break;
+            case INLINESTR: t = toTime(c.sv); break;
+            default:
+                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
         }
-        throw new UncheckedTypeException("can't convert to java.sql.Time");
+        return t;
     }
 
     /**
@@ -1021,7 +1037,8 @@ public abstract class Row {
                     break;
                 case DOUBLE:
                     if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.dv));
-                    else joiner.add(toTimestamp(c.dv).toString());
+                    else if (c.dv > 1.00001) joiner.add(toTimestamp(c.dv).toString());
+                    else joiner.add(toLocalTime(c.dv).toString());
                     break;
                 case BLANK:
                 case EMPTY_TAG:
