@@ -9,6 +9,8 @@ EEC的设计初衷是为了解决Apache POI高内存且API臃肿的诟病，EEC�
 
 从BIFF5以后Office就使用SharedString方式保存字符串，这样可以在多个Worksheet间达到共享字符串和压缩文件的目的。POI使用`innerStr`方式写字符串，EEC默认也是使用innerStr方式，你可以使用注解`@ExcelColumn(share = true)`来使用SharedString模式。
 
+EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
+
 使用`innerStr`模式的情况下EEC的读写内存可以控制在10MB以下，[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在6MB的情况下完成1000万行x29列数据的读写。
 
 EEC采用单线程、高IO设计，多核心并不能提高速度，高主频和一块好SSD能显著提升速度。
@@ -26,8 +28,6 @@ EEC采用单线程、高IO设计，多核心并不能提高速度，高主频和
 也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或者其它RPC
 
 EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为Excel或者读取Excel表格内容到Stream或数据库。
-
-它的最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
 ## 主要功能
 
