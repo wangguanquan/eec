@@ -1,12 +1,22 @@
-# eec介绍
+# EEC介绍
 
 [![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
 
-eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的
-读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
+EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
+EEC的设计初衷是为了解决Apache POI高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
-与传统Excel操作不同之处在于eec并不缓存数据到内存，相反会边读数据边写文件,
-省去了将数据拉取到内存的操作也降低了OOM的可能。目前已实现worksheet类型有
+与传统Excel操作工具不同之处在于EEC并不缓存或只少量缓存数据到内存，写文件时EEC使用分片来处理较大的数据，使用迭代模式读取Excel行内容，当你使用某行数据的时才去解析它们，而不会将整个文件读入到内存。
+
+从BIFF5以后Office就使用SharedString方式保存字符串，这样可以在多个Worksheet间达到共享字符串和压缩文件的目的。POI使用`innerStr`方式写字符串，EEC默认也是使用innerStr方式，你可以使用注解`@ExcelColumn(share = true)`来使用SharedString模式。
+
+使用`innerStr`模式的情况下EEC的读写内存可以控制在10MB以下，[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在6MB的情况下完成1000万行X29列数据的读写。
+
+EEC采用单线程、高IO设计，多核心并不能提高速度，高主频和一块好SSD能显著提升速度。
+
+## 现状
+
+目前已实现worksheet类型有
+
 - [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
 - [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
@@ -15,12 +25,9 @@ eec（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx
 
 也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或者其它RPC
 
-eec并不是一个功能全面的excel操作工具类，它功能有限并不能用它来完全替代Apache POI
-，它最擅长的操作是表格处理。比如将数据库表导出为excel文档或者读取excel表格内容到
-stream或数据库。
+EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为Excel或者读取Excel表格内容到Stream或数据库。
 
-它的最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利。
-同时它的`可扩展`能力也不弱
+它的最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
 ## 主要功能
 
@@ -34,7 +41,6 @@ stream或数据库。
 8. 提供Watch窗口查看操作细节也可以做进度条。
 9. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
 10. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
-11. Reader内置的to和too方法可以方便将行数据转换为对象（前者每次转换都会实例化一个对象，后者内存共享仅产生一个实例）
 
 ## 使用方法
 
@@ -50,9 +56,7 @@ pom.xml添加
 
 ## xls格式支持
 
-xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源
-尝鲜的朋友可以在本项目的[beta](./beta)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取。
-xls格式的读取与xlsx对外暴露完全一样，ExcelReader内部判断文件类型，执行不同的Reader方法。
+xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源，尝鲜的朋友可以在本项目的[beta](./beta)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取，xls格式的读取与xlsx对外暴露完全一样。
 
 示例请查找`testReadXLS()`方法。
 
@@ -92,8 +96,7 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 #### 1. 对象数组导出
 
 #### 1.1 准备工作
-对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，
-使用注解`@IgnoreExport`标记不需要导出的字段。
+对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，使用注解`@IgnoreExport`标记不需要导出的字段。
 
 ```
     @NotExport("敏感信息不导出")
@@ -115,10 +118,6 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 public void testWrite(List<Student> students) throws IOException {
     // 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
     new Workbook("test object", "guanquan.wang")
-        // 添加watch窗口查看导出细节
-        .watch(System.out::println)
-        // 列宽自动调整，如果不设置此属性则默认宽度为20,也可以使用`setWidth(double)`来重置列宽
-        .setAutoSize(true)
         // 添加一个worksheet，可以通过addSheet添加多个worksheet
         .addSheet(new ListSheet<>("学生信息", students))
         // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
@@ -164,8 +163,7 @@ public void testStyleConversion(List<Student> students) throws IOException {
 
 #### 3. 自定义数据源
 
-有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类
-并复写相应方法即可。如下
+有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类并覆写`more`方法即可。如下
 
 ```
 public class CustomizeDataSourceSheet extends ListSheet<Student> {
@@ -205,12 +203,22 @@ public void testCustomizeDataSource(Parameter params) throws IOException {
         .writeTo(Paths.get("f:/excel"));
 }
 
+// 也可以简化为
+new Workbook("customize datasource")
+    .addSheet(new ListSheet<Student>("自定义源") {
+        private int pageNo, limit = 100;
+        @Override
+        public List<Student> more() {
+            return service.getPageData(pageNo++, limit);
+        }
+    })
+    .writeTo(Paths.get("f:/excel"));
 ```
 更详细的信息请查测试类[CustomizeDataSourceSheet](./src/test/java/org/ttzero/excel/entity/CustomizeDataSourceSheet.java)
 
-#### 4. 数据源为数据库
-数据源为数据库时可以直接传入`java.sql.Connection`和SQL语句，取数据的过程在EEC内部实现，
-EEC内部通过游标获取数据直接写入文件，并不会在内存保存副本，所以能极大的降低内存消耗。
+#### 4. 数据源为关系型数据库
+
+数据源为关系型数据库时可以使用`StatementSheet`和`ResultSetSheet`两种Worksheet，它们的工作方式是将SQL和参数交给EEC，EEC内部去查询并使用游标做到取一个值写一个值，省掉了将表数据转为Java实体的过程。
 
 ```
 public void testFromDatabase() {
@@ -284,7 +292,9 @@ Excel如下图
 
 ![多Sheet页](./images/6f2ffc52-f66a-4986-906a-7463d87d9fbe.png)
 
-#### 6. 有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
+#### 6. 模板方式
+
+有时候你可能会使用模板来规范格式，不固定的部分使用${key}标记，Excel导出时使用Map或者Java bean传入。
 
 如有以下格式模板文件template.xlsx
 
@@ -320,8 +330,7 @@ Excel如下图
 
 ### 读取示例
 
-Excel读取使用`ExcelReader#read`静态方法，内部采用流式操作，当使用某一行数据时才会真正
-读入内存，所以即使是GB级别的excel文件也只占用少量内存。
+Excel使用`ExcelReader#read`静态方法读文件，其内部采用流式操作，当使用某一行数据时才会真正读入内存，所以即使是GB级别的Excel文件也只占用少量内存。
 
 默认的ExcelReader仅读取单元格的值而忽略单元格的公式，可以使用`ExcelReader#parseFormula`方法使Reader解析单元格的公式。
 
@@ -380,7 +389,7 @@ public void readToList() {
 }
 ```
 
-#### 4. 当然既然是stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
+#### 4. 当然既然是Stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
 ```
 reader.sheets()
