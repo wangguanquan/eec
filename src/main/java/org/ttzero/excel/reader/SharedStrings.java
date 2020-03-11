@@ -24,8 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
@@ -128,7 +127,11 @@ public class SharedStrings implements AutoCloseable {
     /**
      * Count the number of visits to each segment
      */
-    private Map<Integer, Integer> count_area = null;
+    private CacheTester tester = null;
+//    /**
+//     * Limit number of binary mark area
+//     */
+//    private int mark_limit, limit_start;
     /**
      * High frequency word
      */
@@ -178,14 +181,12 @@ public class SharedStrings implements AutoCloseable {
             max = uniqueCount();
             LOGGER.debug("Size of SharedString: {}", max);
             // Unknown size or big than page
-            int default_cap = 10;
             if (max < 0 || max > page) {
                 forward = new String[page];
                 backward = new String[page];
 
-                if (max > 0 && max / page + 1 > default_cap)
-                    default_cap = max / page + 1;
-                count_area = new HashMap<>(default_cap);
+                // Cache 1MB binary, it will storage 1^20 strings.
+                tester = new CacheTester.FixBinaryCacheTester(max > 1 << 23 ? 1 << 23 : max);
 
                 if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
                 else hot = FixSizeLRUCache.create();
@@ -260,7 +261,6 @@ public class SharedStrings implements AutoCloseable {
             if (vt < 0) vt = 0;
 
             loadXml();
-            test(index);
         }
 
         String value;
@@ -268,6 +268,7 @@ public class SharedStrings implements AutoCloseable {
         if (forwardRange(index)) {
             value = forward[index - offset_forward];
             total_forward++;
+            if (test(index)) hot.put(index, value);
             return value;
         }
 
@@ -275,6 +276,7 @@ public class SharedStrings implements AutoCloseable {
         if (backwardRange(index)) {
             value = backward[index - offset_backward];
             total_backward++;
+            if (test(index)) hot.put(index, value);
             return value;
         }
 
@@ -303,10 +305,7 @@ public class SharedStrings implements AutoCloseable {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
             }
             value = forward[index - offset_forward];
-            if (test(index)) {
-                LOGGER.debug("put hot {}", index);
-                hot.put(index, value);
-            }
+            if (test(index)) hot.put(index, value);
             total_forward++;
         } else {
             total_hot++;
@@ -318,13 +317,13 @@ public class SharedStrings implements AutoCloseable {
     // Check the forward range
     private boolean forwardRange(int index) {
         return offset_forward >= 0 && offset_forward <= index
-            && offset_forward + limit_forward >= index;
+            && offset_forward + limit_forward > index;
     }
 
     // Check the backward range
     private boolean backwardRange(int index) {
         return offset_backward >= 0 && offset_backward <= index
-            && offset_backward + limit_backward >= index;
+            && offset_backward + limit_backward > index;
     }
 
     // Check the current index if out of bound
@@ -336,11 +335,26 @@ public class SharedStrings implements AutoCloseable {
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
-        if (max < page) return false;
-        int idx = index / page;
-        int n = count_area.getOrDefault(idx, 0) + 1;
-        count_area.put(idx, n);
-        return n > 1;
+        // Check bound of bit-set
+//        if (index > mark_limit) {
+//            long[] marks = mark_area.toLongArray();
+//            int i = 0, n = marks.length;
+//            for (; i < n && marks[i] == -1; i++);
+//            // clean
+//            if (i > 0) {
+//                int j = 0;
+//                for (; i < n; marks[j++] = marks[i++]);
+//                for (; j < n; marks[j++] &= 0);
+//                mark_area = BitSet.valueOf(marks);
+//                limit_start += (i << 6);
+//            }
+//        }
+//        index = index - limit_start;
+//        if (!mark_area.get(index)) {
+//            mark_area.flip(index);
+//            return false;
+//        }
+        return tester.test(index);
     }
 
     /**
@@ -563,9 +577,9 @@ public class SharedStrings implements AutoCloseable {
         cb = null;
         forward = null;
         backward = null;
-        if (count_area != null) {
-            count_area.clear();
-            count_area = null;
+        if (tester != null) {
+//            mark_area.clear();
+            tester = null;
         }
         escapeBuf = null;
         if (sst != null) {
@@ -573,4 +587,62 @@ public class SharedStrings implements AutoCloseable {
         }
     }
 
+}
+
+interface CacheTester {
+
+    /**
+     * Test if a string needs to be cached
+     *
+     * @param i the string index in {@link IndexSharedStringTable}
+     * @return true if the string should be cached
+     */
+    boolean test(int i);
+
+    class FixBinaryCacheTester implements CacheTester {
+        private int start, limit, initial_size;
+        private long[] marks;
+
+        FixBinaryCacheTester(int expectedInsertions) {
+            marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
+            limit = initial_size << 6;
+        }
+
+        @Override
+        public boolean test(int i) {
+            // Check bound of bit-set
+            if (i > limit) resize(i);
+            i = i - start;
+            int n = i >> 6 << 6, m = i > n ? i - (n >>= 6) : 0;
+            boolean a = ((marks[n] >> (63 - m)) & 1) == 1;
+            marks[n] |= 1L << (63 - m);
+            return a;
+        }
+
+        private void resize(int i) {
+            int ii = 0, n = marks.length, l = ((i - 1) >> 6) + 1;
+
+            for (; ii < n && marks[ii] == -1; ii++) ;
+
+            if (l - ii <= initial_size) {
+                // Clean old mark
+                if (ii > 0) {
+                    int j = 0;
+                    for (; ii < n; marks[j++] = marks[ii++]) ;
+                    for (; j < n; marks[j++] &= 0) ;
+                    start += (ii << 6);
+                } else {
+                    long[] newMarks = Arrays.copyOf(marks, l);
+                    marks = newMarks;
+                    limit = newMarks.length << 6;
+                }
+            } else {
+                long[] newMarks = new long[l];
+                System.arraycopy(marks, ii, newMarks, 0, marks.length - ii);
+                marks = newMarks;
+                limit = marks.length << 6;
+                start += (ii << 6);
+            }
+        }
+    }
 }
