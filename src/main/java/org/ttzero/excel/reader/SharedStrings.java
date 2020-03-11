@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.StringJoiner;
 
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
@@ -335,25 +336,6 @@ public class SharedStrings implements AutoCloseable {
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
-        // Check bound of bit-set
-//        if (index > mark_limit) {
-//            long[] marks = mark_area.toLongArray();
-//            int i = 0, n = marks.length;
-//            for (; i < n && marks[i] == -1; i++);
-//            // clean
-//            if (i > 0) {
-//                int j = 0;
-//                for (; i < n; marks[j++] = marks[i++]);
-//                for (; j < n; marks[j++] &= 0);
-//                mark_area = BitSet.valueOf(marks);
-//                limit_start += (i << 6);
-//            }
-//        }
-//        index = index - limit_start;
-//        if (!mark_area.get(index)) {
-//            mark_area.flip(index);
-//            return false;
-//        }
         return tester.test(index);
     }
 
@@ -382,7 +364,7 @@ public class SharedStrings implements AutoCloseable {
     private int readData() throws IOException {
         // Read forward area data
         int n = 0, length, nChar;
-        while ((length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0) {
+        for (; (length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0; ) {
             length += offset;
             nChar = offset &= 0;
             int len0 = length - 3, len1 = len0 - 1;
@@ -578,7 +560,6 @@ public class SharedStrings implements AutoCloseable {
         forward = null;
         backward = null;
         if (tester != null) {
-//            mark_area.clear();
             tester = null;
         }
         escapeBuf = null;
@@ -599,28 +580,53 @@ interface CacheTester {
      */
     boolean test(int i);
 
+    /**
+     * Returns the limit index of {@link CacheTester}
+     *
+     * @return limit index
+     */
+    int limit();
+
+    /**
+     * Returns the block size of {@link CacheTester}
+     *
+     * @return the mark array length
+     */
+    int size();
+
     class FixBinaryCacheTester implements CacheTester {
         private int start, limit, initial_size;
         private long[] marks;
 
         FixBinaryCacheTester(int expectedInsertions) {
             marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
-            limit = initial_size << 6;
+            limit = (initial_size << 6) - 1;
         }
 
         @Override
         public boolean test(int i) {
+            if (i < start) return true;
             // Check bound of bit-set
             if (i > limit) resize(i);
             i = i - start;
-            int n = i >> 6 << 6, m = i > n ? i - (n >>= 6) : 0;
+            int n = i >> 6, m = i - (n << 6);
             boolean a = ((marks[n] >> (63 - m)) & 1) == 1;
             marks[n] |= 1L << (63 - m);
             return a;
         }
 
+        @Override
+        public int limit() {
+            return limit;
+        }
+
+        @Override
+        public int size() {
+            return marks.length;
+        }
+
         private void resize(int i) {
-            int ii = 0, n = marks.length, l = ((i - 1) >> 6) + 1;
+            int ii = 0, n = marks.length, l = ((i - start) >> 6) + 1;
 
             for (; ii < n && marks[ii] == -1; ii++) ;
 
@@ -628,21 +634,38 @@ interface CacheTester {
                 // Clean old mark
                 if (ii > 0) {
                     int j = 0;
-                    for (; ii < n; marks[j++] = marks[ii++]) ;
+                    for (int m = ii; m < n; marks[j++] = marks[m++]) ;
                     for (; j < n; marks[j++] &= 0) ;
                     start += (ii << 6);
                 } else {
-                    long[] newMarks = Arrays.copyOf(marks, l);
-                    marks = newMarks;
-                    limit = newMarks.length << 6;
+                    marks = Arrays.copyOf(marks, l);
                 }
             } else {
-                long[] newMarks = new long[l];
+                long[] newMarks = new long[l - ii];
                 System.arraycopy(marks, ii, newMarks, 0, marks.length - ii);
                 marks = newMarks;
-                limit = marks.length << 6;
                 start += (ii << 6);
             }
+            limit = (marks.length << 6) + start - 1;
+        }
+
+        @Override
+        public String toString() {
+            StringJoiner joiner = new StringJoiner("\n");
+            for (long l : marks) {
+                String s = append(Long.toBinaryString(l));
+                joiner.add(s);
+            }
+            return joiner.toString();
+        }
+
+        private char[] chars = new char[64];
+
+        private String append(String s) {
+            int n = s.length();
+            s.getChars(0, n, chars, chars.length - n);
+            Arrays.fill(chars, 0, chars.length - n, '0');
+            return new String(chars);
         }
     }
 }

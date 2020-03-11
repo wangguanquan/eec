@@ -18,12 +18,8 @@
 package org.ttzero.excel.reader;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
-import org.ttzero.excel.annotation.ExcelColumn;
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.Date;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
@@ -39,18 +35,6 @@ public class ExcelReaderSharedTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Test public void testBitSet() {
-        BitSet bitSet = new BitSet();
-        bitSet.flip(1);
-        bitSet.flip(5);
-        bitSet.flip(100);
-
-        assert bitSet.get(1);
-        assert !bitSet.get(99);
-        assert bitSet.get(100);
-        assert !bitSet.get(1000);
     }
 
 //    public static class LargeSharedData {

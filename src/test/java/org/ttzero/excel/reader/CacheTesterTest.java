@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class CacheTesterTest {
     @Test public void test() {
-        CacheTester tester = new CacheTester.FixBinaryCacheTester(10);
+        CacheTester tester = new CacheTester.FixBinaryCacheTester(1024);
         assert !tester.test(0);
         assert !tester.test(1);
         assert !tester.test(9);
@@ -32,6 +32,26 @@ public class CacheTesterTest {
         assert tester.test(9);
         assert !tester.test(5);
         assert tester.test(0);
+
+        for (int i = 0; i < 63; tester.test(i++)) ;
+
         assert !tester.test(1000);
+
+        assert tester.size() == 16;
+
+        assert tester.test(32);
+        assert tester.test(1000);
+        assert !tester.test(64);
+
+        assert !tester.test(63);
+        assert !tester.test(1024);
+
+        assert tester.size() == 16;
+        assert tester.limit() == 1087;
+
+        assert tester.test(1024);
+        assert !tester.test(1087);
+
+        assert tester.size() == 16;
     }
 }
