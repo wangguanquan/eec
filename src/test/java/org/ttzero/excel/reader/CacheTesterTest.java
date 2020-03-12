@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class CacheTesterTest {
     @Test public void test() {
-        CacheTester tester = new CacheTester.FixBinaryCacheTester(1024);
+        Tester tester = new Tester.FixBinaryTester(1024);
         assert !tester.test(0);
         assert !tester.test(1);
         assert !tester.test(9);
