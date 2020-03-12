@@ -129,10 +129,6 @@ public class SharedStrings implements AutoCloseable {
      * Count the number of visits to each segment
      */
     private CacheTester tester = null;
-//    /**
-//     * Limit number of binary mark area
-//     */
-//    private int mark_limit, limit_start;
     /**
      * High frequency word
      */
@@ -160,7 +156,7 @@ public class SharedStrings implements AutoCloseable {
 
     private IndexSharedStringTable sst;
     // For debug
-    private int total, total_forward, total_backward, total_hot;
+    private int total, total_forward, total_backward, total_hot, total_sst;
 
     /**
      * @return the shared string unique count
@@ -186,8 +182,8 @@ public class SharedStrings implements AutoCloseable {
                 forward = new String[page];
                 backward = new String[page];
 
-                // Cache 1MB binary, it will storage 1^20 strings.
-                tester = new CacheTester.FixBinaryCacheTester(max > 1 << 23 ? 1 << 23 : max);
+                // Cache 8KB binary, it will storage 1^16 strings.
+                tester = new CacheTester.FixBinaryCacheTester(max > 1 << 16 ? 1 << 16 : max);
 
                 if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
                 else hot = FixSizeLRUCache.create();
@@ -299,15 +295,16 @@ public class SharedStrings implements AutoCloseable {
                 } catch (IOException e) {
                     throw new ExcelWriteException(e);
                 }
+                total_sst++;
             } else {
                 loadXml();
+                total_forward++;
             }
             if (forward[0] == null) {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
             }
             value = forward[index - offset_forward];
             if (test(index)) hot.put(index, value);
-            total_forward++;
         } else {
             total_hot++;
         }
@@ -552,8 +549,8 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("total: {}, forward: {}, backward: {}, hot: {}"
-                , total, total_forward, total_backward, total_hot);
+            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}"
+                , total, total_forward, total_backward, total_sst, total_hot);
             reader.close();
         }
         cb = null;
