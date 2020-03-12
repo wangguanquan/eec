@@ -181,7 +181,7 @@ public class SharedStrings implements AutoCloseable {
                 forward = new String[page];
                 backward = new String[page];
 
-                // Cache 8KB binary, it will storage 1^16 strings.
+                // Cache 8KB binary, it will store 1^16 strings.
                 tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
 
                 if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
