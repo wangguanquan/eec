@@ -333,7 +333,7 @@ public class SharedStrings implements AutoCloseable {
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
-        return tester.test(index);
+        return tester != null && tester.test(index);
     }
 
     /**
