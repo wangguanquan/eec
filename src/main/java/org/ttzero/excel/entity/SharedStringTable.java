@@ -117,11 +117,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @throws IOException if io error occur
      */
     public int push(char c) throws IOException {
-        if (buffer.remaining() < 4) {
-            flush();
-        }
-        buffer.putInt(~c);
-        return count++;
+        return pushChar(c);
     }
 
     /**
@@ -134,10 +130,10 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
     public int push(String key) throws IOException {
         int len;
         if (key == null || (len = key.length()) == 0) {
-            return push((char) 0xFFFF);
+            return pushChar((char) 0xFFFF);
         }
         if (len == 1) {
-            return push(key.charAt(0));
+            return pushChar(key.charAt(0));
         }
         byte[] bytes = key.getBytes(UTF_8);
         if (buffer.remaining() < bytes.length + 4) {
@@ -145,6 +141,21 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
         }
         buffer.putInt(bytes.length);
         buffer.put(bytes);
+        return count++;
+    }
+
+    /**
+     * Write character value into table
+     *
+     * @param c the character value
+     * @return the value index of table
+     * @throws IOException if io error occur
+     */
+    private int pushChar(char c) throws IOException {
+        if (buffer.remaining() < 4) {
+            flush();
+        }
+        buffer.putInt(~c);
         return count++;
     }
 
