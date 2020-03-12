@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.StringJoiner;
 
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
@@ -126,9 +125,9 @@ public class SharedStrings implements AutoCloseable {
      */
     private int limit_backward;
     /**
-     * Count the number of visits to each segment
+     * A tester of SharedString's cache
      */
-    private CacheTester tester = null;
+    private Tester tester = null;
     /**
      * High frequency word
      */
@@ -183,7 +182,7 @@ public class SharedStrings implements AutoCloseable {
                 backward = new String[page];
 
                 // Cache 8KB binary, it will storage 1^16 strings.
-                tester = new CacheTester.FixBinaryCacheTester(max > 1 << 16 ? 1 << 16 : max);
+                tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
 
                 if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
                 else hot = FixSizeLRUCache.create();
@@ -567,7 +566,7 @@ public class SharedStrings implements AutoCloseable {
 
 }
 
-interface CacheTester {
+interface Tester {
 
     /**
      * Test if a string needs to be cached
@@ -578,24 +577,24 @@ interface CacheTester {
     boolean test(int i);
 
     /**
-     * Returns the limit index of {@link CacheTester}
+     * Returns the limit index of {@link Tester}
      *
      * @return limit index
      */
     int limit();
 
     /**
-     * Returns the block size of {@link CacheTester}
+     * Returns the block size of {@link Tester}
      *
      * @return the mark array length
      */
     int size();
 
-    class FixBinaryCacheTester implements CacheTester {
+    class FixBinaryTester implements Tester {
         private int start, limit, initial_size;
         private long[] marks;
 
-        FixBinaryCacheTester(int expectedInsertions) {
+        FixBinaryTester(int expectedInsertions) {
             marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
             limit = (initial_size << 6) - 1;
         }
@@ -644,25 +643,6 @@ interface CacheTester {
                 start += (ii << 6);
             }
             limit = (marks.length << 6) + start - 1;
-        }
-
-        @Override
-        public String toString() {
-            StringJoiner joiner = new StringJoiner("\n");
-            for (long l : marks) {
-                String s = append(Long.toBinaryString(l));
-                joiner.add(s);
-            }
-            return joiner.toString();
-        }
-
-        private char[] chars = new char[64];
-
-        private String append(String s) {
-            int n = s.length();
-            s.getChars(0, n, chars, chars.length - n);
-            Arrays.fill(chars, 0, chars.length - n, '0');
-            return new String(chars);
         }
     }
 }
