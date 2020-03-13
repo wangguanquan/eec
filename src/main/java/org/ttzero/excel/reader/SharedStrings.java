@@ -548,8 +548,8 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}"
-                , total, total_forward, total_backward, total_sst, total_hot);
+            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}, tester resize: {}"
+                , total, total_forward, total_backward, total_sst, total_hot, tester != null ? tester.analysis() : 0);
             reader.close();
         }
         cb = null;
@@ -590,9 +590,13 @@ interface Tester {
      */
     int size();
 
+    int analysis();
+
     class FixBinaryTester implements Tester {
         private int start, limit, initial_size;
         private long[] marks;
+
+        private int total_resize; // For debug
 
         FixBinaryTester(int expectedInsertions) {
             marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
@@ -621,7 +625,13 @@ interface Tester {
             return marks.length;
         }
 
+        @Override
+        public int analysis() {
+            return total_resize;
+        }
+
         private void resize(int i) {
+            total_resize++;
             int ii = 0, n = marks.length, l = ((i - start) >> 6) + 1;
 
             for (; ii < n && marks[ii] == -1; ii++) ;
