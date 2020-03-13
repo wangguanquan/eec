@@ -102,14 +102,14 @@ public class SharedStrings implements Storageable, AutoCloseable {
     /**
      * The number of expected insertions to the constructed bloom
      */
-    private int expectedInsertions = 1 << 20;
+    private int expectedInsertions = 1 << 17;
 
     SharedStrings() {
         hot = FixSizeLRUCache.create();
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 2^20 expected insertions and 0.03% fpp bloom filter
+        // Create a 2^17 expected insertions and 0.3% fpp bloom filter
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 
         init();
