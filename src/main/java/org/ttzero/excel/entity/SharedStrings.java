@@ -300,7 +300,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        LOGGER.debug("total: {}, hot: {}, sst: {}, cache: {}"
+        LOGGER.debug("total: {}, hot: {}, sst: {}, char cache: {}"
             , count, total_hot, total_sst_find, total_char_cache);
         filter = null;
         hot.clear();
