@@ -66,10 +66,11 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * A streaming operation chain, using cursor control, the cursor
  * will only move forward, so you cannot repeatedly operate the
  * same Sheet stream. If you need to read the data of a worksheet
- * multiple times, please call the {@link Sheet#reset} method.
- * The internal Row object of the same Sheet page is memory shared,
- * so don't directly convert Stream&lt;Row&gt; to a collection class.
- * You should first consider using try-with-resource to use Reader
+ * multiple times please call the {@link Sheet#reset} method.
+ * <p>
+ * The internal Row object of the same Sheet is memory shared,
+ * so don't directly convert Stream&lt;Row&gt; to a {@code Collection}.
+ * You should first consider using the try-with-resource block to use Reader
  * or manually close the ExcelReader.
  * <blockquote><pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
