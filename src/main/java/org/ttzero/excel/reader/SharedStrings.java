@@ -548,8 +548,9 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}, tester resize: {}"
-                , total, total_forward, total_backward, total_sst, total_hot, tester != null ? tester.analysis() : 0);
+            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}, tester:{ resize: {}, size: {} }"
+                , total, total_forward, total_backward, total_sst, total_hot
+                , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
             reader.close();
         }
         cb = null;
