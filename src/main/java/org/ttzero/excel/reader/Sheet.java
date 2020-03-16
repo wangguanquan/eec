@@ -18,6 +18,7 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.CSVUtil;
+import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
+import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * @author guanquan.wang at 2019-04-17 11:36
@@ -201,8 +203,8 @@ public interface Sheet extends AutoCloseable {
      */
     default void saveAsCSV(Path path) throws IOException {
         // Create path if not exists
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
+        if (!exists(path)) {
+            FileUtil.mkdir(path);
         }
         if (Files.isDirectory(path)) {
             path = path.resolve(getName() + Const.Suffix.CSV);

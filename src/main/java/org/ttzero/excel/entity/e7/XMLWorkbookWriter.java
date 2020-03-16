@@ -58,6 +58,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * @author guanquan.wang at 2019-04-22 15:47
  */
@@ -151,7 +153,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         writeCore(root, contentType);
 
         Path themeP = root.resolve("theme");
-        if (!Files.exists(themeP)) {
+        if (!exists(themeP)) {
             Files.createDirectory(themeP);
         }
         try {
@@ -235,7 +237,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                         : Paths.get(url.getFile())).getParent();
                     // On Mac or Linux
                     Path pomPath = targetPath.resolve("maven-archiver/pom.properties");
-                    if (Files.exists(pomPath)) {
+                    if (exists(pomPath)) {
                         is = Files.newInputStream(pomPath);
                         // On windows
                     } else {
@@ -316,7 +318,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         WaterMark waterMark = workbook.getWaterMark();
         if (waterMark != null) {
             Path media = parent.resolve("media");
-            if (!Files.exists(media)) {
+            if (!exists(media)) {
                 Files.createDirectory(media);
             }
             Path image = media.resolve("image" + n++ + waterMark.getSuffix());
@@ -329,7 +331,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Sheet sheet = workbook.getSheetAt(i);
             if ((wm = sheet.getWaterMark()) != null) {
                 Path media = parent.resolve("media");
-                if (!Files.exists(media)) {
+                if (!exists(media)) {
                     Files.createDirectory(media);
                 }
                 Path image = media.resolve("image" + n++ + wm.getSuffix());

@@ -36,6 +36,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * Relation manager
  *
@@ -116,8 +118,8 @@ public class RelManager implements Serializable {
         }
 
         Path rels = parent.resolve("_rels");
-        if (!Files.exists(rels)) {
-            Files.createDirectory(rels);
+        if (!exists(rels)) {
+            FileUtil.mkdir(rels);
         }
 
         if (name == null || name.isEmpty()) {

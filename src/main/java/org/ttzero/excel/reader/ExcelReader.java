@@ -58,6 +58,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.ttzero.excel.reader.SharedStrings.toInt;
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -463,7 +464,7 @@ public class ExcelReader implements AutoCloseable {
 
         // Load SharedString
         Path ss = tmp.resolve("xl/sharedStrings.xml");
-        if (Files.exists(ss)) {
+        if (exists(ss)) {
             sst = new SharedStrings(ss, bufferSize, cacheSize).load();
         }
 
@@ -471,7 +472,7 @@ public class ExcelReader implements AutoCloseable {
         Path s = tmp.resolve("xl/styles.xml");
 
         Styles styles;
-        if (Files.exists(s)) {
+        if (exists(s)) {
             styles = Styles.load(s);
         } else {
             FileUtil.rm_rf(tmp.toFile(), true);
@@ -479,7 +480,7 @@ public class ExcelReader implements AutoCloseable {
         }
 
         this.option = option;
-        hasFormula = Files.exists(tmp.resolve("xl/calcChain.xml"));
+        hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
 
         List<Sheet> sheets = new ArrayList<>();
         @SuppressWarnings("unchecked")

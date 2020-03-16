@@ -75,6 +75,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -198,7 +199,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     protected Path initWriter(Path root) throws IOException {
         this.workSheetPath = root.resolve("worksheets");
-        if (!Files.exists(this.workSheetPath)) {
+        if (!exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
         }
         sheet.what("0010", sheet.getName());

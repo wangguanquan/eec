@@ -36,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * @author guanquan.wang at 2018-02-26 13:45
  */
@@ -100,7 +102,7 @@ public abstract class AbstractTemplate {
         // File exists check
         for (ContentType.Override o : list) {
             Path subPath = zipPath.resolve(o.getPartName().substring(1));
-            if (!Files.exists(subPath)) {
+            if (!exists(subPath)) {
                 wb.what("9004", subPath.toString());
                 return false;
             }

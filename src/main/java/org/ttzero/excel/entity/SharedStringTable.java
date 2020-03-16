@@ -30,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * @author guanquan.wang at 2019-05-10 20:04
@@ -85,7 +86,7 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
      * @throws IOException if file not exists or I/O error occur.
      */
     protected SharedStringTable(Path path) throws IOException {
-        if (!Files.exists(path)) {
+        if (!exists(path)) {
             throw new IOException("The index path [" + path + "] not exists.");
         }
         this.temp = path;

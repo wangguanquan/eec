@@ -22,7 +22,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.ttzero.excel.Print.println;
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.FileUtil.isWindows;
 
 /**
@@ -55,7 +55,7 @@ public class CSVUtilTest {
         path = path.resolve("1.csv");
 
         // Create a test file
-        if (!Files.exists(path)) {
+        if (!exists(path)) {
             testWriter();
         }
     }

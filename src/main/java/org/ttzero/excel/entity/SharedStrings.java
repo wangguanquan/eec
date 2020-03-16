@@ -38,6 +38,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * A workbook collects the strings of all text cells in a global list,
  * the Shared String Table. This table is located in the record SST in
@@ -225,7 +227,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
         // Close temp writer
         FileUtil.close(writer);
 
-        if (!Files.exists(root)) {
+        if (!exists(root)) {
             FileUtil.mkdir(root);
         }
 
