@@ -67,7 +67,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
 public class SharedStrings implements Storageable, AutoCloseable {
-    final Logger LOGGER = LoggerFactory.getLogger(getClass());
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     /**
      * The total word in workbook.
@@ -99,7 +99,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     private int j;
     // For debug
-    private int total_char_cache, total_sst_find, total_hot;
+    private int total_char_cache, total_sst_find, total_hot, filter_constructor = 1;
 
     /**
      * The number of expected insertions to the constructed bloom
@@ -178,14 +178,12 @@ public class SharedStrings implements Storageable, AutoCloseable {
             // Add to bloom if not full
             filter.put(key);
             j++;
-            int n = add(key);
-            hot.put(key, n);
-            return n;
+            return add(key);
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
         if (n == null) {
-            if (sst.size() <= expectedInsertions) {
+//            if (sst.size() <= expectedInsertions) {
                 // Find in temp file
                 n = sst.find(key);
                 total_sst_find++;
@@ -194,10 +192,10 @@ public class SharedStrings implements Storageable, AutoCloseable {
                     n = add(key);
                 }
                 hot.put(key, n);
-            } else {
-                // Convert to inline string
-                n = add(key);
-            }
+//            } else {
+//                // Convert to inline string
+//                n = add(key);
+//            }
         } else {
             total_hot++;
         }
@@ -205,6 +203,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
     }
 
     private int add(String key) throws IOException {
+        // Convert to inline string when the cache full
+//        if (sst.size() > expectedInsertions) return -1;
+
         writer.write("<si><t>");
         writer.escapeWrite(key);
         writer.write("</t></si>");
@@ -289,6 +290,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Reset the bloom filter
      */
     private void resetBloomFilter() {
+        filter_constructor++;
 //        expectedInsertions <<= 1;
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 //        for (String key : hot) {
@@ -302,8 +304,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        LOGGER.debug("total: {}, hot: {}, sst: {}, char cache: {}"
-            , count, total_hot, total_sst_find, total_char_cache);
+        LOGGER.debug("Total: {}, Hot: {}, SST: {}, Char Cache: {}, Filter Constructor: {}"
+            , count, total_hot, total_sst_find, total_char_cache, filter_constructor);
         filter = null;
         hot.clear();
         hot = null;
