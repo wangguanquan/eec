@@ -422,7 +422,7 @@ public class ExcelReaderTest {
     }
 
     // Issue #99
-    @Test public void testInnerString() {
+    @Test public void testInlineString() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("inner string.xlsx"))) {
             long n = reader.sheets().flatMap(Sheet::rows).filter(row -> isNotEmpty(row.getString(0))).count();
             assert n == 11;
