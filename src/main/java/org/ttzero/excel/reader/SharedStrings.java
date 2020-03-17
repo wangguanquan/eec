@@ -625,6 +625,7 @@ interface Tester {
     class FixBinaryTester implements Tester {
         private int start, limit, initial_size;
         private long[] marks;
+//        private static final int LIMIT = (1 << 25) - 1;
 
         private int total_resize; // For debug
 
@@ -673,9 +674,10 @@ interface Tester {
                     for (int m = ii; m < n; marks[j++] = marks[m++]) ;
                     for (; j < n; marks[j++] &= 0) ;
                     start += (ii << 6);
-                } else {
-                    marks = Arrays.copyOf(marks, l + (l >> 1));
                 }
+//                else {
+//                    marks = Arrays.copyOf(marks, l + (l >> 1));
+//                }
             } else {
                 // TODO Limit Tester length to prevent infinite expansion
                 long[] newMarks = new long[(l - ii) + ((l - ii) >> 1)];
