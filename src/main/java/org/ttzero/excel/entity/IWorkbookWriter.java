@@ -29,7 +29,7 @@ import static org.ttzero.excel.util.StringUtil.indexOf;
 /**
  * @author guanquan.wang at 2019-04-22 16:00
  */
-public interface IWorkbookWriter extends Storageable {
+public interface IWorkbookWriter extends Storable {
 
     /**
      * Setting workbook

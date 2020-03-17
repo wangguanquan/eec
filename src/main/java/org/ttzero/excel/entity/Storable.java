@@ -22,7 +22,7 @@ import java.nio.file.Path;
 /**
  * @author guanquan.wang at 2019-05-08 13:13
  */
-public interface Storageable {
+public interface Storable {
     /**
      * Write to disk
      * @param root the parent path

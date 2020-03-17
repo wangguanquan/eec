@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 /**
  * @author guanquan.wang at 2019-04-22 17:23
  */
-public interface IWorksheetWriter extends Closeable, Cloneable, Storageable {
+public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
 
     /**
      * The Worksheet row limit

@@ -21,7 +21,7 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.Relationship;
-import org.ttzero.excel.entity.Storageable;
+import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -38,7 +38,7 @@ import java.util.Set;
  * @author guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "Types", uri = "http://schemas.openxmlformats.org/package/2006/content-types")
-public class ContentType implements Storageable {
+public class ContentType implements Storable {
     private Set<? super Type> set;
     private RelManager relManager;
 

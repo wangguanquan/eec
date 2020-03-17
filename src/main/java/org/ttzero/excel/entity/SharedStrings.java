@@ -66,7 +66,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
-public class SharedStrings implements Storageable, AutoCloseable {
+public class SharedStrings implements Storable, AutoCloseable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     /**

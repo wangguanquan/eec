@@ -83,7 +83,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-public class Workbook implements Storageable {
+public class Workbook implements Storable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
      * The Workbook name, reaction to the Excel file name
