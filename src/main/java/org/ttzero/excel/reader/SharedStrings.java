@@ -359,7 +359,7 @@ public class SharedStrings implements AutoCloseable {
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
-        return tester != null && tester.test(index);
+        return status == 4 && tester.test(index);
     }
 
     /**
@@ -674,11 +674,11 @@ interface Tester {
                     for (; j < n; marks[j++] &= 0) ;
                     start += (ii << 6);
                 } else {
-                    marks = Arrays.copyOf(marks, l);
+                    marks = Arrays.copyOf(marks, l + (l >> 1));
                 }
             } else {
                 // TODO Limit Tester length to prevent infinite expansion
-                long[] newMarks = new long[l - ii];
+                long[] newMarks = new long[(l - ii) + ((l - ii) >> 1)];
                 System.arraycopy(marks, ii, newMarks, 0, marks.length - ii);
                 marks = newMarks;
                 start += (ii << 6);
