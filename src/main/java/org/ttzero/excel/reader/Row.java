@@ -203,8 +203,7 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                v = isNotEmpty(c.sv);
-                break;
+            // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 v = isNotEmpty(c.sv);
                 break;
@@ -257,7 +256,7 @@ public abstract class Row {
             case DOUBLE:
                 b |= (int) c.dv;
                 break;
-            default: throw new UncheckedTypeException("can't convert to byte");
+            default: throw new UncheckedTypeException("Can't convert cell value to byte");
         }
         return b;
     }
@@ -297,10 +296,7 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                if (isNotEmpty(c.sv)) {
-                    cc |= c.sv.charAt(0);
-                }
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 if (isNotEmpty(c.sv)) {
                     cc |= c.sv.charAt(0);
@@ -318,7 +314,7 @@ public abstract class Row {
             case DOUBLE:
                 cc |= (int) c.dv;
                 break;
-            default: throw new UncheckedTypeException("can't convert to char");
+            default: throw new UncheckedTypeException("Can't convert cell value to char");
         }
         return cc;
     }
@@ -360,13 +356,25 @@ public abstract class Row {
             case LONG:
                 s |= c.lv;
                 break;
-            case BOOL:
-                s |= c.bv ? 1 : 0;
-                break;
             case DOUBLE:
                 s |= (int) c.dv;
                 break;
-            default: throw new UncheckedTypeException("can't convert to short");
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR:
+                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                    s = (short) Double.parseDouble(c.sv);
+                } else {
+                    s = Long.valueOf(c.sv).shortValue();
+                }
+                break;
+            case BOOL:
+                s |= c.bv ? 1 : 0;
+                break;
+            default: throw new UncheckedTypeException("Can't convert cell value to short");
         }
         return s;
     }
@@ -411,20 +419,23 @@ public abstract class Row {
             case DOUBLE:
                 n = (int) c.dv;
                 break;
-            case BOOL:
-                n = c.bv ? 1 : 0;
-                break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                n = Integer.parseInt(c.sv);
-                break;
+            // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                n = Integer.parseInt(c.sv);
+                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                    n = (int) Double.parseDouble(c.sv);
+                } else {
+                    n = Long.valueOf(c.sv).intValue();
+                }
+                break;
+            case BOOL:
+                n = c.bv ? 1 : 0;
                 break;
 
-            default: throw new UncheckedTypeException("unknown type");
+            default: throw new UncheckedTypeException("Can't convert cell value to int");
         }
         return n;
     }
@@ -473,15 +484,18 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                l = Long.parseLong(c.sv);
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                l = Long.parseLong(c.sv);
+                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                    l = (long) Double.parseDouble(c.sv);
+                } else {
+                    l = Long.parseLong(c.sv);
+                }
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
                 break;
-            default: throw new UncheckedTypeException("unknown type");
+            default: throw new UncheckedTypeException("Can't convert cell value to long");
         }
         return l;
     }
@@ -521,8 +535,7 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                s = c.sv;
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 s = c.sv;
                 break;
@@ -603,17 +616,19 @@ public abstract class Row {
             case NUMERIC:
                 d = c.nv;
                 break;
+            case LONG:
+                d = c.lv;
+                break;
             case SST:
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                d = Double.valueOf(c.sv);
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 d = Double.valueOf(c.sv);
                 break;
 
-            default: throw new UncheckedTypeException("unknown type");
+            default: throw new UncheckedTypeException("Can't convert cell value to double");
         }
         return d;
     }
@@ -655,8 +670,18 @@ public abstract class Row {
             case NUMERIC:
                 bd = BigDecimal.valueOf(c.nv);
                 break;
-            default:
+            case LONG:
+                bd = BigDecimal.valueOf(c.lv);
+                break;
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR:
                 bd = new BigDecimal(c.sv);
+                break;
+            default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
         }
         return bd;
     }
@@ -702,12 +727,11 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                date = toDate(c.sv);
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 date = toDate(c.sv);
                 break;
-            default: throw new UncheckedTypeException("");
+            default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
         }
         return date;
     }
@@ -753,8 +777,7 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                ts = toTimestamp(c.sv);
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 ts = toTimestamp(c.sv);
                 break;
@@ -797,8 +820,7 @@ public abstract class Row {
                 if (c.sv == null) {
                     c.setSv(sst.get(c.nv));
                 }
-                t = toTime(c.sv);
-                break;
+                // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR: t = toTime(c.sv); break;
             default:
                 throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
@@ -1017,8 +1039,7 @@ public abstract class Row {
                     if (c.sv == null) {
                         c.setSv(sst.get(c.nv));
                     }
-                    joiner.add(c.sv);
-                    break;
+                    // @Mark:=>There is no missing `break`, this is normal logic here
                 case INLINESTR:
                     joiner.add(c.sv);
                     break;
