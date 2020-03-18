@@ -66,6 +66,12 @@ public class SharedStringTableTest {
         index = sst.find("abc");
         assert index == 0;
 
+        index = sst.find("acc");
+        assert index == -1;
+
+        index = sst.find("abd");
+        assert index == -1;
+
         index = sst.find("123");
         assert index == -1;
 
