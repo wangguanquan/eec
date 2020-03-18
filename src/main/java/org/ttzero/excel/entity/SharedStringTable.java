@@ -301,12 +301,12 @@ public class SharedStringTable implements AutoCloseable, Iterable<String> {
                 }
                 // A string value
                 if (a == bytes.length) {
-                    int i = 0;
-                    for (; i < a; ) {
-                        if (buffer.get() != bytes[i++]) break;
+                    int i = 0, p = buffer.position(), b = a - 1;
+                    for (; i <= b; b--, i++) {
+                        if (bytes[b] != buffer.get(p + b) || buffer.get() != bytes[i]) break;
                     }
-                    if (i < a) {
-                        buffer.position(buffer.position() + a - i);
+                    if (i < b || i == b && (a & 1) == 1) {
+                        buffer.position(p + a);
                     } else break A;
                 } else buffer.position(buffer.position() + a);
                 index++;
