@@ -464,6 +464,14 @@ public void testReadXLS() {
 ```
 
 ## CHANGELOG
+Version 0.4.3 (2020-03-19)
+-------------
+1. 修复读取科学计数转数字类型时抛NumberFormatException异常
+2. 修复读取SharedString单字符串时内容错乱的BUG
+3. 解决读取java.sql.Time和java.time.LocalTime类型时导致UncheckedTypeException异常
+4. 解决打开EEC导出的空Worksheet时会弹出警告信息
+5. 缩小堆内存使用（最小6MB）
+
 Version 0.4.2 (2020-03-04)
 -------------
 1. 修复读poi生成的excel文件内容转对象时值为空的异常
