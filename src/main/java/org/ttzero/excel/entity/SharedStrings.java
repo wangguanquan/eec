@@ -51,11 +51,11 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is {@code 0.03%}. When the number exceeds {@code 2^20},
+ * positive rate is {@code 0.3%}. When the number exceeds {@code 2^17},
  * it will be converted to inline string.
  * <p>
  * A hot zone is also designed internally to cache multiple occurrences,
- * the default size is {@code 65,536}, and the LRU elimination algorithm is used.
+ * the default size is {@code 512}, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
  * cache.
  * <p>

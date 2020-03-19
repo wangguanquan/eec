@@ -442,6 +442,7 @@ public class FileUtil {
         try {
             return Files.exists(path);
         } catch (SecurityException e) {
+            LOGGER.warn("Check " + path, e);
             return false;
         }
     }
