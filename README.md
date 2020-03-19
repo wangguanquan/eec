@@ -11,9 +11,19 @@ EEC的设计初衷是为了解决Apache POI高内存且API臃肿的诟病，EEC�
 
 EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
-使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在*6MB*的情况下完成1000万行x29列数据的读写。
+使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在*6MB*的情况下完成1000万行x29列数据的读写。
 
 EEC采用单线程、高IO设计，多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
+
+EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000x29`内存使用截图
+
+写文件
+
+![eec write 100w](./images/eec_write_100w.png)
+
+读文件
+
+![eec read 100w](./images/eec_read_100w.png)
 
 ## 现状
 
