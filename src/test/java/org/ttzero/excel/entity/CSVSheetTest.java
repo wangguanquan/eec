@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.FileUtil.isWindows;
 
 /**
@@ -45,7 +46,7 @@ public class CSVSheetTest extends WorkbookTest {
         path = path.resolve("1.csv");
 
         // Create a test file
-        if (!Files.exists(path)) {
+        if (!exists(path)) {
             int column = random.nextInt(10) + 1, row = random.nextInt(100) + 1;
 
             // storage column type

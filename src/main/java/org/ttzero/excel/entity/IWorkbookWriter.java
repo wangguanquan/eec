@@ -23,12 +23,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.indexOf;
 
 /**
  * @author guanquan.wang at 2019-04-22 16:00
  */
-public interface IWorkbookWriter extends Storageable {
+public interface IWorkbookWriter extends Storable {
 
     /**
      * Setting workbook
@@ -81,10 +82,10 @@ public interface IWorkbookWriter extends Storageable {
         // If the file exists, add the subscript after the file name.
         String suffix = getSuffix();
         Path o = rootPath.resolve(fileName + suffix);
-        if (Files.exists(o)) {
+        if (exists(o)) {
             final String fname = fileName;
             Path parent = o.getParent();
-            if (parent != null && Files.exists(parent)) {
+            if (parent != null && exists(parent)) {
                 String[] os = parent.toFile().list((dir, name) ->
                     new File(dir, name).isFile()
                         && name.startsWith(fname)

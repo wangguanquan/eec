@@ -19,10 +19,11 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.util.FileUtil;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
+
+import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * @author guanquan.wang at 2019-04-26 17:40
@@ -46,7 +47,7 @@ public class WorkbookTest {
     }
 
     public static Path getOutputTestPath() throws IOException {
-        if (!Files.exists(defaultTestPath)) {
+        if (!exists(defaultTestPath)) {
             FileUtil.mkdir(defaultTestPath);
         }
         return defaultTestPath;

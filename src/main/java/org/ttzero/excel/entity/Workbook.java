@@ -42,6 +42,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * The workbook is the basic unit of Excel, and an 'xlsx' or 'xls' file
  * corresponds to a workbook instance.
@@ -81,7 +83,7 @@ import java.util.Map;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-public class Workbook implements Storageable {
+public class Workbook implements Storable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
      * The Workbook name, reaction to the Excel file name
@@ -789,7 +791,7 @@ public class Workbook implements Storageable {
     @Override
     public void writeTo(Path path) throws IOException {
         checkAndInitWriter();
-        if (!Files.exists(path)) {
+        if (!exists(path)) {
             String name = path.getFileName().toString();
             // write to file
             if (name.indexOf('.') > 0) {

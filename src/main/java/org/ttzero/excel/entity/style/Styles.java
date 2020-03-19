@@ -18,7 +18,7 @@ package org.ttzero.excel.entity.style;
 
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.I18N;
-import org.ttzero.excel.entity.Storageable;
+import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.ExcelReadException;
 import org.ttzero.excel.util.FileUtil;
@@ -58,7 +58,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2017/10/13.
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
-public class Styles implements Storageable {
+public class Styles implements Storable {
 
     private Map<Integer, Integer> map;
     private Document document;

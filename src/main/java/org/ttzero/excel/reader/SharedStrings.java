@@ -24,8 +24,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
@@ -152,8 +152,18 @@ public class SharedStrings implements AutoCloseable {
      * escape buffer
      */
     private StringBuilder escapeBuf;
-
+    /**
+     * Shared string table
+     */
     private IndexSharedStringTable sst;
+    /**
+     * 0: empty
+     * 1: forward only
+     * 2: forward + backward
+     * 4: large model/unknown size
+     */
+    private int status;
+
     // For debug
     private int total, total_forward, total_backward, total_hot, total_sst;
 
@@ -172,28 +182,36 @@ public class SharedStrings implements AutoCloseable {
      * @throws IOException if io error occur
      */
     SharedStrings load() throws IOException {
-        if (Files.exists(sstPath)) {
-            // Get unique count
-            max = uniqueCount();
-            LOGGER.debug("Size of SharedString: {}", max);
-            // Unknown size or big than page
-            if (max < 0 || max > page) {
-                forward = new String[page];
-                backward = new String[page];
-
-                // Cache 8KB binary, it will store 1^16 strings.
-                tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
-
-                if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
-                else hot = FixSizeLRUCache.create();
-                // Instance the SharedStringTable
-                sst = new IndexSharedStringTable();
-                sst.setShortSectorSize(9);
-            } else {
-                forward = new String[max];
-            }
-        } else {
+        if (!exists(sstPath)) {
             max = 0;
+            return this;
+        }
+
+        status = 1;
+        // Get unique count
+        max = uniqueCount();
+        LOGGER.debug("Size of SharedString: {}", max);
+        // Unknown size or greater than 512
+        if (max < 0 || max > page << 1) {
+            status <<= 2;
+            forward = new String[page];
+            backward = new String[page];
+
+            // Cache 8KB binary, it will store 1^16 strings.
+            tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
+
+            if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
+            else hot = FixSizeLRUCache.create();
+            // Instance the SharedStringTable
+            sst = new IndexSharedStringTable();
+            sst.setShortSectorSize(9);
+        }
+        else if (max > page) {
+            status <<= 1;
+            forward = new String[page];
+            backward = new String[page];
+        } else {
+            forward = new String[max];
         }
         escapeBuf = new StringBuilder();
         return this;
@@ -259,7 +277,7 @@ public class SharedStrings implements AutoCloseable {
             loadXml();
         }
 
-        String value;
+        String value = null;
         // Find in forward
         if (forwardRange(index)) {
             value = forward[index - offset_forward];
@@ -267,6 +285,9 @@ public class SharedStrings implements AutoCloseable {
             if (test(index)) hot.put(index, value);
             return value;
         }
+
+        if (status == 1)
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
 
         // Find in backward
         if (backwardRange(index)) {
@@ -277,17 +298,22 @@ public class SharedStrings implements AutoCloseable {
         }
 
         // Find in hot cache
-        value = hot.get(index);
+        if (status == 4) {
+            value = hot.get(index);
+        }
 
         // Can't find in memory cache
         if (value == null) {
+            if (status == 2 && offset_backward > -1)
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
+
             System.arraycopy(forward, 0, backward, 0, limit_forward);
             offset_backward = offset_forward;
             limit_backward = limit_forward;
             // reload data
             offset_forward = index / page * page;
             forward[0] = null;
-            if (index < sst.size()) {
+            if (status == 4 && index < sst.size()) {
                 try {
                     // Load from SharedStringTable
                     limit_forward = sst.get(offset_forward, forward);
@@ -332,7 +358,7 @@ public class SharedStrings implements AutoCloseable {
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
-        return tester != null && tester.test(index);
+        return status == 4 && tester.test(index);
     }
 
     /**
@@ -410,7 +436,7 @@ public class SharedStrings implements AutoCloseable {
             // End of <si>
             if (nChar < len1 && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
                 forward[n++] = tmp;
-                if (sst != null) sst.push(forward[n - 1]);
+                if (status == 4) sst.push(forward[n - 1]);
                 nChar += 5;
             } else {
                 StringBuilder buf = new StringBuilder(tmp);
@@ -435,7 +461,7 @@ public class SharedStrings implements AutoCloseable {
                     nChar += 4;
                 }
                 forward[n++] = buf.toString();
-                if (sst != null) sst.push(forward[n - 1]);
+                if (status == 4) sst.push(forward[n - 1]);
             }
 
             // An integral page records
@@ -548,8 +574,11 @@ public class SharedStrings implements AutoCloseable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("total: {}, forward: {}, backward: {}, sst: {}, hot: {}"
-                , total, total_forward, total_backward, total_sst, total_hot);
+            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}", total, max
+                , (total > 0 ? (total - max) * 100.0/ total : 0) + "%");
+            LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
+                , total_forward, total_backward, total_sst, total_hot
+                , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
             reader.close();
         }
         cb = null;
@@ -590,9 +619,14 @@ interface Tester {
      */
     int size();
 
+    int analysis();
+
     class FixBinaryTester implements Tester {
         private int start, limit, initial_size;
         private long[] marks;
+//        private static final int LIMIT = (1 << 25) - 1;
+
+        private int total_resize; // For debug
 
         FixBinaryTester(int expectedInsertions) {
             marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
@@ -621,7 +655,13 @@ interface Tester {
             return marks.length;
         }
 
+        @Override
+        public int analysis() {
+            return total_resize;
+        }
+
         private void resize(int i) {
+            total_resize++;
             int ii = 0, n = marks.length, l = ((i - start) >> 6) + 1;
 
             for (; ii < n && marks[ii] == -1; ii++) ;
@@ -633,11 +673,13 @@ interface Tester {
                     for (int m = ii; m < n; marks[j++] = marks[m++]) ;
                     for (; j < n; marks[j++] &= 0) ;
                     start += (ii << 6);
-                } else {
-                    marks = Arrays.copyOf(marks, l);
                 }
+//                else {
+//                    marks = Arrays.copyOf(marks, l + (l >> 1));
+//                }
             } else {
-                long[] newMarks = new long[l - ii];
+                // TODO Limit Tester length to prevent infinite expansion
+                long[] newMarks = new long[(l - ii) + ((l - ii) >> 1)];
                 System.arraycopy(marks, ii, newMarks, 0, marks.length - ii);
                 marks = newMarks;
                 start += (ii << 6);
