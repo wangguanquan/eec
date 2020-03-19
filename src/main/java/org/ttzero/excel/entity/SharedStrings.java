@@ -182,8 +182,9 @@ public class SharedStrings implements Storable, AutoCloseable {
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
+        // TODO Create a B+ tree to store key and index
         if (n == null) {
-//            if (sst.size() <= expectedInsertions) {
+            if (sst.size() <= expectedInsertions) {
                 // Find in temp file
                 n = sst.find(key);
                 total_sst_find++;
@@ -191,11 +192,11 @@ public class SharedStrings implements Storable, AutoCloseable {
                 if (n < 0) {
                     n = add(key);
                 }
-                hot.put(key, n);
-//            } else {
-//                // Convert to inline string
-//                n = add(key);
-//            }
+            } else {
+                // @Mark: Convert to inline string
+                n = add(key);
+            }
+            hot.put(key, n);
         } else {
             total_hot++;
         }
