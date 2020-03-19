@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -577,7 +576,7 @@ public class SharedStrings implements AutoCloseable {
             // Debug hit rate
             LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}", total, max
                 , (total > 0 ? (total - max) * 100.0/ total : 0) + "%");
-            LOGGER.debug("forward: {}, backward: {}, sst: {}, hot: {}, tester: {resize: {}, size: {}}"
+            LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
             reader.close();
