@@ -11,7 +11,7 @@ Version 0.4.2 (2020-03-04)
 1. 修复读取poi生成的excel文件内容转对象时值为空的异常
 2. 修复读取某些空worksheet时抛IllegalArgumentException异常
 3. 使用slf4j统一日志接口，不强制用户使用log4j
-4. 字符串值默认使用innerStr方式而非SharedString里从而提升一些写入速度
+4. 字符串值默认使用inlineStr方式而非SharedString里从而提升一些写入速度
 5. 调整压缩等级提升一些压缩速度，最终文件比以前有所增加
 
 Version 0.4.1 (2020-03-03)
@@ -88,7 +88,7 @@ Version 0.2.8 (2018-11-26)
 4. 暂时取消setConnection方法的过时标记
 5. 修改超过676列时Export会出现位置错误的BUG
 6. 修改列数据过多时Reader出现死循环的BUG
-7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(innerStr类型)的BUG
+7. 修改读取apache poi生成的Excel文件时转义字符未进行非转义(inlineStr类型)的BUG
 
 Version 0.2.7 (2018-11-19)
 -------------

@@ -38,6 +38,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * A workbook collects the strings of all text cells in a global list,
  * the Shared String Table. This table is located in the record SST in
@@ -49,11 +51,11 @@ import java.util.Arrays;
  * Table and returns the current subscript.
  * Introduced Google BloomFilter to increase filtering speed, the
  * BloomFilter estimates the amount of data to be 1 million, and the false
- * positive rate is {@code 0.03%}. When the number exceeds {@code 2^20},
+ * positive rate is {@code 0.3%}. When the number exceeds {@code 2^17},
  * it will be converted to inline string.
  * <p>
  * A hot zone is also designed internally to cache multiple occurrences,
- * the default size is {@code 65,536}, and the LRU elimination algorithm is used.
+ * the default size is {@code 512}, and the LRU elimination algorithm is used.
  * If the cache misses, it will be read from in temp file and flushed to the
  * cache.
  * <p>
@@ -64,8 +66,8 @@ import java.util.Arrays;
  * @author guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
-public class SharedStrings implements Storageable, AutoCloseable {
-    final Logger LOGGER = LoggerFactory.getLogger(getClass());
+public class SharedStrings implements Storable, AutoCloseable {
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     /**
      * The total word in workbook.
@@ -97,19 +99,19 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     private int j;
     // For debug
-    private int total_char_cache, total_sst_find, total_hot;
+    private int total_char_cache, total_sst_find, total_hot, filter_constructor = 1;
 
     /**
      * The number of expected insertions to the constructed bloom
      */
-    private int expectedInsertions = 1 << 20;
+    private int expectedInsertions = 1 << 17;
 
     SharedStrings() {
         hot = FixSizeLRUCache.create();
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 2^20 expected insertions and 0.03% fpp bloom filter
+        // Create a 2^17 expected insertions and 0.3% fpp bloom filter
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 
         init();
@@ -176,12 +178,11 @@ public class SharedStrings implements Storageable, AutoCloseable {
             // Add to bloom if not full
             filter.put(key);
             j++;
-            int n = add(key);
-            hot.put(key, n);
-            return n;
+            return add(key);
         }
         // Check the keyword exists in cache
         Integer n = hot.get(key);
+        // TODO Create a B+ tree to store key and index
         if (n == null) {
             if (sst.size() <= expectedInsertions) {
                 // Find in temp file
@@ -191,11 +192,11 @@ public class SharedStrings implements Storageable, AutoCloseable {
                 if (n < 0) {
                     n = add(key);
                 }
-                hot.put(key, n);
             } else {
-                // Convert to inline string
+                // @Mark: Convert to inline string
                 n = add(key);
             }
+            hot.put(key, n);
         } else {
             total_hot++;
         }
@@ -203,6 +204,9 @@ public class SharedStrings implements Storageable, AutoCloseable {
     }
 
     private int add(String key) throws IOException {
+        // Convert to inline string when the cache full
+//        if (sst.size() > expectedInsertions) return -1;
+
         writer.write("<si><t>");
         writer.escapeWrite(key);
         writer.write("</t></si>");
@@ -225,7 +229,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
         // Close temp writer
         FileUtil.close(writer);
 
-        if (!Files.exists(root)) {
+        if (!exists(root)) {
             FileUtil.mkdir(root);
         }
 
@@ -287,6 +291,7 @@ public class SharedStrings implements Storageable, AutoCloseable {
      * Reset the bloom filter
      */
     private void resetBloomFilter() {
+        filter_constructor++;
 //        expectedInsertions <<= 1;
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 //        for (String key : hot) {
@@ -300,8 +305,8 @@ public class SharedStrings implements Storageable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        LOGGER.debug("total: {}, hot: {}, sst: {}, cache: {}"
-            , count, total_hot, total_sst_find, total_char_cache);
+        LOGGER.debug("Total: {}, Hot: {}, SST: {}, Char Cache: {}, Filter Constructor: {}"
+            , count, total_hot, total_sst_find, total_char_cache, filter_constructor);
         filter = null;
         hot.clear();
         hot = null;

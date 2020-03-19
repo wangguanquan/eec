@@ -397,7 +397,7 @@ public class FileUtil {
      * @throws IOException if I/O error occur
      */
     public static void writeToDisk(Document doc, Path path) throws IOException {
-        if (!Files.exists(path.getParent())) {
+        if (!exists(path.getParent())) {
             Files.createDirectories(path.getParent());
         }
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
@@ -419,7 +419,7 @@ public class FileUtil {
      * @throws IOException if I/O error occur
      */
     public static void writeToDiskNoFormat(Document doc, Path path) throws IOException {
-        if (!Files.exists(path.getParent())) {
+        if (!exists(path.getParent())) {
             mkdir(path.getParent());
         }
         try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
@@ -429,6 +429,21 @@ public class FileUtil {
             writer.write(doc);
             writer.flush();
             writer.close();
+        }
+    }
+
+    /**
+     * Tests whether a file exists.
+     *
+     * @param path the path to the file to test
+     * @return false if not exits or no read permission
+     */
+    public static boolean exists(Path path) {
+        try {
+            return Files.exists(path);
+        } catch (SecurityException e) {
+            LOGGER.warn("Check " + path, e);
+            return false;
         }
     }
 }

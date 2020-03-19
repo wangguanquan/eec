@@ -201,7 +201,7 @@ class XMLRow extends Row {
                     && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
                     t = INLINESTR; // inlineStr
                 }
-                // -> other unknown case
+                // -> Other unknown case
             }
             // Cell style
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 's' && cb[cursor + 2] == '=') {

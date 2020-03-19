@@ -32,6 +32,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * zip util
  *
@@ -72,7 +74,7 @@ public class ZipUtil {
         if (!destPath.toString().endsWith(suffix)) {
             destPath = Paths.get(destPath.toString() + suffix);
         }
-        if (!Files.exists(destPath.getParent())) {
+        if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
         }
         return zip(destPath, false, srcPath);
@@ -161,7 +163,7 @@ public class ZipUtil {
         while (entry != null) {
             Path sub = destPath.resolve(entry.getName());
             // Create parent
-            if (!Files.exists(sub.getParent())) {
+            if (!exists(sub.getParent())) {
                 FileUtil.mkdir(sub.getParent());
             }
             if (entry.isDirectory()) {
@@ -187,7 +189,7 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     public static Path xlsx(Path destPath, Path... srcPath) throws IOException {
-        if (!Files.exists(destPath.getParent())) {
+        if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
         }
         return zip(destPath, false, srcPath);

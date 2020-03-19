@@ -48,6 +48,7 @@ import static org.ttzero.excel.util.ExtBufferedWriter.MIN_INTEGER_CHARS;
 import static org.ttzero.excel.util.ExtBufferedWriter.MIN_LONG_CHARS;
 import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
+import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.FileUtil.mkdir;
 
 /**
@@ -319,7 +320,7 @@ public class CSVUtil {
     }
 
     private static void testOrCreate(Path path) throws IOException {
-        if (!Files.exists(path)) {
+        if (!exists(path)) {
             mkdir(path.getParent());
         }
     }

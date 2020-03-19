@@ -7,13 +7,23 @@ EEC的设计初衷是为了解决Apache POI高内存且API臃肿的诟病，EEC�
 
 与传统Excel操作工具不同之处在于EEC并不缓存或只少量缓存数据到内存，写文件时EEC使用分片来处理较大的数据，使用迭代模式读取Excel行内容，当你使用某行数据的时才去解析它们，而不会将整个文件读入到内存。
 
-从BIFF5以后Office就使用SharedString方式保存字符串，这样可以在多个Worksheet间达到共享字符串和压缩文件的目的。POI使用`innerStr`方式写字符串，EEC默认也是使用innerStr方式，你可以使用注解`@ExcelColumn(share = true)`来使用SharedString模式。
+从BIFF5以后Office就使用SharedString方式保存字符串，这样可以在多个Worksheet间达到共享字符串和压缩文件的目的。POI使用`inlineStr`方式写字符串，EEC默认也是使用inlineStr方式，你可以使用注解`@ExcelColumn(share = true)`来使用SharedString模式。
 
 EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
-使用`innerStr`模式的情况下EEC的读写内存可以控制在10MB以下，[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在6MB的情况下完成1000万行x29列数据的读写。
+使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在*6MB*的情况下完成1000万行x29列数据的读写。
 
-EEC采用单线程、高IO设计，多核心并不能提高速度，高主频和一块好SSD能显著提升速度。
+EEC采用单线程、高IO设计，多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
+
+EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
+
+写文件
+
+![eec write 100w](./images/eec_write_100w.png)
+
+读文件
+
+![eec read 100w](./images/eec_read_100w.png)
 
 ## 现状
 
@@ -477,7 +487,7 @@ Version 0.4.2 (2020-03-04)
 1. 修复读poi生成的excel文件内容转对象时值为空的异常
 2. 修复读取某些空worksheet时抛IllegalArgumentException异常
 3. 使用slf4j统一日志接口，不强制用户使用log4j
-4. 字符串值默认使用innerStr方式而非SharedString里从而提升一些写入速度
+4. 字符串值默认使用inlineStr方式而非SharedString里从而提升一些写入速度
 5. 调整压缩等级提升一些压缩速度，最终文件比以前有所增加
 
 Version 0.4.1 (2020-03-03)

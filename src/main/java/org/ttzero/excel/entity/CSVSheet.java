@@ -29,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+import static org.ttzero.excel.util.FileUtil.exists;
+
 /**
  * @author guanquan.wang at 2019-09-26 08:33
  */
@@ -142,7 +144,7 @@ public class CSVSheet extends Sheet {
 
     // Create CSV iterator
     private void init() throws IOException {
-        assert path != null && Files.exists(path);
+        assert path != null && exists(path);
         iterator = CSVUtil.newReader(path).sharedIterator();
     }
 
