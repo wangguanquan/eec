@@ -18,7 +18,6 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.util.StringUtil;
 
@@ -419,14 +418,10 @@ public class ListSheet<T> extends Sheet {
                 }
 
                 ExcelColumn ec = field.getAnnotation(ExcelColumn.class);
-                DisplayName dn = field.getAnnotation(DisplayName.class);
 
                 if (ec != null && isNotEmpty(ec.value())) {
                     list.add(new Column(ec.value(), field.getName(), field.getType())
                         .setShare(ec.share()));
-                } else if (dn != null && isNotEmpty(dn.value())) {
-                    list.add(new Column(dn.value(), field.getName(), field.getType())
-                        .setShare(dn.share()));
                 } else if (method != null) {
                     list.add(new Column(field.getName(), field.getName(), field.getType())
                         .setShare(ec != null && ec.share()));

@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.reader;
 
-import org.ttzero.excel.annotation.DisplayName;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.manager.Const;
@@ -152,22 +151,15 @@ class HeaderRow extends Row {
             }
             // field has display name
             ExcelColumn ec = f.getAnnotation(ExcelColumn.class);
-            DisplayName ano = f.getAnnotation(DisplayName.class);
             if (ec != null && isNotEmpty(ec.value())) {
                 n = check(ec.value(), gs);
                 if (n == -1) {
                     declaredFields[i] = null;
                     continue;
                 }
-            } else if (ano != null && isNotEmpty(ano.value())) {
-                n = check(ano.value(), gs);
-                if (n == -1) {
-                    declaredFields[i] = null;
-                    continue;
-                }
             }
             // Annotation value is null
-            else if (ec != null || ano != null || methods[i] != null) {
+            else if (ec != null || methods[i] != null) {
                 String name = f.getName();
                 n = getIndex(name);
                 if (n == -1 && (n = getIndex(StringUtil.toPascalCase(name))) == -1) {
