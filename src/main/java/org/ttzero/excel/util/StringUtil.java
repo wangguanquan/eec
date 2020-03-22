@@ -138,23 +138,23 @@ public class StringUtil {
         return new String(oldValues, 0, idx);
     }
 
-//    public static String append(String src, String a, int n, int origin) {
-//        StringBuilder buf = new StringBuilder();
-//        // Insert header
-//        if (origin == -1) {
-//            for (; n-- > 0; ) {
-//                buf.append(a);
-//            }
-//            buf.append(src);
-//        } else {
-//            buf.append(src);
-//            for (; n-- > 0; ) {
-//                buf.append(a);
-//            }
-//        }
-//
-//        return buf.toString();
-//    }
+    public static String append(String src, String a, int n, int origin) {
+        StringBuilder buf = new StringBuilder();
+        // Insert header
+        if (origin == -1) {
+            for (; n-- > 0; ) {
+                buf.append(a);
+            }
+            buf.append(src);
+        } else {
+            buf.append(src);
+            for (; n-- > 0; ) {
+                buf.append(a);
+            }
+        }
+
+        return buf.toString();
+    }
 
     /**
      * Wrap value in string array
