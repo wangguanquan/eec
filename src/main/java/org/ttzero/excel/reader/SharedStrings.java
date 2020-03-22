@@ -58,6 +58,7 @@ public class SharedStrings implements AutoCloseable {
     SharedStrings(String[] data) {
         max = data.length;
         offset_forward = 0;
+        status = 1;
         if (max <= page) {
             forward = new String[max];
             System.arraycopy(data, offset_forward, forward, 0, max);
@@ -66,6 +67,7 @@ public class SharedStrings implements AutoCloseable {
             if (max > page << 1) {
                 page = max >> 1;
             }
+            status <<= 1;
             forward = new String[page];
             limit_forward = page;
             System.arraycopy(data, offset_forward, forward, 0, limit_forward);
