@@ -95,6 +95,23 @@ public class SharedStrings implements AutoCloseable {
     }
 
     /**
+     * Constructs a SharedStrings with a {@link IndexSharedStringTable}
+     *
+     * @param sst {@link IndexSharedStringTable}
+     * @param cacheSize the number of word per load
+     * @param hotSize   the number of high frequency word
+     */
+    SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
+        max = sst.size();
+        if (cacheSize > 0) {
+            this.page = cacheSize;
+        }
+        this.hotSize = hotSize;
+        init();
+        // TODO load forward and backward string array
+    }
+
+    /**
      * Storage the new load data
      */
     private String[] forward;
@@ -193,6 +210,14 @@ public class SharedStrings implements AutoCloseable {
         // Get unique count
         max = uniqueCount();
         LOGGER.debug("Size of SharedString: {}", max);
+        //
+        init();
+        escapeBuf = new StringBuilder();
+        return this;
+    }
+
+    /* */
+    private void init() throws IOException {
         // Unknown size or greater than 512
         if (max < 0 || max > page << 1) {
             status <<= 2;
@@ -215,8 +240,6 @@ public class SharedStrings implements AutoCloseable {
         } else {
             forward = new String[max];
         }
-        escapeBuf = new StringBuilder();
-        return this;
     }
 
     /**
