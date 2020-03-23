@@ -17,12 +17,10 @@
 package org.ttzero.excel.entity.e7;
 
 import org.dom4j.Document;
-import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
-import org.dom4j.io.SAXReader;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorkbookWriter;
@@ -48,10 +46,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -223,53 +219,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
 
         // Read app and version from pom
-        try {
-            InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("META-INF/maven/org.ttzero/eec/pom.properties");
-            Properties pom = new Properties();
-            if (is == null) {
-                // Read from target/maven-archiver/pom.properties
-                URL url = getClass().getClassLoader().getResource(".");
-                if (url != null) {
-                    Path targetPath = (FileUtil.isWindows()
-                        ? Paths.get(url.getFile().substring(1))
-                        : Paths.get(url.getFile())).getParent();
-                    // On Mac or Linux
-                    Path pomPath = targetPath.resolve("maven-archiver/pom.properties");
-                    if (exists(pomPath)) {
-                        is = Files.newInputStream(pomPath);
-                        // On windows
-                    } else {
-                        pomPath = targetPath.getParent().resolve("pom.xml");
-                        // load workbook.xml
-                        SAXReader reader = new SAXReader();
-                        Document document;
-                        try {
-                            document = reader.read(Files.newInputStream(pomPath));
-                            Element pomRoot = document.getRootElement();
-                            String application = pomRoot.elementText("groupId") + "." + pomRoot.elementText("artifactId");
-                            app.setApplication(application);
-                            String appVersion = pomRoot.elementText("version");
-                            app.setAppVersion(appVersion);
-                        } catch (DocumentException | IOException e) {
-                            // Nothing
-                        }
-                    }
-                }
-            }
-            if (is != null) {
-                pom.load(is);
-                app.setApplication(pom.getProperty("groupId") + '.' + pom.getProperty("artifactId"));
-                app.setAppVersion(pom.getProperty("version"));
-                // Can't read pom.xml if running as dev on window
-            }
-        } catch (IOException e) {
-            // Nothing
-        }
-        if (StringUtil.isEmpty(app.getAppVersion())) {
-            app.setApplication("org.ttzero.eec");
-            app.setAppVersion("1.0.0");
-        }
+        Properties pom = IWorkbookWriter.pom();
+
+        app.setApplication(pom.getProperty("groupId") + "." + pom.getProperty("artifactId"));
+        app.setAppVersion(pom.getProperty("version"));
 
         int size = workbook.getSize();
 
