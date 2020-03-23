@@ -102,13 +102,15 @@ public class SharedStrings implements AutoCloseable {
      * @param hotSize   the number of high frequency word
      */
     SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
+        this.sst = sst;
         max = sst.size();
         if (cacheSize > 0) {
             this.page = cacheSize;
         }
         this.hotSize = hotSize;
         init();
-        // TODO load forward and backward string array
+        // Load forward
+        limit_forward = sst.get(offset_forward = 0, forward);
     }
 
     /**
@@ -206,7 +208,6 @@ public class SharedStrings implements AutoCloseable {
             return this;
         }
 
-        status = 1;
         // Get unique count
         max = uniqueCount();
         LOGGER.debug("Size of SharedString: {}", max);
@@ -218,6 +219,7 @@ public class SharedStrings implements AutoCloseable {
 
     /* */
     private void init() throws IOException {
+        status = 1;
         // Unknown size or greater than 512
         if (max < 0 || max > page << 1) {
             status <<= 2;
@@ -230,8 +232,10 @@ public class SharedStrings implements AutoCloseable {
             if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
             else hot = FixSizeLRUCache.create();
             // Instance the SharedStringTable
-            sst = new IndexSharedStringTable();
-            sst.setShortSectorSize(9);
+            if (sst == null) {
+                sst = new IndexSharedStringTable();
+                sst.setShortSectorSize(9);
+            }
         }
         else if (max > page) {
             status <<= 1;
