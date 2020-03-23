@@ -37,6 +37,7 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -535,9 +536,13 @@ public class ExcelReader implements AutoCloseable {
      * @param rmSource   remove the source files
      * @param option the reader option.
      * @return the {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
+     * @throws FileNotFoundException if the path not exists or no permission to read
+     * @throws IOException if I/O error occur
      */
     private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource, int option) throws IOException {
+        if (!exists(path)) {
+            throw new FileNotFoundException(path.toString());
+        }
         // Check document type
         ExcelType type = getType(path);
         LOGGER.debug("File type: {}", type);
