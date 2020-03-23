@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
@@ -43,6 +44,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -53,6 +55,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -556,8 +559,15 @@ public class ExcelReader implements AutoCloseable {
                     Class<?> clazz = Class.forName("org.ttzero.excel.reader.BIFF8Reader");
                     Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize);
-                } catch (Exception e) {
+                } catch (ClassNotFoundException e) {
                     throw new ExcelReadException("Only support read Office Open XML file.", e);
+                } catch (NoSuchMethodException | InstantiationException e) {
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("Maybe the eec-e3-support dependency error. Please dependency ["
+                        + pom.getProperty("groupId") + ":" + pom.getProperty("artifactId")
+                        + ":" + pom.getProperty("version") + "]", e.getCause() != null ? e.getCause() : e);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new ExcelReadException("Read excel failed.", e.getCause() != null ? e.getCause() : e);
                 }
                 break;
             default:
