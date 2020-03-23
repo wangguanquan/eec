@@ -345,7 +345,7 @@ public class IndexSharedStringTable extends SharedStringTable {
             int _pos = buffer.position();
             buffer.flip();
             if (buffer.hasRemaining()) {
-                buffer.position((int) (keyIndex - index_size) >> ssst << 3);
+                buffer.position(((int)((keyIndex >> ssst) - (index_size >> 3))) << 3);
                 position = buffer.getLong();
             }
             // Mark status WRITE
