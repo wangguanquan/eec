@@ -354,7 +354,7 @@ public class ExcelReader implements AutoCloseable {
      * @return the information
      */
     public AppInfo getAppInfo() {
-        return appInfo;
+        return appInfo != null ? appInfo : (appInfo = getGeneralInfo(self));
     }
 
     /**
