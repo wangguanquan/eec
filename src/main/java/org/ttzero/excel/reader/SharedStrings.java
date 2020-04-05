@@ -622,6 +622,11 @@ public class SharedStrings implements AutoCloseable {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Count: " + (total <= 0 ? max : total) + "，UniqueCount: " + max;
+    }
+
 }
 
 interface Tester {
