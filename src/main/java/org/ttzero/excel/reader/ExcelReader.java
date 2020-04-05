@@ -342,7 +342,9 @@ public class ExcelReader implements AutoCloseable {
             sst.close();
 
         // Delete temp files
-        FileUtil.rm_rf(self.toFile(), true);
+        if (self != null) {
+            FileUtil.rm_rf(self.toFile(), true);
+        }
         if (temp != null) {
             FileUtil.rm(temp);
         }
