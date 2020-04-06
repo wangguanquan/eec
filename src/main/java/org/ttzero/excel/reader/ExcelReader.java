@@ -124,12 +124,12 @@ public class ExcelReader implements AutoCloseable {
      * These attributes can be combined via `|`,
      * like: VALUE_ONLY|COPY_ON_MERGED
      */
-    private int option;
+    protected int option;
 
     /**
      * A formula flag
      */
-    private boolean hasFormula;
+    protected boolean hasFormula;
 
     /**
      * Constructor Excel Reader
