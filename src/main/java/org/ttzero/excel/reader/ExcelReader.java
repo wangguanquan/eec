@@ -564,14 +564,17 @@ public class ExcelReader implements AutoCloseable {
                     Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class, int.class);
                     er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize, option);
                 } catch (ClassNotFoundException e) {
-                    throw new ExcelReadException("Only support read Office Open XML file.", e);
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("Can not load 'org.ttzero.excel.reader.BIFF8Reader'."
+                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                            + ":" + pom.getProperty("version") + "] to parse excel 97~2003.", e);
                 } catch (NoSuchMethodException | InstantiationException e) {
                     Properties pom = IWorkbookWriter.pom();
-                    throw new ExcelReadException("Maybe the eec-e3-support dependency error. Please dependency ["
-                        + pom.getProperty("groupId") + ":" + pom.getProperty("artifactId")
-                        + ":" + pom.getProperty("version") + "]", e.getCause() != null ? e.getCause() : e);
+                    throw new ExcelReadException("It may be an exception caused by eec-e3-support version error."
+                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                            + ":" + pom.getProperty("version") + "]", e);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new ExcelReadException("Read excel failed.", e.getCause() != null ? e.getCause() : e);
+                    throw new ExcelReadException("Read excel failed.", e);
                 }
                 break;
             default:
