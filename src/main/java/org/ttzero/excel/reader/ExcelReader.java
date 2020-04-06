@@ -67,7 +67,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Excel Reader tools
- *
+ * <p>
  * A streaming operation chain, using cursor control, the cursor
  * will only move forward, so you cannot repeatedly operate the
  * same Sheet stream. If you need to read the data of a worksheet
@@ -80,7 +80,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <blockquote><pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
  *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
- * } catch (IOException e) {}</pre></blockquote>
+ * } catch (IOException e) { }</pre></blockquote>
  *
  * @author guanquan.wang on 2018-09-22
  */
@@ -115,19 +115,21 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * Reader Option
-     * 0: only parse cell value (default)
-     * 2: parse cell value and calc
-     * 4: copy value on merge cells
+     * <ul>
+     * <li>0: only parse cell value (default)</li>
+     * <li>2: parse cell value and calc</li>
+     * <li>4: copy value on merge cells</li>
+     * </ul>
      *
      * These attributes can be combined via `|`,
      * like: VALUE_ONLY|COPY_ON_MERGED
      */
-    int option;
+    private int option;
 
     /**
      * A formula flag
      */
-    boolean hasFormula;
+    private boolean hasFormula;
 
     /**
      * Constructor Excel Reader
@@ -309,7 +311,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * get all sheets
+     * Returns all sheets
      *
      * @return Sheet Array
      */
@@ -318,7 +320,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * size of sheets
+     * Size of sheets
      *
      * @return int
      */
@@ -327,7 +329,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * close stream and delete temp files
+     * Close stream and delete temp files
      *
      * @throws IOException when fail close readers
      */
