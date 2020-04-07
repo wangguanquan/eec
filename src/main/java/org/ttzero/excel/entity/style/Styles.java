@@ -49,11 +49,17 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * {@link Fill}, {@link Border}, {@link Verticals} and
  * {@link Horizontals}, each Worksheet introduced by subscript.
  * <p>
- * EEC uses an Integer value to represent a complete pattern,
- * 0-8 bits are stored in NumFmt, 8-14 bits are stored in Font,
- * 14-20 bits are stored in Fill, 20-26 bits are stored in Border,
- * 26-29 bits are stored in Vertical and 29-32 bits are stored in
- * Horizontal. The Build-In number format does not write into styles.
+ * EEC uses an Integer value to store Extended Format:
+ * <blockquote><pre>
+ *  Bit  | Contents
+ * ------+---------
+ * 0-8   | NumFmt
+ * 8-14  | Font
+ * 14-20 | Fill
+ * 20-26 | Border
+ * 26-29 | Vertical
+ * 29-32 | Horizontal</pre></blockquote>
+ * The Build-In number format does not write into styles.
  *
  * @author guanquan.wang on 2017/10/13.
  */
