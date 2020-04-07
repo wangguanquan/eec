@@ -38,10 +38,11 @@ import org.ttzero.excel.util.StringUtil;
  * If you specify only one code section, it is used for all numbers.
  * If you want to skip a code section and include a code section that follows it,
  * you must include the ending semicolon for the section that you skip.
- * <p>
- * <a href="https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4">https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4</a>
- * <a href="https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US">https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68</a>
- * <a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)">https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)</a>
+ * <ul>
+ * <li><a href="https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4">Create a custom number format</a></li>
+ * <li><a href="https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US">Number format codes</a></li>
+ * <li><a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)">NumberingFormat Class</a></li>
+ * </ul>
  *
  * @author guanquan.wang at 2018-02-06 08:51
  */
