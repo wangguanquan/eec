@@ -53,12 +53,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <blockquote><pre>
  *  Bit  | Contents
  * ------+---------
- * 0-8   | NumFmt
- * 8-14  | Font
- * 14-20 | Fill
- * 20-26 | Border
- * 26-29 | Vertical
- * 29-32 | Horizontal</pre></blockquote>
+ *  0, 8 | NumFmt
+ *  8, 6 | Font
+ * 14, 6 | Fill
+ * 20, 6 | Border
+ * 26, 3 | Vertical
+ * 29, 3 | Horizontal</pre></blockquote>
  * The Build-In number format does not write into styles.
  *
  * @author guanquan.wang on 2017/10/13.
