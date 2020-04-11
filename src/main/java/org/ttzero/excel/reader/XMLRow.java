@@ -452,6 +452,7 @@ class XMLCalcRow extends XMLRow {
     /**
      * Loop parse cell
      */
+    @Override
     void parseCells() {
         int index = 0;
         cursor = searchSpan();

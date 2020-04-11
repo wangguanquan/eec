@@ -37,10 +37,11 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
             this.v = v;
         }
 
+        @Override
         public K getKey() {
             return k;
         }
-
+        @Override
         public V getValue() {
             return v;
         }

@@ -634,10 +634,12 @@ class XMLSheet implements Sheet {
         return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
     }
 
+    @Override
     public XMLCalcSheet asCalcSheet() {
         return !(this instanceof XMLCalcSheet) ? new XMLCalcSheet(this) : (XMLCalcSheet) this;
     }
 
+    @Override
     public XMLMergeSheet asMergeSheet() {
         return !(this instanceof XMLMergeSheet) ? new XMLMergeSheet(this) : (XMLMergeSheet) this;
     }
@@ -692,6 +694,7 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         return this;
     }
 
+    @Override
     Row createHeader(char[] cb, int start, int n) {
         return new XMLCalcRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, n);
     }
@@ -743,6 +746,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
      * @return Sheet
      * @throws IOException if io error occur
      */
+    @Override
     public XMLMergeSheet load() throws IOException {
         super.load();
 
@@ -760,6 +764,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     /*
     Parse `mergeCells` tag
      */
+    @Override
     void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block) throws IOException {
         // Find mergeCells tag
         int limit = charBuffer.limit();
