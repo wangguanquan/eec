@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
+import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 
 /**
@@ -150,7 +151,7 @@ interface Grid {
             if (!test(r, cell.i)) return;
 
             Scanner.Entry e = scanner.get(r, cell.i);
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
@@ -232,7 +233,7 @@ interface Grid {
             if (!range(r, cell.i)) return;
             Cell c = index.get(((long) r) << 16 | cell.i);
 
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(c);
             }
@@ -281,7 +282,7 @@ interface Grid {
             Scanner.Entry e = scanner.get(r, cell.i);
             if (e == null) return;
 
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
