@@ -63,6 +63,7 @@ import java.util.stream.StreamSupport;
 
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.util.FileUtil.exists;
+import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -689,6 +690,7 @@ public class ExcelReader implements AutoCloseable {
             Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
             Class<?> type = f.getType();
             String v = root.elementText(new QName(f.getName(), namespace));
+            if (isEmpty(v)) continue;
             if (type == String.class) {
                 try {
                     f.set(core, v);
