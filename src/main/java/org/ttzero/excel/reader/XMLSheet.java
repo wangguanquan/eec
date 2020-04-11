@@ -291,6 +291,10 @@ class XMLSheet implements Sheet {
         if (!eof && dimension == null) {
             parseDimension();
         }
+        // Create a empty worksheet dimension
+        if (dimension == null) {
+            dimension = new Dimension(1, (short) 1, 0, (short) 0);
+        }
 
         return this;
     }
