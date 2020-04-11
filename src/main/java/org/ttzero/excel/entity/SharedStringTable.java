@@ -18,6 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.util.FileUtil;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -35,7 +36,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 /**
  * @author guanquan.wang at 2019-05-10 20:04
  */
-public class SharedStringTable implements AutoCloseable, Iterable<String> {
+public class SharedStringTable implements Closeable, Iterable<String> {
     /**
      * The temp path
      */

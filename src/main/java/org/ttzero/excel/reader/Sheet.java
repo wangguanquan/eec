@@ -21,6 +21,7 @@ import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -45,7 +46,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 /**
  * @author guanquan.wang at 2019-04-17 11:36
  */
-public interface Sheet extends AutoCloseable {
+public interface Sheet extends Closeable {
 
     /**
      * The worksheet name

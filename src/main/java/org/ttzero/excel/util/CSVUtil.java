@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -332,7 +333,7 @@ public class CSVUtil {
      *
      * @since 1.8
      */
-    public static class Reader implements AutoCloseable {
+    public static class Reader implements Closeable {
 
         private RowsIterator iterator;
         private Path path;
@@ -502,7 +503,7 @@ public class CSVUtil {
     /**
      * Rows iterator
      */
-    public static class RowsIterator implements AutoCloseable, Iterator<String[]> {
+    public static class RowsIterator implements Closeable, Iterator<String[]> {
         private int column;
         private final char comma;
         private BufferedReader reader;
@@ -948,7 +949,7 @@ public class CSVUtil {
      *
      * @since 1.8
      */
-    public static class Writer implements AutoCloseable {
+    public static class Writer implements Closeable {
 
         private BufferedWriter writer;
         // Comma separator character, default ','

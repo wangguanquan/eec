@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +46,7 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
  *
  * @author guanquan.wang at 2018-09-27 14:28
  */
-public class SharedStrings implements AutoCloseable {
+public class SharedStrings implements Closeable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Path sstPath;
 

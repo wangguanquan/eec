@@ -38,6 +38,7 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
+import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,7 +86,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *
  * @author guanquan.wang on 2018-09-22
  */
-public class ExcelReader implements AutoCloseable {
+public class ExcelReader implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
     /**
