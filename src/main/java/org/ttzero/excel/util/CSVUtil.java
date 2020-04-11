@@ -62,16 +62,16 @@ import static org.ttzero.excel.util.FileUtil.mkdir;
  * <p>
  * RFC 4180 formalized CSV. It defines the MIME type "text/csv", and CSV files that follow its
  * rules should be very widely portable. Among its requirements:
- * <p>
- * 1. MS-DOS-style lines that end with (CR/LF) characters (optional for the last line).
- * 2. An optional header record (there is no sure way to detect whether it is present,
- * so care is required when importing).
- * 3. Each record "should" contain the same number of comma-separated fields.
- * 4. Any field may be quoted (with double quotes).
- * 5. Fields containing a line-break, double-quote or commas should be quoted. (If they are not,
- * the file will likely be impossible to process correctly).
- * 6. A (double) quote character in a field must be represented by two (double) quote characters.
- *
+ * <ul>
+ * <li>MS-DOS-style lines that end with (CR/LF) characters (optional for the last line).</li>
+ * <li>An optional header record (there is no sure way to detect whether it is present,
+ * so care is required when importing).</li>
+ * <li>Each record "should" contain the same number of comma-separated fields.</li>
+ * <li>Any field may be quoted (with double quotes).</li>
+ * <li>Fields containing a line-break, double-quote or commas should be quoted. (If they are not,
+ * the file will likely be impossible to process correctly).</li>
+ * <li>A (double) quote character in a field must be represented by two (double) quote characters.</li>
+ * </ul>
  * @author guanquan.wang at 2019-02-12 17:27
  */
 public class CSVUtil {
