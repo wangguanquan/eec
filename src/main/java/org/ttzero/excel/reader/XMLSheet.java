@@ -486,8 +486,8 @@ class XMLSheet implements Sheet {
      */
     void parseDimension() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long fileSize = Files.size(path);
-            int block = (int) Math.min(1 << 11, fileSize);
+            long position = Files.size(path);
+            int block = (int) Math.min(1 << 11, position);
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
             int left_size = 0, i;
@@ -495,10 +495,10 @@ class XMLSheet implements Sheet {
             CharBuffer charBuffer;
             boolean eof;
             for (; ;) {
-                channel.position(fileSize - block + left_size);
+                position -= block + left_size;
+                channel.position(Math.max(0, position));
                 channel.read(buffer);
                 eof = buffer.limit() < block;
-                fileSize -= buffer.limit();
                 if (left_size > 0) {
                     buffer.limit(block);
                     buffer.put(left, 0, left_size);
@@ -531,7 +531,7 @@ class XMLSheet implements Sheet {
                 }
                 // Not Found
                 if (i < c) {
-                    if (eof || (eof = fileSize <= 0)) break;
+                    if (eof || (eof = position <= 0)) break;
                     for (; i < limit && charBuffer.get(i) != '>'; i++) ;
                     i++;
                     if (i < limit - 1) {
