@@ -477,8 +477,11 @@ class XMLCalcRow extends XMLRow {
      */
     @Override
     void parseCellValue(Cell cell) {
-        // Parse calc
-        parseCalcFunc(cell);
+        // If cell has formula
+        if (cell.f) {
+            // Parse calc
+            parseCalcFunc(cell);
+        }
 
         // Parse value
         super.parseCellValue(cell);
@@ -490,7 +493,13 @@ class XMLCalcRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     private void parseCalcFunc(Cell cell) {
-        int a = getF(cell);
+        int _cursor = cursor, a = getF(cell);
+
+        // Tag <f> Not Found
+        if (a == cursor) {
+            cursor = _cursor;
+            return;
+        }
         // Inner text
         if (a < cursor) {
             cell.fv = unescape(buf, cb, a, cursor);
