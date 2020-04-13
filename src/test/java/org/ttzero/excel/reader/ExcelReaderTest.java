@@ -383,18 +383,11 @@ public class ExcelReaderTest {
 
 
     @Test public void testMergeExcel() {
-//        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-////            reader.sheets().flatMap(s -> {
-////                println("----------------" + s.getName() + "----------------");
-////                println("dimension: " + s.getDimension());
-////                return s.rows();
-////            }).forEach(Print::println);
-//            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-        testFormulaReader(testResourceRoot().resolve("formula.xlsx"));
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
+            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Ignore
