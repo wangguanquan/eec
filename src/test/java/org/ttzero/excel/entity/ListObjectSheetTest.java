@@ -607,6 +607,73 @@ public class ListObjectSheetTest extends WorkbookTest{
         public LocalTime getLtv() {
             return ltv;
         }
+
+        public void setBv(boolean bv) {
+            this.bv = bv;
+        }
+
+        public void setCv(char cv) {
+            this.cv = cv;
+        }
+
+        public void setSv(short sv) {
+            this.sv = sv;
+        }
+
+        public void setNv(int nv) {
+            this.nv = nv;
+        }
+
+        public void setLv(long lv) {
+            this.lv = lv;
+        }
+
+        public void setFv(float fv) {
+            this.fv = fv;
+        }
+
+        public void setDv(double dv) {
+            this.dv = dv;
+        }
+
+        public void setS(String s) {
+            this.s = s;
+        }
+
+        public void setMv(BigDecimal mv) {
+            this.mv = mv;
+        }
+
+        public void setAv(Date av) {
+            this.av = av;
+        }
+
+        public void setIv(Timestamp iv) {
+            this.iv = iv;
+        }
+
+        public void setTv(Time tv) {
+            this.tv = tv;
+        }
+
+        public void setLdv(LocalDate ldv) {
+            this.ldv = ldv;
+        }
+
+        public void setLdtv(LocalDateTime ldtv) {
+            this.ldtv = ldtv;
+        }
+
+        public void setLtv(LocalTime ltv) {
+            this.ltv = ltv;
+        }
+
+        @Override
+        public String toString() {
+            return "" + bv + '|' + cv + '|' + sv + '|' + nv + '|' + lv
+                + '|' + fv + '|' + dv + '|' + s + '|' + mv + '|' + av
+                + '|' + tv + '|' + ldv + '|' + ldtv + '|' + ltv;
+        }
     }
 
     /**
@@ -779,6 +846,73 @@ public class ListObjectSheetTest extends WorkbookTest{
 
         public LocalTime getLtv() {
             return ltv;
+        }
+
+        public void setBv(Boolean bv) {
+            this.bv = bv;
+        }
+
+        public void setCv(Character cv) {
+            this.cv = cv;
+        }
+
+        public void setSv(Short sv) {
+            this.sv = sv;
+        }
+
+        public void setNv(Integer nv) {
+            this.nv = nv;
+        }
+
+        public void setLv(Long lv) {
+            this.lv = lv;
+        }
+
+        public void setFv(Float fv) {
+            this.fv = fv;
+        }
+
+        public void setDv(Double dv) {
+            this.dv = dv;
+        }
+
+        public void setS(String s) {
+            this.s = s;
+        }
+
+        public void setMv(BigDecimal mv) {
+            this.mv = mv;
+        }
+
+        public void setAv(Date av) {
+            this.av = av;
+        }
+
+        public void setIv(Timestamp iv) {
+            this.iv = iv;
+        }
+
+        public void setTv(Time tv) {
+            this.tv = tv;
+        }
+
+        public void setLdv(LocalDate ldv) {
+            this.ldv = ldv;
+        }
+
+        public void setLdtv(LocalDateTime ldtv) {
+            this.ldtv = ldtv;
+        }
+
+        public void setLtv(LocalTime ltv) {
+            this.ltv = ltv;
+        }
+
+        @Override
+        public String toString() {
+            return "" + bv + '|' + cv + '|' + sv + '|' + nv + '|' + lv
+                + '|' + fv + '|' + dv + '|' + s + '|' + mv + '|' + av
+                + '|' + tv + '|' + ldv + '|' + ldtv + '|' + ltv;
         }
     }
 
