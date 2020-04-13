@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
@@ -395,6 +396,26 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
             long n = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(LargeData.class)).count();
             assert n == 500000;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testAllType() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
+            reader.sheets().flatMap(Sheet::dataRows)
+                .map(row -> row.too(ListObjectSheetTest.AllType.class))
+                .forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testBoxAllType() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
+            reader.sheets().flatMap(Sheet::dataRows)
+                .map(row -> row.too(ListObjectSheetTest.BoxAllType.class))
+                .forEach(Print::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
