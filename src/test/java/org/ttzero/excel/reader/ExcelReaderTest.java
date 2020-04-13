@@ -22,10 +22,10 @@ import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.WorkbookTest;
-import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -42,8 +42,8 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
+import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -61,17 +61,29 @@ public class ExcelReaderTest {
     }
 
     @Test public void testReader() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            assert reader.getType() == ExcelType.XLSX;
+        File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
+        if (files != null) {
+            for (File file : files) {
+                testReader(file.toPath());
+            }
+        }
+    }
 
-            AppInfo appInfo = reader.getAppInfo();
-            assert "对象数组测试".equals(appInfo.getTitle());
-            assert "guanquan.wang".equals(appInfo.getCreator());
-            println(appInfo);
+    @Test public void testMergedReader() {
+        File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
+        if (files != null) {
+            for (File file : files) {
+                testReader(file.toPath(), COPY_ON_MERGED);
+            }
+        }
+    }
 
-            reader.sheet(0).rows().forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
+    @Test public void testFormulaReader() {
+        File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
+        if (files != null) {
+            for (File file : files) {
+                testFormulaReader(file.toPath());
+            }
         }
     }
 
@@ -199,7 +211,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void test() {
+    @Test public void test_81() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             List<Customer> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Customer.class)).collect(Collectors.toList());
 
@@ -235,19 +247,6 @@ public class ExcelReaderTest {
 
     @Test public void testFormula() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-            // Read formula
-            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
-                for (int i = row.fc; i < row.lc; i++) {
-                    if (row.hasFormula(i)) {
-                        print(row.getFormula(i));
-                        println('|');
-                    }
-                }
-            });
-
-            // Reset
-            reader.sheets().forEach(Sheet::reset);
-
             // Read value
             reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
 
@@ -273,21 +272,6 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testFormulaOption() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"), VALUE_AND_CALC)) {
-            // Read formula
-            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
-                for (int i = row.fc; i < row.lc; i++) {
-                    if (row.hasFormula(i)) {
-                        print(row.getFormula(i));
-                        println('|');
-                    }
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Test public void testSearch() {
         long[] array = { 131075L, 327683L };
@@ -343,7 +327,7 @@ public class ExcelReaderTest {
                 sheet.bind(Entry.class);
                 println(sheet.getHeader());
                 return sheet.dataRows();
-            }).forEach(Print::println);
+            }).forEach(row -> println((Entry) row.get()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -384,25 +368,14 @@ public class ExcelReaderTest {
         assert "B2:B8".equals(values[5]);
     }
 
-    @Test public void testMergeOption() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"), COPY_ON_MERGED)) {
-            reader.sheets().flatMap(s -> {
-                println("----------------" + s.getName() + "----------------");
-                println("dimension: " + s.getDimension());
-                return s.rows();
-            }).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Test public void testMergeFunc() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            reader.copyOnMergeCells().sheets().flatMap(s -> {
-                println("----------------" + s.getName() + "----------------");
-                println("dimension: " + s.getDimension());
-                return s.rows();
-            }).forEach(Print::println);
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+//            reader.copyOnMergeCells().sheets().flatMap(s -> {
+//                println("----------------" + s.getName() + "----------------");
+//                println("dimension: " + s.getDimension());
+//                return s.rows();
+//            }).forEach(Print::println);
+            reader.copyOnMergeCells().sheets().flatMap(Sheet::rows).forEach(Print::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -410,25 +383,18 @@ public class ExcelReaderTest {
 
 
     @Test public void testMergeExcel() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            reader.sheets().flatMap(s -> {
-                println("----------------" + s.getName() + "----------------");
-                println("dimension: " + s.getDimension());
-                return s.rows();
-            }).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+////            reader.sheets().flatMap(s -> {
+////                println("----------------" + s.getName() + "----------------");
+////                println("dimension: " + s.getDimension());
+////                return s.rows();
+////            }).forEach(Print::println);
+//            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
-    // Issue #99
-    @Test public void testInlineString() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("inner string.xlsx"))) {
-            long n = reader.sheets().flatMap(Sheet::rows).filter(row -> isNotEmpty(row.getString(0))).count();
-            assert n == 11;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        testFormulaReader(testResourceRoot().resolve("formula.xlsx"));
     }
 
     @Ignore
@@ -441,9 +407,40 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testReadAllType() {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+    private void testReader(Path path) {
+        testReader(path, VALUE_ONLY);
+    }
+
+    private void testReader(Path path, int option) {
+        println("----------" + path.getFileName() + "----------");
+        try (ExcelReader reader = ExcelReader.read(path, option)) {
+            println(reader.getAppInfo());
+
+            reader.sheets()
+                .peek(sheet -> println("--------" + sheet.getName() + "--------" + sheet.getDimension()))
+                .flatMap(Sheet::rows)
+                .forEach(row -> println(row.getRowNumber() + "|: " + row.toString()));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void testFormulaReader(Path path) {
+        println("----------" + path.getFileName() + "----------");
+        try (ExcelReader reader = ExcelReader.read(path, VALUE_AND_CALC)) {
+            // Read formula
+            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
+                for (int i = row.fc; i < row.lc; i++) {
+                    if (row.hasFormula(i)) {
+                        print(new Dimension(row.index, (short) (i + 1), 0, (short) 0));
+                        print(": ");
+                        print(row.getFormula(i));
+                        println('|');
+                    }
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
