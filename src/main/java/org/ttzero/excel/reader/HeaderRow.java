@@ -28,6 +28,10 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -358,25 +362,50 @@ class HeaderRow extends Row {
         int c = columns[i];
         if (fieldClazz[i] == String.class) {
             fields[i].set(t, row.getString(c));
-        } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
+        }
+        else if (fieldClazz[i] == Integer.class || fieldClazz[i] == int.class) {
             fields[i].set(t, row.getInt(c));
-        } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
+        }
+        else if (fieldClazz[i] == Long.class || fieldClazz[i] == long.class) {
             fields[i].set(t, row.getLong(c));
-        } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
+        }
+        else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
             fields[i].set(t, row.getDate(c));
-        } else if (fieldClazz[i] == java.sql.Timestamp.class) {
+        }
+        else if (fieldClazz[i] == java.sql.Timestamp.class) {
             fields[i].set(t, row.getTimestamp(c));
-        } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
+        }
+        else if (fieldClazz[i] == Double.class || fieldClazz[i] == double.class) {
             fields[i].set(t, row.getDouble(c));
-        } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
+        }
+        else if (fieldClazz[i] == Float.class || fieldClazz[i] == float.class) {
             fields[i].set(t, row.getFloat(c));
-        } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
+        }
+        else if (fieldClazz[i] == Boolean.class || fieldClazz[i] == boolean.class) {
             fields[i].set(t, row.getBoolean(c));
-        } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
+        }
+        else if (fieldClazz[i] == BigDecimal.class) {
+            fields[i].set(t, row.getDecimal(c));
+        }
+        else if (fieldClazz[i] == java.sql.Time.class) {
+            fields[i].set(t, row.getTime(c));
+        }
+        else if (fieldClazz[i] == LocalDateTime.class) {
+            fields[i].set(t, row.getLocalDateTime(c));
+        }
+        else if (fieldClazz[i] == LocalDate.class) {
+            fields[i].set(t, row.getLocalDate(c));
+        }
+        else if (fieldClazz[i] == LocalTime.class) {
+            fields[i].set(t, row.getLocalTime(c));
+        }
+        else if (fieldClazz[i] == Character.class || fieldClazz[i] == char.class) {
             fields[i].set(t, row.getChar(c));
-        } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
+        }
+        else if (fieldClazz[i] == Byte.class || fieldClazz[i] == byte.class) {
             fields[i].set(t, row.getByte(c));
-        } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
+        }
+        else if (fieldClazz[i] == Short.class || fieldClazz[i] == short.class) {
             fields[i].set(t, row.getShort(c));
         }
     }
@@ -385,25 +414,50 @@ class HeaderRow extends Row {
         int c = columns[i];
         if (fieldClazz[i] == String.class) {
             methods[i].invoke(t, row.getString(c));
-        } else if (fieldClazz[i] == int.class || fieldClazz[i] == Integer.class) {
+        }
+        else if (fieldClazz[i] == Integer.class || fieldClazz[i] == int.class) {
             methods[i].invoke(t, row.getInt(c));
-        } else if (fieldClazz[i] == long.class || fieldClazz[i] == Long.class) {
+        }
+        else if (fieldClazz[i] == Long.class || fieldClazz[i] == long.class) {
             methods[i].invoke(t, row.getLong(c));
-        } else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
+        }
+        else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
             methods[i].invoke(t, row.getDate(c));
-        } else if (fieldClazz[i] == java.sql.Timestamp.class) {
+        }
+        else if (fieldClazz[i] == java.sql.Timestamp.class) {
             methods[i].invoke(t, row.getTimestamp(c));
-        } else if (fieldClazz[i] == double.class || fieldClazz[i] == Double.class) {
+        }
+        else if (fieldClazz[i] == Double.class || fieldClazz[i] == double.class) {
             methods[i].invoke(t, row.getDouble(c));
-        } else if (fieldClazz[i] == float.class || fieldClazz[i] == Float.class) {
+        }
+        else if (fieldClazz[i] == Float.class || fieldClazz[i] == float.class) {
             methods[i].invoke(t, row.getFloat(c));
-        } else if (fieldClazz[i] == boolean.class || fieldClazz[i] == Boolean.class) {
+        }
+        else if (fieldClazz[i] == Boolean.class || fieldClazz[i] == boolean.class) {
             methods[i].invoke(t, row.getBoolean(c));
-        } else if (fieldClazz[i] == char.class || fieldClazz[i] == Character.class) {
+        }
+        else if (fieldClazz[i] == BigDecimal.class) {
+            methods[i].invoke(t, row.getDecimal(c));
+        }
+        else if (fieldClazz[i] == java.sql.Time.class) {
+            methods[i].invoke(t, row.getTime(c));
+        }
+        else if (fieldClazz[i] == LocalDateTime.class) {
+            methods[i].invoke(t, row.getLocalDateTime(c));
+        }
+        else if (fieldClazz[i] == LocalDate.class) {
+            methods[i].invoke(t, row.getLocalDate(c));
+        }
+        else if (fieldClazz[i] == LocalTime.class) {
+            methods[i].invoke(t, row.getLocalTime(c));
+        }
+        else if (fieldClazz[i] == Character.class || fieldClazz[i] == char.class) {
             methods[i].invoke(t, row.getChar(c));
-        } else if (fieldClazz[i] == byte.class || fieldClazz[i] == Byte.class) {
+        }
+        else if (fieldClazz[i] == Byte.class || fieldClazz[i] == byte.class) {
             methods[i].invoke(t, row.getByte(c));
-        } else if (fieldClazz[i] == short.class || fieldClazz[i] == Short.class) {
+        }
+        else if (fieldClazz[i] == Short.class || fieldClazz[i] == short.class) {
             methods[i].invoke(t, row.getShort(c));
         }
     }
