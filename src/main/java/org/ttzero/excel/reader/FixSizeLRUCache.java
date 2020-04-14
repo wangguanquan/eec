@@ -92,6 +92,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
 
     private FixSizeLRUCache(int limit) {
         this.limit = limit;
+        // Create double limit size
         table = new HashMap<>(Math.round(limit * 1.25f));
     }
 
