@@ -16,13 +16,18 @@
 
 package org.ttzero.excel.reader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
+import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 
 /**
@@ -146,7 +151,7 @@ interface Grid {
             if (!test(r, cell.i)) return;
 
             Scanner.Entry e = scanner.get(r, cell.i);
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
@@ -228,7 +233,7 @@ interface Grid {
             if (!range(r, cell.i)) return;
             Cell c = index.get(((long) r) << 16 | cell.i);
 
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(c);
             }
@@ -277,7 +282,7 @@ interface Grid {
             Scanner.Entry e = scanner.get(r, cell.i);
             if (e == null) return;
 
-            if (cell.t == EMPTY_TAG) {
+            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
@@ -378,6 +383,7 @@ interface Grid {
             size++;
         }
 
+        @Override
         public Entry get(int r, int c) {
             Node val = null;
             if (head == null) return null;
@@ -453,19 +459,35 @@ interface Grid {
 }
 
 final class GridFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GridFactory.class);
     private GridFactory() { }
-    static Grid create(Dimension dim) {
-        int r = dim.lastRow - dim.firstRow + 1
-            , c = dim.lastColumn - dim.firstColumn + 1;
+    static Grid create(List<Dimension> mergeCells) {
+        Dimension dim = mergeCells.get(0);
+        int fr = dim.firstRow, lr = dim.lastRow;
+        short fc = dim.firstColumn, lc = dim.lastColumn;
+        int n = (lr - fr + 1) * (lc - fc + 1);
+        for (int j = 1, len = mergeCells.size(); j < len; j++) {
+            dim = mergeCells.get(j);
+            n += (dim.lastRow - dim.firstRow + 1) * (dim.lastColumn - dim.firstColumn + 1);
+            if (fr > dim.firstRow)    fr = dim.firstRow;
+            if (lr < dim.lastRow)     lr = dim.lastRow;
+            if (fc > dim.firstColumn) fc = dim.firstColumn;
+            if (lc < dim.lastColumn)  lc = dim.lastColumn;
+        }
 
-        return create(dim, r * c);
-    }
+        Dimension range = new Dimension(fr, fc, lr, lc);
+        int r = lr - fr + 1
+            , c = lc - fc + 1;
 
-    static Grid create(Dimension dim, int n) {
-        int r = dim.lastRow - dim.firstRow + 1
-            , c = dim.lastColumn - dim.firstColumn + 1;
+        n = r * c;
 
-        return c <= 64 && r < 1 << 14 ? new Grid.FastGrid(dim)
-            : n > 1 << 10 ? new Grid.FractureGrid(dim) : new Grid.IndexGrid(dim, n);
+        Grid grid = c <= 64 && r < 1 << 14 ? new Grid.FastGrid(range)
+            : n > 1 << 10 ? new Grid.FractureGrid(range) : new Grid.IndexGrid(range, n);
+
+        for (Dimension d : mergeCells) {
+            grid.mark(d);
+            LOGGER.debug("merged cells range {}", d);
+        }
+        return grid;
     }
 }

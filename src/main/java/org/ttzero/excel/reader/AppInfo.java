@@ -19,9 +19,11 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.util.DateUtil;
-import org.ttzero.excel.util.StringUtil;
+import org.ttzero.excel.util.ReflectUtil;
 
+import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.StringJoiner;
 
 /**
  * The file basic information
@@ -165,20 +167,22 @@ public class AppInfo {
 
     @Override
     public String toString() {
-        return "Application: " + getApplication()
-            + System.lineSeparator() + "Company: " + getCompany()
-            + System.lineSeparator() + "AppVersion: " + getAppVersion()
-            + System.lineSeparator() + "Title: " + getTitle()
-            + System.lineSeparator() + "Subject: " + getSubject()
-            + System.lineSeparator() + "Creator: " + getCreator()
-            + System.lineSeparator() + "Description: " + getDescription()
-            + System.lineSeparator() + "Keywords: " + getKeywords()
-            + System.lineSeparator() + "LastModifiedBy: " + getLastModifiedBy()
-            + System.lineSeparator() + "Version: " + getVersion()
-            + System.lineSeparator() + "Revision: " + getRevision()
-            + System.lineSeparator() + "Category: " + getCategory()
-            + System.lineSeparator() + "Created: " + (getCreated() != null ? DateUtil.toString(getCreated()) : StringUtil.EMPTY)
-            + System.lineSeparator() + "Modified: " + (getModified() != null ? DateUtil.toString(getModified()) : StringUtil.EMPTY)
-            ;
+        StringJoiner joiner = new StringJoiner(System.lineSeparator());
+        try {
+            Method[] methods = ReflectUtil.listReadMethods(getClass(),
+                method -> method.getName().startsWith("get")
+                    || method.getReturnType() == boolean.class && method.getName().startsWith("is"));
+            for (Method method : methods) {
+                Object o = method.invoke(this);
+                if (o != null) {
+                    joiner.add(method.getReturnType() == boolean.class ? method.getName().substring(2)
+                        : method.getName().substring(3) + ": "
+                        + (o instanceof Date ? DateUtil.toString((Date)o) : o.toString()));
+                }
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        return joiner.toString();
     }
 }

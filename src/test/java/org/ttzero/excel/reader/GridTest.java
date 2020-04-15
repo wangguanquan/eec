@@ -18,6 +18,11 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
 
@@ -26,35 +31,20 @@ import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
  */
 public class GridTest {
     @Test public void testGridType() {
-        Grid grid = GridFactory.create(Dimension.of("A1:BM10"));
+        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:BM10")));
 
         assert grid instanceof Grid.IndexGrid;
 
-        grid = GridFactory.create(Dimension.of("A1:B16383"));
+        grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:B16383")));
         assert grid instanceof Grid.FastGrid;
 
-        grid = GridFactory.create(Dimension.of("A1:B16384"));
+        grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:B16384")));
         assert grid instanceof Grid.FractureGrid;
 
     }
 
     @Test public void testGrid1() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 1));
-
-        grid.mark(new Dimension(3, (short) 1, 7, (short) 1));
-
-        println(grid);
-
-        assert !grid.test(2, 1);
-        assert grid.test(3, 1);
-        assert grid.test(7, 1);
-        assert !grid.test(8, 1);
-    }
-
-    @Test public void testGrid2() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 2));
-
-        grid.mark(new Dimension(3, (short) 1, 7, (short) 1));
+        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 1, 7, (short) 1)));
 
         println(grid);
 
@@ -65,9 +55,7 @@ public class GridTest {
     }
 
     @Test public void testGrid4() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 3));
-
-        grid.mark(new Dimension(3, (short) 1, 7, (short) 3));
+        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 1, 7, (short) 3)));
 
         println(grid);
 
@@ -80,38 +68,37 @@ public class GridTest {
     }
 
     @Test public void testGrid8() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 8));
-
-        grid.mark(new Dimension(3, (short) 4, 7, (short) 4));
+        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 4, 7, (short) 4)));
 
         println(grid);
     }
 
     @Test public void testGrid8_2() {
-        Grid grid = GridFactory.create(Dimension.of("A1:H71"));
+        List<Dimension> list = new ArrayList<>();
+        list.add(Dimension.of("C10:D10"));
+        list.add(Dimension.of("C5:D5"));
+        list.add(Dimension.of("C6:D6"));
+        list.add(Dimension.of("C7:D7"));
+        list.add(Dimension.of("C8:D8"));
+        list.add(Dimension.of("C9:D9"));
+        list.add(Dimension.of("A39:A71"));
+        list.add(Dimension.of("D1:E1"));
+        list.add(Dimension.of("A1:A26"));
+        list.add(Dimension.of("A27:A38"));
+        list.add(Dimension.of("E20:H20"));
+        list.add(Dimension.of("E21:H21"));
+        list.add(Dimension.of("E22:H22"));
+        list.add(Dimension.of("E23:H23"));
+        list.add(Dimension.of("E24:H24"));
+        list.add(Dimension.of("E25:H25"));
+        list.add(Dimension.of("C11:D11"));
+        list.add(Dimension.of("C12:D12"));
+        list.add(Dimension.of("C13:D13"));
+        list.add(Dimension.of("C14:D14"));
+        list.add(Dimension.of("C15:D15"));
+        list.add(Dimension.of("C16:D16"));
 
-        grid.mark(Dimension.of("C10:D10"));
-        grid.mark(Dimension.of("C5:D5"));
-        grid.mark(Dimension.of("C6:D6"));
-        grid.mark(Dimension.of("C7:D7"));
-        grid.mark(Dimension.of("C8:D8"));
-        grid.mark(Dimension.of("C9:D9"));
-        grid.mark(Dimension.of("A39:A71"));
-        grid.mark(Dimension.of("D1:E1"));
-        grid.mark(Dimension.of("A1:A26"));
-        grid.mark(Dimension.of("A27:A38"));
-        grid.mark(Dimension.of("E20:H20"));
-        grid.mark(Dimension.of("E21:H21"));
-        grid.mark(Dimension.of("E22:H22"));
-        grid.mark(Dimension.of("E23:H23"));
-        grid.mark(Dimension.of("E24:H24"));
-        grid.mark(Dimension.of("E25:H25"));
-        grid.mark(Dimension.of("C11:D11"));
-        grid.mark(Dimension.of("C12:D12"));
-        grid.mark(Dimension.of("C13:D13"));
-        grid.mark(Dimension.of("C14:D14"));
-        grid.mark(Dimension.of("C15:D15"));
-        grid.mark(Dimension.of("C16:D16"));
+        Grid grid = GridFactory.create(list);
 
         assert grid.toString().equals("FastGrid\n" +
             "00011001\n00000001\n00000001\n00000001\n" +
@@ -135,19 +122,17 @@ public class GridTest {
     }
 
     @Test public void testGrid16() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 10));
-
-        grid.mark(new Dimension(4, (short) 5, 9, (short) 7));
+        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(4, (short) 5, 9, (short) 7)));
 
         println(grid);
     }
 
     @Test public void testGrid162() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 10));
+        List<Dimension> list = Arrays.asList(new Dimension(2, (short) 2, 4, (short) 6)
+            , new Dimension(3, (short) 7, 5, (short) 9)
+            , new Dimension(7, (short) 10, 10, (short) 10));
+        Grid grid = GridFactory.create(list);
 
-        grid.mark(new Dimension(2, (short) 2, 4, (short) 6));
-        grid.mark(new Dimension(3, (short) 7, 5, (short) 9));
-        grid.mark(new Dimension(7, (short) 10, 10, (short) 10));
 
         println(grid);
 
@@ -158,17 +143,13 @@ public class GridTest {
     }
 
     @Test public void testGrid32() {
-        Grid grid = GridFactory.create(Dimension.of("A1:AF10"));
-
-        grid.mark(Dimension.of("G3:AA9"));
+        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("G3:AA9")));
 
         println(grid);
     }
 
     @Test public void testGrid64() {
-        Grid grid = GridFactory.create(new Dimension(1, (short) 1, 10, (short) 54));
-
-        grid.mark(new Dimension(2, (short) 2, 4, (short) 6));
+        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(2, (short) 2, 4, (short) 6)));
 
         println(grid);
     }
@@ -210,9 +191,7 @@ public class GridTest {
     }
 
     @Test public void testIndexGrid() {
-        Grid grid = GridFactory.create(Dimension.of("A1:BM10"));
-
-        grid.mark(Dimension.of("B2:E2"));
+        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("B2:E2")));
 
         assert !grid.test(1, 1);
         assert grid.test(2, 2);
@@ -222,9 +201,7 @@ public class GridTest {
     }
 
     @Test public void testFractureGrid() {
-        Grid grid = GridFactory.create(Dimension.of("A1:E16384"));
-
-        grid.mark(Dimension.of("B1:C3"));
+        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("B1:C3")));
 
         assert !grid.test(1, 1);
         assert grid.test(1, 2);

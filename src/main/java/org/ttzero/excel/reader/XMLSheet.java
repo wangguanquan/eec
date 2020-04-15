@@ -291,6 +291,10 @@ class XMLSheet implements Sheet {
         if (!eof && dimension == null) {
             parseDimension();
         }
+        // Create a empty worksheet dimension
+        if (dimension == null) {
+            dimension = new Dimension(1, (short) 1, 0, (short) 0);
+        }
 
         return this;
     }
@@ -634,10 +638,12 @@ class XMLSheet implements Sheet {
         return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
     }
 
+    @Override
     public XMLCalcSheet asCalcSheet() {
         return !(this instanceof XMLCalcSheet) ? new XMLCalcSheet(this) : (XMLCalcSheet) this;
     }
 
+    @Override
     public XMLMergeSheet asMergeSheet() {
         return !(this instanceof XMLMergeSheet) ? new XMLMergeSheet(this) : (XMLMergeSheet) this;
     }
@@ -692,6 +698,7 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         return this;
     }
 
+    @Override
     Row createHeader(char[] cb, int start, int n) {
         return new XMLCalcRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, n);
     }
@@ -743,6 +750,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
      * @return Sheet
      * @throws IOException if io error occur
      */
+    @Override
     public XMLMergeSheet load() throws IOException {
         super.load();
 
@@ -760,6 +768,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     /*
     Parse `mergeCells` tag
      */
+    @Override
     void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block) throws IOException {
         // Find mergeCells tag
         int limit = charBuffer.limit();
@@ -807,27 +816,8 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         }
 
         if (mergeCells != null) {
-            Dimension dim = mergeCells.get(0);
-            int fr = dim.firstRow, lr = dim.lastRow;
-            short fc = dim.firstColumn, lc = dim.lastColumn;
-            int n = (lr - fr + 1) * (lc - fc + 1);
-            for (int j = 1, len = mergeCells.size(); j < len; j++) {
-                dim = mergeCells.get(j);
-                n += (dim.lastRow - dim.firstRow + 1) * (dim.lastColumn - dim.firstColumn + 1);
-                if (fr > dim.firstRow)    fr = dim.firstRow;
-                if (lr < dim.lastRow)     lr = dim.lastRow;
-                if (fc > dim.firstColumn) fc = dim.firstColumn;
-                if (lc < dim.lastColumn)  lc = dim.lastColumn;
-            }
-
-            Grid grid = GridFactory.create(new Dimension(fr, fc, lr, lc), n);
-            for (Dimension d : mergeCells) {
-                grid.mark(d);
-                LOGGER.debug("merged cells range {}", d);
-            }
-
-            LOGGER.debug("Grid: {}", grid);
-            this.mergeCells = grid;
+            this.mergeCells = GridFactory.create(mergeCells);
+            LOGGER.debug("Grid: {}", this.mergeCells);
         }
     }
 

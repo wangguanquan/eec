@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,7 +46,7 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
  *
  * @author guanquan.wang at 2018-09-27 14:28
  */
-public class SharedStrings implements AutoCloseable {
+public class SharedStrings implements Closeable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Path sstPath;
 
@@ -58,6 +59,7 @@ public class SharedStrings implements AutoCloseable {
     SharedStrings(String[] data) {
         max = data.length;
         offset_forward = 0;
+        status = 1;
         if (max <= page) {
             forward = new String[max];
             System.arraycopy(data, offset_forward, forward, 0, max);
@@ -66,6 +68,7 @@ public class SharedStrings implements AutoCloseable {
             if (max > page << 1) {
                 page = max >> 1;
             }
+            status <<= 1;
             forward = new String[page];
             limit_forward = page;
             System.arraycopy(data, offset_forward, forward, 0, limit_forward);
@@ -90,6 +93,25 @@ public class SharedStrings implements AutoCloseable {
             this.page = cacheSize;
         }
         this.hotSize = hotSize;
+    }
+
+    /**
+     * Constructs a SharedStrings with a {@link IndexSharedStringTable}
+     *
+     * @param sst {@link IndexSharedStringTable}
+     * @param cacheSize the number of word per load
+     * @param hotSize   the number of high frequency word
+     */
+    SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
+        this.sst = sst;
+        max = sst.size();
+        if (cacheSize > 0) {
+            this.page = cacheSize;
+        }
+        this.hotSize = hotSize;
+        init();
+        // Load forward
+        limit_forward = sst.get(offset_forward = 0, forward);
     }
 
     /**
@@ -187,10 +209,18 @@ public class SharedStrings implements AutoCloseable {
             return this;
         }
 
-        status = 1;
         // Get unique count
         max = uniqueCount();
         LOGGER.debug("Size of SharedString: {}", max);
+        //
+        init();
+        escapeBuf = new StringBuilder();
+        return this;
+    }
+
+    /* */
+    private void init() throws IOException {
+        status = 1;
         // Unknown size or greater than 512
         if (max < 0 || max > page << 1) {
             status <<= 2;
@@ -203,8 +233,10 @@ public class SharedStrings implements AutoCloseable {
             if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
             else hot = FixSizeLRUCache.create();
             // Instance the SharedStringTable
-            sst = new IndexSharedStringTable();
-            sst.setShortSectorSize(9);
+            if (sst == null) {
+                sst = new IndexSharedStringTable();
+                sst.setShortSectorSize(9);
+            }
         }
         else if (max > page) {
             status <<= 1;
@@ -213,8 +245,6 @@ public class SharedStrings implements AutoCloseable {
         } else {
             forward = new String[max];
         }
-        escapeBuf = new StringBuilder();
-        return this;
     }
 
     /**
@@ -591,6 +621,11 @@ public class SharedStrings implements AutoCloseable {
         if (sst != null) {
             sst.close();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Count: " + (total <= 0 ? max : total) + "，UniqueCount: " + max;
     }
 
 }

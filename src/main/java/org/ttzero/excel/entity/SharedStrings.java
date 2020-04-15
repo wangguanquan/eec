@@ -28,6 +28,7 @@ import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.Closeable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -66,7 +67,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/10/10.
  */
 @TopNS(prefix = "", value = "sst", uri = Const.SCHEMA_MAIN)
-public class SharedStrings implements Storable, AutoCloseable {
+public class SharedStrings implements Storable, Closeable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     /**

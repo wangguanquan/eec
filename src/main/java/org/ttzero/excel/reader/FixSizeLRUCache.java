@@ -37,10 +37,11 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
             this.v = v;
         }
 
+        @Override
         public K getKey() {
             return k;
         }
-
+        @Override
         public V getValue() {
             return v;
         }
@@ -91,6 +92,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
 
     private FixSizeLRUCache(int limit) {
         this.limit = limit;
+        // Create double limit size
         table = new HashMap<>(Math.round(limit * 1.25f));
     }
 

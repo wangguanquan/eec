@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
@@ -37,11 +38,14 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
+import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -52,6 +56,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -59,11 +64,12 @@ import java.util.stream.StreamSupport;
 
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.util.FileUtil.exists;
+import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Excel Reader tools
- *
+ * <p>
  * A streaming operation chain, using cursor control, the cursor
  * will only move forward, so you cannot repeatedly operate the
  * same Sheet stream. If you need to read the data of a worksheet
@@ -76,11 +82,11 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <blockquote><pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
  *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
- * } catch (IOException e) {}</pre></blockquote>
+ * } catch (IOException e) { }</pre></blockquote>
  *
  * @author guanquan.wang on 2018-09-22
  */
-public class ExcelReader implements AutoCloseable {
+public class ExcelReader implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
     /**
@@ -111,19 +117,21 @@ public class ExcelReader implements AutoCloseable {
 
     /**
      * Reader Option
-     * 0: only parse cell value (default)
-     * 2: parse cell value and calc
-     * 4: copy value on merge cells
+     * <ul>
+     * <li>0: only parse cell value (default)</li>
+     * <li>2: parse cell value and calc</li>
+     * <li>4: copy value on merge cells</li>
+     * </ul>
      *
      * These attributes can be combined via `|`,
      * like: VALUE_ONLY|COPY_ON_MERGED
      */
-    int option;
+    protected int option;
 
     /**
      * A formula flag
      */
-    boolean hasFormula;
+    protected boolean hasFormula;
 
     /**
      * Constructor Excel Reader
@@ -305,7 +313,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * get all sheets
+     * Returns all sheets
      *
      * @return Sheet Array
      */
@@ -314,7 +322,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * size of sheets
+     * Size of sheets
      *
      * @return int
      */
@@ -323,7 +331,7 @@ public class ExcelReader implements AutoCloseable {
     }
 
     /**
-     * close stream and delete temp files
+     * Close stream and delete temp files
      *
      * @throws IOException when fail close readers
      */
@@ -338,7 +346,9 @@ public class ExcelReader implements AutoCloseable {
             sst.close();
 
         // Delete temp files
-        FileUtil.rm_rf(self.toFile(), true);
+        if (self != null) {
+            FileUtil.rm_rf(self.toFile(), true);
+        }
         if (temp != null) {
             FileUtil.rm(temp);
         }
@@ -350,7 +360,7 @@ public class ExcelReader implements AutoCloseable {
      * @return the information
      */
     public AppInfo getAppInfo() {
-        return appInfo;
+        return appInfo != null ? appInfo : (appInfo = getGeneralInfo(self));
     }
 
     /**
@@ -535,9 +545,13 @@ public class ExcelReader implements AutoCloseable {
      * @param rmSource   remove the source files
      * @param option the reader option.
      * @return the {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
+     * @throws FileNotFoundException if the path not exists or no permission to read
+     * @throws IOException if I/O error occur
      */
     private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource, int option) throws IOException {
+        if (!exists(path)) {
+            throw new FileNotFoundException(path.toString());
+        }
         // Check document type
         ExcelType type = getType(path);
         LOGGER.debug("File type: {}", type);
@@ -549,10 +563,20 @@ public class ExcelReader implements AutoCloseable {
             case XLS:
                 try {
                     Class<?> clazz = Class.forName("org.ttzero.excel.reader.BIFF8Reader");
-                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class);
-                    er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize);
-                } catch (Exception e) {
-                    throw new ExcelReadException("Only support read Office Open XML file.", e);
+                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class, int.class);
+                    er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize, option);
+                } catch (ClassNotFoundException e) {
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("Can not load 'org.ttzero.excel.reader.BIFF8Reader'."
+                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                            + ":" + pom.getProperty("version") + "] to parse excel 97~2003.", e);
+                } catch (NoSuchMethodException | InstantiationException e) {
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("It may be an exception caused by eec-e3-support version error."
+                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                            + ":" + pom.getProperty("version") + "]", e);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new ExcelReadException("Read excel failed.", e);
                 }
                 break;
             default:
@@ -667,6 +691,7 @@ public class ExcelReader implements AutoCloseable {
             Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
             Class<?> type = f.getType();
             String v = root.elementText(new QName(f.getName(), namespace));
+            if (isEmpty(v)) continue;
             if (type == String.class) {
                 try {
                     f.set(core, v);

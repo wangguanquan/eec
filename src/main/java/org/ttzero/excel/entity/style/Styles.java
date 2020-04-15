@@ -49,11 +49,17 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * {@link Fill}, {@link Border}, {@link Verticals} and
  * {@link Horizontals}, each Worksheet introduced by subscript.
  * <p>
- * EEC uses an Integer value to represent a complete pattern,
- * 0-8 bits are stored in NumFmt, 8-14 bits are stored in Font,
- * 14-20 bits are stored in Fill, 20-26 bits are stored in Border,
- * 26-29 bits are stored in Vertical and 29-32 bits are stored in
- * Horizontal. The Build-In number format does not write into styles.
+ * EEC uses an Integer value to store Extended Format:
+ * <blockquote><pre>
+ *  Bit  | Contents
+ * ------+---------
+ *  0, 8 | NumFmt
+ *  8, 6 | Font
+ * 14, 6 | Fill
+ * 20, 6 | Border
+ * 26, 3 | Vertical
+ * 29, 3 | Horizontal</pre></blockquote>
+ * The Build-In number format does not write into styles.
  *
  * @author guanquan.wang on 2017/10/13.
  */
@@ -103,12 +109,12 @@ public class Styles implements Storable {
         return map.size();
     }
 
-    static final int INDEX_NUMBER_FORMAT = 24;
-    static final int INDEX_FONT = 18;
-    static final int INDEX_FILL = 12;
-    static final int INDEX_BORDER = 6;
-    static final int INDEX_VERTICAL = 3;
-    static final int INDEX_HORIZONTAL = 0;
+    public static final int INDEX_NUMBER_FORMAT = 24;
+    public static final int INDEX_FONT = 18;
+    public static final int INDEX_FILL = 12;
+    public static final int INDEX_BORDER = 6;
+    public static final int INDEX_VERTICAL = 3;
+    public static final int INDEX_HORIZONTAL = 0;
 
     /**
      * Create a general style
@@ -190,6 +196,15 @@ public class Styles implements Storable {
         self.of(0); // General
 
         return self;
+    }
+
+    /**
+     * Create a general style
+     *
+     * @return Styles
+     */
+    public static Styles forReader() {
+        return new Styles();
     }
 
     /**
@@ -604,18 +619,16 @@ public class Styles implements Storable {
         if (style == null) return false;
         int nf = style >> INDEX_NUMBER_FORMAT & 0xFF;
 
-        boolean isDate = false;
+        // No number format
+        if (nf == 0) return false;
+
+        boolean isDate;
         NumFmt numFmt;
-        // All indexes from 0 to 163 are reserved for built-in formats.
-        // The first user-defined format starts at 164.
-        if (nf < 164) {
-            isDate = (nf >= 14 && nf <= 22
-                || nf >= 27 && nf <= 36
-                || nf >= 45 && nf <= 47
-                || nf >= 50 && nf <= 58
-                || nf == 81);
-            // Test by numFmt code
-        } else if ((numFmt = findFmtById(nf)) != null && (isNotEmpty(numFmt.getCode()))) {
+
+        // Test by numFmt code
+        if (!(isDate = isBuildInDateFormat(nf))
+            && (numFmt = findFmtById(nf)) != null
+            && (isNotEmpty(numFmt.getCode()))) {
             isDate = testCodeIsDate(numFmt.getCode());
         }
 
@@ -626,6 +639,16 @@ public class Styles implements Storable {
             dateFmtCache.add(styleIndex);
         }
         return isDate;
+    }
+
+    // All indexes from 0 to 163 are reserved for built-in formats.
+    // The first user-defined format starts at 164.
+    private static boolean isBuildInDateFormat(int nf) {
+        return nf < 164 && (nf >= 14 && nf <= 22
+            || nf >= 27 && nf <= 36
+            || nf >= 45 && nf <= 47
+            || nf >= 50 && nf <= 58
+            || nf == 81);
     }
 
     public static boolean testCodeIsDate(String code) {
@@ -794,4 +817,13 @@ public class Styles implements Storable {
         return dateFmtCache != null && dateFmtCache.contains(styleIndex);
     }
 
+    /**
+     * Append a date format back into cache
+     *
+     * @param xf the XFRecord id
+     */
+    public void addDateFmtCache(int xf) {
+        if (dateFmtCache == null) dateFmtCache = new HashSet<>();
+        dateFmtCache.add(xf);
+    }
 }

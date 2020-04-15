@@ -27,13 +27,13 @@ import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
  * @author guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
-    // Index to first used row
+    // Index to first used row (one base)
     public final int firstRow;
-    // Index to last used row, increased by 1
+    // Index to last used row (one base)
     public final int lastRow;
-    // Index to first used column
+    // Index to first used column (one base)
     public final short firstColumn;
-    // Index to last used column, increased by 1
+    // Index to last used column (one base)
     public final short lastColumn;
 
     public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
@@ -100,7 +100,8 @@ public class Dimension {
     @Override
     public String toString() {
         return new String(int2Col(firstColumn)) + this.firstRow
-            + ":" + new String(int2Col(lastColumn)) + this.lastRow;
+            + (lastRow > 0 ? ":" + new String(int2Col(lastColumn)) + this.lastRow
+            : "");
     }
 
     /**
