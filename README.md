@@ -13,7 +13,7 @@ EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导�
 
 使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在*6MB*的情况下完成1,000,000行x29列数据的读写。
 
-EEC采用单线程、高IO设计，多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
+EEC采用单线程、高IO设计，所以多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
 
 EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
 
@@ -62,38 +62,6 @@ pom.xml添加
     <artifactId>eec</artifactId>
     <version>${eec.version}</version>
 </dependency>
-```
-
-## xls格式支持
-
-xls格式的读写目前处于开发中，项目地址[eec-e3-support](https://github.com/wangguanquan/eec-e3-support)暂时未开源，尝鲜的朋友可以在本项目的[beta](./beta)目录下找到相关jar包，加入到项目classpath即可实现xls格式读取，xls格式的读取与xlsx对外暴露完全一样。
-
-示例请查找`testReadXLS()`方法。
-
-## CSV格式支持
-
-ExcelWriter支持csv格式，只需要在`writeTo`方法前添加`saveAsCSV()`即可。[测试代码参考](./src/test/java/org/ttzero/excel/entity/csv)
-
-#### CSV与Excel格式互转
-
-- CSV => Excel 向Workbook中添加一个`CSVSheet`即可
-- Excel => CSV 读Excel后通过Worksheet调用`saveAsCSV`
-
-代码示例
-
-```
-// CSV转Excel
-new Workbook("csv path test", author)
-    .addSheet(new CSVSheet(csvPath)) // 添加CSVSheet并指定csv路径
-    .writeTo(getOutputTestPath());
-    
-// Excel转CSV
-try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-    // 读取Excel并保存为CSV格式
-    reader.sheet(0).saveAsCSV(getOutputTestPath());
-} catch (IOException e) {
-    e.printStackTrace();
-}
 ```
 
 ## 示例
@@ -473,7 +441,53 @@ public void testReadXLS() {
 }
 ```
 
+## xls格式支持
+
+pom.xml添加
+
+```
+<dependency>
+    <groupId>org.ttzero</groupId>
+    <artifactId>eec-e3-support</artifactId>
+    <version>${eec.version}-SNAPSHOT</version>
+</dependency>
+```
+
+xls格式的读写目前处于开发中，只有发布SNAPSHOT版本，e3-support包含e3的依赖。示例请查找`testReadXLS()`方法。
+
+## CSV格式支持
+
+ExcelWriter支持csv格式，只需要在`writeTo`方法前添加`saveAsCSV()`即可。[测试代码参考](./src/test/java/org/ttzero/excel/entity/csv)
+
+#### CSV与Excel格式互转
+
+- CSV => Excel 向Workbook中添加一个`CSVSheet`即可
+- Excel => CSV 读Excel后通过Worksheet调用`saveAsCSV`
+
+代码示例
+
+```
+// CSV转Excel
+new Workbook("csv path test", author)
+    .addSheet(new CSVSheet(csvPath)) // 添加CSVSheet并指定csv路径
+    .writeTo(getOutputTestPath());
+    
+// Excel转CSV
+try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+    // 读取Excel并保存为CSV格式
+    reader.sheet(0).saveAsCSV(getOutputTestPath());
+} catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
 ## CHANGELOG
+Version 0.4.4 (2020-04-20)
+-------------
+1. 优化SharedStringTable
+2. 支持读取Excel97~2003文件(需要依懒eec-e3-support)
+3. 修复一些已知BUG
+
 Version 0.4.3 (2020-03-19)
 -------------
 1. 修复读取科学计数转数字类型时抛NumberFormatException异常
