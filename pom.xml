@@ -70,7 +70,7 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com/wangguanquan/eec.git</connection>
+        <connection>scm:git:https://github.com/wangguanquan/eec.git</connection>
         <tag>eec-0.4.6</tag>
     </scm>
 
