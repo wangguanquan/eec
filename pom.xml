@@ -4,7 +4,7 @@
 
     <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
-    <version>0.4.6-SNAPSHOT</version>
+    <version>0.4.6</version>
     <name>Excel Write/Read Framework</name>
     <packaging>jar</packaging>
     <url>https://www.ttzero.org</url>
@@ -73,7 +73,7 @@
         <connection>scm:git:git@github.com/wangguanquan/eec.git</connection>
         <developerConnection>scm:git:git@github.com/wangguanquan/eec.git</developerConnection>
         <url>git@github.com/wangguanquan/eec.git</url>
-        <tag>HEAD</tag>
+        <tag>eec-0.4.6</tag>
     </scm>
 
     <build>
