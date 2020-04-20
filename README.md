@@ -399,20 +399,7 @@ reader.sheets()
 
 以上方法获取excel文件的"游戏"列的不重复值
 
-#### 5. xls读取
-xls读取对方法式与xlsx完全一致
-
-```
-public void testReadXLS() {
-    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
-        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-```
-
-#### 6. 读取单元格公式
+#### 5. 读取单元格公式
 
 ```
 @Test public void testFormula() {
@@ -453,7 +440,21 @@ pom.xml添加
 </dependency>
 ```
 
-xls格式的读写目前处于开发中，只有发布SNAPSHOT版本，e3-support包含e3的依赖。示例请查找`testReadXLS()`方法。
+xls格式的读写目前处于开发中，只有发布SNAPSHOT版本，e3-support包含e3的依赖。
+
+
+#### 6. xls读取
+xls读取对方法式与xlsx完全一致
+
+```
+public void testReadXLS() {
+    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls"))) {
+        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
 
 ## CSV格式支持
 
@@ -522,7 +523,7 @@ Version 0.4.0 (2020-02-24)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.3-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.4-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
