@@ -71,6 +71,7 @@
 
     <scm>
         <connection>scm:git:https://github.com/wangguanquan/eec.git</connection>
+        <url>https://github.com/wangguanquan/eec</url>
       <tag>HEAD</tag>
   </scm>
 
