@@ -421,6 +421,10 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testNumber2ExcelFormula() {
+        testFormulaReader(testResourceRoot().resolve("Number2Excel.xlsx"));
+    }
+
     private void testReader(Path path) {
         testReader(path, VALUE_ONLY);
     }
