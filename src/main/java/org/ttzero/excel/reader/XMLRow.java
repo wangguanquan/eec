@@ -428,6 +428,7 @@ class XMLRow extends Row {
  */
 class XMLCalcRow extends XMLRow {
     private MergeCalcFunc calcFun;
+    private boolean hasCalcFunc;
 
     XMLCalcRow(SharedStrings sst, Styles styles, int startRow, MergeCalcFunc calcFun) {
         this.sst = sst;
@@ -435,6 +436,7 @@ class XMLCalcRow extends XMLRow {
         this.startRow = startRow;
         this.buf = new StringBuilder();
         this.calcFun = calcFun;
+        this.hasCalcFunc = calcFun != null;
     }
 
     XMLCalcRow(XMLRow row) {
@@ -446,6 +448,7 @@ class XMLCalcRow extends XMLRow {
 
     XMLCalcRow setCalcFun(MergeCalcFunc calcFun) {
         this.calcFun = calcFun;
+        hasCalcFunc = calcFun != null;
         return this;
     }
 
@@ -460,7 +463,9 @@ class XMLCalcRow extends XMLRow {
         unknownLength = lc < 0;
 
         // Parse formula if exists and can parse
-        calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+        if (hasCalcFunc) {
+            calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+        }
 
         Cell cell;
         // Parse cell value
@@ -479,7 +484,7 @@ class XMLCalcRow extends XMLRow {
     @Override
     void parseCellValue(Cell cell) {
         // If cell has formula
-        if (cell.f) {
+        if (cell.f || !hasCalcFunc) {
             // Parse calc
             parseCalcFunc(cell);
         }
@@ -495,7 +500,8 @@ class XMLCalcRow extends XMLRow {
      */
     private void parseCalcFunc(Cell cell) {
         int _cursor = cursor, a = getF(cell);
-
+        // Reset the formula flag
+        cell.f = a < cursor;
         // Tag <f> Not Found
         if (a == cursor) {
             cursor = _cursor;

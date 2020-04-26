@@ -421,6 +421,10 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testNumber2ExcelFormula() {
+        testFormulaReader(testResourceRoot().resolve("Number2Excel.xlsx"));
+    }
+
     private void testReader(Path path) {
         testReader(path, VALUE_ONLY);
     }
@@ -448,7 +452,7 @@ public class ExcelReaderTest {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
                     if (row.hasFormula(i)) {
-                        print(new Dimension(row.index, (short) (i + 1), 0, (short) 0));
+                        print(new Dimension(row.getRowNumber(), (short) (i + 1), 0, (short) 0));
                         print(": ");
                         print(row.getFormula(i));
                         println('|');
