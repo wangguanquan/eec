@@ -682,9 +682,11 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
     public XMLCalcSheet load() throws IOException {
         super.load();
 
-        if (!eof && !(sRow instanceof XMLCalcRow) && calc != null) {
-            sRow = sRow.asCalcRow().setCalcFun(this::findCalc);
+        if (!eof && !(sRow instanceof XMLCalcRow)) {
+            sRow = sRow.asCalcRow();
+            if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
         }
+
         return this;
     }
 
