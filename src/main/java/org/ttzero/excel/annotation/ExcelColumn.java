@@ -46,4 +46,20 @@ public @interface ExcelColumn {
      * @return true if shared
      */
     boolean share() default false;
+
+    /**
+     * Specify the output format.
+     * <p>
+     * It only supports the format specified by Office excel, please refer
+     * to {@link org.ttzero.excel.entity.style.NumFmt}.
+     * <p>
+     * If you are not sure whether the format is correct, please open
+     * Office excel{@code >} Format cell{@code >} Custom and debug the
+     * custom format here.
+     * <p>
+     * Note: It only used on Number or Date(include Timestamp, Time and java.time.*) field.
+     *
+     * @return the data format string
+     */
+    String format() default "";
 }
