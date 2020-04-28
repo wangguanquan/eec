@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static java.lang.Integer.numberOfTrailingZeros;
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
@@ -49,6 +50,13 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
 public class SharedStrings implements Closeable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Path sstPath;
+
+    /**
+     * The maximum capacity, used if a higher value is implicitly specified
+     * by either of the constructors with arguments.
+     * MUST be a power of two <= 1<<36.
+     */
+    static final int MAXIMUM_CAPACITY = 1 << 20;
 
     /**
      * Constructs a SharedStrings containing the elements of the
@@ -90,7 +98,7 @@ public class SharedStrings implements Closeable {
     SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
-            this.page = cacheSize;
+            this.page = tableSizeFor(cacheSize);
         }
         this.hotSize = hotSize;
     }
@@ -106,7 +114,7 @@ public class SharedStrings implements Closeable {
         this.sst = sst;
         max = sst.size();
         if (cacheSize > 0) {
-            this.page = cacheSize;
+            this.page = tableSizeFor(cacheSize);
         }
         this.hotSize = hotSize;
         init();
@@ -198,6 +206,22 @@ public class SharedStrings implements Closeable {
     }
 
     /**
+     * Returns a power of two size for the given target capacity.
+     *
+     * @param cap the custom buffer size
+     * @return Returns a power of two size
+     */
+    static int tableSizeFor(int cap) {
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 64) ? 64 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+
+    /**
      * Load the sharedString.xml file and instance word cache
      *
      * @return the {@code SharedStrings}
@@ -235,7 +259,7 @@ public class SharedStrings implements Closeable {
             // Instance the SharedStringTable
             if (sst == null) {
                 sst = new IndexSharedStringTable();
-                sst.setShortSectorSize(9);
+                sst.setShortSectorSize(numberOfTrailingZeros(page));
             }
         }
         else if (max > page) {
