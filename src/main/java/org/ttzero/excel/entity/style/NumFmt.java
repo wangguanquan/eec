@@ -58,7 +58,7 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     public NumFmt(String code) {
-        this.code = code;
+        this.code = clean(code);
     }
 
     public String getCode() {
@@ -86,6 +86,24 @@ public class NumFmt implements Comparable<NumFmt> {
      */
     public static NumFmt valueOf(int id) {
         return new NumFmt().setId(id);
+    }
+
+    /**
+     * Create a NumFmt
+     *
+     * @param code the numFmt code string
+     * @return NumFmt
+     */
+    public static NumFmt of(String code) {
+        return new NumFmt(code);
+    }
+
+    // Clean the format code
+    private static String clean(String code) {
+        // TODO
+        // Replace '-' to '\-'
+        // Replace ' ' to '\ '
+        return code;
     }
 
     @Override
