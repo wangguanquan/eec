@@ -187,7 +187,7 @@ public class ListSheet<T> extends Sheet {
      * @return the object
      */
     protected T getFirst() {
-        if (data == null) return null;
+        if (data == null || data.isEmpty()) return null;
         T first = data.get(start);
         if (first != null) return first;
         int i = start + 1;

@@ -471,6 +471,11 @@ public class ListObjectSheetTest extends WorkbookTest{
         }).writeTo(defaultTestPath);
     }
 
+    // #132
+    @Test public void testEmptyList() throws IOException {
+        new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
+    }
+
     public static class Item {
         private int id;
         private String name;
