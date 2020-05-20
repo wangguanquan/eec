@@ -425,6 +425,43 @@ public class ExcelReaderTest {
         testFormulaReader(testResourceRoot().resolve("Number2Excel.xlsx"));
     }
 
+    @Test public void testResetToEntry() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            println("--------0--------");
+            reader.sheet(0).reset().rows().forEach(Print::println);
+
+            println("--------1--------");
+            reader.sheet(0).dataRows().map(row -> row.too(Entry.class)).forEach(Print::println);
+
+            println("--------2--------");
+            reader.sheet(0).reset().dataRows().map(row -> row.too(Entry.class)).forEach(Print::println);
+
+            Sheet sheet = reader.sheet(0);
+            println("--------3--------");
+            sheet.reset().dataRows().map(row -> row.too(Entry.class)).forEach(Print::println);
+
+            println("--------4--------");
+            sheet.reset().rows().forEach(Print::println);
+
+            println("--------5--------");
+            reader.sheet(0).reset().rows().forEach(Print::println);
+
+            println("--------6--------");
+            reader.sheet(0).asCalcSheet().reset().rows().forEach(Print::println);
+
+            println("--------7--------");
+            reader.sheet(0).asCalcSheet().reset().rows().forEach(Print::println);
+
+            println("--------8--------");
+            reader.sheet(0).asMergeSheet().reset().rows().forEach(Print::println);
+
+            println("--------9--------");
+            reader.sheet(0).reset().rows().forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void testReader(Path path) {
         testReader(path, VALUE_ONLY);
     }
