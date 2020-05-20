@@ -237,6 +237,10 @@ class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         LOGGER.debug("load {}", path.toString());
+        if (cb != null) {
+            reset();
+            return this;
+        }
         reader = Files.newBufferedReader(path);
         cb = new char[8192];
         nChar = 0;
@@ -440,6 +444,7 @@ class XMLSheet implements Sheet {
             Row row = nIter.next();
             if (header == null)
                 header = row.asHeader();
+            else row.setHr(header);
         }
         return nIter;
     }
@@ -469,6 +474,9 @@ class XMLSheet implements Sheet {
             // Close the opening reader
             if (reader != null) {
                 reader.close();
+            }
+            if (cb == null) {
+                return this.load();
             }
             // Reload
             reader = Files.newBufferedReader(path);
