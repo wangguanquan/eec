@@ -244,16 +244,17 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     }
 
     private void writeCore(Path root, ContentType contentType) throws IOException {
-        Core core = new Core();
-        core.setCreated(new Date());
-        if (workbook.getCreator() != null) {
-            core.setCreator(workbook.getCreator());
-        } else {
-            core.setCreator(System.getProperty("user.name"));
+        Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
+        if (StringUtil.isEmpty(core.getCreator())) {
+            if (workbook.getCreator() != null) {
+                core.setCreator(workbook.getCreator());
+            } else {
+                core.setCreator(System.getProperty("user.name"));
+            }
         }
-        core.setTitle(workbook.getName());
-
-        core.setModified(new Date());
+        if (StringUtil.isEmpty(core.getTitle())) core.setTitle(workbook.getName());
+        if (core.getCreated() == null) core.setCreated(new Date());
+        if (core.getCreated() == null) core.setModified(new Date());
 
         try {
             core.writeTo(root.getParent() + "/docProps/core.xml");

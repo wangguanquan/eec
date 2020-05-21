@@ -23,6 +23,7 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.ExcelReaderTest;
@@ -51,7 +52,7 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 /**
  * @author guanquan.wang at 2019-04-28 19:17
  */
-public class ListObjectSheetTest extends WorkbookTest{
+public class ListObjectSheetTest extends WorkbookTest {
 
     @Test
     public void testWrite() throws IOException {
@@ -426,6 +427,23 @@ public class ListObjectSheetTest extends WorkbookTest{
                 return list;
             }
         }).writeTo(defaultTestPath);
+    }
+
+    @Test public void testSpecifyCore() throws IOException {
+        Core core = new Core();
+        core.setCreator("一名光荣的测试人员");
+        core.setTitle("空白文件");
+        core.setSubject("主题");
+        core.setCategory("IT;木工");
+        core.setDescription("为了艾尔");
+        core.setKeywords("机枪兵;光头");
+        core.setVersion("1.0");
+        core.setRevision("1.2");
+        core.setLastModifiedBy("TTT");
+        new Workbook("Specify Core")
+            .setCore(core)
+            .addSheet(new ListSheet<>(Collections.singletonList(new NotSharedObject(getRandomString()))))
+                .writeTo(defaultTestPath);
     }
 
     @Test public void testLarge() throws IOException {
