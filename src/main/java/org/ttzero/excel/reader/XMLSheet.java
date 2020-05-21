@@ -237,7 +237,7 @@ class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         LOGGER.debug("load {}", path.toString());
-        if (cb != null) {
+        if (sRow != null) {
             reset();
             return this;
         }
