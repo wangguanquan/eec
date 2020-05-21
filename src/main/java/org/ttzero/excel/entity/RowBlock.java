@@ -95,7 +95,7 @@ public class RowBlock implements Iterator<Row> {
      *
      * @return true if end of file
      */
-    public boolean isEof() {
+    public boolean isEOF() {
         return eof;
     }
 

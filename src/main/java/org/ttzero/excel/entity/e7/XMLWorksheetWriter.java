@@ -117,14 +117,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data auto size
                     writeAutoSizeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                 } while ((rowBlock = supplier.get()) != null);
             } else {
                 do {
                     // write row-block data
                     writeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                 } while ((rowBlock = supplier.get()) != null);
             }
         }
@@ -167,7 +167,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data
                     writeAutoSizeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                     // Get the next block
                     rowBlock = sheet.nextBlock();
                 }
@@ -176,7 +176,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data
                     writeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                     // Get the next block
                     rowBlock = sheet.nextBlock();
                 }
