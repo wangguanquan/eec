@@ -245,7 +245,7 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting basic information
+     * Setting basic information,such as title, subject, keyword, category...
      *
      * @param core the {@link Core} instance
      */
