@@ -45,7 +45,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -234,13 +233,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
         app.setTitlePards(titleParts);
 
-        try {
-            app.writeTo(root.getParent() + "/docProps/app.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
-            contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        app.writeTo(root.getParent().resolve("docProps/app.xml"));
+        contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
+        contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
     }
 
     private void writeCore(Path root, ContentType contentType) throws IOException {
@@ -256,13 +251,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         if (core.getCreated() == null) core.setCreated(new Date());
         if (core.getCreated() == null) core.setModified(new Date());
 
-        try {
-            core.writeTo(root.getParent() + "/docProps/core.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
-            contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        core.writeTo(root.getParent().resolve("docProps/core.xml"));
+        contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
+        contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
     }
 
     private void madeMark(Path parent) throws IOException {

@@ -24,7 +24,9 @@ import org.dom4j.QName;
 import org.ttzero.excel.annotation.Attr;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.NameValue;
+import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -33,7 +35,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -42,12 +44,11 @@ import java.util.List;
 /**
  * @author guanquan.wang on 2017/9/21.
  */
-class XmlEntity {
+class XmlEntity implements Storable {
 
     private String[] prefixs, uris;
 
-    public void writeTo(String path) throws IllegalAccessException, NoSuchMethodException
-        , InvocationTargetException, IOException {
+    public void writeTo(Path path) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
@@ -58,7 +59,7 @@ class XmlEntity {
             prefixs = topNs.prefix();
             uris = topNs.uri();
             for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs[i].length() == 0) { // 创建前缀为空的命名空间
+                if (prefixs[i].length() == 0) {
                     rootElement = factory.createElement(topNs.value(), uris[i]);
                     break;
                 }
@@ -80,10 +81,15 @@ class XmlEntity {
                 }
             }
         }
-        toXML(rootElement, this);
+
+        try {
+            toXML(rootElement, this);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new ExcelWriteException("Create Node failed.", e);
+        }
 
         Document doc = factory.createDocument(rootElement);
-        FileUtil.writeToDiskNoFormat(doc, Paths.get(path)); // write to desk
+        FileUtil.writeToDiskNoFormat(doc, path); // write to desk
     }
 
     public void toXML(Element doc, Object o) throws IllegalAccessException
