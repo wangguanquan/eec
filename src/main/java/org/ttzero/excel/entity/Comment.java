@@ -17,28 +17,16 @@
 
 package org.ttzero.excel.entity;
 
-import java.util.function.Predicate;
-
 /**
  * @author guanquan.wang at 2020-05-22 09:32
  */
-public class Comment<T> {
-    private Predicate<T> predicate;
+public class Comment {
     private String title;
     private String value;
 
-    public Comment (Predicate<T> predicate, String title, String value) {
-        this.predicate = predicate;
+    public Comment (String title, String value) {
         this.title = title;
         this.value = value;
-    }
-
-    public Predicate<T> getPredicate() {
-        return predicate;
-    }
-
-    public void setPredicate(Predicate<T> predicate) {
-        this.predicate = predicate;
     }
 
     public String getTitle() {

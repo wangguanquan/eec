@@ -506,7 +506,7 @@ public class ListSheet<T> extends Sheet {
     private Comment createComment(HeaderComment precedence, HeaderComment normal) {
         HeaderComment comment = precedence != null ? precedence : normal;
         if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
-            return new Comment<>(null, comment.title(), comment.value());
+            return new Comment(comment.title(), comment.value());
         }
         return null;
     }

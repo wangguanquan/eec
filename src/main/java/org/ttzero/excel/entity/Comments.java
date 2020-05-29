@@ -53,7 +53,7 @@ public class Comments implements Storable, Closeable {
         commentList = new ArrayList<>();
     }
 
-    public void addComment(String ref, String title, String value) throws IOException {
+    public void addComment(String ref, String title, String value) {
         C c = new C();
         c.ref = ref;
         c.text = new ArrayList<>();
@@ -86,14 +86,14 @@ public class Comments implements Storable, Closeable {
         list.add(r);
     }
 
-    public void flush() throws IOException {
+    public void flush() {
         // TODO Write tmp and clear cache
 
     }
 
     @Override
-    public void close() throws IOException {
-
+    public void close() {
+        // Ignore
     }
 
     @Override
@@ -195,7 +195,7 @@ public class Comments implements Storable, Closeable {
 
     private static class Pr extends Font {
         private static final String[] STYLE = {"", "<u/>", "<b/>", "<u/><b/>", "<i/>", "<i/><u/>", "<b/><i/>", "<i/><b/><u/>"};
-        public Pr(String name, int size) {
+        Pr(String name, int size) {
             super(name, size);
         }
 
