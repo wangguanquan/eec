@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2020, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,49 +14,35 @@
  * limitations under the License.
  */
 
+
 package org.ttzero.excel.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify export information
- *
- * @author guanquan.wang at 2019-06-21 09:53
+ * @author guanquan.wang at 2020-05-21 16:43
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
-public @interface ExcelColumn {
+public @interface HeaderComment {
     /**
-     * Title of column
+     * Description detail
      *
-     * @return the title of column
+     * @return the comment detail desc
      */
     String value() default "";
 
     /**
-     * Share body string
+     * Specify a title, the title will be bold display
      *
-     * @return true if shared
+     * @return sub-title of comment
      */
-    boolean share() default false;
+    String title() default "";
 
-    /**
-     * Specify a comment in header column
-     * <p>
-     * If this annotation appears with {@code @HeaderComment} at
-     * the same time, the independent {@code @HeaderComment} annotation
-     * takes precedence
-     * <p>
-     * NOTE: This attribute only affects the header line
-     *
-     * @return a header {@link HeaderComment}
-     */
-    HeaderComment comment() default @HeaderComment;
+
 }

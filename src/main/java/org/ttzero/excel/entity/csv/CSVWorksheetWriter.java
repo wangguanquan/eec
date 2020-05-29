@@ -88,7 +88,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
                 // write row-block data
                 writeRow(rowBlock.next());
                 // end of row
-                if (rowBlock.isEof()) break;
+                if (rowBlock.isEOF()) break;
             } while ((rowBlock = supplier.get()) != null);
         }
         // Write some final info
@@ -126,7 +126,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
                 // write row-block data
                 for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
                 // end of row
-                if (rowBlock.isEof()) break;
+                if (rowBlock.isEOF()) break;
                 // Get the next block
                 rowBlock = sheet.nextBlock();
             }

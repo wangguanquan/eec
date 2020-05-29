@@ -61,6 +61,10 @@ public interface Const {
             , SHEET = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
             , THEME = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"
             , RELATIONSHIP = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+            , COMMENTS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments"
+            , DRAWINGS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+            , VMLDRAWING = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing"
+            , CHARTS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
             ;
     }
 
@@ -84,6 +88,10 @@ public interface Const {
             , CORE = "application/vnd.openxmlformats-package.core-properties+xml"
             , SHAREDSTRING = "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"
             , PRINTSETTING = "application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"
+            , COMMENTS ="application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml"
+            , DRAWINGS = "application/vnd.openxmlformats-officedocument.drawing+xml"
+            , VMLDRAWING = "application/vnd.openxmlformats-officedocument.vmlDrawing"
+            , CHARTS = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
             ;
     }
 
@@ -145,6 +153,10 @@ public interface Const {
          * Zip
          */
         String ZIP = ".zip";
+        /**
+         * VML
+         */
+        String VML = ".vml";
     }
 
     /**

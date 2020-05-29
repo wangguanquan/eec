@@ -22,6 +22,7 @@ import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ParamProcessor;
 import org.ttzero.excel.processor.Watch;
 import org.ttzero.excel.util.FileUtil;
@@ -101,7 +102,15 @@ public class Workbook implements Storable {
      * Automatic interlacing fill, default fill color is '#E2EDDA'
      */
     private int autoOdd = 0;
-    private String creator, company;
+    /**
+     * Author
+     */
+    private String creator;
+    private Core core;
+    /**
+     * Specify a company name(null able)
+     */
+    private String company;
     /**
      * The fill
      */
@@ -224,6 +233,25 @@ public class Workbook implements Storable {
      */
     public int getSize() {
         return size;
+    }
+
+    /**
+     * Returns the basic information about workbook
+     *
+     * @return the {@link Core} instance
+     */
+    public Core getCore() {
+        return core;
+    }
+
+    /**
+     * Setting basic information,such as title, subject, keyword, category...
+     *
+     * @param core the {@link Core} instance
+     */
+    public Workbook setCore(Core core) {
+        this.core = core;
+        return this;
     }
 
     /**

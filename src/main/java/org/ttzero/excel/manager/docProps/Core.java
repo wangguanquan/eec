@@ -31,30 +31,63 @@ import java.util.Date;
     , "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
     , "http://purl.org/dc/terms/"}, value = "cp:coreProperties")
 public class Core extends XmlEntity {
+    /**
+     * Title of workbook(null able)
+     */
     @NS("dc")
-    private String title;   // 标题
+    private String title;
+    /**
+     * Subject of workbook(null able)
+     */
     @NS("dc")
-    private String subject; // 主题
+    private String subject;
+    /**
+     * Author, default get the system login user
+     */
     @NS("dc")
-    private String creator; // 作者
+    private String creator;
+    /**
+     * Description(null able)
+     */
     @NS("dc")
-    private String description; // 描述
+    private String description;
+    /**
+     * List keyword about this workbook, Multiple keywords are separated by ';'(null able)
+     */
     @NS("cp")
-    private String keywords;        // 标记
+    private String keywords;
+    /**
+     * The last modify user(null able)
+     */
     @NS("cp")
-    private String lastModifiedBy;  // 最后一次保存者
+    private String lastModifiedBy;
+    /**
+     * The file version(null able)
+     */
     @NS("cp")
-    private String version;         // 版本号
+    private String version;
+    /**
+     * The file reversion(null able)
+     */
     @NS("cp")
-    private String revision;        // 修订号
+    private String revision;
+    /**
+     * Specify category about this workbook, Multiple keywords are separated by ';'(null able)
+     */
     @NS("cp")
-    private String category;        // 类别
+    private String category;
+    /**
+     * Create time(notnull)
+     */
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
-    private Date created;         // 创建时间
+    private Date created;
+    /**
+     * The last modify time(notnull)
+     */
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
-    private Date modified;       // 最后更新时间
+    private Date modified;
 
 
     public void setTitle(String title) {

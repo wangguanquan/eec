@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
@@ -89,6 +90,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private Sheet sheet;
     private Sheet.Column[] columns;
     private SharedStrings sst;
+    private Comments comments;
 
     public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
@@ -117,14 +119,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data auto size
                     writeAutoSizeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                 } while ((rowBlock = supplier.get()) != null);
             } else {
                 do {
                     // write row-block data
                     writeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                 } while ((rowBlock = supplier.get()) != null);
             }
         }
@@ -167,7 +169,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data
                     writeAutoSizeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                     // Get the next block
                     rowBlock = sheet.nextBlock();
                 }
@@ -176,7 +178,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     // write row-block data
                     writeRowBlock(rowBlock);
                     // end of row
-                    if (rowBlock.isEof()) break;
+                    if (rowBlock.isEOF()) break;
                     // Get the next block
                     rowBlock = sheet.nextBlock();
                 }
@@ -399,6 +401,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, defaultStyle);
             }
         }
+
+        // Write header comments
+        c = 0;
+        for (Sheet.Column hc : columns) {
+            c++;
+            if (hc.headerComment != null) {
+                if (comments == null) comments = sheet.createComments();
+                comments.addComment(new String(int2Col(c)) + row
+                    , hc.headerComment.getTitle(), hc.headerComment.getValue());
+            }
+        }
         bw.write("</row>");
     }
 
@@ -415,12 +428,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // background image
         if (sheet.getWaterMark() != null) {
             // relationship
-            Relationship r = sheet.find("media/image"); // only one background image
+            Relationship r = sheet.findRel("media/image"); // only one background image
             if (r != null) {
                 bw.write("<picture r:id=\"");
                 bw.write(r.getId());
                 bw.write("\"/>");
             }
+        }
+        // vmlDrawing
+        Relationship r = sheet.findRel("vmlDrawing");
+        if (r != null) {
+            bw.write("<legacyDrawing r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
         }
         // End target
         if (getClass().isAnnotationPresent(TopNS.class)) {

@@ -101,6 +101,10 @@ public abstract class Sheet implements Cloneable, Storable {
     protected RelManager relManager;
     protected int id;
     /**
+     * The header column comments
+     */
+    protected Comments comments;
+    /**
      * To mark the cell auto-width
      */
     protected int autoSize;
@@ -242,6 +246,7 @@ public abstract class Sheet implements Cloneable, Storable {
         public double width;
         public int o;
         public Styles styles;
+        public Comment headerComment, cellComment;
 
         /**
          * Constructor Column
@@ -950,6 +955,31 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Returns the header column {@link Comments}
+     *
+     * @return Columns instance if exists
+     */
+    public Comments getComments() {
+        return comments;
+    }
+
+    /**
+     * Create a {@link Comments} and add relationship
+     *
+     * @return a comment instance
+     */
+    public Comments createComments() {
+        if (comments == null) {
+            comments = new Comments(id, workbook.getCreator());
+            // FIXME Removed at excel version 2013
+            addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+
+            addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+        }
+        return comments;
+    }
+
+    /**
      * Returns the header column info
      * <p>
      * The copy sheet will use the parent worksheet header information.
@@ -1071,7 +1101,7 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
-    public Relationship find(String key) {
+    public Relationship findRel(String key) {
         return relManager.likeByTarget(key);
     }
 

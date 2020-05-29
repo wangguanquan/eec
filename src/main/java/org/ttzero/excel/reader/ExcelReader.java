@@ -780,7 +780,7 @@ public class ExcelReader implements Closeable {
      * @param r the range string of cell
      * @return long value
      */
-    static long cellRangeToLong(String r) {
+    public static long cellRangeToLong(String r) {
         char[] values = r.toCharArray();
         long v = 0L;
         int n = 0;
