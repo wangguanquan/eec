@@ -463,7 +463,7 @@ public class Workbook implements Storable {
 
     // Find the first not null data
     private Object getFirst(List<?> data) {
-        if (data == null) return null;
+        if (data == null || data.isEmpty()) return null;
         Object first = data.get(0);
         if (first != null) return first;
         int i = 1;
