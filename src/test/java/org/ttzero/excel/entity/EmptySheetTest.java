@@ -16,14 +16,20 @@
 
 package org.ttzero.excel.entity;
 
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.ttzero.excel.Print;
 import org.junit.Test;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
+
+import static org.ttzero.excel.Print.println;
 
 /**
  * @author guanquan.wang at 2019-04-29 21:36
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class EmptySheetTest extends WorkbookTest {
     @Test
     public void testEmpty() throws IOException {
@@ -34,7 +40,7 @@ public class EmptySheetTest extends WorkbookTest {
     }
 
     @Test public void testEmptyWithHeader() throws IOException {
-        new Workbook("test empty", author)
+        new Workbook("test empty header", author)
             .watch(Print::println)
             .addSheet(new EmptySheet("Empty"
                 , new Sheet.Column("ID", Integer.class)
@@ -42,5 +48,31 @@ public class EmptySheetTest extends WorkbookTest {
                 , new Sheet.Column("AGE", Integer.class)
             ))
             .writeTo(defaultTestPath);
+    }
+
+    @Test
+    public void testEmptyReader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty.xlsx"))) {
+            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count() == 0L;
+        }
+    }
+
+    @Test
+    public void testEmptyDataReader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty.xlsx"))) {
+            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count() == 0L;
+        }
+    }
+
+    @Test public void testEmptyWithHeaderReader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx"))) {
+            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count() == 1L;
+        }
+    }
+
+    @Test public void testEmptyWithHeaderDataReader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx"))) {
+            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count() == 0L;
+        }
     }
 }
