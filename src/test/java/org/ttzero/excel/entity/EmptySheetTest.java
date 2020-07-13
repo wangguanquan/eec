@@ -24,8 +24,6 @@ import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
 
-import static org.ttzero.excel.Print.println;
-
 /**
  * @author guanquan.wang at 2019-04-29 21:36
  */
@@ -53,26 +51,30 @@ public class EmptySheetTest extends WorkbookTest {
     @Test
     public void testEmptyReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty.xlsx"))) {
-            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count() == 0L;
+            long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count();
+            assert count == 0L;
         }
     }
 
     @Test
     public void testEmptyDataReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty.xlsx"))) {
-            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count() == 0L;
+            long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count();
+            assert count == 0L;
         }
     }
 
     @Test public void testEmptyWithHeaderReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx"))) {
-            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count() == 1L;
+            long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).count();
+            assert count == 1L;
         }
     }
 
     @Test public void testEmptyWithHeaderDataReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx"))) {
-            assert reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count() == 0L;
+            long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count();
+            assert count == 0L;
         }
     }
 }

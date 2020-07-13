@@ -39,7 +39,8 @@ public class CustomizeDataSourceSheet extends ListSheet<ListObjectSheetTest.Stud
 
     private StudentService service;
 
-    private int pageNo, limit = 1 << 9;
+    private int pageNo;
+    private final int limit = 1 << 9;
 
     /**
      * Do not specify the worksheet name

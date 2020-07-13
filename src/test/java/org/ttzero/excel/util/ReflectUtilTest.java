@@ -160,7 +160,7 @@ public class ReflectUtilTest {
         }
     }
 
-    @Test public void testRewriteMethod() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+    @Test public void testRewriteMethod() throws IntrospectionException {
         C c = new C() {
             @Override
             @IgnoreImport
