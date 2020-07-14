@@ -64,7 +64,8 @@ public class IndexSharedStringTableTest {
             }
 
             for (int i = 0; i < length; i++) {
-                assert sst.get(i).equals(buf[i]);
+                String s = sst.get(i);
+                assert s.equals(buf[i]);
             }
 
             int fromIndex = 0, size = length;

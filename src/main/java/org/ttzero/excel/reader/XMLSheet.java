@@ -237,11 +237,16 @@ class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         LOGGER.debug("load {}", path.toString());
+        if (sRow != null) {
+            reset();
+            return this;
+        }
         reader = Files.newBufferedReader(path);
         cb = new char[8192];
         nChar = 0;
+        int left = 0;
         loopA: for (; ; ) {
-            length = reader.read(cb);
+            length = reader.read(cb, left, cb.length - left);
             if (length < 11) break;
             // read size
             if (nChar == 0) {
@@ -276,17 +281,25 @@ class XMLSheet implements Sheet {
                     break loopA;
                 }
             }
+
+            // Find the last tag '>'
+            for (left = nChar; left > 0 && cb[left--] != '>'; );
+            if (left > 0) {
+                System.arraycopy(cb, left, cb, 0, length - left);
+                mark += nChar;
+                nChar = 0;
+            }
         }
         // Empty sheet
         if (cb[nChar] == '>') {
-            nChar++;
+            mark += length;
             eof = true;
         } else {
             eof = false;
+            mark += nChar;
             sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
 
-        mark = nChar;
         // Deep read if dimension information not write in header
         if (!eof && dimension == null) {
             parseDimension();
@@ -440,6 +453,7 @@ class XMLSheet implements Sheet {
             Row row = nIter.next();
             if (header == null)
                 header = row.asHeader();
+            else row.setHr(header);
         }
         return nIter;
     }
@@ -469,6 +483,9 @@ class XMLSheet implements Sheet {
             // Close the opening reader
             if (reader != null) {
                 reader.close();
+            }
+            if (cb == null) {
+                return this.load();
             }
             // Reload
             reader = Files.newBufferedReader(path);

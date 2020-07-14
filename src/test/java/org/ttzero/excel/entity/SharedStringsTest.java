@@ -57,7 +57,8 @@ public class SharedStringsTest {
 
             for (int i = 0; i < 0x7FFFFFFF; i++) {
                 char c = (char) (i & 0x7F);
-                assert sst.get(c) == c;
+                int index = sst.get(c);
+                assert index == c;
             }
         } catch (IOException e) {
             e.printStackTrace();

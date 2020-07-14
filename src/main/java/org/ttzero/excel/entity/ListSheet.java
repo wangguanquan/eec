@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.util.StringUtil;
@@ -187,7 +188,7 @@ public class ListSheet<T> extends Sheet {
      * @return the object
      */
     protected T getFirst() {
-        if (data == null) return null;
+        if (data == null || data.isEmpty()) return null;
         T first = data.get(start);
         if (first != null) return first;
         int i = start + 1;
@@ -404,8 +405,10 @@ public class ListSheet<T> extends Sheet {
                     methods[i] = method;
                     ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
                     if (mec != null && isNotEmpty(mec.value())) {
-                        list.add(new Column(mec.value(), field.getName(), method.getReturnType())
-                            .setShare(mec.share()));
+                        Column column = new Column(mec.value(), field.getName(), method.getReturnType())
+                            .setShare(mec.share());
+                        column.headerComment = createComment(method.getAnnotation(HeaderComment.class), mec.comment());
+                        list.add(column);
                         continue;
                     }
                 }
@@ -418,13 +421,17 @@ public class ListSheet<T> extends Sheet {
                 }
 
                 ExcelColumn ec = field.getAnnotation(ExcelColumn.class);
-
+                HeaderComment hc = field.getAnnotation(HeaderComment.class);
                 if (ec != null && isNotEmpty(ec.value())) {
-                    list.add(new Column(ec.value(), field.getName(), field.getType())
-                        .setShare(ec.share()));
+                    Column column = new Column(ec.value(), field.getName(), field.getType())
+                        .setShare(ec.share());
+                    column.headerComment = createComment(hc, ec.comment());
+                    list.add(column);
                 } else if (method != null) {
-                    list.add(new Column(field.getName(), field.getName(), field.getType())
-                        .setShare(ec != null && ec.share()));
+                    Column column = new Column(field.getName(), field.getName(), field.getType())
+                        .setShare(ec != null && ec.share());
+                    column.headerComment = createComment(hc, ec != null ? ec.comment() : null);
+                    list.add(column);
                 }
             }
             if (readLength > 0) {
@@ -433,8 +440,10 @@ public class ListSheet<T> extends Sheet {
                     readMethod.setAccessible(true);
                     methods[i++] = readMethod;
                     ExcelColumn mec = readMethod.getAnnotation(ExcelColumn.class);
-                    list.add(new Column(mec.value(), readMethod.getName(), readMethod.getReturnType())
-                        .setShare(mec.share()));
+                    Column column = new Column(mec.value(), readMethod.getName(), readMethod.getReturnType())
+                        .setShare(mec.share());
+                    column.headerComment = createComment(readMethod.getAnnotation(HeaderComment.class), mec.comment());
+                    list.add(column);
                 }
             }
             // No column to write
@@ -492,7 +501,14 @@ public class ListSheet<T> extends Sheet {
             }
             return columns.length;
         }
+    }
 
+    private Comment createComment(HeaderComment precedence, HeaderComment normal) {
+        HeaderComment comment = precedence != null ? precedence : normal;
+        if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
+            return new Comment(comment.title(), comment.value());
+        }
+        return null;
     }
 
     /**

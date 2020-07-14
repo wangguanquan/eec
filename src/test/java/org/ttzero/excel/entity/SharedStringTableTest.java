@@ -24,7 +24,6 @@ import java.io.IOException;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
-import static org.ttzero.excel.Print.print;
 
 /**
  * @author guanquan.wang at 2019-05-08 17:04

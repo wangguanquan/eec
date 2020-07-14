@@ -34,18 +34,31 @@ import java.lang.annotation.Target;
 @Documented
 public @interface ExcelColumn {
     /**
-     * header cell
+     * Title of column
      *
-     * @return the column name
+     * @return the title of column
      */
     String value() default "";
 
     /**
-     * share body string
+     * Share body string
      *
      * @return true if shared
      */
     boolean share() default false;
+
+    /**
+     * Specify a comment in header column
+     * <p>
+     * If this annotation appears with {@code @HeaderComment} at
+     * the same time, the independent {@code @HeaderComment} annotation
+     * takes precedence
+     * <p>
+     * NOTE: This attribute only affects the header line
+     *
+     * @return a header {@link HeaderComment}
+     */
+    HeaderComment comment() default @HeaderComment;
 
     /**
      * Specify the output format.

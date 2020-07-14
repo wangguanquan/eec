@@ -23,8 +23,10 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
 
 import java.awt.Color;
@@ -44,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
@@ -51,7 +54,7 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 /**
  * @author guanquan.wang at 2019-04-28 19:17
  */
-public class ListObjectSheetTest extends WorkbookTest{
+public class ListObjectSheetTest extends WorkbookTest {
 
     @Test
     public void testWrite() throws IOException {
@@ -383,11 +386,11 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test public void testMethodAnnotation() throws IOException {
         new Workbook("重写方法注解", author)
-            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, author, 0) {
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0) {
                 @Override
                 @ExcelColumn("ID")
                 public int getId() {
-                    return super.id;
+                    return super.getId();
                 }
 
                 @Override
@@ -398,6 +401,34 @@ public class ListObjectSheetTest extends WorkbookTest{
             }))
             )
             .writeTo(defaultTestPath);
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("重写方法注解.xlsx"))) {
+            Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
+                .map(row -> row.too(ExtStudent.class)).findAny();
+            assert opt.isPresent();
+            ExtStudent student = opt.get();
+            assert student.getId() == 9527;
+            assert student.getScore() == 97;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testIgnoreSupperMethod() throws IOException {
+        new Workbook("忽略父类属性", author)
+            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0))))
+            .writeTo(defaultTestPath);
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("忽略父类属性.xlsx"))) {
+            Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
+                .map(row -> row.too(ExtStudent.class)).findAny();
+            assert opt.isPresent();
+            ExtStudent student = opt.get();
+            assert student.getId() == 0;
+            assert student.getScore() == 0;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Issue #93
@@ -426,6 +457,23 @@ public class ListObjectSheetTest extends WorkbookTest{
                 return list;
             }
         }).writeTo(defaultTestPath);
+    }
+
+    @Test public void testSpecifyCore() throws IOException {
+        Core core = new Core();
+        core.setCreator("一名光荣的测试人员");
+        core.setTitle("空白文件");
+        core.setSubject("主题");
+        core.setCategory("IT;木工");
+        core.setDescription("为了艾尔");
+        core.setKeywords("机枪兵;光头");
+        core.setVersion("1.0");
+        core.setRevision("1.2");
+        core.setLastModifiedBy("TTT");
+        new Workbook("Specify Core")
+            .setCore(core)
+            .addSheet(new ListSheet<>(Collections.singletonList(new NotSharedObject(getRandomString()))))
+                .writeTo(defaultTestPath);
     }
 
     @Test public void testLarge() throws IOException {
@@ -469,6 +517,11 @@ public class ListObjectSheetTest extends WorkbookTest{
                 return list;
             }
         }).writeTo(defaultTestPath);
+    }
+
+    // #132
+    @Test public void testEmptyList() throws IOException {
+        new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
     }
 
     public static class Item {
@@ -686,6 +739,8 @@ public class ListObjectSheetTest extends WorkbookTest{
         private String name;
         @ExcelColumn("成绩")
         private int score;
+
+        public Student() { }
 
         protected Student(int id, String name, int score) {
             this.id = id;
@@ -954,6 +1009,39 @@ public class ListObjectSheetTest extends WorkbookTest{
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    public static class ExtStudent extends Student {
+        public ExtStudent() { }
+        protected ExtStudent(int id, String name, int score) {
+            super(id, name, score);
+        }
+
+        @Override
+        @ExcelColumn("ID")
+        @IgnoreExport
+        public int getId() {
+            return super.getId();
+        }
+
+        @ExcelColumn("ID")
+        @Override
+        public void setId(int id) {
+            super.setId(id);
+        }
+
+        @Override
+        @ExcelColumn("SCORE")
+        @IgnoreExport
+        public int getScore() {
+            return super.getScore();
+        }
+
+        @ExcelColumn("SCORE")
+        @Override
+        public void setScore(int score) {
+            super.setScore(score);
         }
     }
 }

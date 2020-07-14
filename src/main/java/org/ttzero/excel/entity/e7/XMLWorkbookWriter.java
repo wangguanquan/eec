@@ -22,6 +22,7 @@ import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
@@ -45,7 +46,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -182,7 +182,16 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
 
         for (int i = 0; i < size; i++) {
-            contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + workbook.getSheetAt(i).getId() + Const.Suffix.XML));
+            Sheet sheet;
+            contentType.add(new ContentType.Override(Const.ContentType.SHEET
+                , "/xl/worksheets/sheet" + (sheet = workbook.getSheetAt(i)).getId() + Const.Suffix.XML));
+            Comments comments = sheet.getComments();
+            if (comments != null) {
+                comments.writeTo(root);
+                contentType.add(new ContentType.Override(Const.ContentType.COMMENTS
+                    , "/xl/comments" + sheet.getId() + Const.Suffix.XML));
+                contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
+            }
         } // END
 
 
@@ -234,34 +243,27 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
         app.setTitlePards(titleParts);
 
-        try {
-            app.writeTo(root.getParent() + "/docProps/app.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
-            contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        app.writeTo(root.getParent().resolve("docProps/app.xml"));
+        contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
+        contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
     }
 
     private void writeCore(Path root, ContentType contentType) throws IOException {
-        Core core = new Core();
-        core.setCreated(new Date());
-        if (workbook.getCreator() != null) {
-            core.setCreator(workbook.getCreator());
-        } else {
-            core.setCreator(System.getProperty("user.name"));
+        Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
+        if (StringUtil.isEmpty(core.getCreator())) {
+            if (workbook.getCreator() != null) {
+                core.setCreator(workbook.getCreator());
+            } else {
+                core.setCreator(System.getProperty("user.name"));
+            }
         }
-        core.setTitle(workbook.getName());
+        if (StringUtil.isEmpty(core.getTitle())) core.setTitle(workbook.getName());
+        if (core.getCreated() == null) core.setCreated(new Date());
+        if (core.getModified() == null) core.setModified(new Date());
 
-        core.setModified(new Date());
-
-        try {
-            core.writeTo(root.getParent() + "/docProps/core.xml");
-            contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
-            contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        core.writeTo(root.getParent().resolve("docProps/core.xml"));
+        contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
+        contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
     }
 
     private void madeMark(Path parent) throws IOException {
@@ -310,7 +312,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             uris = topNs.uri();
             rootName = topNs.value();
             for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs[i].length() == 0) { // 创建前缀为空的命名空间
+                if (prefixs[i].length() == 0) {
                     rootElement = factory.createElement(rootName, uris[i]);
                     break;
                 }
@@ -376,7 +378,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
             // Interlace changes color as default
             if (sheet.getAutoOdd() == 0) {
-                sheet.setOddFill(workbook.getOddFill() == null ? new Fill(PatternType.solid, new Color(226, 237, 218)) : workbook.getOddFill());
+                sheet.setOddFill(workbook.getOddFill() == null
+                    ? new Fill(PatternType.solid, new Color(226, 237, 218)) : workbook.getOddFill());
             }
             sheet.setId(i + 1);
             // default worksheet name
