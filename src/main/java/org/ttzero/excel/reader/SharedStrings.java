@@ -681,7 +681,9 @@ interface Tester {
     int analysis();
 
     class FixBinaryTester implements Tester {
-        private int start, limit, initial_size;
+        private int start;
+        private int limit;
+        private final int initial_size;
         private long[] marks;
 //        private static final int LIMIT = (1 << 25) - 1;
 

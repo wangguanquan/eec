@@ -47,7 +47,7 @@ public class Comments implements Storable, Closeable {
     private final String author;
 //    private final static int CACHE_SIZE = 20;
 
-    public Comments(int id, String author) {
+    Comments(int id, String author) {
         this.id = id;
         this.author = author;
         commentList = new ArrayList<>();
