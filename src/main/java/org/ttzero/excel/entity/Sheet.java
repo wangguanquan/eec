@@ -738,10 +738,10 @@ public abstract class Sheet implements Cloneable, Storable {
                     case Const.ColumnType.NORMAL:
                         break;
                     case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(ip);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(ip);
                         break;
                     case Const.ColumnType.RMB:
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(ir);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(ir);
                         break;
                     default:
                 }
@@ -751,15 +751,15 @@ public abstract class Sheet implements Cloneable, Storable {
                     case Const.ColumnType.NORMAL:
                         break;
                     case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(fp);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(fp);
                         break;
                     case Const.ColumnType.RMB:
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(fr);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(fr);
                         break;
                     default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style = Styles.clearNumfmt(Styles.defaultDateBorderStyle()) | styles.addNumFmt(tm);
+                style = Styles.clearNumFmt(Styles.defaultDateBorderStyle()) | styles.addNumFmt(tm);
             } else {
                 style = 0; // Auto-style
             }

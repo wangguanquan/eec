@@ -39,11 +39,11 @@ public class Font implements Cloneable {
     private Font() {}
 
     public Font(String name, int size) {
-        this(name, size, Style.normal, null);
+        this(name, size, Style.NORMAL, null);
     }
 
     public Font(String name, int size, Color color) {
-        this(name, size, Style.normal, color);
+        this(name, size, Style.NORMAL, color);
     }
 
     public Font(String name, int size, int style, Color color) {
@@ -208,42 +208,42 @@ public class Font implements Cloneable {
     }
 
     public Font italic() {
-        style |= Style.italic;
+        style |= Style.ITALIC;
         return this;
     }
 
     public Font bold() {
-        style |= Style.bold;
+        style |= Style.BOLD;
         return this;
     }
 
     public Font underLine() {
-        style |= Style.underLine;
+        style |= Style.UNDERLINE;
         return this;
     }
 
     public boolean isItalic() {
-        return (style & Style.italic) == Style.italic;
+        return (style & Style.ITALIC) == Style.ITALIC;
     }
     public boolean isBold() {
-        return (style & Style.bold) == Style.bold;
+        return (style & Style.BOLD) == Style.BOLD;
     }
     public boolean isUnderLine() {
-        return (style & Style.underLine) == Style.underLine;
+        return (style & Style.UNDERLINE) == Style.UNDERLINE;
     }
 
     public Font delItalic() {
-        style &= (Style.underLine | Style.bold);
+        style &= (Style.UNDERLINE | Style.BOLD);
         return this;
     }
 
     public Font delBold() {
-        style &= (Style.underLine | Style.italic);
+        style &= (Style.UNDERLINE | Style.ITALIC);
         return this;
     }
 
     public Font delUnderLine() {
-        style &= (Style.bold | Style.italic);
+        style &= (Style.BOLD | Style.ITALIC);
         return this;
     }
 
@@ -386,11 +386,31 @@ public class Font implements Cloneable {
     // ######################################Static inner class######################################
 
     public static class Style {
-        public static final int normal = 0
-            , italic = 1 << 2
-            , bold = 1 << 1
-            , underLine = 1
-            ;
+        /**
+         * @deprecated {@link Style#NORMAL}
+         */
+        @Deprecated
+        public static final int normal = 0;
+        /**
+         * @deprecated {@link Style#ITALIC}
+         */
+        @Deprecated
+        public static final int italic = 1 << 2;
+        /**
+         * @deprecated {@link Style#BOLD}
+         */
+        @Deprecated
+        public static final int bold = 1 << 1;
+        /**
+         * @deprecated {@link Style#UNDERLINE}
+         */
+        @Deprecated
+        public static final int underLine = 1;
+
+        public static final int NORMAL = 0;
+        public static final int ITALIC = 1 << 2;
+        public static final int BOLD = 1 << 1;
+        public static final int UNDERLINE = 1;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name);
