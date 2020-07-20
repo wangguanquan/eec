@@ -29,7 +29,7 @@ import static org.ttzero.excel.reader.SharedStrings.toInt;
  */
 class PreCalc {
     // Reference position
-    private long position;
+    private final long position;
     // calc string value
     private char[] cb;
     private Node head, tail;

@@ -39,8 +39,8 @@ import java.util.Set;
  */
 @TopNS(prefix = "", value = "Types", uri = "http://schemas.openxmlformats.org/package/2006/content-types")
 public class ContentType implements Storable {
-    private Set<? super Type> set;
-    private RelManager relManager;
+    private final Set<? super Type> set;
+    private final RelManager relManager;
 
     public ContentType() {
         set = new HashSet<>();

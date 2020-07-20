@@ -28,7 +28,7 @@ import java.util.Properties;
  * @author guanquan.wang on 2018-10-13
  */
 public class I18N {
-    private Properties pro;
+    private final Properties pro;
 
     public I18N() {
         Locale locale = Locale.getDefault();

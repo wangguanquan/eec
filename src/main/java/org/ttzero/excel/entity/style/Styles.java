@@ -67,7 +67,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles implements Storable {
 
-    private Map<Integer, Integer> map;
+    private final Map<Integer, Integer> map;
     private Document document;
 
     private List<Font> fonts;

@@ -24,8 +24,8 @@ import java.util.function.Supplier;
  * @author guanquan.wang at 2019-04-17 19:03
  */
 class RowSetIterator implements Iterator<Row> {
-    private boolean onlyDataRow;
-    private Supplier<Row> supplier;
+    private final boolean onlyDataRow;
+    private final Supplier<Row> supplier;
     private Row nextRow = null;
 
     public RowSetIterator(Supplier<Row> supplier, boolean onlyDataRow) {

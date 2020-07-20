@@ -39,7 +39,7 @@ import java.nio.file.StandardCopyOption;
  * @author guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
-    private Path imagePath;
+    private final Path imagePath;
     private boolean temp;
 
     public WaterMark(String word) { // 文字水印

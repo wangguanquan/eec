@@ -184,7 +184,7 @@ interface Grid {
             return joiner.toString();
         }
 
-        private char[] chars = new char[64];
+        private final char[] chars = new char[64];
 
         private String append(String s) {
             int n = s.length();
@@ -322,8 +322,8 @@ interface Grid {
     class LinkedScanner implements Scanner {
 
         final static class E implements Entry {
-            private Dimension dim;
-            private Cell cell;
+            private final Dimension dim;
+            private final Cell cell;
             private int n;
 
             E(Dimension dim, Cell cell) {
@@ -345,7 +345,7 @@ interface Grid {
 
         private static class Node {
             private Node next;
-            private E entry;
+            private final E entry;
 
             Node(E entry, Node next) {
                 this.entry = entry;

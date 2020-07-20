@@ -42,9 +42,9 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class Comments implements Storable, Closeable {
 
     /** Comments Cache*/
-    private List<C> commentList;
-    private int id;
-    private String author;
+    private final List<C> commentList;
+    private final int id;
+    private final String author;
 //    private final static int CACHE_SIZE = 20;
 
     public Comments(int id, String author) {

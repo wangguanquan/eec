@@ -63,7 +63,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 public class XMLWorkbookWriter implements IWorkbookWriter {
 
     private Workbook workbook;
-    private RelManager relManager;
+    private final RelManager relManager;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();

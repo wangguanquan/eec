@@ -89,7 +89,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private ExtBufferedWriter bw;
     private Sheet sheet;
     private Sheet.Column[] columns;
-    private SharedStrings sst;
+    private final SharedStrings sst;
     private Comments comments;
 
     public XMLWorksheetWriter(Sheet sheet) {

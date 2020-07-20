@@ -37,7 +37,7 @@ public enum BorderStyle {
     MEDIUM_DASH_DOT_DOT("mediumDashDotDot"),
     SLANTED_DASH_DOT("slantDashDot");
 
-    private String name;
+    private final String name;
 
     BorderStyle(String name) {
         this.name = name;

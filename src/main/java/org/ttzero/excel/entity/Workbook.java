@@ -119,7 +119,7 @@ public class Workbook implements Storable {
      * A windows to debug
      */
     private Watch watch;
-    private I18N i18N;
+    private final I18N i18N;
 
     private SharedStrings sst;
     private Styles styles;
