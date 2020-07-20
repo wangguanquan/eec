@@ -33,8 +33,7 @@ import java.util.function.Predicate;
  * @author guanquan.wang at 2019-08-15 21:02
  */
 public class ReflectUtil {
-    private ReflectUtil() {
-    }
+    private ReflectUtil() { }
 
     /**
      * List all declared fields that contains all supper class

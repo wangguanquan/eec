@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -40,7 +41,7 @@ public class I18N {
                 is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", "zh-CN"));
             }
             if (is != null) {
-                try (Reader reader = new InputStreamReader(is, "UTF-8")) {
+                try (Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
                     pro.load(reader);
                 }
             }

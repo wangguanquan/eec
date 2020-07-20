@@ -185,7 +185,7 @@ public class WaterMark {
                 try {
                     return f.get(null).toString();
                 } catch (IllegalAccessException e) {
-                    ; // Empty
+                    // Empty
                 }
             }
         }

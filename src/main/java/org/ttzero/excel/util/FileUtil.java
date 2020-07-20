@@ -218,6 +218,7 @@ public class FileUtil {
                     LOGGER.error("Copy file from [{}] to [{}] failed...", srcFile.getPath(), descFile.getPath());
                 return;
             } catch (IOException e) {
+                //
             }
         }
         try (FileChannel inChannel = new FileInputStream(srcFile).getChannel();
@@ -304,7 +305,7 @@ public class FileUtil {
             }
         }
 
-        String ss[] = src.list();
+        String[] ss = src.list();
         if (ss == null) return;
         List<File> files = new ArrayList<>();
         LinkedList<File> folders = new LinkedList<>();

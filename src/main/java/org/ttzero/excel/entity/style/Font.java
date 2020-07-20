@@ -96,6 +96,7 @@ public class Font implements Cloneable {
                 try {
                     size = Integer.valueOf(temp);
                 } catch (NumberFormatException e) {
+                    //
                 }
                 if (size == null) {
                     int n;
