@@ -385,8 +385,19 @@ public class Styles implements Storable {
             ;
     }
 
-    static final String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
-        , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
+    static final String[] attrNames = {
+            "numFmtId"
+            , "fontId"
+            , "fillId"
+            , "borderId"
+            , "vertical"
+            , "horizontal"
+            , "applyNumberFormat"
+            , "applyFont"
+            , "applyFill"
+            , "applyBorder"
+            , "applyAlignment"
+    };
 
     /**
      * add style in document
@@ -466,7 +477,16 @@ public class Styles implements Storable {
     }
 
     ////////////////////////clear style///////////////////////////////
+
+    /**
+     * @deprecated Please use {@link #clearNumFmt(int)}
+     */
+    @Deprecated
     public static int clearNumfmt(int style) {
+        return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
+    }
+
+    public static int clearNumFmt(int style) {
         return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
     }
 
