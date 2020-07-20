@@ -34,7 +34,7 @@ import java.util.Locale;
  * @author guanquan.wang at 2018-02-12 10:11
  */
 public final class BuiltInNumFmt {
-    private static NumFmt[][] data;
+    private static final NumFmt[][] data;
 
     static {
         InputStream is = BuiltInNumFmt.class.getClassLoader().getResourceAsStream("numFmt");

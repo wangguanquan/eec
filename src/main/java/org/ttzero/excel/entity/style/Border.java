@@ -37,7 +37,7 @@ public class Border {
 
     private static final Color defaultColor = new Color(51, 51, 51); // #333333
 
-    private SubBorder[] borders;
+    private final SubBorder[] borders;
 
     public Border() {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
@@ -333,8 +333,8 @@ public class Border {
     }
 
     private static class SubBorder {
-        private BorderStyle style;
-        private Color color;
+        private final BorderStyle style;
+        private final Color color;
 
         public SubBorder(BorderStyle style, Color color) {
             this.style = style;
