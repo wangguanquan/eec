@@ -91,15 +91,15 @@ public interface ICellValueAndStyle {
         } else if (isDateTime(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
-            Character c = (Character) e;
+            char c = (Character) e;
             if (hasIntProcessor) conversion(row, cell, c, hc);
             else cell.setCv(c);
         } else if (isShort(clazz)) {
-            Short t = (Short) e;
+            short t = (Short) e;
             if (hasIntProcessor) conversion(row, cell, t, hc);
             else cell.setNv(t);
         } else if (isInt(clazz)) {
-            Integer n = (Integer) e;
+            int n = (Integer) e;
             if (hasIntProcessor) conversion(row, cell, n, hc);
             else cell.setNv(n);
         } else if (isLong(clazz)) {
