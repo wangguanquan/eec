@@ -282,11 +282,11 @@ public class Border {
      * orientation is not set, the last color will be complemented.
      * <p>
      * eq:
-     * thin red
-     * thin red thin dashed dashed
-     * medium black thick #cccccc double black hair green
-     * none none thin thin
-     * </p>
+     * <p>thin red</p>
+     * <p>thin red thin dashed dashed</p>
+     * <p>medium black thick #cccccc double black hair green</p>
+     * <p>none none thin thin</p>
+     *
      * @param text the border value
      * @return the parse value of {@link Border}
      */
