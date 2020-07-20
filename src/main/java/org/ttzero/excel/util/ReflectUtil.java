@@ -92,13 +92,13 @@ public class ReflectUtil {
      * @param stopClass The base class at which to stop the analysis.  Any
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
-     * @param predicate A field filter
+     * @param filter A field filter
      * @return all declared fields
      */
-    public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass, Predicate<Field> predicate) {
+    public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass, Predicate<Field> filter) {
         Field[] fields = listDeclaredFields(beanClass, stopClass);
 
-        return fieldFilter(fields, predicate);
+        return filter != null ? fieldFilter(fields, filter) : fields;
     }
 
     /**
@@ -117,15 +117,15 @@ public class ReflectUtil {
      * List all declared methods that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listDeclaredMethods(Class<?> beanClass, Predicate<Method> predicate)
+    public static Method[] listDeclaredMethods(Class<?> beanClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listDeclaredMethods(beanClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -161,15 +161,15 @@ public class ReflectUtil {
      * @param stopClass The base class at which to stop the analysis.  Any
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+    public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listDeclaredMethods(beanClass, stopClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -215,15 +215,15 @@ public class ReflectUtil {
      * List all declared read methods that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listReadMethods(Class<?> beanClass, Predicate<Method> predicate)
+    public static Method[] listReadMethods(Class<?> beanClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listReadMethods(beanClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -233,15 +233,15 @@ public class ReflectUtil {
      * @param stopClass The base class at which to stop the analysis.  Any
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+    public static Method[] listReadMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listReadMethods(beanClass, stopClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -290,15 +290,15 @@ public class ReflectUtil {
      * List all declared methods that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listWriteMethods(Class<?> beanClass, Predicate<Method> predicate)
+    public static Method[] listWriteMethods(Class<?> beanClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listWriteMethods(beanClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -308,15 +308,15 @@ public class ReflectUtil {
      * @param stopClass The base class at which to stop the analysis.  Any
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
-     * @param predicate A method filter
+     * @param filter A method filter
      * @return all declared method
      * @throws IntrospectionException happens during introspection error
      */
-    public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> predicate)
+    public static Method[] listWriteMethods(Class<?> beanClass, Class<?> stopClass, Predicate<Method> filter)
         throws IntrospectionException {
         Method[] methods = listWriteMethods(beanClass, stopClass);
 
-        return methodFilter(methods, predicate);
+        return filter != null ? methodFilter(methods, filter) : methods;
     }
 
     /**
@@ -376,11 +376,11 @@ public class ReflectUtil {
     }
 
     // Do Filter
-    private static Method[] methodFilter(Method[] methods, Predicate<Method> predicate) {
+    private static Method[] methodFilter(Method[] methods, Predicate<Method> filter) {
         int n = 0;
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
-            if (predicate.test(method)) {
+            if (filter.test(method)) {
                 if (i != n) methods[n] = method;
                 n++;
             }
@@ -389,12 +389,12 @@ public class ReflectUtil {
         return n < methods.length ? Arrays.copyOf(methods, n) : methods;
     }
 
-    private static Field[] fieldFilter(Field[] fields, Predicate<Field> predicate) {
+    private static Field[] fieldFilter(Field[] fields, Predicate<Field> filter) {
         int n = 0;
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
             field.setAccessible(true);
-            if (predicate.test(field)) {
+            if (filter.test(field)) {
                 if (i != n) fields[n] = field;
                 n++;
             }
