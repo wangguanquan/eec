@@ -22,6 +22,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 /**
  * @author guanquan.wang at 2018-02-02 16:51
@@ -324,8 +325,8 @@ public class Font implements Cloneable {
             return other.family == family
                 && other.style == style
                 && other.size == size
-                && (other.color != null ? other.color.equals(color) : null == color)
-                && (other.name != null ? other.name.equals(name) : null == name)
+                && (Objects.equals(other.color, color))
+                && (Objects.equals(other.name, name))
                 ;
         }
         return false;

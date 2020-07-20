@@ -19,6 +19,8 @@ package org.ttzero.excel.entity.style;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
+import java.util.Objects;
+
 /**
  * To create a custom number format, you start by selecting one of the built-in number formats as a starting point.
  * You can then change any one of the code sections of that format to create your own custom number format.
@@ -115,7 +117,7 @@ public class NumFmt implements Comparable<NumFmt> {
     public boolean equals(Object o) {
         if (o instanceof NumFmt) {
             NumFmt other = (NumFmt) o;
-            return other.code != null ? other.code.equals(code) : null == code;
+            return Objects.equals(other.code, code);
         }
         return false;
     }

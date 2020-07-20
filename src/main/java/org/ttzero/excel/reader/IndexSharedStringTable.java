@@ -360,7 +360,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     private String parse(ByteBuffer readBuffer) {
         int n = readBuffer.getInt();
         if (bytes == null || bytes.length < n) {
-            bytes = new byte[n < 128 ? 128 : n];
+            bytes = new byte[Math.max(n, 128)];
         }
         if (n < 0) {
             char c = (char) ~n;

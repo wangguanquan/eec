@@ -252,7 +252,7 @@ public class SharedStrings implements Closeable {
             backward = new String[page];
 
             // Cache 8KB binary, it will store 1^16 strings.
-            tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
+            tester = new Tester.FixBinaryTester(Math.min(max, 1 << 16));
 
             if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
             else hot = FixSizeLRUCache.create();

@@ -22,6 +22,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 /**
  * @author guanquan.wang at 2018-02-06 08:55
@@ -98,8 +99,8 @@ public class Fill implements Cloneable {
         if (o instanceof Fill) {
             Fill other = (Fill) o;
             return (other.patternType == this.patternType)
-                && (other.bgColor != null ? other.bgColor.equals(bgColor) : null == bgColor)
-                && (other.fgColor != null ? other.fgColor.equals(fgColor) : null == fgColor);
+                && (Objects.equals(other.bgColor, bgColor))
+                && (Objects.equals(other.fgColor, fgColor));
         }
         return false;
     }

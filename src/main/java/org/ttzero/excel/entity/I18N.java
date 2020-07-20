@@ -81,7 +81,7 @@ public class I18N {
         String msg = pro.getProperty(code, code);
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);
-        int len = indexs.length >= args.length ? args.length : indexs.length, size = 0;
+        int len = Math.min(indexs.length, args.length), size = 0;
         for (int i = 0; i < len; size += args[i++].length()) ;
         StringBuilder buf = new StringBuilder(oldValue.length + size - (len << 1));
         buf.append(oldValue, 0, indexs[0]).append(args[0]);

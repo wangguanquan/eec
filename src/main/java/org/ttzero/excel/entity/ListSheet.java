@@ -546,7 +546,7 @@ public class ListSheet<T> extends Sheet {
             blockSize = rowLimit - rows;
         }
         int end = start + blockSize;
-        return end <= this.end ? end : this.end;
+        return Math.min(end, this.end);
     }
 
     /**
@@ -586,7 +586,7 @@ public class ListSheet<T> extends Sheet {
                 @SuppressWarnings("unchecked")
                 ListSheet<T> copy = getClass().cast(clone());
                 copy.start = i;
-                copy.end = (i = i + limit < len ? i + limit : len);
+                copy.end = (i = Math.min(i + limit, len));
                 copy.size = copy.end - copy.start;
                 copy.eof = copy.size == limit;
                 workbook.insertSheet(n++, copy);
