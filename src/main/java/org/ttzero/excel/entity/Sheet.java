@@ -735,12 +735,12 @@ public abstract class Sheet implements Cloneable, Storable {
             } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
-                    case Const.ColumnType.NORMAL: // 正常显示数字
+                    case Const.ColumnType.NORMAL:
                         break;
-                    case Const.ColumnType.PARENTAGE: // 百分比显示
+                    case Const.ColumnType.PARENTAGE:
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(ip);
                         break;
-                    case Const.ColumnType.RMB: // 显示人民币
+                    case Const.ColumnType.RMB:
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(ir);
                         break;
                     default:
@@ -748,12 +748,12 @@ public abstract class Sheet implements Cloneable, Storable {
             } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
                 style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
-                    case Const.ColumnType.NORMAL: // 正常显示数字
+                    case Const.ColumnType.NORMAL:
                         break;
-                    case Const.ColumnType.PARENTAGE: // 百分比显示
+                    case Const.ColumnType.PARENTAGE:
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(fp);
                         break;
-                    case Const.ColumnType.RMB: // 显示人民币
+                    case Const.ColumnType.RMB:
                         style = Styles.clearNumfmt(style) | styles.addNumFmt(fr);
                         break;
                     default:

@@ -173,7 +173,7 @@ public class Styles implements Storable {
         self.addFont(font1);
 
         String lang = Locale.getDefault().toLanguageTag();
-        // 添加中文默认字体
+        // Add chinese font
         Font font2 = new Font(i18N.get("local-font-family"), 11); // cn
         font2.setFamily(3);
         font2.setScheme("minor");

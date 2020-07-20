@@ -60,10 +60,10 @@ public class RelManager implements Serializable {
             relationships = new ArrayList<>();
         }
         int n = indexOf(rel.getTarget());
-        if (n > -1) { // 替换
+        if (n > -1) { // Replace
             rel.setId("rId" + (n + 1));
             relationships.set(n, rel);
-        } else { // 追加
+        } else { // Append
             rel.setId("rId" + (relationships.size() + 1));
             relationships.add(rel);
         }

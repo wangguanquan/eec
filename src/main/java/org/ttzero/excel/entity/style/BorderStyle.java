@@ -23,12 +23,12 @@ package org.ttzero.excel.entity.style;
  */
 public enum BorderStyle {
     NONE("none"),
-    THIN("thin"),    // 细直线
+    THIN("thin"),
     MEDIUM("medium"),
-    DASHED("dashed"), // 虚线
-    DOTTED("dotted"), // 点线
-    THICK("thick"), // 粗直线
-    DOUBLE("double"), // 双线
+    DASHED("dashed"),
+    DOTTED("dotted"),
+    THICK("thick"),
+    DOUBLE("double"),
     HAIR("hair"),
     MEDIUM_DASHED("mediumDashed"),
     DASH_DOT("dashDot"),

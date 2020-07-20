@@ -264,9 +264,9 @@ public class Font implements Cloneable {
         // name
         buf.append("    <name val=\"").append(name).append("\"/>").append(Const.lineSeparator);
         // family
-//        DECORATIVE  装饰
-//        MODERN   现代
-//        NOT_APPLICABLE  不适用
+//        DECORATIVE
+//        MODERN
+//        NOT_APPLICABLE
 //        ROMAN
 //        SCRIPT
 //        SWISS
@@ -386,10 +386,10 @@ public class Font implements Cloneable {
     // ######################################Static inner class######################################
 
     public static class Style {
-        public static final int normal = 0 // 正常
-            , italic = 1 << 2 // 斜体
-            , bold = 1 << 1 // 加粗
-            , underLine = 1 // 下划线
+        public static final int normal = 0
+            , italic = 1 << 2
+            , bold = 1 << 1
+            , underLine = 1
             ;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {

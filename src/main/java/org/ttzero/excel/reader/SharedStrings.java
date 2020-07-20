@@ -560,7 +560,7 @@ public class SharedStrings implements Closeable {
         escapeBuf.delete(0, escapeBuf.length());
         do {
             escapeBuf.append(cb, from, idx_38 - from);
-            // ASCII值
+            // ASCII
             if (cb[idx_38 + 1] == '#') {
                 int n = toInt(cb, idx_38 + 2, idx_59);
                 // byte range
@@ -570,7 +570,7 @@ public class SharedStrings implements Closeable {
                 // Unicode char
                 escapeBuf.append((char) n);
             }
-            // 转义字符
+            // desc
             else {
                 String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
                 switch (name) {

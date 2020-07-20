@@ -128,7 +128,7 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     public Element toDom4j(Element root) {
-        if (StringUtil.isEmpty(code)) return root; // 内置format不用重复输出
+        if (StringUtil.isEmpty(code)) return root; // Build in style
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
             .addAttribute("numFmtId", String.valueOf(id));
