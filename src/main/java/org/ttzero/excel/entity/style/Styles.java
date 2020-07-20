@@ -30,6 +30,7 @@ import org.dom4j.io.SAXReader;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -449,7 +450,9 @@ public class Styles implements Storable {
         if (document != null) { // Not null
             FileUtil.writeToDiskNoFormat(document, styleFile);
         } else {
-            Files.copy(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
+            try (InputStream temp = getClass().getClassLoader().getResourceAsStream("template/styles.xml")) {
+                if (temp != null) Files.copy(temp, styleFile);
+            }
         }
     }
 
