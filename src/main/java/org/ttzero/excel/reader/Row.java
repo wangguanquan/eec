@@ -629,7 +629,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                d = Double.valueOf(c.sv);
+                d = Double.parseDouble(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("Can't convert cell value to double");
