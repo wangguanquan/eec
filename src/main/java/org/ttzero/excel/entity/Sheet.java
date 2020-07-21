@@ -1371,7 +1371,7 @@ public abstract class Sheet implements Cloneable, Storable {
         return c;
     }
 
-    private static ThreadLocal<char[][]> cache
+    private static final ThreadLocal<char[][]> cache
         = ThreadLocal.withInitial(() -> new char[][]{ {65}, {65, 65}, {65, 65, 65} });
 
     /**
