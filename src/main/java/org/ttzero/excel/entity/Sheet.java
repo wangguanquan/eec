@@ -761,7 +761,7 @@ public abstract class Sheet implements Cloneable, Storable {
             } else if (isTime(clazz) || isLocalTime(clazz)) {
                 style = Styles.clearNumFmt(Styles.defaultDateBorderStyle()) | styles.addNumFmt(tm);
             } else {
-                style = 0; // Auto-style
+                style = (1 << Styles.INDEX_FONT) | (1 << Styles.INDEX_BORDER); // Auto-style
             }
             return style;
         }
