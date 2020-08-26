@@ -109,10 +109,12 @@ public class RowBlock implements Iterator<Row> {
         return this;
     }
 
+    @Override
     public boolean hasNext() {
         return i < n;
     }
 
+    @Override
     public Row next() {
         return rows[i++];
     }
