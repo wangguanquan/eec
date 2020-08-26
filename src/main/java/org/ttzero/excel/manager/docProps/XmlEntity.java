@@ -48,6 +48,7 @@ class XmlEntity implements Storable {
 
     private String[] prefixs, uris;
 
+    @Override
     public void writeTo(Path path) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
