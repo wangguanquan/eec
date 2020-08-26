@@ -436,12 +436,11 @@ pom.xml添加
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>${eec.version}-SNAPSHOT</version>
+    <version>0.4.6</version>
 </dependency>
 ```
 
-xls格式的读写目前处于开发中，只有发布SNAPSHOT版本，e3-support包含e3的依赖。
-
+你可以在 [search.maven.org](https://search.maven.org/artifact/org.ttzero/eec-e3-support) 查询eec-e3-support版本
 
 #### 6. xls读取
 xls读取对方法式与xlsx完全一致
