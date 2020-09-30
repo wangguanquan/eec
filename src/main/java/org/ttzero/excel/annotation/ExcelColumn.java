@@ -61,13 +61,13 @@ public @interface ExcelColumn {
     HeaderComment comment() default @HeaderComment;
 
     /**
-     * Specify the output format.
+     * Specify the cell format.
      * <p>
      * It only supports the format specified by Office excel, please refer
      * to {@link org.ttzero.excel.entity.style.NumFmt}.
      * <p>
      * If you are not sure whether the format is correct, please open
-     * Office excel{@code >} Format cell{@code >} Custom and debug the
+     * Office excel{@code >} Format cell{@code >} Custom to debug the
      * custom format here.
      * <p>
      * Note: It only used on Number or Date(include Timestamp, Time and java.time.*) field.
