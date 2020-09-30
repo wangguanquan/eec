@@ -221,7 +221,7 @@ class HeaderRow extends Row {
 
             return mapping(writeMethods, tmp, propertyDescriptors, mergedMethods);
         } catch (IntrospectionException e) {
-            LOGGER.warn("Get " + clazz + " property descriptor failed.");
+            LOGGER.warn("Get {} property descriptor failed.", clazz);
         }
         return 0;
     }
@@ -230,7 +230,7 @@ class HeaderRow extends Row {
         int n = getIndex(first);
         if (n == -1) n = getIndex(second);
         if (n == -1) {
-            LOGGER.warn(clazz + " field [" + first + "] can't find in header" + Arrays.toString(names));
+            LOGGER.warn("{} field [{}] can't find in header {}", clazz, first, Arrays.toString(names));
         }
         return n;
     }

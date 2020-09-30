@@ -298,7 +298,6 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      *
      * @param action The action to be performed for each element
      * @throws NullPointerException if the specified action is null
-     * @since 1.8
      */
     @Override
     public void forEach(Consumer<? super Entry<K, V>> action) {

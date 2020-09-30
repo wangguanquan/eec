@@ -182,7 +182,7 @@ public class Styles implements Storable {
         } else if ("zh-TW".equals(lang)) {
             font2.setCharset(Charset.CHINESEBIG5);
         }
-        // TODO other charset
+        // Other charset
         self.addFont(font2);
 
         self.fills = new ArrayList<>();

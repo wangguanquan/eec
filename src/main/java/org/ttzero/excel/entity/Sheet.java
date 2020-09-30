@@ -17,6 +17,8 @@
 package org.ttzero.excel.entity;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
@@ -91,8 +93,11 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-@TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
+@TopNS(prefix = {"", "r"}, value = "worksheet"
+        , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet implements Cloneable, Storable {
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
     protected Workbook workbook;
 
     protected String name;
@@ -1229,7 +1234,7 @@ public abstract class Sheet implements Cloneable, Storable {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 11, Font.Style.bold, Color.white);
+                , 11, Font.Style.BOLD, Color.white);
             headStyle = styles.of(styles.addFont(font)
                 | styles.addFill(Fill.parse("solid #666699"))
                 | styles.addBorder(Border.parse("thin black"))
