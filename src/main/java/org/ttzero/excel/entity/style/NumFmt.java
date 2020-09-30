@@ -19,6 +19,7 @@ package org.ttzero.excel.entity.style;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -102,10 +103,64 @@ public class NumFmt implements Comparable<NumFmt> {
 
     // Clean the format code
     private static String clean(String code) {
-        // TODO
+        if (StringUtil.isEmpty(code))
+            throw new NumberFormatException("The format code must not be null or empty.");
+
         // Replace '-' to '\-'
+        code = escape(code, '-');
         // Replace ' ' to '\ '
+        code = escape(code, ' ');
+
         return code;
+    }
+
+    private static String escape(String code, char c) {
+        int i = code.indexOf(c);
+        if (i > -1) {
+            int j = 0;
+            StringBuilder buf = new StringBuilder();
+            do {
+                if (i != j) {
+                    buf.append(code, j, i);
+                    j = i;
+                }
+                if (i == 0 || code.charAt(i - 1) != '\\') {
+                    buf.append('\\');
+                }
+            } while ((i = code.indexOf(c, i + 1)) > -1);
+            code = buf.append(code, j, code.length()).toString();
+        }
+        return code;
+    }
+
+    /**
+     * Roughly calculate the cell length
+     *
+     * @param base the cell value length
+     * @return cell length
+     */
+    public int calcNumWidth(int base) {
+        int n = 0;
+        boolean ignore = false, comma = false;
+        char[] cs = new char[1];
+        for (int i = 0; i < code.length(); i++) {
+            char c = code.charAt(i);
+            if (c == '"' || c == '\\') continue;
+            if (ignore) {
+                if (c == ']' || c == ')') {
+                    ignore = false;
+                }
+                continue;
+            }
+            if (c == '[' || c == '(') {
+                ignore = true;
+                continue;
+            }
+            if (c == ',') comma = true;
+            cs[0] = c;
+            n += (new String(cs).getBytes(StandardCharsets.UTF_8).length >> 1) + 1;
+        }
+        return comma ? base + base / 3 + n - 5 : n;
     }
 
     @Override

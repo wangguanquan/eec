@@ -163,8 +163,8 @@ public class Styles implements Storable {
         self.document = factory.createDocument(rootElement);
 
         self.numFmts = new ArrayList<>();
-        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
-        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
+//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
+//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
 
         self.fonts = new ArrayList<>();
         Font font1 = new Font(i18N.get("en-font-family"), 11, Color.black);  // en
@@ -534,13 +534,13 @@ public class Styles implements Storable {
         return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
-    public static int defaultDateBorderStyle() {
-        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-    }
-
-    public static int defaultTimestampBorderStyle() {
-        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-    }
+//    public static int defaultDateBorderStyle() {
+//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//    }
+//
+//    public static int defaultTimestampBorderStyle() {
+//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//    }
 
     public static int defaultDoubleBorderStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
@@ -559,13 +559,13 @@ public class Styles implements Storable {
         return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
     }
 
-    public static int defaultDateStyle() {
-        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
-    }
-
-    public static int defaultTimestampStyle() {
-        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
-    }
+//    public static int defaultDateStyle() {
+//        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//    }
+//
+//    public static int defaultTimestampStyle() {
+//        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//    }
 
     public static int defaultDoubleStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
@@ -598,7 +598,8 @@ public class Styles implements Storable {
 
     ////////////////////////////////To object//////////////////////////////////
     public NumFmt getNumFmt(int style) {
-        return numFmts.get(style >>> INDEX_NUMBER_FORMAT);
+        int n = style >>> INDEX_NUMBER_FORMAT;
+        return n < numFmts.size() ? numFmts.get(n) : null;
     }
 
     public Fill getFill(int style) {

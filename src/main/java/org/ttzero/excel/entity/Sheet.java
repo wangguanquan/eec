@@ -247,6 +247,14 @@ public abstract class Sheet implements Cloneable, Storable {
         public int o;
         public Styles styles;
         public Comment headerComment, cellComment;
+        /**
+         * Specify the cell number format
+         */
+        private NumFmt numFmt;
+        /**
+         * Only export column name and ignore value
+         */
+        private boolean ignoreValue;
 
         /**
          * Constructor Column
@@ -709,11 +717,33 @@ public abstract class Sheet implements Cloneable, Storable {
             return this;
         }
 
-        private static final NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // 整数百分比
-            , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // 整数人民币
-            , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // 小数百分比
-            , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // 小数人民币
-            , tm = new NumFmt("hh:mm:ss") // 时分秒
+        /**
+         * Setting a cell format of number or date type
+         *
+         * @param code the format string
+         * @return the {@link Sheet.Column}
+         */
+        public Column setNumFmt(String code) {
+            this.numFmt = new NumFmt(code);
+            return this;
+        }
+
+        /**
+         * Returns the column {@link NumFmt}
+         *
+         * @return number format
+         */
+        public NumFmt getNumFmt() {
+            return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
+        }
+
+        private static final NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // Integer-Percentage
+            , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // Integer-RMB
+            , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // Float-Percentage
+            , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // Flat-RMB
+            , tm = new NumFmt("hh:mm:ss")
+            , dt = new NumFmt("yyyy\\-mm\\-dd")
+            , dts = new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")
             ;
 
         /**
@@ -727,9 +757,9 @@ public abstract class Sheet implements Cloneable, Storable {
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
             } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = Styles.defaultDateBorderStyle();
+                style = styles.addNumFmt(dt) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                style = Styles.defaultTimestampBorderStyle();
+                style = styles.addNumFmt(dts) | Horizontals.CENTER;
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
@@ -759,10 +789,16 @@ public abstract class Sheet implements Cloneable, Storable {
                     default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style = Styles.clearNumFmt(Styles.defaultDateBorderStyle()) | styles.addNumFmt(tm);
+                style =  styles.addNumFmt(tm) | Horizontals.CENTER;
             } else {
                 style = (1 << Styles.INDEX_FONT) | (1 << Styles.INDEX_BORDER); // Auto-style
             }
+
+            // Reset custom number format if specified.
+            if (numFmt != null) {
+                style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
+            }
+
             return style;
         }
 
@@ -776,6 +812,21 @@ public abstract class Sheet implements Cloneable, Storable {
                 return cellStyle;
             }
             return cellStyle = getCellStyle(clazz);
+        }
+
+        /**
+         * @return bool
+         */
+        public boolean isIgnoreValue() {
+            return ignoreValue;
+        }
+
+        /**
+         * Ignore value
+         */
+        Column ignoreValue() {
+            this.ignoreValue = true;
+            return this;
         }
     }
 

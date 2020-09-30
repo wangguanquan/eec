@@ -252,7 +252,9 @@ public class ListSheet<T> extends Sheet {
                     cell.clear();
 
                     Object e;
-                    if (methods[i] != null)
+                    if (columns[i].isIgnoreValue())
+                        e = null;
+                    else if (methods[i] != null)
                         e = methods[i].invoke(o);
                     else
                         e = fields[i].get(o);

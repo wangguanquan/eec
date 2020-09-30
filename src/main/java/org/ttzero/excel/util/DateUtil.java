@@ -100,6 +100,16 @@ public class DateUtil {
      * @param date the java.util.Date value
      * @return Office open xml date
      */
+    public static double toDateTimeValue(Date date) {
+        return toDateTimeValue(new Timestamp(date.getTime()));
+    }
+
+    /**
+     * java.util.Date to Office open xml date
+     *
+     * @param date the java.util.Date value
+     * @return Office open xml date
+     */
     public static int toDateValue(Date date) {
         int n;
         if (date instanceof java.sql.Date) {

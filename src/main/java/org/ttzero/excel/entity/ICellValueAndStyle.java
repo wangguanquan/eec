@@ -87,7 +87,7 @@ public interface ICellValueAndStyle {
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
-            cell.setAv(DateUtil.toDateValue((java.util.Date) e));
+            cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
         } else if (isDateTime(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
