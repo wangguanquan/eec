@@ -78,11 +78,11 @@ public class ReflectUtil {
      * List all declared fields that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
-     * @param predicate A field filter
+     * @param filter A field filter
      * @return all declared fields
      */
-    public static Field[] listDeclaredFields(Class<?> beanClass, Predicate<Field> predicate) {
-        return listDeclaredFields(beanClass, Object.class, predicate);
+    public static Field[] listDeclaredFields(Class<?> beanClass, Predicate<Field> filter) {
+        return listDeclaredFields(beanClass, Object.class, filter);
     }
 
     /**
