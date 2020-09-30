@@ -249,6 +249,7 @@ public class Border {
         return this;
     }
 
+    @Override
     public int hashCode() {
         int down = borders[4] != null ? 1 : 0
             , up = borders[5] != null ? 2 : 0;
@@ -259,6 +260,7 @@ public class Border {
         return hash;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof Border) {
             Border other = (Border) o;
@@ -341,11 +343,13 @@ public class Border {
             this.color = color;
         }
 
+        @Override
         public int hashCode() {
             int hash = color.hashCode();
             return (style.ordinal() << 24) | (hash << 8 >>> 8);
         }
 
+        @Override
         public boolean equals(Object o) {
             return (o instanceof SubBorder) && o.hashCode() == hashCode();
         }

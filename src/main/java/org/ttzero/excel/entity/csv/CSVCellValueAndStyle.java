@@ -131,6 +131,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param o  the cell value
      * @return const zero (general style)
      */
+    @Override
     public int getStyleIndex(int rows, Sheet.Column hc, Object o) {
         return 0;
     }

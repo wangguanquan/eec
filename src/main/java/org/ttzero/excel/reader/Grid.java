@@ -194,6 +194,7 @@ interface Grid {
         }
 
         private static class FastLinkedScanner extends LinkedScanner {
+            @Override
             public Entry get(int r, int c) {
                 if (size() == 1) return head.entry;
                 return super.get(r, c);

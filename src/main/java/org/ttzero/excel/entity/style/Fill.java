@@ -80,6 +80,7 @@ public class Fill implements Cloneable {
         return this;
     }
 
+    @Override
     public int hashCode() {
         int hash = 0;
         if (patternType != null) {
@@ -95,6 +96,7 @@ public class Fill implements Cloneable {
         return hash + (c << 8 >>> 8);
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof Fill) {
             Fill other = (Fill) o;

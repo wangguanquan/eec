@@ -335,6 +335,7 @@ public class ExcelReader implements Closeable {
      *
      * @throws IOException when fail close readers
      */
+    @Override
     public void close() throws IOException {
         // Close all opened sheet
         for (Sheet st : sheets) {
