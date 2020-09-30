@@ -478,14 +478,6 @@ public class Styles implements Storable {
 
     ////////////////////////clear style///////////////////////////////
 
-    /**
-     * @deprecated Please use {@link #clearNumFmt(int)}
-     */
-    @Deprecated
-    public static int clearNumfmt(int style) {
-        return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
-    }
-
     public static int clearNumFmt(int style) {
         return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
     }

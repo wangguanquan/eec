@@ -386,27 +386,6 @@ public class Font implements Cloneable {
     // ######################################Static inner class######################################
 
     public static class Style {
-        /**
-         * @deprecated {@link Style#NORMAL}
-         */
-        @Deprecated
-        public static final int normal = 0;
-        /**
-         * @deprecated {@link Style#ITALIC}
-         */
-        @Deprecated
-        public static final int italic = 1 << 2;
-        /**
-         * @deprecated {@link Style#BOLD}
-         */
-        @Deprecated
-        public static final int bold = 1 << 1;
-        /**
-         * @deprecated {@link Style#UNDERLINE}
-         */
-        @Deprecated
-        public static final int underLine = 1;
-
         public static final int NORMAL = 0;
         public static final int ITALIC = 1 << 2;
         public static final int BOLD = 1 << 1;
