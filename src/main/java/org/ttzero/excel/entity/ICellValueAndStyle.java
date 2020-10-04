@@ -113,7 +113,7 @@ public interface ICellValueAndStyle {
         } else if (isBigDecimal(clazz)) {
             cell.setMv((BigDecimal) e);
         } else if (isLocalDate(clazz)) {
-            cell.setAv(DateUtil.toDateValue((java.time.LocalDate) e));
+            cell.setIv(DateUtil.toDateValue((java.time.LocalDate) e));
         } else if (isLocalDateTime(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((java.time.LocalDateTime) e));
         } else if (isTime(clazz)) {
