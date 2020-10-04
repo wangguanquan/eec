@@ -58,6 +58,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
+import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
@@ -762,9 +763,9 @@ public abstract class Sheet implements Cloneable, Storable {
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
             } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = styles.addNumFmt(dt) | Horizontals.CENTER;
+                style = styles.addNumFmt(dt) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                style = styles.addNumFmt(dts) | Horizontals.CENTER;
+                style = styles.addNumFmt(dts) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
@@ -794,9 +795,9 @@ public abstract class Sheet implements Cloneable, Storable {
                     default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style =  styles.addNumFmt(tm) | Horizontals.CENTER;
+                style =  styles.addNumFmt(tm) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else {
-                style = (1 << Styles.INDEX_FONT) | (1 << Styles.INDEX_BORDER); // Auto-style
+                style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
             }
 
             // Reset custom number format if specified.
