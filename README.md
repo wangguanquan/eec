@@ -74,16 +74,15 @@ pom.xml添加
 #### 1. 对象数组导出
 
 #### 1.1 准备工作
-对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，使用注解`@IgnoreExport`标记不需要导出的字段。
+对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出。
 
 ```
-    @NotExport("敏感信息不导出")
     private int id; // not export
 
     @ExcelColumn("渠道ID")
     private int channelId;
 
-    @ExcelColumn(share = false)
+    @ExcelColumn
     private String account;
 
     @ExcelColumn("注册时间")
@@ -96,8 +95,10 @@ pom.xml添加
 public void testWrite(List<Student> students) throws IOException {
     // 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
     new Workbook("test object", "guanquan.wang")
+    
         // 添加一个worksheet，可以通过addSheet添加多个worksheet
         .addSheet(new ListSheet<>("学生信息", students))
+        
         // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
         .writeTo(Paths.get("f:/excel"));
 }
@@ -482,15 +483,16 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.8 (2020-10-09)
+-------------
+1. ExcelColumn注解增加format属性来支持自定义单元格格式化
+2. 为减少数据泄露风险，现在对象属性必须明确指定ExcelColumn注解才会被导出
+
 Version 0.4.7 (2020-08-14)
 -------------
 1. 安全更新，修复dom4j小于2.1.3版本可能启用XXE攻击。
 2. ExcelColumn注解增加comment属性，允许在Excel列头添加“批注”功能
 3. 修复一些已知BUG
-
-Version 0.4.6 (2020-04-20)
--------------
-1. 什么也没做，0.4.4版本发布异常
 
 Version 0.4.4 (2020-04-20)
 -------------
@@ -498,21 +500,13 @@ Version 0.4.4 (2020-04-20)
 2. 支持读取Excel97~2003文件(需要依懒eec-e3-support)
 3. 修复一些已知BUG
 
-Version 0.4.3 (2020-03-19)
--------------
-1. 修复读取科学计数转数字类型时抛NumberFormatException异常
-2. 修复读取SharedString单字符串时内容错乱的BUG
-3. 解决读取java.sql.Time和java.time.LocalTime类型时导致UncheckedTypeException异常
-4. 解决打开EEC导出的空Worksheet时会弹出警告信息
-5. 缩小堆内存使用（最小6MB）
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.7-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.8-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
