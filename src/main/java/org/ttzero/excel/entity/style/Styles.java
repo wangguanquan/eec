@@ -275,8 +275,9 @@ public class Styles implements Storable {
      * @return the numFmt part value in style
      */
     public final int addNumFmt(NumFmt numFmt) {
-        // check and search default code
-        if (numFmt.getId() < 0) {
+        // All indexes from 0 to 175 are reserved for built-in formats.
+        // The first user-defined format starts at 176.
+        if (numFmt.getId() < 0 || numFmt.getId() >= 176) {
             if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }

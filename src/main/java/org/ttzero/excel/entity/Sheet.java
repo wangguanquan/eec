@@ -743,15 +743,6 @@ public abstract class Sheet implements Cloneable, Storable {
             return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
         }
 
-        private static final NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // Integer-Percentage
-            , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // Integer-RMB
-            , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // Float-Percentage
-            , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // Flat-RMB
-            , tm = new NumFmt("hh:mm:ss")
-            , dt = new NumFmt("yyyy\\-mm\\-dd")
-            , dts = new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")
-            ;
-
         /**
          * Returns default style based on cell type
          *
@@ -763,9 +754,9 @@ public abstract class Sheet implements Cloneable, Storable {
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
             } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = styles.addNumFmt(dt) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                style = styles.addNumFmt(dts) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
@@ -774,10 +765,10 @@ public abstract class Sheet implements Cloneable, Storable {
                     case Const.ColumnType.NORMAL:
                         break;
                     case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(ip);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0%_);[Red]-0% "));
                         break;
                     case Const.ColumnType.RMB:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(ir);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0_);[Red]-¥0 "));
                         break;
                     default:
                 }
@@ -787,15 +778,15 @@ public abstract class Sheet implements Cloneable, Storable {
                     case Const.ColumnType.NORMAL:
                         break;
                     case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(fp);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0.00%_);[Red]-0.00% "));
                         break;
                     case Const.ColumnType.RMB:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(fr);
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0.00_);[Red]-¥0.00 "));
                         break;
                     default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style =  styles.addNumFmt(tm) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+                style =  styles.addNumFmt(new NumFmt("hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else {
                 style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
             }

@@ -6,6 +6,7 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -36,8 +37,15 @@ public class CustomerNumFmtTest extends WorkbookTest {
                         , new Sheet.Column("编码", "code")
                         , new Sheet.Column("姓名", "name")
                         , new Sheet.Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
-                        , new Sheet.Column("数字", "num").setNumFmt("#,##0")
+                        , new Sheet.Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
                 )).writeTo(defaultTestPath);
+    }
+
+    @Test public void testNegativeNumFmt() throws IOException {
+        new Workbook("customize_negative")
+                .setAutoSize(true)
+                .addSheet(new ListSheet<>(Arrays.asList(new Num(12345678), new Num(0), new Num(-12345678))))
+                .writeTo(defaultTestPath);
     }
 
     static class Item {
@@ -84,6 +92,15 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 list.add(e);
             }
             return list;
+        }
+    }
+
+    static class Num {
+        @ExcelColumn(format = "[Blue]#,##0.00_);[Red]-#,##0.00_);0_)")
+        int num;
+
+        Num(int num) {
+            this.num = num;
         }
     }
 }
