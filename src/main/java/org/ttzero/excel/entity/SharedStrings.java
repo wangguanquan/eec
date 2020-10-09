@@ -83,7 +83,7 @@ public class SharedStrings implements Storable, Closeable {
     /**
      * Cache ASCII value
      */
-    private int[] ascii;
+    private final int[] ascii;
     private Path temp;
     private ExtBufferedWriter writer;
 
@@ -105,7 +105,7 @@ public class SharedStrings implements Storable, Closeable {
     /**
      * The number of expected insertions to the constructed bloom
      */
-    private int expectedInsertions = 1 << 17;
+    private final int expectedInsertions = 1 << 17;
 
     SharedStrings() {
         hot = FixSizeLRUCache.create();
@@ -132,7 +132,7 @@ public class SharedStrings implements Storable, Closeable {
         }
     }
 
-    private ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
+    private final ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
 
     /**
      * Getting the character value index (zero base)

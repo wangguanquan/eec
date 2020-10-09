@@ -118,13 +118,9 @@ public abstract class Row {
         return lc - fc <= 0;
     }
 
-    private String outOfBoundsMsg(int index) {
-        return "Index: " + index + ", Size: " + lc;
-    }
-
     protected void rangeCheck(int index) {
         if (index >= lc || index < 0)
-            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + lc);
     }
 
     /**
@@ -629,7 +625,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                d = Double.valueOf(c.sv);
+                d = Double.parseDouble(c.sv);
                 break;
 
             default: throw new UncheckedTypeException("Can't convert cell value to double");

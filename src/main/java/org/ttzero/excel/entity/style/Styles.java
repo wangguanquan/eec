@@ -30,6 +30,7 @@ import org.dom4j.io.SAXReader;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -66,7 +67,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles implements Storable {
 
-    private Map<Integer, Integer> map;
+    private final Map<Integer, Integer> map;
     private Document document;
 
     private List<Font> fonts;
@@ -162,8 +163,8 @@ public class Styles implements Storable {
         self.document = factory.createDocument(rootElement);
 
         self.numFmts = new ArrayList<>();
-        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
-        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
+//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
+//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
 
         self.fonts = new ArrayList<>();
         Font font1 = new Font(i18N.get("en-font-family"), 11, Color.black);  // en
@@ -172,7 +173,7 @@ public class Styles implements Storable {
         self.addFont(font1);
 
         String lang = Locale.getDefault().toLanguageTag();
-        // 添加中文默认字体
+        // Add chinese font
         Font font2 = new Font(i18N.get("local-font-family"), 11); // cn
         font2.setFamily(3);
         font2.setScheme("minor");
@@ -181,7 +182,7 @@ public class Styles implements Storable {
         } else if ("zh-TW".equals(lang)) {
             font2.setCharset(Charset.CHINESEBIG5);
         }
-        // TODO other charset
+        // Other charset
         self.addFont(font2);
 
         self.fills = new ArrayList<>();
@@ -274,8 +275,9 @@ public class Styles implements Storable {
      * @return the numFmt part value in style
      */
     public final int addNumFmt(NumFmt numFmt) {
-        // check and search default code
-        if (numFmt.getId() < 0) {
+        // All indexes from 0 to 175 are reserved for built-in formats.
+        // The first user-defined format starts at 176.
+        if (numFmt.getId() < 0 || numFmt.getId() >= 176) {
             if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }
@@ -384,8 +386,19 @@ public class Styles implements Storable {
             ;
     }
 
-    static final String[] attrNames = {"numFmtId", "fontId", "fillId", "borderId", "vertical", "horizontal"
-        , "applyNumberFormat", "applyFont", "applyFill", "applyBorder", "applyAlignment"};
+    static final String[] attrNames = {
+            "numFmtId"
+            , "fontId"
+            , "fillId"
+            , "borderId"
+            , "vertical"
+            , "horizontal"
+            , "applyNumberFormat"
+            , "applyFont"
+            , "applyFill"
+            , "applyBorder"
+            , "applyAlignment"
+    };
 
     /**
      * add style in document
@@ -449,7 +462,9 @@ public class Styles implements Storable {
         if (document != null) { // Not null
             FileUtil.writeToDiskNoFormat(document, styleFile);
         } else {
-            Files.copy(getClass().getClassLoader().getResourceAsStream("template/styles.xml"), styleFile);
+            try (InputStream temp = getClass().getClassLoader().getResourceAsStream("template/styles.xml")) {
+                if (temp != null) Files.copy(temp, styleFile);
+            }
         }
     }
 
@@ -463,7 +478,8 @@ public class Styles implements Storable {
     }
 
     ////////////////////////clear style///////////////////////////////
-    public static int clearNumfmt(int style) {
+
+    public static int clearNumFmt(int style) {
         return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
     }
 
@@ -511,13 +527,13 @@ public class Styles implements Storable {
         return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
-    public static int defaultDateBorderStyle() {
-        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-    }
-
-    public static int defaultTimestampBorderStyle() {
-        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-    }
+//    public static int defaultDateBorderStyle() {
+//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//    }
+//
+//    public static int defaultTimestampBorderStyle() {
+//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//    }
 
     public static int defaultDoubleBorderStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
@@ -536,13 +552,13 @@ public class Styles implements Storable {
         return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
     }
 
-    public static int defaultDateStyle() {
-        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
-    }
-
-    public static int defaultTimestampStyle() {
-        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
-    }
+//    public static int defaultDateStyle() {
+//        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//    }
+//
+//    public static int defaultTimestampStyle() {
+//        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//    }
 
     public static int defaultDoubleStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
@@ -575,7 +591,8 @@ public class Styles implements Storable {
 
     ////////////////////////////////To object//////////////////////////////////
     public NumFmt getNumFmt(int style) {
-        return numFmts.get(style >>> INDEX_NUMBER_FORMAT);
+        int n = style >>> INDEX_NUMBER_FORMAT;
+        return n < numFmts.size() ? numFmts.get(n) : null;
     }
 
     public Fill getFill(int style) {

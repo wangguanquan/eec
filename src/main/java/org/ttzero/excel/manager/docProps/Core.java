@@ -80,13 +80,15 @@ public class Core extends XmlEntity {
      * Create time(notnull)
      */
     @NS("dcterms")
-    @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
+    @Attr(name = "type", value = "dcterms:W3CDTF"
+            , namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date created;
     /**
      * The last modify time(notnull)
      */
     @NS("dcterms")
-    @Attr(name = "type", value = "dcterms:W3CDTF", namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
+    @Attr(name = "type", value = "dcterms:W3CDTF"
+            , namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date modified;
 
 

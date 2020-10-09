@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -28,7 +29,7 @@ import java.util.Properties;
  * @author guanquan.wang on 2018-10-13
  */
 public class I18N {
-    private Properties pro;
+    private final Properties pro;
 
     public I18N() {
         Locale locale = Locale.getDefault();
@@ -40,7 +41,7 @@ public class I18N {
                 is = I18N.class.getClassLoader().getResourceAsStream("I18N/" + fn.replace("_", "zh-CN"));
             }
             if (is != null) {
-                try (Reader reader = new InputStreamReader(is, "UTF-8")) {
+                try (Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
                     pro.load(reader);
                 }
             }
@@ -81,7 +82,7 @@ public class I18N {
         String msg = pro.getProperty(code, code);
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);
-        int len = indexs.length >= args.length ? args.length : indexs.length, size = 0;
+        int len = Math.min(indexs.length, args.length), size = 0;
         for (int i = 0; i < len; size += args[i++].length()) ;
         StringBuilder buf = new StringBuilder(oldValue.length + size - (len << 1));
         buf.append(oldValue, 0, indexs[0]).append(args[0]);

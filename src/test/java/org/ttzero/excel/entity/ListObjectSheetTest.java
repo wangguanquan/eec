@@ -525,7 +525,9 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static class Item {
+        @ExcelColumn
         private int id;
+        @ExcelColumn
         private String name;
 
         public Item(int id, String name) {
@@ -556,20 +558,35 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static class AllType {
+        @ExcelColumn
         private boolean bv;
+        @ExcelColumn
         private char cv;
+        @ExcelColumn
         private short sv;
+        @ExcelColumn
         private int nv;
+        @ExcelColumn
         private long lv;
+        @ExcelColumn
         private float fv;
+        @ExcelColumn
         private double dv;
+        @ExcelColumn
         private String s;
+        @ExcelColumn
         private BigDecimal mv;
+        @ExcelColumn
         private Date av;
+        @ExcelColumn
         private Timestamp iv;
+        @ExcelColumn
         private Time tv;
+        @ExcelColumn
         private LocalDate ldv;
+        @ExcelColumn
         private LocalDateTime ldtv;
+        @ExcelColumn
         private LocalTime ltv;
 
         public static List<AllType> randomTestData(int size) {
@@ -798,20 +815,35 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static class BoxAllType {
+        @ExcelColumn
         private Boolean bv;
+        @ExcelColumn
         private Character cv;
+        @ExcelColumn
         private Short sv;
+        @ExcelColumn
         private Integer nv;
+        @ExcelColumn
         private Long lv;
+        @ExcelColumn
         private Float fv;
+        @ExcelColumn
         private Double dv;
+        @ExcelColumn
         private String s;
+        @ExcelColumn
         private BigDecimal mv;
+        @ExcelColumn
         private Date av;
+        @ExcelColumn
         private Timestamp iv;
+        @ExcelColumn
         private Time tv;
+        @ExcelColumn
         private LocalDate ldv;
+        @ExcelColumn
         private LocalDateTime ldtv;
+        @ExcelColumn
         private LocalTime ltv;
 
         public static List<AllType> randomTestData(int size) {
@@ -972,6 +1004,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static class ExtItem extends Item {
+        @ExcelColumn
         private String nice;
 
         public ExtItem(int id, String name) {

@@ -37,7 +37,7 @@ public class Border {
 
     private static final Color defaultColor = new Color(51, 51, 51); // #333333
 
-    private SubBorder[] borders;
+    private final SubBorder[] borders;
 
     public Border() {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
@@ -249,6 +249,7 @@ public class Border {
         return this;
     }
 
+    @Override
     public int hashCode() {
         int down = borders[4] != null ? 1 : 0
             , up = borders[5] != null ? 2 : 0;
@@ -259,6 +260,7 @@ public class Border {
         return hash;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (o instanceof Border) {
             Border other = (Border) o;
@@ -282,11 +284,11 @@ public class Border {
      * orientation is not set, the last color will be complemented.
      * <p>
      * eq:
-     * thin red
-     * thin red thin dashed dashed
-     * medium black thick #cccccc double black hair green
-     * none none thin thin
-     * </p>
+     * <p>thin red</p>
+     * <p>thin red thin dashed dashed</p>
+     * <p>medium black thick #cccccc double black hair green</p>
+     * <p>none none thin thin</p>
+     *
      * @param text the border value
      * @return the parse value of {@link Border}
      */
@@ -333,19 +335,21 @@ public class Border {
     }
 
     private static class SubBorder {
-        private BorderStyle style;
-        private Color color;
+        private final BorderStyle style;
+        private final Color color;
 
         public SubBorder(BorderStyle style, Color color) {
             this.style = style;
             this.color = color;
         }
 
+        @Override
         public int hashCode() {
             int hash = color.hashCode();
             return (style.ordinal() << 24) | (hash << 8 >>> 8);
         }
 
+        @Override
         public boolean equals(Object o) {
             return (o instanceof SubBorder) && o.hashCode() == hashCode();
         }

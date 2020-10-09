@@ -17,6 +17,8 @@
 package org.ttzero.excel.entity;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
@@ -56,6 +58,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
+import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
@@ -91,8 +94,11 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-@TopNS(prefix = {"", "r"}, value = "worksheet", uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
+@TopNS(prefix = {"", "r"}, value = "worksheet"
+        , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet implements Cloneable, Storable {
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+
     protected Workbook workbook;
 
     protected String name;
@@ -247,6 +253,14 @@ public abstract class Sheet implements Cloneable, Storable {
         public int o;
         public Styles styles;
         public Comment headerComment, cellComment;
+        /**
+         * Specify the cell number format
+         */
+        private NumFmt numFmt;
+        /**
+         * Only export column name and ignore value
+         */
+        private boolean ignoreValue;
 
         /**
          * Constructor Column
@@ -709,12 +723,25 @@ public abstract class Sheet implements Cloneable, Storable {
             return this;
         }
 
-        private static final NumFmt ip = new NumFmt("0%_);[Red]\\(0%\\)") // 整数百分比
-            , ir = new NumFmt("¥0_);[Red]\\(¥0\\)") // 整数人民币
-            , fp = new NumFmt("0.00%_);[Red]\\(0.00%\\)") // 小数百分比
-            , fr = new NumFmt("¥0.00_);[Red]\\(¥0.00\\)") // 小数人民币
-            , tm = new NumFmt("hh:mm:ss") // 时分秒
-            ;
+        /**
+         * Setting a cell format of number or date type
+         *
+         * @param code the format string
+         * @return the {@link Sheet.Column}
+         */
+        public Column setNumFmt(String code) {
+            this.numFmt = new NumFmt(code);
+            return this;
+        }
+
+        /**
+         * Returns the column {@link NumFmt}
+         *
+         * @return number format
+         */
+        public NumFmt getNumFmt() {
+            return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
+        }
 
         /**
          * Returns default style based on cell type
@@ -727,42 +754,48 @@ public abstract class Sheet implements Cloneable, Storable {
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle();
             } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = Styles.defaultDateBorderStyle();
+                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                style = Styles.defaultTimestampBorderStyle();
+                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
                 style = Styles.defaultIntBorderStyle();
                 switch (type) {
-                    case Const.ColumnType.NORMAL: // 正常显示数字
+                    case Const.ColumnType.NORMAL:
                         break;
-                    case Const.ColumnType.PARENTAGE: // 百分比显示
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(ip);
+                    case Const.ColumnType.PARENTAGE:
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0%_);[Red]-0% "));
                         break;
-                    case Const.ColumnType.RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(ir);
+                    case Const.ColumnType.RMB:
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0_);[Red]-¥0 "));
                         break;
                     default:
                 }
             } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
                 style = Styles.defaultDoubleBorderStyle();
                 switch (type) {
-                    case Const.ColumnType.NORMAL: // 正常显示数字
+                    case Const.ColumnType.NORMAL:
                         break;
-                    case Const.ColumnType.PARENTAGE: // 百分比显示
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(fp);
+                    case Const.ColumnType.PARENTAGE:
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0.00%_);[Red]-0.00% "));
                         break;
-                    case Const.ColumnType.RMB: // 显示人民币
-                        style = Styles.clearNumfmt(style) | styles.addNumFmt(fr);
+                    case Const.ColumnType.RMB:
+                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0.00_);[Red]-¥0.00 "));
                         break;
                     default:
                 }
             } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style = Styles.clearNumfmt(Styles.defaultDateBorderStyle()) | styles.addNumFmt(tm);
+                style =  styles.addNumFmt(new NumFmt("hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else {
-                style = 0; // Auto-style
+                style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
             }
+
+            // Reset custom number format if specified.
+            if (numFmt != null) {
+                style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
+            }
+
             return style;
         }
 
@@ -776,6 +809,21 @@ public abstract class Sheet implements Cloneable, Storable {
                 return cellStyle;
             }
             return cellStyle = getCellStyle(clazz);
+        }
+
+        /**
+         * @return bool
+         */
+        public boolean isIgnoreValue() {
+            return ignoreValue;
+        }
+
+        /**
+         * Ignore value
+         */
+        Column ignoreValue() {
+            this.ignoreValue = true;
+            return this;
         }
     }
 
@@ -1178,7 +1226,7 @@ public abstract class Sheet implements Cloneable, Storable {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 11, Font.Style.bold, Color.white);
+                , 11, Font.Style.BOLD, Color.white);
             headStyle = styles.of(styles.addFont(font)
                 | styles.addFill(Fill.parse("solid #666699"))
                 | styles.addBorder(Border.parse("thin black"))
@@ -1371,7 +1419,7 @@ public abstract class Sheet implements Cloneable, Storable {
         return c;
     }
 
-    private static ThreadLocal<char[][]> cache
+    private static final ThreadLocal<char[][]> cache
         = ThreadLocal.withInitial(() -> new char[][]{ {65}, {65, 65}, {65, 65, 65} });
 
     /**

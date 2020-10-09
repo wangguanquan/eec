@@ -32,7 +32,16 @@ public class Horizontals {
         , DISTRIBUTED = 7 // Distributed Horizontal Alignment
         ;
 
-    private static final String[] _names = {"general","left","right","center","centerContinuous","fill","justify","distributed"};
+    private static final String[] _names = {
+            "general"
+            ,"left"
+            ,"right"
+            ,"center"
+            ,"centerContinuous"
+            ,"fill"
+            ,"justify"
+            ,"distributed"
+    };
 
     public static String of(int n) {
         return _names[n];

@@ -19,6 +19,9 @@ package org.ttzero.excel.entity.style;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
 /**
  * To create a custom number format, you start by selecting one of the built-in number formats as a starting point.
  * You can then change any one of the code sections of that format to create your own custom number format.
@@ -58,7 +61,7 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     public NumFmt(String code) {
-        this.code = code;
+        this.code = clean(code);
     }
 
     public String getCode() {
@@ -88,6 +91,78 @@ public class NumFmt implements Comparable<NumFmt> {
         return new NumFmt().setId(id);
     }
 
+    /**
+     * Create a NumFmt
+     *
+     * @param code the numFmt code string
+     * @return NumFmt
+     */
+    public static NumFmt of(String code) {
+        return new NumFmt(code);
+    }
+
+    // Clean the format code
+    private static String clean(String code) {
+        if (StringUtil.isEmpty(code))
+            throw new NumberFormatException("The format code must not be null or empty.");
+
+        // Replace '-' to '\-'
+        code = escape(code, '-');
+        // Replace ' ' to '\ '
+        code = escape(code, ' ');
+
+        return code;
+    }
+
+    private static String escape(String code, char c) {
+        int i = code.indexOf(c);
+        if (i > -1) {
+            int j = 0;
+            StringBuilder buf = new StringBuilder();
+            do {
+                if (i != j) {
+                    buf.append(code, j, i);
+                    j = i;
+                }
+                if (i == 0 || code.charAt(i - 1) != '\\') {
+                    buf.append('\\');
+                }
+            } while ((i = code.indexOf(c, i + 1)) > -1);
+            code = buf.append(code, j, code.length()).toString();
+        }
+        return code;
+    }
+
+    /**
+     * Roughly calculate the cell length
+     *
+     * @param base the cell value length
+     * @return cell length
+     */
+    public int calcNumWidth(int base) {
+        int n = 0;
+        boolean ignore = false, comma = false;
+        char[] cs = new char[1];
+        for (int i = 0; i < code.length(); i++) {
+            char c = code.charAt(i);
+            if (c == '"' || c == '\\') continue;
+            if (ignore) {
+                if (c == ']' || c == ')') {
+                    ignore = false;
+                }
+                continue;
+            }
+            if (c == '[' || c == '(') {
+                ignore = true;
+                continue;
+            }
+            if (c == ',') comma = true;
+            cs[0] = c;
+            n += (new String(cs).getBytes(StandardCharsets.UTF_8).length >> 1) + 1;
+        }
+        return comma ? base + base / 3 + n - 5 : n;
+    }
+
     @Override
     public int hashCode() {
         return code != null ? code.hashCode() : 0;
@@ -97,7 +172,7 @@ public class NumFmt implements Comparable<NumFmt> {
     public boolean equals(Object o) {
         if (o instanceof NumFmt) {
             NumFmt other = (NumFmt) o;
-            return other.code != null ? other.code.equals(code) : null == code;
+            return Objects.equals(other.code, code);
         }
         return false;
     }
@@ -108,7 +183,7 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     public Element toDom4j(Element root) {
-        if (StringUtil.isEmpty(code)) return root; // 内置format不用重复输出
+        if (StringUtil.isEmpty(code)) return root; // Build in style
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
             .addAttribute("numFmtId", String.valueOf(id));

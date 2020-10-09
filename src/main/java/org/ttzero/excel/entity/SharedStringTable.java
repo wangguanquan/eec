@@ -40,14 +40,14 @@ public class SharedStringTable implements Closeable, Iterable<String> {
     /**
      * The temp path
      */
-    private Path temp;
+    private final Path temp;
 
     /**
      * The total unique word in workbook.
      */
     private int count;
 
-    private SeekableByteChannel channel;
+    private final SeekableByteChannel channel;
 
     /**
      * Byte array buffer
@@ -469,12 +469,12 @@ public class SharedStringTable implements Closeable, Iterable<String> {
     }
 
     private static class SSTIterator implements Iterator<String> {
-        private SeekableByteChannel channel;
-        private ByteBuffer buffer;
+        private final SeekableByteChannel channel;
+        private final ByteBuffer buffer;
         private byte[] bytes;
         @SuppressWarnings("unused")
         private int count; // ignore
-        private char[] chars;
+        private final char[] chars;
         private SSTIterator(Path temp) {
             try {
                 channel = Files.newByteChannel(temp, StandardOpenOption.READ);

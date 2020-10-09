@@ -252,7 +252,7 @@ public class SharedStrings implements Closeable {
             backward = new String[page];
 
             // Cache 8KB binary, it will store 1^16 strings.
-            tester = new Tester.FixBinaryTester(max > 1 << 16 ? 1 << 16 : max);
+            tester = new Tester.FixBinaryTester(Math.min(max, 1 << 16));
 
             if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
             else hot = FixSizeLRUCache.create();
@@ -560,7 +560,7 @@ public class SharedStrings implements Closeable {
         escapeBuf.delete(0, escapeBuf.length());
         do {
             escapeBuf.append(cb, from, idx_38 - from);
-            // ASCII值
+            // ASCII
             if (cb[idx_38 + 1] == '#') {
                 int n = toInt(cb, idx_38 + 2, idx_59);
                 // byte range
@@ -570,7 +570,7 @@ public class SharedStrings implements Closeable {
                 // Unicode char
                 escapeBuf.append((char) n);
             }
-            // 转义字符
+            // desc
             else {
                 String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
                 switch (name) {
@@ -681,7 +681,9 @@ interface Tester {
     int analysis();
 
     class FixBinaryTester implements Tester {
-        private int start, limit, initial_size;
+        private int start;
+        private int limit;
+        private final int initial_size;
         private long[] marks;
 //        private static final int LIMIT = (1 << 25) - 1;
 

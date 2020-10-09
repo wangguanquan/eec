@@ -48,6 +48,7 @@ class XmlEntity implements Storable {
 
     private String[] prefixs, uris;
 
+    @Override
     public void writeTo(Path path) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
@@ -76,9 +77,7 @@ class XmlEntity implements Storable {
 
         if (hasTopNs) {
             for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs.length > 0) {
-                    rootElement.add(Namespace.get(prefixs[i], uris[i]));
-                }
+                rootElement.add(Namespace.get(prefixs[i], uris[i]));
             }
         }
 

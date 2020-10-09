@@ -89,7 +89,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     private ExtBufferedWriter bw;
     private Sheet sheet;
     private Sheet.Column[] columns;
-    private SharedStrings sst;
+    private final SharedStrings sst;
     private Comments comments;
 
     public XMLWorksheetWriter(Sheet sheet) {
@@ -515,13 +515,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 case SST:
                     writeString(cell.sv, r, i, xf);
                     break;
-                case DATE:
                 case NUMERIC:
                     writeNumeric(cell.nv, r, i, xf);
                     break;
                 case LONG:
                     writeNumeric(cell.lv, r, i, xf);
                     break;
+                case DATE:
                 case DATETIME:
                 case DOUBLE:
                 case TIME:
@@ -564,13 +564,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 case SST:
                     writeStringAutoSize(cell.sv, r, i, xf);
                     break;
-                case DATE:
                 case NUMERIC:
                     writeNumericAutoSize(cell.nv, r, i, xf);
                     break;
                 case LONG:
                     writeNumericAutoSize(cell.lv, r, i, xf);
                     break;
+                case DATE:
                 case DATETIME:
                 case DOUBLE:
                 case TIME:
@@ -781,7 +781,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeNumeric(l, row, column, xf);
         Sheet.Column hc = columns[column];
         int n;
-        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
+        if (hc.width == 0 && hc.o < (n = (l < 0L ? stringSize(-l) + 1 : stringSize(l)))) {
             hc.o = n;
         }
     }
@@ -846,28 +846,36 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 if (isString(clazz)) {
                     len = hc.o;
                 }
-                else if (isDate(clazz) || isLocalDate(clazz)) {
-                    len = 10;
-                }
-                else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                    len = 20;
+                else if (isDate(clazz) || isLocalDate(clazz) || isDateTime(clazz) || isLocalDateTime(clazz)) {
+//                    len = 10;
+//                }
+//                else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
+                    if (hc.getNumFmt() != null) {
+                        len = hc.getNumFmt().calcNumWidth(0);
+                    } else len = 20;
                 }
                 else if (isChar(clazz)) {
                     len = 1;
                 }
                 else if (isInt(clazz) || isLong(clazz)) {
                     // TODO Calculate character width based on numFmt
-                    len = hc.o;
+                    if (hc.getNumFmt() != null) {
+                        len = hc.getNumFmt().calcNumWidth(hc.o);
+                    } else len = hc.o;
                 }
                 else if (isFloat(clazz) || isDouble(clazz)) {
                     // TODO Calculate character width based on numFmt
-                    len = hc.o;
+                    if (hc.getNumFmt() != null) {
+                        len = hc.getNumFmt().calcNumWidth(hc.o);
+                    } else len = hc.o;
                 }
                 else if (isBigDecimal(clazz)) {
                     len = hc.o;
                 }
                 else if (isTime(clazz) || isLocalTime(clazz)) {
-                    len = 8;
+                    if (hc.getNumFmt() != null) {
+                        len = hc.getNumFmt().calcNumWidth(0);
+                    } else len = 8;
                 }
                 else if (isBool(clazz)) {
                     len = 5;

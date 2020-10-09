@@ -35,7 +35,7 @@ public class RowBlock implements Iterator<Row> {
     private Row[] rows;
     private int i, n, total = 0;
     private boolean eof;
-    private int limit;
+    private final int limit;
 
     public RowBlock() {
         this(ROW_BLOCK_SIZE);
@@ -109,10 +109,12 @@ public class RowBlock implements Iterator<Row> {
         return this;
     }
 
+    @Override
     public boolean hasNext() {
         return i < n;
     }
 
+    @Override
     public Row next() {
         return rows[i++];
     }

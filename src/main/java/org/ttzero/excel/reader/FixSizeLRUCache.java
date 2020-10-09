@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  */
 public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     private static class E<K, V> implements Cache.Entry<K, V> {
-        private K k;
+        private final K k;
         private V v;
 
         private E(K k, V v) {
@@ -66,14 +66,14 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     /**
      * The elements limit
      */
-    private int limit;
+    private final int limit;
 
     /**
      * Size of elements
      */
     private int size;
 
-    private Map<K, Node<E<K, V>>> table;
+    private final Map<K, Node<E<K, V>>> table;
 
     public static <K, V> FixSizeLRUCache<K, V> create() {
         return new FixSizeLRUCache<>();
@@ -298,7 +298,6 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      *
      * @param action The action to be performed for each element
      * @throws NullPointerException if the specified action is null
-     * @since 1.8
      */
     @Override
     public void forEach(Consumer<? super Entry<K, V>> action) {

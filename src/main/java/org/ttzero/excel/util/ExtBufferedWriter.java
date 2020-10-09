@@ -26,7 +26,7 @@ import java.io.Writer;
  * @author guanquan.wang on 2017/10/11.
  */
 public class ExtBufferedWriter extends BufferedWriter {
-    private static int defaultCharBufferSize = 8192;
+    private static final int defaultCharBufferSize = 8192;
 
     public ExtBufferedWriter(Writer out) {
         this(out, defaultCharBufferSize);
@@ -40,7 +40,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private char[][] cache_char_array = new char[25][];
+    private final char[][] cache_char_array = new char[25][];
     static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
     static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];

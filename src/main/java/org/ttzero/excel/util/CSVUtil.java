@@ -336,8 +336,8 @@ public class CSVUtil {
     public static class Reader implements Closeable {
 
         private RowsIterator iterator;
-        private Path path;
-        private Charset charset;
+        private final Path path;
+        private final Charset charset;
         private char separator;
 
         private Reader(Path path, Charset charset) {
@@ -468,7 +468,7 @@ public class CSVUtil {
         }
 
         // None item iterator
-        private Spliterator<String[]> emptySql = new Spliterator<String[]>() {
+        private final Spliterator<String[]> emptySql = new Spliterator<String[]>() {
             @Override
             public boolean tryAdvance(Consumer<? super String[]> action) {
                 return false;
@@ -951,7 +951,7 @@ public class CSVUtil {
      */
     public static class Writer implements Closeable {
 
-        private BufferedWriter writer;
+        private final BufferedWriter writer;
         // Comma separator character, default ','
         private char separator = COMMA;
         private int column;
@@ -965,7 +965,7 @@ public class CSVUtil {
          * Line separator string.  This is the value of the line.separator
          * property at the moment that the stream was created.
          */
-        private char[] lineSeparator = System.lineSeparator().toCharArray();
+        private final char[] lineSeparator = System.lineSeparator().toCharArray();
 
         /**
          * Create a CSV format writer

@@ -39,9 +39,9 @@ public class IndexSharedStringTable extends SharedStringTable {
     /**
      * The index temp path
      */
-    private Path temp;
+    private final Path temp;
 
-    private SeekableByteChannel channel;
+    private final SeekableByteChannel channel;
 
     /**
      * Byte array buffer
@@ -67,7 +67,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     /**
      * A fix length multiplexing char array
      */
-    private char[] chars = new char[1];
+    private final char[] chars = new char[1];
 
     /**
      * Cache the getting index
@@ -360,7 +360,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     private String parse(ByteBuffer readBuffer) {
         int n = readBuffer.getInt();
         if (bytes == null || bytes.length < n) {
-            bytes = new byte[n < 128 ? 128 : n];
+            bytes = new byte[Math.max(n, 128)];
         }
         if (n < 0) {
             char c = (char) ~n;

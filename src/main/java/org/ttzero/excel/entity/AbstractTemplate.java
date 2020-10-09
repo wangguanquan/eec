@@ -186,8 +186,9 @@ public abstract class AbstractTemplate {
         while (iterator.hasNext()) {
             Element si = iterator.next(), t = si.element("t");
             String txt = t.getText();
-            if (isPlaceholder(txt)) { // 判断是否是占位符
-                // 如果是占位符则对值进行替换
+            // Determine whether it is a placeholder text
+            if (isPlaceholder(txt)) {
+                // Replace if it is a placeholder text
                 t.setText(getValue(txt));
                 n++;
             }
@@ -257,8 +258,9 @@ public abstract class AbstractTemplate {
                 if (t != null && inlineStr.equals(t.getValue())) {
                     Element tv = cell.element("is").element("t");
                     String txt = tv.getText();
-                    if (isPlaceholder(txt)) { // 判断是否是占位符
-                        // 如果是占位符则对值进行替换
+                    // Determine whether it is a placeholder text
+                    if (isPlaceholder(txt)) {
+                        // Replace if it is a placeholder text
                         tv.setText(getValue(txt));
                         n++;
                     }

@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -50,10 +51,7 @@ public class RelManager implements Serializable {
 
     public static RelManager of(Relationship... relationships) {
         RelManager relManager = new RelManager();
-        relManager.relationships = new ArrayList<>();
-        for (Relationship r : relationships) {
-            relManager.relationships.add(r);
-        }
+        relManager.relationships = new ArrayList<>(Arrays.asList(relationships));
         return relManager;
     }
 
@@ -62,10 +60,10 @@ public class RelManager implements Serializable {
             relationships = new ArrayList<>();
         }
         int n = indexOf(rel.getTarget());
-        if (n > -1) { // 替换
+        if (n > -1) { // Replace
             rel.setId("rId" + (n + 1));
             relationships.set(n, rel);
-        } else { // 追加
+        } else { // Append
             rel.setId("rId" + (relationships.size() + 1));
             relationships.add(rel);
         }

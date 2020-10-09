@@ -33,11 +33,11 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Automatic interlacing color
      */
-    private int autoOdd;
+    private final int autoOdd;
     /**
      * Odd row's background color
      */
-    private int oddFill;
+    private final int oddFill;
 
     public XMLCellValueAndStyle(int autoOdd, int oddFill) {
         this.autoOdd = autoOdd;
