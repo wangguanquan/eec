@@ -248,6 +248,7 @@ public class Workbook implements Storable {
      * Setting basic information,such as title, subject, keyword, category...
      *
      * @param core the {@link Core} instance
+     * @return ths size of Worksheet
      */
     public Workbook setCore(Core core) {
         this.core = core;
