@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -779,49 +780,12 @@ public class Styles implements Storable {
     private NumFmt findFmtById(int id) {
         if (numFmts == null || numFmts.isEmpty())
             return null;
-        NumFmt fmt = numFmts.get(0);
-        // Found it
-        if (fmt.getId() == id)
-            return fmt;
-        if (fmt.getId() < id) {
-            int size = numFmts.size();
-            if (fmt.getId() < 164) {
-                int index = 1;
-                for (; index < size; ) {
-                    if ((fmt = numFmts.get(index++)).getId() >= 164)
-                        break;
-                }
-            }
-            // The format is sorted and incremented
-            // So get it by index, the index equals id subtract the first id
-            int index = id - fmt.getId();
-            if (index >= size) {
-                fmt = null;
-            } else {
-                fmt = numFmts.get(id - fmt.getId());
-                if (fmt.getId() == id) return fmt;
-                else if (fmt.getId() < id) {
-                    // Loop check forward
-                    for (; index++ < size; ) {
-                        NumFmt nf = numFmts.get(index);
-                        if (nf.getId() == id) {
-                            fmt = nf;
-                            break;
-                        }
-                    }
-                } else {
-                    // Loop check backward
-                    for (; index-- > 0; ) {
-                        NumFmt nf = numFmts.get(index);
-                        if (nf.getId() == id) {
-                            fmt = nf;
-                            break;
-                        }
-                    }
-                }
-            }
-        } else fmt = null;
-        return fmt;
+        NumFmt fmt = numFmts.get(numFmts.size() - 1);
+        if (fmt.getId() > id) {
+            int n = Collections.binarySearch(numFmts, new NumFmt(id, null));
+            return n >= 0 ? numFmts.get(n) : null;
+        }
+        return fmt.getId() == id ? fmt : null;
     }
 
     /**
