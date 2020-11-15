@@ -437,7 +437,7 @@ pom.xml添加
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.4.6</version>
+    <version>0.4.9</version>
 </dependency>
 ```
 
@@ -483,6 +483,11 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.9 (2020-11-15)
+-------------
+1. 修复读取文件时的BUG(#146)
+2. 增加读取高版本Office导出的xls文件格式的兼容性
+
 Version 0.4.8 (2020-10-09)
 -------------
 1. ExcelColumn注解增加format属性来支持自定义单元格格式化
@@ -494,19 +499,13 @@ Version 0.4.7 (2020-08-14)
 2. ExcelColumn注解增加comment属性，允许在Excel列头添加“批注”功能
 3. 修复一些已知BUG
 
-Version 0.4.4 (2020-04-20)
--------------
-1. 优化SharedStringTable
-2. 支持读取Excel97~2003文件(需要依懒eec-e3-support)
-3. 修复一些已知BUG
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.8-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.9-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
