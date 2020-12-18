@@ -25,6 +25,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import static java.lang.Integer.numberOfTrailingZeros;
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -451,7 +452,10 @@ public class SharedStrings implements Closeable {
 
             limit_forward = n;
 
-            if (nChar < length) {
+            // If cell value(character value) length greater than buffer size
+            if (nChar == 0) {
+                cb = Arrays.copyOf(cb, cb.length << 1);
+            } else if (nChar < length) {
                 System.arraycopy(cb, nChar, cb, 0, offset = length - nChar);
             }
 
@@ -485,10 +489,10 @@ public class SharedStrings implements Closeable {
             nChar += 4;
 
             // Test the next tag
-            for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'); ++nChar);
+            for (; nChar < len1 && (cb[nChar] != '<'); ++nChar);
 
             // End of <si>
-            if (nChar < len1 && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
+            if (nChar < len1 && cb[nChar + 1] == '/' && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
                 forward[n++] = tmp;
                 if (status == 4) sst.push(forward[n - 1]);
                 nChar += 5;
