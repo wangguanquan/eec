@@ -249,7 +249,7 @@ class XMLSheet implements Sheet {
             length = reader.read(cb, left, cb.length - left);
             if (length < 11) break;
             // read size
-            if (nChar == 0) {
+            if (nChar == 0 && startRow < 1) {
                 String line = new String(cb, 56, 1024);
                 String size = "<dimension ref=\"";
                 int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index += size.length()) : -1;
