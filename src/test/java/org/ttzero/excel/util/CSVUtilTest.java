@@ -17,6 +17,7 @@
 package org.ttzero.excel.util;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -134,6 +135,7 @@ public class CSVUtilTest {
         }
     }
 
+    @Ignore
     @Test public void testWriteChar() {
         char c = base[random.nextInt(base.length)];
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
