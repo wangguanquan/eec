@@ -510,7 +510,7 @@ public class SharedStrings implements Closeable {
                 nChar = t;
                 // Loop and join
                 for (; ; ) {
-                    subT = subT(cb, nChar, end, end);
+                    subT = subT(cb, nChar, end, end - 1);
                     a = subT[0];
                     if (a == -1) break;
                     nChar = subT[1];
@@ -531,11 +531,27 @@ public class SharedStrings implements Closeable {
     }
 
     private int[] subT(char[] cb, int nChar, int len0, int len1) {
+        do {
+            // The next tag
+            for (; nChar < len0 && cb[nChar] != '<'; ++nChar) ;
+
+            if (nChar >= len1) return new int[] { -1 };
+
+            // Ignore <rPh> translate
+            if (cb[nChar + 1] == 'r' && cb[nChar + 2] == 'P' && cb[nChar + 3] == 'h' && (cb[nChar + 4] == '>' || cb[nChar + 4] == ' ')) {
+                int a = nChar + 5;
+                for (int len = len1 - 2; a < len && cb[a] != '<' || cb[a + 1] != '/' || cb[a + 2] != 'r'
+                        || cb[a + 3] != 'P' || cb[a + 4] != 'h' || cb[a + 5] != '>'; ++a)
+                    ;
+                if (a >= len1 - 2) return new int[] { -1 };
+                nChar = a + 6;
+            } else break;
+        } while (nChar < len1);
 
         for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
             || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
             ;
-        if (nChar >= len0) return new int[]{ -1 }; // Not found
+        if (nChar >= len0) return new int[] { -1 }; // Not found
         int a = nChar += 3;
         if (cb[nChar - 1] == ' ') { // space="preserve"
             for (; nChar < len0 && cb[nChar++] != '>'; ) ;
