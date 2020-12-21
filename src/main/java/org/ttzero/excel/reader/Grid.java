@@ -406,7 +406,8 @@ interface Grid {
                     head = val;
                     // Move entry back
                 } else if (n == 0) {
-                    head = val.next;
+                    if (bf != null) bf.next = val.next;
+                    else head = val.next;
                     val.next = null;
                     tail.next = val;
                     tail = val;
