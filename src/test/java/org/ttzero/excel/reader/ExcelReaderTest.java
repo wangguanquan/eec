@@ -391,6 +391,14 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testMergeExcel2() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
+            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Ignore
     @Test public void testReaderLarge() {
         try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
