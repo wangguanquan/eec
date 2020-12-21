@@ -501,6 +501,20 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testToObject2() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("test-fixed-row.xlsx"))) {
+            reader.sheet(0).rows().forEach(row -> {
+                if (row.getRowNumber() == 1) {
+                    assert "我是固定表头".equals(row.getString(0));
+                } else if (row.getRowNumber() == 2) {
+                    assert "我是内容".equals(row.getString(0));
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class Customer {
         @ExcelColumn("客户编码")
         private String code;
