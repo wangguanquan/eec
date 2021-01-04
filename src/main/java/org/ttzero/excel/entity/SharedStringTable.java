@@ -65,6 +65,11 @@ public class SharedStringTable implements Closeable, Iterable<String> {
     protected boolean shouldDelete;
 
     /**
+     * Buffer size(4K)
+     */
+    protected int defaultBufferSize = 1 << 12;
+
+    /**
      * Create a temp file to storage shared strings
      *
      * @throws IOException if I/O error occur.
@@ -73,7 +78,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
         temp = Files.createTempFile("+", ".sst");
         shouldDelete = true;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
-        buffer = ByteBuffer.allocate(1 << 11);
+        buffer = ByteBuffer.allocate(defaultBufferSize);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         // Total keyword storage the header 4 bytes
         buffer.putInt(0);
@@ -93,7 +98,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
         this.temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
 
-        buffer = ByteBuffer.allocate(1 << 11);
+        buffer = ByteBuffer.allocate(defaultBufferSize);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         channel.read(buffer);
@@ -138,6 +143,10 @@ public class SharedStringTable implements Closeable, Iterable<String> {
             return pushChar(key.charAt(0));
         }
         byte[] bytes = key.getBytes(UTF_8);
+        // The byte length exceeds 4k
+        if (bytes.length + 4 > defaultBufferSize) {
+           return -1;
+        }
         if (buffer.remaining() < bytes.length + 4) {
             flush();
         }

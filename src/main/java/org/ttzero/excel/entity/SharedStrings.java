@@ -208,12 +208,15 @@ public class SharedStrings implements Storable, Closeable {
         // Convert to inline string when the cache full
 //        if (sst.size() > expectedInsertions) return -1;
 
-        writer.write("<si><t>");
-        writer.escapeWrite(key);
-        writer.write("</t></si>");
-
         // Add to table
-        return sst.push(key);
+        int n = sst.push(key);
+        // Ignore write into SST
+        if (n >= 0) {
+            writer.write("<si><t>");
+            writer.escapeWrite(key);
+            writer.write("</t></si>");
+        }
+        return n;
     }
 
     private int add(char c) throws IOException {
