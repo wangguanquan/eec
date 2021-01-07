@@ -483,6 +483,11 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.10 (2021-01-07)
+-------------
+1. 增加兼容性（Office for Mac）
+2. 修复部分BUG(#147,#148,#159,#161)
+
 Version 0.4.9 (2020-11-15)
 -------------
 1. 修复读取文件时的BUG(#146)
@@ -493,11 +498,6 @@ Version 0.4.8 (2020-10-09)
 1. ExcelColumn注解增加format属性来支持自定义单元格格式化
 2. 为减少数据泄露风险，现在对象属性必须明确指定ExcelColumn注解才会被导出
 
-Version 0.4.7 (2020-08-14)
--------------
-1. 安全更新，修复dom4j小于2.1.3版本可能启用XXE攻击。
-2. ExcelColumn注解增加comment属性，允许在Excel列头添加“批注”功能
-3. 修复一些已知BUG
 
 [更多...](./CHANGELOG)
 
@@ -505,7 +505,7 @@ Version 0.4.7 (2020-08-14)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.9-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.10-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
