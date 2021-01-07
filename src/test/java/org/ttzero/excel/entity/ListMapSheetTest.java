@@ -26,6 +26,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,6 +34,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author guanquan.wang at 2019-04-28 19:16
@@ -258,6 +260,37 @@ public class ListMapSheetTest extends WorkbookTest {
             @Override
             protected List<Map<String, ?>> more() {
                 return i++ < 10 ? createAllTypeData(30) : null;
+            }
+        }).writeTo(defaultTestPath);
+    }
+
+    @Test public void test_161() throws IOException {
+        new Workbook(("Issue#161")).addSheet(new ListMapSheet() {
+            private int i = 0;
+            @Override
+            protected List<Map<String, ?>> more() {
+                // Only write one row
+                if (i++ > 0) return null;
+                List<Map<String, ?>> list = new ArrayList<>();
+                Map<String, Object> map = new HashMap<>();
+                map.put("a0172da4c398047aeac758ecd4a799b71", UUID.randomUUID().toString());
+                map.put("hobbies", new ArrayList<String>() {{
+                    add("张");
+                    add("李");
+                }});
+                map.put("sex", "男");
+                final int len = 4095;
+                StringBuilder buf = new StringBuilder(len);
+                for (int i = 0; i < len; i++) {
+                    buf.append('a');
+                }
+                // java.nio.BufferOverflowException occur when the cell value length large than 2045
+                map.put("name", buf.toString());
+                map.put("age", 24);
+                map.put("createDate", new Date(1535444725000L).toInstant().atOffset(ZoneOffset.of("+8")).toLocalDateTime());
+
+                list.add(map);
+                return list;
             }
         }).writeTo(defaultTestPath);
     }
