@@ -437,7 +437,7 @@ pom.xml添加
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.4.9</version>
+    <version>0.4.11</version>
 </dependency>
 ```
 
@@ -483,6 +483,13 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.11 (2021-01-15) *eec-e3-support* only
+-------------
+1. 兼容非标准化BOF记录解析
+2. 优化short-sector解析
+3. 极大提升读取xls兼容性(兼容某些版本所有数据都写在short-sector中的处理；提升大文件CONTINUE块解析的容错性；提升某些版本没有short-sector的容错性)
+4. 增加对EXTSST的解析
+
 Version 0.4.10 (2021-01-07)
 -------------
 1. 增加兼容性（Office for Mac）
