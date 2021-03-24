@@ -1226,7 +1226,7 @@ public abstract class Sheet implements Cloneable, Storable {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 11, Font.Style.BOLD, Color.white);
+                , 12, Font.Style.BOLD, Color.white);
             headStyle = styles.of(styles.addFont(font)
                 | styles.addFill(Fill.parse("solid #666699"))
                 | styles.addBorder(Border.parse("thin black"))

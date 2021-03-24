@@ -386,7 +386,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         int row = 1;
         bw.write("<row r=\"");
         bw.writeInt(row);
-        bw.write("\" customHeight=\"1\" ht=\"18.6\" spans=\"1:");
+        bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
         bw.writeInt(columns.length);
         bw.write("\">");
 
