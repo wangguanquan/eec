@@ -228,7 +228,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public IWorksheetWriter clone() {
-        IWorksheetWriter copy = null;
+        IWorksheetWriter copy;
         try {
             copy = (IWorksheetWriter) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -246,7 +246,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     copy = getClass().getConstructor(Sheet.class).newInstance(sheet);
                 } catch (NoSuchMethodException | IllegalAccessException
                     | InstantiationException | InvocationTargetException e2) {
-                    e2.printStackTrace();
+                    throw new ExcelWriteException(e2);
                 }
             } finally {
                 FileUtil.close(oos);
