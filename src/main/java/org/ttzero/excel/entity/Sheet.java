@@ -155,6 +155,11 @@ public abstract class Sheet implements Cloneable, Storable {
 
     protected ICellValueAndStyle cellValueAndStyle;
 
+    /**
+     * Force export all attributes
+     */
+    protected int forceExport;
+
     public int getId() {
         return id;
     }
@@ -1096,6 +1101,35 @@ public abstract class Sheet implements Cloneable, Storable {
     public Sheet hidden() {
         this.hidden = true;
         return this;
+    }
+
+    /**
+     * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
+     *
+     * @return the {@link Sheet}
+     */
+    public Sheet forceExport() {
+        this.forceExport = 1;
+        return this;
+    }
+
+    /**
+     * Cancel force export
+     *
+     * @return the {@link Sheet}
+     */
+    public Sheet cancelForceExport() {
+        this.forceExport = 2;
+        return this;
+    }
+
+    /**
+     * Returns the force export
+     *
+     * @return 1 if force, otherwise returns 0
+     */
+    public int getForceExport() {
+        return forceExport;
     }
 
     /**

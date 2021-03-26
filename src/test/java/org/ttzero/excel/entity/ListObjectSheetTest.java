@@ -26,6 +26,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
 
@@ -394,7 +395,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
 
                 @Override
-                @ExcelColumn("SCORE")
+                @ExcelColumn("成绩")
                 public int getScore() {
                     return 97;
                 }
@@ -477,7 +478,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testLarge() throws IOException {
-        new Workbook("large07").addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
+        new Workbook("large07").forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
             private int i = 0, n;
 
             @Override
@@ -517,13 +518,82 @@ public class ListObjectSheetTest extends WorkbookTest {
                 return list;
             }
         }).writeTo(defaultTestPath);
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
+            assert Dimension.of("A1:Y50001").equals(reader.sheet(0).getDimension());
+        }
     }
 
     // #132
     @Test public void testEmptyList() throws IOException {
         new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
     }
+    
+    @Test public void testNoForceExport() throws IOException {
+        new Workbook("testNoForceExport").addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath);
 
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testNoForceExport.xlsx"))) {
+            assert Dimension.of("A1").equals(reader.sheet(0).getDimension());
+        }
+    }
+    
+    @Test public void testForceExportOnWorkbook() throws IOException {
+        int lines = random.nextInt(100) + 3;
+        new Workbook("testForceExportOnWorkbook").forceExport().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines))).writeTo(defaultTestPath);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook.xlsx"))) {
+            assert reader.sheet(0).dataRows().count() == lines;
+        }
+    }
+
+    @Test public void testForceExportOnWorkSheet() throws IOException {
+        int lines = random.nextInt(100) + 3;
+        new Workbook("testForceExportOnWorkSheet").addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport()).writeTo(defaultTestPath);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkSheet.xlsx"))) {
+            assert reader.sheet(0).dataRows().count() == lines;
+        }
+    }
+
+    @Test public void testForceExportOnWorkbook2() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
+                .writeTo(defaultTestPath);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2.xlsx"))) {
+            assert reader.sheet(0).dataRows().count() == lines;
+            assert reader.sheet(1).dataRows().count() == lines2;
+        }
+    }
+
+    @Test public void testForceExportOnWorkbook2Cancel1() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2Cancel1")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
+                .writeTo(defaultTestPath);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel1.xlsx"))) {
+            assert reader.sheets().count() == 2L;
+            assert reader.sheet(0).dataRows().count() == 0L;
+            assert reader.sheet(1).dataRows().count() == lines2;
+        }
+    }
+
+    @Test public void testForceExportOnWorkbook2Cancel2() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2Cancel2")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
+                .writeTo(defaultTestPath);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel2.xlsx"))) {
+            assert reader.sheets().count() == 2L;
+            assert reader.sheet(0).dataRows().count() == 0L;
+            assert reader.sheet(1).dataRows().count() == 0L;
+        }
+    }
+    
     public static class Item {
         @ExcelColumn
         private int id;
@@ -1011,13 +1081,13 @@ public class ListObjectSheetTest extends WorkbookTest {
             super(id, name);
         }
 
-        public String getNice() {
-            return nice;
-        }
-
-        public void setNice(String nice) {
-            this.nice = nice;
-        }
+//        public String getNice() {
+//            return nice;
+//        }
+//
+//        public void setNice(String nice) {
+//            this.nice = nice;
+//        }
 
         public static List<Item> randomTestData(int n) {
             List<Item> list = new ArrayList<>(n);
@@ -1075,6 +1145,68 @@ public class ListObjectSheetTest extends WorkbookTest {
         @Override
         public void setScore(int score) {
             super.setScore(score);
+        }
+    }
+    
+    public static class NoColumnAnnotation {
+        private int id;
+        private String name;
+
+        public int getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public NoColumnAnnotation(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public static List<NoColumnAnnotation> randomTestData(int n) {
+            List<NoColumnAnnotation> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new NoColumnAnnotation(i, getRandomString()));
+            }
+            return list;
+        }
+
+        public static List<NoColumnAnnotation> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
+        }
+    }
+
+    public static class NoColumnAnnotation2 {
+        private int age;
+        private String abc;
+
+        public int getAge() {
+            return age;
+        }
+
+        public String getAbc() {
+            return abc;
+        }
+
+        public NoColumnAnnotation2(int age, String abc) {
+            this.age = age;
+            this.abc = abc;
+        }
+
+        public static List<NoColumnAnnotation2> randomTestData(int n) {
+            List<NoColumnAnnotation2> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new NoColumnAnnotation2(i, getRandomString()));
+            }
+            return list;
+        }
+
+        public static List<NoColumnAnnotation2> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
         }
     }
 }

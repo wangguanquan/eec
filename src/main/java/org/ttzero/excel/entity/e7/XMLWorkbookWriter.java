@@ -390,6 +390,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
             // Set cell value and style processor
             sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
+
+            // Force export all fields
+            if (workbook.getForceExport() > sheet.getForceExport()) {
+                sheet.forceExport();
+            }
         }
         workbook.what("0001");
 
