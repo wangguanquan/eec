@@ -424,13 +424,16 @@ public class ListSheet<T> extends Sheet {
             try {
                 Collection<Method> values = tmp.values();
                 readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                        && !values.contains(method));
+                        && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
             } catch (IntrospectionException e) {
                 // Ignore
             }
 
             if (readMethods != null) {
+                Set<Method> existsMethods = new HashSet<>(tmp.values());
                 for (Method method : readMethods) {
+                    // Exclusions exists
+                    if (existsMethods.contains(method)) continue;
                     Column column = createColumn(method);
                     if (column != null) {
                         if (i >= methods.length) {
