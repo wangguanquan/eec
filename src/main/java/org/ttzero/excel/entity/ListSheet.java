@@ -433,6 +433,9 @@ public class ListSheet<T> extends Sheet {
                 for (Method method : readMethods) {
                     Column column = createColumn(method);
                     if (column != null) {
+                        if (i >= methods.length) {
+                            methods = Arrays.copyOf(methods, i + 1);
+                        }
                         methods[i++] = method;
                         list.add(column);
                         column.clazz = method.getReturnType();
