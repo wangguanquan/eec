@@ -381,7 +381,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             // Interlace changes color as default
             if (sheet.getAutoOdd() == 0) {
                 sheet.setOddFill(workbook.getOddFill() == null
-                    ? new Fill(PatternType.solid, new Color(226, 237, 218)) : workbook.getOddFill());
+                    ? new Fill(PatternType.solid, new Color(239, 245, 235)) : workbook.getOddFill());
             }
             sheet.setId(i + 1);
             // default worksheet name
@@ -390,6 +390,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
             // Set cell value and style processor
             sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
+
+            // Force export all fields
+            if (workbook.getForceExport() > sheet.getForceExport()) {
+                sheet.forceExport();
+            }
         }
         workbook.what("0001");
 

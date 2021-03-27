@@ -228,7 +228,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public IWorksheetWriter clone() {
-        IWorksheetWriter copy = null;
+        IWorksheetWriter copy;
         try {
             copy = (IWorksheetWriter) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -246,7 +246,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     copy = getClass().getConstructor(Sheet.class).newInstance(sheet);
                 } catch (NoSuchMethodException | IllegalAccessException
                     | InstantiationException | InvocationTargetException e2) {
-                    e2.printStackTrace();
+                    throw new ExcelWriteException(e2);
                 }
             } finally {
                 FileUtil.close(oos);
@@ -386,7 +386,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         int row = 1;
         bw.write("<row r=\"");
         bw.writeInt(row);
-        bw.write("\" customHeight=\"1\" ht=\"18.6\" spans=\"1:");
+        bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
         bw.writeInt(columns.length);
         bw.write("\">");
 

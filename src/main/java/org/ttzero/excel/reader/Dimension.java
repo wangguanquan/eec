@@ -51,11 +51,16 @@ public class Dimension {
      */
     public static Dimension of(String range) {
         int i = range.indexOf(':');
-        if (i < 0 || i == range.length() - 1)
-            throw new IllegalArgumentException(range + " can't convert to Dimension.");
 
-        long f = cellRangeToLong(range.substring(0, i))
-            , t = cellRangeToLong(range.substring(i + 1));
+        long f = 0L, t = 0L;
+        if (i < 0) {
+            f = cellRangeToLong(range);
+        } else if (i == 0) {
+            t = cellRangeToLong(range.substring(i + 1));
+        } else {
+            f = cellRangeToLong(range.substring(0, i));
+            t = cellRangeToLong(range.substring(i + 1));
+        }
         return new Dimension((int) (f >> 16), (short) f, (int) (t >> 16), (short) t);
     }
 
@@ -113,5 +118,15 @@ public class Dimension {
      */
     public boolean checkRange(int r, int c) {
         return r >= firstRow && r <= lastRow && c >= firstColumn && c <= lastColumn;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Dimension) {
+            Dimension other = (Dimension) o;
+            return other.firstRow == firstRow && other.firstColumn == firstColumn
+                    && other.lastRow == lastRow && other.lastColumn == lastColumn;
+        }
+        return false;
     }
 }

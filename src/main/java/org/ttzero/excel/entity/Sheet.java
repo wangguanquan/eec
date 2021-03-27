@@ -155,6 +155,11 @@ public abstract class Sheet implements Cloneable, Storable {
 
     protected ICellValueAndStyle cellValueAndStyle;
 
+    /**
+     * Force export all attributes
+     */
+    protected int forceExport;
+
     public int getId() {
         return id;
     }
@@ -1099,6 +1104,35 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
+     *
+     * @return the {@link Sheet}
+     */
+    public Sheet forceExport() {
+        this.forceExport = 1;
+        return this;
+    }
+
+    /**
+     * Cancel force export
+     *
+     * @return the {@link Sheet}
+     */
+    public Sheet cancelForceExport() {
+        this.forceExport = 2;
+        return this;
+    }
+
+    /**
+     * Returns the force export
+     *
+     * @return 1 if force, otherwise returns 0
+     */
+    public int getForceExport() {
+        return forceExport;
+    }
+
+    /**
      * abstract method close
      *
      * @throws IOException if I/O error occur
@@ -1226,7 +1260,7 @@ public abstract class Sheet implements Cloneable, Storable {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 11, Font.Style.BOLD, Color.white);
+                , 12, Font.Style.BOLD, Color.white);
             headStyle = styles.of(styles.addFont(font)
                 | styles.addFill(Fill.parse("solid #666699"))
                 | styles.addBorder(Border.parse("thin black"))

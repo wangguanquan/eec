@@ -127,6 +127,11 @@ public class Workbook implements Storable {
     private IWorkbookWriter workbookWriter;
 
     /**
+     * Force export all attributes
+     */
+    private int forceExport;
+
+    /**
      * Create a unnamed workbook
      *
      * EEC finds the 'non-name-file' keyword under the {@code resources/I18N/message.XXX.properties}
@@ -333,6 +338,24 @@ public class Workbook implements Storable {
         return autoSize;
     }
 
+    /**
+     * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook forceExport() {
+        this.forceExport = 1;
+        return this;
+    }
+
+    /**
+     * Returns the force export
+     *
+     * @return 1 if force, otherwise returns 0
+     */
+    public int getForceExport() {
+        return forceExport;
+    }
 
     /**
      * Returns the global {@link Styles}

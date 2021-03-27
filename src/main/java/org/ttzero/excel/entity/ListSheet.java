@@ -31,10 +31,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
@@ -356,18 +359,19 @@ public class ListSheet<T> extends Sheet {
 
         Map<String, Method> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
                     .getPropertyDescriptors();
             for (PropertyDescriptor pd : propertyDescriptors) {
                 Method method = pd.getReadMethod();
-                if (method == null) continue;
-                tmp.put(pd.getName(), method);
+                if (method != null) tmp.put(pd.getName(), method);
             }
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
 
-        Field[] declaredFields = listDeclaredFields(clazz);
+        Field[] declaredFields = listDeclaredFields(clazz, c -> c.getAnnotation(IgnoreExport.class) == null);
+
+        boolean forceExport = this.forceExport == 1;
 
         if (!hasHeaderColumns()) {
             // Get ExcelColumn annotation method
@@ -389,6 +393,10 @@ public class ListSheet<T> extends Sheet {
                     }
 
                     Column column = createColumn(method);
+                    // Force export
+                    if (column == null && forceExport) {
+                        column = new Column(gs, EMPTY, false);
+                    }
                     if (column != null) {
                         methods[i] = method;
                         column.clazz = method.getReturnType();
@@ -402,6 +410,10 @@ public class ListSheet<T> extends Sheet {
                 }
 
                 Column column = createColumn(field);
+                // Force export
+                if (column == null && forceExport) {
+                    column = new Column(gs, EMPTY, false);
+                }
                 if (column != null) {
                     list.add(column);
                     column.key = gs;
@@ -424,15 +436,21 @@ public class ListSheet<T> extends Sheet {
             try {
                 Collection<Method> values = tmp.values();
                 readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                        && !values.contains(method));
+                        && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
             } catch (IntrospectionException e) {
                 // Ignore
             }
 
             if (readMethods != null) {
+                Set<Method> existsMethods = new HashSet<>(tmp.values());
                 for (Method method : readMethods) {
+                    // Exclusions exists
+                    if (existsMethods.contains(method)) continue;
                     Column column = createColumn(method);
                     if (column != null) {
+                        if (i >= methods.length) {
+                            methods = Arrays.copyOf(methods, i + 1);
+                        }
                         methods[i++] = method;
                         list.add(column);
                         column.clazz = method.getReturnType();
