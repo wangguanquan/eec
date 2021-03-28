@@ -39,6 +39,10 @@ EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
 
 EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为Excel或者读取Excel表格内容到Stream或数据库。
 
+
+阅读[WIKI](https://github.com/wangguanquan/eec/wiki)了解更多用法（编写中）
+
+
 ## 主要功能
 
 1. 支持大数据量导出，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
@@ -74,7 +78,7 @@ pom.xml添加
 #### 1. 对象数组导出
 
 #### 1.1 准备工作
-对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出。
+对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出，也可以通过调用`forceExport`方法来强制导出。
 
 ```
     private int id; // not export
@@ -483,6 +487,12 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.11 (2021-03-28)
+-------------
+- 修复导出时删除特殊字符的问题
+- 增加wrapText属性控制单元格自动换行
+- 增加forceExport属性来强制没有@ExcelColumn注解的属性
+
 Version 0.4.11 (2021-01-15) *eec-e3-support* only
 -------------
 1. 兼容非标准化BOF记录解析
@@ -500,11 +510,6 @@ Version 0.4.9 (2020-11-15)
 1. 修复读取文件时的BUG(#146)
 2. 增加读取高版本Office导出的xls文件格式的兼容性
 
-Version 0.4.8 (2020-10-09)
--------------
-1. ExcelColumn注解增加format属性来支持自定义单元格格式化
-2. 为减少数据泄露风险，现在对象属性必须明确指定ExcelColumn注解才会被导出
-
 
 [更多...](./CHANGELOG)
 
@@ -512,7 +517,7 @@ Version 0.4.8 (2020-10-09)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.10-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.11-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

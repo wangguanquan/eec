@@ -1,3 +1,9 @@
+Version 0.4.11 (2021-03-28)
+-------------
+- 修复导出时删除特殊字符的问题
+- 增加wrapText属性控制单元格自动换行
+- 增加forceExport属性来强制没有@ExcelColumn注解的属性
+
 Version 0.4.11 (2021-01-15) *eec-e3-support* only
 -------------
 1. 兼容非标准化BOF记录解析
