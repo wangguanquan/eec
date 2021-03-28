@@ -266,6 +266,10 @@ public abstract class Sheet implements Cloneable, Storable {
          * Only export column name and ignore value
          */
         private boolean ignoreValue;
+        /**
+         * Wrap text in a cell
+         */
+        private int wrapText;
 
         /**
          * Constructor Column
@@ -757,7 +761,7 @@ public abstract class Sheet implements Cloneable, Storable {
         public int getCellStyle(Class<?> clazz) {
             int style;
             if (isString(clazz)) {
-                style = Styles.defaultStringBorderStyle();
+                style = Styles.defaultStringBorderStyle() | wrapText;
             } else if (isDate(clazz) || isLocalDate(clazz)) {
                 style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
@@ -828,6 +832,19 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         Column ignoreValue() {
             this.ignoreValue = true;
+            return this;
+        }
+
+        /**
+         * Wrap text in a cell
+         * <p>
+         * Microsoft Excel can wrap text so it appears on multiple lines in a cell.
+         * You can format the cell so the text wraps automatically, or enter a manual line break.
+         *
+         * @param wrapText set wrap
+         */
+        public Column setWrapText(boolean wrapText) {
+            this.wrapText = wrapText ? 1 : 0;
             return this;
         }
     }

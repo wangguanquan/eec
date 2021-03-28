@@ -59,8 +59,9 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *  8, 6 | Font
  * 14, 6 | Fill
  * 20, 6 | Border
- * 26, 3 | Vertical
- * 29, 3 | Horizontal</pre></blockquote>
+ * 26, 2 | Vertical
+ * 28, 3 | Horizontal
+ * 31. 1 | Warp Text</pre></blockquote>
  * The Build-In number format does not write into styles.
  *
  * @author guanquan.wang on 2017/10/13.
@@ -115,8 +116,9 @@ public class Styles implements Storable {
     public static final int INDEX_FONT = 18;
     public static final int INDEX_FILL = 12;
     public static final int INDEX_BORDER = 6;
-    public static final int INDEX_VERTICAL = 3;
-    public static final int INDEX_HORIZONTAL = 0;
+    public static final int INDEX_VERTICAL = 4;
+    public static final int INDEX_HORIZONTAL = 1;
+    public static final int INDEX_WRAP_TEXT = 0;
 
     /**
      * Create a general style
@@ -367,13 +369,14 @@ public class Styles implements Storable {
     }
 
     private static int[] unpack(int style) {
-        int[] styles = new int[6];
+        int[] styles = new int[7];
         styles[0] = style >>> INDEX_NUMBER_FORMAT;
         styles[1] = style << 8 >>> (INDEX_FONT + 8);
         styles[2] = style << 14 >>> (INDEX_FILL + 14);
         styles[3] = style << 20 >>> (INDEX_BORDER + 20);
         styles[4] = style << 26 >>> (INDEX_VERTICAL + 26);
-        styles[5] = style << 29 >>> (INDEX_HORIZONTAL + 29);
+        styles[5] = style << 28 >>> (INDEX_HORIZONTAL + 28);
+        styles[6] = style << 31 >>> (INDEX_WRAP_TEXT + 31);
         return styles;
     }
 
@@ -384,16 +387,18 @@ public class Styles implements Storable {
             | styles[3] << INDEX_BORDER
             | styles[4] << INDEX_VERTICAL
             | styles[5] << INDEX_HORIZONTAL
+            | styles[6] << INDEX_WRAP_TEXT
             ;
     }
 
-    static final String[] attrNames = {
+    private static final String[] attrNames = {
             "numFmtId"
             , "fontId"
             , "fillId"
             , "borderId"
             , "vertical"
             , "horizontal"
+            , "wrapText"
             , "applyNumberFormat"
             , "applyFont"
             , "applyFill"
@@ -427,7 +432,7 @@ public class Styles implements Storable {
             .addAttribute(attrNames[3], String.valueOf(styles[3]))
             .addAttribute("xfId", "0")
         ;
-        int start = 6;
+        int start = 7;
         if (styles[0] > 0) {
             newXf.addAttribute(attrNames[start], "1");
         }
@@ -440,13 +445,16 @@ public class Styles implements Storable {
         if (styles[3] > 0) {
             newXf.addAttribute(attrNames[start + 3], "1");
         }
-        if ((styles[4] | styles[5]) > 0) {
+        if ((styles[4] | styles[5] | styles[6]) > 0) {
             newXf.addAttribute(attrNames[start + 4], "1");
         }
 
         Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals.of(styles[4]));
         if (styles[5] > 0) {
             subEle.addAttribute(attrNames[5], Horizontals.of(styles[5]));
+        }
+        if (styles[6] > 0) {
+            subEle.addAttribute(attrNames[6], "1");
         }
         cellXfs.addAttribute("count", String.valueOf(count + 1));
         return n;
@@ -501,7 +509,11 @@ public class Styles implements Storable {
     }
 
     public static int clearHorizontal(int style) {
-        return style & ~(-1 >>> 32 - (INDEX_VERTICAL - INDEX_HORIZONTAL));
+        return style & ~((-1 >>> 32 - (INDEX_VERTICAL - INDEX_HORIZONTAL)) << INDEX_HORIZONTAL);
+    }
+
+    public static int clearWrapText(int style) {
+        return style & ~(-1 >>> 32 - (INDEX_HORIZONTAL - INDEX_WRAP_TEXT));
     }
 
     ////////////////////////reset style/////////////////////////////
@@ -517,52 +529,52 @@ public class Styles implements Storable {
 
     ////////////////////////default border style/////////////////////////////
     public static int defaultCharBorderStyle() {
-        return (1 << INDEX_BORDER) | Horizontals.CENTER_CONTINUOUS;
+        return (1 << INDEX_BORDER) | (Horizontals.CENTER_CONTINUOUS << INDEX_HORIZONTAL);
     }
 
     public static int defaultStringBorderStyle() {
-        return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.LEFT;
+        return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | (Horizontals.LEFT << INDEX_HORIZONTAL);
     }
 
     public static int defaultIntBorderStyle() {
-        return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
+        return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
 
 //    public static int defaultDateBorderStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
 //    }
 //
 //    public static int defaultTimestampBorderStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
 //    }
 
     public static int defaultDoubleBorderStyle() {
-        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
 
     ////////////////////////default style/////////////////////////////
     public static int defaultCharStyle() {
-        return Horizontals.CENTER_CONTINUOUS;
+        return Horizontals.CENTER_CONTINUOUS << INDEX_HORIZONTAL;
     }
 
     public static int defaultStringStyle() {
-        return (1 << INDEX_FONT) | Horizontals.LEFT;
+        return (1 << INDEX_FONT) | (Horizontals.LEFT << INDEX_HORIZONTAL);
     }
 
     public static int defaultIntStyle() {
-        return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
+        return (1 << INDEX_NUMBER_FORMAT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
 
 //    public static int defaultDateStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//        return (176 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
 //    }
 //
 //    public static int defaultTimestampStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER;
+//        return (177 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
 //    }
 
     public static int defaultDoubleStyle() {
-        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
 
     ////////////////////////////////Check style////////////////////////////////
@@ -587,7 +599,11 @@ public class Styles implements Storable {
     }
 
     public static boolean hasHorizontal(int style) {
-        return style << 29 >>> (INDEX_HORIZONTAL + 29) != 0;
+        return style << 28 >>> (INDEX_HORIZONTAL + 28) != 0;
+    }
+
+    public static boolean hasWrapText(int style) {
+        return (style & 1) > 0;
     }
 
     ////////////////////////////////To object//////////////////////////////////
@@ -610,6 +626,14 @@ public class Styles implements Storable {
 
     public int getVertical(int style) {
         return style << 26 >>> (INDEX_VERTICAL + 26);
+    }
+
+    public int getHorizontal(int style) {
+        return style << 28 >>> (INDEX_HORIZONTAL + 28);
+    }
+
+    public int getWrapText(int style) {
+        return style & 1;
     }
 
     /**

@@ -295,6 +295,15 @@ public class ListMapSheetTest extends WorkbookTest {
         }).writeTo(defaultTestPath);
     }
 
+    @Test public void testWrapText() throws IOException {
+        new Workbook("MAP WRAP TEXT", author)
+                .addSheet(createTestData(10)
+                    , new Sheet.Column("ID", "id", int.class)
+                    , new Sheet.Column("NAME", "name", String.class).setWrapText(true)
+                )
+                .writeTo(defaultTestPath);
+    }
+
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
