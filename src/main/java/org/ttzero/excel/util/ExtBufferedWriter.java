@@ -123,11 +123,11 @@ public class ExtBufferedWriter extends BufferedWriter {
             char c = block[i];
             if (c > 62) continue;
             // UnDisplay char
-            if (c < 32) {
-                write(block, last, i - last);
-                last = i + 1;
-                continue;
-            }
+//            if (c < 32) {
+//                write(block, last, i - last);
+//                last = i + 1;
+//                continue;
+//            }
             // html escape char
             char[] entity = ESCAPE_CHARS[c];
 
