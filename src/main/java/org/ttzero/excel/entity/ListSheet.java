@@ -531,6 +531,8 @@ public class ListSheet<T> extends Sheet {
             if (isNotEmpty(ec.format())) {
                 column.setNumFmt(ec.format());
             }
+            // Wrap
+            column.setWrapText(ec.wrapText());
             return column;
         }
         return null;

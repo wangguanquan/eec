@@ -24,7 +24,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
+import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
+import static org.ttzero.excel.entity.style.Styles.INDEX_FILL;
+import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
+import static org.ttzero.excel.entity.style.Styles.INDEX_HORIZONTAL;
 import static org.ttzero.excel.entity.style.Styles.INDEX_NUMBER_FORMAT;
+import static org.ttzero.excel.entity.style.Styles.INDEX_VERTICAL;
+import static org.ttzero.excel.entity.style.Styles.INDEX_WRAP_TEXT;
 import static org.ttzero.excel.entity.style.Styles.testCodeIsDate;
 
 /**
@@ -120,4 +126,42 @@ public class StylesTest {
            else assert isDate;
         }
     }
+
+    @Test public void testClear() {
+        int style = (7 << INDEX_NUMBER_FORMAT) | (6 << INDEX_FONT)
+                | (5 << INDEX_FILL) | (4 << INDEX_BORDER)
+                | (3 << INDEX_VERTICAL) | (2 << INDEX_HORIZONTAL) | 1;
+
+        assert Styles.clearNumFmt(style) == style - (7 << INDEX_NUMBER_FORMAT);
+        assert Styles.clearFont(style) == style - (6 << INDEX_FONT);
+        assert Styles.clearFill(style) == style - (5 << INDEX_FILL);
+        assert Styles.clearBorder(style) == style - (4 << INDEX_BORDER);
+        assert Styles.clearVertical(style) == style - (3 << INDEX_VERTICAL);
+        assert Styles.clearHorizontal(style) == style - (2 << INDEX_HORIZONTAL);
+        assert Styles.clearWrapText(style) == style - (1 << INDEX_WRAP_TEXT);
+    }
+
+    @Test public void testHas() {
+        int style = (7 << INDEX_NUMBER_FORMAT) | (6 << INDEX_FONT)
+                | (5 << INDEX_FILL) | (4 << INDEX_BORDER)
+                | (3 << INDEX_VERTICAL) | (2 << INDEX_HORIZONTAL) | 1;
+
+        assert Styles.hasNumFmt(style);
+        assert Styles.hasFont(style);
+        assert Styles.hasFill(style);
+        assert Styles.hasBorder(style);
+        assert Styles.hasVertical(style);
+        assert Styles.hasHorizontal(style);
+        assert Styles.hasWrapText(style);
+
+
+        assert !Styles.hasNumFmt(Styles.clearNumFmt(style));
+        assert !Styles.hasFont(Styles.clearFont(style));
+        assert !Styles.hasFill(Styles.clearFill(style));
+        assert !Styles.hasBorder(Styles.clearBorder(style));
+        assert !Styles.hasVertical(Styles.clearVertical(style));
+        assert !Styles.hasHorizontal(Styles.clearHorizontal(style));
+        assert !Styles.hasWrapText(Styles.clearWrapText(style));
+    }
+
 }

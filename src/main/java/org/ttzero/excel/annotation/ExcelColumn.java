@@ -75,4 +75,14 @@ public @interface ExcelColumn {
      * @return the data format string
      */
     String format() default "";
+
+    /**
+     * Wrap text in a cell
+     * <p>
+     * Microsoft Excel can wrap text so it appears on multiple lines in a cell.
+     * You can format the cell so the text wraps automatically, or enter a manual line break.
+     *
+     * @return true if
+     */
+    boolean wrapText() default false;
 }

@@ -593,11 +593,19 @@ public class ListObjectSheetTest extends WorkbookTest {
             assert reader.sheet(1).dataRows().count() == 0L;
         }
     }
+
+    @Test public void testWrapText() throws IOException {
+        new Workbook("WRAP TEXT")
+                .addSheet(new ListSheet<>()
+                        .setData(Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
+                                , new Item(2, "fdsafdsafdsafdsafdsafdsafdsafdsfadsafdsafdsafdsafdsafdsafds"))))
+                .writeTo(defaultTestPath);
+    }
     
     public static class Item {
         @ExcelColumn
         private int id;
-        @ExcelColumn
+        @ExcelColumn(wrapText = true)
         private String name;
 
         public Item(int id, String name) {
