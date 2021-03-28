@@ -842,6 +842,7 @@ public abstract class Sheet implements Cloneable, Storable {
          * You can format the cell so the text wraps automatically, or enter a manual line break.
          *
          * @param wrapText set wrap
+         * @return the {@link Column} self
          */
         public Column setWrapText(boolean wrapText) {
             this.wrapText = wrapText ? 1 : 0;
