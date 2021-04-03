@@ -3,13 +3,9 @@
 [![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
 
 EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
-EEC的设计初衷是为了解决Apache POI高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
+EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`logback`，前者用于小文件xml读取，后者统一日志接口。
 
-与传统Excel操作工具不同之处在于EEC并不缓存或只少量缓存数据到内存，写文件时EEC使用分片来处理较大的数据，使用迭代模式读取Excel行内容，当你使用某行数据的时才去解析它们，而不会将整个文件读入到内存。
-
-从BIFF5以后Office就使用SharedString方式保存字符串，这样可以在多个Worksheet间达到共享字符串和压缩文件的目的。POI使用`inlineStr`方式写字符串，EEC默认也是使用inlineStr方式，你可以使用注解`@ExcelColumn(share = true)`来使用SharedString模式。
-
-EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
+EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
 使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html)有关于EEC的压力测试，最低可以在*6MB*的情况下完成1,000,000行x29列数据的读写。
 
@@ -39,6 +35,7 @@ EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
 
 EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为Excel或者读取Excel表格内容到Stream或数据库。
 
+## WIKI
 
 阅读[WIKI](https://github.com/wangguanquan/eec/wiki)了解更多用法（编写中）
 
@@ -46,10 +43,10 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 ## 主要功能
 
 1. 支持大数据量导出，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
-2. **超低内存**，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写。
+2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写。
 3. 支持 对象数组 和 Map数组 导出。
 4. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
-5. excel隔行变色，利于阅读
+5. 导出excel默认隔行变色(俗称斑马线)，利于阅读
 6. 设置列宽自动调节（功能未完善）
 7. 设置水印（文字，本地＆网络图片）
 8. 提供Watch窗口查看操作细节也可以做进度条。
@@ -149,49 +146,12 @@ public void testStyleConversion(List<Student> students) throws IOException {
 有时候数据并不来自于一个数据库或一个服务器，也不能一次将数据取到数组中，此时可以自定义一个worksheet继承已有的Sheet类并覆写`more`方法即可。如下
 
 ```
-public class CustomizeDataSourceSheet extends ListSheet<Student> {
-
-    // RPC, mybatis, jpa or others service
-    private StudentService service;
-    // The paging info
-    private int pageNo, limit = 100;
-    // The query parameter
-    private Parameter params;
-
-    /**
-     * 指定worksheet名称
-     */
-    public CustomizeDataSourceSheet(String name, Parameter params) {
-        super(name);
-        this.service = new StudentService();
-        this.params = params;
-    }
-
-    /**
-     * 获取worksheet行数据，返回null或空数组表示当前worksheet写结束
-     */
-    @Override
-    public List<Student> more() {
-        return service.getPageData(params, pageNo++, limit);
-    }
-}
-
-/**
- * 测试类
- */
-public void testCustomizeDataSource(Parameter params) throws IOException {
-    new Workbook("customize datasource")
-        // 设置自定义数据源worksheet
-        .addSheet(new CustomizeDataSourceSheet("自定义源", params))
-        .writeTo(Paths.get("f:/excel"));
-}
-
-// 也可以简化为
 new Workbook("customize datasource")
     .addSheet(new ListSheet<Student>("自定义源") {
         private int pageNo, limit = 100;
         @Override
         public List<Student> more() {
+            // Call remote RPC service
             return service.getPageData(pageNo++, limit);
         }
     })
@@ -434,6 +394,8 @@ reader.sheets()
 ```
 
 ## xls格式支持
+
+读取xls格式的方法与读取xlsx格式完全一样，读取文件时不需要判断是xls格式还是xlsx格式，因为EEC为其提供了完全一样的接口，内部会根据文件头去判断具体类型， 这种方式比判断文件后缀准确得多。
 
 pom.xml添加
 
