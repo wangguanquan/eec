@@ -465,7 +465,6 @@ public class ExcelReader implements Closeable {
             FileUtil.rm_rf(tmp.toFile(), true);
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
         }
-        @SuppressWarnings("unchecked")
         List<Element> list = document.getRootElement().elements();
         Relationship[] rels = new Relationship[list.size()];
         int i = 0;
@@ -505,7 +504,6 @@ public class ExcelReader implements Closeable {
         hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
 
         List<Sheet> sheets = new ArrayList<>();
-        @SuppressWarnings("unchecked")
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
@@ -730,7 +728,6 @@ public class ExcelReader implements Closeable {
             return null;
         }
 
-        @SuppressWarnings("unchecked")
         Iterator<Element> ite = calcChain.elementIterator();
         int i = 1;
         long[][] array = new long[n][];
