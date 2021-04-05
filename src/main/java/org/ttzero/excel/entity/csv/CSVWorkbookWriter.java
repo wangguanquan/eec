@@ -150,6 +150,11 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             }
             // Set cell value and style processor
             sheet.setCellValueAndStyle(new CSVCellValueAndStyle());
+
+            // Force export all fields
+            if (workbook.getForceExport() > sheet.getForceExport()) {
+                sheet.forceExport();
+            }
         }
         workbook.what("0001");
 
