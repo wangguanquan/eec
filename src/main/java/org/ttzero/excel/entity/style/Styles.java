@@ -217,7 +217,6 @@ public class Styles implements Storable {
      * @param path the style file path
      * @return the {@link Styles} Object
      */
-    @SuppressWarnings("unchecked")
     public static Styles load(Path path) {
         // load workbook.xml
         SAXReader reader = new SAXReader();

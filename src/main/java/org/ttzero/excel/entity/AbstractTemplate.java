@@ -229,7 +229,6 @@ public abstract class AbstractTemplate {
         return n;
     }
 
-    @SuppressWarnings("unchecked")
     int bindSheet(Path sheetPath) {
         SAXReader reader = new SAXReader();
         Document document;
