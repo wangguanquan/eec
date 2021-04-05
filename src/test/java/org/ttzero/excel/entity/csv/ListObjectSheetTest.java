@@ -33,6 +33,9 @@ import org.ttzero.excel.entity.ListObjectSheetTest.Item;
 import org.ttzero.excel.entity.ListObjectSheetTest.Student;
 import org.ttzero.excel.entity.ListObjectSheetTest.BoxAllType;
 import org.ttzero.excel.entity.ListObjectSheetTest.ExtItem;
+import org.ttzero.excel.entity.ListObjectSheetTest.NoColumnAnnotation;
+import org.ttzero.excel.entity.ListObjectSheetTest.NoColumnAnnotation2;
+import org.ttzero.excel.util.CSVUtil;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -243,5 +246,69 @@ public class ListObjectSheetTest extends WorkbookTest{
             )
             .saveAsCSV()
             .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testNoForceExport() throws IOException {
+        new Workbook("testNoForceExport")
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData()))
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+
+        try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testNoForceExport.csv"))) {
+            assert reader.stream().count() == 0L;
+        }
+    }
+
+    @Test public void testForceExportOnWorkbook() throws IOException {
+        int lines = random.nextInt(100) + 3;
+        new Workbook("testForceExportOnWorkbook")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+        try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkbook.csv"))) {
+            assert reader.stream().count() == lines + 1;
+        }
+    }
+
+    @Test public void testForceExportOnWorkSheet() throws IOException {
+        int lines = random.nextInt(100) + 3;
+        new Workbook("testForceExportOnWorkSheet")
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport())
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+        try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkSheet.csv"))) {
+            assert reader.stream().count() == lines + 1;
+        }
+    }
+
+    @Test public void testForceExportOnWorkbook2() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testForceExportOnWorkbook2Cancel1() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2Cancel1")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testForceExportOnWorkbook2Cancel2() throws IOException {
+        int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        new Workbook("testForceExportOnWorkbook2Cancel2")
+                .forceExport()
+                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
+                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
+                .saveAsCSV()
+                .writeTo(getOutputTestPath());
     }
 }
