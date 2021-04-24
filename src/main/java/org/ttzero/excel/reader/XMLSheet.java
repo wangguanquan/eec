@@ -598,18 +598,22 @@ class XMLSheet implements Sheet {
             row = row * 10 + (charBuffer.get(i) - '0');
         // spans="
         i++;
-        for (; charBuffer.get(i) != 's' || charBuffer.get(i + 1) != 'p'
+        for (; charBuffer.limit() - i >= 7 && (charBuffer.get(i) != 's' || charBuffer.get(i + 1) != 'p'
             || charBuffer.get(i + 2) != 'a' || charBuffer.get(i + 3) != 'n'
             || charBuffer.get(i + 4) != 's' || charBuffer.get(i + 5) != '='
-            || charBuffer.get(i + 6) != '"'; i++) ;
+            || charBuffer.get(i + 6) != '"'); i++) ;
         i += 7;
         int cs = 0, ls = 0;
+        if (charBuffer.limit() <= i) {
+            eof = true; // EOF
+            return new int[] { row, 1, 1 };
+        }
         for (; charBuffer.get(i) != ':'; i++)
             cs = cs * 10 + (charBuffer.get(i) - '0');
         i++;
         for (; charBuffer.get(i) != '"'; i++)
             ls = ls * 10 + (charBuffer.get(i) - '0');
-        return new int[] {row, cs, ls};
+        return new int[] { row, cs, ls };
     }
 
     private void parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
