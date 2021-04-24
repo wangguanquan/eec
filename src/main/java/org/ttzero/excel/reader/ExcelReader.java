@@ -28,6 +28,7 @@ import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.Relationship;
+import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.ExcelType;
@@ -132,6 +133,8 @@ public class ExcelReader implements Closeable {
      * A formula flag
      */
     protected boolean hasFormula;
+
+    private Drawings drawings;
 
     /**
      * Constructor Excel Reader
@@ -440,6 +443,30 @@ public class ExcelReader implements Closeable {
 
     // --- PRIVATE FUNCTIONS
 
+    private ContentType checkContentType(Path root) {
+        SAXReader reader = new SAXReader();
+        Document document;
+        // Read [Content_Types].xml
+        try {
+            document = reader.read(Files.newInputStream(root.resolve("[Content_Types].xml")));
+        } catch (DocumentException | IOException e) {
+            FileUtil.rm_rf(root.toFile(), true);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [[Content_Types].xml]");
+        }
+        ContentType contentType = new ContentType();
+        List<Element> list = document.getRootElement().elements();
+        for (Element e : list) {
+            if ("Override".equals(e.getName())) {
+                ContentType.Override override = new ContentType.Override(e.attributeValue("ContentType"), e.attributeValue("PartName"));
+                if (!Files.exists(root.resolve(override.getPartName().substring(1)))) {
+                    FileUtil.rm_rf(root.toFile(), true);
+                    throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
+                }
+                contentType.add(override);
+            }
+        }
+        return contentType;
+    }
 
     private ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         // Store template stream as zip file
@@ -447,6 +474,12 @@ public class ExcelReader implements Closeable {
         LOGGER.debug("Unzip file to：{}", tmp);
         ZipUtil.unzip(Files.newInputStream(path), tmp);
         LOGGER.debug("Finished decompress. start to check the file integrity.");
+
+        // Check content-type
+        ContentType contentType = checkContentType(tmp);
+        if (contentType.hasDrawings()) {
+            this.drawings = new XMLDrawings(this);
+        }
 
         // Check the file format and parse general information
         try {
@@ -523,6 +556,8 @@ public class ExcelReader implements Closeable {
             sheet.setSst(sst);
             // Setting styles
             sheet.setStyles(styles);
+            // Drawings
+            sheet.setDrawings(drawings);
             sheets.add(sheet);
         }
 
@@ -798,4 +833,12 @@ public class ExcelReader implements Closeable {
         return (v & 0x7FFF) | ((long) n) << 16;
     }
 
+    /**
+     * List all pictures in excel
+     *
+     * @return picture list or null if not exists.
+     */
+    public List<Drawings.Picture> listPictures() {
+        return drawings != null ? drawings.listPictures() : null;
+    }
 }

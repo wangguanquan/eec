@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -135,6 +136,13 @@ public interface Sheet extends Closeable {
      * @return a row iterator
      */
     Iterator<Row> dataIterator();
+
+    /**
+     * List all pictures in workbook
+     *
+     * @return picture list or null if not exists.
+     */
+    List<XMLDrawings.Picture> listPictures();
 
     /**
      * Reset the {@link Sheet}'s row index to begging
