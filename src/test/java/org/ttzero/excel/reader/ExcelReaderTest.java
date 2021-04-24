@@ -45,6 +45,7 @@ import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.reader.ExcelReader.read;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -518,6 +519,18 @@ public class ExcelReaderTest {
                     assert "我是内容".equals(row.getString(0));
                 }
             });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testReadEmptyCell() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#169.xlsx"))) {
+            reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
+            reader.sheets().peek(sheet -> {
+                sheet.reset();
+                println(sheet.getName() + ": " + sheet.getDimension());
+            }).flatMap(Sheet::rows).forEach(Print::println);
         } catch (IOException e) {
             e.printStackTrace();
         }
