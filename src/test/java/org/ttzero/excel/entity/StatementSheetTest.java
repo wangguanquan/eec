@@ -60,7 +60,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     private void testWrite(boolean autoSize) {
         try (Connection con = getConnection()) {
             new Workbook("statement", author)
-                .watch(Print::println)
                 .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age from student order by age"
@@ -77,7 +76,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     private void testStyleProcessor(boolean autoSize) {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor", author)
-                .watch(Print::println)
                 .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age from student"

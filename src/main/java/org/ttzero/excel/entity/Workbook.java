@@ -669,7 +669,7 @@ public class Workbook implements Storable {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-            watch.what("Not support fetch size value of " + Integer.MIN_VALUE);
+            what("Not support fetch size value of " + Integer.MIN_VALUE);
         }
         if (pp != null) pp.build(ps);
         sheet.setPs(ps);
