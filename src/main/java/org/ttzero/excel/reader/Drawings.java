@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author guanquan.wang at 2021-04-24 19:53
  */
-interface Drawings {
+public interface Drawings {
     /**
      * List all picture in excel
      *
