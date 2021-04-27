@@ -64,6 +64,8 @@ class XMLSheet implements Sheet {
 
     // Range address of the used area in the current sheet
     Dimension dimension;
+    // XMLDrawings
+    Drawings drawings;
 
 
     /**
@@ -125,6 +127,10 @@ class XMLSheet implements Sheet {
 
     void setIndex(int index) {
         this.index = index;
+    }
+
+    void setDrawings(Drawings drawings) {
+        this.drawings = drawings;
     }
 
     /**
@@ -456,6 +462,16 @@ class XMLSheet implements Sheet {
             else row.setHr(header);
         }
         return nIter;
+    }
+
+    /**
+     * List all pictures in workbook
+     *
+     * @return picture list or null if not exists.
+     */
+    @Override
+    public List<Drawings.Picture> listPictures() {
+        return drawings != null ? drawings.listPictures(this) : null;
     }
 
     /**

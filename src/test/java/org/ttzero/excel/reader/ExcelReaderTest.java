@@ -29,8 +29,10 @@ import org.ttzero.excel.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -45,7 +47,6 @@ import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
-import static org.ttzero.excel.reader.ExcelReader.read;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -531,6 +532,36 @@ public class ExcelReaderTest {
                 sheet.reset();
                 println(sheet.getName() + ": " + sheet.getDimension());
             }).flatMap(Sheet::rows).forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testReadDrawings() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("drawing.xlsx"))) {
+            reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
+
+            // From workbook`
+            List<Drawings.Picture> pictures = reader.listPictures();
+            assert pictures.size() == 5;
+            pictures.forEach(Print::println);
+
+            // Copy images
+            for (Drawings.Picture pic : pictures) {
+                Path dest = Paths.get("target/excel/drawing/", pic.sheet.getName(), pic.localPath.getFileName().toString());
+                if (!Files.exists(dest.getParent())) FileUtil.mkdir(dest.getParent());
+                Files.copy(pic.localPath, dest, StandardCopyOption.REPLACE_EXISTING);
+                assert Files.size(pic.localPath) == Files.size(dest);
+            }
+
+            // From worksheet
+            reader.sheets().forEach(sheet -> {
+                List<Drawings.Picture> pictures1 = sheet.listPictures();
+                if (sheet.getName().equals("Sheet1")) {
+                    assert pictures1.size() == 4;
+                } else assert !sheet.getName().equals("Sheet2") || pictures1.size() == 1;
+                pictures1.forEach(Print::println);
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }

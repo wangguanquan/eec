@@ -22,6 +22,7 @@ import org.dom4j.Element;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.Storable;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -133,6 +134,10 @@ public class ContentType implements Storable {
 
     public void add(Type type) {
         set.add(type);
+    }
+
+    public boolean hasDrawings() {
+        return set.stream().anyMatch(t -> Const.ContentType.DRAWINGS.equals(((Type) t).contentType));
     }
 
     @java.lang.Override
