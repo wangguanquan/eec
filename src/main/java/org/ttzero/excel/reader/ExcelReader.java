@@ -134,7 +134,10 @@ public class ExcelReader implements Closeable {
      */
     protected boolean hasFormula;
 
-    private Drawings drawings;
+    /**
+     * Picture or Tables
+     */
+    protected Drawings drawings;
 
     /**
      * Constructor Excel Reader
