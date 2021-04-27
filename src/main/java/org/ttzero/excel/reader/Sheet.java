@@ -142,7 +142,7 @@ public interface Sheet extends Closeable {
      *
      * @return picture list or null if not exists.
      */
-    List<XMLDrawings.Picture> listPictures();
+    List<Drawings.Picture> listPictures();
 
     /**
      * Reset the {@link Sheet}'s row index to begging
