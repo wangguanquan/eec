@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Drawings resources
@@ -66,19 +65,6 @@ public class XMLDrawings implements Drawings {
     @Override
     public List<Drawings.Picture> listPictures() {
         return parsed ? pictures : parse();
-    }
-
-    /**
-     * List all picture in specify worksheet
-     *
-     * @return list of {@link Drawings.Picture}, or null if not exists.
-     */
-    @Override
-    public List<Drawings.Picture> listPictures(Sheet sheet) {
-        if (!parsed) parse();
-        if (pictures != null)
-            return pictures.stream().filter(p -> p.sheet.getIndex() == sheet.getIndex()).collect(Collectors.toList());
-        return null;
     }
 
     private List<Drawings.Picture> parse() {

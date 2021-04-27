@@ -21,6 +21,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Drawings resources
@@ -40,7 +41,11 @@ public interface Drawings {
      *
      * @return list of {@link Picture}, or null if not exists.
      */
-    List<Picture> listPictures(Sheet sheet);
+    default List<Picture> listPictures(final Sheet sheet) {
+        List<Picture> pictures = listPictures();
+        return pictures == null ? null :
+            pictures.stream().filter(p -> p.sheet.getIndex() == sheet.getIndex()).collect(Collectors.toList());
+    }
 
     class Picture {
         /**
