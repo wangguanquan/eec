@@ -28,6 +28,7 @@ import org.ttzero.excel.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +38,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
@@ -566,6 +568,43 @@ public class ExcelReaderTest {
             e.printStackTrace();
         }
     }
+
+    @Test public void test175() {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
+            reader.sheet(0).rows().filter(row -> row.getRowNumber() > 7 && !row.isEmpty()).forEach(row -> println(row.getDouble(4)));
+            reader.sheet(0).reset();
+            println("-------------DECIMAL-------------");
+            reader.sheet(0).rows().filter(row -> row.getRowNumber() > 7 && !row.isEmpty()).forEach(row -> println(row.getDecimal(4)));
+            reader.sheet(0).reset();
+            reader.sheet(0).rows()
+                    .filter(row -> row.getRowNumber() > 6 && !row.isEmpty())
+                    .map(row -> row.to(O.class))
+                    .filter(Objects::nonNull)
+                    .forEach(Print::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static class O {
+        @ExcelColumn("亚马逊FBA子单号/箱唛号")
+        private String fbaNo;
+
+        @ExcelColumn("Reference ID（亚马逊追踪编码）")
+        private String refId;
+
+        @ExcelColumn("单个产品申报单价")
+        private BigDecimal price;
+
+        @ExcelColumn("单个产品净重KG(必填)")
+        private BigDecimal weight;
+
+        @Override
+        public String toString() {
+            return "fbaNo: " + fbaNo + ", refId: " + refId + ", price: " + price + ", weight: " + weight;
+        }
+    }
+
 
     public static class Customer {
         @ExcelColumn("客户编码")
