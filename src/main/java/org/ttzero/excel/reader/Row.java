@@ -1136,7 +1136,9 @@ public abstract class Row {
      */
     public <T> T to(Class<T> clazz) {
         if (hr == null) {
-            throw new UncheckedTypeException("Lost header row info");
+            hr = asHeader();
+            return null;
+//            throw new UncheckedTypeException("Lost header row info");
         }
         // reset class info
         if (!hr.is(clazz)) {
@@ -1162,7 +1164,9 @@ public abstract class Row {
      */
     public <T> T too(Class<T> clazz) {
         if (hr == null) {
-            throw new UncheckedTypeException("Lost header row info");
+            hr = asHeader();
+            return null;
+//            throw new UncheckedTypeException("Lost header row info");
         }
         // reset class info
         if (!hr.is(clazz)) {
