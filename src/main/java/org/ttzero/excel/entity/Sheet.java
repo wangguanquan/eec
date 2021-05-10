@@ -252,6 +252,10 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public int cellStyle = -1;
         /**
+         * The style of header, -1 if not be setting
+         */
+        public int headerStyle = -1;
+        /**
          * The cell width
          */
         public double width;
@@ -551,6 +555,17 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public Column setCellStyle(int cellStyle) {
             this.cellStyle = cellStyle;
+            return this;
+        }
+
+        /**
+         * Setting the header's style
+         *
+         * @param headerStyle the styles value
+         * @return the {@link Sheet.Column}
+         */
+        public Column setHeaderStyle(int headerStyle) {
+            this.headerStyle = headerStyle;
             return this;
         }
 

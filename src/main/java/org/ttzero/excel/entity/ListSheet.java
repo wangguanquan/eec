@@ -18,9 +18,17 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
+import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
 
+import java.awt.*;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -525,6 +533,19 @@ public class ListSheet<T> extends Sheet {
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             Column column = new Column(ec.value(), EMPTY, ec.share());
+            // 解析自定义头样式
+            HeaderStyle hs = ao.getAnnotation(HeaderStyle.class);
+            if (hs != null) {
+                Styles styles = workbook.getStyles();
+                Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
+                        , 12, Font.Style.BOLD, Color.decode(hs.fillForegroundColor()));
+                int customHeadStyle = styles.of(styles.addFont(font)
+                        | styles.addFill(Fill.parse(hs.fillBackgroundColor()))
+                        | styles.addBorder(Border.parse("thin black"))
+                        | Verticals.CENTER
+                        | Horizontals.CENTER);
+                column.setHeaderStyle(customHeadStyle);
+            }
             // Comment
             column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
             // Number format
