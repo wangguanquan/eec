@@ -37,6 +37,7 @@ public class Cell {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
+    public static final char UNICODE_EMPTY= '\u0000';
     public static final char EMPTY_TAG   = 'e';
     /**
      * Value type
