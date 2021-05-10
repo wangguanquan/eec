@@ -43,6 +43,7 @@ import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.reader.Cell.UNICODE_EMPTY;
 import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDateTime;
@@ -680,6 +681,10 @@ public abstract class Row {
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 bd = new BigDecimal(c.sv);
+                break;
+            case UNICODE_EMPTY:
+            case EMPTY_TAG:
+                bd = null;
                 break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
         }
