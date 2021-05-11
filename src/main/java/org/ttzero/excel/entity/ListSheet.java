@@ -536,15 +536,7 @@ public class ListSheet<T> extends Sheet {
             // 解析自定义头样式
             HeaderStyle hs = ao.getAnnotation(HeaderStyle.class);
             if (hs != null) {
-                Styles styles = workbook.getStyles();
-                Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                        , 12, Font.Style.BOLD, Color.decode(hs.fillForegroundColor()));
-                int customHeadStyle = styles.of(styles.addFont(font)
-                        | styles.addFill(Fill.parse(hs.fillBackgroundColor()))
-                        | styles.addBorder(Border.parse("thin black"))
-                        | Verticals.CENTER
-                        | Horizontals.CENTER);
-                column.setHeaderStyle(customHeadStyle);
+                column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillBgColor()));
             }
             // Comment
             column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());

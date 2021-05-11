@@ -35,18 +35,19 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface HeaderStyle {
+
+    /**
+     * Set font color.
+     *
+     */
+    String fontColor() default "#ffffff";
+
     /**
      * Set the background fill color.
      *
      * @see Fill#parse(java.lang.String)
      *
      */
-    String fillBackgroundColor() default "solid #666699";
-
-    /**
-     * Set the foreground fill color.
-     *
-     */
-    String fillForegroundColor() default "#ffffff";
+    String fillBgColor() default "#666699";
 
 }

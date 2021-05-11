@@ -1289,18 +1289,30 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
-    public int defaultHeadStyle() {
+    /**
+     * Custom header style according to parameters
+     *
+     * @param fontColor
+     * @param fillBgColor
+     * @return headStyle
+     */
+    public int buildHeadStyle(String fontColor, String fillBgColor) {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, Color.white);
+                    , 12, Font.Style.BOLD, Color.decode(fontColor));
             headStyle = styles.of(styles.addFont(font)
-                | styles.addFill(Fill.parse("solid #666699"))
-                | styles.addBorder(Border.parse("thin black"))
-                | Verticals.CENTER
-                | Horizontals.CENTER);
+                    | styles.addFill(Fill.parse(String.join(" ",
+                    fillBgColor, "solid")))
+                    | styles.addBorder(Border.parse("thin black"))
+                    | Verticals.CENTER
+                    | Horizontals.CENTER);
         }
         return headStyle;
+    }
+
+    public int defaultHeadStyle() {
+        return this.buildHeadStyle("#ffffff", "#666699");
     }
 
     protected static boolean nonOrIntDefault(int style) {
