@@ -252,6 +252,10 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public int cellStyle = -1;
         /**
+         * The style of header, -1 if not be setting
+         */
+        public int headerStyle = -1;
+        /**
          * The cell width
          */
         public double width;
@@ -551,6 +555,17 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public Column setCellStyle(int cellStyle) {
             this.cellStyle = cellStyle;
+            return this;
+        }
+
+        /**
+         * Setting the header's style
+         *
+         * @param headerStyle the styles value
+         * @return the {@link Sheet.Column}
+         */
+        public Column setHeaderStyle(int headerStyle) {
+            this.headerStyle = headerStyle;
             return this;
         }
 
@@ -1274,18 +1289,30 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
-    public int defaultHeadStyle() {
+    /**
+     * Custom header style according to parameters
+     *
+     * @param fontColor
+     * @param fillBgColor
+     * @return headStyle
+     */
+    public int buildHeadStyle(String fontColor, String fillBgColor) {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, Color.white);
+                    , 12, Font.Style.BOLD, Color.decode(fontColor));
             headStyle = styles.of(styles.addFont(font)
-                | styles.addFill(Fill.parse("solid #666699"))
-                | styles.addBorder(Border.parse("thin black"))
-                | Verticals.CENTER
-                | Horizontals.CENTER);
+                    | styles.addFill(Fill.parse(String.join(" ",
+                    fillBgColor, "solid")))
+                    | styles.addBorder(Border.parse("thin black"))
+                    | Verticals.CENTER
+                    | Horizontals.CENTER);
         }
         return headStyle;
+    }
+
+    public int defaultHeadStyle() {
+        return this.buildHeadStyle("#ffffff", "#666699");
     }
 
     protected static boolean nonOrIntDefault(int style) {

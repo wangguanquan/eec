@@ -32,7 +32,7 @@ public class WorkbookTest {
     /**
      * The default output path
      */
-    static Path defaultTestPath = Paths.get("target/excel/");
+    public static Path defaultTestPath = Paths.get("target/excel/");
     public static String author = "guanquan.wang";
     public static Random random = new Random();
 
