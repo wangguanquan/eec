@@ -528,12 +528,6 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void test177() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(Paths.get("D:\\wangguanquan3\\Documents\\JD\\office_dongdong\\wangguanquan3\\RecvFile\\采购单批量导入模板 -各种错误.xlsx"))) {
-            reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Goods.class)).forEach(Print::println);
-        }
-    }
-
     public static class O {
         @ExcelColumn("亚马逊FBA子单号/箱唛号")
         private String fbaNo;
