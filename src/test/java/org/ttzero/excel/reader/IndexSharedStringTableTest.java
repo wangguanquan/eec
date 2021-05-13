@@ -28,7 +28,7 @@ import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
  */
 public class IndexSharedStringTableTest {
 
-    @Test public void test1() {
+    @Test public void test1() throws IOException {
         try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             sst.push('a');
             sst.push('b');
@@ -47,12 +47,10 @@ public class IndexSharedStringTableTest {
             for (int i = 0; i < n; i++) {
                 println(array[i]);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void test2() {
+    @Test public void test2() throws IOException {
         try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             int length = 10000;
             String[] buf = new String[length];
@@ -75,12 +73,10 @@ public class IndexSharedStringTableTest {
             for (int i = 0; i < size; i++) {
                 assert _buf[i].equals(buf[fromIndex + i]);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void test3() {
+    @Test public void test3() throws IOException {
         try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             long start = System.currentTimeMillis();
             for (int i = 0; i < 10_000_000; i++) {
@@ -94,8 +90,6 @@ public class IndexSharedStringTableTest {
                 sst.get(i);
             }
             println(System.currentTimeMillis() - start);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 //

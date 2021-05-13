@@ -47,7 +47,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
     }
 
     @Test
-    public void testMultiDataSource() {
+    public void testMultiDataSource() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student order by age limit 10");
@@ -87,8 +87,6 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 // Customize
                 .addSheet(new CustomizeDataSourceSheet("Customize"))
                 .writeTo(defaultTestPath);
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 }

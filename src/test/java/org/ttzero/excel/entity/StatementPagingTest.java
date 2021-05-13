@@ -27,20 +27,13 @@ import java.sql.SQLException;
  * @author guanquan.wang at 2019-04-28 22:47
  */
 public class StatementPagingTest extends SQLWorkbookTest {
-    @Test public void testPaging() {
+    @Test public void testPaging() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement paging", author)
                 .watch(Print::println)
-                .setConnection(con)
-                .addSheet("select id, name, age from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
-                )
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student"))
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 }

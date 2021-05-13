@@ -410,8 +410,6 @@ public class ListObjectSheetTest extends WorkbookTest {
             ExtStudent student = opt.get();
             assert student.getId() == 9527;
             assert student.getScore() == 0; // The setter column name is 'score'
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -427,8 +425,6 @@ public class ListObjectSheetTest extends WorkbookTest {
             ExtStudent student = opt.get();
             assert student.getId() == 0;
             assert student.getScore() == 0;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

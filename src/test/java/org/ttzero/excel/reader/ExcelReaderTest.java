@@ -65,7 +65,7 @@ public class ExcelReaderTest {
             : Paths.get(url.getFile());
     }
 
-    @Test public void testReader() {
+    @Test public void testReader() throws IOException {
         File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
         if (files != null) {
             for (File file : files) {
@@ -74,7 +74,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testMergedReader() {
+    @Test public void testMergedReader() throws IOException {
         File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
         if (files != null) {
             for (File file : files) {
@@ -83,7 +83,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testFormulaReader() {
+    @Test public void testFormulaReader() throws IOException {
         File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
         if (files != null) {
             for (File file : files) {
@@ -92,7 +92,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void testColumnIndex() {
+    @Test public void testColumnIndex() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             Sheet sheet = reader.sheet(0);
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
@@ -102,12 +102,10 @@ public class ExcelReaderTest {
                     + " | " + row.getLastColumnIndex()
                     + " => " + row);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testReset() {
+    @Test public void testReset() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
 
             Sheet sheet = reader.sheet(0);
@@ -119,12 +117,10 @@ public class ExcelReaderTest {
 
             sheet.rows().forEach(Print::println);
 
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testForEach() {
+    @Test public void testForEach() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             Sheet sheet = reader.sheet(0);
 
@@ -150,36 +146,28 @@ public class ExcelReaderTest {
                 }
                 println();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testToStandardObject() {
+    @Test public void testToStandardObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(StandardEntry.class)).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testToObject() {
+    @Test public void testToObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(Entry.class)).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testToAnnotationObject() {
+    @Test public void testToAnnotationObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(AnnotationEntry.class)).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testReaderByName() {
+    @Test public void testReaderByName() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheet(0).dataIterator().forEachRemaining(row -> {
                 print(row.getInt("渠道ID")); print(" | ");
@@ -190,12 +178,10 @@ public class ExcelReaderTest {
                 print(row.getChar("VIP"));
                 println();
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testFilter() {
+    @Test public void testFilter() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             String[] games = reader.sheet(0)
                 .dataRows()
@@ -203,30 +189,24 @@ public class ExcelReaderTest {
                 .distinct()
                 .toArray(String[]::new);
             print(Arrays.toString(games));
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testToCSV() {
+    @Test public void testToCSV() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheet(0).saveAsCSV(getOutputTestPath());
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void test_81() {
+    @Test public void test_81() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             List<Customer> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Customer.class)).collect(Collectors.toList());
 
             for (Customer c : list) System.out.println(c);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testDimension() {
+    @Test public void testDimension() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             Dimension dimension = reader.sheet(0).getDimension();
             System.out.println(dimension);
@@ -235,8 +215,6 @@ public class ExcelReaderTest {
             assert dimension.lastRow == 6;
             assert dimension.firstColumn == 1;
             assert dimension.lastColumn == 2;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -250,7 +228,7 @@ public class ExcelReaderTest {
         assert dimension.lastColumn == 3;
     }
 
-    @Test public void testFormula() {
+    @Test public void testFormula() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
             // Read value
             reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
@@ -272,8 +250,6 @@ public class ExcelReaderTest {
                     }
                 });
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -287,7 +263,7 @@ public class ExcelReaderTest {
         print(cellRangeToLong("AA10"));
     }
 
-    @Test public void testClassBind() {
+    @Test public void testClassBind() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
                 // Use bind...get...
@@ -295,12 +271,10 @@ public class ExcelReaderTest {
                 Entry entry = row.get();
                 System.out.println(entry.toString());
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testClassSharedBind() {
+    @Test public void testClassSharedBind() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
                 // Use bind...geet...
@@ -308,24 +282,20 @@ public class ExcelReaderTest {
                 Entry entry = row.geet();
                 System.out.println(entry.toString());
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testHeaderString() {
+    @Test public void testHeaderString() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(sheet -> {
                 println("----------------" + sheet.getName() + "----------------");
                 println(sheet.getHeader());
                 return sheet.dataRows();
             }).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testHeaderString2() {
+    @Test public void testHeaderString2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(sheet -> {
                 println("----------------" + sheet.getName() + "----------------");
@@ -333,8 +303,6 @@ public class ExcelReaderTest {
                 println(sheet.getHeader());
                 return sheet.dataRows();
             }).forEach(row -> println((Entry) row.get()));
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -373,7 +341,7 @@ public class ExcelReaderTest {
         assert "B2:B8".equals(values[5]);
     }
 
-    @Test public void testMergeFunc() {
+    @Test public void testMergeFunc() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
 //            reader.copyOnMergeCells().sheets().flatMap(s -> {
 //                println("----------------" + s.getName() + "----------------");
@@ -381,63 +349,51 @@ public class ExcelReaderTest {
 //                return s.rows();
 //            }).forEach(Print::println);
             reader.copyOnMergeCells().sheets().flatMap(Sheet::rows).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
 
-    @Test public void testMergeExcel() {
+    @Test public void testMergeExcel() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
             reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testMergeExcel2() {
+    @Test public void testMergeExcel2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
             reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Ignore
-    @Test public void testReaderLarge() {
+    @Test public void testReaderLarge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
             long n = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(LargeData.class)).count();
             assert n == 500000;
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testAllType() {
+    @Test public void testAllType() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows)
                 .map(row -> row.too(ListObjectSheetTest.AllType.class))
                 .forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testBoxAllType() {
+    @Test public void testBoxAllType() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows)
                 .map(row -> row.too(ListObjectSheetTest.BoxAllType.class))
                 .forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testNumber2ExcelFormula() {
+    @Test public void testNumber2ExcelFormula() throws IOException {
         testFormulaReader(testResourceRoot().resolve("Number2Excel.xlsx"));
     }
 
-    @Test public void testResetToEntry() {
+    @Test public void testResetToEntry() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             println("--------0--------");
             reader.sheet(0).reset().rows().forEach(Print::println);
@@ -469,16 +425,14 @@ public class ExcelReaderTest {
 
             println("--------9--------");
             reader.sheet(0).reset().rows().forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    private void testReader(Path path) {
+    private void testReader(Path path) throws IOException {
         testReader(path, VALUE_ONLY);
     }
 
-    private void testReader(Path path, int option) {
+    private void testReader(Path path, int option) throws IOException {
         println("----------" + path.getFileName() + "----------");
         try (ExcelReader reader = ExcelReader.read(path, option)) {
             println(reader.getAppInfo());
@@ -488,13 +442,11 @@ public class ExcelReaderTest {
                 .flatMap(Sheet::rows)
                 .forEach(row -> println(row.getRowNumber() + "|: " + row.toString()));
 
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
 
-    private void testFormulaReader(Path path) {
+    private void testFormulaReader(Path path) throws IOException {
         println("----------" + path.getFileName() + "----------");
         try (ExcelReader reader = ExcelReader.read(path, VALUE_AND_CALC)) {
             // Read formula
@@ -508,12 +460,10 @@ public class ExcelReaderTest {
                     }
                 }
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testToObject2() {
+    @Test public void testToObject2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("test-fixed-row.xlsx"))) {
             reader.sheet(0).rows().forEach(row -> {
                 if (row.getRowNumber() == 1) {
@@ -522,24 +472,20 @@ public class ExcelReaderTest {
                     assert "我是内容".equals(row.getString(0));
                 }
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testReadEmptyCell() {
+    @Test public void testReadEmptyCell() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#169.xlsx"))) {
             reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
             reader.sheets().peek(sheet -> {
                 sheet.reset();
                 println(sheet.getName() + ": " + sheet.getDimension());
             }).flatMap(Sheet::rows).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testReadDrawings() {
+    @Test public void testReadDrawings() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("drawing.xlsx"))) {
             reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
 
@@ -564,12 +510,10 @@ public class ExcelReaderTest {
                 } else assert !sheet.getName().equals("Sheet2") || pictures1.size() == 1;
                 pictures1.forEach(Print::println);
             });
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void test175() {
+    @Test public void test175() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
             reader.sheet(0).rows().filter(row -> row.getRowNumber() > 7 && !row.isEmpty()).forEach(row -> println(row.getDouble(4)));
             reader.sheet(0).reset();
@@ -581,8 +525,12 @@ public class ExcelReaderTest {
                     .map(row -> row.to(O.class))
                     .filter(Objects::nonNull)
                     .forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+    }
+
+    @Test public void test177() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(Paths.get("D:\\wangguanquan3\\Documents\\JD\\office_dongdong\\wangguanquan3\\RecvFile\\采购单批量导入模板 -各种错误.xlsx"))) {
+            reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Goods.class)).forEach(Print::println);
         }
     }
 
@@ -1044,6 +992,104 @@ public class ExcelReaderTest {
 
         public void setStr25(String str25) {
             this.str25 = str25;
+        }
+    }
+
+    public static class Goods {
+        @ExcelColumn("商品编码")
+        private String no;
+        @ExcelColumn("商品名称")
+        private String name;
+        @ExcelColumn("*品牌")
+        private String brand;
+        @ExcelColumn("*订货号")
+        private String buyNo;
+        @ExcelColumn("型号")
+        private String model;
+        @ExcelColumn("*单位")
+        private String unit;
+        @ExcelColumn("税率（不填默认为0）")
+        private BigDecimal taxRate;
+        @ExcelColumn("*含税单价（元）")
+        private BigDecimal price;
+        @ExcelColumn("*采购数量")
+        private BigDecimal count;
+
+        public String getNo() {
+            return no;
+        }
+
+        public void setNo(String no) {
+            this.no = no;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getBrand() {
+            return brand;
+        }
+
+        public void setBrand(String brand) {
+            this.brand = brand;
+        }
+
+        public String getBuyNo() {
+            return buyNo;
+        }
+
+        public void setBuyNo(String buyNo) {
+            this.buyNo = buyNo;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
+        }
+
+        public String getUnit() {
+            return unit;
+        }
+
+        public void setUnit(String unit) {
+            this.unit = unit;
+        }
+
+        public BigDecimal getTaxRate() {
+            return taxRate;
+        }
+
+        public void setTaxRate(BigDecimal taxRate) {
+            this.taxRate = taxRate;
+        }
+
+        public BigDecimal getPrice() {
+            return price;
+        }
+
+        public void setPrice(BigDecimal price) {
+            this.price = price;
+        }
+
+        public BigDecimal getCount() {
+            return count;
+        }
+
+        public void setCount(BigDecimal count) {
+            this.count = count;
+        }
+
+        @Override
+        public String toString() {
+            return buyNo + " " + price + " " + count;
         }
     }
 }

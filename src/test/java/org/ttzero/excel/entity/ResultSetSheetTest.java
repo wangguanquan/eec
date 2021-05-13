@@ -24,15 +24,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 /**
  * @author guanquan.wang at 2019-04-28 21:50
  */
 public class ResultSetSheetTest extends SQLWorkbookTest {
-    @Test public void testWrite() {
+    @Test public void testWrite() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("result set", author)
@@ -41,65 +42,55 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(rs
                     , new Sheet.Column("学号", int.class)
                     , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Sheet.Column("年龄", Integer.class)
+                    , new Sheet.Column("创建时间", Timestamp.class)
+                    , new Sheet.Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
-        } catch (SQLException|IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor1() {
+    @Test public void testConstructor1() throws IOException {
         try {
             new Workbook("test ResultSet sheet Constructor1", author)
-                .watch(Print::println)
-                .addSheet(new ResultSetSheet())
-                .writeTo(defaultTestPath);
-        } catch (IOException e) {
-            e.printStackTrace();
+                    .watch(Print::println)
+                    .addSheet(new ResultSetSheet())
+                    .writeTo(defaultTestPath);
         } catch (ExcelWriteException e) {
             assert true;
         }
     }
 
-    @Test public void testConstructor2() {
+    @Test public void testConstructor2() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor2", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet().setRs(rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor3() {
+    @Test public void testConstructor3() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor3", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student").setRs(rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor4() {
+    @Test public void testConstructor4() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor4", author)
@@ -107,20 +98,18 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet("Student"
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
-                    .setRs(rs))
+                    , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                ).setRs(rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor5() {
+    @Test public void testConstructor5() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor5", author)
@@ -128,54 +117,44 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet("Student", WaterMark.of(author)
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
-                    .setRs(rs))
+                    , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                ).setRs(rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor6() {
+    @Test public void testConstructor6() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor6", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor7() {
+    @Test public void testConstructor7() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor7", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor8() {
+    @Test public void testConstructor8() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor8", author)
@@ -184,19 +163,17 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor9() {
+    @Test public void testConstructor9() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor9", author)
@@ -205,19 +182,17 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor10() {
+    @Test public void testConstructor10() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor10", author)
@@ -226,19 +201,17 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor11() {
+    @Test public void testConstructor11() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor11", author)
@@ -247,19 +220,17 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("ID", int.class)
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testDiffTypeFromMetadata() {
+    @Test public void testDiffTypeFromMetadata() throws SQLException, IOException {
         try (
             Connection con = getConnection();
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet different type from metadata", author)
@@ -268,12 +239,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("ID", String.class)  // Integer in database
                     , new Sheet.Column("NAME", String.class)
                     , new Sheet.Column("AGE", String.class) // // Integer in database
+                    , new Sheet.Column("AGE", int.class)
+                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 

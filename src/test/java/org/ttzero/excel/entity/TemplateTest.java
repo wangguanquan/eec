@@ -31,7 +31,7 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class TemplateTest extends WorkbookTest {
 
-    @Test public void testTemplate() {
+    @Test public void testTemplate() throws IOException {
         try (InputStream fis = Files.newInputStream(testResourceRoot().resolve("template.xlsx"))) {
             // Map data
             Map<String, Object> map = new HashMap<>();
@@ -49,8 +49,6 @@ public class TemplateTest extends WorkbookTest {
             new Workbook("模板导出", author)
                 .withTemplate(fis, map)
                 .writeTo(defaultTestPath);
-        } catch (IOException | ExcelWriteException e) {
-            e.printStackTrace();
         }
     }
 }

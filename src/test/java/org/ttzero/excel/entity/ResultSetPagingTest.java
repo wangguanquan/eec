@@ -23,15 +23,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 /**
  * @author guanquan.wang at 2019-04-29 15:16
  */
 public class ResultSetPagingTest extends SQLWorkbookTest {
     @Test
-    public void testPaging() {
+    public void testPaging() throws SQLException, IOException {
         try (Connection con = getConnection()) {
-            PreparedStatement ps = con.prepareStatement("select id, name, age from student");
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student");
             ResultSet rs = ps.executeQuery();
             new Workbook("result set paging", author)
                 .watch(Print::println)
@@ -40,12 +41,12 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
                     , new Sheet.Column("学号", int.class)
                     , new Sheet.Column("性名", String.class)
                     , new Sheet.Column("年龄", int.class)
+                    , new Sheet.Column("创建时间", Timestamp.class)
+                    , new Sheet.Column("更新", Timestamp.class)
                 )
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
             ps.close();
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 }

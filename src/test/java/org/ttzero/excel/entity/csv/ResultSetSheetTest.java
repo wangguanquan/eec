@@ -34,7 +34,7 @@ import java.sql.SQLException;
  * @author guanquan.wang at 2019-04-28 21:50
  */
 public class ResultSetSheetTest extends SQLWorkbookTest {
-    @Test public void testWrite() {
+    @Test public void testWrite() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -50,26 +50,22 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException|IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor1() {
+    @Test public void testConstructor1() throws IOException {
         try {
             new Workbook("test ResultSet sheet Constructor1")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet())
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (ExcelWriteException e) {
             assert true;
         }
     }
 
-    @Test public void testConstructor2() {
+    @Test public void testConstructor2() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -80,14 +76,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet().setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor3() {
+    @Test public void testConstructor3() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -98,14 +90,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet("Student").setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor4() {
+    @Test public void testConstructor4() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -120,14 +108,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     .setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor5() {
+    @Test public void testConstructor5() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -142,14 +126,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     .setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor6() {
+    @Test public void testConstructor6() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -160,14 +140,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor7() {
+    @Test public void testConstructor7() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -178,14 +154,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet("Student", rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor8() {
+    @Test public void testConstructor8() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -200,14 +172,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor9() {
+    @Test public void testConstructor9() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -222,14 +190,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor10() {
+    @Test public void testConstructor10() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -244,14 +208,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testConstructor11() {
+    @Test public void testConstructor11() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -266,14 +226,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
-    @Test public void testDiffTypeFromMetadata() {
+    @Test public void testDiffTypeFromMetadata() throws SQLException, IOException {
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
@@ -288,10 +244,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
-        } catch (ExcelWriteException e) {
-            assert true;
         }
     }
 
