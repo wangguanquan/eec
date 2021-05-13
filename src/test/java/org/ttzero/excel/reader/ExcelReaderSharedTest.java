@@ -29,11 +29,9 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class ExcelReaderSharedTest {
 
-    @Test public void testSharedRead() {
+    @Test public void testSharedRead() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("eec shared 100.xlsx"))) {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> println(row.getRowNumber() + "| " + row.toString()));
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

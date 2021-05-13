@@ -363,10 +363,10 @@ class HeaderRow extends Row {
         if (fieldClazz[i] == String.class) {
             fields[i].set(t, row.getString(c));
         }
-        else if (fieldClazz[i] == Integer.class || fieldClazz[i] == int.class) {
+        else if (fieldClazz[i] == Integer.class) {
             fields[i].set(t, row.getInt(c));
         }
-        else if (fieldClazz[i] == Long.class || fieldClazz[i] == long.class) {
+        else if (fieldClazz[i] == Long.class) {
             fields[i].set(t, row.getLong(c));
         }
         else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
@@ -375,17 +375,37 @@ class HeaderRow extends Row {
         else if (fieldClazz[i] == java.sql.Timestamp.class) {
             fields[i].set(t, row.getTimestamp(c));
         }
-        else if (fieldClazz[i] == Double.class || fieldClazz[i] == double.class) {
+        else if (fieldClazz[i] == Double.class) {
             fields[i].set(t, row.getDouble(c));
         }
-        else if (fieldClazz[i] == Float.class || fieldClazz[i] == float.class) {
+        else if (fieldClazz[i] == Float.class) {
             fields[i].set(t, row.getFloat(c));
         }
-        else if (fieldClazz[i] == Boolean.class || fieldClazz[i] == boolean.class) {
+        else if (fieldClazz[i] == Boolean.class) {
             fields[i].set(t, row.getBoolean(c));
         }
         else if (fieldClazz[i] == BigDecimal.class) {
             fields[i].set(t, row.getDecimal(c));
+        }
+        else if (fieldClazz[i] == int.class) {
+            Integer v;
+            fields[i].set(t, (v = row.getInt(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == long.class) {
+            Long v;
+            fields[i].set(t, (v = row.getLong(c)) != null ? v : 0L);
+        }
+        else if (fieldClazz[i] == double.class) {
+            Double v;
+            fields[i].set(t, (v = row.getDouble(c)) != null ? v : 0.0D);
+        }
+        else if (fieldClazz[i] == float.class) {
+            Float v;
+            fields[i].set(t, (v = row.getFloat(c)) != null ? v : 0.0F);
+        }
+        else if (fieldClazz[i] == boolean.class) {
+            Boolean v;
+            fields[i].set(t, (v = row.getBoolean(c)) != null ? v : false);
         }
         else if (fieldClazz[i] == java.sql.Time.class) {
             fields[i].set(t, row.getTime(c));
@@ -399,14 +419,26 @@ class HeaderRow extends Row {
         else if (fieldClazz[i] == LocalTime.class) {
             fields[i].set(t, row.getLocalTime(c));
         }
-        else if (fieldClazz[i] == Character.class || fieldClazz[i] == char.class) {
+        else if (fieldClazz[i] == Character.class) {
             fields[i].set(t, row.getChar(c));
         }
-        else if (fieldClazz[i] == Byte.class || fieldClazz[i] == byte.class) {
+        else if (fieldClazz[i] == Byte.class) {
             fields[i].set(t, row.getByte(c));
         }
-        else if (fieldClazz[i] == Short.class || fieldClazz[i] == short.class) {
+        else if (fieldClazz[i] == Short.class) {
             fields[i].set(t, row.getShort(c));
+        }
+        else if (fieldClazz[i] == char.class) {
+            Character v;
+            fields[i].set(t, (v = row.getChar(c)) != null ? v : '\0');
+        }
+        else if (fieldClazz[i] == byte.class) {
+            Byte v;
+            fields[i].set(t, (v = row.getByte(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == short.class) {
+            Short v;
+            fields[i].set(t, (v = row.getShort(c)) != null ? v : 0);
         }
     }
 
@@ -415,10 +447,10 @@ class HeaderRow extends Row {
         if (fieldClazz[i] == String.class) {
             methods[i].invoke(t, row.getString(c));
         }
-        else if (fieldClazz[i] == Integer.class || fieldClazz[i] == int.class) {
+        else if (fieldClazz[i] == Integer.class) {
             methods[i].invoke(t, row.getInt(c));
         }
-        else if (fieldClazz[i] == Long.class || fieldClazz[i] == long.class) {
+        else if (fieldClazz[i] == Long.class) {
             methods[i].invoke(t, row.getLong(c));
         }
         else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
@@ -427,17 +459,37 @@ class HeaderRow extends Row {
         else if (fieldClazz[i] == java.sql.Timestamp.class) {
             methods[i].invoke(t, row.getTimestamp(c));
         }
-        else if (fieldClazz[i] == Double.class || fieldClazz[i] == double.class) {
+        else if (fieldClazz[i] == Double.class) {
             methods[i].invoke(t, row.getDouble(c));
         }
-        else if (fieldClazz[i] == Float.class || fieldClazz[i] == float.class) {
+        else if (fieldClazz[i] == Float.class) {
             methods[i].invoke(t, row.getFloat(c));
         }
-        else if (fieldClazz[i] == Boolean.class || fieldClazz[i] == boolean.class) {
+        else if (fieldClazz[i] == Boolean.class) {
             methods[i].invoke(t, row.getBoolean(c));
         }
         else if (fieldClazz[i] == BigDecimal.class) {
             methods[i].invoke(t, row.getDecimal(c));
+        }
+        else if (fieldClazz[i] == int.class) {
+            Integer v;
+            methods[i].invoke(t, (v = row.getInt(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == long.class) {
+            Long v;
+            methods[i].invoke(t, (v = row.getLong(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == double.class) {
+            Double v;
+            methods[i].invoke(t, (v = row.getDouble(c)) != null ? v : 0.0D);
+        }
+        else if (fieldClazz[i] == float.class) {
+            Float v;
+            methods[i].invoke(t, (v = row.getFloat(c)) != null ? v : 0.0F);
+        }
+        else if (fieldClazz[i] == boolean.class) {
+            Boolean v;
+            methods[i].invoke(t, (v = row.getBoolean(c)) != null ? v : false);
         }
         else if (fieldClazz[i] == java.sql.Time.class) {
             methods[i].invoke(t, row.getTime(c));
@@ -451,14 +503,26 @@ class HeaderRow extends Row {
         else if (fieldClazz[i] == LocalTime.class) {
             methods[i].invoke(t, row.getLocalTime(c));
         }
-        else if (fieldClazz[i] == Character.class || fieldClazz[i] == char.class) {
+        else if (fieldClazz[i] == Character.class) {
             methods[i].invoke(t, row.getChar(c));
         }
-        else if (fieldClazz[i] == Byte.class || fieldClazz[i] == byte.class) {
+        else if (fieldClazz[i] == Byte.class) {
             methods[i].invoke(t, row.getByte(c));
         }
-        else if (fieldClazz[i] == Short.class || fieldClazz[i] == short.class) {
+        else if (fieldClazz[i] == Short.class) {
             methods[i].invoke(t, row.getShort(c));
+        }
+        else if (fieldClazz[i] == char.class) {
+            Character v;
+            methods[i].invoke(t, (v = row.getChar(c)) != null ? v : '\0');
+        }
+        else if (fieldClazz[i] == byte.class) {
+            Byte v;
+            methods[i].invoke(t, (v = row.getByte(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == short.class) {
+            Short v;
+            methods[i].invoke(t, (v = row.getShort(c)) != null ? v : 0);
         }
     }
 }

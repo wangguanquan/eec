@@ -36,7 +36,7 @@ import java.sql.SQLException;
  * @author guanquan.wang at 2019-04-28 22:47
  */
 public class StatementSheetTest extends SQLWorkbookTest {
-    @Test public void testWrite() {
+    @Test public void testWrite() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement")
                 .watch(Print::println)
@@ -48,12 +48,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testStyleProcessor() {
+    @Test public void testStyleProcessor() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor")
                 .watch(Print::println)
@@ -73,12 +71,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testIntConversion() {
+    @Test public void testIntConversion() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement")
                 .setConnection(con)
@@ -98,36 +94,30 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor1() {
+    @Test public void testConstructor1() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor1")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor2() {
+    @Test public void testConstructor2() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor2")
                 .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age from student limit 10"))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor3() {
+    @Test public void testConstructor3() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor3")
                 .watch(Print::println)
@@ -137,12 +127,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 }))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor4() {
+    @Test public void testConstructor4() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor4")
                 .watch(Print::println)
@@ -152,12 +140,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 }))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor5() {
+    @Test public void testConstructor5() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor5")
                 .watch(Print::println)
@@ -168,12 +154,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor6() {
+    @Test public void testConstructor6() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor6")
                 .watch(Print::println)
@@ -184,12 +168,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor7() {
+    @Test public void testConstructor7() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor7")
                 .watch(Print::println)
@@ -203,12 +185,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("AGE", int.class)))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor8() {
+    @Test public void testConstructor8() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor8")
                 .watch(Print::println)
@@ -222,26 +202,22 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("AGE", int.class)))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor9() {
+    @Test public void testConstructor9() throws IOException {
         try {
             new Workbook("test statement sheet Constructor9")
                 .watch(Print::println)
                 .addSheet(new StatementSheet())
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (ExcelWriteException e) {
             assert true;
         }
     }
 
-    @Test public void testConstructor10() {
+    @Test public void testConstructor10() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor10")
                 .watch(Print::println)
@@ -249,12 +225,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor11() {
+    @Test public void testConstructor11() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor11")
                 .watch(Print::println)
@@ -262,12 +236,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor12() {
+    @Test public void testConstructor12() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor12")
                 .watch(Print::println)
@@ -275,12 +247,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testConstructor13() {
+    @Test public void testConstructor13() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor13")
                 .watch(Print::println)
@@ -291,13 +261,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
         }
     }
 
 
-    @Test public void testCancelOddStyle() {
+    @Test public void testCancelOddStyle() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet cancel odd")
                 .watch(Print::println)
@@ -306,12 +274,10 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testDiffTypeFromMetadata() {
+    @Test public void testDiffTypeFromMetadata() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test Statement different type from metadata")
                 .watch(Print::println)
@@ -322,20 +288,16 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 
-    @Test public void testFixWidth() {
+    @Test public void testFixWidth() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixSize(10))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
-        } catch (SQLException |IOException e) {
-            e.printStackTrace();
         }
     }
 }

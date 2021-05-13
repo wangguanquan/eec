@@ -27,12 +27,10 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  * @author guanquan.wang at 2019-06-12 17:26
  */
 public class MultiStyleInCellTest {
-    @Test public void testMulti() {
+    @Test public void testMulti() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("multi-style In cell.xlsx"))) {
 
             reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
