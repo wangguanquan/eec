@@ -202,13 +202,33 @@ public class ResultSetSheet extends Sheet {
                 row.index = rows;
                 Cell[] cells = row.realloc(len);
                 for (int i = 1; i <= len; i++) {
-                    Column hc = columns[i - 1];
+                    SQLColumn hc = (SQLColumn) columns[i - 1];
 
                     // clear cells
                     Cell cell = cells[i - 1];
                     cell.clear();
 
-                    Object e = rs.getObject(i);
+                    Object e;
+                    switch (hc.sqlType) {
+                        case VARCHAR:
+                        case LONGVARCHAR:
+                        case NULL:        e = rs.getString(i);     break;
+                        case INTEGER:
+                        case TINYINT:
+                        case SMALLINT:
+                        case BIT:
+                        case CHAR:        e = rs.getInt(i);        break;
+                        case DATE:        e = rs.getDate(i);       break;
+                        case TIMESTAMP:   e = rs.getTimestamp(i);  break;
+                        case NUMERIC:
+                        case DECIMAL:     e = rs.getBigDecimal(i); break;
+                        case BIGINT:      e = rs.getLong(i);       break;
+                        case REAL:
+                        case FLOAT:
+                        case DOUBLE:      e = rs.getDouble(i);     break;
+                        case TIME:        e = rs.getTime(i);       break;
+                        default:          e = rs.getObject(i);     break;
+                    }
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
                 }
@@ -241,24 +261,28 @@ public class ResultSetSheet extends Sheet {
         try {
             ResultSetMetaData metaData = rs.getMetaData();
             if (hasHeaderColumns()) {
+                Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
-                    Column column = columns[i];
+                    SQLColumn column = SQLColumn.of(columns[i]);
+                    newColumns[i] = column;
                     if (StringUtil.isEmpty(column.getName())) {
                         column.setName(metaData.getColumnLabel(i + 1));
                     }
                     // FIXME maybe do not reset the types
-                    Class<?> metaClazz = columnTypeToClass(metaData.getColumnType(i + 1));
+                    column.sqlType = metaData.getColumnType(i + 1);
+                    Class<?> metaClazz = columnTypeToClass(column.sqlType);
                     if (column.clazz != metaClazz) {
                         what("The specified type " + column.clazz + " is different" +
                             " from metadata column type " + metaClazz);
                         column.clazz = metaClazz;
                     }
                 }
+                columns = newColumns;
             } else {
                 int count = metaData.getColumnCount();
                 columns = new Column[count];
                 for (; ++i <= count; ) {
-                    columns[i - 1] = new Column(metaData.getColumnLabel(i)
+                    columns[i - 1] = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
                 }
             }
@@ -296,22 +320,52 @@ public class ResultSetSheet extends Sheet {
             case CHAR:
             case LONGVARCHAR:
             case NULL:      clazz = String.class;        break;
-            case INTEGER:   clazz = int.class;           break;
+            case INTEGER:   clazz = Integer.class;       break;
             case DATE:      clazz = java.sql.Date.class; break;
             case TIMESTAMP: clazz = Timestamp.class;     break;
             case NUMERIC:
             case DECIMAL:   clazz = BigDecimal.class;    break;
-            case BIT:       clazz = boolean.class;       break;
-            case TINYINT:   clazz = byte.class;          break;
-            case SMALLINT:  clazz = short.class;         break;
-            case BIGINT:    clazz = long.class;          break;
-            case REAL:      clazz = float.class;         break;
+            case BIT:       clazz = Boolean.class;       break;
+            case TINYINT:   clazz = Byte.class;          break;
+            case SMALLINT:  clazz = Short.class;         break;
+            case BIGINT:    clazz = Long.class;          break;
+            case REAL:      clazz = Float.class;         break;
             case FLOAT:
-            case DOUBLE:    clazz = double.class;        break;
+            case DOUBLE:    clazz = Double.class;        break;
 //            case CHAR:      clazz = char.class;          break;
             case TIME:      clazz = java.sql.Time.class; break;
             default:        clazz = Object.class;
         }
         return clazz;
+    }
+
+    private static class SQLColumn extends Column {
+        int sqlType;
+
+        public SQLColumn(String name, int sqlType, Class<?> clazz) {
+            super(name, clazz);
+            this.sqlType = sqlType;
+        }
+
+        public static SQLColumn of(Column other) {
+            SQLColumn self = new SQLColumn(other.name, 0, other.clazz);
+            self.key = other.key;
+            self.name = other.name;
+            self.clazz = other.clazz;
+            self.share = other.share;
+            self.type = other.type;
+            self.processor = other.processor;
+            self.styleProcessor = other.styleProcessor;
+            self.cellStyle = other.cellStyle;
+            self.width = other.width;
+            self.o = other.o;
+            self.styles = other.styles;
+            self.headerComment = other.headerComment;
+            self.cellComment = other.cellComment;
+            self.numFmt = other.numFmt;
+            self.ignoreValue = other.ignoreValue;
+            self.wrapText = other.wrapText;
+            return self;
+        }
     }
 }

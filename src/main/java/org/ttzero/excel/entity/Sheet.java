@@ -234,10 +234,12 @@ public abstract class Sheet implements Cloneable, Storable {
         /**
          * The string value is shared
          */
-        public boolean share = true;
+        public boolean share;
         /**
          * 0: standard 1:percentage 2:RMB
+         * @deprecated Do not use.
          */
+        @Deprecated
         public int type;
         /**
          * The int value conversion
@@ -261,15 +263,15 @@ public abstract class Sheet implements Cloneable, Storable {
         /**
          * Specify the cell number format
          */
-        private NumFmt numFmt;
+        public NumFmt numFmt;
         /**
          * Only export column name and ignore value
          */
-        private boolean ignoreValue;
+        public boolean ignoreValue;
         /**
          * Wrap text in a cell
          */
-        private int wrapText;
+        public int wrapText;
 
         /**
          * Constructor Column
