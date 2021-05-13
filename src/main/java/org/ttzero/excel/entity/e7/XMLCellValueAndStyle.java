@@ -71,7 +71,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
                 cell.xf = getStyleIndex(row, hc, n, style);
             }
         } else {
-            cell.setBlank();
+            cell.blank();
             cell.xf = getStyleIndex(row, hc, null);
         }
     }

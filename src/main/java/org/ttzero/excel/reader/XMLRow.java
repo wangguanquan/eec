@@ -19,12 +19,10 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.entity.style.Styles;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
-import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
-import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.reader.SharedStrings.unescape;
 import static org.ttzero.excel.util.StringUtil.swap;
@@ -75,7 +73,7 @@ class XMLRow extends Row {
 
     ///////////////////////////////////////////////////////
     XMLRow with(char[] cb, int from, int size) {
-//        LOGGER.info(new String(cb, from, size));
+//        LOGGER.debug(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
         this.to = from + size;
@@ -87,7 +85,7 @@ class XMLRow extends Row {
 
     /* empty row*/
     XMLRow empty(char[] cb, int from, int size) {
-//        LOGGER.info(new String(cb, from, size));
+//        LOGGER.debug(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
         this.to = from + size;
@@ -352,7 +350,7 @@ class XMLRow extends Row {
                 if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
+                    cell.blank(); // Reset type to BLANK if null value
                 }
                 break;
             case SST: // shared string lazy get
@@ -371,7 +369,7 @@ class XMLRow extends Row {
                 if (a < cursor) {
                     cell.setSv(unescape(buf, cb, a, cursor));
                 } else { // null value
-                    cell.setT(BLANK); // Reset type to BLANK if null value
+                    cell.blank(); // Reset type to BLANK if null value
                 }
                 break;
             default:
@@ -391,7 +389,7 @@ class XMLRow extends Row {
                     }
                 }
                 // Maybe the cell should be merged
-                else cell.setT(EMPTY_TAG);
+                else cell.emptyTag();
         }
 
         // end of cell

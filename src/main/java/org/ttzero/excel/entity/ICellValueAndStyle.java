@@ -137,7 +137,7 @@ public interface ICellValueAndStyle {
         if (hasIntProcessor) {
             conversion(row, cell, 0, hc);
         } else
-            cell.setBlank();
+            cell.blank();
     }
 
     /**
@@ -164,7 +164,7 @@ public interface ICellValueAndStyle {
                 setCellValue(row, cell, e, hc, clazz);
             }
         } else {
-            cell.setBlank();
+            cell.blank();
         }
     }
 }

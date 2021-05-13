@@ -43,7 +43,7 @@ import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
-import static org.ttzero.excel.reader.Cell.UNICODE_EMPTY;
+import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDateTime;
@@ -257,6 +257,10 @@ public abstract class Row {
             case DOUBLE:
                 b |= (int) c.dv;
                 break;
+            case BLANK:
+            case EMPTY_TAG:
+            case UNALLOCATED:
+                break;
             default: throw new UncheckedTypeException("Can't convert cell value to byte");
         }
         return b;
@@ -314,6 +318,10 @@ public abstract class Row {
                 break;
             case DOUBLE:
                 cc |= (int) c.dv;
+                break;
+            case BLANK:
+            case EMPTY_TAG:
+            case UNALLOCATED:
                 break;
             default: throw new UncheckedTypeException("Can't convert cell value to char");
         }
@@ -435,6 +443,11 @@ public abstract class Row {
             case BOOL:
                 n = c.bv ? 1 : 0;
                 break;
+            case BLANK:
+            case EMPTY_TAG:
+            case UNALLOCATED:
+                n = 0;
+                break;
 
             default: throw new UncheckedTypeException("Can't convert cell value to int");
         }
@@ -542,6 +555,10 @@ public abstract class Row {
                 break;
             case BLANK:
                 s = EMPTY;
+                break;
+            case EMPTY_TAG:
+            case UNALLOCATED:
+                s = null;
                 break;
             case LONG:
                 s = String.valueOf(c.lv);
@@ -682,7 +699,8 @@ public abstract class Row {
             case INLINESTR:
                 bd = new BigDecimal(c.sv);
                 break;
-            case UNICODE_EMPTY:
+            case UNALLOCATED:
+            case BLANK:
             case EMPTY_TAG:
                 bd = null;
                 break;
@@ -736,6 +754,11 @@ public abstract class Row {
             case INLINESTR:
                 date = toDate(c.sv);
                 break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                date = null;
+                break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
         }
         return date;
@@ -786,6 +809,11 @@ public abstract class Row {
             case INLINESTR:
                 ts = toTimestamp(c.sv);
                 break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                ts = null;
+                break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ts;
@@ -827,6 +855,11 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR: t = toTime(c.sv); break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                t = null;
+                break;
             default:
                 throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
         }
@@ -878,6 +911,11 @@ public abstract class Row {
             case INLINESTR:
                 ldt = toTimestamp(c.sv).toLocalDateTime();
                 break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                ldt = null;
+                break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.time.LocalDateTime");
         }
         return ldt;
@@ -927,6 +965,11 @@ public abstract class Row {
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
                 ld = toTimestamp(c.sv).toLocalDateTime().toLocalDate();
+                break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                ld = null;
                 break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
@@ -982,6 +1025,11 @@ public abstract class Row {
                 } else {
                     lt = toTimestamp(c.sv).toLocalDateTime().toLocalTime();
                 }
+                break;
+            case UNALLOCATED:
+            case BLANK:
+            case EMPTY_TAG:
+                lt = null;
                 break;
             default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
@@ -1083,8 +1131,12 @@ public abstract class Row {
             case TIME:
                 type = CellType.DATE;
                 break;
+            case EMPTY_TAG:
             case BLANK:
                 type = CellType.BLANK;
+                break;
+            case UNALLOCATED:
+                type = CellType.UNALLOCATED;
                 break;
 
             default: type = CellType.STRING;
