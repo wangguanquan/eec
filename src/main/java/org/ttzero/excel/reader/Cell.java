@@ -37,7 +37,7 @@ public class Cell {
     public static final char DATETIME    = 'i';
     public static final char DATE        = 'a';
     public static final char TIME        = 't';
-    public static final char UNICODE_EMPTY= '\u0000';
+    public static final char UNALLOCATED = '\0';
     public static final char EMPTY_TAG   = 'e';
     /**
      * Value type
@@ -128,8 +128,12 @@ public class Cell {
         this.cv = c;
     }
 
-    public void setBlank() {
+    public void blank() {
         this.t = BLANK;
+    }
+
+    public void emptyTag() {
+        this.t = EMPTY_TAG;
     }
 
     public void setLv(long lv) {
@@ -158,7 +162,7 @@ public class Cell {
     }
 
     public void clear() {
-        this.t  = '\0';
+        this.t  = UNALLOCATED;
         this.sv = null;
         this.nv = 0;
         this.dv = 0.0;

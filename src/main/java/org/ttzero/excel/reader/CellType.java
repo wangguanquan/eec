@@ -48,4 +48,8 @@ public enum CellType {
     Null
      */
     , BLANK
+    /*
+    UNALLOCATED
+     */
+    , UNALLOCATED
 }
