@@ -18,6 +18,7 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Before;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -25,13 +26,16 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Properties;
 
 /**
  * @author guanquan.wang at 2019-04-28 21:50
  */
 public class SQLWorkbookTest extends WorkbookTest {
-    private static Properties pro;
+    private static final Properties pro;
+    private static String protocol;
     static {
         pro = new Properties();
         try {
@@ -46,10 +50,22 @@ public class SQLWorkbookTest extends WorkbookTest {
             e.printStackTrace();
             System.exit(-1);
         }
+
+        String url = pro.getProperty("dataSource.url");
+        if (StringUtil.isNotEmpty(url)) {
+            int i1 = url.indexOf(':'), i2 = url.indexOf(':', ++i1);
+            if (i2 > i1 && i1 > 0) {
+                protocol = url.substring(i1, i2);
+            }
+        }
+        if (StringUtil.isEmpty(protocol)) {
+            throw new IllegalArgumentException("dataSource.url");
+        }
     }
 
     protected Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(pro.getProperty("dataSource.url"));
+        return DriverManager.getConnection(pro.getProperty("dataSource.url")
+            , pro.getProperty("dataSource.username"), pro.getProperty("dataSource.password"));
     }
 
     /**
@@ -61,7 +77,7 @@ public class SQLWorkbookTest extends WorkbookTest {
         ResultSet rs = null;
         try {
             con = getConnection();
-            String student = "create table if not exists student(id integer primary key, name text, age integer)";
+            String student = "create table if not exists student(id integer " + ("sqlite".equals(protocol) ? "" : "auto_increment") + " primary key, name text, age integer, create_date timestamp, update_date timestamp)";
             ps = con.prepareStatement(student);
             ps.executeUpdate();
             ps.close();
@@ -72,11 +88,21 @@ public class SQLWorkbookTest extends WorkbookTest {
             if (!rs.next()) {
                 ps.close();
                 con.setAutoCommit(false);
-                ps = con.prepareStatement("insert into student(name, age) values (?,?)");
+                ps = con.prepareStatement("insert into student(name, age, create_date, update_date) values (?,?,?,?)");
                 int size = 10_000;
                 for (int i = 0; i < size; i++) {
                     ps.setString(1, getRandomString());
-                    ps.setInt(2, random.nextInt(15) + 5);
+                    if (random.nextInt(1000) >= 975) {
+                        ps.setNull(2, Types.INTEGER);
+                    } else {
+                        ps.setInt(2, random.nextInt(15) + 5);
+                    }
+                    ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+                    if (random.nextInt(1000) >= 615) {
+                        ps.setNull(4, Types.DATE);
+                    } else {
+                        ps.setTimestamp(4, new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)));
+                    }
                     ps.addBatch();
                 }
                 ps.executeBatch();
