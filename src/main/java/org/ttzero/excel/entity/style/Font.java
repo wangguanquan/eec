@@ -392,7 +392,7 @@ public class Font implements Cloneable {
         public static final int UNDERLINE = 1;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
-            Field field = Style.class.getDeclaredField(name);
+            Field field = Style.class.getDeclaredField(name.toUpperCase());
             return field.getInt(null);
         }
     }

@@ -413,6 +413,8 @@ public class ListSheet<T> extends Sheet {
                             column.name = gs;
                         }
                         list.add(column);
+
+                        buildHeaderStyle(method, column);
                         continue;
                     }
                 }
@@ -432,6 +434,8 @@ public class ListSheet<T> extends Sheet {
                         column.clazz = method.getReturnType();
                         methods[i] = method;
                     } else column.clazz = field.getType();
+
+                    buildHeaderStyle(field, column);
                     continue;
                 }
 
@@ -466,6 +470,8 @@ public class ListSheet<T> extends Sheet {
                         if (isEmpty(column.name)) {
                             column.name = method.getName();
                         }
+
+                        buildHeaderStyle(method, column);
                     }
                 }
             }
@@ -479,8 +485,17 @@ public class ListSheet<T> extends Sheet {
             }
             columns = new Column[list.size()];
             list.toArray(columns);
+
+            // Merge Header Style
+            HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
+            int style = 0;
+            if (headerStyle != null) {
+                style = buildHeadStyle(headerStyle.font(), headerStyle.fill());
+            }
             for (i = 0; i < columns.length; i++) {
                 columns[i].styles = workbook.getStyles();
+                if (columns[i].headerStyle == 0)
+                    columns[i].headerStyle |= style;
             }
 
             // Clean
@@ -533,11 +548,6 @@ public class ListSheet<T> extends Sheet {
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             Column column = new Column(ec.value(), EMPTY, ec.share());
-            // 解析自定义头样式
-            HeaderStyle hs = ao.getAnnotation(HeaderStyle.class);
-            if (hs != null) {
-                column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillBgColor()));
-            }
             // Comment
             column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
             // Number format
@@ -549,6 +559,13 @@ public class ListSheet<T> extends Sheet {
             return column;
         }
         return null;
+    }
+
+    private void buildHeaderStyle(AccessibleObject ao, Column column) {
+        HeaderStyle hs = ao.getAnnotation(HeaderStyle.class);
+        if (hs != null) {
+            column.setHeaderStyle(this.buildHeadStyle(hs.font(), hs.fill()));
+        }
     }
 
     private Comment createComment(HeaderComment precedence, HeaderComment normal) {

@@ -18,6 +18,7 @@
 package org.ttzero.excel.annotation;
 
 import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Font;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -28,26 +29,51 @@ import java.lang.annotation.Target;
 /**
  * Custom header styles
  *
- * @author jialei
- * @date 2021-05-10 17:38
+ * @author jialei2 at 021-05-10 17:38
  */
-@Target({ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface HeaderStyle {
 
     /**
-     * Set font color.
+     * The {@link Font} property is a shorthand property for:
+     * <ul>
+     * <li>font-style: Specifies the font {@link Font.Style}. Default value is "normal"</li>
+     * <li>font-size: Specifies the font size, Default value is 12</li>
+     * <li>font-family: Specifies the font family. Default value depends on the property {@code local-font-family}</li>
+     * <li>color: Specifies the font {@link java.awt.Color}. Default value is {@link java.awt.Color#BLACK}</li>
+     * </ul>
      *
+     * @see Font#parse(String)
+     * @return all properties join with {@code ' '} or {@code '_'}
      */
-    String fontColor() default "#ffffff";
+    String font() default "bold 12 black";
 
     /**
-     * Set the background fill color.
+     * The {@link Fill} property is a shorthand property for:
+     * <ul>
+     * <li>fg-color: Specifies the foreground color. Default value is "#666699"</li>
+     * <li>bg-color: Specifies the background color. Default value is "#666699"</li>
+     * <li>pattern-type</li>
+     * </ul>
      *
-     * @see Fill#parse(java.lang.String)
-     *
+     * @see Fill#parse(String)
+     * @return all properties join with {@code ' '}
      */
-    String fillBgColor() default "#666699";
+    String fill() default "#666699 solid";
+
+    /**
+     * The {@link Fill} property is a shorthand property for:
+     * <ul>
+     * <li>fgColor</li>
+     * <li>bgColor</li>
+     * <li>patternType</li>
+     * </ul>
+     *
+     * @see Fill#parse(String)
+     * @return all properties join with {@code ' '}
+     */
+    String border() default "thin black";
 
 }

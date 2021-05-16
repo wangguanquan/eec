@@ -34,7 +34,7 @@ public class HeaderStyleTest extends WorkbookTest {
 
     }
 
-    static class Head {
+    private static class Head {
 
         /**
          * errorMsg
@@ -44,24 +44,24 @@ public class HeaderStyleTest extends WorkbookTest {
 
     }
 
-    static class Head1 {
+    private static class Head1 {
 
         /**
          * errorMsg
          */
         @ExcelColumn(value = "错误信息")
-        @HeaderStyle(fillBgColor = "#ff0000")
+        @HeaderStyle(fill = "#ff0000")
         private String errorMsg;
 
     }
 
-    static class Head2 {
+    private static class Head2 {
 
         /**
          * errorMsg
          */
         @ExcelColumn(value = "错误信息")
-        @HeaderStyle(fontColor = "#ff0000")
+        @HeaderStyle(font = "#ff0000")
         private String errorMsg;
 
     }
