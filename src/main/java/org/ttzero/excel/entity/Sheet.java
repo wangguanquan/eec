@@ -1296,8 +1296,8 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Custom header style according to parameters
      *
-     * @param fontColor
-     * @param fillBgColor
+     * @param fontColor the font color
+     * @param fillBgColor the fill background color
      * @return headStyle
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {

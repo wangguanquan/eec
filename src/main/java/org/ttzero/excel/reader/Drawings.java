@@ -39,6 +39,7 @@ public interface Drawings {
     /**
      * List all picture in specify worksheet
      *
+     * @param sheet Specifies witch {@code Worksheet} to get the picture from
      * @return list of {@link Picture}, or null if not exists.
      */
     default List<Picture> listPictures(final Sheet sheet) {
