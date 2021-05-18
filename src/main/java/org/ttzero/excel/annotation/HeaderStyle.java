@@ -28,8 +28,7 @@ import java.lang.annotation.Target;
 /**
  * Custom header styles
  *
- * @author jialei
- * @date 2021-05-10 17:38
+ * @author jialei2 at 021-05-10 17:38
  */
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -39,15 +38,16 @@ public @interface HeaderStyle {
     /**
      * Set font color.
      *
+     * @return color
      */
-    String fontColor() default "#ffffff";
+    String fontColor() default "white";
 
     /**
-     * Set the background fill color.
+     * Set the foreground color.
      *
      * @see Fill#parse(java.lang.String)
-     *
+     * @return color
      */
-    String fillBgColor() default "#666699";
+    String fillFgColor() default "#666699";
 
 }

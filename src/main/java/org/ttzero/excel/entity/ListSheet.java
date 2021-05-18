@@ -19,16 +19,9 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
-import org.ttzero.excel.entity.style.Border;
-import org.ttzero.excel.entity.style.Fill;
-import org.ttzero.excel.entity.style.Font;
-import org.ttzero.excel.entity.style.Horizontals;
-import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
 
-import java.awt.*;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -413,6 +406,11 @@ public class ListSheet<T> extends Sheet {
                             column.name = gs;
                         }
                         list.add(column);
+
+                        // Attach header style
+                        buildHeaderStyle(method, field, column);
+                        // Attach header comment
+                        buildHeaderComment(method, field, column);
                         continue;
                     }
                 }
@@ -432,6 +430,11 @@ public class ListSheet<T> extends Sheet {
                         column.clazz = method.getReturnType();
                         methods[i] = method;
                     } else column.clazz = field.getType();
+
+                    // Attach header style
+                    buildHeaderStyle(method, field, column);
+                    // Attach header comment
+                    buildHeaderComment(method, field, column);
                     continue;
                 }
 
@@ -466,6 +469,11 @@ public class ListSheet<T> extends Sheet {
                         if (isEmpty(column.name)) {
                             column.name = method.getName();
                         }
+
+                        // Attach header style
+                        buildHeaderStyle(method, null, column);
+                        // Attach header comment
+                        buildHeaderComment(method, null, column);
                     }
                 }
             }
@@ -479,8 +487,17 @@ public class ListSheet<T> extends Sheet {
             }
             columns = new Column[list.size()];
             list.toArray(columns);
+
+            // Merge Header Style
+            HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
+            int style = 0;
+            if (headerStyle != null) {
+                style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
+            }
             for (i = 0; i < columns.length; i++) {
                 columns[i].styles = workbook.getStyles();
+                if (columns[i].headerStyle == 0)
+                    columns[i].headerStyle |= style;
             }
 
             // Clean
@@ -533,13 +550,8 @@ public class ListSheet<T> extends Sheet {
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             Column column = new Column(ec.value(), EMPTY, ec.share());
-            // 解析自定义头样式
-            HeaderStyle hs = ao.getAnnotation(HeaderStyle.class);
-            if (hs != null) {
-                column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillBgColor()));
-            }
             // Comment
-            column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
+//            column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
             // Number format
             if (isNotEmpty(ec.format())) {
                 column.setNumFmt(ec.format());
@@ -551,12 +563,38 @@ public class ListSheet<T> extends Sheet {
         return null;
     }
 
-    private Comment createComment(HeaderComment precedence, HeaderComment normal) {
-        HeaderComment comment = precedence != null ? precedence : normal;
-        if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
-            return new Comment(comment.title(), comment.value());
+    private void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
+        HeaderStyle hs = null;
+        if (main != null) {
+            hs = main.getAnnotation(HeaderStyle.class);
         }
-        return null;
+        if (hs == null && sub != null) {
+            hs = sub.getAnnotation(HeaderStyle.class);
+        }
+        if (hs != null) {
+            column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillFgColor()));
+        }
+    }
+
+    private void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
+        HeaderComment comment = null;
+        if (main != null) {
+            comment = main.getAnnotation(HeaderComment.class);
+            if (comment == null) {
+                ExcelColumn ec = main.getAnnotation(ExcelColumn.class);
+                if (ec != null) comment = ec.comment();
+            }
+        }
+        if (comment == null && sub != null) {
+            comment = sub.getAnnotation(HeaderComment.class);
+            if (comment == null) {
+                ExcelColumn ec = sub.getAnnotation(ExcelColumn.class);
+                if (ec != null) comment = ec.comment();
+            }
+        }
+        if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
+            column.headerComment = new Comment(comment.title(), comment.value());
+        }
     }
 
     /**

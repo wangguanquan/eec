@@ -126,17 +126,7 @@ public class Fill implements Cloneable {
                     patternType = null;
                 }
                 if (patternType == null) {
-                    Color color;
-                    if (v.charAt(0) == '#') {
-                        color = Color.decode(v);
-                    } else {
-                        try {
-                            Field field = Color.class.getDeclaredField(v);
-                            color = (Color) field.get(null);
-                        } catch (NoSuchFieldException | IllegalAccessException e) {
-                            throw new ColorParseException("Color \"" + v + "\" not support.");
-                        }
-                    }
+                    Color color = Styles.toColor(v);
                     if (fill.fgColor == null) {
                         fill.fgColor = color;
                     } else {
@@ -147,9 +137,9 @@ public class Fill implements Cloneable {
                 }
             }
         }
-        if (fill.patternType == null) {
-            fill.patternType = PatternType.solid;
-        }
+//        if (fill.patternType == null) {
+//            fill.patternType = PatternType.solid;
+//        }
         return fill;
     }
 

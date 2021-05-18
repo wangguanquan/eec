@@ -472,7 +472,9 @@ public abstract class Sheet implements Cloneable, Storable {
          *
          * @param type the cell type
          * @return the {@link Sheet.Column}
+         * @deprecated Do not use
          */
+        @Deprecated
         public Column setType(int type) {
             this.type = type;
             return this;
@@ -1294,18 +1296,17 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Custom header style according to parameters
      *
-     * @param fontColor
-     * @param fillBgColor
+     * @param fontColor the font color
+     * @param fillBgColor the fill background color
      * @return headStyle
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
             Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                    , 12, Font.Style.BOLD, Color.decode(fontColor));
+                    , 12, Font.Style.BOLD, Styles.toColor(fontColor));
             headStyle = styles.of(styles.addFont(font)
-                    | styles.addFill(Fill.parse(String.join(" ",
-                    fillBgColor, "solid")))
+                    | styles.addFill(Fill.parse(fillBgColor))
                     | styles.addBorder(Border.parse("thin black"))
                     | Verticals.CENTER
                     | Horizontals.CENTER);
