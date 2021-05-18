@@ -1303,12 +1303,10 @@ public abstract class Sheet implements Cloneable, Storable {
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         if (headStyle == 0) {
             Styles styles = workbook.getStyles();
-//            Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-//                    , 12, Font.Style.BOLD, Color.decode(fontColor));
-            Font font = Font.parse(fontColor);
-            Fill fill = Fill.parse(fillBgColor);
+            Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
+                    , 12, Font.Style.BOLD, Styles.toColor(fontColor));
             headStyle = styles.of(styles.addFont(font)
-                    | styles.addFill(fill)
+                    | styles.addFill(Fill.parse(fillBgColor))
                     | styles.addBorder(Border.parse("thin black"))
                     | Verticals.CENTER
                     | Horizontals.CENTER);

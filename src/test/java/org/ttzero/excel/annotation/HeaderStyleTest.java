@@ -50,7 +50,7 @@ public class HeaderStyleTest extends WorkbookTest {
          * errorMsg
          */
         @ExcelColumn(value = "错误信息")
-        @HeaderStyle(fill = "#ff0000")
+        @HeaderStyle(fillFgColor = "#ff0000")
         private String errorMsg;
 
     }
@@ -61,7 +61,7 @@ public class HeaderStyleTest extends WorkbookTest {
          * errorMsg
          */
         @ExcelColumn(value = "错误信息")
-        @HeaderStyle(font = "#ff0000")
+        @HeaderStyle(fontColor = "#ff0000")
         private String errorMsg;
 
     }
