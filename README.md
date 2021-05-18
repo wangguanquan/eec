@@ -449,6 +449,13 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.12 (2021-05-18)
+-------------
+- 增加获取图片功能(#168)
+- 支持row()方法转对象(#175)
+- 读取文件默认使用包装类而非基本类型，为了方便处理Null类型(#177)
+- 增加`@HeaderStyle`注解自定义头部样式，本次仅引入颜色的定制，后续将提供更丰富的样式支持持
+
 Version 0.4.11 (2021-03-28)
 -------------
 - 修复导出时删除特殊字符的问题
@@ -467,11 +474,6 @@ Version 0.4.10 (2021-01-07)
 1. 增加兼容性（Office for Mac）
 2. 修复部分BUG(#147,#148,#159,#161)
 
-Version 0.4.9 (2020-11-15)
--------------
-1. 修复读取文件时的BUG(#146)
-2. 增加读取高版本Office导出的xls文件格式的兼容性
-
 
 [更多...](./CHANGELOG)
 
@@ -479,7 +481,7 @@ Version 0.4.9 (2020-11-15)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.11-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.12-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
