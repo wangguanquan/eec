@@ -31,6 +31,7 @@ import org.dom4j.io.SAXReader;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -829,5 +830,33 @@ public class Styles implements Storable {
     public void addDateFmtCache(int xf) {
         if (dateFmtCache == null) dateFmtCache = new HashSet<>();
         dateFmtCache.add(xf);
+    }
+
+    /**
+     * Converts a <code>String</code> to an integer and returns the
+     * specified opaque <code>Color</code>. This method handles string
+     * formats that are used to represent octal and hexadecimal numbers.
+     *
+     * @param v hexadecimal numbers or color name
+     * @return the new <code>Color</code> object.
+     * @throws ColorParseException if convert failed.
+     */
+    public static Color toColor(String v) {
+        Color color;
+        if (v.charAt(0) == '#') {
+            try {
+                color = Color.decode(v);
+            } catch (NumberFormatException e) {
+                throw new ColorParseException("Color \"" + v + "\" not support.");
+            }
+        } else {
+            try {
+                Field field = Color.class.getDeclaredField(v);
+                color = (Color) field.get(null);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new ColorParseException("Color \"" + v + "\" not support.");
+            }
+        }
+        return color;
     }
 }
