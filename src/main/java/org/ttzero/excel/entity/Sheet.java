@@ -1297,7 +1297,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param fontColor the font color
      * @param fillBgColor the fill background color
-     * @return headStyle
+     * @return style index
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
@@ -1311,8 +1311,13 @@ public abstract class Sheet implements Cloneable, Storable {
 
     }
 
+    /**
+     * Build default header style
+     *
+     * @return style index
+     */
     public int defaultHeadStyle() {
-        return this.buildHeadStyle("#ffffff", "#666699");
+        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
     }
 
     protected static boolean nonOrIntDefault(int style) {
