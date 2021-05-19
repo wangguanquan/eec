@@ -35,7 +35,6 @@ import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1301,17 +1300,15 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return headStyle
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
-        if (headStyle == 0) {
-            Styles styles = workbook.getStyles();
-            Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                    , 12, Font.Style.BOLD, Styles.toColor(fontColor));
-            headStyle = styles.of(styles.addFont(font)
-                    | styles.addFill(Fill.parse(fillBgColor))
-                    | styles.addBorder(Border.parse("thin black"))
-                    | Verticals.CENTER
-                    | Horizontals.CENTER);
-        }
-        return headStyle;
+        Styles styles = workbook.getStyles();
+        Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
+                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
+        return styles.of(styles.addFont(font)
+                | styles.addFill(Fill.parse(fillBgColor))
+                | styles.addBorder(Border.parse("thin black"))
+                | Verticals.CENTER
+                | Horizontals.CENTER);
+
     }
 
     public int defaultHeadStyle() {
