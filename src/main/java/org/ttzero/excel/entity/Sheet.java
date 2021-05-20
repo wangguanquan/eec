@@ -35,7 +35,6 @@ import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
 
-import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -1298,24 +1297,27 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param fontColor the font color
      * @param fillBgColor the fill background color
-     * @return headStyle
+     * @return style index
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
-        if (headStyle == 0) {
-            Styles styles = workbook.getStyles();
-            Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                    , 12, Font.Style.BOLD, Styles.toColor(fontColor));
-            headStyle = styles.of(styles.addFont(font)
-                    | styles.addFill(Fill.parse(fillBgColor))
-                    | styles.addBorder(Border.parse("thin black"))
-                    | Verticals.CENTER
-                    | Horizontals.CENTER);
-        }
-        return headStyle;
+        Styles styles = workbook.getStyles();
+        Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
+                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
+        return styles.of(styles.addFont(font)
+                | styles.addFill(Fill.parse(fillBgColor))
+                | styles.addBorder(Border.parse("thin black"))
+                | Verticals.CENTER
+                | Horizontals.CENTER);
+
     }
 
+    /**
+     * Build default header style
+     *
+     * @return style index
+     */
     public int defaultHeadStyle() {
-        return this.buildHeadStyle("#ffffff", "#666699");
+        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
     }
 
     protected static boolean nonOrIntDefault(int style) {

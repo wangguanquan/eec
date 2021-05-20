@@ -35,7 +35,14 @@ public class HeaderStyleTest extends WorkbookTest {
     }
 
     private static class Head {
-
+        @ExcelColumn
+        private String column1;
+        @ExcelColumn
+        private String column2;
+        @ExcelColumn
+        private String column3;
+        @ExcelColumn
+        private String code;
         /**
          * errorMsg
          */
@@ -44,25 +51,31 @@ public class HeaderStyleTest extends WorkbookTest {
 
     }
 
-    private static class Head1 {
-
+    private static class Head1 extends Head {
+        @ExcelColumn
+        private String column4;
         /**
          * errorMsg
          */
         @ExcelColumn(value = "错误信息")
         @HeaderStyle(fillFgColor = "#ff0000")
-        private String errorMsg;
-
+        public String getErrorMsg() {
+            return null;
+        }
     }
 
-    private static class Head2 {
-
-        /**
-         * errorMsg
-         */
+    private static class Head2 extends Head {
         @ExcelColumn(value = "错误信息")
         @HeaderStyle(fontColor = "#ff0000")
-        private String errorMsg;
+        public String getErrorMsg() {
+            return null;
+        }
 
+        @ExcelColumn
+        @HeaderStyle(fontColor = "black")
+        private String column4;
+        @ExcelColumn
+        @HeaderStyle(fillFgColor = "#cccccc")
+        private String column5;
     }
 }

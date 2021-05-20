@@ -496,8 +496,8 @@ public class ListSheet<T> extends Sheet {
             }
             for (i = 0; i < columns.length; i++) {
                 columns[i].styles = workbook.getStyles();
-                if (columns[i].headerStyle == 0)
-                    columns[i].headerStyle |= style;
+                if (style > 0 && columns[i].headerStyle == 0)
+                    columns[i].headerStyle = style;
             }
 
             // Clean
