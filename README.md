@@ -449,6 +449,10 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.12.1 (2021-05-20)
+-------------
+- Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
+
 Version 0.4.12 (2021-05-18)
 -------------
 - 增加获取图片功能(#168)
@@ -469,11 +473,6 @@ Version 0.4.11 (2021-01-15) *eec-e3-support* only
 3. 极大提升读取xls兼容性(兼容某些版本所有数据都写在short-sector中的处理；提升大文件CONTINUE块解析的容错性；提升某些版本没有short-sector的容错性)
 4. 增加对EXTSST的解析
 
-Version 0.4.10 (2021-01-07)
--------------
-1. 增加兼容性（Office for Mac）
-2. 修复部分BUG(#147,#148,#159,#161)
-
 
 [更多...](./CHANGELOG)
 
@@ -481,7 +480,7 @@ Version 0.4.10 (2021-01-07)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.12-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.12.1-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
