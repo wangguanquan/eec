@@ -52,6 +52,8 @@ public class HeaderStyleTest extends WorkbookTest {
     }
 
     private static class Head1 extends Head {
+        @ExcelColumn
+        private String column4;
         /**
          * errorMsg
          */
@@ -68,5 +70,12 @@ public class HeaderStyleTest extends WorkbookTest {
         public String getErrorMsg() {
             return null;
         }
+
+        @ExcelColumn
+        @HeaderStyle(fontColor = "black")
+        private String column4;
+        @ExcelColumn
+        @HeaderStyle(fillFgColor = "#cccccc")
+        private String column5;
     }
 }
