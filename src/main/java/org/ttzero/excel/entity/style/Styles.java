@@ -529,52 +529,52 @@ public class Styles implements Storable {
 
     ////////////////////////default border style/////////////////////////////
     public static int defaultCharBorderStyle() {
-        return (1 << INDEX_BORDER) | (Horizontals.CENTER_CONTINUOUS << INDEX_HORIZONTAL);
+        return (1 << INDEX_BORDER) | Horizontals.CENTER;
     }
 
     public static int defaultStringBorderStyle() {
-        return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | (Horizontals.LEFT << INDEX_HORIZONTAL);
+        return (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.LEFT;
     }
 
     public static int defaultIntBorderStyle() {
-        return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
+        return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
 //    public static int defaultDateBorderStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
+//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
 //    }
 //
 //    public static int defaultTimestampBorderStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
+//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
 //    }
 
     public static int defaultDoubleBorderStyle() {
-        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
     ////////////////////////default style/////////////////////////////
     public static int defaultCharStyle() {
-        return Horizontals.CENTER_CONTINUOUS << INDEX_HORIZONTAL;
+        return Horizontals.CENTER;
     }
 
     public static int defaultStringStyle() {
-        return (1 << INDEX_FONT) | (Horizontals.LEFT << INDEX_HORIZONTAL);
+        return (1 << INDEX_FONT) | Horizontals.LEFT;
     }
 
     public static int defaultIntStyle() {
-        return (1 << INDEX_NUMBER_FORMAT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
+        return (1 << INDEX_NUMBER_FORMAT) | Horizontals.RIGHT;
     }
 
 //    public static int defaultDateStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
+//        return (176 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER);
 //    }
 //
 //    public static int defaultTimestampStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
+//        return (177 << INDEX_NUMBER_FORMAT) | Horizontals.CENTER);
 //    }
 
     public static int defaultDoubleStyle() {
-        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
+        return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
     ////////////////////////////////Check style////////////////////////////////
