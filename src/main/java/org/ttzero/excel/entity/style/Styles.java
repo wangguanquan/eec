@@ -187,8 +187,6 @@ public class Styles implements Storable {
         self.document = factory.createDocument(rootElement);
 
         self.numFmts = new ArrayList<>();
-//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd"));
-//        self.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"));
 
         self.fonts = new ArrayList<>();
         Font font1 = new Font(i18N.get("en-font-family"), 11, Color.black);  // en
@@ -493,15 +491,6 @@ public class Styles implements Storable {
         FileUtil.writeToDiskNoFormat(document, styleFile);
     }
 
-    int indexOf(int[] array, int v) {
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] == v) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     ////////////////////////clear style///////////////////////////////
 
     public static int clearNumFmt(int style) {
@@ -556,14 +545,6 @@ public class Styles implements Storable {
         return (1 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
 
-//    public static int defaultDateBorderStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
-//    }
-//
-//    public static int defaultTimestampBorderStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | (1 << INDEX_BORDER) | (Horizontals.CENTER << INDEX_HORIZONTAL);
-//    }
-
     public static int defaultDoubleBorderStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (1 << INDEX_BORDER) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
@@ -580,14 +561,6 @@ public class Styles implements Storable {
     public static int defaultIntStyle() {
         return (1 << INDEX_NUMBER_FORMAT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
     }
-
-//    public static int defaultDateStyle() {
-//        return (176 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
-//    }
-//
-//    public static int defaultTimestampStyle() {
-//        return (177 << INDEX_NUMBER_FORMAT) | (Horizontals.CENTER << INDEX_HORIZONTAL);
-//    }
 
     public static int defaultDoubleStyle() {
         return (2 << INDEX_NUMBER_FORMAT) | (1 << INDEX_FONT) | (Horizontals.RIGHT << INDEX_HORIZONTAL);
