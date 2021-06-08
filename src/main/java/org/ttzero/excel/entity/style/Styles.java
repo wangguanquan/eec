@@ -30,7 +30,6 @@ import org.dom4j.io.SAXReader;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -71,6 +71,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class Styles implements Storable {
 
     private final Map<Integer, Integer> map;
+    private final AtomicInteger counter;
     private Document document;
 
     private List<Font> fonts;
@@ -86,6 +87,7 @@ public class Styles implements Storable {
 
     private Styles() {
         map = new HashMap<>();
+        counter = new AtomicInteger();
     }
 
     /**
@@ -98,7 +100,7 @@ public class Styles implements Storable {
     public int of(int s) {
         int n = map.getOrDefault(s, 0);
         if (n == 0) {
-            n = addStyle(s);
+            n = counter.getAndIncrement();
             map.put(s, n);
         }
         return n;
@@ -298,10 +300,6 @@ public class Styles implements Storable {
                     }
                     numFmt.setId(id);
                     numFmts.add(numFmt);
-
-                    Element element = document.getRootElement().element("numFmts");
-                    element.attribute("count").setValue(String.valueOf(numFmts.size()));
-                    numFmt.toDom4j(element);
                 } else {
                     numFmt.setId(numFmts.get(i).getId());
                 }
@@ -324,10 +322,6 @@ public class Styles implements Storable {
         if (i <= -1) {
             fonts.add(font);
             i = fonts.size() - 1;
-
-            Element element = document.getRootElement().element("fonts");
-            element.attribute("count").setValue(String.valueOf(fonts.size()));
-            font.toDom4j(element);
         }
         return i << INDEX_FONT;
     }
@@ -343,9 +337,6 @@ public class Styles implements Storable {
         if (i <= -1) {
             fills.add(fill);
             i = fills.size() - 1;
-            Element element = document.getRootElement().element("fills");
-            element.attribute("count").setValue(String.valueOf(fills.size()));
-            fill.toDom4j(element);
         }
         return i << INDEX_FILL;
     }
@@ -361,9 +352,6 @@ public class Styles implements Storable {
         if (i <= -1) {
             borders.add(border);
             i = borders.size() - 1;
-            Element element = document.getRootElement().element("borders");
-            element.attribute("count").setValue(String.valueOf(borders.size()));
-            border.toDom4j(element);
         }
         return i << INDEX_BORDER;
     }
@@ -407,60 +395,6 @@ public class Styles implements Storable {
     };
 
     /**
-     * add style in document
-     *
-     * @param s style
-     * @return style index in styles array.
-     */
-    private synchronized int addStyle(int s) {
-        int[] styles = unpack(s);
-        Element root = document.getRootElement();
-        Element cellXfs = root.element("cellXfs");
-        int count;
-        if (cellXfs == null) {
-            cellXfs = root.addElement("cellXfs").addAttribute("count", "0");
-            count = 0;
-        } else {
-            count = Integer.parseInt(cellXfs.attributeValue("count"));
-        }
-
-        int n = cellXfs.elements().size();
-        Element newXf = cellXfs.addElement("xf");
-        newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
-            .addAttribute(attrNames[1], String.valueOf(styles[1]))
-            .addAttribute(attrNames[2], String.valueOf(styles[2]))
-            .addAttribute(attrNames[3], String.valueOf(styles[3]))
-            .addAttribute("xfId", "0")
-        ;
-        int start = 7;
-        if (styles[0] > 0) {
-            newXf.addAttribute(attrNames[start], "1");
-        }
-        if (styles[1] > 0) {
-            newXf.addAttribute(attrNames[start + 1], "1");
-        }
-        if (styles[2] > 0) {
-            newXf.addAttribute(attrNames[start + 2], "1");
-        }
-        if (styles[3] > 0) {
-            newXf.addAttribute(attrNames[start + 3], "1");
-        }
-        if ((styles[4] | styles[5] | styles[6]) > 0) {
-            newXf.addAttribute(attrNames[start + 4], "1");
-        }
-
-        Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals.of(styles[4]));
-        if (styles[5] > 0) {
-            subEle.addAttribute(attrNames[5], Horizontals.of(styles[5]));
-        }
-        if (styles[6] > 0) {
-            subEle.addAttribute(attrNames[6], "1");
-        }
-        cellXfs.addAttribute("count", String.valueOf(count + 1));
-        return n;
-    }
-
-    /**
      * Write style to disk
      *
      * @param styleFile the storage path
@@ -468,13 +402,77 @@ public class Styles implements Storable {
      */
     @Override
     public void writeTo(Path styleFile) throws IOException {
-        if (document != null) { // Not null
-            FileUtil.writeToDiskNoFormat(document, styleFile);
-        } else {
-            try (InputStream temp = getClass().getClassLoader().getResourceAsStream("template/styles.xml")) {
-                if (temp != null) Files.copy(temp, styleFile);
-            }
+        Element root = document.getRootElement();
+
+        // Number format
+        if (!numFmts.isEmpty()) {
+            Element element = document.getRootElement().element("numFmts");
+            element.attribute("count").setValue(String.valueOf(numFmts.size()));
+            for (NumFmt numFmt : numFmts) numFmt.toDom4j(element);
         }
+
+        // Font
+        if (!fonts.isEmpty()) {
+            Element element = document.getRootElement().element("fonts");
+            element.attribute("count").setValue(String.valueOf(fonts.size()));
+            for (Font font : fonts) font.toDom4j(element);
+        }
+
+        // Fill
+        if (!fills.isEmpty()) {
+            Element element = document.getRootElement().element("fills");
+            element.attribute("count").setValue(String.valueOf(fills.size()));
+            for (Fill fill : fills) fill.toDom4j(element);
+        }
+
+        // Border
+        if (!borders.isEmpty()) {
+            Element element = document.getRootElement().element("borders");
+            element.attribute("count").setValue(String.valueOf(borders.size()));
+            for (Border border : borders) border.toDom4j(element);
+        }
+
+        Element cellXfs = root.element("cellXfs").addAttribute("count", String.valueOf(map.size()));
+
+        List<Map.Entry<Integer, Integer>> list = new ArrayList<>(map.entrySet());
+        list.sort(Comparator.comparingInt(Map.Entry::getValue));
+        list.forEach(e -> {
+            int[] styles = unpack(e.getKey());
+
+            Element newXf = cellXfs.addElement("xf");
+            newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
+                .addAttribute(attrNames[1], String.valueOf(styles[1]))
+                .addAttribute(attrNames[2], String.valueOf(styles[2]))
+                .addAttribute(attrNames[3], String.valueOf(styles[3]))
+                .addAttribute("xfId", "0")
+            ;
+            int start = 7;
+            if (styles[0] > 0) {
+                newXf.addAttribute(attrNames[start], "1");
+            }
+            if (styles[1] > 0) {
+                newXf.addAttribute(attrNames[start + 1], "1");
+            }
+            if (styles[2] > 0) {
+                newXf.addAttribute(attrNames[start + 2], "1");
+            }
+            if (styles[3] > 0) {
+                newXf.addAttribute(attrNames[start + 3], "1");
+            }
+            if ((styles[4] | styles[5] | styles[6]) > 0) {
+                newXf.addAttribute(attrNames[start + 4], "1");
+            }
+
+            Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals.of(styles[4]));
+            if (styles[5] > 0) {
+                subEle.addAttribute(attrNames[5], Horizontals.of(styles[5]));
+            }
+            if (styles[6] > 0) {
+                subEle.addAttribute(attrNames[6], "1");
+            }
+        });
+
+        FileUtil.writeToDiskNoFormat(document, styleFile);
     }
 
     int indexOf(int[] array, int v) {
