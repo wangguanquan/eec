@@ -126,7 +126,16 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected boolean hidden;
 
+    /**
+     * The header style index
+     */
+    protected int headStyleIndex = -1;
+
+    /**
+     * The header style value
+     */
     protected int headStyle;
+
     /**
      * Automatic interlacing color
      */
@@ -1271,13 +1280,13 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
-        headStyle = styles.of(
-            (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-                | (font != null ? styles.addFont(font) : 0)
-                | (fill != null ? styles.addFill(fill) : 0)
-                | (border != null ? styles.addBorder(border) : 0)
-                | vertical
-                | horizontal);
+        headStyle = (numFmt != null ? styles.addNumFmt(numFmt) : 0)
+            | (font != null ? styles.addFont(font) : 0)
+            | (fill != null ? styles.addFill(fill) : 0)
+            | (border != null ? styles.addBorder(border) : 0)
+            | vertical
+            | horizontal;
+        headStyleIndex = styles.of(headStyle);
         return this;
     }
 
@@ -1289,7 +1298,38 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet setHeadStyle(int style) {
         headStyle = style;
+        headStyleIndex = workbook.getStyles().of(style);
         return this;
+    }
+
+    /**
+     * Setting the header cell styles
+     *
+     * @param styleIndex the styles index
+     * @return the {@link Sheet}
+     */
+    public Sheet setHeadStyleIndex(int styleIndex) {
+        headStyleIndex = styleIndex;
+        headStyle = workbook.getStyles().getStyleByIndex(styleIndex);
+        return this;
+    }
+
+    /**
+     * Returns the header style value
+     *
+     * @return 0 if not set
+     */
+    public int getHeadStyle() {
+        return headStyle;
+    }
+
+    /**
+     * Returns the header style index
+     *
+     * @return -1 if not set
+     */
+    public int getHeadStyleIndex() {
+        return headStyleIndex;
     }
 
     /**
@@ -1297,18 +1337,26 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param fontColor the font color
      * @param fillBgColor the fill background color
-     * @return style index
+     * @return style value
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
         Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
                 , 12, Font.Style.BOLD, Styles.toColor(fontColor));
-        return styles.of(styles.addFont(font)
+        return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(Border.parse("thin black"))
                 | Verticals.CENTER
-                | Horizontals.CENTER);
+                | Horizontals.CENTER;
+    }
 
+    /**
+     * Build default header style
+     *
+     * @return style value
+     */
+    public int defaultHeadStyle() {
+        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
     }
 
     /**
@@ -1316,8 +1364,11 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return style index
      */
-    public int defaultHeadStyle() {
-        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
+    public int defaultHeadStyleIndex() {
+        if (headStyleIndex == -1) {
+            setHeadStyle(this.buildHeadStyle("#ffffff", "#666699"));
+        }
+        return headStyleIndex;
     }
 
     protected static boolean nonOrIntDefault(int style) {
