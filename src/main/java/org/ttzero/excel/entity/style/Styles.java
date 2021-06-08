@@ -107,6 +107,24 @@ public class Styles implements Storable {
     }
 
     /**
+     * Search the style value by style index
+     *
+     * @param styleIndex the style index
+     * @return -1 if not found
+     */
+    public int getStyleByIndex(int styleIndex) {
+        if (styleIndex >= counter.get()) {
+            return -1;
+        }
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            if (entry.getValue() == styleIndex) {
+                return entry.getKey();
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Returns the number of styles
      *
      * @return the total styles
