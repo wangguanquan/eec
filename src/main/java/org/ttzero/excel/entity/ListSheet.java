@@ -402,6 +402,7 @@ public class ListSheet<T> extends Sheet {
                         methods[i] = method;
                         column.clazz = method.getReturnType();
                         column.key = gs;
+                        column.styles = workbook.getStyles();
                         if (isEmpty(column.name)) {
                             column.name = gs;
                         }
@@ -423,6 +424,7 @@ public class ListSheet<T> extends Sheet {
                 if (column != null) {
                     list.add(column);
                     column.key = gs;
+                    column.styles = workbook.getStyles();
                     if (isEmpty(column.name)) {
                         column.name = gs;
                     }
@@ -466,6 +468,7 @@ public class ListSheet<T> extends Sheet {
                         list.add(column);
                         column.clazz = method.getReturnType();
                         column.key = method.getName();
+                        column.styles = workbook.getStyles();
                         if (isEmpty(column.name)) {
                             column.name = method.getName();
                         }
@@ -495,7 +498,6 @@ public class ListSheet<T> extends Sheet {
                 style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
             }
             for (i = 0; i < columns.length; i++) {
-                columns[i].styles = workbook.getStyles();
                 if (style > 0 && columns[i].headerStyle == 0)
                     columns[i].headerStyle = style;
             }
