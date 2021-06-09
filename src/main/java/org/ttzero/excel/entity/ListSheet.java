@@ -498,8 +498,8 @@ public class ListSheet<T> extends Sheet {
                 style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
             }
             for (i = 0; i < columns.length; i++) {
-                if (style > 0 && columns[i].headerStyle == 0)
-                    columns[i].headerStyle = style;
+                if (style > 0 && columns[i].headerStyleIndex == -1)
+                    columns[i].setHeaderStyle(style);
             }
 
             // Clean

@@ -390,15 +390,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.writeInt(columns.length);
         bw.write("\">");
 
-        int c = 0, defaultStyle = sheet.defaultHeadStyle();
+        int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
 
         if (sheet.isAutoSize()) {
             for (Sheet.Column hc : columns) {
-                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyle == -1 ? defaultStyle : hc.headerStyle);
+                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
             }
         } else {
             for (Sheet.Column hc : columns) {
-                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyle == -1 ? defaultStyle : hc.headerStyle);
+                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
             }
         }
 

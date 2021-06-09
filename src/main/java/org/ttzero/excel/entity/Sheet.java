@@ -258,13 +258,21 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public StyleProcessor styleProcessor;
         /**
-         * The style of cell, -1 if not be setting
+         * The style of cell
          */
-        public int cellStyle = -1;
+        public int cellStyle;
         /**
-         * The style of header, -1 if not be setting
+         * The style of header
          */
-        public int headerStyle = -1;
+        public int headerStyle;
+        /**
+         * The style index of cell, -1 if not be setting
+         */
+        public int cellStyleIndex = -1;
+        /**
+         * The style index of header, -1 if not be setting
+         */
+        public int headerStyleIndex = -1;
         /**
          * The cell width
          */
@@ -567,6 +575,7 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public Column setCellStyle(int cellStyle) {
             this.cellStyle = cellStyle;
+            this.cellStyleIndex = styles.of(cellStyle);
             return this;
         }
 
@@ -578,6 +587,7 @@ public abstract class Sheet implements Cloneable, Storable {
          */
         public Column setHeaderStyle(int headerStyle) {
             this.headerStyle = headerStyle;
+            this.headerStyleIndex = styles.of(headerStyle);
             return this;
         }
 
