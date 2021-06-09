@@ -98,8 +98,8 @@ public class Styles implements Storable {
      * @return the style index
      */
     public int of(int s) {
-        int n = map.getOrDefault(s, 0);
-        if (n == 0) {
+        int n = map.getOrDefault(s, -1);
+        if (n == -1) {
             n = counter.getAndIncrement();
             map.put(s, n);
         }
