@@ -21,6 +21,7 @@ import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
@@ -596,6 +597,18 @@ public class ListObjectSheetTest extends WorkbookTest {
                         .setData(Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
                                 , new Item(2, "fdsafdsafdsafdsafdsafdsafdsafdsfadsafdsafdsafdsafdsafdsafds"))))
                 .writeTo(defaultTestPath);
+    }
+
+    @Test public void testClearHeadStyle() throws IOException {
+        Workbook workbook = new Workbook("clear style").addSheet(new ListSheet<>(Item.randomTestData()));
+
+        Sheet sheet = workbook.getSheetAt(0);
+        sheet.cancelOddStyle();  // Clear odd style
+        int headStyle = sheet.defaultHeadStyle();
+        sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
+        sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
+
+        workbook.writeTo(defaultTestPath);
     }
     
     public static class Item {
