@@ -851,10 +851,11 @@ public abstract class Sheet implements Cloneable, Storable {
          * @return the styles value
          */
         public int getCellStyle() {
-            if (cellStyle != -1) {
+            if (cellStyleIndex != -1) {
                 return cellStyle;
             }
-            return cellStyle = getCellStyle(clazz);
+            setCellStyle(getCellStyle(clazz));
+            return cellStyle;
         }
 
         /**
