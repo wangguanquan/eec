@@ -85,4 +85,32 @@ public @interface ExcelColumn {
      * @return true if
      */
     boolean wrapText() default false;
+
+    /**
+     * Specify the column index(zero base), it from {@code 0} to {@code 16383} include {@code 16383}
+     *
+     * @return -1 means unset
+     */
+    int colIndex() default -1;
+
+    /**
+     * Specify the column index by String, eg. "A", "AB" or "ABC" as you see
+     * in the office excel. It is treated as {@link #colIndex()}
+     * <p>
+     * An example of mapping from {@code colIndex' to {@code col}
+     * <blockquote><pre>
+     * colIndex | col
+     * ---------|---------
+     * 0        | A
+     * 9        | J
+     * 25       | Z
+     * 26       | AA
+     * 27       | AB
+     * 52       | BA
+     * 16_383   | XFD
+     * </pre></blockquote>
+     *
+     * @return column index string, {@code '@'} means unset
+     */
+    String col() default "@";
 }
