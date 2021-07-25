@@ -117,10 +117,15 @@ public class App extends XmlEntity {
         } else {
             // Filter other character but number and `.`
             char[] chars = appVersion.toCharArray();
-            int i = 0;
+            int i = 0, n = 0;
             for (int j = 0; j < chars.length; j++) {
-                if (chars[j] >= '0' && chars[j] <= '9' || chars[j] == '.' && i > 0 && chars[i - 1] != '.')
+                if (chars[j] >= '0' && chars[j] <= '9')
                     chars[i++] = chars[j];
+                else if (chars[j] == '.' && i > 0 && chars[i - 1] != '.' && n < 2) {
+                    chars[i++] = chars[j];
+                    n++;
+                }
+                else break;
             }
             this.appVersion = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
         }
