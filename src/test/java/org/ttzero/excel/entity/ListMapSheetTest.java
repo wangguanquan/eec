@@ -304,6 +304,21 @@ public class ListMapSheetTest extends WorkbookTest {
                 .writeTo(defaultTestPath);
     }
 
+    @Test public void testOverLargeOrderColumn() throws IOException {
+        try {
+            new Workbook("test list map sheet Constructor8", author)
+                    .watch(Print::println)
+                    .setAutoSize(true)
+                    .addSheet(new ListMapSheet("MAP", createTestData(10)
+                            , new Sheet.Column("ID", "id", int.class).setColIndex(9999999)
+                            , new Sheet.Column("NAME", "name", String.class)))
+                    .writeTo(defaultTestPath);
+            assert false;
+        } catch (TooManyColumnsException e) {
+            assert true;
+        }
+    }
+
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
