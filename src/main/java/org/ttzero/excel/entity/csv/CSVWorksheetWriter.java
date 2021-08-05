@@ -148,7 +148,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBefore() throws IOException {
         // The header columns
-        Sheet.Column[] columns = sheet.getHeaderColumns();
+        Sheet.Column[] columns = sheet.getAndSortHeaderColumns();
         boolean noneHeader = columns == null || columns.length == 0;
 
         if (!noneHeader) {

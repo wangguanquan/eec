@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.processor.IntConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
 
@@ -32,7 +33,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,8 +61,8 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  */
 public class ListSheet<T> extends Sheet {
     protected List<T> data;
-    private Field[] fields;
-    private Method[] methods;
+//    protected Field[] fields;
+//    protected Method[] methods;
     protected int start, end;
     protected boolean eof;
     private int size;
@@ -258,12 +258,13 @@ public class ListSheet<T> extends Sheet {
                     cell.clear();
 
                     Object e;
-                    if (columns[i].isIgnoreValue())
+                    EntryColumn column = (EntryColumn) columns[i];
+                    if (column.isIgnoreValue())
                         e = null;
-                    else if (methods[i] != null)
-                        e = methods[i].invoke(o);
+                    else if (column.getMethod() != null)
+                        e = column.getMethod().invoke(o);
                     else
-                        e = fields[i].get(o);
+                        e = column.getField().get(o);
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
                 }
@@ -319,7 +320,7 @@ public class ListSheet<T> extends Sheet {
     }
 
     // Returns the reflect <T> type
-    private Class<?> getTClass() {
+    protected Class<?> getTClass() {
         Class<?> clazz;
         if (getClass().getGenericSuperclass() instanceof ParameterizedType) {
             @SuppressWarnings({"unchecked", "retype"})
@@ -354,7 +355,7 @@ public class ListSheet<T> extends Sheet {
      *
      * @return the column array length
      */
-    private int init() {
+    protected int init() {
         Class<?> clazz = getTClass();
         if (clazz == null) return 0;
 
@@ -376,7 +377,6 @@ public class ListSheet<T> extends Sheet {
 
         if (!hasHeaderColumns()) {
             // Get ExcelColumn annotation method
-            methods = new Method[declaredFields.length + tmp.size()];
             List<Column> list = new ArrayList<>(declaredFields.length);
 
             int i = 0;
@@ -393,13 +393,14 @@ public class ListSheet<T> extends Sheet {
                         continue;
                     }
 
-                    Column column = createColumn(method);
+                    EntryColumn column = createColumn(method);
                     // Force export
                     if (column == null && forceExport) {
-                        column = new Column(gs, EMPTY, false);
+                        column = new EntryColumn(gs, EMPTY, false);
                     }
                     if (column != null) {
-                        methods[i] = method;
+                        column.method = method;
+                        column.field = field;
                         column.clazz = method.getReturnType();
                         column.key = gs;
                         column.styles = workbook.getStyles();
@@ -416,13 +417,14 @@ public class ListSheet<T> extends Sheet {
                     }
                 }
 
-                Column column = createColumn(field);
+                EntryColumn column = createColumn(field);
                 // Force export
                 if (column == null && forceExport) {
-                    column = new Column(gs, EMPTY, false);
+                    column = new EntryColumn(gs, EMPTY, false);
                 }
                 if (column != null) {
                     list.add(column);
+                    column.field = field;
                     column.key = gs;
                     column.styles = workbook.getStyles();
                     if (isEmpty(column.name)) {
@@ -430,7 +432,7 @@ public class ListSheet<T> extends Sheet {
                     }
                     if (method != null) {
                         column.clazz = method.getReturnType();
-                        methods[i] = method;
+                        column.method = method;
                     } else column.clazz = field.getType();
 
                     // Attach header style
@@ -439,9 +441,6 @@ public class ListSheet<T> extends Sheet {
                     buildHeaderComment(method, field, column);
                     continue;
                 }
-
-                // Ignore others
-                declaredFields[i] = null;
             }
 
             // Collect the method which has ExcelColumn annotation
@@ -459,13 +458,10 @@ public class ListSheet<T> extends Sheet {
                 for (Method method : readMethods) {
                     // Exclusions exists
                     if (existsMethods.contains(method)) continue;
-                    Column column = createColumn(method);
+                    EntryColumn column = createColumn(method);
                     if (column != null) {
-                        if (i >= methods.length) {
-                            methods = Arrays.copyOf(methods, i + 1);
-                        }
-                        methods[i++] = method;
                         list.add(column);
+                        column.method = method;
                         column.clazz = method.getReturnType();
                         column.key = method.getName();
                         column.styles = workbook.getStyles();
@@ -502,56 +498,52 @@ public class ListSheet<T> extends Sheet {
                     columns[i].setHeaderStyle(style);
             }
 
-            // Clean
-            i = 0;
-            fields = new Field[columns.length];
-            for (int j = 0; j < declaredFields.length; j++) {
-                if (declaredFields[j] != null) {
-                    declaredFields[j].setAccessible(true);
-                    fields[i] = declaredFields[j];
-                    methods[i] = methods[j];
-                    i++;
-                }
-            }
-            if (declaredFields.length < methods.length) {
-                System.arraycopy(methods, declaredFields.length, methods, i, methods.length - declaredFields.length);
-                i += methods.length - declaredFields.length;
-            }
-            return i;
         } else {
-            fields = new Field[columns.length];
-            methods = new Method[columns.length];
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
-                methods[i] = tmp.get(hc.key);
-                if (methods[i] != null) methods[i].setAccessible(true);
+                if (!(hc instanceof EntryColumn)) {
+                    hc = new EntryColumn(hc);
+                    columns[i] = hc;
+                }
+                EntryColumn ec = (EntryColumn) hc;
+                Method method = tmp.get(hc.key);
+                if (method != null) method.setAccessible(true);
+                ec.method = method;
 
                 for (Field field : declaredFields) {
                     if (hc.key.equals(field.getName())) {
                         field.setAccessible(true);
-                        fields[i] = field;
+                        ec.field = field;
                         break;
                     }
                 }
 
-                if (methods[i] == null && fields[i] == null) {
+                if (method == null && ec.field == null) {
                     LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
                             + "] not declare in class " + clazz);
                     hc.ignoreValue();
                 } else if (hc.getClazz() == null) {
-                    hc.setClazz(methods[i] != null ? methods[i].getReturnType() : fields[i].getType());
+                    hc.setClazz(ec.method != null ? ec.method.getReturnType() : ec.field.getType());
                 }
             }
-            return columns.length;
         }
+        return columns.length;
     }
 
-    private Column createColumn(AccessibleObject ao) {
+    /**
+     * Create column from {@link ExcelColumn} annotation
+     * <p>
+     * Override the method to extend custom comments
+     *
+     * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
+     * @return the Worksheet's {@link Column} information
+     */
+    protected EntryColumn createColumn(AccessibleObject ao) {
         if (ao.getAnnotation(IgnoreExport.class) != null) return null;
         ao.setAccessible(true);
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
-            Column column = new Column(ec.value(), EMPTY, ec.share());
+            EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
             // Comment
 //            column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
             // Number format
@@ -560,12 +552,16 @@ public class ListSheet<T> extends Sheet {
             }
             // Wrap
             column.setWrapText(ec.wrapText());
+            // Column index
+            if (ec.colIndex() > -1) {
+                column.colIndex = ec.colIndex();
+            }
             return column;
         }
         return null;
     }
 
-    private void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
+    protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderStyle hs = null;
         if (main != null) {
             hs = main.getAnnotation(HeaderStyle.class);
@@ -578,7 +574,7 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
-    private void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
+    protected void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderComment comment = null;
         if (main != null) {
             comment = main.getAnnotation(HeaderComment.class);
@@ -615,8 +611,6 @@ public class ListSheet<T> extends Sheet {
             if (size <= 0) {
                 columns = new Column[0];
             } else {
-                // Check the header column limit
-                checkColumnLimit();
                 headerReady = true;
             }
         }
@@ -715,5 +709,98 @@ public class ListSheet<T> extends Sheet {
      */
     protected List<T> more() {
         return null;
+    }
+
+    static class EntryColumn extends Column {
+        Method method;
+        Field field;
+
+        public EntryColumn() { }
+
+        public EntryColumn(String name, Class<?> clazz) {
+            super(name, clazz);
+        }
+
+        public EntryColumn(String name, String key) {
+            super(name, key);
+        }
+
+        public EntryColumn(String name, String key, Class<?> clazz) {
+            super(name, key, clazz);
+        }
+
+        public EntryColumn(String name, Class<?> clazz, IntConversionProcessor processor) {
+            super(name, clazz, processor);
+        }
+
+        public EntryColumn(String name, String key, IntConversionProcessor processor) {
+            super(name, key, processor);
+        }
+
+        public EntryColumn(String name, Class<?> clazz, boolean share) {
+            super(name, clazz, share);
+        }
+
+        public EntryColumn(String name, String key, boolean share) {
+            super(name, key, share);
+        }
+
+        public EntryColumn(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
+            super(name, clazz, processor, share);
+        }
+
+        public EntryColumn(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
+            super(name, key, clazz, processor);
+        }
+
+        public EntryColumn(String name, String key, IntConversionProcessor processor, boolean share) {
+            super(name, key, processor, share);
+        }
+
+        public EntryColumn(String name, Class<?> clazz, int cellStyle) {
+            super(name, clazz, cellStyle);
+        }
+
+        public EntryColumn(String name, String key, int cellStyle) {
+            super(name, key, cellStyle);
+        }
+
+        public EntryColumn(String name, Class<?> clazz, int cellStyle, boolean share) {
+            super(name, clazz, cellStyle, share);
+        }
+
+        public EntryColumn(String name, String key, int cellStyle, boolean share) {
+            super(name, key, cellStyle, share);
+        }
+
+        public EntryColumn(Column other) {
+            this.key = other.key;
+            this.name = other.name;
+            this.clazz = other.clazz;
+            this.share = other.share;
+            this.type = other.type;
+            this.processor = other.processor;
+            this.styleProcessor = other.styleProcessor;
+            this.cellStyle = other.cellStyle;
+            this.headerStyle = other.headerStyle;
+            this.cellStyleIndex = other.cellStyleIndex;
+            this.headerStyleIndex = other.headerStyleIndex;
+            this.width = other.width;
+            this.o = other.o;
+            this.styles = other.styles;
+            this.headerComment = other.headerComment;
+            this.numFmt = other.numFmt;
+            this.ignoreValue = other.ignoreValue;
+            this.wrapText = other.wrapText;
+            this.colIndex = other.colIndex;
+        }
+
+        public Method getMethod() {
+            return method;
+        }
+
+        public Field getField() {
+            return field;
+        }
     }
 }
