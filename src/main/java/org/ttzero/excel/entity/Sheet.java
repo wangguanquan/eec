@@ -1574,7 +1574,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns[columns.length - 1].colIndex
+        int a = columns.length > 0 ? columns[columns.length - 1].colIndex : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
