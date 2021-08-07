@@ -61,8 +61,6 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  */
 public class ListSheet<T> extends Sheet {
     protected List<T> data;
-//    protected Field[] fields;
-//    protected Method[] methods;
     protected int start, end;
     protected boolean eof;
     private int size;
@@ -639,9 +637,6 @@ public class ListSheet<T> extends Sheet {
     @Override
     public Column[] getHeaderColumns() {
         if (!headerReady) {
-//            if (!hasHeaderColumns()) {
-//                columns = new Column[0];
-//            }
             // create header columns
             int size = init();
             if (size <= 0) {
