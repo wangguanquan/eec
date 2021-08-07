@@ -64,6 +64,14 @@ public interface Sheet extends Closeable {
     int getIndex();
 
     /**
+     * The worksheet id, it difference with index is that the id will not change
+     * because of moving or deleting worksheet.
+     *
+     * @return id of worksheet
+     */
+    int getId();
+
+    /**
      * size of rows.
      *
      * @return size of rows

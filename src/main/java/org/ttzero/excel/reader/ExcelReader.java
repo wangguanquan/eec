@@ -541,11 +541,12 @@ public class ExcelReader implements Closeable {
 
         List<Sheet> sheets = new ArrayList<>();
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
+        int index = 0;
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
             XMLSheet sheet = sheetFactory(option);
             sheet.setName(e.attributeValue("name"));
-            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            sheet.setId(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
             sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
@@ -561,6 +562,7 @@ public class ExcelReader implements Closeable {
             sheet.setStyles(styles);
             // Drawings
             sheet.setDrawings(drawings);
+            sheet.setIndex(index++);
             sheets.add(sheet);
         }
 
@@ -570,7 +572,7 @@ public class ExcelReader implements Closeable {
         }
 
         // sort by sheet index
-        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
+//        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
