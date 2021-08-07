@@ -587,7 +587,7 @@ public class ListSheet<T> extends Sheet {
      * Attach some custom columns
      *
      * @param existsMethodMapper all exists method collection by default
-     * @param clazz Class of &ltT&gt
+     * @param clazz Class of &lt;T&gt;
      * @return list of {@link Column} or null if no more columns to attach
      */
     protected List<Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
