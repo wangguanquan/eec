@@ -812,10 +812,6 @@ public class ListSheet<T> extends Sheet {
             this.type = other.type;
             this.processor = other.processor;
             this.styleProcessor = other.styleProcessor;
-            this.cellStyle = other.cellStyle;
-            this.headerStyle = other.headerStyle;
-            this.cellStyleIndex = other.cellStyleIndex;
-            this.headerStyleIndex = other.headerStyleIndex;
             this.width = other.width;
             this.o = other.o;
             this.styles = other.styles;
@@ -824,6 +820,8 @@ public class ListSheet<T> extends Sheet {
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;
             this.colIndex = other.colIndex;
+            if (other.cellStyle > 0) setCellStyle(other.cellStyle);
+            if (other.headerStyle > 0) setHeaderStyle(other.headerStyle);
         }
 
         public Method getMethod() {
