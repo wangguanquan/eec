@@ -393,13 +393,12 @@ public class ExcelReader implements Closeable {
     public ExcelReader parseFormula() {
         if (hasFormula) {
             // Formula string if exists
-            Path calcPath = self.resolve("xl/calcChain.xml");
-            long[][] calcArray = parseCalcChain(calcPath, sheets[sheets.length - 1].getIndex());
+            long[][] calcArray = parseCalcChain();
 
             if (calcArray == null) return this;
             int i = 0;
             for (int n; i < sheets.length; i++) {
-                n = sheets[i].getIndex();
+                n = sheets[i].getId();
                 if (calcArray[n - 1] == null) continue;
                 if (!(sheets[i] instanceof CalcSheet)) {
                     sheets[i] = sheets[i].asCalcSheet();
@@ -541,11 +540,12 @@ public class ExcelReader implements Closeable {
 
         List<Sheet> sheets = new ArrayList<>();
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
+        int index = 0;
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
             XMLSheet sheet = sheetFactory(option);
             sheet.setName(e.attributeValue("name"));
-            sheet.setIndex(Integer.parseInt(e.attributeValue("sheetId")));
+            sheet.setId(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
             sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
@@ -561,6 +561,7 @@ public class ExcelReader implements Closeable {
             sheet.setStyles(styles);
             // Drawings
             sheet.setDrawings(drawings);
+            sheet.setIndex(index++);
             sheets.add(sheet);
         }
 
@@ -570,7 +571,7 @@ public class ExcelReader implements Closeable {
         }
 
         // sort by sheet index
-        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
+//        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
@@ -756,18 +757,20 @@ public class ExcelReader implements Closeable {
     }
 
     /* Parse `calcChain` */
-    private long[][] parseCalcChain(Path path, int n) {
+    private long[][] parseCalcChain() {
+        Path calcPath = self.resolve("xl/calcChain.xml");
+        if (!FileUtil.exists(calcPath)) return null;
         Element calcChain;
         try {
             SAXReader reader = new SAXReader();
-            calcChain = reader.read(Files.newInputStream(path)).getRootElement();
+            calcChain = reader.read(Files.newInputStream(calcPath)).getRootElement();
         } catch (DocumentException | IOException e) {
             LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
             return null;
         }
 
         Iterator<Element> ite = calcChain.elementIterator();
-        int i = 1;
+        int i = 1, n = sheets().map(Sheet::getId).max(Integer::compareTo).orElse(0);
         long[][] array = new long[n][];
         int[] indices = new int[n];
         for (; ite.hasNext(); ) {

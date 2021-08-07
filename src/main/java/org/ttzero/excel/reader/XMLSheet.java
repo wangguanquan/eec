@@ -50,6 +50,7 @@ class XMLSheet implements Sheet {
     int index; // per sheet index of workbook
 //        , size = -1; // size of rows per sheet
     Path path;
+    int id;
     /**
      * The Shared String Table
      */
@@ -129,6 +130,30 @@ class XMLSheet implements Sheet {
         this.index = index;
     }
 
+    /**
+     * Returns the worksheet id
+     *
+     * @return int value
+     */
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Setting id of worksheet
+     *
+     * @param id the id of worksheet
+     */
+    void setId(int id) {
+        this.id = id;
+    }
+
+    /**
+     * Setting the {@link Drawings} info
+     *
+     * @param drawings resource info
+     */
     void setDrawings(Drawings drawings) {
         this.drawings = drawings;
     }
@@ -222,7 +247,7 @@ class XMLSheet implements Sheet {
 
     @Override
     public String toString() {
-        return "Sheet name: " + name + " has " + getDimension();
+        return "Sheet id: " + getId() + ", name: " + getName() + ", dimension: " + getDimension();
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
