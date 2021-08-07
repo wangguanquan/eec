@@ -604,6 +604,7 @@ public abstract class Sheet implements Cloneable, Storable {
          * Settings the x-axis of column in row
          *
          * @param colIndex column index (zero base)
+         * @return the {@link Sheet.Column}
          */
         public Column setColIndex(int colIndex) {
             this.colIndex = colIndex;
