@@ -371,7 +371,7 @@ public class ListSheet<T> extends Sheet {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
 
-        Field[] declaredFields = listDeclaredFields(clazz, c -> c.getAnnotation(IgnoreExport.class) == null);
+        Field[] declaredFields = listDeclaredFields(clazz, c -> !ignoreColumn(c));
 
         boolean forceExport = this.forceExport == 1;
 
@@ -379,8 +379,7 @@ public class ListSheet<T> extends Sheet {
             // Get ExcelColumn annotation method
             List<Column> list = new ArrayList<>(declaredFields.length);
 
-            int i = 0;
-            for (; i < declaredFields.length; i++) {
+            for (int i = 0; i < declaredFields.length; i++) {
                 Field field = declaredFields[i];
                 field.setAccessible(true);
                 String gs = field.getName();
@@ -388,7 +387,8 @@ public class ListSheet<T> extends Sheet {
                 // Ignore annotation on read method
                 Method method = tmp.get(gs);
                 if (method != null) {
-                    if (method.getAnnotation(IgnoreExport.class) != null) {
+                    // Filter all ignore column
+                    if (ignoreColumn(method)) {
                         declaredFields[i] = null;
                         continue;
                     }
@@ -439,43 +439,12 @@ public class ListSheet<T> extends Sheet {
                     buildHeaderStyle(method, field, column);
                     // Attach header comment
                     buildHeaderComment(method, field, column);
-                    continue;
                 }
             }
 
-            // Collect the method which has ExcelColumn annotation
-            Method[] readMethods = null;
-            try {
-                Collection<Method> values = tmp.values();
-                readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                        && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
-            } catch (IntrospectionException e) {
-                // Ignore
-            }
-
-            if (readMethods != null) {
-                Set<Method> existsMethods = new HashSet<>(tmp.values());
-                for (Method method : readMethods) {
-                    // Exclusions exists
-                    if (existsMethods.contains(method)) continue;
-                    EntryColumn column = createColumn(method);
-                    if (column != null) {
-                        list.add(column);
-                        column.method = method;
-                        column.clazz = method.getReturnType();
-                        column.key = method.getName();
-                        column.styles = workbook.getStyles();
-                        if (isEmpty(column.name)) {
-                            column.name = method.getName();
-                        }
-
-                        // Attach header style
-                        buildHeaderStyle(method, null, column);
-                        // Attach header comment
-                        buildHeaderComment(method, null, column);
-                    }
-                }
-            }
+            // Attach some custom column
+            List<Column> attachList = attachOtherColumn(tmp, clazz);
+            if (attachList != null) list.addAll(attachList);
 
             // No column to write
             if (list.isEmpty()) {
@@ -486,18 +455,6 @@ public class ListSheet<T> extends Sheet {
             }
             columns = new Column[list.size()];
             list.toArray(columns);
-
-            // Merge Header Style
-            HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
-            int style = 0;
-            if (headerStyle != null) {
-                style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
-            }
-            for (i = 0; i < columns.length; i++) {
-                if (style > 0 && columns[i].headerStyleIndex == -1)
-                    columns[i].setHeaderStyle(style);
-            }
-
         } else {
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i];
@@ -507,7 +464,9 @@ public class ListSheet<T> extends Sheet {
                 }
                 EntryColumn ec = (EntryColumn) hc;
                 Method method = tmp.get(hc.key);
-                if (method != null) method.setAccessible(true);
+                if (method != null) {
+                    method.setAccessible(true);
+                }
                 ec.method = method;
 
                 for (Field field : declaredFields) {
@@ -525,8 +484,29 @@ public class ListSheet<T> extends Sheet {
                 } else if (hc.getClazz() == null) {
                     hc.setClazz(ec.method != null ? ec.method.getReturnType() : ec.field.getType());
                 }
+
+                // Attach header style
+                if (hc.getHeaderStyleIndex() == -1) {
+                    buildHeaderStyle(method, ec.field, hc);
+                }
+                // Attach header comment
+                if (hc.headerComment == null) {
+                    buildHeaderComment(method, ec.field, hc);
+                }
             }
         }
+
+        // Merge Header Style defined on Entry Class
+        HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
+        int style = 0;
+        if (headerStyle != null) {
+            style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
+        }
+        for (Column column : columns) {
+            if (style > 0 && column.getHeaderStyleIndex() == -1)
+                column.setHeaderStyle(style);
+        }
+
         return columns.length;
     }
 
@@ -539,13 +519,13 @@ public class ListSheet<T> extends Sheet {
      * @return the Worksheet's {@link Column} information
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
-        if (ao.getAnnotation(IgnoreExport.class) != null) return null;
+        // Filter all ignore column
+        if (ignoreColumn(ao)) return null;
+
         ao.setAccessible(true);
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
-            // Comment
-//            column.headerComment = createComment(ao.getAnnotation(HeaderComment.class), ec.comment());
             // Number format
             if (isNotEmpty(ec.format())) {
                 column.setNumFmt(ec.format());
@@ -593,6 +573,62 @@ public class ListSheet<T> extends Sheet {
         if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
             column.headerComment = new Comment(comment.title(), comment.value());
         }
+    }
+
+    /**
+     * Ignore some columns, override this method to add custom filtering
+     *
+     * @param ao {@code Method} or {@code Field}
+     * @return true if ignore current column
+     */
+    protected boolean ignoreColumn(AccessibleObject ao) {
+        return ao.getAnnotation(IgnoreExport.class) != null;
+    }
+
+    /**
+     * Attach some custom columns
+     *
+     * @param existsMethodMapper all exists method collection by default
+     * @param clazz Class of &ltT&gt
+     * @return list of {@link Column} or null if no more columns to attach
+     */
+    protected List<Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
+        // Collect the method which has ExcelColumn annotation
+        Method[] readMethods = null;
+        try {
+            Collection<Method> values = existsMethodMapper.values();
+            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
+                    && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
+        } catch (IntrospectionException e) {
+            // Ignore
+        }
+
+        if (readMethods != null) {
+            Set<Method> existsMethods = new HashSet<>(existsMethodMapper.values());
+            List<Column> list = new ArrayList<>();
+            for (Method method : readMethods) {
+                // Exclusions exists
+                if (existsMethods.contains(method)) continue;
+                EntryColumn column = createColumn(method);
+                if (column != null) {
+                    list.add(column);
+                    column.method = method;
+                    column.clazz = method.getReturnType();
+                    column.key = method.getName();
+                    column.styles = workbook.getStyles();
+                    if (isEmpty(column.name)) {
+                        column.name = method.getName();
+                    }
+
+                    // Attach header style
+                    buildHeaderStyle(method, null, column);
+                    // Attach header comment
+                    buildHeaderComment(method, null, column);
+                }
+            }
+            return list;
+        }
+        return null; // No more columns
     }
 
     /**
