@@ -394,11 +394,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         if (sheet.isAutoSize()) {
             for (Sheet.Column hc : columns) {
-                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
+                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
             }
         } else {
             for (Sheet.Column hc : columns) {
-                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
+                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
             }
         }
 

@@ -268,11 +268,11 @@ public abstract class Sheet implements Cloneable, Storable {
         /**
          * The style index of cell, -1 if not be setting
          */
-        public int cellStyleIndex = -1;
+        private int cellStyleIndex = -1;
         /**
          * The style index of header, -1 if not be setting
          */
-        public int headerStyleIndex = -1;
+        private int headerStyleIndex = -1;
         /**
          * The cell width
          */
@@ -608,6 +608,24 @@ public abstract class Sheet implements Cloneable, Storable {
         public Column setColIndex(int colIndex) {
             this.colIndex = colIndex;
             return this;
+        }
+
+        /**
+         * Returns the style index of cell, -1 if not be setting
+         *
+         * @return index of style
+         */
+        public int getCellStyleIndex() {
+            return cellStyleIndex;
+        }
+
+        /**
+         * Returns the header style index of cell, -1 if not be setting
+         *
+         * @return index of style
+         */
+        public int getHeaderStyleIndex() {
+            return headerStyleIndex;
         }
 
         /**
