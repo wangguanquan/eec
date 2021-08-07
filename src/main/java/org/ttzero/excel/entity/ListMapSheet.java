@@ -199,8 +199,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 }
             }
         }
-        // Check the header column limit
-        checkColumnLimit();
 
         for (Column hc : columns) {
             hc.styles = workbook.getStyles();

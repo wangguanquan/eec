@@ -23,6 +23,7 @@ import org.ttzero.excel.entity.CustomizeDataSourceSheet;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Sheet;
+import org.ttzero.excel.entity.TooManyColumnsException;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -310,5 +311,44 @@ public class ListObjectSheetTest extends WorkbookTest{
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
+    }
+
+    @Test public void testOrderColumn() throws IOException {
+        new Workbook(("Order column"))
+                .addSheet(new ListSheet<>(org.ttzero.excel.entity.ListObjectSheetTest.OrderEntry.randomTestData()))
+                .saveAsCSV()
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testSameOrderColumn() throws IOException {
+        new Workbook(("Same order column"))
+                .addSheet(new ListSheet<>(org.ttzero.excel.entity.ListObjectSheetTest.SameOrderEntry.randomTestData()))
+                .saveAsCSV()
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testFractureOrderColumn() throws IOException {
+        new Workbook(("Fracture order column"))
+                .addSheet(new ListSheet<>(org.ttzero.excel.entity.ListObjectSheetTest.FractureOrderEntry.randomTestData()))
+                .saveAsCSV()
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testLargeOrderColumn() throws IOException {
+        new Workbook(("Large order column"))
+                .addSheet(new ListSheet<>(org.ttzero.excel.entity.ListObjectSheetTest.LargeOrderEntry.randomTestData()))
+                .saveAsCSV()
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testOverLargeOrderColumn() throws IOException {
+        try {
+            new Workbook(("Over Large order column"))
+                    .addSheet(new ListSheet<>(org.ttzero.excel.entity.ListObjectSheetTest.OverLargeOrderEntry.randomTestData()))
+                    .saveAsCSV()
+                    .writeTo(defaultTestPath);
+        } catch (TooManyColumnsException e) {
+            assert true;
+        }
     }
 }

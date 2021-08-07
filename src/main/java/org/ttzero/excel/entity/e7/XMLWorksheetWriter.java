@@ -287,7 +287,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBefore() throws IOException {
         // The header columns
-        columns = sheet.getHeaderColumns();
+        columns = sheet.getAndSortHeaderColumns();
         boolean noneHeader = sheet.hasNonHeader();
 
         bw.write(Const.EXCEL_XML_DECLARATION);
@@ -323,7 +323,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (size > 0) {
             bw.write(':');
             n--;
-            char[] col = int2Col(columns.length);
+            char[] col = int2Col(columns[columns.length - 1].colIndex);
             bw.write(col);
             n -= col.length;
             bw.writeInt(size + 1);
@@ -360,9 +360,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write('"');
                 for (int j = n; j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" max=\"");
-                bw.writeInt(i + 1);
+                bw.writeInt(columns[i].colIndex + 1);
                 bw.write("\" min=\"");
-                bw.writeInt(i + 1);
+                bw.writeInt(columns[i].colIndex);
                 bw.write("\" bestFit=\"1\"/>");
             }
             bw.write("</cols>");
@@ -387,28 +387,26 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<row r=\"");
         bw.writeInt(row);
         bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
-        bw.writeInt(columns.length);
+        bw.writeInt(columns[columns.length - 1].colIndex);
         bw.write("\">");
 
         int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
 
         if (sheet.isAutoSize()) {
             for (Sheet.Column hc : columns) {
-                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
+                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
             }
         } else {
             for (Sheet.Column hc : columns) {
-                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.headerStyleIndex == -1 ? defaultStyleIndex : hc.headerStyleIndex);
+                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
             }
         }
 
         // Write header comments
-        c = 0;
         for (Sheet.Column hc : columns) {
-            c++;
             if (hc.headerComment != null) {
                 if (comments == null) comments = sheet.createComments();
-                comments.addComment(new String(int2Col(c)) + row
+                comments.addComment(new String(int2Col(hc.colIndex)) + row
                     , hc.headerComment.getTitle(), hc.headerComment.getValue());
             }
         }
@@ -611,7 +609,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         Sheet.Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(hc.colIndex));
         bw.writeInt(row);
         int i;
         if (StringUtil.isEmpty(s)) {
@@ -663,7 +661,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -701,7 +699,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -739,7 +737,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" t=\"s\" s=\"");
         bw.writeInt(xf);
@@ -759,7 +757,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -797,7 +795,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" t=\"b\" s=\"");
         bw.writeInt(xf);
@@ -816,7 +814,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(column + 1));
+        bw.write(int2Col(columns[column].colIndex));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -910,7 +908,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 int fill = 11; // fill 11 space
                 buffer.put((byte) ':');
                 fill--;
-                char[] col = int2Col(columns.length);
+                char[] col = int2Col(columns[columns.length - 1].colIndex);
                 buffer.put((new String(col) + (rows + 1)).getBytes(StandardCharsets.US_ASCII));
                 fill -= col.length;
                 fill -= stringSize(rows + 1);

@@ -85,4 +85,15 @@ public @interface ExcelColumn {
      * @return true if
      */
     boolean wrapText() default false;
+
+    /**
+     * Specify the column index(zero base), Range from {@code 0} to {@code 16383} include {@code 16383}
+     * <p>
+     * The column set by colIndex is an absolute position. For example,
+     * if {@code colIndex=100}, this column must be placed at the {@code "CV"} position
+     *
+     * @return -1 means unset
+     */
+    int colIndex() default -1;
+
 }

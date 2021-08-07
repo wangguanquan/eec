@@ -95,7 +95,7 @@ public class Cell {
      */
     public boolean f;
     /**
-     * y-axis of cell in row
+     * x-axis of cell in row
      */
     public transient short i;
 

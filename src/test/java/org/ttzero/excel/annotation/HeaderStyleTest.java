@@ -14,24 +14,34 @@ import java.util.Collections;
 public class HeaderStyleTest extends WorkbookTest {
 
     @Test
-    public void originalTest() throws IOException {
+    public void testOriginal() throws IOException {
         Head itemFull = new Head();
         new Workbook("customize_header_style_original").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
     }
 
     @Test
-    public void fillBgColorTest() throws IOException {
+    public void testFillBgColor() throws IOException {
         Head1 itemFull = new Head1();
         new Workbook("customize_header_style_bgc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
     }
 
     @Test
-    public void fontColorTest() throws IOException {
+    public void testFontColor() throws IOException {
         Head2 itemFull = new Head2();
         new Workbook("customize_header_style_fc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
+    }
+
+    @Test public void testAnnoOnClassTest() throws IOException {
+        Head3 itemFull = new Head3();
+        new Workbook("annotation on class").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+    }
+
+    @Test public void testAnnoOnClassAndMethodTest() throws IOException {
+        Head4 itemFull = new Head4();
+        new Workbook("annotation on class and method").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
     }
 
     private static class Head {
@@ -49,6 +59,25 @@ public class HeaderStyleTest extends WorkbookTest {
         @ExcelColumn(value = "错误信息")
         private String errorMsg;
 
+        public String getColumn1() {
+            return column1;
+        }
+
+        public String getColumn2() {
+            return column2;
+        }
+
+        public String getColumn3() {
+            return column3;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getErrorMsg() {
+            return errorMsg;
+        }
     }
 
     private static class Head1 extends Head {
@@ -77,5 +106,17 @@ public class HeaderStyleTest extends WorkbookTest {
         @ExcelColumn
         @HeaderStyle(fillFgColor = "#cccccc")
         private String column5;
+    }
+
+    @HeaderStyle(fontColor = "red", fillFgColor = "#ffff00")
+    private static class Head3 extends Head { }
+
+    @HeaderStyle(fontColor = "red", fillFgColor = "#ffff00")
+    private static class Head4 extends Head {
+        @Override
+        @HeaderStyle(fontColor = "blue")
+        public String getErrorMsg() {
+            return super.getErrorMsg();
+        }
     }
 }

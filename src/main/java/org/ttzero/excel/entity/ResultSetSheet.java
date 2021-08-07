@@ -291,8 +291,6 @@ public class ResultSetSheet extends Sheet {
         }
 
         if (hasHeaderColumns()) {
-            // Check the limit of columns
-            checkColumnLimit();
 
             for (i = 0; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {

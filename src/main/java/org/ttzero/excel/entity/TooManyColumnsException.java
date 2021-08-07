@@ -31,7 +31,7 @@ public class TooManyColumnsException extends ExcelWriteException {
     }
 
     public TooManyColumnsException(int n, int m) {
-        super(n + " out of Total number of columns on a worksheet " + m);
+        super("The max columns on sheet is " + m + ", current is " + n);
     }
 
     public TooManyColumnsException(String s) {

@@ -271,7 +271,7 @@ public class StatementSheet extends ResultSetSheet {
                 }
 
                 // Check the header information is exists
-                getHeaderColumns();
+                getAndSortHeaderColumns();
             }
 
             if (rowBlock == null) {

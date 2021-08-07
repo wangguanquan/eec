@@ -268,11 +268,11 @@ public abstract class Sheet implements Cloneable, Storable {
         /**
          * The style index of cell, -1 if not be setting
          */
-        public int cellStyleIndex = -1;
+        private int cellStyleIndex = -1;
         /**
          * The style index of header, -1 if not be setting
          */
-        public int headerStyleIndex = -1;
+        private int headerStyleIndex = -1;
         /**
          * The cell width
          */
@@ -292,6 +292,15 @@ public abstract class Sheet implements Cloneable, Storable {
          * Wrap text in a cell
          */
         public int wrapText;
+        /**
+         * Specify the column index
+         */
+        public int colIndex = -1;
+
+        /**
+         * Constructor Column
+         */
+        public Column() { }
 
         /**
          * Constructor Column
@@ -592,6 +601,34 @@ public abstract class Sheet implements Cloneable, Storable {
         }
 
         /**
+         * Settings the x-axis of column in row
+         *
+         * @param colIndex column index (zero base)
+         */
+        public Column setColIndex(int colIndex) {
+            this.colIndex = colIndex;
+            return this;
+        }
+
+        /**
+         * Returns the style index of cell, -1 if not be setting
+         *
+         * @return index of style
+         */
+        public int getCellStyleIndex() {
+            return cellStyleIndex;
+        }
+
+        /**
+         * Returns the header style index of cell, -1 if not be setting
+         *
+         * @return index of style
+         */
+        public int getHeaderStyleIndex() {
+            return headerStyleIndex;
+        }
+
+        /**
          * Returns the default horizontal style
          * the Date, Character, Bool has center value, the
          * Numeric has right value, otherwise left value
@@ -799,10 +836,10 @@ public abstract class Sheet implements Cloneable, Storable {
             int style;
             if (isString(clazz)) {
                 style = Styles.defaultStringBorderStyle() | wrapText;
-            } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
                 style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            } else if (isDate(clazz) || isLocalDate(clazz)) {
+                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
             } else if (isBool(clazz) || isChar(clazz)) {
                 style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
             } else if (isInt(clazz) || isLong(clazz)) {
@@ -1106,6 +1143,63 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Sort column by {@code colIndex}
+     *
+     * @return header columns
+     */
+    public Column[] getAndSortHeaderColumns() {
+        if (!headerReady) {
+            getHeaderColumns();
+            // Sort column index
+            sortColumns(columns);
+            // Turn to one-base
+            for (int i = 0; i < columns.length; i++) {
+                if (i > 0 && columns[i - 1].colIndex >= columns[i].colIndex) columns[i].colIndex = columns[i - 1].colIndex + 1;
+                else if (columns[i].colIndex <= i) columns[i].colIndex = i + 1;
+                else columns[i].colIndex++;
+            }
+
+            // Check the limit of columns
+            checkColumnLimit();
+        }
+        return columns;
+    }
+
+    protected void sortColumns(Column[] columns) {
+        if (columns.length <= 1) return;
+        int j = 0;
+        for (int i = 0; i < columns.length; i++) {
+            if (columns[i].colIndex >= 0) {
+                int n = search(columns, j, columns[i].colIndex);
+                if (n < i) insert(columns, n, i);
+                j++;
+            }
+        }
+        // Finished
+        if (j == columns.length) return;
+        int n = columns[0].colIndex;
+        for (int i = 0; i < columns.length && j < columns.length; ) {
+            if (n > i) {
+                for (int k = Math.min(n - i, columns.length - j); k > 0; k--, j++)
+                    insert(columns, i++, j);
+            } else i++;
+            if (i < columns.length) n = columns[i].colIndex;
+        }
+    }
+
+    protected int search(Column[] columns, int n, int k) {
+        int i = 0;
+        for (; i < n && columns[i].colIndex <= k; i++) ;
+        return i;
+    }
+
+    private void insert(Column[] columns, int n, int k) {
+        Column t = columns[k];
+        System.arraycopy(columns, n, columns, n + 1, k - n);
+        columns[n] = t;
+    }
+
+    /**
      * Setting the header rows's columns
      *
      * @param columns the header row's columns
@@ -1214,7 +1308,7 @@ public abstract class Sheet implements Cloneable, Storable {
             paging();
         }
         if (!headerReady) {
-            getHeaderColumns();
+            getAndSortHeaderColumns();
         }
         if (rowBlock == null) {
             rowBlock = new RowBlock(getRowBlockSize());
@@ -1498,7 +1592,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns.length
+        int a = columns.length > 0 ? columns[columns.length - 1].colIndex : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
@@ -1516,7 +1610,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * Int conversion to column string number.
-     * The max column on sheet is 16_384 after office 2007 and 256 in office 2003
+     * The max column on sheet is {@code 16_384} after office 2007 and {@code 256} in office 2003
      * <blockquote><pre>
      * int    | column number
      * -------|---------
