@@ -393,13 +393,12 @@ public class ExcelReader implements Closeable {
     public ExcelReader parseFormula() {
         if (hasFormula) {
             // Formula string if exists
-            Path calcPath = self.resolve("xl/calcChain.xml");
-            long[][] calcArray = parseCalcChain(calcPath, sheets[sheets.length - 1].getIndex());
+            long[][] calcArray = parseCalcChain();
 
             if (calcArray == null) return this;
             int i = 0;
             for (int n; i < sheets.length; i++) {
-                n = sheets[i].getIndex();
+                n = sheets[i].getId();
                 if (calcArray[n - 1] == null) continue;
                 if (!(sheets[i] instanceof CalcSheet)) {
                     sheets[i] = sheets[i].asCalcSheet();
@@ -758,18 +757,20 @@ public class ExcelReader implements Closeable {
     }
 
     /* Parse `calcChain` */
-    private long[][] parseCalcChain(Path path, int n) {
+    private long[][] parseCalcChain() {
+        Path calcPath = self.resolve("xl/calcChain.xml");
+        if (!FileUtil.exists(calcPath)) return null;
         Element calcChain;
         try {
             SAXReader reader = new SAXReader();
-            calcChain = reader.read(Files.newInputStream(path)).getRootElement();
+            calcChain = reader.read(Files.newInputStream(calcPath)).getRootElement();
         } catch (DocumentException | IOException e) {
             LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
             return null;
         }
 
         Iterator<Element> ite = calcChain.elementIterator();
-        int i = 1;
+        int i = 1, n = sheets().map(Sheet::getId).max(Integer::compareTo).orElse(0);
         long[][] array = new long[n][];
         int[] indices = new int[n];
         for (; ite.hasNext(); ) {
