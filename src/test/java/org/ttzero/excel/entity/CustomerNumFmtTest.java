@@ -21,7 +21,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testDateFmt() throws IOException {
-        new Workbook("customize_numfmt_full")
+        new Workbook("customize_data_format")
                 .setAutoSize(true)
                 .addSheet(new ListSheet<>(ItemFull.randomFull()
                 , new Sheet.Column("编码", "code")

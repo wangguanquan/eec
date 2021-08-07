@@ -32,7 +32,7 @@ public class ListObjectPagingTest extends WorkbookTest {
     public void testPaging() throws IOException {
         new Workbook("test paging", author)
             .watch(Print::println)
-            .addSheet(ListObjectSheetTest.Item.randomTestData(202))
+            .addSheet(ListObjectSheetTest.Item.randomTestData(1024))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
@@ -80,5 +80,21 @@ public class ListObjectPagingTest extends WorkbookTest {
             .addSheet(new CustomizeDataSourceSheet())
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
+    }
+
+    @Test public void testOrderPaging() throws IOException {
+        new Workbook("test fracture order paging", author)
+                .watch(Print::println)
+                .addSheet(ListObjectSheetTest.FractureOrderEntry.randomTestData(1024))
+                .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testLargeOrderPaging() throws IOException {
+        new Workbook("test large order paging", author)
+                .watch(Print::println)
+                .addSheet(ListObjectSheetTest.LargeOrderEntry.randomTestData(1024))
+                .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
+                .writeTo(defaultTestPath);
     }
 }

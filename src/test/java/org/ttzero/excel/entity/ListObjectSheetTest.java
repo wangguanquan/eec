@@ -463,7 +463,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         core.setDescription("为了艾尔");
         core.setKeywords("机枪兵;光头");
         core.setVersion("1.0");
-        core.setRevision("1.2");
+//        core.setRevision("1.2");
         core.setLastModifiedBy("TTT");
         new Workbook("Specify Core")
             .setCore(core)
