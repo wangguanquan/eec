@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017-2021, carl.jia@qq.com All Rights Reserved.
+ * Copyright (c) 2017-2021, guanquan.wang@yandex.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +29,10 @@ import java.lang.annotation.Target;
 /**
  * Custom header styles
  *
- * @author jialei2 at 021-05-10 17:38
+ * @author jialei2 at 2021-05-10 17:38
+ * @author guanquan.wang at 2021-08-06 18:19
  */
-@Target({ElementType.FIELD, ElementType.METHOD})
+@Target({ ElementType.TYPE, ElementType.FIELD, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface HeaderStyle {
