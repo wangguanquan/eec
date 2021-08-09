@@ -449,6 +449,13 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.13 (2021-08-09)
+-------------
+- 支持xls获取图片
+- `@ExcelColumn`注解增加`colIndex`属性，用于指定列顺序(#188)
+- 读取文件时`Worksheet#getIndex()`方法返回Sheet在文件中的下标而非id，并取消按id排序(#193)
+- 修复部分BUG(#182,#190)
+
 Version 0.4.12.1 (2021-05-20)
 -------------
 - Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
@@ -466,13 +473,6 @@ Version 0.4.11 (2021-03-28)
 - 增加wrapText属性控制单元格自动换行
 - 增加forceExport属性来强制没有@ExcelColumn注解的属性
 
-Version 0.4.11 (2021-01-15) *eec-e3-support* only
--------------
-1. 兼容非标准化BOF记录解析
-2. 优化short-sector解析
-3. 极大提升读取xls兼容性(兼容某些版本所有数据都写在short-sector中的处理；提升大文件CONTINUE块解析的容错性；提升某些版本没有short-sector的容错性)
-4. 增加对EXTSST的解析
-
 
 [更多...](./CHANGELOG)
 
@@ -480,7 +480,7 @@ Version 0.4.11 (2021-01-15) *eec-e3-support* only
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.12.1-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.13-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

@@ -1,3 +1,10 @@
+Version 0.4.13 (2021-08-09)
+-------------
+- 支持xls获取图片
+- `@ExcelColumn`注解增加`colIndex`属性，用于指定列顺序(#188)
+- 读取文件时`Worksheet#getIndex()`返回Sheet在文件中的下标而非id，并取消按id排序(#193)
+- 修复部分BUG(#182,#190)
+
 Version 0.4.12.1 (2021-05-20)
 -------------
 - Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
