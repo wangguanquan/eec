@@ -32,6 +32,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -319,13 +320,15 @@ public class ListSheet<T> extends Sheet {
 
     // Returns the reflect <T> type
     protected Class<?> getTClass() {
-        Class<?> clazz;
+        Class<?> clazz = null;
         if (getClass().getGenericSuperclass() instanceof ParameterizedType) {
-            @SuppressWarnings({"unchecked", "retype"})
-            Class<?> tClass = (Class<T>) ((ParameterizedType) getClass()
+            Type type = ((ParameterizedType) getClass()
                 .getGenericSuperclass()).getActualTypeArguments()[0];
-            clazz = tClass;
-        } else {
+            if (type instanceof Class) {
+                clazz = (Class) type;
+            }
+        }
+        if (clazz == null) {
             T o = getFirst();
             if (o == null) return null;
             clazz = o.getClass();
