@@ -742,7 +742,7 @@ public class ListSheet<T> extends Sheet {
         return null;
     }
 
-    static class EntryColumn extends Column {
+    public static class EntryColumn extends Column {
         Method method;
         Field field;
 
