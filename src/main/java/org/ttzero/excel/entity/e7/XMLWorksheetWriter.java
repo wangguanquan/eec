@@ -85,12 +85,13 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // the storage path
-    private Path workSheetPath;
-    private ExtBufferedWriter bw;
-    private Sheet sheet;
-    private Sheet.Column[] columns;
-    private final SharedStrings sst;
-    private Comments comments;
+    protected Path workSheetPath;
+    protected ExtBufferedWriter bw;
+    protected Sheet sheet;
+    protected Sheet.Column[] columns;
+    protected final SharedStrings sst;
+    protected Comments comments;
+    protected int startRow;
 
     public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
@@ -288,7 +289,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeBefore() throws IOException {
         // The header columns
         columns = sheet.getAndSortHeaderColumns();
-        boolean noneHeader = sheet.hasNonHeader();
 
         bw.write(Const.EXCEL_XML_DECLARATION);
         // Declaration
@@ -343,7 +343,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Default row height and width
         n = 6;
         bw.write("<sheetFormatPr defaultRowHeight=\"15.5\" defaultColWidth=\"");
-        BigDecimal width = BigDecimal.valueOf(!noneHeader ? sheet.getDefaultWidth() : 8.38);
+        BigDecimal width = BigDecimal.valueOf(!sheet.hasNonHeader() ? sheet.getDefaultWidth() : 8.38);
         String stringWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
         n -= stringWidth.length();
         bw.write(stringWidth);
@@ -371,9 +371,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Write body data
         bw.write("<sheetData>");
 
-        if (!noneHeader) {
+        if (!sheet.hasNonHeader()) {
             writeHeaderRow();
         }
+        startRow = sheet.hasNonHeader() ? 1 : 2;
     }
 
     /**
@@ -480,7 +481,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected int startRow(int rows, int columns) throws IOException {
         // Row number
-        int r = rows + 2;
+        int r = rows + startRow;
         // logging
         if (r % 1_0000 == 0) {
             sheet.what("0014", String.valueOf(r));
@@ -490,7 +491,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.writeInt(r);
         // default data row height 16.5
         bw.write("\" spans=\"1:");
-        bw.writeInt(columns);
+        bw.writeInt(columns + startRow);
         bw.write("\">");
         return r;
     }

@@ -194,7 +194,7 @@ public class ResultSetSheet extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
+        int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - (hasNonHeader() ? 0 : 1);
 
         try {
             for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
@@ -295,9 +295,6 @@ public class ResultSetSheet extends Sheet {
             for (i = 0; i < columns.length; i++) {
                 if (StringUtil.isEmpty(columns[i].getName())) {
                     columns[i].setName(String.valueOf(i));
-                }
-                if (columns[i].styles == null) {
-                    columns[i].styles = workbook.getStyles();
                 }
             }
             headerReady = columns.length > 0;

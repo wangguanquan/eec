@@ -200,9 +200,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             }
         }
 
-        for (Column hc : columns) {
-            hc.styles = workbook.getStyles();
-        }
         headerReady = columns.length > 0;
         return columns;
     }

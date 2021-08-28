@@ -168,6 +168,11 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected int forceExport;
 
+    /**
+     * Ignore header when export
+     */
+    protected int nonHeader = -1;
+
     public int getId() {
         return id;
     }
@@ -1150,7 +1155,9 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
-            getHeaderColumns();
+            this.columns = getHeaderColumns();
+            // Reset Common Properties
+            resetCommonProperties(columns);
             // Sort column index
             sortColumns(columns);
             // Turn to one-base
@@ -1164,6 +1171,13 @@ public abstract class Sheet implements Cloneable, Storable {
             checkColumnLimit();
         }
         return columns;
+    }
+
+    protected void resetCommonProperties(Column[] columns) {
+        for (Column column : columns) {
+            if (column == null) continue;
+            if (column.styles == null) column.styles = workbook.getStyles();
+        }
     }
 
     protected void sortColumns(Column[] columns) {
@@ -1669,17 +1683,43 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return true if none header row
      */
     public boolean hasNonHeader() {
-        columns = getAndSortHeaderColumns();
-        boolean noneHeader = columns == null || columns.length == 0;
-        if (!noneHeader) {
-            int n = 0;
-            for (Column column : columns) {
-                if (isEmpty(column.name)) n++;
+        int nonHeader = getNonHeader();
+        if (nonHeader == -1) {
+            columns = getAndSortHeaderColumns();
+            boolean noneHeader = columns == null || columns.length == 0;
+            if (!noneHeader) {
+                int n = 0;
+                for (Column column : columns) {
+                    if (isEmpty(column.name)) n++;
+                }
+                noneHeader = n == columns.length;
             }
-            noneHeader = n == columns.length;
+            if (noneHeader) {
+                rows--;
+                nonHeader();
+            } else this.nonHeader = 0;
+            return noneHeader;
         }
-        if (noneHeader) rows--;
-        return noneHeader;
+        return nonHeader == 1;
+    }
+
+    /**
+     * Settings nonHeader property
+     *
+     * @return the Worksheet
+     */
+    public Sheet nonHeader() {
+        this.nonHeader = 1;
+        return this;
+    }
+
+    /**
+     * Returns the nonHeader value.
+     *
+     * @return -1, 0, 1 means not-set, include header, exclude header
+     */
+    public int getNonHeader() {
+        return nonHeader;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

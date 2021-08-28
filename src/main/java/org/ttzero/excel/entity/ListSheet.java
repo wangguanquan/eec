@@ -211,7 +211,7 @@ public class ListSheet<T> extends Sheet {
     @Override
     public void close() throws IOException {
         // Maybe there has more data
-        if (!eof && rows >= sheetWriter.getRowLimit() - 1) {
+        if (!eof && rows >= sheetWriter.getRowLimit() - (hasNonHeader() ? 0 : 1)) {
             List<T> list = more();
             if (list != null && !list.isEmpty()) {
                 compact();
@@ -262,8 +262,9 @@ public class ListSheet<T> extends Sheet {
                         e = null;
                     else if (column.getMethod() != null)
                         e = column.getMethod().invoke(o);
-                    else
+                    else if (column.getField() != null)
                         e = column.getField().get(o);
+                    else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
                 }
@@ -404,7 +405,6 @@ public class ListSheet<T> extends Sheet {
                         column.field = field;
                         column.clazz = method.getReturnType();
                         column.key = gs;
-                        column.styles = workbook.getStyles();
                         if (isEmpty(column.name)) {
                             column.name = gs;
                         }
@@ -427,7 +427,6 @@ public class ListSheet<T> extends Sheet {
                     list.add(column);
                     column.field = field;
                     column.key = gs;
-                    column.styles = workbook.getStyles();
                     if (isEmpty(column.name)) {
                         column.name = gs;
                     }
@@ -498,15 +497,7 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Merge Header Style defined on Entry Class
-        HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
-        int style = 0;
-        if (headerStyle != null) {
-            style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
-        }
-        for (Column column : columns) {
-            if (style > 0 && column.getHeaderStyleIndex() == -1)
-                column.setHeaderStyle(style);
-        }
+        mergeGlobalSetting(clazz);
 
         return columns.length;
     }
@@ -527,6 +518,7 @@ public class ListSheet<T> extends Sheet {
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+            column.styles = workbook.getStyles();
             // Number format
             if (isNotEmpty(ec.format())) {
                 column.setNumFmt(ec.format());
@@ -542,6 +534,13 @@ public class ListSheet<T> extends Sheet {
         return null;
     }
 
+    /**
+     * Build header style
+     *
+     * @param main the getter method
+     * @param sub the defined field
+     * @param column the header column
+     */
     protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderStyle hs = null;
         if (main != null) {
@@ -555,6 +554,13 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
+    /**
+     * Build header comment
+     *
+     * @param main the getter method
+     * @param sub the defined field
+     * @param column the header column
+     */
     protected void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderComment comment = null;
         if (main != null) {
@@ -573,6 +579,23 @@ public class ListSheet<T> extends Sheet {
         }
         if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
             column.headerComment = new Comment(comment.title(), comment.value());
+        }
+    }
+
+    /**
+     * Merge Header Style defined on Entry Class
+     *
+     * @param clazz  Class of &lt;T&gt;
+     */
+    protected void mergeGlobalSetting(Class<?> clazz) {
+        HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
+        int style = 0;
+        if (headerStyle != null) {
+            style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
+        }
+        for (Column column : columns) {
+            if (style > 0 && column.getHeaderStyleIndex() == -1)
+                column.setHeaderStyle(style);
         }
     }
 
@@ -616,7 +639,6 @@ public class ListSheet<T> extends Sheet {
                     column.method = method;
                     column.clazz = method.getReturnType();
                     column.key = method.getName();
-                    column.styles = workbook.getStyles();
                     if (isEmpty(column.name)) {
                         column.name = method.getName();
                     }
@@ -657,7 +679,7 @@ public class ListSheet<T> extends Sheet {
      * @return the end index
      */
     protected int getEndIndex() {
-        int blockSize = getRowBlockSize(), rowLimit = sheetWriter.getRowLimit() - 1;
+        int blockSize = getRowBlockSize(), rowLimit = sheetWriter.getRowLimit() - (hasNonHeader() ? 0 : 1);
         if (rows + blockSize > rowLimit) {
             blockSize = rowLimit - rows;
         }
@@ -689,7 +711,7 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     protected void paging() {
-        int len = dataSize(), limit = sheetWriter.getRowLimit() - 1;
+        int len = dataSize(), limit = sheetWriter.getRowLimit() - (hasNonHeader() ? 0 : 1);
         // paging
         if (len + rows > limit) {
             // Reset current index
@@ -750,7 +772,9 @@ public class ListSheet<T> extends Sheet {
         Field field;
 
         public EntryColumn() { }
-
+        public EntryColumn(String name) {
+            this.name = name;
+        }
         public EntryColumn(String name, Class<?> clazz) {
             super(name, clazz);
         }
