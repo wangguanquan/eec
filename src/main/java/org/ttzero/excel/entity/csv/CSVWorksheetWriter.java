@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.entity.csv;
 
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Row;
@@ -148,11 +149,11 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBefore() throws IOException {
         // The header columns
-        Sheet.Column[] columns = sheet.getAndSortHeaderColumns();
+        Column[] columns = sheet.getAndSortHeaderColumns();
         boolean noneHeader = columns == null || columns.length == 0;
 
         if (!noneHeader) {
-            for (Sheet.Column hc : columns) {
+            for (Column hc : columns) {
                 writer.write(isNotEmpty(hc.getName()) ? hc.getName() : hc.key);
             }
             writer.newLine();

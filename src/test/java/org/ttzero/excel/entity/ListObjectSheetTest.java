@@ -125,9 +125,9 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("test int conversion", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
             )
             .writeTo(defaultTestPath);
     }
@@ -136,9 +136,9 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("object style processor", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score")
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -154,9 +154,9 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("object style and style processor", author)
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -221,8 +221,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item"
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name"))
+                , new Column("ID", "id")
+                , new Column("NAME", "name"))
                 .setData(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
     }
@@ -232,8 +232,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name"))
+                , new Column("ID", "id")
+                , new Column("NAME", "name"))
                 .setData(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
     }
@@ -259,8 +259,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name")))
+                , new Column("ID", "id")
+                , new Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -269,8 +269,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name")))
+                , new Column("ID", "id")
+                , new Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -280,8 +280,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
                 , WaterMark.of(author)
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name")))
+                , new Column("ID", "id")
+                , new Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -292,8 +292,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(new ListSheet<>("ITEM"
                 , Item.randomTestData(10)
                 , WaterMark.of(author)
-                , new Sheet.Column("ID", "id")
-                , new Sheet.Column("NAME", "name")))
+                , new Column("ID", "id")
+                , new Column("NAME", "name")))
             .writeTo(defaultTestPath);
     }
 
@@ -328,9 +328,9 @@ public class ListObjectSheetTest extends WorkbookTest {
     public void testStyleConversion1() throws IOException {
         new Workbook("object style processor1", "guanquan.wang")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Sheet.Column("学号", "id")
-                    , new Sheet.Column("姓名", "name")
-                    , new Sheet.Column("成绩", "score", conversion)
+                    , new Column("学号", "id")
+                    , new Column("姓名", "name")
+                    , new Column("成绩", "score", conversion)
                     .setStyleProcessor(sp)
                 )
             )
@@ -363,9 +363,9 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testFieldUnDeclare() throws IOException {
         new Workbook("field un-declare", author)
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Sheet.Column("学号", "id")
-                    , new Sheet.Column("姓名", "name")
-                    , new Sheet.Column("成绩", "sore") // un-declare field
+                    , new Column("学号", "id")
+                    , new Column("姓名", "name")
+                    , new Column("成绩", "sore") // un-declare field
                 )
             )
             .writeTo(defaultTestPath);
@@ -636,9 +636,9 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testOrderColumnSpecifyOnColumn() throws IOException {
         new Workbook("Order column 2")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                , new Sheet.Column("学号", "id").setColIndex(3)
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "sore").setColIndex(5) // un-declare field
+                , new Column("学号", "id").setColIndex(3)
+                , new Column("姓名", "name")
+                , new Column("成绩", "sore").setColIndex(5) // un-declare field
             )).writeTo(defaultTestPath);
     }
 

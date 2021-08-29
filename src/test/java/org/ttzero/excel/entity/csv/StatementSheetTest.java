@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.csv;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.SQLWorkbookTest;
 import org.ttzero.excel.entity.Sheet;
@@ -42,9 +43,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet("select id, name, age from student order by age"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", int.class)
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -57,9 +58,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet("select id, name, age from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", int.class)
                         .setStyleProcessor((o, style, sst) -> {
                             int n = (int) o;
                             if (n < 10) {
@@ -80,9 +81,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .setConnection(con)
                 .watch(Print::println)
                 .addSheet("select id, name, age from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("姓名", String.class)
-                    , new Sheet.Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                    , new Column("学号", int.class)
+                    , new Column("姓名", String.class)
+                    , new Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
                         .setStyleProcessor((o, style, sst) -> {
                             int n = (int) o;
                             if (n > 14) {
@@ -148,9 +149,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor5")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -162,9 +163,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor6")
                 .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age from student limit 10"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -180,9 +181,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         ps.setInt(1, 10);
                         ps.setInt(2, 20);
                     }
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -197,9 +198,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         ps.setInt(1, 10);
                         ps.setInt(2, 20);
                     }
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -255,9 +256,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor13")
                 .watch(Print::println)
                 .addSheet(new StatementSheet("Student"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class))
                     .setPs(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -282,9 +283,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test Statement different type from metadata")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10"
-                    , new Sheet.Column("ID", String.class)  // Integer in database
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", String.class) // Integer in database
+                    , new Column("ID", String.class)  // Integer in database
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", String.class) // Integer in database
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());

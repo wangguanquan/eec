@@ -64,9 +64,9 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .addSheet("ListObject", ListObjectSheetTest.Item.randomTestData())
                 // Statement
                 .addSheet("Statement", "select id, name, age from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("姓名", String.class)
-                    , new Sheet.Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                    , new Column("学号", int.class)
+                    , new Column("姓名", String.class)
+                    , new Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
                         .setStyleProcessor((o, style, sst) -> {
                             int n = (int) o;
                             if (n > 14) {
@@ -80,9 +80,9 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .addSheet(new EmptySheet("Empty"))
                 // ResultSet
                 .addSheet("ResultSet", rs
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("姓名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Column("学号", int.class)
+                    , new Column("姓名", String.class)
+                    , new Column("年龄", int.class)
                 )
                 // Customize
                 .addSheet(new CustomizeDataSourceSheet("Customize"))

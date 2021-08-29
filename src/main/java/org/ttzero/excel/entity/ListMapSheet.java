@@ -56,7 +56,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public ListMapSheet(String name, final Column... columns) {
+    public ListMapSheet(String name, final org.ttzero.excel.entity.Column... columns) {
         super(name, columns);
     }
 
@@ -67,7 +67,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
+    public ListMapSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
         super(name, waterMark, columns);
     }
 
@@ -98,7 +98,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
+    public ListMapSheet(List<Map<String, ?>> data, final org.ttzero.excel.entity.Column... columns) {
         this(null, data, columns);
     }
 
@@ -109,7 +109,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
+    public ListMapSheet(String name, List<Map<String, ?>> data, final org.ttzero.excel.entity.Column... columns) {
         this(name, data, null, columns);
     }
 
@@ -120,7 +120,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
         this(null, data, waterMark, columns);
     }
 
@@ -132,7 +132,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
         super(name, waterMark, columns);
         setData(data);
     }
@@ -152,7 +152,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             row.index = rows;
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i];
                 Object e = data.get(start).get(hc.key);
                 // clear cells
                 Cell cell = cells[i];
@@ -170,7 +170,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @return array of column
      */
     @Override
-    public Column[] getHeaderColumns() {
+    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
         Map<String, ?> first = getFirst();
         // No data
@@ -190,7 +190,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             }
         } else {
             for (int i = 0; i < columns.length; i++) {
-                Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i];
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
