@@ -177,7 +177,7 @@ public class ListSheet<T> extends Sheet {
     public ListSheet<T> setData(final List<T> data) {
         this.data = data;
         if (!headerReady && workbook != null) {
-            getHeaderColumns();
+            getAndSortHeaderColumns();
         }
         // Has data and worksheet can write
         // Paging in advance

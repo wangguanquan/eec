@@ -1669,7 +1669,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return true if none header row
      */
     public boolean hasNonHeader() {
-        columns = getHeaderColumns();
+        columns = getAndSortHeaderColumns();
         boolean noneHeader = columns == null || columns.length == 0;
         if (!noneHeader) {
             int n = 0;
