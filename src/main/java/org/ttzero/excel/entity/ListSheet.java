@@ -470,7 +470,7 @@ public class ListSheet<T> extends Sheet {
                 ec.method = method;
 
                 for (Field field : declaredFields) {
-                    if (hc.key.equals(field.getName())) {
+                    if (field.getName().equals(hc.key)) {
                         field.setAccessible(true);
                         ec.field = field;
                         break;
