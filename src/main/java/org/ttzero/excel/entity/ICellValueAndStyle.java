@@ -50,7 +50,7 @@ public interface ICellValueAndStyle {
      * @param e    the cell value
      * @param hc   the header column
      */
-    void reset(int row, Cell cell, Object e, Sheet.Column hc);
+    void reset(int row, Cell cell, Object e, Column hc);
 
     /**
      * Returns the worksheet name
@@ -67,7 +67,7 @@ public interface ICellValueAndStyle {
      * @param o  the cell value
      * @return the style index in xf
      */
-    int getStyleIndex(int rows, Sheet.Column hc, Object o);
+    int getStyleIndex(int rows, Column hc, Object o);
 
     /**
      * Setting cell value
@@ -78,7 +78,7 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      * @param clazz the cell value type
      */
-    default void setCellValue(int row, Cell cell, Object e, Sheet.Column hc, Class<?> clazz) {
+    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
         if (e == null) {
             setNullValue(row, cell, hc);
             return;
@@ -132,7 +132,7 @@ public interface ICellValueAndStyle {
      * @param cell  the cell
      * @param hc    the header column
      */
-    default void setNullValue(int row, Cell cell, Sheet.Column hc) {
+    default void setNullValue(int row, Cell cell, Column hc) {
         boolean hasIntProcessor = hc.processor != null;
         if (hasIntProcessor) {
             conversion(row, cell, 0, hc);
@@ -148,7 +148,7 @@ public interface ICellValueAndStyle {
      * @param n    the cell value
      * @param hc   the header column
      */
-    default void conversion(int row, Cell cell, int n, Sheet.Column hc) {
+    default void conversion(int row, Cell cell, int n, Column hc) {
         Object e = hc.processor.conversion(n);
         if (e != null) {
             Class<?> clazz = e.getClass();

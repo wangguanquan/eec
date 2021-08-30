@@ -19,6 +19,7 @@ package org.ttzero.excel.entity.csv;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.CustomizeDataSourceSheet;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
@@ -98,9 +99,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("test int conversion")
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
             )
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -110,9 +111,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("object style processor")
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score")
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -129,9 +130,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         new Workbook("object style and style processor")
             .watch(Print::println)
             .addSheet(Student.randomTestData()
-                , new Sheet.Column("学号", "id")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -182,9 +183,9 @@ public class ListObjectSheetTest extends WorkbookTest{
     public void testStyleConversion1() throws IOException {
         new Workbook("object style processor1", "guanquan.wang")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Sheet.Column("学号", "id")
-                    , new Sheet.Column("姓名", "name")
-                    , new Sheet.Column("成绩", "score", conversion)
+                    , new Column("学号", "id")
+                    , new Column("姓名", "name")
+                    , new Column("成绩", "score", conversion)
                     .setStyleProcessor(sp)
                 )
             )
@@ -204,9 +205,9 @@ public class ListObjectSheetTest extends WorkbookTest{
         try {
             new Workbook("field un-declare")
                 .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                        , new Sheet.Column("学号", "id")
-                        , new Sheet.Column("姓名", "name")
-                        , new Sheet.Column("成绩", "sore") // un-declare field
+                        , new Column("学号", "id")
+                        , new Column("姓名", "name")
+                        , new Column("成绩", "sore") // un-declare field
                     )
                 )
                 .saveAsCSV()

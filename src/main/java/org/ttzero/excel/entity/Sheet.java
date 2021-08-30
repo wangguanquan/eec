@@ -31,7 +31,6 @@ import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.IntConversionProcessor;
-import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
 
@@ -43,21 +42,6 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 
-import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
-import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
-import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDate;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDateTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDouble;
-import static org.ttzero.excel.entity.IWorksheetWriter.isFloat;
-import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
-import static org.ttzero.excel.entity.IWorksheetWriter.isString;
-import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
-import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
@@ -101,7 +85,7 @@ public abstract class Sheet implements Cloneable, Storable {
     protected Workbook workbook;
 
     protected String name;
-    protected Column[] columns;
+    protected org.ttzero.excel.entity.Column[] columns;
     protected WaterMark waterMark;
     protected RelManager relManager;
     protected int id;
@@ -173,6 +157,8 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected int nonHeader = -1;
 
+    private int rowLimit;
+
     public int getId() {
         return id;
     }
@@ -209,7 +195,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public Sheet(String name, final Column... columns) {
+    public Sheet(String name, final org.ttzero.excel.entity.Column... columns) {
         this(name, null, columns);
     }
 
@@ -220,7 +206,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public Sheet(String name, WaterMark waterMark, final Column... columns) {
+    public Sheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
         this.name = name;
         this.columns = columns;
         this.waterMark = waterMark;
@@ -228,705 +214,89 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Associated with Worksheet for controlling head style and cache
-     * column data types and conversions
+     * Will be deleted soon
+     *
+     * @deprecated use the new {@link org.ttzero.excel.entity.Column}
      */
-    public static class Column {
-        /**
-         * The key of Map or field name of entry
-         */
-        public String key;
-        /**
-         * The header name
-         */
-        public String name;
-        /**
-         * The cell type
-         */
-        public Class<?> clazz;
-        /**
-         * The string value is shared
-         */
-        public boolean share;
-        /**
-         * 0: standard 1:percentage 2:RMB
-         * @deprecated Do not use.
-         */
-        @Deprecated
-        public int type;
-        /**
-         * The int value conversion
-         */
-        public IntConversionProcessor processor;
-        /**
-         * The style conversion
-         */
-        public StyleProcessor styleProcessor;
-        /**
-         * The style of cell
-         */
-        public int cellStyle;
-        /**
-         * The style of header
-         */
-        public int headerStyle;
-        /**
-         * The style index of cell, -1 if not be setting
-         */
-        private int cellStyleIndex = -1;
-        /**
-         * The style index of header, -1 if not be setting
-         */
-        private int headerStyleIndex = -1;
-        /**
-         * The cell width
-         */
-        public double width;
-        public int o;
-        public Styles styles;
-        public Comment headerComment, cellComment;
-        /**
-         * Specify the cell number format
-         */
-        public NumFmt numFmt;
-        /**
-         * Only export column name and ignore value
-         */
-        public boolean ignoreValue;
-        /**
-         * Wrap text in a cell
-         */
-        public int wrapText;
-        /**
-         * Specify the column index
-         */
-        public int colIndex = -1;
+    @Deprecated
+    public static class Column extends org.ttzero.excel.entity.Column {
+        public Column() {
+        }
 
-        /**
-         * Constructor Column
-         */
-        public Column() { }
-
-        /**
-         * Constructor Column
-         *
-         * @param name  the column name
-         * @param clazz the cell type
-         */
         public Column(String name, Class<?> clazz) {
-            this(name, clazz, true);
+            super(name, clazz);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name the column name
-         * @param key  field
-         */
         public Column(String name, String key) {
-            this(name, key, true);
+            super(name, key);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name  the column name
-         * @param key   field
-         * @param clazz the cell type
-         */
         public Column(String name, String key, Class<?> clazz) {
-            this(name, key, true);
-            this.clazz = clazz;
+            super(name, key, clazz);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param clazz     the cell type
-         * @param processor The int value conversion
-         */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
-            this(name, clazz, processor, true);
+            super(name, clazz, processor);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param key       field
-         * @param processor The int value conversion
-         */
         public Column(String name, String key, IntConversionProcessor processor) {
-            this(name, key, processor, true);
+            super(name, key, processor);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name  the column name
-         * @param clazz the cell type
-         * @param share true:shared false:inline string
-         */
         public Column(String name, Class<?> clazz, boolean share) {
-            this.name = name;
-            this.clazz = clazz;
-            this.share = share;
+            super(name, clazz, share);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name  the column name
-         * @param key   filed
-         * @param share true:shared false:inline string
-         */
         public Column(String name, String key, boolean share) {
-            this.name = name;
-            this.key = key;
-            this.share = share;
+            super(name, key, share);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param clazz     the cell type
-         * @param processor The int value conversion
-         * @param share     true:shared false:inline string
-         */
         public Column(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
-            this(name, clazz, share);
-            this.processor = processor;
+            super(name, clazz, processor, share);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param key       field
-         * @param clazz     type of cell
-         * @param processor The int value conversion
-         */
         public Column(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
-            this(name, key, clazz);
-            this.processor = processor;
+            super(name, key, clazz, processor);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param key       field
-         * @param processor The int value conversion
-         * @param share     true:shared false:inline string
-         */
         public Column(String name, String key, IntConversionProcessor processor, boolean share) {
-            this(name, key, share);
-            this.processor = processor;
+            super(name, key, processor, share);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param clazz     the cell type
-         * @param cellStyle the style of cell
-         */
         public Column(String name, Class<?> clazz, int cellStyle) {
-            this(name, clazz, cellStyle, true);
+            super(name, clazz, cellStyle);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param key       field
-         * @param cellStyle the style of cell
-         */
         public Column(String name, String key, int cellStyle) {
-            this(name, key, cellStyle, true);
+            super(name, key, cellStyle);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param clazz     the cell type
-         * @param cellStyle the style of cell
-         * @param share     true:shared false:inline string
-         */
         public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
-            this(name, clazz, share);
-            this.cellStyle = cellStyle;
+            super(name, clazz, cellStyle, share);
         }
 
-        /**
-         * Constructor Column
-         *
-         * @param name      the column name
-         * @param key       field
-         * @param cellStyle the style of cell
-         * @param share     true:shared false:inline string
-         */
         public Column(String name, String key, int cellStyle, boolean share) {
-            this(name, key, share);
-            this.cellStyle = cellStyle;
-        }
-
-        /**
-         * Setting the cell's width
-         *
-         * @param width the width value
-         * @return the {@link Sheet.Column}
-         */
-        public Column setWidth(double width) {
-            if (width < 0.00000001) {
-                throw new ExcelWriteException("Width " + width + " less than 0.");
-            }
-            this.width = width;
-            return this;
-        }
-
-        /**
-         * Setting the cell is shared
-         *
-         * @return true:shared false:inline string
-         */
-        public boolean isShare() {
-            return share;
+            super(name, key, cellStyle, share);
         }
 
         /**
          * Setting the cell type
          *
          * @param type the cell type
-         * @return the {@link Sheet.Column}
-         * @deprecated Do not use
+         * @return the {@link org.ttzero.excel.entity.Column}
+         * @deprecated replace it with the {{@link #setNumFmt(String)}} method.
          */
         @Deprecated
-        public Column setType(int type) {
-            this.type = type;
-            return this;
-        }
-
-        /**
-         * Returns the column name
-         *
-         * @return the column name
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Setting the column name
-         *
-         * @param name the column name
-         * @return the {@link Sheet.Column}
-         */
-        public Column setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        /**
-         * Returns the cell type
-         *
-         * @return the cell type
-         */
-        public Class<?> getClazz() {
-            return clazz;
-        }
-
-        /**
-         * Setting the cell type
-         *
-         * @param clazz the cell type
-         * @return the {@link Sheet.Column}
-         */
-        public Column setClazz(Class<?> clazz) {
-            this.clazz = clazz;
-            return this;
-        }
-
-        /**
-         * Setting the int value conversion
-         *
-         * @param processor The int value conversion
-         * @return the {@link Sheet.Column}
-         */
-        public Column setProcessor(IntConversionProcessor processor) {
-            this.processor = processor;
-            return this;
-        }
-
-        /**
-         * Setting the style conversion
-         *
-         * @param styleProcessor The style conversion
-         * @return the {@link Sheet.Column}
-         */
-        public Column setStyleProcessor(StyleProcessor styleProcessor) {
-            this.styleProcessor = styleProcessor;
-            return this;
-        }
-
-        /**
-         * Returns the width of cell
-         *
-         * @return the cell width
-         */
-        public double getWidth() {
-            return width;
-        }
-
-        /**
-         * Setting the cell's style
-         *
-         * @param cellStyle the styles value
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(int cellStyle) {
-            this.cellStyle = cellStyle;
-            this.cellStyleIndex = styles.of(cellStyle);
-            return this;
-        }
-
-        /**
-         * Setting the header's style
-         *
-         * @param headerStyle the styles value
-         * @return the {@link Sheet.Column}
-         */
-        public Column setHeaderStyle(int headerStyle) {
-            this.headerStyle = headerStyle;
-            this.headerStyleIndex = styles.of(headerStyle);
-            return this;
-        }
-
-        /**
-         * Settings the x-axis of column in row
-         *
-         * @param colIndex column index (zero base)
-         * @return the {@link Sheet.Column}
-         */
-        public Column setColIndex(int colIndex) {
-            this.colIndex = colIndex;
-            return this;
-        }
-
-        /**
-         * Returns the style index of cell, -1 if not be setting
-         *
-         * @return index of style
-         */
-        public int getCellStyleIndex() {
-            return cellStyleIndex;
-        }
-
-        /**
-         * Returns the header style index of cell, -1 if not be setting
-         *
-         * @return index of style
-         */
-        public int getHeaderStyleIndex() {
-            return headerStyleIndex;
-        }
-
-        /**
-         * Returns the default horizontal style
-         * the Date, Character, Bool has center value, the
-         * Numeric has right value, otherwise left value
-         *
-         * @return the horizontal value
-         */
-        int defaultHorizontal() {
-            int horizontal;
-            if (isDate(clazz) || isDateTime(clazz)
-                || isLocalDate(clazz) || isLocalDateTime(clazz)
-                || isTime(clazz) || isLocalTime(clazz)
-                || isChar(clazz) || isBool(clazz)) {
-                horizontal = Horizontals.CENTER;
-            } else if (isInt(clazz) || isLong(clazz)
-                || isFloat(clazz) || isDouble(clazz)
-                || isBigDecimal(clazz)) {
-                horizontal = Horizontals.RIGHT;
-            } else {
-                horizontal = Horizontals.LEFT;
+        public org.ttzero.excel.entity.Column setType(int type) {
+            switch (type) {
+                case Const.ColumnType.PARENTAGE:
+                    setNumFmt("0.00%_);[Red]-0.00% ");
+                    break;
+                case Const.ColumnType.RMB:
+                    setNumFmt("¥0.00_);[Red]-¥0.00 ");
+                    break;
+                default:
             }
-            return horizontal;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font the font
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | Verticals.CENTER
-                    | defaultHorizontal());
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font       the font
-         * @param horizontal the horizontal style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, int horizontal) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | Verticals.CENTER
-                    | horizontal);
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font   the font
-         * @param border the border style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, Border border) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | Verticals.CENTER
-                    | defaultHorizontal());
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font       the font
-         * @param border     the border style
-         * @param horizontal the horizontal style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, Border border, int horizontal) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | Verticals.CENTER
-                    | horizontal);
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font   the font
-         * @param fill   the fill style
-         * @param border the border style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, Fill fill, Border border) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | (fill != null ? styles.addFill(fill) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | Verticals.CENTER
-                    | defaultHorizontal());
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font       the font
-         * @param fill       the fill style
-         * @param border     the border style
-         * @param horizontal the horizontal style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | (fill != null ? styles.addFill(fill) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | Verticals.CENTER
-                    | horizontal);
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param font       the font
-         * @param fill       the fill style
-         * @param border     the border style
-         * @param vertical   the vertical style
-         * @param horizontal the horizontal style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-            this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                    | (fill != null ? styles.addFill(fill) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | vertical
-                    | horizontal);
-            return this;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @param numFmt     the number format
-         * @param font       the font
-         * @param fill       the fill style
-         * @param border     the border style
-         * @param vertical   the vertical style
-         * @param horizontal the horizontal style
-         * @return the {@link Sheet.Column}
-         */
-        public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-            this.cellStyle = styles.of(
-                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-                    | (font != null ? styles.addFont(font) : 0)
-                    | (fill != null ? styles.addFill(fill) : 0)
-                    | (border != null ? styles.addBorder(border) : 0)
-                    | vertical
-                    | horizontal);
-            return this;
-        }
-
-        /**
-         * Setting cell string value is shared
-         * Shared is only valid for strings, and the converted cell type
-         * is also valid for strings.
-         *
-         * @param share true:shared false:inline string
-         * @return the {@link Sheet.Column}
-         */
-        public Column setShare(boolean share) {
-            this.share = share;
-            return this;
-        }
-
-        /**
-         * Setting a cell format of number or date type
-         *
-         * @param code the format string
-         * @return the {@link Sheet.Column}
-         */
-        public Column setNumFmt(String code) {
-            this.numFmt = new NumFmt(code);
-            return this;
-        }
-
-        /**
-         * Returns the column {@link NumFmt}
-         *
-         * @return number format
-         */
-        public NumFmt getNumFmt() {
-            return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
-        }
-
-        /**
-         * Returns default style based on cell type
-         *
-         * @param clazz the cell type
-         * @return the styles value
-         */
-        public int getCellStyle(Class<?> clazz) {
-            int style;
-            if (isString(clazz)) {
-                style = Styles.defaultStringBorderStyle() | wrapText;
-            } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-            } else if (isDate(clazz) || isLocalDate(clazz)) {
-                style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-            } else if (isBool(clazz) || isChar(clazz)) {
-                style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
-            } else if (isInt(clazz) || isLong(clazz)) {
-                style = Styles.defaultIntBorderStyle();
-                switch (type) {
-                    case Const.ColumnType.NORMAL:
-                        break;
-                    case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0%_);[Red]-0% "));
-                        break;
-                    case Const.ColumnType.RMB:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0_);[Red]-¥0 "));
-                        break;
-                    default:
-                }
-            } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
-                style = Styles.defaultDoubleBorderStyle();
-                switch (type) {
-                    case Const.ColumnType.NORMAL:
-                        break;
-                    case Const.ColumnType.PARENTAGE:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("0.00%_);[Red]-0.00% "));
-                        break;
-                    case Const.ColumnType.RMB:
-                        style = Styles.clearNumFmt(style) | styles.addNumFmt(new NumFmt("¥0.00_);[Red]-¥0.00 "));
-                        break;
-                    default:
-                }
-            } else if (isTime(clazz) || isLocalTime(clazz)) {
-                style =  styles.addNumFmt(new NumFmt("hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-            } else {
-                style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
-            }
-
-            // Reset custom number format if specified.
-            if (numFmt != null) {
-                style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
-            }
-
-            return style;
-        }
-
-        /**
-         * Setting the cell styles
-         *
-         * @return the styles value
-         */
-        public int getCellStyle() {
-            if (cellStyleIndex != -1) {
-                return cellStyle;
-            }
-            setCellStyle(getCellStyle(clazz));
-            return cellStyle;
-        }
-
-        /**
-         * @return bool
-         */
-        public boolean isIgnoreValue() {
-            return ignoreValue;
-        }
-
-        /**
-         * Ignore value
-         */
-        Column ignoreValue() {
-            this.ignoreValue = true;
-            return this;
-        }
-
-        /**
-         * Wrap text in a cell
-         * <p>
-         * Microsoft Excel can wrap text so it appears on multiple lines in a cell.
-         * You can format the cell so the text wraps automatically, or enter a manual line break.
-         *
-         * @param wrapText set wrap
-         * @return the {@link Column} self
-         */
-        public Column setWrapText(boolean wrapText) {
-            this.wrapText = wrapText ? 1 : 0;
             return this;
         }
     }
@@ -1023,7 +393,7 @@ public abstract class Sheet implements Cloneable, Storable {
         this.autoSize = 2;
         this.width = width;
         if (headerReady) {
-            for (Column hc : columns) {
+            for (org.ttzero.excel.entity.Column hc : columns) {
                 hc.setWidth(width);
             }
         }
@@ -1138,10 +508,10 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return array of column
      */
-    public Column[] getHeaderColumns() {
+    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (!headerReady) {
             if (columns == null) {
-                columns = new Column[0];
+                columns = new org.ttzero.excel.entity.Column[0];
             }
             headerReady = true;
         }
@@ -1153,7 +523,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return header columns
      */
-    public Column[] getAndSortHeaderColumns() {
+    public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
             this.columns = getHeaderColumns();
             // Reset Common Properties
@@ -1173,14 +543,14 @@ public abstract class Sheet implements Cloneable, Storable {
         return columns;
     }
 
-    protected void resetCommonProperties(Column[] columns) {
-        for (Column column : columns) {
+    protected void resetCommonProperties(org.ttzero.excel.entity.Column[] columns) {
+        for (org.ttzero.excel.entity.Column column : columns) {
             if (column == null) continue;
             if (column.styles == null) column.styles = workbook.getStyles();
         }
     }
 
-    protected void sortColumns(Column[] columns) {
+    protected void sortColumns(org.ttzero.excel.entity.Column[] columns) {
         if (columns.length <= 1) return;
         int j = 0;
         for (int i = 0; i < columns.length; i++) {
@@ -1202,14 +572,14 @@ public abstract class Sheet implements Cloneable, Storable {
         }
     }
 
-    protected int search(Column[] columns, int n, int k) {
+    protected int search(org.ttzero.excel.entity.Column[] columns, int n, int k) {
         int i = 0;
         for (; i < n && columns[i].colIndex <= k; i++) ;
         return i;
     }
 
-    private void insert(Column[] columns, int n, int k) {
-        Column t = columns[k];
+    private void insert(org.ttzero.excel.entity.Column[] columns, int n, int k) {
+        org.ttzero.excel.entity.Column t = columns[k];
         System.arraycopy(columns, n, columns, n + 1, k - n);
         columns[n] = t;
     }
@@ -1220,7 +590,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns the header row's columns
      * @return the {@link Sheet}
      */
-    public Sheet setColumns(final Column[] columns) {
+    public Sheet setColumns(final org.ttzero.excel.entity.Column[] columns) {
         this.columns = columns.clone();
         for (int i = 0; i < columns.length; i++) {
             columns[i].styles = workbook.getStyles();
@@ -1319,15 +689,16 @@ public abstract class Sheet implements Cloneable, Storable {
         if (sheetWriter == null) {
             throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
-        if (!copySheet) {
-            paging();
-        }
         if (!headerReady) {
             getAndSortHeaderColumns();
         }
         if (rowBlock == null) {
             rowBlock = new RowBlock(getRowBlockSize());
         } else rowBlock.reopen();
+
+        if (!copySheet) {
+            paging();
+        }
 
         sheetWriter.writeTo(path);
     }
@@ -1515,7 +886,9 @@ public abstract class Sheet implements Cloneable, Storable {
         // clear first
         rowBlock.clear();
 
-        resetBlockData();
+        if (columns.length > 0) {
+            resetBlockData();
+        }
 
         return rowBlock.flip();
     }
@@ -1611,6 +984,20 @@ public abstract class Sheet implements Cloneable, Storable {
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
+        } else {
+            boolean noneHeader = columns == null || columns.length == 0;
+            if (!noneHeader) {
+                int n = 0;
+                for (org.ttzero.excel.entity.Column column : columns) {
+                    if (isEmpty(column.name)) n++;
+                }
+                noneHeader = n == columns.length;
+            }
+            if (noneHeader) {
+                if (rows > 0) rows--;
+                ignoreHeader();
+            } else this.nonHeader = 0;
+            this.rowLimit = sheetWriter.getRowLimit() - (this.nonHeader ^ 1);
         }
     }
 
@@ -1677,38 +1064,38 @@ public abstract class Sheet implements Cloneable, Storable {
     private static final ThreadLocal<char[][]> cache
         = ThreadLocal.withInitial(() -> new char[][]{ {65}, {65, 65}, {65, 65, 65} });
 
-    /**
-     * Check empty header row
-     *
-     * @return true if none header row
-     */
-    public boolean hasNonHeader() {
-        int nonHeader = getNonHeader();
-        if (nonHeader == -1) {
-            columns = getAndSortHeaderColumns();
-            boolean noneHeader = columns == null || columns.length == 0;
-            if (!noneHeader) {
-                int n = 0;
-                for (Column column : columns) {
-                    if (isEmpty(column.name)) n++;
-                }
-                noneHeader = n == columns.length;
-            }
-            if (noneHeader) {
-                rows--;
-                nonHeader();
-            } else this.nonHeader = 0;
-            return noneHeader;
-        }
-        return nonHeader == 1;
-    }
+//    /**
+//     * Check empty header row
+//     *
+//     * @return true if none header row
+//     */
+//    public boolean hasNonHeader() {
+//        int nonHeader = getNonHeader();
+//        if (nonHeader == -1) {
+//            columns = getAndSortHeaderColumns();
+//            boolean noneHeader = columns == null || columns.length == 0;
+//            if (!noneHeader) {
+//                int n = 0;
+//                for (org.ttzero.excel.entity.Column column : columns) {
+//                    if (isEmpty(column.name)) n++;
+//                }
+//                noneHeader = n == columns.length;
+//            }
+//            if (noneHeader) {
+////                rows--;
+//                ignoreHeader();
+//            } else this.nonHeader = 0;
+//            return noneHeader;
+//        }
+//        return nonHeader == 1;
+//    }
 
     /**
      * Settings nonHeader property
      *
      * @return the Worksheet
      */
-    public Sheet nonHeader() {
+    public Sheet ignoreHeader() {
         this.nonHeader = 1;
         return this;
     }
@@ -1722,13 +1109,22 @@ public abstract class Sheet implements Cloneable, Storable {
         return nonHeader;
     }
 
+    /**
+     * The Worksheet row limit
+     *
+     * @return the limit
+     */
+    protected int getRowLimit() {
+        return rowLimit;
+    }
+
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     /**
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Sheet.Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, org.ttzero.excel.entity.Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();

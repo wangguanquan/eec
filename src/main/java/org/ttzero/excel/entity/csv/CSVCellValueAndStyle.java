@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.entity.csv;
 
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
-import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
@@ -54,7 +54,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param hc   the header column
      */
     @Override
-    public void reset(int row, Cell cell, Object e, Sheet.Column hc) {
+    public void reset(int row, Cell cell, Object e, Column hc) {
         setCellValue(row, cell, e, hc, hc.getClazz());
     }
 
@@ -77,7 +77,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param clazz the cell value type
      */
     @Override
-    public void setCellValue(int row, Cell cell, Object e, Sheet.Column hc, Class<?> clazz) {
+    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
         if (e == null) {
             setNullValue(row, cell, hc);
             return;
@@ -132,7 +132,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @return const zero (general style)
      */
     @Override
-    public int getStyleIndex(int rows, Sheet.Column hc, Object o) {
+    public int getStyleIndex(int rows, Column hc, Object o) {
         return 0;
     }
 }

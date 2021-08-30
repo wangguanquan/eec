@@ -40,11 +40,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet(rs
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", Integer.class)
-                    , new Sheet.Column("创建时间", Timestamp.class)
-                    , new Sheet.Column("更新", Timestamp.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", Integer.class)
+                    , new Column("创建时间", Timestamp.class)
+                    , new Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
         }
@@ -96,11 +96,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor4", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ).setRs(rs))
                 .writeTo(defaultTestPath);
         }
@@ -115,11 +115,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor5", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", WaterMark.of(author)
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ).setRs(rs))
                 .writeTo(defaultTestPath);
         }
@@ -160,11 +160,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor8", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -179,11 +179,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor9", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -198,11 +198,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor10", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs, WaterMark.of(author)
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -217,11 +217,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor11", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("AGE", int.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -236,11 +236,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet different type from metadata", author)
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
-                    , new Sheet.Column("ID", String.class)  // Integer in database
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", String.class) // // Integer in database
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", String.class)  // Integer in database
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", String.class) // // Integer in database
+                    , new Column("AGE", int.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
