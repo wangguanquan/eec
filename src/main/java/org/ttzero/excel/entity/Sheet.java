@@ -591,10 +591,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the {@link Sheet}
      */
     public Sheet setColumns(final org.ttzero.excel.entity.Column[] columns) {
-        this.columns = columns.clone();
-        for (int i = 0; i < columns.length; i++) {
-            columns[i].styles = workbook.getStyles();
-        }
+        this.columns = columns;
         return this;
     }
 
