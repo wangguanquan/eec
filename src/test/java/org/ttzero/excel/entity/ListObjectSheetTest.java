@@ -638,7 +638,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                 , new Sheet.Column("学号", "id").setColIndex(3)
                 , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("成绩", "sore").setColIndex(5) // un-declare field
+                , new Sheet.Column("成绩", "score").setColIndex(5) // un-declare field
             )).writeTo(defaultTestPath);
     }
 

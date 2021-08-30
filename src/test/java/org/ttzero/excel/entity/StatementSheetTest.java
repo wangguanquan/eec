@@ -67,7 +67,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Sheet.Column("学号", int.class)
                     , new Sheet.Column("性名", String.class)
                     , new Sheet.Column("年龄", int.class)
-                    , new Sheet.Column("创建时间", Timestamp.class)
+                    , new Sheet.Column("创建时间", Timestamp.class).setColIndex(0)
                     , new Sheet.Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
