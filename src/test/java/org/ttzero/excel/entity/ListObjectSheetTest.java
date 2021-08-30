@@ -642,6 +642,24 @@ public class ListObjectSheetTest extends WorkbookTest {
             )).writeTo(defaultTestPath);
     }
 
+    @Test public void testBasicType() throws IOException {
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        new Workbook("Integer array").addSheet(new ListSheet<Integer>(list) {
+            @Override
+            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(Integer.class) };
+            }
+        }.ignoreHeader()).writeTo(defaultTestPath);
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
+            Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);
+            assert array.length == list.size();
+            for (int i = 0; i < array.length; i++) {
+                assert array[i].equals(list.get(i));
+            }
+        }
+    }
+
     public static class Item {
         @ExcelColumn
         private int id;
