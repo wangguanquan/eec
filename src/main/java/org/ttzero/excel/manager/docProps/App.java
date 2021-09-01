@@ -20,7 +20,7 @@ package org.ttzero.excel.manager.docProps;
 import org.ttzero.excel.annotation.Attr;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
-import org.ttzero.excel.entity.NameValue;
+import org.ttzero.excel.entity.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,15 +60,15 @@ public class App extends XmlEntity {
             this.vector = vector;
             headingPairs = new HeadingPairs();
             headingPairs.vector = new ArrayList<>();
-            headingPairs.vector.add(new NameValue("lpstr", "Workbook"));
-            headingPairs.vector.add(new NameValue("i4", String.valueOf(vector.size())));
+            headingPairs.vector.add(new Tuple2<>("lpstr", "Workbook"));
+            headingPairs.vector.add(new Tuple2<>("i4", String.valueOf(vector.size())));
         }
     }
 
     private static class HeadingPairs {
         @NS(value = "vt", contentUse = true)
         @Attr(name = {"baseType", "size"}, value = {"variant", "#size#"})
-        List<NameValue> vector;
+        List<Tuple2<String, String>> vector;
     }
 
     public void setTitlePards(List<String> list) {
