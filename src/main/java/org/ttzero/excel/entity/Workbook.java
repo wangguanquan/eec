@@ -26,6 +26,7 @@ import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ParamProcessor;
 import org.ttzero.excel.processor.Watch;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.File;
@@ -743,8 +744,9 @@ public class Workbook implements Storable {
      * @return the {@link Sheet}, returns null if not found
      */
     public Sheet getSheet(String sheetName) {
+        if (StringUtil.isEmpty(sheetName)) return null;
         for (Sheet sheet : sheets) {
-            if (sheet.getName().equals(sheetName)) {
+            if (sheetName.equals(sheet.getName())) {
                 return sheet;
             }
         }
