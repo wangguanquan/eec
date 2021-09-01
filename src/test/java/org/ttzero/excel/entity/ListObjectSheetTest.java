@@ -643,7 +643,8 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testBasicType() throws IOException {
-        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 35; i++) list.add(i);
         new Workbook("Integer array").addSheet(new ListSheet<Integer>(list) {
             @Override
             public org.ttzero.excel.entity.Column[] getHeaderColumns() {
