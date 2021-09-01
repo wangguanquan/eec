@@ -252,7 +252,7 @@ public class ResultSetSheet extends Sheet {
      * @return the header information
      */
     @Override
-    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
         if (rs == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter ResultSet");
@@ -297,7 +297,6 @@ public class ResultSetSheet extends Sheet {
                     columns[i].setName(String.valueOf(i));
                 }
             }
-            headerReady = columns.length > 0;
         }
         return columns;
     }

@@ -660,14 +660,12 @@ public class ListSheet<T> extends Sheet {
      * @return array of column
      */
     @Override
-    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (!headerReady) {
             // create header columns
             int size = init();
             if (size <= 0) {
                 columns = new org.ttzero.excel.entity.Column[0];
-            } else {
-                headerReady = true;
             }
         }
         return columns;

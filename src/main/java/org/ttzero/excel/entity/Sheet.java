@@ -505,15 +505,16 @@ public abstract class Sheet implements Cloneable, Storable {
      * Returns the header column info
      * <p>
      * The copy sheet will use the parent worksheet header information.
+     * <p>
+     * Use the method {@link #getAndSortHeaderColumns()} to get Columns
      *
      * @return array of column
      */
-    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (!headerReady) {
             if (columns == null) {
                 columns = new org.ttzero.excel.entity.Column[0];
             }
-            headerReady = true;
         }
         return columns;
     }
@@ -539,6 +540,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
             // Check the limit of columns
             checkColumnLimit();
+            headerReady |= (this.columns.length > 0);
         }
         return columns;
     }
