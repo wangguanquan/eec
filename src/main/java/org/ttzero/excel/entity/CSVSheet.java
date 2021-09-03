@@ -181,7 +181,7 @@ public class CSVSheet extends Sheet {
     }
 
     @Override
-    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
         try {
             // Create CSV iterator
@@ -194,7 +194,6 @@ public class CSVSheet extends Sheet {
                 columns[i] = new org.ttzero.excel.entity.Column(hasHeader ? rows[i] : null, String.class);
                 columns[i].styles = workbook.getStyles();
             }
-            headerReady = true;
         } catch (IOException e) {
             throw new ExcelWriteException(e);
         }

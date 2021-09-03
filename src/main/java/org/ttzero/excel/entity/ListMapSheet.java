@@ -170,23 +170,23 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @return array of column
      */
     @Override
-    public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
         Map<String, ?> first = getFirst();
         // No data
         if (first == null) {
             if (columns == null) {
-                columns = new Column[0];
+                columns = new org.ttzero.excel.entity.Column[0];
             }
         } else if (!hasHeaderColumns()) {
             int size = first.size(), i = 0;
-            columns = new Column[size];
+            columns = new org.ttzero.excel.entity.Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
                 // Ignore the null key
                 if (isEmpty(entry.getKey())) continue;
                 Object value = entry.getValue();
-                columns[i++] = new Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+                columns[i++] = new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
             }
         } else {
             for (int i = 0; i < columns.length; i++) {
@@ -200,7 +200,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             }
         }
 
-        headerReady = columns.length > 0;
         return columns;
     }
 
