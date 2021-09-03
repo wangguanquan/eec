@@ -48,8 +48,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang at 2019-08-21 22:19
  */
 public class CSVWorksheetWriter implements IWorksheetWriter {
-    private Sheet sheet;
-    private CSVUtil.Writer writer;
+    protected Sheet sheet;
+    protected CSVUtil.Writer writer;
 
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
