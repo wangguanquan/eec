@@ -739,6 +739,8 @@ public class Workbook implements Storable {
 
     /**
      * Return a {@link Sheet} with the specified name
+     * <p>
+     * Note: This method can only return the {@code Sheet} which name specified when created.
      *
      * @param sheetName the sheet name
      * @return the {@link Sheet}, returns null if not found
