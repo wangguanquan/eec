@@ -64,11 +64,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student order by age"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
-                    , new Sheet.Column("创建时间", Timestamp.class)
-                    , new Sheet.Column("更新", Timestamp.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", int.class)
+                    , new Column("创建时间", Timestamp.class).setColIndex(0)
+                    , new Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
         }
@@ -80,9 +80,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .setAutoSize(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", int.class)
                         .setStyleProcessor((o, style, sst) -> {
                             Integer n = (Integer) o;
                             if (n == null || n < 10) {
@@ -91,8 +91,8 @@ public class StatementSheetTest extends SQLWorkbookTest {
                             }
                             return style;
                         })
-                    , new Sheet.Column("创建时间", Timestamp.class)
-                    , new Sheet.Column("更新", Timestamp.class)
+                    , new Column("创建时间", Timestamp.class)
+                    , new Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
         }
@@ -105,9 +105,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .setAutoSize(autoSize)
                 .watch(Print::println)
                 .addSheet("select id, name, age, create_date, update_date from student"
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("姓名", String.class)
-                    , new Sheet.Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                    , new Column("学号", int.class)
+                    , new Column("姓名", String.class)
+                    , new Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
                         .setStyleProcessor((o, style, sst) -> {
                             Integer n = (Integer) o;
                             if (n == null || n > 14) {
@@ -116,8 +116,8 @@ public class StatementSheetTest extends SQLWorkbookTest {
                             }
                             return style;
                         })
-                    , new Sheet.Column("创建时间", Timestamp.class)
-                    , new Sheet.Column("更新", Timestamp.class)
+                    , new Column("创建时间", Timestamp.class)
+                    , new Column("更新", Timestamp.class)
                 )
                 .writeTo(defaultTestPath);
         }
@@ -170,11 +170,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor5", author)
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -185,11 +185,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor6", author)
                 .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age, create_date, update_date from student limit 10"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -204,11 +204,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         ps.setInt(1, 10);
                         ps.setInt(2, 20);
                     }
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -223,11 +223,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         ps.setInt(1, 10);
                         ps.setInt(2, 20);
                     }
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
-                    , new Sheet.Column("CREATE_DATE", Timestamp.class)
-                    , new Sheet.Column("UPDATE_DATE", Timestamp.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
+                    , new Column("CREATE_DATE", Timestamp.class)
+                    , new Column("UPDATE_DATE", Timestamp.class)
                 ))
                 .writeTo(defaultTestPath);
         }
@@ -279,9 +279,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet Constructor13", author)
                 .watch(Print::println)
                 .addSheet(new StatementSheet("Student", WaterMark.of(author)
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class))
                     .setPs(con.prepareStatement("select id, name, age, create_date, update_date from student limit 10")))
                 .writeTo(defaultTestPath);
         }
@@ -305,11 +305,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test Statement different type from metadata", author)
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
-                    , new Sheet.Column("ID", String.class)  // Integer in database
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", String.class) // Integer in database
-                    , new Sheet.Column("CREATE_DATE", String.class) // Timestamp in database
-                    , new Sheet.Column("UPDATE_DATE", String.class) // Timestamp in database
+                    , new Column("ID", String.class)  // Integer in database
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", String.class) // Integer in database
+                    , new Column("CREATE_DATE", String.class) // Timestamp in database
+                    , new Column("UPDATE_DATE", String.class) // Timestamp in database
                 ))
                 .writeTo(defaultTestPath);
         }

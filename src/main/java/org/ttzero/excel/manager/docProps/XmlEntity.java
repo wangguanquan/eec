@@ -25,7 +25,7 @@ import org.ttzero.excel.annotation.Attr;
 import org.ttzero.excel.annotation.NS;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.ExcelWriteException;
-import org.ttzero.excel.entity.NameValue;
+import org.ttzero.excel.entity.Tuple2;
 import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
@@ -257,9 +257,9 @@ class XmlEntity implements Storable {
         StringBuilder buf = new StringBuilder();
         for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
             Object node = it.next();
-            if (node instanceof NameValue) {
-                NameValue nv = (NameValue) node;
-                element.addElement(nv.getName()).setText(nv.getValue());
+            if (node instanceof Tuple2) {
+                Tuple2 nv = (Tuple2) node;
+                element.addElement(nv.stringV1()).setText(nv.stringV2());
             } else {
 //                element.addElement(String.valueOf(++idx)).setText(node.toString());
                 buf.append(node).append(',');
@@ -275,10 +275,10 @@ class XmlEntity implements Storable {
         if (namespace != null) {
             for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
                 Object node = it.next();
-                if (node instanceof NameValue) {
-                    NameValue nv = (NameValue) node;
+                if (node instanceof Tuple2) {
+                    Tuple2 nv = (Tuple2) node;
                     element.addElement(QName.get(baseType, namespace))
-                        .addElement(QName.get(nv.getName(), namespace)).setText(nv.getValue());
+                        .addElement(QName.get(nv.stringV1(), namespace)).setText(nv.stringV2());
                 } else {
                     element.addElement(QName.get(baseType, namespace)).setText(node.toString());
                 }
@@ -286,9 +286,9 @@ class XmlEntity implements Storable {
         } else {
             for (Iterator<?> it = collection.iterator(); it.hasNext(); ) {
                 Object node = it.next();
-                if (node instanceof NameValue) {
-                    NameValue nv = (NameValue) node;
-                    element.addElement(baseType).addElement(nv.getName()).setText(nv.getValue());
+                if (node instanceof Tuple2) {
+                    Tuple2 nv = (Tuple2) node;
+                    element.addElement(baseType).addElement(nv.stringV1()).setText(nv.stringV2());
                 } else {
                     element.addElement(baseType).setText(node.toString());
                 }

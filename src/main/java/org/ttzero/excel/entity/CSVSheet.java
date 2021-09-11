@@ -153,14 +153,14 @@ public class CSVSheet extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        int len = columns.length, n = 0, limit = sheetWriter.getRowLimit() - 1;
+        int len = columns.length, n = 0, limit = getRowLimit();
         for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && iterator.hasNext(); rows++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
             String[] csvRow = iterator.next();
             for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i];
 
                 // clear cells
                 Cell cell = cells[i];
@@ -181,22 +181,18 @@ public class CSVSheet extends Sheet {
     }
 
     @Override
-    public Column[] getHeaderColumns() {
+    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
         try {
             // Create CSV iterator
             init();
             if (!iterator.hasNext()) return columns;
             String[] rows = iterator.next();
-            columns = new Column[rows.length];
+            columns = new org.ttzero.excel.entity.Column[rows.length];
             for (int i = 0; i < rows.length; i++) {
                 // FIXME the column type
-                columns[i] = new Column(hasHeader ? rows[i] : null, String.class);
+                columns[i] = new org.ttzero.excel.entity.Column(hasHeader ? rows[i] : null, String.class);
                 columns[i].styles = workbook.getStyles();
-            }
-            headerReady = true;
-            if (hasNonHeader()) {
-                ((CSVUtil.SharedRowsIterator) iterator).retain();
             }
         } catch (IOException e) {
             throw new ExcelWriteException(e);
@@ -204,16 +200,24 @@ public class CSVSheet extends Sheet {
         return columns;
     }
 
-    /**
-     * Check empty header row
-     *
-     * @return true if none header row
-     */
     @Override
-    public boolean hasNonHeader() {
-        if (!hasHeader) {
-            hasHeader = !super.hasNonHeader();
+    public void checkColumnLimit() {
+        super.checkColumnLimit();
+        if (nonHeader == 1) {
+            ((CSVUtil.SharedRowsIterator) iterator).retain();
         }
-        return !hasHeader;
     }
+
+//    /**
+//     * Check empty header row
+//     *
+//     * @return true if none header row
+//     */
+//    @Override
+//    public boolean hasNonHeader() {
+//        if (!hasHeader) {
+//            hasHeader = !super.hasNonHeader();
+//        }
+//        return !hasHeader;
+//    }
 }

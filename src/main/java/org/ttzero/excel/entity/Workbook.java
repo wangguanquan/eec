@@ -447,7 +447,7 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Add a {@link ListSheet} to the tail with header {@link Sheet.Column} setting.
+     * Add a {@link ListSheet} to the tail with header {@link Column} setting.
      * Also you can use {@code addSheet(new ListSheet&lt;&gt;(data, columns)}
      * to achieve the same effect.
      *
@@ -455,13 +455,13 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      */
-    public Workbook addSheet(List<?> data, Sheet.Column... columns) {
+    public Workbook addSheet(List<?> data, Column... columns) {
         return addSheet(null, data, columns);
     }
 
     /**
      * Add a {@link ListSheet} to the tail with Worksheet name
-     * and header {@link Sheet.Column} setting. Also you can use
+     * and header {@link Column} setting. Also you can use
      * {@code addSheet(new ListSheet&lt;&gt;(name, data, columns)}
      * to achieve the same effect.
      *
@@ -471,7 +471,7 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public Workbook addSheet(String name, List<?> data, Sheet.Column... columns) {
+    public Workbook addSheet(String name, List<?> data, Column... columns) {
         Object o;
         if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
             addSheet(new EmptySheet(name, columns));
@@ -499,7 +499,7 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Add a {@link ResultSetSheet} to the tail with header {@link Sheet.Column} setting.
+     * Add a {@link ResultSetSheet} to the tail with header {@link Column} setting.
      * Also you can use {@code addSheet(new ResultSetSheet(rs, columns)}
      * to achieve the same effect.
      *
@@ -507,13 +507,13 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      */
-    public Workbook addSheet(ResultSet rs, Sheet.Column... columns) {
+    public Workbook addSheet(ResultSet rs, Column... columns) {
         return addSheet(null, rs, columns);
     }
 
     /**
      * Add a {@link ResultSetSheet} to the tail with worksheet name
-     * and header {@link Sheet.Column} setting. Also you can use
+     * and header {@link Column} setting. Also you can use
      * {@code addSheet(new ResultSetSheet(name, rs, columns)}
      *
      * @param name    the worksheet name
@@ -521,7 +521,7 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      */
-    public Workbook addSheet(String name, ResultSet rs, Sheet.Column... columns) {
+    public Workbook addSheet(String name, ResultSet rs, Column... columns) {
         ResultSetSheet sheet = new ResultSetSheet(name, columns);
         sheet.setRs(rs);
         addSheet(sheet);
@@ -529,7 +529,7 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
+     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
      * Also you can use {@code addSheet(new StatementSheet(connection, sql, columns)}
      * to achieve the same effect.
      *
@@ -538,13 +538,13 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String sql, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String sql, Column... columns) throws SQLException {
         return addSheet(null, sql, columns);
     }
 
     /**
      * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Sheet.Column} setting. Also you can use
+     * and header {@link Column} setting. Also you can use
      * {@code addSheet(new StatementSheet(name, connection, sql, columns)}
      * to achieve the same effect.
      *
@@ -554,14 +554,14 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String name, String sql, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String name, String sql, Column... columns) throws SQLException {
         PreparedStatement ps = con.prepareStatement(sql
             , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         return addSheet(name, ps, null, columns);
     }
 
     /**
-     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column}
+     * Add a {@link StatementSheet} to the tail with header {@link Column}
      * setting. The {@link ParamProcessor} is a sql parameter replacement
      * function-interface to replace "?" in the sql string.
      * <p>
@@ -577,13 +577,13 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String sql, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String sql, ParamProcessor pp, Column... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
     }
 
     /**
      * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Sheet.Column} setting. The {@link ParamProcessor}
+     * and header {@link Column} setting. The {@link ParamProcessor}
      * is a sql parameter replacement function-interface to replace "?" in
      * the sql string.
      * <p>
@@ -601,14 +601,14 @@ public class Workbook implements Storable {
      * @throws SQLException if a database access error occurs
      */
     public Workbook addSheet(String name, String sql, ParamProcessor pp
-        , Sheet.Column... columns) throws SQLException {
+        , Column... columns) throws SQLException {
         PreparedStatement ps = con.prepareStatement(sql
             , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         return addSheet(name, ps, pp, columns);
     }
 
     /**
-     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
+     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
      * Also you can use {@code addSheet(new StatementSheet(null, columns).setPs(ps)}
      * to achieve the same effect.
      *
@@ -617,13 +617,13 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(PreparedStatement ps, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(PreparedStatement ps, Column... columns) throws SQLException {
         return addSheet(null, ps, columns);
     }
 
     /**
      * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Sheet.Column} setting. Also you can use
+     * and header {@link Column} setting. Also you can use
      * {@code addSheet(new StatementSheet(name, columns).setPs(ps)}
      * to achieve the same effect.
      *
@@ -633,12 +633,12 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String name, PreparedStatement ps, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String name, PreparedStatement ps, Column... columns) throws SQLException {
         return addSheet(name, ps, null, columns);
     }
 
     /**
-     * Add a {@link StatementSheet} to the tail with header {@link Sheet.Column} setting.
+     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
      *
      * @param ps      the {@link PreparedStatement}
      * @param pp      the sql parameter replacement function-interface
@@ -646,13 +646,13 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
         return addSheet(null, ps, pp, columns);
     }
 
     /**
      * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Sheet.Column} setting.
+     * and header {@link Column} setting.
      * <blockquote><pre>
      * workbook.addSheet("users", ps, ps -&gt; ps.setString(1, "middle") ...
      * </pre></blockquote>
@@ -664,7 +664,7 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
      */
-    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Sheet.Column... columns) throws SQLException {
+    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
         try {
             ps.setFetchSize(Integer.MIN_VALUE);

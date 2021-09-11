@@ -64,7 +64,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public StatementSheet(String name, final Column... columns) {
+    public StatementSheet(String name, final org.ttzero.excel.entity.Column... columns) {
         super(name, columns);
     }
 
@@ -75,7 +75,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
+    public StatementSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
         super(name, waterMark, columns);
     }
 
@@ -161,7 +161,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param sql     the sql string
      * @param columns the header column
      */
-    public StatementSheet(Connection con, String sql, Sheet.Column... columns) {
+    public StatementSheet(Connection con, String sql, org.ttzero.excel.entity.Column... columns) {
         this(null, con, sql, columns);
     }
 
@@ -173,7 +173,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param sql     the sql string
      * @param columns the header column
      */
-    public StatementSheet(String name, Connection con, String sql, Sheet.Column... columns) {
+    public StatementSheet(String name, Connection con, String sql, org.ttzero.excel.entity.Column... columns) {
         this(name, con, sql, null, columns);
     }
 
@@ -185,7 +185,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param pp      the sql parameter replacement function-interface
      * @param columns the header column
      */
-    public StatementSheet(Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
+    public StatementSheet(Connection con, String sql, ParamProcessor pp, org.ttzero.excel.entity.Column... columns) {
         this(null, con, sql, pp, columns);
     }
 
@@ -198,7 +198,7 @@ public class StatementSheet extends ResultSetSheet {
      * @param pp      the sql parameter replacement function-interface
      * @param columns the header column
      */
-    public StatementSheet(String name, Connection con, String sql, ParamProcessor pp, Sheet.Column... columns) {
+    public StatementSheet(String name, Connection con, String sql, ParamProcessor pp, org.ttzero.excel.entity.Column... columns) {
         super(name, columns);
         PreparedStatement ps = null;
         try {

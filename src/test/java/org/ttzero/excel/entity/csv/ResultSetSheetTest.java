@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.csv;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ResultSetSheet;
 import org.ttzero.excel.entity.SQLWorkbookTest;
@@ -44,9 +45,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .setConnection(con)
                 .addSheet(rs
-                    , new Sheet.Column("学号", int.class)
-                    , new Sheet.Column("性名", String.class)
-                    , new Sheet.Column("年龄", int.class)
+                    , new Column("学号", int.class)
+                    , new Column("性名", String.class)
+                    , new Column("年龄", int.class)
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -102,9 +103,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor4")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class))
                     .setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -120,9 +121,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor5")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student"
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class))
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class))
                     .setRs(rs))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -166,9 +167,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor8")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -184,9 +185,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor9")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -202,9 +203,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor10")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -220,9 +221,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet sheet Constructor11")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
-                    , new Sheet.Column("ID", int.class)
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", int.class)
+                    , new Column("ID", int.class)
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -238,9 +239,9 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             new Workbook("test ResultSet different type from metadata")
                 .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
-                    , new Sheet.Column("ID", String.class)  // Integer in database
-                    , new Sheet.Column("NAME", String.class)
-                    , new Sheet.Column("AGE", String.class) // // Integer in database
+                    , new Column("ID", String.class)  // Integer in database
+                    , new Column("NAME", String.class)
+                    , new Column("AGE", String.class) // // Integer in database
                 ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());

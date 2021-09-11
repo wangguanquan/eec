@@ -41,9 +41,9 @@ public class EmptySheetTest extends WorkbookTest {
         new Workbook("test empty header", author)
             .watch(Print::println)
             .addSheet(new EmptySheet("Empty"
-                , new Sheet.Column("ID", Integer.class)
-                , new Sheet.Column("NAME", String.class)
-                , new Sheet.Column("AGE", Integer.class)
+                , new Column("ID", Integer.class)
+                , new Column("NAME", String.class)
+                , new Column("AGE", Integer.class)
             ))
             .writeTo(defaultTestPath);
     }

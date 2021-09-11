@@ -24,9 +24,9 @@ public class CustomerNumFmtTest extends WorkbookTest {
         new Workbook("customize_data_format")
                 .setAutoSize(true)
                 .addSheet(new ListSheet<>(ItemFull.randomFull()
-                , new Sheet.Column("编码", "code")
-                , new Sheet.Column("姓名", "name")
-                , new Sheet.Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分")
+                , new Column("编码", "code")
+                , new Column("姓名", "name")
+                , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分")
         )).writeTo(defaultTestPath);
     }
 
@@ -34,10 +34,10 @@ public class CustomerNumFmtTest extends WorkbookTest {
         new Workbook("customize_numfmt_full")
                 .setAutoSize(true)
                 .addSheet(new ListSheet<>(ItemFull.randomFull()
-                        , new Sheet.Column("编码", "code")
-                        , new Sheet.Column("姓名", "name")
-                        , new Sheet.Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
-                        , new Sheet.Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
+                        , new Column("编码", "code")
+                        , new Column("姓名", "name")
+                        , new Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
+                        , new Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
                 )).writeTo(defaultTestPath);
     }
 

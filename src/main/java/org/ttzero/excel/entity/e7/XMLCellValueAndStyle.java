@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.entity.e7;
 
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
-import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
@@ -52,7 +52,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param hc   the header column
      */
     @Override
-    public void conversion(int row, Cell cell, int n, Sheet.Column hc) {
+    public void conversion(int row, Cell cell, int n, Column hc) {
         Object e = hc.processor.conversion(n);
         if (e != null) {
             Class<?> clazz = e.getClass();
@@ -84,7 +84,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param hc   the header column
      */
     @Override
-    public void reset(int row, Cell cell, Object e, Sheet.Column hc) {
+    public void reset(int row, Cell cell, Object e, Column hc) {
         setCellValue(row, cell, e, hc, hc.getClazz());
         if (hc.processor == null) {
             cell.xf = getStyleIndex(row, hc, e);
@@ -99,7 +99,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param style the default style
      * @return the style index in xf
      */
-    private int getStyleIndex(int rows, Sheet.Column hc, Object o, int style) {
+    private int getStyleIndex(int rows, Column hc, Object o, int style) {
         // Interlaced discoloration
         if (autoOdd == 0 && isOdd(rows) && !Styles.hasFill(style)) {
             style |= oddFill;
@@ -120,7 +120,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @return the style index in xf
      */
     @Override
-    public int getStyleIndex(int rows, Sheet.Column hc, Object o) {
+    public int getStyleIndex(int rows, Column hc, Object o) {
         int style = hc.getCellStyle();
         return getStyleIndex(rows, hc, o, style);
     }
