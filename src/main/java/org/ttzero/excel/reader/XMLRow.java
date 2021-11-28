@@ -16,7 +16,9 @@
 
 package org.ttzero.excel.reader;
 
+import org.ttzero.excel.entity.TooManyColumnsException;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
@@ -185,6 +187,23 @@ class XMLRow extends Row {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
                 i = unknownLength ? (lc = toCellIndex(cb, a, cursor)) : toCellIndex(cb, a, cursor);
+                // The `spans` attribute is not be set
+                if (i - 1 >= cells.length) {
+                    // Bound check
+                    if (i - 1 > Const.Limit.MAX_COLUMNS_ON_SHEET) {
+                        throw new TooManyColumnsException(i, Const.Limit.MAX_COLUMNS_ON_SHEET);
+                    }
+                    Cell[] _cells = new Cell[i];
+                    for (int k = 0; k < i - 1; k++) {
+                        _cells[k] = new Cell((short) (k + 1));
+                        // Copy values
+                        if (cells[k] != null) {
+                            _cells[k].from(cells[k]);
+                        }
+                    }
+                    _cells[i - 1] = new Cell((short) i);
+                    cells = _cells;
+                }
                 cell = cells[i - 1];
             }
             // Cell type
