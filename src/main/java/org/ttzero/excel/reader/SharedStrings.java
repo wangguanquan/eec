@@ -285,11 +285,11 @@ public class SharedStrings implements Closeable {
         offset = 0;
         offset = reader.read(cb);
 
-        int i = 0, len = offset - 4;
-        for (; i < len && (cb[i] != '<' || cb[i + 1] != 's' || cb[i + 2] != 'i' || cb[i + 3] != '>'); i++) ;
-        if (i == len) return 0; // Empty
+//        int i = 0, len = offset - 4;
+//        for (; i < len && (cb[i] != '<' || cb[i + 1] != 's' || cb[i + 2] != 'i' || cb[i + 3] != '>'); i++) ;
+//        if (i == len) return 0; // Empty
 
-        String line = new String(cb, 0, i);
+        String line = new String(cb, 0, cb.length);
         // Microsoft Excel
         String uniqueCount = " uniqueCount=";
         int index = line.indexOf(uniqueCount)
@@ -307,7 +307,7 @@ public class SharedStrings implements Closeable {
             }
         }
 
-        vt = i + 4;
+        vt = ++end;
         System.arraycopy(cb, vt, cb, 0, offset -= vt);
 
         return off;
@@ -478,6 +478,16 @@ public class SharedStrings implements Closeable {
         int cursor;
         for (; nChar < length && n < page; ) {
             cursor = nChar;
+            // find the tag `<si>` or tag `<si/>`
+            for (; nChar < len0 && cb[nChar] != '<'; ++nChar) ;
+            // Empty
+            if (nChar < len0 && cb[nChar + 1] == 's' && cb[nChar + 2] == 'i' && (cb[nChar + 3] == '>' || cb[nChar + 3] == '/' && cb[nChar + 4] == '>')) {
+                if (cb[nChar + 3] == '/') {
+                    forward[n++] = null;
+                    nChar += 4;
+                } else nChar += 3;
+            }
+
             int[] subT = subT(cb, nChar, len0, len1);
             int a = subT[0];
             if (a == -1) break;
