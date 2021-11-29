@@ -246,7 +246,7 @@ public class SharedStrings implements Closeable {
     /* */
     private void init() throws IOException {
         status = 1;
-        // Unknown size or greater than 512
+        // Unknown size or greater than {@code page * 2}
         if (max < 0 || max > page << 1) {
             status <<= 2;
             forward = new String[page];
@@ -362,9 +362,7 @@ public class SharedStrings implements Closeable {
             if (status == 2 && offset_backward > -1)
                 throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
 
-            System.arraycopy(forward, 0, backward, 0, limit_forward);
-            offset_backward = offset_forward;
-            limit_backward = limit_forward;
+            copyToBackward();
             // reload data
             offset_forward = index / page * page;
             forward[0] = null;
@@ -416,6 +414,12 @@ public class SharedStrings implements Closeable {
         return status == 4 && tester.test(index);
     }
 
+    private void copyToBackward() {
+        System.arraycopy(forward, 0, backward, 0, limit_forward);
+        offset_backward = offset_forward;
+        limit_backward = limit_forward;
+    }
+
     /**
      * Load string record from xml
      */
@@ -424,6 +428,10 @@ public class SharedStrings implements Closeable {
         try {
             // Read xml file string value into IndexSharedStringTable
             for (int n = index - offsetM; n-- >= 0; ) {
+                if (offset_backward == -1 && limit_forward > 0) {
+                    copyToBackward();
+                    offset_backward = 0;
+                }
                 readData();
             }
         } catch (IOException e) {
@@ -483,9 +491,10 @@ public class SharedStrings implements Closeable {
             // Empty
             if (nChar < len0 && cb[nChar + 1] == 's' && cb[nChar + 2] == 'i' && (cb[nChar + 3] == '>' || cb[nChar + 3] == '/' && cb[nChar + 4] == '>')) {
                 if (cb[nChar + 3] == '/') {
-                    forward[n++] = null;
-                    nChar += 4;
-                } else nChar += 3;
+                    forward[n++] = EMPTY;
+                    if (status == 4) sst.push(forward[n - 1]);
+                    nChar += 5;
+                } else nChar += 4;
             }
 
             int[] subT = subT(cb, nChar, len0, len1);
