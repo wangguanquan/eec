@@ -16,8 +16,8 @@
 
 package org.ttzero.excel.bloom;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
+import org.ttzero.excel.common.hash.BloomFilter;
+import org.ttzero.excel.common.hash.Funnels;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
