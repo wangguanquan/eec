@@ -356,29 +356,29 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // cols
         if (columns.length > 0) {
             bw.write("<cols>");
-            if (sheet.isAutoSize()) {
-                for (int i = 0; i < columns.length; i++) {
-                    bw.write("<col customWidth=\"1\" width=\"");
-                    bw.write(stringWidth);
-                    bw.write('"');
-                    for (int j = n; j-- > 0; ) bw.write(32); // Fill space
-                    bw.write(" min=\"");
-                    bw.writeInt(columns[i].colIndex);
-                    bw.write("\" max=\"");
-                    bw.writeInt(columns[i].colIndex + 1);
-                    bw.write("\" bestFit=\"1\"/>");
-                }
-            } else {
+//            if (sheet.isAutoSize()) {
+            for (int i = 0; i < columns.length; i++) {
                 bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(stringWidth);
+                bw.write(columns[i].width > 0.0000001 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
                 bw.write('"');
                 for (int j = n; j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
-                bw.writeInt(columns[0].colIndex);
+                bw.writeInt(columns[i].colIndex);
                 bw.write("\" max=\"");
-                bw.writeInt(columns[columns.length - 1].colIndex + 1);
+                bw.writeInt(columns[i].colIndex + 1);
                 bw.write("\" bestFit=\"1\"/>");
             }
+//            } else {
+//                bw.write("<col customWidth=\"1\" width=\"");
+//                bw.write(columns[i].width >= 1.0 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
+//                bw.write('"');
+//                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
+//                bw.write(" min=\"");
+//                bw.writeInt(columns[0].colIndex);
+//                bw.write("\" max=\"");
+//                bw.writeInt(columns[columns.length - 1].colIndex + 1);
+//                bw.write("\" bestFit=\"1\"/>");
+//            }
             bw.write("</cols>");
         }
 
