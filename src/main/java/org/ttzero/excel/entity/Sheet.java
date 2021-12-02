@@ -30,7 +30,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
-import org.ttzero.excel.processor.IntConversionProcessor;
+import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
 
@@ -235,11 +235,11 @@ public abstract class Sheet implements Cloneable, Storable {
             super(name, key, clazz);
         }
 
-        public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
+        public Column(String name, Class<?> clazz, ConversionProcessor processor) {
             super(name, clazz, processor);
         }
 
-        public Column(String name, String key, IntConversionProcessor processor) {
+        public Column(String name, String key, ConversionProcessor processor) {
             super(name, key, processor);
         }
 
@@ -251,15 +251,15 @@ public abstract class Sheet implements Cloneable, Storable {
             super(name, key, share);
         }
 
-        public Column(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
+        public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
             super(name, clazz, processor, share);
         }
 
-        public Column(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
+        public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
             super(name, key, clazz, processor);
         }
 
-        public Column(String name, String key, IntConversionProcessor processor, boolean share) {
+        public Column(String name, String key, ConversionProcessor processor, boolean share) {
             super(name, key, processor, share);
         }
 

@@ -48,12 +48,12 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * Int value conversion to others
      *
      * @param cell the cell
-     * @param n    the cell value
+     * @param o    the cell value
      * @param hc   the header column
      */
     @Override
-    public void conversion(int row, Cell cell, int n, Column hc) {
-        Object e = hc.processor.conversion(n);
+    public void conversion(int row, Cell cell, Object o, Column hc) {
+        Object e = hc.processor.conversion(o);
         if (e != null) {
             Class<?> clazz = e.getClass();
             if (isInt(clazz)) {
@@ -66,9 +66,9 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
                 }
                 cell.xf = getStyleIndex(row, hc, e);
             } else {
-                setCellValue(row, cell, e, hc, clazz);
+                setCellValue(row, cell, e, hc, clazz, false);
                 int style = hc.getCellStyle(clazz);
-                cell.xf = getStyleIndex(row, hc, n, style);
+                cell.xf = getStyleIndex(row, hc, o, style);
             }
         } else {
             cell.blank();
@@ -85,7 +85,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      */
     @Override
     public void reset(int row, Cell cell, Object e, Column hc) {
-        setCellValue(row, cell, e, hc, hc.getClazz());
+        setCellValue(row, cell, e, hc, hc.getClazz(), hc.processor != null);
         if (hc.processor == null) {
             cell.xf = getStyleIndex(row, hc, e);
         }

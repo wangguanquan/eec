@@ -24,7 +24,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
-import org.ttzero.excel.processor.IntConversionProcessor;
+import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
@@ -69,7 +69,7 @@ public class Column {
     /**
      * The int value conversion
      */
-    public IntConversionProcessor processor;
+    public ConversionProcessor processor;
     /**
      * The style conversion
      */
@@ -158,7 +158,7 @@ public class Column {
      * @param clazz     the cell type
      * @param processor The int value conversion
      */
-    public Column(String name, Class<?> clazz, IntConversionProcessor processor) {
+    public Column(String name, Class<?> clazz, ConversionProcessor processor) {
         this(name, clazz, processor, true);
     }
 
@@ -169,7 +169,7 @@ public class Column {
      * @param key       field
      * @param processor The int value conversion
      */
-    public Column(String name, String key, IntConversionProcessor processor) {
+    public Column(String name, String key, ConversionProcessor processor) {
         this(name, key, processor, true);
     }
 
@@ -207,7 +207,7 @@ public class Column {
      * @param processor The int value conversion
      * @param share     true:shared false:inline string
      */
-    public Column(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
+    public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
         this(name, clazz, share);
         this.processor = processor;
     }
@@ -220,7 +220,7 @@ public class Column {
      * @param clazz     type of cell
      * @param processor The int value conversion
      */
-    public Column(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
+    public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
         this(name, key, clazz);
         this.processor = processor;
     }
@@ -233,7 +233,7 @@ public class Column {
      * @param processor The int value conversion
      * @param share     true:shared false:inline string
      */
-    public Column(String name, String key, IntConversionProcessor processor, boolean share) {
+    public Column(String name, String key, ConversionProcessor processor, boolean share) {
         this(name, key, share);
         this.processor = processor;
     }
@@ -355,7 +355,7 @@ public class Column {
      * @param processor The int value conversion
      * @return the {@link Column}
      */
-    public Column setProcessor(IntConversionProcessor processor) {
+    public Column setProcessor(ConversionProcessor processor) {
         this.processor = processor;
         return this;
     }

@@ -66,7 +66,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .addSheet("Statement", "select id, name, age from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
-                    , new Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                    , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
                         .setStyleProcessor((o, style, sst) -> {
                             int n = (int) o;
                             if (n > 14) {

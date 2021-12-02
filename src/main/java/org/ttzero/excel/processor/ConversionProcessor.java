@@ -17,20 +17,20 @@
 package org.ttzero.excel.processor;
 
 /**
- * An Integer Conversion
+ * A value Conversion
  * Typically used to convert state values or enumerated values
  * to meaningful values
  *
  * @author guanquan.wang on 2017/10/13.
- * @deprecated replace with {@link ConversionProcessor}
  */
-@Deprecated
-public interface IntConversionProcessor extends ConversionProcessor {
+@FunctionalInterface
+public interface ConversionProcessor {
     /**
-     * The integer value include byte, char, short, int
+     * A value Converter, the converted value is used as the export value
+     * and the style is also changed accordingly
      *
-     * @param n the integer value
+     * @param v the original value
      * @return the converted value
      */
-    Object conversion(int n);
+    Object conversion(Object v);
 }
