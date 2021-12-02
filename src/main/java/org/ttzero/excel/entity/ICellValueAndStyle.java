@@ -77,6 +77,7 @@ public interface ICellValueAndStyle {
      * @param e     the cell value
      * @param hc    the header column
      * @param clazz the cell value type
+     * @param hasProcessor Specify the cell has value converter
      */
     default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasProcessor) {
         if (hasProcessor) {
