@@ -679,14 +679,9 @@ public class Column {
     }
 
     /**
-     * @return bool
-     */
-    public boolean isIgnoreValue() {
-        return ignoreValue;
-    }
-
-    /**
      * Ignore value
+     *
+     * @return the {@link Column} self
      */
     public Column ignoreValue() {
         this.ignoreValue = true;
@@ -704,6 +699,17 @@ public class Column {
      */
     public Column setWrapText(boolean wrapText) {
         this.wrapText = wrapText ? 1 : 0;
+        return this;
+    }
+
+    /**
+     * Setting the header cell comment
+     *
+     * @param headerComment {@link Comment}
+     * @return the {@link Column} self
+     */
+    public Column setHeaderComment(Comment headerComment) {
+        this.headerComment = headerComment;
         return this;
     }
 }
