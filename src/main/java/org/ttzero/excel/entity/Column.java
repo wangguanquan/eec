@@ -701,4 +701,15 @@ public class Column {
         this.wrapText = wrapText ? 1 : 0;
         return this;
     }
+
+    /**
+     * Setting the header cell comment
+     *
+     * @param headerComment {@link Comment}
+     * @return the {@link Column} self
+     */
+    public Column setHeaderComment(Comment headerComment) {
+        this.headerComment = headerComment;
+        return this;
+    }
 }
