@@ -77,13 +77,18 @@ public interface ICellValueAndStyle {
      * @param e     the cell value
      * @param hc    the header column
      * @param clazz the cell value type
+     * @param hasProcessor Specify the cell has value converter
      */
-    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
+    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasProcessor) {
+        if (hasProcessor) {
+            conversion(row, cell, e, hc);
+            return;
+        }
+
         if (e == null) {
             setNullValue(row, cell, hc);
             return;
         }
-        boolean hasIntProcessor = hc.processor != null;
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
@@ -91,17 +96,11 @@ public interface ICellValueAndStyle {
         } else if (isDateTime(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
-            char c = (Character) e;
-            if (hasIntProcessor) conversion(row, cell, c, hc);
-            else cell.setCv(c);
+            cell.setCv((Character) e);
         } else if (isShort(clazz)) {
-            short t = (Short) e;
-            if (hasIntProcessor) conversion(row, cell, t, hc);
-            else cell.setNv(t);
+            cell.setNv((Short) e);
         } else if (isInt(clazz)) {
-            int n = (Integer) e;
-            if (hasIntProcessor) conversion(row, cell, n, hc);
-            else cell.setNv(n);
+            cell.setNv((Integer) e);
         } else if (isLong(clazz)) {
             cell.setLv((Long) e);
         } else if (isFloat(clazz)) {
@@ -145,11 +144,11 @@ public interface ICellValueAndStyle {
      *
      * @param row the row number
      * @param cell the cell
-     * @param n    the cell value
+     * @param o    the cell value
      * @param hc   the header column
      */
-    default void conversion(int row, Cell cell, int n, Column hc) {
-        Object e = hc.processor.conversion(n);
+    default void conversion(int row, Cell cell, Object o, Column hc) {
+        Object e = hc.processor.conversion(o);
         if (e != null) {
             Class<?> clazz = e.getClass();
             if (isInt(clazz)) {
@@ -161,7 +160,7 @@ public interface ICellValueAndStyle {
                     cell.setNv((Integer) e);
                 }
             } else {
-                setCellValue(row, cell, e, hc, clazz);
+                setCellValue(row, cell, e, hc, clazz, false);
             }
         } else {
             cell.blank();

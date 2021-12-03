@@ -55,7 +55,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      */
     @Override
     public void reset(int row, Cell cell, Object e, Column hc) {
-        setCellValue(row, cell, e, hc, hc.getClazz());
+        setCellValue(row, cell, e, hc, hc.getClazz(), hc.processor != null);
     }
 
     /**
@@ -77,7 +77,11 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param clazz the cell value type
      */
     @Override
-    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
+    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasProcessor) {
+        if (hasProcessor) {
+            conversion(row, cell, e, hc);
+            return;
+        }
         if (e == null) {
             setNullValue(row, cell, hc);
             return;

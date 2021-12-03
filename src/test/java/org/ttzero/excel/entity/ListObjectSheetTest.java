@@ -26,7 +26,7 @@ import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.processor.IntConversionProcessor;
+import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
@@ -127,7 +127,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
             )
             .writeTo(defaultTestPath);
     }
@@ -140,7 +140,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
-                        if ((int)o < 60) {
+                        if ((int) o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, Color.orange));
                         }
@@ -156,7 +156,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -322,7 +322,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     };
 
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-    public static IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不及格" : n;
 
     @Test
     public void testStyleConversion1() throws IOException {

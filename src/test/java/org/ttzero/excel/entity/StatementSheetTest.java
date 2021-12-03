@@ -107,7 +107,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .addSheet("select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
-                    , new Column("年龄", int.class, n -> n > 14 ? "高龄" : n)
+                    , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
                         .setStyleProcessor((o, style, sst) -> {
                             Integer n = (Integer) o;
                             if (n == null || n > 14) {

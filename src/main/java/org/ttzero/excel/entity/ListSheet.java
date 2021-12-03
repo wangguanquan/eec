@@ -19,7 +19,7 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
-import org.ttzero.excel.processor.IntConversionProcessor;
+import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
 
@@ -766,8 +766,8 @@ public class ListSheet<T> extends Sheet {
     }
 
     public static class EntryColumn extends org.ttzero.excel.entity.Column {
-        Method method;
-        Field field;
+        public Method method;
+        public Field field;
 
         public EntryColumn() { }
         public EntryColumn(String name) {
@@ -785,11 +785,11 @@ public class ListSheet<T> extends Sheet {
             super(name, key, clazz);
         }
 
-        public EntryColumn(String name, Class<?> clazz, IntConversionProcessor processor) {
+        public EntryColumn(String name, Class<?> clazz, ConversionProcessor processor) {
             super(name, clazz, processor);
         }
 
-        public EntryColumn(String name, String key, IntConversionProcessor processor) {
+        public EntryColumn(String name, String key, ConversionProcessor processor) {
             super(name, key, processor);
         }
 
@@ -801,15 +801,15 @@ public class ListSheet<T> extends Sheet {
             super(name, key, share);
         }
 
-        public EntryColumn(String name, Class<?> clazz, IntConversionProcessor processor, boolean share) {
+        public EntryColumn(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
             super(name, clazz, processor, share);
         }
 
-        public EntryColumn(String name, String key, Class<?> clazz, IntConversionProcessor processor) {
+        public EntryColumn(String name, String key, Class<?> clazz, ConversionProcessor processor) {
             super(name, key, clazz, processor);
         }
 
-        public EntryColumn(String name, String key, IntConversionProcessor processor, boolean share) {
+        public EntryColumn(String name, String key, ConversionProcessor processor, boolean share) {
             super(name, key, processor, share);
         }
 
