@@ -72,7 +72,6 @@ public class Comments implements Storable, Closeable {
     }
 
     private void parse(String val, boolean bold, List<R> list) {
-        // TODO
         // a simple implement
         R r = new R();
         r.rPr = new Pr("宋体", 9);
@@ -109,11 +108,11 @@ public class Comments implements Storable, Closeable {
             writer.write(" xmlns=\"");
             writer.write(topNS.uri()[0]);
             writer.write("\"><authors><author>");
-            writer.write(isNotEmpty(author) ? author : System.getProperty("user.name"));
+            writer.escapeWrite(isNotEmpty(author) ? author : System.getProperty("user.name"));
             writer.write("</author></authors><commentList>");
 
             for (C c : commentList)
-                writer.write(c.toString());
+                writer.escapeWrite(c.toString());
             writer.write("</commentList></comments>");
         }
 
