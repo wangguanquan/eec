@@ -111,8 +111,20 @@ public class Comments implements Storable, Closeable {
             writer.escapeWrite(isNotEmpty(author) ? author : System.getProperty("user.name"));
             writer.write("</author></authors><commentList>");
 
-            for (C c : commentList)
-                writer.escapeWrite(c.toString());
+            for (C c : commentList) {
+                writer.write("<comment ref=\"");
+                writer.write(c.ref);
+                writer.write("\" authorId=\"0\"><text>");
+                for (R r : c.text) {
+                    writer.write("<r>");
+                    writer.write(r.rPr.toString());
+                    writer.write("<t");
+                    writer.write((r.t.indexOf(10) > 0 ? " xml:space=\"preserve\">" : ">"));
+                    writer.escapeWrite(r.t);
+                    writer.write("</t></r>");
+                }
+                writer.write("</text></comment>");
+            }
             writer.write("</commentList></comments>");
         }
 
