@@ -679,6 +679,13 @@ public class Column {
     }
 
     /**
+     * @return bool
+     */
+    public boolean isIgnoreValue() {
+        return ignoreValue;
+    }
+
+    /**
      * Ignore value
      *
      * @return the {@link Column} self
