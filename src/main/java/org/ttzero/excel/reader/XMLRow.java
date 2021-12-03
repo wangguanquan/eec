@@ -49,11 +49,23 @@ class XMLRow extends Row {
      * The number of row. (one base)
      *
      * @return int value
+     * @deprecated replace with {@link #getRowNum()}
      */
     @Override
+    @Deprecated
     public int getRowNumber() {
+        return this.getRowNum();
+    }
+
+    /**
+     * The number of row. (one base)
+     *
+     * @return int value
+     */
+    @Override
+    public int getRowNum() {
         if (index == -1)
-            searchRowNumber();
+            searchRowNum();
         // The first row index is one
         return index;
     }
@@ -97,7 +109,7 @@ class XMLRow extends Row {
         return this;
     }
 
-    private void searchRowNumber() {
+    private void searchRowNum() {
         int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
@@ -485,7 +497,7 @@ class XMLCalcRow extends XMLRow {
 
         // Parse formula if exists and can parse
         if (hasCalcFunc) {
-            calcFun.accept(getRowNumber(), cells, !unknownLength ? lc - fc : -1);
+            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
         }
 
         Cell cell;
@@ -536,7 +548,7 @@ class XMLCalcRow extends XMLRow {
         // Function string is shared
         else if (cell.si > -1) {
             // Get from ref
-            cell.fv = getCalc(cell.si, (getRowNumber() << 14) | cell.i);
+            cell.fv = getCalc(cell.si, (getRowNum() << 14) | cell.i);
         }
     }
 
@@ -643,6 +655,6 @@ class XMLMergeRow extends XMLRow {
         super.parseCellValue(cell);
 
         // Setting/copy value if merged
-        func.accept(getRowNumber(), cell);
+        func.accept(getRowNum(), cell);
     }
 }

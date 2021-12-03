@@ -97,7 +97,7 @@ public class ExcelReaderTest {
             Sheet sheet = reader.sheet(0);
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
                 Row row = it.next();
-                println(row.getRowNumber()
+                println(row.getRowNum()
                     + " | " + row.getFirstColumnIndex()
                     + " | " + row.getLastColumnIndex()
                     + " => " + row);
@@ -128,9 +128,9 @@ public class ExcelReaderTest {
 
             for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
-                if (row.getRowNumber() == 0) continue;
+                if (row.getRowNum() == 0) continue;
 
-                print(row.getRowNumber());
+                print(row.getRowNum());
                 for (int start = 0, end = row.getLastColumnIndex(); start < end; start++) {
                     print(header.getString(start));
                     print(" : ");
@@ -242,7 +242,7 @@ public class ExcelReaderTest {
                     for (int i = row.fc; i < row.lc; i++) {
                         if (row.hasFormula(i)) {
                             print(int2Col(i + 1));
-                            print(row.getRowNumber());
+                            print(row.getRowNum());
                             print("=");
                             print(row.getFormula(i));
                             println();
@@ -440,7 +440,7 @@ public class ExcelReaderTest {
             reader.sheets()
                 .peek(sheet -> println("--------" + sheet.getName() + "--------" + sheet.getDimension()))
                 .flatMap(Sheet::rows)
-                .forEach(row -> println(row.getRowNumber() + "|: " + row.toString()));
+                .forEach(row -> println(row.getRowNum() + "|: " + row.toString()));
 
         }
     }
@@ -453,7 +453,7 @@ public class ExcelReaderTest {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
                     if (row.hasFormula(i)) {
-                        print(new Dimension(row.getRowNumber(), (short) (i + 1), 0, (short) 0));
+                        print(new Dimension(row.getRowNum(), (short) (i + 1), 0, (short) 0));
                         print(": ");
                         print(row.getFormula(i));
                         println('|');
@@ -466,9 +466,9 @@ public class ExcelReaderTest {
     @Test public void testToObject2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("test-fixed-row.xlsx"))) {
             reader.sheet(0).rows().forEach(row -> {
-                if (row.getRowNumber() == 1) {
+                if (row.getRowNum() == 1) {
                     assert "我是固定表头".equals(row.getString(0));
-                } else if (row.getRowNumber() == 2) {
+                } else if (row.getRowNum() == 2) {
                     assert "我是内容".equals(row.getString(0));
                 }
             });
@@ -515,13 +515,13 @@ public class ExcelReaderTest {
 
     @Test public void test175() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
-            reader.sheet(0).rows().filter(row -> row.getRowNumber() > 7 && !row.isEmpty()).forEach(row -> println(row.getDouble(4)));
+            reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).forEach(row -> println(row.getDouble(4)));
             reader.sheet(0).reset();
             println("-------------DECIMAL-------------");
-            reader.sheet(0).rows().filter(row -> row.getRowNumber() > 7 && !row.isEmpty()).forEach(row -> println(row.getDecimal(4)));
+            reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).forEach(row -> println(row.getDecimal(4)));
             reader.sheet(0).reset();
             reader.sheet(0).rows()
-                    .filter(row -> row.getRowNumber() > 6 && !row.isEmpty())
+                    .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
                     .map(row -> row.to(O.class))
                     .filter(Objects::nonNull)
                     .forEach(Print::println);
