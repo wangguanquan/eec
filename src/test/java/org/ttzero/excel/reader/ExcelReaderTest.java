@@ -578,6 +578,8 @@ public class ExcelReaderTest {
     }
 
     public static class Entry {
+        @RowNum
+        private int num;
         @ExcelColumn("渠道ID")
         private Integer channelId;
         @ExcelColumn(value = "游戏", share = true)
@@ -630,7 +632,7 @@ public class ExcelReaderTest {
 
         @Override
         public String toString() {
-            return channelId + " | "
+            return num + " | " + channelId + " | "
                 + pro + " | "
                 + account + " | "
                 + (registered != null ? DateUtil.toDateString(registered) : null) + " | "
