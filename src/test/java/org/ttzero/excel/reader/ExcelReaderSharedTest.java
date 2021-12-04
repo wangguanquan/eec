@@ -31,7 +31,7 @@ public class ExcelReaderSharedTest {
 
     @Test public void testSharedRead() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("eec shared 100.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(row -> println(row.getRowNumber() + "| " + row.toString()));
+            reader.sheets().flatMap(Sheet::rows).forEach(row -> println(row.getRowNum() + "| " + row.toString()));
         }
     }
 

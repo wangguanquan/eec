@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.processor;
+package org.ttzero.excel.annotation;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * A value Conversion
- * Typically used to convert state values or enumerated values
- * to meaningful values
+ * Inject line number.
  *
- * @author guanquan.wang on 2021-11-30 19:10
+ * @author guanquan.wang at 2021-12-03 13:40
  */
-@FunctionalInterface
-public interface ConversionProcessor {
-    /**
-     * A value Converter, the converted value is used as the export value
-     * and the style is also changed accordingly
-     *
-     * @param v the original value
-     * @return the converted value
-     */
-    Object conversion(Object v);
+@Target({ ElementType.FIELD, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface RowNum {
+//    /**
+//     * Specify the beginning number, one-base default.
+//     *
+//     * @return the beginning number
+//     */
+//    int begins() default 1;
 }
