@@ -33,10 +33,10 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface RowNum {
-    /**
-     * Specify the beginning number, one-base default.
-     *
-     * @return the beginning number
-     */
-    int begins() default 1;
+//    /**
+//     * Specify the beginning number, one-base default.
+//     *
+//     * @return the beginning number
+//     */
+//    int begins() default 1;
 }

@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.util.DateUtil;
@@ -707,6 +708,7 @@ public class ExcelReaderTest {
         private int id;
         private String address;
         private char c;
+        private int rowNum;
 
         private boolean vip;
 
@@ -748,9 +750,14 @@ public class ExcelReaderTest {
             this.vip = c == 'A';
         }
 
+        @RowNum
+        public void setRowNum(int rowNum) {
+            this.rowNum = rowNum;
+        }
+
         @Override
         public String toString() {
-            return channelId + " | "
+            return rowNum + " | " + channelId + " | "
                 + pro + " | "
                 + account + " | "
                 + (registered != null ? DateUtil.toDateString(registered) : null) + " | "

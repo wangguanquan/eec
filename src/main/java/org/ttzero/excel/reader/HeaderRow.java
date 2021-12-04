@@ -18,6 +18,7 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
+import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.ReflectUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -46,7 +47,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
-import static org.ttzero.excel.util.ReflectUtil.listWriteMethods;
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.ReflectUtil.mapping;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
@@ -106,7 +107,8 @@ class HeaderRow extends Row {
 
         Method[] writeMethods = null;
         try {
-            writeMethods = listWriteMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null);
+            writeMethods = listDeclaredMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
+                    || method.getAnnotation(RowNum.class) != null);
         } catch (IntrospectionException e) {
             LOGGER.warn("Get [" + clazz + "] read declared failed.", e);
         }
@@ -115,7 +117,7 @@ class HeaderRow extends Row {
 
         int writeLength = methodMapping(clazz, writeMethods, tmp);
         methods = new Method[declaredFields.length + writeLength];
-
+        Class<?>[] fieldClazz = new Class[methods.length];
 
         int[] index = new int[declaredFields.length];
         int count = 0;
@@ -145,6 +147,15 @@ class HeaderRow extends Row {
                     }
                     continue;
                 }
+
+                // Row Num
+                RowNum rowNum = method.getAnnotation(RowNum.class);
+                if (rowNum != null) {
+                    fieldClazz[i] = RowNum.class;
+                    index[i] = i;
+                    count++;
+                    continue;
+                }
             }
 
             // skip not import fields
@@ -153,6 +164,16 @@ class HeaderRow extends Row {
                 declaredFields[i] = null;
                 continue;
             }
+
+            // Row Num
+            RowNum rowNum = f.getAnnotation(RowNum.class);
+            if (rowNum != null) {
+                index[i] = i;
+                count++;
+                fieldClazz[i] = RowNum.class;
+                continue;
+            }
+
             // field has display name
             ExcelColumn ec = f.getAnnotation(ExcelColumn.class);
             if (ec != null && isNotEmpty(ec.value())) {
@@ -196,7 +217,11 @@ class HeaderRow extends Row {
                 fields[j] = declaredFields[i];
                 columns[j] = index[i];
                 methods[j] = methods[i];
-                fieldClazz[j] = methods[i] != null ? methods[i].getParameterTypes()[0] : declaredFields[i].getType();
+                if (fieldClazz[i] != null) {
+                    this.fieldClazz[j] = fieldClazz[i];
+                } else {
+                    this.fieldClazz[j] = methods[i] != null ? methods[i].getParameterTypes()[0] : declaredFields[i].getType();
+                }
                 j++;
             }
         }
@@ -440,6 +465,9 @@ class HeaderRow extends Row {
             Short v;
             fields[i].set(t, (v = row.getShort(c)) != null ? v : 0);
         }
+        else if (fieldClazz[i] == RowNum.class) {
+            fields[i].set(t, row.getRowNum());
+        }
     }
 
     private void methodPut(int i, Row row, Object t) throws IllegalAccessException, InvocationTargetException {
@@ -523,6 +551,9 @@ class HeaderRow extends Row {
         else if (fieldClazz[i] == short.class) {
             Short v;
             methods[i].invoke(t, (v = row.getShort(c)) != null ? v : 0);
+        }
+        else if (fieldClazz[i] == RowNum.class) {
+            methods[i].invoke(t, row.getRowNum());
         }
     }
 }
