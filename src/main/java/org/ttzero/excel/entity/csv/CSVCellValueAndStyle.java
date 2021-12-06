@@ -86,25 +86,19 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
             setNullValue(row, cell, hc);
             return;
         }
-        boolean hasIntProcessor = hc.processor != null;
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
+            // TODO hc.numFmt
             cell.setSv(DateUtil.toDateString((java.util.Date) e));
         } else if (isDateTime(clazz)) {
             cell.setSv(DateUtil.toString((Timestamp) e));
         } else if (isChar(clazz)) {
-            char c = (char) e;
-            if (hasIntProcessor) conversion(row, cell, c, hc);
-            else cell.setCv(c);
+            cell.setCv((Character) e);
         } else if (isShort(clazz)) {
-            short t = (short) e;
-            if (hasIntProcessor) conversion(row, cell, t, hc);
-            else cell.setNv(t);
+            cell.setNv((Short) e);
         } else if (isInt(clazz)) {
-            int n = (int) e;
-            if (hasIntProcessor) conversion(row, cell, n, hc);
-            else cell.setNv(n);
+            cell.setNv((Integer) e);
         } else if (isLong(clazz)) {
             cell.setLv((Long) e);
         } else if (isFloat(clazz)) {
