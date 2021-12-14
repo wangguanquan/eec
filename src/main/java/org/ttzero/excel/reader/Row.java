@@ -388,11 +388,13 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                    s = (short) Double.parseDouble(c.sv.trim());
-                } else {
-                    s = Long.valueOf(c.sv.trim()).shortValue();
-                }
+                if (c.sv != null) {
+                    if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                        s = (short) Double.parseDouble(c.sv.trim());
+                    } else {
+                        s = Long.valueOf(c.sv.trim()).shortValue();
+                    }
+                } else return null;
                 break;
             case BOOL:
                 s |= c.bv ? 1 : 0;
@@ -452,11 +454,13 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                    n = (int) Double.parseDouble(c.sv.trim());
-                } else {
-                    n = Long.valueOf(c.sv.trim()).intValue();
-                }
+                if (c.sv != null) {
+                    if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                        n = (int) Double.parseDouble(c.sv.trim());
+                    } else {
+                        n = Long.valueOf(c.sv.trim()).intValue();
+                    }
+                } else return null;
                 break;
             case BOOL:
                 n = c.bv ? 1 : 0;
@@ -517,11 +521,13 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                    l = (long) Double.parseDouble(c.sv.trim());
-                } else {
-                    l = Long.parseLong(c.sv.trim());
-                }
+                if (c.sv != null) {
+                    if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
+                        l = (long) Double.parseDouble(c.sv.trim());
+                    } else {
+                        l = Long.parseLong(c.sv.trim());
+                    }
+                } else return null;
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
@@ -664,7 +670,9 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                d = Double.parseDouble(c.sv.trim());
+                if (c.sv != null) {
+                    d = Double.parseDouble(c.sv.trim());
+                } else return null;
                 break;
             case BLANK:
             case EMPTY_TAG:
@@ -721,7 +729,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                bd = new BigDecimal(c.sv.trim());
+                bd = c.sv != null ? new BigDecimal(c.sv.trim()) : null;
                 break;
             case UNALLOCATED:
             case BLANK:
@@ -776,7 +784,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                date = toDate(c.sv.trim());
+                date = c.sv != null ? toDate(c.sv.trim()) : null;
                 break;
             case UNALLOCATED:
             case BLANK:
@@ -831,7 +839,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ts = toTimestamp(c.sv.trim());
+                ts = c.sv != null ? toTimestamp(c.sv.trim()) : null;
                 break;
             case UNALLOCATED:
             case BLANK:
@@ -878,7 +886,7 @@ public abstract class Row {
                     c.setSv(sst.get(c.nv));
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR: t = toTime(c.sv.trim()); break;
+            case INLINESTR: t = c.sv != null ? toTime(c.sv.trim()) : null; break;
             case UNALLOCATED:
             case BLANK:
             case EMPTY_TAG:
@@ -933,7 +941,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ldt = toTimestamp(c.sv.trim()).toLocalDateTime();
+                ldt = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime() : null;
                 break;
             case UNALLOCATED:
             case BLANK:
@@ -988,7 +996,7 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ld = toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate();
+                ld = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null;
                 break;
             case UNALLOCATED:
             case BLANK:
@@ -1043,12 +1051,14 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                // 00:00:00
-                if (c.sv.length() == 8 && c.sv.charAt(2) == ':' && c.sv.charAt(5) == ':') {
-                    lt = toLocalTime(c.sv.trim());
-                } else {
-                    lt = toTimestamp(c.sv.trim()).toLocalDateTime().toLocalTime();
-                }
+                if (c.sv != null) {
+                    // 00:00:00
+                    if (c.sv.length() == 8 && c.sv.charAt(2) == ':' && c.sv.charAt(5) == ':') {
+                        lt = toLocalTime(c.sv.trim());
+                    } else {
+                        lt = toTimestamp(c.sv.trim()).toLocalDateTime().toLocalTime();
+                    }
+                } else lt = null;
                 break;
             case UNALLOCATED:
             case BLANK:
