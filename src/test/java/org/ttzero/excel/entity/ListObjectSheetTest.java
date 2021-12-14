@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
@@ -657,6 +658,26 @@ public class ListObjectSheetTest extends WorkbookTest {
             assert array.length == list.size();
             for (int i = 0; i < array.length; i++) {
                 assert array[i].equals(list.get(i));
+            }
+        }
+    }
+
+    @Test public void testEmojiChar() throws IOException {
+        List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
+        new Workbook().addSheet(new ListSheet<String>(list) {
+            @Override
+            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(String.class) };
+            }
+        }.ignoreHeader()).writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
+            List<String> subList = reader.sheet(0).rows().map(row -> row.getString(0)).collect(Collectors.toList());
+
+            assert subList.size() == list.size();
+
+            for (int i = 0, len = subList.size(); i < len; i++) {
+                assert subList.get(i).equals(list.get(i));
             }
         }
     }
