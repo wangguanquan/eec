@@ -388,7 +388,7 @@ public class Column {
      */
     public Column setCellStyle(int cellStyle) {
         this.cellStyle = cellStyle;
-        this.cellStyleIndex = styles.of(cellStyle);
+        if (styles != null) this.cellStyleIndex = styles.of(cellStyle);
         return this;
     }
 
@@ -400,7 +400,7 @@ public class Column {
      */
     public Column setHeaderStyle(int headerStyle) {
         this.headerStyle = headerStyle;
-        this.headerStyleIndex = styles.of(headerStyle);
+        if (styles != null) this.headerStyleIndex = styles.of(headerStyle);
         return this;
     }
 
@@ -421,7 +421,7 @@ public class Column {
      * @return index of style
      */
     public int getCellStyleIndex() {
-        return cellStyleIndex;
+        return cellStyleIndex > 0 ? cellStyleIndex : (cellStyleIndex = styles != null ? styles.of(cellStyle) : 0);
     }
 
     /**
@@ -430,7 +430,7 @@ public class Column {
      * @return index of style
      */
     public int getHeaderStyleIndex() {
-        return headerStyleIndex;
+        return headerStyleIndex > 0 ? headerStyleIndex : (headerStyleIndex = styles != null ? styles.of(headerStyle) : 0);
     }
 
     /**

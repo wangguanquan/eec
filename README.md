@@ -119,17 +119,17 @@ private StyleProcessor sp = (o, style, sst) -> {
     return style;
 };
 
-// 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-private IntConversionProcessor conversion = n -> n < 60 ? "不及格" : n;
+// 定义一个转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
+private ConversionProcessor conversion = n -> (int) n < 60 ? "不及格" : n;
 ```
 
 ```
 public void testStyleConversion(List<Student> students) throws IOException {
     new Workbook("object style processor", "guanquan.wang")
         .addSheet(new ListSheet<>("期末成绩", students
-            , new Sheet.Column("学号", "id", int.class)
-            , new Sheet.Column("姓名", "name", String.class)
-            , new Sheet.Column("成绩", "score", int.class, conversion)
+            , new Column("学号", "id", int.class)
+            , new Column("姓名", "name", String.class)
+            , new Column("成绩", "score", int.class, conversion)
                 .setStyleProcessor(sp)
             )
         )
@@ -172,15 +172,15 @@ public void testFromDatabase() {
             .watch(System.out::println) // 添加watch窗口查看导出细节
             .addSheet("用户注册"
                 , "select id,pro_id,channel_no,aid,account,regist_time,uid,platform_type from wh_regist limit 10"
-                , new Sheet.Column("ID", int.class)
-                , new Sheet.Column("产品ID", int.class)
-                , new Sheet.Column("渠道ID", int.class)
-                , new Sheet.Column("AID", int.class)
-                // 默认字符串多个worksheet共享，如果已知字符串唯一可设置为不共享
-                , new Sheet.Column("注册账号", String.class, false)
-                , new Sheet.Column("注册时间", Timestamp.class)
-                , new Sheet.Column("CPS用户ID", int.class)
-                , new Sheet.Column("渠道类型", int.class)
+                , new Column("ID", int.class)
+                , new Column("产品ID", int.class)
+                , new Column("渠道ID", int.class)
+                , new Column("AID", int.class)
+                // 默认字符串多个worksheet不共享，如果已知字符串重复使用则可以设置为true
+                , new Column("注册账号", String.class, false)
+                , new Column("注册时间", Timestamp.class)
+                , new Column("CPS用户ID", int.class)
+                , new Column("渠道类型", int.class)
             ) // 添加一个sheet页
             .writeTo(Paths.get("f:\\excel"));
     } catch (SQLException | IOException e) {
@@ -212,17 +212,17 @@ public void testFromDatabase2() {
                     p.setInt(2, 500);
                     p.setString(3, "苏州市");
                 } // 设定SQL参数
-                , new Sheet.Column("用户编号", int.class)
-                , new Sheet.Column("登录名", String.class, false) // 登录名都是唯一的设置不共享
-                , new Sheet.Column("通行证", String.class)
-                , new Sheet.Column("状态", char.class, c -> cs[c]) // 将0/1用户无感的数字转为文字
+                , new Column("用户编号", int.class)
+                , new Column("登录名", String.class, false) // 登录名都是唯一的设置不共享
+                , new Column("通行证", String.class)
+                , new Column("状态", char.class, c -> cs[c]) // 将0/1用户无感的数字转为文字
                     .setStyleProcessor((n, style, sst) -> {
                         if ((int) n == 1) { // 将注销的用户标记
                             style = Styles.clearFill(style) | sst.addFill(fill); // 注销标红
                         }
                         return style;
                     })
-                , new Sheet.Column("城市", String.class)
+                , new Column("城市", String.class)
             )
             .writeTo(Paths.get("f:\\excel"));
     } catch (SQLException | IOException e) {
@@ -449,6 +449,16 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.4.14 (2021-12-15)
+-------------
+- 提高对Numbers转xlsx的兼容性
+- 值转换从原来的int类型扩大为Object
+- 增加@RowNum注解，用于注入行号
+- 修改ListSheet.EntryColumn的访问权限，方便实现更多高级特性
+- 支持单列数字无表头导出，现在可以简单的导出`List<String>`数据
+- 修复已知BUG(#197,#202，#205,#219)
+- 将com.google.common包重命名为org.ttzero.excel.common解决内嵌引起的包冲突(#200)
+
 Version 0.4.13 (2021-08-09)
 -------------
 - 支持xls获取图片
@@ -467,12 +477,6 @@ Version 0.4.12 (2021-05-18)
 - 读取文件默认使用包装类而非基本类型，为了方便处理Null类型(#177)
 - 增加`@HeaderStyle`注解自定义头部样式，本次仅引入颜色的定制，后续将提供更丰富的样式支持
 
-Version 0.4.11 (2021-03-28)
--------------
-- 修复导出时删除特殊字符的问题
-- 增加wrapText属性控制单元格自动换行
-- 增加forceExport属性来强制没有@ExcelColumn注解的属性
-
 
 [更多...](./CHANGELOG)
 
@@ -480,7 +484,7 @@ Version 0.4.11 (2021-03-28)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.13-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.4.14-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

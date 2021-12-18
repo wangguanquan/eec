@@ -1,3 +1,13 @@
+Version 0.4.14 (2021-12-15)
+-------------
+- 提高对Numbers转xlsx的兼容性
+- 值转换从原来的int类型扩大为Object
+- 增加@RowNum注解，用于注入行号
+- 修改ListSheet.EntryColumn的访问权限，方便实现更多高级特性
+- 支持单列数字无表头导出，现在可以简单的导出`List<String>`数据
+- 修复已知BUG(#197,#202，#205,#219)
+- 将com.google.common包重命名为org.ttzero.excel.common解决内嵌引起的包冲突(#200)
+
 Version 0.4.13 (2021-08-09)
 -------------
 - 支持xls获取图片
