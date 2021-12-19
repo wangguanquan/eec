@@ -42,6 +42,9 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
+import static org.ttzero.excel.entity.style.NumFmt.DATETIME_FORMAT;
+import static org.ttzero.excel.entity.style.NumFmt.DATE_FORMAT;
+import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
 
 /**
  * Associated with Worksheet for controlling head style and cache
@@ -77,11 +80,11 @@ public class Column {
     /**
      * The style of cell
      */
-    public int cellStyle;
+    public Integer cellStyle;
     /**
      * The style of header
      */
-    public int headerStyle;
+    public Integer headerStyle;
     /**
      * The style index of cell, -1 if not be setting
      */
@@ -388,7 +391,7 @@ public class Column {
      */
     public Column setCellStyle(int cellStyle) {
         this.cellStyle = cellStyle;
-        this.cellStyleIndex = styles.of(cellStyle);
+        if (styles != null) this.cellStyleIndex = styles.of(cellStyle);
         return this;
     }
 
@@ -400,7 +403,7 @@ public class Column {
      */
     public Column setHeaderStyle(int headerStyle) {
         this.headerStyle = headerStyle;
-        this.headerStyleIndex = styles.of(headerStyle);
+        if (styles != null) this.headerStyleIndex = styles.of(headerStyle);
         return this;
     }
 
@@ -421,7 +424,7 @@ public class Column {
      * @return index of style
      */
     public int getCellStyleIndex() {
-        return cellStyleIndex;
+        return cellStyleIndex >= 0 ? cellStyleIndex : (cellStyleIndex = styles != null && cellStyle != null ? styles.of(cellStyle) : -1);
     }
 
     /**
@@ -430,7 +433,7 @@ public class Column {
      * @return index of style
      */
     public int getHeaderStyleIndex() {
-        return headerStyleIndex;
+        return headerStyleIndex >= 0 ? headerStyleIndex : (headerStyleIndex = styles != null && headerStyle != null ? styles.of(headerStyle) : -1);
     }
 
     /**
@@ -641,18 +644,18 @@ public class Column {
         int style;
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle() | wrapText;
-        } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-            style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-        } else if (isDate(clazz) || isLocalDate(clazz)) {
-            style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+        } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
+            style = styles.addNumFmt(DATETIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
             style = Styles.defaultIntBorderStyle();
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
+        } else if (isLocalDate(clazz)) {
+            style = styles.addNumFmt(DATE_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            style =  styles.addNumFmt(new NumFmt("hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style =  styles.addNumFmt(TIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
@@ -671,7 +674,7 @@ public class Column {
      * @return the styles value
      */
     public int getCellStyle() {
-        if (cellStyleIndex != -1) {
+        if (cellStyle != null) {
             return cellStyle;
         }
         setCellStyle(getCellStyle(clazz));

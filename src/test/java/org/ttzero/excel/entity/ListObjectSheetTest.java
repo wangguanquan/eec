@@ -646,12 +646,12 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testBasicType() throws IOException {
         List<Integer> list = new ArrayList<>();
         for (int i = 0; i < 35; i++) list.add(i);
-        new Workbook("Integer array").addSheet(new ListSheet<Integer>(list) {
+        new Workbook().addSheet(new ListSheet<Integer>(list) {
             @Override
             public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(Integer.class) };
+                return new org.ttzero.excel.entity.Column[]{new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)};
             }
-        }.ignoreHeader()).writeTo(defaultTestPath);
+        }.ignoreHeader().cancelOddStyle()).writeTo(defaultTestPath.resolve("Integer array.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
             Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);

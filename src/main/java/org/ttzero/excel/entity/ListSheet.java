@@ -844,8 +844,8 @@ public class ListSheet<T> extends Sheet {
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;
             this.colIndex = other.colIndex;
-            if (other.cellStyle > 0) setCellStyle(other.cellStyle);
-            if (other.headerStyle > 0) setHeaderStyle(other.headerStyle);
+            if (other.cellStyle != null) setCellStyle(other.cellStyle);
+            if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
         }
 
         public Method getMethod() {
