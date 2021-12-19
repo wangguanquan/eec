@@ -45,7 +45,7 @@ public interface Drawings {
     default List<Picture> listPictures(final Sheet sheet) {
         List<Picture> pictures = listPictures();
         return pictures == null ? null :
-            pictures.stream().filter(p -> p.sheet.getId() == sheet.getId()).collect(Collectors.toList());
+            pictures.stream().filter(p -> p.getSheet().getId() == sheet.getId()).collect(Collectors.toList());
     }
 
     class Picture {
