@@ -77,11 +77,11 @@ public class Column {
     /**
      * The style of cell
      */
-    public int cellStyle;
+    public Integer cellStyle;
     /**
      * The style of header
      */
-    public int headerStyle;
+    public Integer headerStyle;
     /**
      * The style index of cell, -1 if not be setting
      */
@@ -421,7 +421,7 @@ public class Column {
      * @return index of style
      */
     public int getCellStyleIndex() {
-        return cellStyleIndex > 0 ? cellStyleIndex : (cellStyleIndex = styles != null ? styles.of(cellStyle) : 0);
+        return cellStyleIndex >= 0 ? cellStyleIndex : (cellStyleIndex = styles != null && cellStyle != null ? styles.of(cellStyle) : -1);
     }
 
     /**
@@ -430,7 +430,7 @@ public class Column {
      * @return index of style
      */
     public int getHeaderStyleIndex() {
-        return headerStyleIndex > 0 ? headerStyleIndex : (headerStyleIndex = styles != null ? styles.of(headerStyle) : 0);
+        return headerStyleIndex >= 0 ? headerStyleIndex : (headerStyleIndex = styles != null && headerStyle != null ? styles.of(headerStyle) : -1);
     }
 
     /**
@@ -671,7 +671,7 @@ public class Column {
      * @return the styles value
      */
     public int getCellStyle() {
-        if (cellStyleIndex != -1) {
+        if (cellStyle != null) {
             return cellStyle;
         }
         setCellStyle(getCellStyle(clazz));
