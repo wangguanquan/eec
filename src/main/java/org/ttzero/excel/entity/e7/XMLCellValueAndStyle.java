@@ -67,6 +67,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
                 cell.xf = getStyleIndex(row, hc, e);
             } else {
                 setCellValue(row, cell, e, hc, clazz, false);
+                // FIXME Here will override the style set by the user
                 int style = hc.getCellStyle(clazz);
                 cell.xf = getStyleIndex(row, hc, o, style);
             }
