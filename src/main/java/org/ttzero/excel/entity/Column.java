@@ -42,6 +42,9 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
+import static org.ttzero.excel.entity.style.NumFmt.DATETIME_FORMAT;
+import static org.ttzero.excel.entity.style.NumFmt.DATE_FORMAT;
+import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
 
 /**
  * Associated with Worksheet for controlling head style and cache
@@ -641,18 +644,18 @@ public class Column {
         int style;
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle() | wrapText;
-        } else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-            style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
-        } else if (isDate(clazz) || isLocalDate(clazz)) {
-            style = styles.addNumFmt(new NumFmt("yyyy\\-mm\\-dd")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+        } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
+            style = styles.addNumFmt(DATETIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
             style = Styles.defaultIntBorderStyle();
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
+        } else if (isLocalDate(clazz)) {
+            style = styles.addNumFmt(DATE_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            style =  styles.addNumFmt(new NumFmt("hh:mm:ss")) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style =  styles.addNumFmt(TIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }

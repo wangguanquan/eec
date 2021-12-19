@@ -50,6 +50,20 @@ import java.util.Objects;
  * @author guanquan.wang at 2018-02-06 08:51
  */
 public class NumFmt implements Comparable<NumFmt> {
+
+    /**
+     * Format as {@code yyyy-mm-dd hh:mm:ss}
+     */
+    public static final NumFmt DATETIME_FORMAT = new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"),
+    /**
+     * Format as {@code yyyy-mm-dd}
+     */
+    DATE_FORMAT = new NumFmt("yyyy\\-mm\\-dd"),
+    /**
+     * Format as {@code hh:mm:ss}
+     */
+    TIME_FORMAT = new NumFmt("hh:mm:ss");
+
     private String code;
     private int id = -1;
 
