@@ -40,6 +40,10 @@ public class Cell {
     public static final char UNALLOCATED = '\0';
     public static final char EMPTY_TAG   = 'e';
     /**
+     * Unallocated cell
+     */
+    public static final Cell UNALLOCATED_CELL = new Cell();
+    /**
      * Value type
      * n=numeric
      * s=string

@@ -44,6 +44,7 @@ import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED;
+import static org.ttzero.excel.reader.Cell.UNALLOCATED_CELL;
 import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDateTime;
@@ -130,19 +131,27 @@ public abstract class Row {
         return lc - fc <= 0;
     }
 
+    /**
+     * Check the cell ranges,
+     *
+     * @param index the index
+     * @exception IndexOutOfBoundsException If the specified {@code index}
+     * argument is negative
+     */
     protected void rangeCheck(int index) {
-        if (index >= lc || index < 0)
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + lc);
+        if (index < 0)
+            throw new IndexOutOfBoundsException("Index: " + index + " is negative.");
     }
 
     /**
      * Returns {@link Cell}
+     *
      * @param i the position of cell
      * @return the {@link Cell}
      */
     protected Cell getCell(int i) {
         rangeCheck(i);
-        return cells[i];
+        return i < lc ? cells[i] : UNALLOCATED_CELL;
     }
 
     /**
@@ -154,7 +163,7 @@ public abstract class Row {
     protected Cell getCell(String name) {
         int i = hr.getIndex(name);
         rangeCheck(i);
-        return cells[i];
+        return i < lc ? cells[i] : UNALLOCATED_CELL;
     }
 
     /**
