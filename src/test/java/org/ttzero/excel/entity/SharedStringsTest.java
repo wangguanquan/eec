@@ -46,6 +46,7 @@ public class SharedStringsTest {
             assert index == 2;
         } catch (IOException e) {
             e.printStackTrace();
+            assert false;
         }
     }
 
@@ -62,6 +63,7 @@ public class SharedStringsTest {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            assert false;
         }
     }
 
