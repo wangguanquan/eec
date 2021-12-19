@@ -449,7 +449,7 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
-Version 0.4.14 (2021-12-15)
+Version 0.4.14 (2021-12-19)
 -------------
 - 提高对Numbers转xlsx的兼容性
 - 值转换从原来的int类型扩大为Object
