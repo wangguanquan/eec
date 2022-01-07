@@ -494,6 +494,7 @@ public class SharedStrings implements Closeable {
                     forward[n++] = EMPTY;
                     if (status == 4) sst.push(forward[n - 1]);
                     nChar += 5;
+                    continue;
                 } else nChar += 4;
             }
 
@@ -567,10 +568,34 @@ public class SharedStrings implements Closeable {
             } else break;
         } while (nChar < len1);
 
-        for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
-            || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
+//        if (nChar < len0) {
+//            switch (cb[nChar + 1]) {
+//                case 't':
+//                    break;
+//                case 'r':
+//                    break;
+//                    // phoneticPr
+//                case 'p':
+//                    // Ignore
+//                    break;
+//                // Empty <si></si> tag
+//                case '/':
+//                    if (cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>')
+//                        return new int[] { nChar, nChar };
+//                    break;
+//            }
+//        }
+//
+
+
+
+
+        for (; nChar < len0 && (cb[nChar + 1] != 't'
+            || cb[nChar + 2] != '>' && cb[nChar + 2] != ' ' && cb[nChar + 2] != '/'); ++nChar)
             ;
         if (nChar >= len0) return new int[] { -1 }; // Not found
+        // Empty tag
+        if (cb[nChar + 2] == '/' && cb[nChar + 3] == '>') return new int[] { nChar, nChar };
         int a = nChar += 3;
         if (cb[nChar - 1] == ' ') { // space="preserve"
             for (; nChar < len0 && cb[nChar++] != '>'; ) ;
