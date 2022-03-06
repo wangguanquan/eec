@@ -41,17 +41,18 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
-    static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
-    static final double SECOND_OF_DAY = (double) 24 * 60 * 60;
+    public static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
+    public static final double SECOND_OF_DAY = (double) 24 * 60 * 60;
+    public static final double MILLIS_OF_DAY = (double) 24 * 60 * 60 * 1000;
 
     // time-zone
-    static final int tz = TimeZone.getDefault().getRawOffset();
+    public static final int tz = TimeZone.getDefault().getRawOffset();
 
-    static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
+    public static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"));
-    static final ThreadLocal<SimpleDateFormat> dateTimeFormat
+    public static final ThreadLocal<SimpleDateFormat> dateTimeFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-    static final ThreadLocal<SimpleDateFormat> dateFormat
+    public static final ThreadLocal<SimpleDateFormat> dateFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
     public static final DateTimeFormatter LOCAL_DATE_TIME;
 
@@ -207,7 +208,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        int n = (int) d, m = (int) Math.floor(((d - n) * MILLIS_OF_DAY + 0.5) / 1000);
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
@@ -216,7 +217,7 @@ public class DateUtil {
     }
 
     public static java.sql.Time toTime(double d) {
-        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        int n = (int) d, m = (int) Math.floor(((d - n) * MILLIS_OF_DAY + 0.5) / 1000);
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
@@ -226,7 +227,7 @@ public class DateUtil {
     }
 
     public static LocalTime toLocalTime(double d) {
-        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        int n = (int) d, m = (int) Math.floor(((d - n) * MILLIS_OF_DAY + 0.5) / 1000);
         return LocalTime.ofSecondOfDay(m);
     }
 
@@ -242,7 +243,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        int n = (int) d, m = (int) Math.floor(((d - n) * MILLIS_OF_DAY + 0.5) / 1000);
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
@@ -251,7 +252,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY);
+        int n = (int) d, m = (int) Math.floor(((d - n) * MILLIS_OF_DAY + 0.5) / 1000);
         return LocalDateTime.ofInstant(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz), ZoneId.systemDefault());
     }
 
