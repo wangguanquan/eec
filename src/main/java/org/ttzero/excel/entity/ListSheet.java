@@ -16,12 +16,10 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.annotation.ExcelColumn;
-import org.ttzero.excel.annotation.HeaderComment;
-import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.annotation.*;
+import org.ttzero.excel.entity.style.*;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.annotation.IgnoreExport;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -40,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
@@ -65,6 +64,7 @@ public class ListSheet<T> extends Sheet {
     protected int start, end;
     protected boolean eof;
     private int size;
+    protected Predicate<T> waringRowValid;
 
     /**
      * Constructor worksheet
@@ -121,6 +121,19 @@ public class ListSheet<T> extends Sheet {
     public ListSheet(String name, List<T> data) {
         super(name);
         setData(data);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param name the worksheet name
+     * @param data the worksheet's body data
+     * @param validFn the validate funtion
+     */
+    public ListSheet(String name, List<T> data,Predicate<T> validFn) {
+        super(name);
+        setData(data);
+        validFn(validFn);
     }
 
     /**
@@ -233,6 +246,10 @@ public class ListSheet<T> extends Sheet {
         super.close();
     }
 
+    protected void validFn(Predicate<T> validRow){
+        waringRowValid = validRow;
+    }
+
     /**
      * Reset the row-block data
      */
@@ -251,6 +268,10 @@ public class ListSheet<T> extends Sheet {
                 row.index = rows;
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
+                boolean waring = false;
+                if(null != waringRowValid){
+                    waring = waringRowValid.test(o);
+                }
                 for (int i = 0; i < len; i++) {
                     // clear cells
                     Cell cell = cells[i];
@@ -267,10 +288,17 @@ public class ListSheet<T> extends Sheet {
                     else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
+                    setCellWaringStyle(waring,cell,columns[i]);
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ExcelWriteException(e);
+        }
+    }
+
+    public void setCellWaringStyle(boolean waring, Cell cell, org.ttzero.excel.entity.Column hc) {
+        if(waring && hc.getWaringStyleIndex()>-1){
+            cell.xf = hc.getWaringStyleIndex();
         }
     }
 
@@ -498,7 +526,7 @@ public class ListSheet<T> extends Sheet {
 
         // Merge Header Style defined on Entry Class
         mergeGlobalSetting(clazz);
-
+        setWaringStyle(clazz);
         return columns.length;
     }
 
@@ -596,6 +624,24 @@ public class ListSheet<T> extends Sheet {
         for (org.ttzero.excel.entity.Column column : columns) {
             if (style > 0 && column.getHeaderStyleIndex() == -1)
                 column.setHeaderStyle(style);
+        }
+    }
+
+    protected void setWaringStyle(Class<?> clazz){
+        Styles styles = workbook.getStyles();
+        if(null != styles){
+            int style = 0;
+            WaringStyle waringStyle = clazz.getDeclaredAnnotation(WaringStyle.class);
+            Fill waringFill;
+            if(waringStyle != null){
+                waringFill = Fill.parse(waringStyle.fillFgColor());
+            }else{
+                waringFill = Fill.parse("red");
+            }
+            for (org.ttzero.excel.entity.Column column : columns) {
+                style =  Styles.clearFill(column.getCellStyle(column.clazz))| styles.addFill(waringFill);
+                column.setWaringStyle(style);
+            }
         }
     }
 

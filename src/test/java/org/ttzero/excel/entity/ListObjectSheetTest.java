@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.WaringStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
@@ -682,6 +683,13 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testWaringStyle() throws IOException{
+        new Workbook("标识行样式", author)
+                .addSheet(new ListSheet<Student>("期末成绩",Student.randomTestData()
+                        ,(Student stu)->stu.getScore()<60))
+                .writeTo(defaultTestPath);
+    }
+
     public static class Item {
         @ExcelColumn
         private int id;
@@ -907,6 +915,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     /**
      * Annotation Object
      */
+    @WaringStyle(fillFgColor = "yellow")
     public static class Student {
         @IgnoreExport
         private int id;

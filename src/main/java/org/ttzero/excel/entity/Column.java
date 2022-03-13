@@ -86,6 +86,10 @@ public class Column {
      */
     public Integer headerStyle;
     /**
+     * The style of waring
+     */
+    public Integer waringStyle;
+    /**
      * The style index of cell, -1 if not be setting
      */
     private int cellStyleIndex = -1;
@@ -93,6 +97,10 @@ public class Column {
      * The style index of header, -1 if not be setting
      */
     private int headerStyleIndex = -1;
+    /**
+     * The style index of waring, -1 if not be setting
+     */
+    private int waringStyleIndex = -1;
     /**
      * The cell width
      */
@@ -408,6 +416,18 @@ public class Column {
     }
 
     /**
+     * Setting the header's style
+     *
+     * @param waringStyle the styles value
+     * @return the {@link Column}
+     */
+    public Column setWaringStyle(int waringStyle) {
+        this.waringStyle = waringStyle;
+        if (styles != null) this.waringStyleIndex = styles.of(waringStyle);
+        return this;
+    }
+
+    /**
      * Settings the x-axis of column in row
      *
      * @param colIndex column index (zero base)
@@ -434,6 +454,15 @@ public class Column {
      */
     public int getHeaderStyleIndex() {
         return headerStyleIndex >= 0 ? headerStyleIndex : (headerStyleIndex = styles != null && headerStyle != null ? styles.of(headerStyle) : -1);
+    }
+
+    /**
+     * Returns the waring style index of cell, -1 if not be setting
+     *
+     * @return index of style
+     */
+    public int getWaringStyleIndex() {
+        return waringStyleIndex >= 0 ? waringStyleIndex : (waringStyleIndex = styles != null && waringStyle != null ? styles.of(waringStyle) : -1);
     }
 
     /**
