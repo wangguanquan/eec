@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
+import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
@@ -124,6 +125,14 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     public int getStyleIndex(int rows, Column hc, Object o) {
         int style = hc.getCellStyle();
         return getStyleIndex(rows, hc, o, style);
+    }
+
+    @Override
+    public <T> void setStyleDesign(T o, Cell cell, Column hc, Sheet sheet) {
+        Styles styles = hc.styles;
+        if(null != styles && null != sheet.getStyleProcessor()){
+            cell.xf = styles.of(sheet.getStyleProcessor().build(o,hc.cellStyle,styles));
+        }
     }
 
     /**

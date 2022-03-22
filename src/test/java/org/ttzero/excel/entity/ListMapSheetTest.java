@@ -18,7 +18,11 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.entity.style.Styles;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -54,6 +58,20 @@ public class ListMapSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(createAllTypeData())
             .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStyleDesign4Map() throws IOException{
+        new Workbook("Map标识行样式", author)
+                .addSheet(new ListMapSheet("Map", createAllTypeData(10)).setStyleProcessor((map, style, sst)->{
+                    if(map instanceof Map){
+                        Map<String, Object> map1 = (Map<String, Object>) map;
+                        if ((Boolean) map1.get("bv")) {
+                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                        }
+                    }
+                    return style;
+                }))
+                .writeTo(defaultTestPath);
     }
 
     @Test public void testHeaderColumn() throws IOException {

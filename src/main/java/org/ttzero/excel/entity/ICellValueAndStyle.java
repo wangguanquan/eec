@@ -70,6 +70,17 @@ public interface ICellValueAndStyle {
     int getStyleIndex(int rows, Column hc, Object o);
 
     /**
+     * Setting all cell of specified row style
+     *
+     * @param o the row data
+     * @param cell the cell of row
+     * @param hc the header column
+     * @param sheet the sheet
+     * @param <T> the row's class
+     */
+    <T> void setStyleDesign(T o, Cell cell, org.ttzero.excel.entity.Column hc,Sheet sheet);
+
+    /**
      * Setting cell value
      *
      * @param row the row number

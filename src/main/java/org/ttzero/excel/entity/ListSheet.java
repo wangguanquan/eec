@@ -16,10 +16,15 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.annotation.*;
-import org.ttzero.excel.entity.style.*;
+import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.HeaderComment;
+import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.UncheckedTypeException;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -38,14 +43,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
-
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * List is the most important data source, you can pass all
@@ -64,7 +67,6 @@ public class ListSheet<T> extends Sheet {
     protected int start, end;
     protected boolean eof;
     private int size;
-    protected Predicate<T> waringRowValid;
 
     /**
      * Constructor worksheet
@@ -123,18 +125,6 @@ public class ListSheet<T> extends Sheet {
         setData(data);
     }
 
-    /**
-     * Constructor worksheet
-     *
-     * @param name the worksheet name
-     * @param data the worksheet's body data
-     * @param validFn the validate funtion
-     */
-    public ListSheet(String name, List<T> data,Predicate<T> validFn) {
-        super(name);
-        setData(data);
-        validFn(validFn);
-    }
 
     /**
      * Constructor worksheet
@@ -246,9 +236,6 @@ public class ListSheet<T> extends Sheet {
         super.close();
     }
 
-    protected void validFn(Predicate<T> validRow){
-        waringRowValid = validRow;
-    }
 
     /**
      * Reset the row-block data
@@ -268,10 +255,6 @@ public class ListSheet<T> extends Sheet {
                 row.index = rows;
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
-                boolean waring = false;
-                if(null != waringRowValid){
-                    waring = waringRowValid.test(o);
-                }
                 for (int i = 0; i < len; i++) {
                     // clear cells
                     Cell cell = cells[i];
@@ -288,17 +271,11 @@ public class ListSheet<T> extends Sheet {
                     else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
-                    setCellWaringStyle(waring,cell,columns[i]);
+                    cellValueAndStyle.setStyleDesign(o,cell,columns[i],this);
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ExcelWriteException(e);
-        }
-    }
-
-    public void setCellWaringStyle(boolean waring, Cell cell, org.ttzero.excel.entity.Column hc) {
-        if(waring && hc.getWaringStyleIndex()>-1){
-            cell.xf = hc.getWaringStyleIndex();
         }
     }
 
@@ -526,7 +503,7 @@ public class ListSheet<T> extends Sheet {
 
         // Merge Header Style defined on Entry Class
         mergeGlobalSetting(clazz);
-        setWaringStyle(clazz);
+        setDesignStyle(clazz);
         return columns.length;
     }
 
@@ -627,20 +604,16 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
-    protected void setWaringStyle(Class<?> clazz){
+    protected void setDesignStyle(Class<?> clazz) {
         Styles styles = workbook.getStyles();
         if(null != styles){
-            int style = 0;
-            WaringStyle waringStyle = clazz.getDeclaredAnnotation(WaringStyle.class);
-            Fill waringFill;
-            if(waringStyle != null){
-                waringFill = Fill.parse(waringStyle.fillFgColor());
-            }else{
-                waringFill = Fill.parse("red");
-            }
-            for (org.ttzero.excel.entity.Column column : columns) {
-                style =  Styles.clearFill(column.getCellStyle(column.clazz))| styles.addFill(waringFill);
-                column.setWaringStyle(style);
+            StyleDesign designStyle = clazz.getDeclaredAnnotation(StyleDesign.class);
+            if(designStyle != null){
+                try {
+                    setStyleProcessor(designStyle.using().newInstance());
+                } catch (InstantiationException |IllegalAccessException e) {
+                    throw new UncheckedTypeException(designStyle + " new instance error.", e);
+                }
             }
         }
     }

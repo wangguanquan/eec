@@ -159,6 +159,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 cell.clear();
 
                 cellValueAndStyle.reset(rows, cell, e, hc);
+                cellValueAndStyle.setStyleDesign(data.get(start),cell,columns[i],this);
             }
         }
     }
