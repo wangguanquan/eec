@@ -418,46 +418,54 @@ class XMLSheet implements Sheet {
                     }
                 }
             }
+
+            boolean eof = cb[nChar] == '>';
+            if (eof) {
+                this.heof = true;
+                return null;
+            }
+
+            boolean endTag = false;
+            int start;
+            // find the first not null row
+            loopB: while (true) {
+                start = nChar;
+                for (; cb[++nChar] != '>' && nChar < length; ) ;
+                if (nChar >= length - 6) break;
+                // Empty Row
+                if (cb[nChar++ - 1] != '/') {
+                    // find end of row tag
+                    for (; nChar < length - 6; nChar++) {
+                        if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
+                                && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
+                            nChar += 6;
+                            endTag = true;
+                            break loopB;
+                        }
+                    }
+                }
+
+                // Read more
+                int last = cb.length - nChar;
+                System.arraycopy(cb, nChar, cb, 0, last);
+                // Not found
+                if (reader.read(cb, last, nChar) <= 0) {
+                    return null;
+                }
+                // From beginning
+                nChar = 0;
+            }
+
+            if (!endTag) {
+                // too big
+                return null;
+            }
+
+            return func.accept(cb, start, nChar - start);
         } catch (IOException e) {
             LOGGER.error("Read header row error.");
             return null;
         }
-        boolean eof = cb[nChar] == '>';
-        if (eof) {
-            this.heof = true;
-            return null;
-        }
-
-        boolean endTag = false;
-        int start;
-        // find the first not null row
-        loopB: while (true) {
-            start = nChar;
-            for (; cb[++nChar] != '>' && nChar < length; ) ;
-            if (nChar >= length - 6) break;
-            // Empty Row
-            if (cb[nChar++ - 1] != '/') {
-                // find end of row tag
-                for (; nChar < length - 6; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                        nChar += 6;
-                        endTag = true;
-                        break loopB;
-                    }
-                }
-            }
-        }
-
-        if (!endTag) {
-            // too big
-            return null;
-        }
-
-        return func.accept(cb, start, nChar - start);
-        // row
-//        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1
-//            , parseFormula && hasCalc ? this::findCalc : null).with(cb, start, nChar - start);
 
     }
 
