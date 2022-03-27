@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
@@ -317,7 +318,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     public static StyleProcessor sp = (o, style, sst) -> {
         if ((int)o < 60) {
             style = Styles.clearFill(style)
-                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                | sst.addFill(new Fill(PatternType.solid,Color.green, Color.blue));
         }
         return style;
     };
@@ -682,6 +683,65 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+
+    @Test public void testStyleDesign() throws IOException {
+        new Workbook("标识行样式", author)
+                .addSheet(new ListSheet<Student>("期末成绩",Student.randomTestData()))
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStyleDesign1() throws IOException {
+        ListSheet itemListSheet = new ListSheet<Item>("序列数",Item.randomTestData());
+        itemListSheet.setStyleProcessor(rainbowStyle);
+        new Workbook("标识行样式1", author)
+                .addSheet(itemListSheet)
+                .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStyleDesign2() throws IOException {
+        new Workbook("标识行样式2", author)
+                .addSheet(new ListSheet<Item>("序列数",Item.randomTestData()).setStyleProcessor((item,style,sst)->{
+                    if(item instanceof Item){
+                        Item item1 = (Item)item;
+                        if (item1.getId() < 10) {
+                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                        }
+                    }
+                    return style;
+                }))
+                .writeTo(defaultTestPath);
+    }
+
+
+    public static class StudentScoreStyle implements StyleProcessor<Student> {
+        @Override
+        public int build(Student o, int style, Styles sst) {
+            // 低于60分时背景色标黄
+            if (o.getScore() < 60) {
+                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                // 低于30分时加下划线
+            }else if (o.getScore() < 70) {
+                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+            }else if (o.getScore() > 90) {
+                // 获取原有字体+下划线（这样做可以保留原字体和大小）
+                Font newFont = sst.getFont(style).clone();
+                style = Styles.clearFont(style) | sst.addFont(newFont.underLine().bold());
+            }
+            return style;
+        }
+    }
+
+    public static StyleProcessor<Item> rainbowStyle = (item, style, sst)->{
+        if (item.getId()%3==0) {
+            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+        }else if (item.getId()%3==1) {
+            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.blue));
+        }else if (item.getId()%3==2) {
+            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.pink));
+        }
+        return style;
+    };
+
     public static class Item {
         @ExcelColumn
         private int id;
@@ -907,6 +967,8 @@ public class ListObjectSheetTest extends WorkbookTest {
     /**
      * Annotation Object
      */
+    @StyleDesign(using = StudentScoreStyle.class)
+    //@WaringStyle(fillFgColor = "yellow")
     public static class Student {
         @IgnoreExport
         private int id;

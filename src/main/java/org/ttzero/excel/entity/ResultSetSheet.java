@@ -231,6 +231,7 @@ public class ResultSetSheet extends Sheet {
                     }
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
+                    //setStyleDesign(rs,cell,hc);
                 }
             }
         } catch (SQLException e) {

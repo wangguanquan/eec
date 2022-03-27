@@ -50,6 +50,26 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         }
     }
 
+//    @Test public void testStyleDesign4RS() throws IOException, SQLException {
+//        try (
+//                Connection con = getConnection();
+//                PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
+//                ResultSet rs = ps.executeQuery()
+//        ) {
+//            new Workbook("test ResultSet sheet Constructor2", author)
+//                    .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rset, style, sst)->{
+//                        if(rset instanceof ResultSet){
+//                            ResultSet rset1 = (ResultSet) rset;
+//                            if (rset1.getInt("age")>14) {
+//                                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+//                            }
+//                        }
+//                        return style;
+//                    }))
+//                    .writeTo(defaultTestPath);
+//        }
+//    }
+
     @Test public void testConstructor1() throws IOException {
         try {
             new Workbook("test ResultSet sheet Constructor1", author)

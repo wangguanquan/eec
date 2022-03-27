@@ -18,13 +18,14 @@ package org.ttzero.excel.processor;
 
 import org.ttzero.excel.entity.style.Styles;
 
+
 /**
  * The style conversion
  *
  * @author guanquan.wang on 2017/10/13.
  */
 @FunctionalInterface
-public interface StyleProcessor {
+public interface StyleProcessor<T> {
     /**
      * The style conversion
      * You must add it using {@code Styles#addXXX} method before adding a style,
@@ -39,5 +40,13 @@ public interface StyleProcessor {
      * @param sst   the {@link Styles} entry
      * @return new style of cell
      */
-    int build(Object o, int style, Styles sst);
+    int build(T o, int style, Styles sst);
+
+    class None implements StyleProcessor<Object> {
+
+        @Override
+        public int build(Object o, int style, Styles sst) {
+            return style;
+        }
+    }
 }

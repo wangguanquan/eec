@@ -19,9 +19,13 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
-import org.ttzero.excel.processor.ConversionProcessor;
-import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.processor.ConversionProcessor;
+import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.UncheckedTypeException;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -41,12 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * List is the most important data source, you can pass all
@@ -65,6 +68,21 @@ public class ListSheet<T> extends Sheet {
     protected int start, end;
     protected boolean eof;
     private int size;
+
+    /**
+     * The custom styleProcessor
+     */
+    protected StyleProcessor styleProcessor;
+
+    public Sheet setStyleProcessor(StyleProcessor styleProcessor) {
+        this.styleProcessor = styleProcessor;
+        return this;
+    }
+
+    public StyleProcessor getStyleProcessor() {
+        return this.styleProcessor;
+    }
+
 
     /**
      * Constructor worksheet
@@ -122,6 +140,7 @@ public class ListSheet<T> extends Sheet {
         super(name);
         setData(data);
     }
+
 
     /**
      * Constructor worksheet
@@ -233,6 +252,7 @@ public class ListSheet<T> extends Sheet {
         super.close();
     }
 
+
     /**
      * Reset the row-block data
      */
@@ -267,6 +287,7 @@ public class ListSheet<T> extends Sheet {
                     else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
+                    cellValueAndStyle.setStyleDesign(o,cell,columns[i],getStyleProcessor());
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -498,7 +519,7 @@ public class ListSheet<T> extends Sheet {
 
         // Merge Header Style defined on Entry Class
         mergeGlobalSetting(clazz);
-
+        setDesignStyle(clazz);
         return columns.length;
     }
 
@@ -596,6 +617,24 @@ public class ListSheet<T> extends Sheet {
         for (org.ttzero.excel.entity.Column column : columns) {
             if (style > 0 && column.getHeaderStyleIndex() == -1)
                 column.setHeaderStyle(style);
+        }
+    }
+
+    /**
+     * Set custom styleProcessor for declarations on Entry Class
+     * @param clazz  Class of &lt;T&gt;
+     */
+    protected void setDesignStyle(Class<?> clazz) {
+        Styles styles = workbook.getStyles();
+        if(null != styles) {
+            StyleDesign designStyle = clazz.getDeclaredAnnotation(StyleDesign.class);
+            if(designStyle != null) {
+                try {
+                    setStyleProcessor(designStyle.using().newInstance());
+                } catch (InstantiationException |IllegalAccessException e) {
+                    throw new UncheckedTypeException(designStyle + " new instance error.", e);
+                }
+            }
         }
     }
 
