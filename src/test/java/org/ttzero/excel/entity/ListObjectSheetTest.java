@@ -684,13 +684,13 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
 
-    @Test public void testStyleDesign() throws IOException{
+    @Test public void testStyleDesign() throws IOException {
         new Workbook("标识行样式", author)
                 .addSheet(new ListSheet<Student>("期末成绩",Student.randomTestData()))
                 .writeTo(defaultTestPath);
     }
 
-    @Test public void testStyleDesign1() throws IOException{
+    @Test public void testStyleDesign1() throws IOException {
         ListSheet itemListSheet = new ListSheet<Item>("序列数",Item.randomTestData());
         itemListSheet.setStyleProcessor(rainbowStyle);
         new Workbook("标识行样式1", author)
@@ -698,7 +698,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .writeTo(defaultTestPath);
     }
 
-    @Test public void testStyleDesign2() throws IOException{
+    @Test public void testStyleDesign2() throws IOException {
         new Workbook("标识行样式2", author)
                 .addSheet(new ListSheet<Item>("序列数",Item.randomTestData()).setStyleProcessor((item,style,sst)->{
                     if(item instanceof Item){

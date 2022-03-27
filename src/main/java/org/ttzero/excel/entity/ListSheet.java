@@ -23,6 +23,7 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.ConversionProcessor;
+import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.UncheckedTypeException;
 
@@ -67,6 +68,21 @@ public class ListSheet<T> extends Sheet {
     protected int start, end;
     protected boolean eof;
     private int size;
+
+    /**
+     * The custom styleProcessor
+     */
+    protected StyleProcessor styleProcessor;
+
+    public Sheet setStyleProcessor(StyleProcessor styleProcessor) {
+        this.styleProcessor = styleProcessor;
+        return this;
+    }
+
+    public StyleProcessor getStyleProcessor() {
+        return this.styleProcessor;
+    }
+
 
     /**
      * Constructor worksheet
@@ -271,7 +287,7 @@ public class ListSheet<T> extends Sheet {
                     else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
-                    cellValueAndStyle.setStyleDesign(o,cell,columns[i],this);
+                    cellValueAndStyle.setStyleDesign(o,cell,columns[i],getStyleProcessor());
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -604,11 +620,15 @@ public class ListSheet<T> extends Sheet {
         }
     }
 
+    /**
+     * Set custom styleProcessor for declarations on Entry Class
+     * @param clazz  Class of &lt;T&gt;
+     */
     protected void setDesignStyle(Class<?> clazz) {
         Styles styles = workbook.getStyles();
-        if(null != styles){
+        if(null != styles) {
             StyleDesign designStyle = clazz.getDeclaredAnnotation(StyleDesign.class);
-            if(designStyle != null){
+            if(designStyle != null) {
                 try {
                     setStyleProcessor(designStyle.using().newInstance());
                 } catch (InstantiationException |IllegalAccessException e) {

@@ -60,7 +60,7 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
-    @Test public void testStyleDesign4Map() throws IOException{
+    @Test public void testStyleDesign4Map() throws IOException {
         new Workbook("Map标识行样式", author)
                 .addSheet(new ListMapSheet("Map", createAllTypeData(10)).setStyleProcessor((map, style, sst)->{
                     if(map instanceof Map){

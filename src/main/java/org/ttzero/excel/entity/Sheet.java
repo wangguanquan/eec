@@ -31,7 +31,6 @@ import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.ConversionProcessor;
-import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
 
@@ -157,17 +156,6 @@ public abstract class Sheet implements Cloneable, Storable {
      * Ignore header when export
      */
     protected int nonHeader = -1;
-
-    protected StyleProcessor styleProcessor;
-
-    public Sheet setStyleProcessor(StyleProcessor styleProcessor){
-        this.styleProcessor = styleProcessor;
-        return this;
-    }
-
-    public StyleProcessor getStyleProcessor(){
-        return this.styleProcessor;
-    }
 
     private int rowLimit;
 
