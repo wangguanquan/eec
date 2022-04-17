@@ -284,10 +284,11 @@ class XMLRow extends Row {
 
     protected Cell[] cellCopyOf(int newLength) {
         Cell[] newCells = new Cell[newLength];
+        int oldRow = cells.length;
         for (int k = 0; k < newLength; k++) {
             newCells[k] = new Cell((short) (k + 1));
             // Copy values
-            if (cells[k] != null) {
+            if (k < oldRow && cells[k] != null) {
                 newCells[k].from(cells[k]);
             }
         }
