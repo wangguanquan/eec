@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
@@ -807,10 +808,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         @ExcelColumn
         private LocalTime ltv;
 
-        public static List<AllType> randomTestData(int size) {
+        public static List<AllType> randomTestData(int size, Supplier<AllType> sup) {
             List<AllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                AllType o = new AllType();
+                AllType o = sup.get();
                 o.bv = random.nextInt(10) == 5;
                 o.cv = charArray[random.nextInt(charArray.length)];
                 o.sv = (short) (random.nextInt() & 0xFFFF);
@@ -832,8 +833,12 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
 
         public static List<AllType> randomTestData() {
+            return randomTestData(AllType::new);
+        }
+
+        public static List<AllType> randomTestData(Supplier<AllType> sup) {
             int size = random.nextInt(100) + 1;
-            return randomTestData(size);
+            return randomTestData(size, sup);
         }
 
         public boolean isBv() {
