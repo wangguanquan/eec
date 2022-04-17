@@ -337,7 +337,7 @@ class XMLSheet implements Sheet {
         }
         // Create a empty worksheet dimension
         if (dimension == null) {
-            dimension = new Dimension(1, (short) 1, 0, (short) 0);
+            dimension = new Dimension(1, (short) 1);
         }
 
         return this;

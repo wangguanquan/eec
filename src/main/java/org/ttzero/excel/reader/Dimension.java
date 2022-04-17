@@ -36,6 +36,13 @@ public class Dimension {
     // Index to last used column (one base)
     public final short lastColumn;
 
+    public Dimension(int firstRow, short firstColumn) {
+        this.firstRow = firstRow;
+        this.firstColumn = firstColumn;
+        this.lastRow = 0;
+        this.lastColumn = 0;
+    }
+
     public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
         this.firstRow = firstRow;
         this.firstColumn = firstColumn;

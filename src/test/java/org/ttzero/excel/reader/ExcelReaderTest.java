@@ -454,7 +454,7 @@ public class ExcelReaderTest {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
                     if (row.hasFormula(i)) {
-                        print(new Dimension(row.getRowNum(), (short) (i + 1), 0, (short) 0));
+                        print(new Dimension(row.getRowNum(), (short) (i + 1)));
                         print(": ");
                         print(row.getFormula(i));
                         println('|');
