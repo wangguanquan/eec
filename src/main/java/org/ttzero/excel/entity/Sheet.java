@@ -41,6 +41,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
@@ -158,6 +160,11 @@ public abstract class Sheet implements Cloneable, Storable {
     protected int nonHeader = -1;
 
     private int rowLimit;
+
+    /**
+     * Other extend properties
+     */
+    protected Map<String, Object> extProp = new HashMap<>();
 
     public int getId() {
         return id;
@@ -1115,6 +1122,63 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected int getRowLimit() {
         return rowLimit;
+    }
+
+    /**
+     * Append extend property
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return current Worksheet
+     */
+    public Sheet putExtProp(String key, Object value) {
+        extProp.put(key, value);
+        return this;
+    }
+
+    /**
+     * If the specified key is not already associated with a value (or is mapped
+     * to {@code null}) associates it with the given value and returns
+     * {@code null}, else returns the current value.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return current Worksheet
+     */
+    public Sheet putExtPropIfAbsent(String key, Object value) {
+        extProp.putIfAbsent(key, value);
+        return this;
+    }
+
+    /**
+     * Copies all of the mappings from the specified map to extend properties
+     *
+     * @param m mappings to be stored in this map
+     * @return current Worksheet
+     */
+    public Sheet putAllExtProp(Map<String, Object> m) {
+        extProp.putAll(m);
+        return this;
+    }
+
+    /**
+     * Returns the value to which the specified key in extend property,
+     * or {@code null} if it contains no mapping for the key.
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the extend property value
+     */
+    public Object getExtPropValue(String key) {
+        return extProp.get(key);
+    }
+
+    /**
+     * Shallow copy all extend properties
+     *
+     * @return all extend properties
+     */
+    public Map<String, Object> getExtPropAsMap() {
+        return new HashMap<>(extProp);
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
