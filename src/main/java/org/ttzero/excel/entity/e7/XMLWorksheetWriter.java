@@ -21,6 +21,7 @@ import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
+import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.RowBlock;
@@ -28,6 +29,7 @@ import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -962,11 +964,51 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeSheetViews() throws IOException {
-        bw.write("<sheetViews><sheetView workbookViewId=\"0\"");
+        bw.write("<sheetViews>");
+
+        bw.write("<sheetView workbookViewId=\"0\"");
         if (sheet.getId() == 1) { // Default select the first worksheet
             bw.write(" tabSelected=\"1\"");
         }
-        bw.write("/></sheetViews>");
+
+        Object o = sheet.getExtPropValue(Const.WorksheetExtendProperty.FREEZE);
+        if (o instanceof Panes) {
+            Panes freezePanes = (Panes) o;
+
+            // Validity check
+            if (freezePanes.row < 0 || freezePanes.col < 0) {
+                throw new IllegalArgumentException("negative row or column number occur.");
+            }
+
+            if ((freezePanes.col | freezePanes.row) == 0) {
+                bw.write("/>"); // Empty tag
+            } else {
+                bw.write(">");
+
+                Dimension dim = new Dimension(freezePanes.row + 1, (short) (freezePanes.col + 1));
+                // Freeze top row
+                if (freezePanes.col == 0) {
+                    bw.write("<pane ySplit=\"" + freezePanes.row + "\" topLeftCell=\"" + dim + "\" activePane=\"bottomLeft\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"bottomLeft\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                // Freeze first column
+                else if (freezePanes.row == 0) {
+                    bw.write("<pane xSplit=\"" + freezePanes.col + "\" topLeftCell=\"" + dim + "\" activePane=\"topRight\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"topRight\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                // Freeze panes
+                else {
+                    bw.write("<pane xSplit=\"" + freezePanes.col + "\" ySplit=\"" + freezePanes.row + "\" topLeftCell=\"" + dim + "\" activePane=\"bottomRight\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"topRight\" activeCell=\"" + new Dimension(1, dim.firstColumn) + "\" sqref=\"" + new Dimension(1, dim.firstColumn) + "\"/>");
+                    bw.write("<selection pane=\"bottomLeft\" activeCell=\"" + new Dimension(dim.firstRow, (short) 1) + "\" sqref=\"" + new Dimension(dim.firstRow, (short) 1) + "\"/>");
+                    bw.write("<selection pane=\"bottomRight\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                bw.write("</sheetView>");
+            }
+        } else {
+            bw.write("/>"); // Empty tag
+        }
+        bw.write("</sheetViews>");
     }
 
     /**
