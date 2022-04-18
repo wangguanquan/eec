@@ -304,7 +304,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns workbook
      *
-     * @return the {@link Workbook}
+     * @return current {@link Workbook}
      */
     public Workbook getWorkbook() {
         return workbook;
@@ -314,7 +314,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the workbook
      *
      * @param workbook the {@link Workbook}
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setWorkbook(Workbook workbook) {
         this.workbook = workbook;
@@ -348,7 +348,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns shared string
      *
-     * @return the {@link SharedStrings}
+     * @return global {@link SharedStrings} in workbook
      */
     public SharedStrings getSst() {
         return workbook.getSst();
@@ -366,7 +366,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting auto resize cell's width
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet autoSize() {
         this.autoSize = 1;
@@ -376,7 +376,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting fix column width
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet fixSize() {
         this.autoSize = 2;
@@ -387,7 +387,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting fix column width
      *
      * @param width the column width
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet fixSize(double width) {
         this.autoSize = 2;
@@ -421,26 +421,38 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Cancel the odd row's fill style
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet cancelOddStyle() {
         this.autoOdd = 1;
         return this;
     }
 
+    /**
+     * Returns auto setting odd background flag
+     *
+     * @return 1: auto setting, others none
+     */
     public int getAutoOdd() {
         return autoOdd;
     }
 
-    public void setAutoOdd(int autoOdd) {
+    /**
+     * Setting auto setting odd background flag
+     *
+     * @param autoOdd 1: setting, others none
+     * @return current {@link Sheet}
+     */
+    public Sheet setAutoOdd(int autoOdd) {
         this.autoOdd = autoOdd;
+        return this;
     }
 
     /**
      * Setting the odd row's fill style
      *
      * @param fill the fill style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setOddFill(Fill fill) {
         this.oddFill = workbook.getStyles().addFill(fill);
@@ -469,7 +481,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the worksheet name
      *
      * @param name the worksheet name
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setName(String name) {
         this.name = name;
@@ -590,7 +602,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the header rows's columns
      *
      * @param columns the header row's columns
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setColumns(final org.ttzero.excel.entity.Column[] columns) {
         this.columns = columns;
@@ -600,7 +612,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns the {@link WaterMark}
      *
-     * @return the {@link WaterMark}
+     * @return the {@link WaterMark} in worksheet
      * @see WaterMark
      */
     public WaterMark getWaterMark() {
@@ -611,7 +623,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the {@link WaterMark}
      *
      * @param waterMark the {@link WaterMark}
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -630,7 +642,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting the worksheet status
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet hidden() {
         this.hidden = true;
@@ -640,7 +652,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet forceExport() {
         this.forceExport = 1;
@@ -650,7 +662,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Cancel force export
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet cancelForceExport() {
         this.forceExport = 2;
@@ -711,7 +723,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Add relationship
      *
      * @param rel Relationship
-     * @return worksheet
+     * @return current worksheet
      */
     public Sheet addRel(Relationship rel) {
         relManager.add(rel);
@@ -737,7 +749,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param font   the font
      * @param fill   the fill style
      * @param border the border style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
         return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
@@ -751,7 +763,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param border     the border style
      * @param vertical   the vertical style
      * @param horizontal the horizontal style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         return setHeadStyle(null, font, fill, border, vertical, horizontal);
@@ -766,7 +778,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param border     the border style
      * @param vertical   the vertical style
      * @param horizontal the horizontal style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
@@ -784,7 +796,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the header cell styles
      *
      * @param style the styles value
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(int style) {
         headStyle = style;
@@ -796,7 +808,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the header cell styles
      *
      * @param styleIndex the styles index
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyleIndex(int styleIndex) {
         headStyleIndex = styleIndex;
@@ -922,7 +934,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns the copy worksheet name
      *
-     * @return the name
+     * @return the name of copy worksheet
      */
     protected String getCopySheetName() {
         int sub = copyCount;
@@ -1092,7 +1104,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Settings nonHeader property
      *
-     * @return the Worksheet
+     * @return current Worksheet
      */
     public Sheet ignoreHeader() {
         this.nonHeader = 1;
