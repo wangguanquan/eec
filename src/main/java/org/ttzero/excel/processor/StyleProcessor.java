@@ -42,10 +42,13 @@ public interface StyleProcessor<T> {
      */
     int build(T o, int style, Styles sst);
 
-    class None implements StyleProcessor<Object> {
+    /**
+     * None processor
+     */
+    final class None implements StyleProcessor<Object> {
 
         @Override
-        public int build(Object o, int style, Styles sst) {
+        public final int build(Object o, int style, Styles sst) {
             return style;
         }
     }

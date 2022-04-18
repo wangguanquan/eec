@@ -134,13 +134,13 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param o the row data
      * @param cell the cell of row
      * @param hc the header column
-     * @param styleProcessor the styleProcessor
+     * @param styleProcessor a customize {@link StyleProcessor}
      */
     @Override
-    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor styleProcessor) {
+    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
         Styles styles = hc.styles;
-        if(null != styles && null != styleProcessor) {
-            cell.xf = styles.of(styleProcessor.build(o,hc.cellStyle,styles));
+        if (null != styles && null != styleProcessor) {
+            cell.xf = styles.of(styleProcessor.build(o, hc.cellStyle, styles));
         }
     }
 

@@ -70,16 +70,27 @@ public class ListSheet<T> extends Sheet {
     private int size;
 
     /**
-     * The custom styleProcessor
+     * The row styleProcessor
      */
-    protected StyleProcessor styleProcessor;
+    protected StyleProcessor<T> styleProcessor;
 
-    public Sheet setStyleProcessor(StyleProcessor styleProcessor) {
+    /**
+     * Setting a row style processor
+     *
+     * @param styleProcessor a row style processor
+     * @return current worksheet
+     */
+    public Sheet setStyleProcessor(StyleProcessor<T> styleProcessor) {
         this.styleProcessor = styleProcessor;
         return this;
     }
 
-    public StyleProcessor getStyleProcessor() {
+    /**
+     * Returns the row style processor
+     *
+     * @return {@link StyleProcessor}
+     */
+    public StyleProcessor<T> getStyleProcessor() {
         return this.styleProcessor;
     }
 
@@ -287,7 +298,8 @@ public class ListSheet<T> extends Sheet {
                     else e = o;
 
                     cellValueAndStyle.reset(rows, cell, e, columns[i]);
-                    cellValueAndStyle.setStyleDesign(o,cell,columns[i],getStyleProcessor());
+                    // TODO setting thd style-design into extend-prop
+                    cellValueAndStyle.setStyleDesign(o, cell, columns[i], getStyleProcessor());
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -519,7 +531,7 @@ public class ListSheet<T> extends Sheet {
 
         // Merge Header Style defined on Entry Class
         mergeGlobalSetting(clazz);
-        setDesignStyle(clazz);
+
         return columns.length;
     }
 
@@ -618,6 +630,9 @@ public class ListSheet<T> extends Sheet {
             if (style > 0 && column.getHeaderStyleIndex() == -1)
                 column.setHeaderStyle(style);
         }
+
+        // Parse the global style processor
+        setDesignStyle(clazz);
     }
 
     /**
@@ -626,13 +641,14 @@ public class ListSheet<T> extends Sheet {
      */
     protected void setDesignStyle(Class<?> clazz) {
         Styles styles = workbook.getStyles();
-        if(null != styles) {
+        if (null != styles) {
             StyleDesign designStyle = clazz.getDeclaredAnnotation(StyleDesign.class);
-            if(designStyle != null) {
+            if (designStyle != null && !StyleProcessor.None.class.isAssignableFrom(designStyle.using())) {
                 try {
                     setStyleProcessor(designStyle.using().newInstance());
-                } catch (InstantiationException |IllegalAccessException e) {
-                    throw new UncheckedTypeException(designStyle + " new instance error.", e);
+                } catch (InstantiationException | IllegalAccessException e) {
+                    LOGGER.warn("Construct {} error occur, it will be ignore.", designStyle.using(), e);
+//                    throw new UncheckedTypeException(designStyle + " new instance error.", e);
                 }
             }
         }
