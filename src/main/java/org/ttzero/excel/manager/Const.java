@@ -177,4 +177,18 @@ public interface Const {
          */
         int RMB = 2;
     }
+
+    /**
+     * The worksheet extend properties key
+     */
+    interface WorksheetExtendProperty {
+        /**
+         * Freeze panes key
+         */
+        String FREEZE = "freeze";
+        /**
+         * The style desing key
+         */
+        String STYLE_DESIGN = "styleDesign";
+    }
 }

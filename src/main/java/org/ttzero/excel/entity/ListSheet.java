@@ -636,6 +636,9 @@ public class ListSheet<T> extends Sheet {
 
         // Parse the global style processor
         styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+
+        // Freeze panes
+        attachFreezePanes(clazz);
     }
 
     /**
@@ -818,6 +821,35 @@ public class ListSheet<T> extends Sheet {
      */
     protected List<T> more() {
         return null;
+    }
+
+    /**
+     * Parse and attach freeze info
+     *
+     * @param clazz Class of &lt;T&gt;
+     */
+    protected void attachFreezePanes(Class<?> clazz) {
+        // Annotation setting has lower priority than setting method
+        if (getExtPropValue(Const.WorksheetExtendProperty.FREEZE) != null) {
+            return;
+        }
+        FreezePanes panes = clazz.getAnnotation(FreezePanes.class);
+        if (panes == null) {
+            return;
+        }
+
+        // Validity check
+        if (panes.topRow() < 0 || panes.firstColumn() < 0) {
+            throw new IllegalArgumentException("negative number occur.");
+        }
+
+        // Zero means unfreeze
+        if ((panes.topRow() | panes.firstColumn()) == 0) {
+            return;
+        }
+
+        // Put value into extend properties
+        putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.of(panes.topRow(), panes.firstColumn()));
     }
 
     public static class EntryColumn extends org.ttzero.excel.entity.Column {

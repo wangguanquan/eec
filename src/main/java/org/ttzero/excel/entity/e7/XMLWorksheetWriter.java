@@ -21,6 +21,7 @@ import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
+import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.RowBlock;
@@ -28,6 +29,7 @@ import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -296,99 +298,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Declaration
         bw.newLine();
         // Root node
-        if (sheet.getClass().isAnnotationPresent(TopNS.class)) {
-            TopNS topNS = sheet.getClass().getAnnotation(TopNS.class);
-            bw.write('<');
-            bw.write(topNS.value());
-            String[] prefixs = topNS.prefix(), urls = topNS.uri();
-            for (int i = 0, len = prefixs.length; i < len; ) {
-                bw.write(" xmlns");
-                if (prefixs[i] != null && !prefixs[i].isEmpty()) {
-                    bw.write(':');
-                    bw.write(prefixs[i]);
-                }
-                bw.write("=\"");
-                bw.write(urls[i]);
-                if (++i < len) {
-                    bw.write('"');
-                }
-            }
-        } else {
-            bw.write("<worksheet xmlns=\"");
-            bw.write(Const.SCHEMA_MAIN);
-        }
-        bw.write("\">");
+        writeRootNode();
 
         // Dimension
-        bw.append("<dimension ref=\"A1"); // FIXME Setting the column or row's start-index
-        int n = 11, size = sheet.size(); // fill 11 space
-        if (size > 0) {
-            bw.write(':');
-            n--;
-            char[] col = int2Col(columns[columns.length - 1].colIndex);
-            bw.write(col);
-            n -= col.length;
-            bw.writeInt(size + 1);
-            n -= stringSize(size + 1);
-        }
-        bw.write('"');
-        for (; n-->0;) bw.write(32); // Fill space
-        bw.write("/>");
+        writeDimension();
 
         // SheetViews default value
-        bw.write("<sheetViews><sheetView workbookViewId=\"0\"");
-        if (sheet.getId() == 1) { // Default select the first worksheet
-            bw.write(" tabSelected=\"1\"");
-        }
-        bw.write("/></sheetViews>");
+        writeSheetViews();
 
         // Default row height and width
-        n = 6;
-        bw.write("<sheetFormatPr defaultRowHeight=\"15.5\" defaultColWidth=\"");
+        int fillSpace = 6;
         BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38);
-        String stringWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-        n -= stringWidth.length();
-        bw.write(stringWidth);
-        bw.write('"');
-        for (int i = n; i-->=0;) bw.write(32); // Fill space
-        bw.write("/>");
+        String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+        writeSheetFormat(fillSpace, defaultWidth);
 
         // cols
-        if (columns.length > 0) {
-            bw.write("<cols>");
-//            if (sheet.isAutoSize()) {
-            for (int i = 0; i < columns.length; i++) {
-                bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(columns[i].width > 0.0000001 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
-                bw.write('"');
-                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
-                bw.write(" min=\"");
-                bw.writeInt(columns[i].colIndex);
-                bw.write("\" max=\"");
-                bw.writeInt(columns[i].colIndex + 1);
-                bw.write("\" bestFit=\"1\"/>");
-            }
-//            } else {
-//                bw.write("<col customWidth=\"1\" width=\"");
-//                bw.write(columns[i].width >= 1.0 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
-//                bw.write('"');
-//                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
-//                bw.write(" min=\"");
-//                bw.writeInt(columns[0].colIndex);
-//                bw.write("\" max=\"");
-//                bw.writeInt(columns[columns.length - 1].colIndex + 1);
-//                bw.write("\" bestFit=\"1\"/>");
-//            }
-            bw.write("</cols>");
-        }
+        writeCols(fillSpace, defaultWidth);
 
         // Write body data
-        bw.write("<sheetData>");
-
-        if (!nonHeader) {
-            writeHeaderRow();
-        }
-        startRow = 1 + (sheet.getNonHeader() ^ 1);
+        beforeSheetDate(nonHeader);
     }
 
     /**
@@ -455,6 +383,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(r.getId());
             bw.write("\"/>");
         }
+
+        // Others
+        afterSheetData();
+
         // End target
         if (getClass().isAnnotationPresent(TopNS.class)) {
             TopNS topNS = getClass().getAnnotation(TopNS.class);
@@ -973,4 +905,184 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     public void close() {
         FileUtil.close(bw);
     }
+
+    /**
+     * Write the &lt;worksheet&gt; node
+     *
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeRootNode() throws IOException {
+        if (sheet.getClass().isAnnotationPresent(TopNS.class)) {
+            TopNS topNS = sheet.getClass().getAnnotation(TopNS.class);
+            bw.write('<');
+            bw.write(topNS.value());
+            String[] prefixs = topNS.prefix(), urls = topNS.uri();
+            for (int i = 0, len = prefixs.length; i < len; ) {
+                bw.write(" xmlns");
+                if (prefixs[i] != null && !prefixs[i].isEmpty()) {
+                    bw.write(':');
+                    bw.write(prefixs[i]);
+                }
+                bw.write("=\"");
+                bw.write(urls[i]);
+                if (++i < len) {
+                    bw.write('"');
+                }
+            }
+        } else {
+            bw.write("<worksheet xmlns=\"");
+            bw.write(Const.SCHEMA_MAIN);
+        }
+        bw.write("\">");
+    }
+
+    /**
+     * Write the dimension of sheet, default value is {@code A1}
+     *
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeDimension() throws IOException {
+        bw.append("<dimension ref=\"A1"); // FIXME Setting the column or row's start-index
+        int n = 11, size = sheet.size(); // fill 11 space
+        if (size > 0) {
+            bw.write(':');
+            n--;
+            char[] col = int2Col(columns[columns.length - 1].colIndex);
+            bw.write(col);
+            n -= col.length;
+            bw.writeInt(size + 1);
+            n -= stringSize(size + 1);
+        }
+        bw.write('"');
+        for (; n-->0;) bw.write(32); // Fill space
+        bw.write("/>");
+    }
+
+    /**
+     * Write the sheet views such as FreezeEnum, Default selection cell.
+     *
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeSheetViews() throws IOException {
+        bw.write("<sheetViews>");
+
+        bw.write("<sheetView workbookViewId=\"0\"");
+        if (sheet.getId() == 1) { // Default select the first worksheet
+            bw.write(" tabSelected=\"1\"");
+        }
+
+        Object o = sheet.getExtPropValue(Const.WorksheetExtendProperty.FREEZE);
+        if (o instanceof Panes) {
+            Panes freezePanes = (Panes) o;
+
+            // Validity check
+            if (freezePanes.row < 0 || freezePanes.col < 0) {
+                throw new IllegalArgumentException("negative row or column number occur.");
+            }
+
+            if ((freezePanes.col | freezePanes.row) == 0) {
+                bw.write("/>"); // Empty tag
+            } else {
+                bw.write(">");
+
+                Dimension dim = new Dimension(freezePanes.row + 1, (short) (freezePanes.col + 1));
+                // Freeze top row
+                if (freezePanes.col == 0) {
+                    bw.write("<pane ySplit=\"" + freezePanes.row + "\" topLeftCell=\"" + dim + "\" activePane=\"bottomLeft\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"bottomLeft\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                // Freeze first column
+                else if (freezePanes.row == 0) {
+                    bw.write("<pane xSplit=\"" + freezePanes.col + "\" topLeftCell=\"" + dim + "\" activePane=\"topRight\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"topRight\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                // Freeze panes
+                else {
+                    bw.write("<pane xSplit=\"" + freezePanes.col + "\" ySplit=\"" + freezePanes.row + "\" topLeftCell=\"" + dim + "\" activePane=\"bottomRight\" state=\"frozen\"/>");
+                    bw.write("<selection pane=\"topRight\" activeCell=\"" + new Dimension(1, dim.firstColumn) + "\" sqref=\"" + new Dimension(1, dim.firstColumn) + "\"/>");
+                    bw.write("<selection pane=\"bottomLeft\" activeCell=\"" + new Dimension(dim.firstRow, (short) 1) + "\" sqref=\"" + new Dimension(dim.firstRow, (short) 1) + "\"/>");
+                    bw.write("<selection pane=\"bottomRight\" activeCell=\"" + dim + "\" sqref=\"" + dim + "\"/>");
+                }
+                bw.write("</sheetView>");
+            }
+        } else {
+            bw.write("/>"); // Empty tag
+        }
+        bw.write("</sheetViews>");
+    }
+
+    /**
+     * Write the sheet format
+     *
+     * @param fillSpace The number of characters to pad when recalculating the width.
+     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeSheetFormat(int fillSpace, String defaultWidth) throws IOException {
+        bw.write("<sheetFormatPr defaultRowHeight=\"15.5\" defaultColWidth=\"");
+        bw.write(defaultWidth);
+        bw.write('"');
+        for (int i = fillSpace - defaultWidth.length(); i-->=0;) bw.write(32); // Fill space
+        bw.write("/>");
+    }
+
+    /**
+     * Write the default column info, The specified column width will be overwritten in these method.
+     *
+     * @param fillSpace The number of characters to pad when recalculating the width.
+     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeCols(int fillSpace, String defaultWidth) throws IOException {
+        if (columns.length > 0) {
+            bw.write("<cols>");
+//            if (sheet.isAutoSize()) {
+            for (int i = 0; i < columns.length; i++) {
+                bw.write("<col customWidth=\"1\" width=\"");
+                bw.write(columns[i].width > 0.0000001 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
+                bw.write('"');
+                for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
+                bw.write(" min=\"");
+                bw.writeInt(columns[i].colIndex);
+                bw.write("\" max=\"");
+                bw.writeInt(columns[i].colIndex + 1);
+                bw.write("\" bestFit=\"1\"/>");
+            }
+//            } else {
+//                bw.write("<col customWidth=\"1\" width=\"");
+//                bw.write(columns[i].width >= 1.0 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
+//                bw.write('"');
+//                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
+//                bw.write(" min=\"");
+//                bw.writeInt(columns[0].colIndex);
+//                bw.write("\" max=\"");
+//                bw.writeInt(columns[columns.length - 1].colIndex + 1);
+//                bw.write("\" bestFit=\"1\"/>");
+//            }
+            bw.write("</cols>");
+        }
+    }
+
+    /**
+     * Begin to write the Sheet data and the header row.
+     *
+     * @param nonHeader mark none header
+     * @throws IOException if I/O error occur.
+     */
+    protected void beforeSheetDate(boolean nonHeader) throws IOException {
+        bw.write("<sheetData>");
+
+        // The first header row
+        if (!nonHeader) {
+            writeHeaderRow();
+        }
+        startRow = 1 + (sheet.getNonHeader() ^ 1);
+    }
+
+    /**
+     * Append others customize info
+     *
+     * @throws IOException if I/O error occur.
+     */
+    protected void afterSheetData() throws IOException { }
 }
