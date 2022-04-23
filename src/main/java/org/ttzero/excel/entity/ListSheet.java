@@ -17,10 +17,12 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
