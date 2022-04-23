@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * @author suyl at 2022-03-23 17:38
  *
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface StyleDesign {

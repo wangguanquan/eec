@@ -49,8 +49,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
@@ -686,12 +688,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign() throws IOException {
         new Workbook("标识行样式", author)
-                .addSheet(new ListSheet<Student>("期末成绩",Student.randomTestData()))
+                .addSheet(new ListSheet<>("期末成绩",Student.randomTestData()))
                 .writeTo(defaultTestPath);
     }
 
     @Test public void testStyleDesign1() throws IOException {
-        ListSheet itemListSheet = new ListSheet<Item>("序列数",Item.randomTestData());
+        ListSheet<Item> itemListSheet = new ListSheet<>("序列数",Item.randomTestData());
         itemListSheet.setStyleProcessor(rainbowStyle);
         new Workbook("标识行样式1", author)
                 .addSheet(itemListSheet)
@@ -700,10 +702,9 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign2() throws IOException {
         new Workbook("标识行样式2", author)
-                .addSheet(new ListSheet<Item>("序列数",Item.randomTestData()).setStyleProcessor((item,style,sst)->{
-                    if(item instanceof Item){
-                        Item item1 = (Item)item;
-                        if (item1.getId() < 10) {
+                .addSheet(new ListSheet<>("序列数",Item.randomTestData()).setStyleProcessor((item, style, sst)->{
+                    if (item != null) {
+                        if (item.getId() < 10) {
                             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                         }
                     }
@@ -732,15 +733,28 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static StyleProcessor<Item> rainbowStyle = (item, style, sst)->{
-        if (item.getId()%3==0) {
+        if (item.getId() % 3 == 0) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-        }else if (item.getId()%3==1) {
+        }else if (item.getId() % 3 == 1) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.blue));
-        }else if (item.getId()%3==2) {
+        }else if (item.getId() % 3 == 2) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.pink));
         }
         return style;
     };
+
+    static final Set<String> VIP_SET = new HashSet<>(Arrays.asList("a", "b", "x"));
+    public static class NameMatch implements StyleProcessor<String> {
+        @Override
+        public int build(String name, int style, Styles sst) {
+            if (VIP_SET.contains(name)) {
+                Font font = sst.getFont(style).clone();
+                style = Styles.clearFont(style) | sst.addFont(font.bold());
+            }
+            return style;
+        }
+    }
+
 
     public static class Item {
         @ExcelColumn
@@ -972,6 +986,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     public static class Student {
         @IgnoreExport
         private int id;
+        @StyleDesign(using = NameMatch.class)
         @ExcelColumn("姓名")
         private String name;
         @ExcelColumn("成绩")
@@ -1011,8 +1026,8 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
-            for (int i = pageNo * limit, n = i + limit; i < n; i++) {
-                Student e = new Student(i, getRandomString(), random.nextInt(50) + 50);
+            for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
+                Student e = new Student(i, (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;

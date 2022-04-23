@@ -21,11 +21,9 @@ import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.StyleDesign;
-import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
-import org.ttzero.excel.reader.UncheckedTypeException;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -562,6 +560,11 @@ public class ListSheet<T> extends Sheet {
             if (ec.colIndex() > -1) {
                 column.colIndex = ec.colIndex();
             }
+            // Style Design
+            StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+            if (sp != null) {
+                column.styleProcessor = sp;
+            }
             return column;
         }
         return null;
@@ -632,26 +635,23 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Parse the global style processor
-        setDesignStyle(clazz);
+        styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
     }
 
     /**
      * Set custom styleProcessor for declarations on Entry Class
-     * @param clazz  Class of &lt;T&gt;
+     *
+     * @param styleDesign {@link StyleDesign}
      */
-    protected void setDesignStyle(Class<?> clazz) {
-        Styles styles = workbook.getStyles();
-        if (null != styles) {
-            StyleDesign designStyle = clazz.getDeclaredAnnotation(StyleDesign.class);
-            if (designStyle != null && !StyleProcessor.None.class.isAssignableFrom(designStyle.using())) {
-                try {
-                    setStyleProcessor(designStyle.using().newInstance());
-                } catch (InstantiationException | IllegalAccessException e) {
-                    LOGGER.warn("Construct {} error occur, it will be ignore.", designStyle.using(), e);
-//                    throw new UncheckedTypeException(designStyle + " new instance error.", e);
-                }
+    protected StyleProcessor<?> getDesignStyle(StyleDesign styleDesign) {
+        if (styleDesign != null && !StyleProcessor.None.class.isAssignableFrom(styleDesign.using())) {
+            try {
+                return styleDesign.using().newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                LOGGER.warn("Construct {} error occur, it will be ignore.", styleDesign.using(), e);
             }
         }
+        return null;
     }
 
     /**
