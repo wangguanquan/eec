@@ -36,7 +36,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
- * A date util ror excel
+ * A date util for excel 07
  *
  * @author guanquan.wang on 2017/9/21.
  */
@@ -208,7 +208,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
@@ -217,7 +217,7 @@ public class DateUtil {
     }
 
     public static java.sql.Time toTime(double d) {
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
@@ -227,7 +227,7 @@ public class DateUtil {
     }
 
     public static LocalTime toLocalTime(double d) {
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalTime.ofSecondOfDay(m);
     }
 
@@ -243,7 +243,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
@@ -252,7 +252,7 @@ public class DateUtil {
         if (d - DAYS_1900_TO_1970 < .00001) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalDateTime.ofInstant(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz), ZoneId.systemDefault());
     }
 
