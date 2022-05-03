@@ -722,9 +722,9 @@ public class ListObjectSheetTest extends WorkbookTest {
             if (o.getScore() < 60) {
                 style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
                 // 低于30分时加下划线
-            }else if (o.getScore() < 70) {
+            } else if (o.getScore() < 70) {
                 style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-            }else if (o.getScore() > 90) {
+            } else if (o.getScore() > 90) {
                 // 获取原有字体+下划线（这样做可以保留原字体和大小）
                 Font newFont = sst.getFont(style).clone();
                 style = Styles.clearFont(style) | sst.addFont(newFont.underLine().bold());
@@ -736,9 +736,9 @@ public class ListObjectSheetTest extends WorkbookTest {
     public static StyleProcessor<Item> rainbowStyle = (item, style, sst)->{
         if (item.getId() % 3 == 0) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-        }else if (item.getId() % 3 == 1) {
+        } else if (item.getId() % 3 == 1) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.blue));
-        }else if (item.getId() % 3 == 2) {
+        } else if (item.getId() % 3 == 2) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.pink));
         }
         return style;
