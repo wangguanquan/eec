@@ -352,16 +352,17 @@ public class ReflectUtil {
         if (writeMethods == null) {
             for (int i = 1; i < propertyDescriptors.length; i++) {
                 PropertyDescriptor pd = propertyDescriptors[i];
-                tmp.put(pd.getName(), mergedMethods[i]);
+                if (i < mergedMethods.length && mergedMethods[i] != null) {
+                    tmp.put(pd.getName(), mergedMethods[i]);
+                }
             }
         } else {
             int i;
             for (int j = 0; j < mergedMethods.length; j++) {
                 i = mergedMethods[j] != null ? indexOf(writeMethods, mergedMethods[j]) : -1;
-                if (i >= 0) {
-                    writeMethods[i] = null;
-                }
-                tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
+                if (i >= 0) writeMethods[i] = null;
+                if (mergedMethods[j] != null)
+                    tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
             }
 
             i = 0;
