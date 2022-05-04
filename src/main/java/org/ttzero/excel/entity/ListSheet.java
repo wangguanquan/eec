@@ -647,6 +647,7 @@ public class ListSheet<T> extends Sheet {
      * Set custom styleProcessor for declarations on Entry Class
      *
      * @param styleDesign {@link StyleDesign}
+     * @return a style processor
      */
     protected StyleProcessor<?> getDesignStyle(StyleDesign styleDesign) {
         if (styleDesign != null && !StyleProcessor.None.class.isAssignableFrom(styleDesign.using())) {
