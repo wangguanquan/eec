@@ -19,6 +19,7 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
+import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.ReflectUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -26,6 +27,7 @@ import org.ttzero.excel.util.StringUtil;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,6 +36,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,46 +52,43 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.ReflectUtil.mapping;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
+import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
  * @author guanquan.wang at 2019-04-17 11:55
  */
-class HeaderRow extends Row {
-    private String[] names;
-    private Class<?> clazz;
-    private Field[] fields;
-    private Method[] methods;
-    private int[] columns;
-    private Class<?>[] fieldClazz;
-    private Object t;
+public class HeaderRow extends Row {
+    protected String[] names;
+    protected Class<?> clazz;
+    protected Object t;
     /* The column name and column position mapping */
-    private Map<String, Integer> mapping;
+    protected Map<String, Integer> mapping;
+    /* Storage header column */
+    protected ListSheet.EntryColumn[] columns;
 
-    private HeaderRow() { }
+    protected HeaderRow() { }
 
-    static HeaderRow with(Row row) {
-        HeaderRow hr = new HeaderRow();
-        hr.names = new String[row.lc];
-        hr.mapping = new HashMap<>();
+    public HeaderRow with(Row row) {
+        this.names = new String[row.lc];
+        this.mapping = new HashMap<>();
         for (int i = row.fc; i < row.lc; i++) {
-            hr.names[i] = row.getString(i);
-            hr.mapping.put(hr.names[i], i);
+            this.names[i] = row.getString(i);
+            this.mapping.put(this.names[i], i);
         }
         // Extends from row
-        hr.fc = row.fc;
-        hr.lc = row.lc;
-        hr.index = row.index;
-        hr.cells = new Cell[hr.names.length];
+        this.fc = row.fc;
+        this.lc = row.lc;
+        this.index = row.index;
+        this.cells = new Cell[this.names.length];
         for (int i = 0; i < row.fc; i++) {
-            hr.cells[i] = new Cell();
+            this.cells[i] = new Cell();
         }
         for (int i = row.fc; i < row.lc; i++) {
             Cell cell = new Cell();
-            cell.setSv(hr.names[i]);
-            hr.cells[i] = cell;
+            cell.setSv(this.names[i]);
+            this.cells[i] = cell;
         }
-        return hr;
+        return this;
     }
 
     final boolean is(Class<?> clazz) {
@@ -101,137 +101,85 @@ class HeaderRow extends Row {
      * @param clazz the type of binding
      * @return the header row
      */
-    final HeaderRow setClass(Class<?> clazz) {
+    protected HeaderRow setClass(Class<?> clazz) {
         this.clazz = clazz;
+        // Parse Field
         Field[] declaredFields = listDeclaredFields(clazz);
+        // Parse Method
+        Map<String, Method> tmp = attachOtherColumn(clazz);
 
-        Method[] writeMethods = null;
-        try {
-            writeMethods = listDeclaredMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                    || method.getAnnotation(RowNum.class) != null);
-        } catch (IntrospectionException e) {
-            LOGGER.warn("Get [" + clazz + "] read declared failed.", e);
-        }
+        ListSheet.EntryColumn[] columns = new ListSheet.EntryColumn[declaredFields.length + tmp.size()];
 
-        Map<String, Method> tmp = new LinkedHashMap<>();
-
-        int writeLength = methodMapping(clazz, writeMethods, tmp);
-        methods = new Method[declaredFields.length + writeLength];
-        Class<?>[] fieldClazz = new Class[methods.length];
-
-        int[] index = new int[declaredFields.length];
         int count = 0;
-        for (int i = 0, n; i < declaredFields.length; i++) {
+        for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
             f.setAccessible(true);
             String gs = f.getName();
 
-            // Ignore annotation on read method
+            // The setter methods take precedence over property reflection
             Method method = tmp.get(gs);
             if (method != null) {
-                if (method.getAnnotation(IgnoreImport.class) != null) {
-                    declaredFields[i] = null;
-                    continue;
-                }
+                ListSheet.EntryColumn column = createColumn(method);
+                if (column != null) {
+                    column.method = method;
+                    column.colIndex = check(column.name, gs);
+                    if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
+                    columns[count++] = column;
 
-                method.setAccessible(true);
-                methods[i] = method;
-                ExcelColumn mec = method.getAnnotation(ExcelColumn.class);
-                if (mec != null && isNotEmpty(mec.value())) {
-                    n = check(mec.value(), gs);
-                    if (n == -1) {
-                        declaredFields[i] = null;
-                    } else {
-                        index[i] = n;
-                        count++;
-                    }
-                    continue;
-                }
-
-                // Row Num
-                RowNum rowNum = method.getAnnotation(RowNum.class);
-                if (rowNum != null) {
-                    fieldClazz[i] = RowNum.class;
-                    index[i] = i;
-                    count++;
+                    // Remove from mapper if attached
+                    tmp.remove(gs);
                     continue;
                 }
             }
 
-            // skip not import fields
-            IgnoreImport nit = f.getAnnotation(IgnoreImport.class);
-            if (nit != null) {
-                declaredFields[i] = null;
-                continue;
-            }
-
-            // Row Num
-            RowNum rowNum = f.getAnnotation(RowNum.class);
-            if (rowNum != null) {
-                index[i] = i;
-                count++;
-                fieldClazz[i] = RowNum.class;
-                continue;
-            }
-
-            // field has display name
-            ExcelColumn ec = f.getAnnotation(ExcelColumn.class);
-            if (ec != null && isNotEmpty(ec.value())) {
-                n = check(ec.value(), gs);
-                if (n == -1) {
-                    declaredFields[i] = null;
-                    continue;
+            ListSheet.EntryColumn column = createColumn(f);
+            if (column != null) {
+                if (StringUtil.isEmpty(column.name)) {
+                    column.name = gs;
                 }
-            }
-            // Annotation value is null
-            else if (ec != null || methods[i] != null) {
-                String name = f.getName();
-                n = getIndex(name);
-                if (n == -1 && (n = getIndex(StringUtil.toPascalCase(name))) == -1) {
-                    declaredFields[i] = null;
-                    continue;
-                }
-            } else {
-                declaredFields[i] = null;
-                continue;
-            }
-
-            index[i] = n;
-            count++;
-        }
-
-        if (writeLength > 0) {
-            System.arraycopy(writeMethods, 0, methods, declaredFields.length, writeLength);
-            count += writeLength;
-//            for (int i = declaredFields.length, j = 0; j < writeLength; j++) {
-//                index[i++] =
-//            }
-        }
-
-        this.fields = new Field[count];
-        this.columns = new int[count];
-        this.fieldClazz = new Class<?>[count];
-
-        for (int i = 0, j = 0; i < declaredFields.length; i++) {
-            if (declaredFields[i] != null) {
-                fields[j] = declaredFields[i];
-                columns[j] = index[i];
-                methods[j] = methods[i];
-                if (fieldClazz[i] != null) {
-                    this.fieldClazz[j] = fieldClazz[i];
+                if (method != null) {
+                    column.method = method;
+                    if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
                 } else {
-                    this.fieldClazz[j] = methods[i] != null ? methods[i].getParameterTypes()[0] : declaredFields[i].getType();
+                    column.field = f;
+                    if (column.clazz == null) column.clazz = declaredFields[i].getType();
+                }
+                column.colIndex = check(column.name, gs);
+                columns[count++] = column;
+            }
+        }
+
+        if (!tmp.isEmpty()) {
+            for (Map.Entry<String, Method> entry : tmp.entrySet()) {
+                ListSheet.EntryColumn column = createColumn(entry.getValue());
+                if (column == null) {
+                    column = new ListSheet.EntryColumn(entry.getKey());
+                }
+                column.method = entry.getValue();
+                column.colIndex = getIndex(column.name);
+                if (column.clazz == null) column.clazz = entry.getValue().getParameterTypes()[0];
+                columns[count++] = column;
+            }
+        }
+
+        // Remove not mapped column
+        int j = 0;
+        for (int i = 0; i < count; i++) {
+            ListSheet.EntryColumn column = columns[i];
+            if (column.colIndex >= 0 || column.clazz == RowNum.class) {
+                if (i != j) {
+                    columns[j] = column;
                 }
                 j++;
             }
         }
 
-
+        this.columns = j < columns.length ? Arrays.copyOf(columns, j) : columns;
 
         return this;
     }
 
-    private int methodMapping(Class<?> clazz, Method[] writeMethods, Map<String, Method> tmp) {
+    protected int methodMapping(Class<?> clazz, Method[] writeMethods, Map<String, Method> tmp) {
         try {
             PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
                 .getPropertyDescriptors();
@@ -241,6 +189,7 @@ class HeaderRow extends Row {
                 Method method = propertyDescriptors[i].getWriteMethod();
                 if (method == null) continue;
                 int index = ReflectUtil.indexOf(allMethods, method);
+                // Subclass methods have higher priority
                 mergedMethods[i] = index >= 0 ? allMethods[index] : method;
             }
 
@@ -251,7 +200,7 @@ class HeaderRow extends Row {
         return 0;
     }
 
-    private int check(String first, String second) {
+    protected int check(String first, String second) {
         int n = getIndex(first);
         if (n == -1) n = getIndex(second);
         if (n == -1) {
@@ -268,26 +217,18 @@ class HeaderRow extends Row {
      * @throws IllegalAccessException -
      * @throws InstantiationException -
      */
-    final HeaderRow setClassOnce(Class<?> clazz) throws IllegalAccessException, InstantiationException {
+    protected HeaderRow setClassOnce(Class<?> clazz) throws IllegalAccessException, InstantiationException {
         setClass(clazz);
         this.t = clazz.newInstance();
         return this;
     }
 
-    final Field[] getFields() {
-        return fields;
-    }
-
-    final int[] getColumns() {
+    protected ListSheet.EntryColumn[] getColumns() {
         return columns;
     }
 
-    final Class<?>[] getFieldClazz() {
-        return fieldClazz;
-    }
-
     @SuppressWarnings("unchecked")
-    final <T> T getT() {
+    protected <T> T getT() {
         return (T) t;
     }
 
@@ -340,8 +281,8 @@ class HeaderRow extends Row {
                 Arrays.fill(chars, 0, n, '-');
             }
 
-            if (fieldClazz != null) {
-                Class<?> c = fieldClazz[i];
+            if (columns != null && i < columns.length && columns[i].clazz != RowNum.class) {
+                Class<?> c = columns[i].clazz;
 
                 // Align Center
                 if (isDate(c) || isLocalDate(c) || isLocalDateTime(c) || isLocalTime(c) || isChar(c) || isBool(c)) {
@@ -363,7 +304,7 @@ class HeaderRow extends Row {
         return buf.toString();
     }
 
-    int simpleTestLength(String name) {
+    protected int simpleTestLength(String name) {
         if (name == null) return 4;
         char[] chars = name.toCharArray();
         double d = 0.0;
@@ -376,184 +317,246 @@ class HeaderRow extends Row {
 
     void put(Row row, Object t) throws IllegalAccessException, InvocationTargetException {
         for (int i = 0; i < columns.length; i++) {
-            if (methods[i] != null)
+            if (columns[i].method != null)
                 methodPut(i, row, t);
             else
                 fieldPut(i, row, t);
         }
     }
 
-    private void fieldPut(int i, Row row, Object t) throws IllegalAccessException {
-        int c = columns[i];
-        if (fieldClazz[i] == String.class) {
-            fields[i].set(t, row.getString(c));
+    protected void fieldPut(int i, Row row, Object t) throws IllegalAccessException {
+        ListSheet.EntryColumn ec = columns[i];
+        int c = ec.colIndex;
+        Class<?> fieldClazz = ec.clazz;
+        if (fieldClazz == String.class) {
+            ec.field.set(t, row.getString(c));
         }
-        else if (fieldClazz[i] == Integer.class) {
-            fields[i].set(t, row.getInt(c));
+        else if (fieldClazz == Integer.class) {
+            ec.field.set(t, row.getInt(c));
         }
-        else if (fieldClazz[i] == Long.class) {
-            fields[i].set(t, row.getLong(c));
+        else if (fieldClazz == Long.class) {
+            ec.field.set(t, row.getLong(c));
         }
-        else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
-            fields[i].set(t, row.getDate(c));
+        else if (fieldClazz == java.util.Date.class || fieldClazz == java.sql.Date.class) {
+            ec.field.set(t, row.getDate(c));
         }
-        else if (fieldClazz[i] == java.sql.Timestamp.class) {
-            fields[i].set(t, row.getTimestamp(c));
+        else if (fieldClazz == java.sql.Timestamp.class) {
+            ec.field.set(t, row.getTimestamp(c));
         }
-        else if (fieldClazz[i] == Double.class) {
-            fields[i].set(t, row.getDouble(c));
+        else if (fieldClazz == Double.class) {
+            ec.field.set(t, row.getDouble(c));
         }
-        else if (fieldClazz[i] == Float.class) {
-            fields[i].set(t, row.getFloat(c));
+        else if (fieldClazz == Float.class) {
+            ec.field.set(t, row.getFloat(c));
         }
-        else if (fieldClazz[i] == Boolean.class) {
-            fields[i].set(t, row.getBoolean(c));
+        else if (fieldClazz == Boolean.class) {
+            ec.field.set(t, row.getBoolean(c));
         }
-        else if (fieldClazz[i] == BigDecimal.class) {
-            fields[i].set(t, row.getDecimal(c));
+        else if (fieldClazz == BigDecimal.class) {
+            ec.field.set(t, row.getDecimal(c));
         }
-        else if (fieldClazz[i] == int.class) {
+        else if (fieldClazz == int.class) {
             Integer v;
-            fields[i].set(t, (v = row.getInt(c)) != null ? v : 0);
+            ec.field.set(t, (v = row.getInt(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == long.class) {
+        else if (fieldClazz == long.class) {
             Long v;
-            fields[i].set(t, (v = row.getLong(c)) != null ? v : 0L);
+            ec.field.set(t, (v = row.getLong(c)) != null ? v : 0L);
         }
-        else if (fieldClazz[i] == double.class) {
+        else if (fieldClazz == double.class) {
             Double v;
-            fields[i].set(t, (v = row.getDouble(c)) != null ? v : 0.0D);
+            ec.field.set(t, (v = row.getDouble(c)) != null ? v : 0.0D);
         }
-        else if (fieldClazz[i] == float.class) {
+        else if (fieldClazz == float.class) {
             Float v;
-            fields[i].set(t, (v = row.getFloat(c)) != null ? v : 0.0F);
+            ec.field.set(t, (v = row.getFloat(c)) != null ? v : 0.0F);
         }
-        else if (fieldClazz[i] == boolean.class) {
+        else if (fieldClazz == boolean.class) {
             Boolean v;
-            fields[i].set(t, (v = row.getBoolean(c)) != null ? v : false);
+            ec.field.set(t, (v = row.getBoolean(c)) != null ? v : false);
         }
-        else if (fieldClazz[i] == java.sql.Time.class) {
-            fields[i].set(t, row.getTime(c));
+        else if (fieldClazz == java.sql.Time.class) {
+            ec.field.set(t, row.getTime(c));
         }
-        else if (fieldClazz[i] == LocalDateTime.class) {
-            fields[i].set(t, row.getLocalDateTime(c));
+        else if (fieldClazz == LocalDateTime.class) {
+            ec.field.set(t, row.getLocalDateTime(c));
         }
-        else if (fieldClazz[i] == LocalDate.class) {
-            fields[i].set(t, row.getLocalDate(c));
+        else if (fieldClazz == LocalDate.class) {
+            ec.field.set(t, row.getLocalDate(c));
         }
-        else if (fieldClazz[i] == LocalTime.class) {
-            fields[i].set(t, row.getLocalTime(c));
+        else if (fieldClazz == LocalTime.class) {
+            ec.field.set(t, row.getLocalTime(c));
         }
-        else if (fieldClazz[i] == Character.class) {
-            fields[i].set(t, row.getChar(c));
+        else if (fieldClazz == Character.class) {
+            ec.field.set(t, row.getChar(c));
         }
-        else if (fieldClazz[i] == Byte.class) {
-            fields[i].set(t, row.getByte(c));
+        else if (fieldClazz == Byte.class) {
+            ec.field.set(t, row.getByte(c));
         }
-        else if (fieldClazz[i] == Short.class) {
-            fields[i].set(t, row.getShort(c));
+        else if (fieldClazz == Short.class) {
+            ec.field.set(t, row.getShort(c));
         }
-        else if (fieldClazz[i] == char.class) {
+        else if (fieldClazz == char.class) {
             Character v;
-            fields[i].set(t, (v = row.getChar(c)) != null ? v : '\0');
+            ec.field.set(t, (v = row.getChar(c)) != null ? v : '\0');
         }
-        else if (fieldClazz[i] == byte.class) {
+        else if (fieldClazz == byte.class) {
             Byte v;
-            fields[i].set(t, (v = row.getByte(c)) != null ? v : 0);
+            ec.field.set(t, (v = row.getByte(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == short.class) {
+        else if (fieldClazz == short.class) {
             Short v;
-            fields[i].set(t, (v = row.getShort(c)) != null ? v : 0);
+            ec.field.set(t, (v = row.getShort(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == RowNum.class) {
-            fields[i].set(t, row.getRowNum());
+        else if (fieldClazz == RowNum.class) {
+            ec.field.set(t, row.getRowNum());
         }
     }
 
-    private void methodPut(int i, Row row, Object t) throws IllegalAccessException, InvocationTargetException {
-        int c = columns[i];
-        if (fieldClazz[i] == String.class) {
-            methods[i].invoke(t, row.getString(c));
+    protected void methodPut(int i, Row row, Object t) throws IllegalAccessException, InvocationTargetException {
+        ListSheet.EntryColumn ec = columns[i];
+        int c = ec.colIndex;
+        Class<?> fieldClazz = ec.clazz;
+        if (fieldClazz == String.class) {
+            ec.method.invoke(t, row.getString(c));
         }
-        else if (fieldClazz[i] == Integer.class) {
-            methods[i].invoke(t, row.getInt(c));
+        else if (fieldClazz == Integer.class) {
+            ec.method.invoke(t, row.getInt(c));
         }
-        else if (fieldClazz[i] == Long.class) {
-            methods[i].invoke(t, row.getLong(c));
+        else if (fieldClazz == Long.class) {
+            ec.method.invoke(t, row.getLong(c));
         }
-        else if (fieldClazz[i] == java.util.Date.class || fieldClazz[i] == java.sql.Date.class) {
-            methods[i].invoke(t, row.getDate(c));
+        else if (fieldClazz == java.util.Date.class || fieldClazz == java.sql.Date.class) {
+            ec.method.invoke(t, row.getDate(c));
         }
-        else if (fieldClazz[i] == java.sql.Timestamp.class) {
-            methods[i].invoke(t, row.getTimestamp(c));
+        else if (fieldClazz == java.sql.Timestamp.class) {
+            ec.method.invoke(t, row.getTimestamp(c));
         }
-        else if (fieldClazz[i] == Double.class) {
-            methods[i].invoke(t, row.getDouble(c));
+        else if (fieldClazz == Double.class) {
+            ec.method.invoke(t, row.getDouble(c));
         }
-        else if (fieldClazz[i] == Float.class) {
-            methods[i].invoke(t, row.getFloat(c));
+        else if (fieldClazz == Float.class) {
+            ec.method.invoke(t, row.getFloat(c));
         }
-        else if (fieldClazz[i] == Boolean.class) {
-            methods[i].invoke(t, row.getBoolean(c));
+        else if (fieldClazz == Boolean.class) {
+            ec.method.invoke(t, row.getBoolean(c));
         }
-        else if (fieldClazz[i] == BigDecimal.class) {
-            methods[i].invoke(t, row.getDecimal(c));
+        else if (fieldClazz == BigDecimal.class) {
+            ec.method.invoke(t, row.getDecimal(c));
         }
-        else if (fieldClazz[i] == int.class) {
+        else if (fieldClazz == int.class) {
             Integer v;
-            methods[i].invoke(t, (v = row.getInt(c)) != null ? v : 0);
+            ec.method.invoke(t, (v = row.getInt(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == long.class) {
+        else if (fieldClazz == long.class) {
             Long v;
-            methods[i].invoke(t, (v = row.getLong(c)) != null ? v : 0);
+            ec.method.invoke(t, (v = row.getLong(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == double.class) {
+        else if (fieldClazz == double.class) {
             Double v;
-            methods[i].invoke(t, (v = row.getDouble(c)) != null ? v : 0.0D);
+            ec.method.invoke(t, (v = row.getDouble(c)) != null ? v : 0.0D);
         }
-        else if (fieldClazz[i] == float.class) {
+        else if (fieldClazz == float.class) {
             Float v;
-            methods[i].invoke(t, (v = row.getFloat(c)) != null ? v : 0.0F);
+            ec.method.invoke(t, (v = row.getFloat(c)) != null ? v : 0.0F);
         }
-        else if (fieldClazz[i] == boolean.class) {
+        else if (fieldClazz == boolean.class) {
             Boolean v;
-            methods[i].invoke(t, (v = row.getBoolean(c)) != null ? v : false);
+            ec.method.invoke(t, (v = row.getBoolean(c)) != null ? v : false);
         }
-        else if (fieldClazz[i] == java.sql.Time.class) {
-            methods[i].invoke(t, row.getTime(c));
+        else if (fieldClazz == java.sql.Time.class) {
+            ec.method.invoke(t, row.getTime(c));
         }
-        else if (fieldClazz[i] == LocalDateTime.class) {
-            methods[i].invoke(t, row.getLocalDateTime(c));
+        else if (fieldClazz == LocalDateTime.class) {
+            ec.method.invoke(t, row.getLocalDateTime(c));
         }
-        else if (fieldClazz[i] == LocalDate.class) {
-            methods[i].invoke(t, row.getLocalDate(c));
+        else if (fieldClazz == LocalDate.class) {
+            ec.method.invoke(t, row.getLocalDate(c));
         }
-        else if (fieldClazz[i] == LocalTime.class) {
-            methods[i].invoke(t, row.getLocalTime(c));
+        else if (fieldClazz == LocalTime.class) {
+            ec.method.invoke(t, row.getLocalTime(c));
         }
-        else if (fieldClazz[i] == Character.class) {
-            methods[i].invoke(t, row.getChar(c));
+        else if (fieldClazz == Character.class) {
+            ec.method.invoke(t, row.getChar(c));
         }
-        else if (fieldClazz[i] == Byte.class) {
-            methods[i].invoke(t, row.getByte(c));
+        else if (fieldClazz == Byte.class) {
+            ec.method.invoke(t, row.getByte(c));
         }
-        else if (fieldClazz[i] == Short.class) {
-            methods[i].invoke(t, row.getShort(c));
+        else if (fieldClazz == Short.class) {
+            ec.method.invoke(t, row.getShort(c));
         }
-        else if (fieldClazz[i] == char.class) {
+        else if (fieldClazz == char.class) {
             Character v;
-            methods[i].invoke(t, (v = row.getChar(c)) != null ? v : '\0');
+            ec.method.invoke(t, (v = row.getChar(c)) != null ? v : '\0');
         }
-        else if (fieldClazz[i] == byte.class) {
+        else if (fieldClazz == byte.class) {
             Byte v;
-            methods[i].invoke(t, (v = row.getByte(c)) != null ? v : 0);
+            ec.method.invoke(t, (v = row.getByte(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == short.class) {
+        else if (fieldClazz == short.class) {
             Short v;
-            methods[i].invoke(t, (v = row.getShort(c)) != null ? v : 0);
+            ec.method.invoke(t, (v = row.getShort(c)) != null ? v : 0);
         }
-        else if (fieldClazz[i] == RowNum.class) {
-            methods[i].invoke(t, row.getRowNum());
+        else if (fieldClazz == RowNum.class) {
+            ec.method.invoke(t, row.getRowNum());
         }
+    }
+
+    /**
+     * Ignore some columns, override this method to add custom filtering
+     *
+     * @param ao {@code Method} or {@code Field}
+     * @return true if ignore current column
+     */
+    protected boolean ignoreColumn(AccessibleObject ao) {
+        return ao.getAnnotation(IgnoreImport.class) != null;
+    }
+
+    /**
+     * Attach some others column
+     *
+     * @param clazz Target class
+     * @return a column and Write method mapping
+     */
+    protected Map<String, Method> attachOtherColumn(Class<?> clazz) {
+        Method[] writeMethods;
+        try {
+            writeMethods = listDeclaredMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
+                    || method.getAnnotation(RowNum.class) != null);
+        } catch (IntrospectionException e) {
+            LOGGER.warn("Get [" + clazz + "] read declared failed.", e);
+            return Collections.emptyMap();
+        }
+
+        Map<String, Method> tmp = new LinkedHashMap<>();
+
+        methodMapping(clazz, Arrays.stream(writeMethods).filter(m -> m.getParameterCount() == 1).toArray(Method[]::new), tmp);
+
+        return tmp;
+    }
+
+    /**
+     * Create column from {@link ExcelColumn} annotation
+     * <p>
+     * Override the method to extend custom comments
+     *
+     * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
+     * @return the Worksheet's {@link ListSheet.EntryColumn} information
+     */
+    protected ListSheet.EntryColumn createColumn(AccessibleObject ao) {
+        // Filter all ignore column
+        if (ignoreColumn(ao)) return null;
+
+        ao.setAccessible(true);
+        ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
+        if (ec != null) {
+            return new ListSheet.EntryColumn(ec.value());
+        }
+        // Row Num
+        RowNum rowNum = ao.getAnnotation(RowNum.class);
+        if (rowNum != null) {
+            return new ListSheet.EntryColumn(EMPTY, RowNum.class);
+        }
+        return null;
     }
 }

@@ -53,7 +53,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -443,9 +442,9 @@ public class ExcelReader implements Closeable {
         return this;
     }
 
-    // --- PRIVATE FUNCTIONS
+    // --- PROTECTED FUNCTIONS
 
-    private ContentType checkContentType(Path root) {
+    protected ContentType checkContentType(Path root) {
         SAXReader reader = new SAXReader();
         Document document;
         // Read [Content_Types].xml
@@ -470,7 +469,37 @@ public class ExcelReader implements Closeable {
         return contentType;
     }
 
-    private ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+    public ExcelReader(InputStream is) throws IOException {
+        this(is, 0, 0, VALUE_ONLY);
+    }
+
+    public ExcelReader(InputStream is, int option) throws IOException {
+        this(is, 0, 0, option);
+    }
+
+    public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        if (temp == null) {
+            throw new IOException("Create temp directory error. Please check your permission");
+        }
+        FileUtil.cp(stream, temp);
+
+        init(temp, bufferSize, cacheSize, option);
+    }
+
+    public ExcelReader(Path path) throws IOException {
+        init(path, 0, 0, VALUE_ONLY);
+    }
+
+    public ExcelReader(Path path, int option) throws IOException {
+        init(path, 0, 0, option);
+    }
+
+    public ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+        init(path, bufferSize, cacheSize, option);
+    }
+
+    protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         // Store template stream as zip file
         Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
         LOGGER.debug("Unzip file to：{}", tmp);
@@ -582,6 +611,7 @@ public class ExcelReader implements Closeable {
         if ((option >> 1 & 1) == 1) {
             parseFormula();
         }
+        return this;
     }
 
     /**
@@ -641,7 +671,7 @@ public class ExcelReader implements Closeable {
         return er;
     }
 
-    private XMLSheet sheetFactory(int option) {
+    protected XMLSheet sheetFactory(int option) {
         XMLSheet sheet;
         switch (option) {
             case VALUE_AND_CALC: sheet = new XMLCalcSheet(); break;
@@ -659,7 +689,7 @@ public class ExcelReader implements Closeable {
      * @param path documents path
      * @return enum of ExcelType
      */
-    private static ExcelType getType(Path path) {
+    public static ExcelType getType(Path path) {
         ExcelType type;
         try (InputStream is = Files.newInputStream(path)) {
             byte[] bytes = new byte[8];
