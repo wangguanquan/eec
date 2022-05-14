@@ -738,7 +738,7 @@ public class XMLSheet implements Sheet {
  */
 class XMLCalcSheet extends XMLSheet implements CalcSheet {
     private long[] calc; // Array of formula
-    XMLCalcSheet() { }
+
     XMLCalcSheet(XMLSheet sheet) {
         this.name = sheet.name;
         this.index = sheet.index;
@@ -812,7 +812,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     // A merge cells grid
     private Grid mergeCells;
 
-    XMLMergeSheet() { }
     XMLMergeSheet(XMLSheet sheet) {
         this.name = sheet.name;
         this.index = sheet.index;
