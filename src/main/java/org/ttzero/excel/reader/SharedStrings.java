@@ -268,7 +268,7 @@ public class SharedStrings implements Closeable {
             forward = new String[page];
             backward = new String[page];
         } else {
-            forward = new String[max];
+            forward = new String[page];
         }
     }
 
@@ -472,12 +472,16 @@ public class SharedStrings implements Closeable {
                 ++offsetM;
                 break;
             } else if (length < cb.length && nChar == length - 6) { // EOF '</sst>'
-                if (max == -1) { // Reset totals when unknown size
-                    max = offsetM * page + n;
-                }
+//                if (max == -1) { // Reset totals when unknown size
+//                    max = offsetM * page + n;
+//                }
                 ++offsetM; // out of index range
                 break;
             }
+        }
+        // Reset totals when unknown size
+        if (max < n) {
+            max = offsetM * page + n;
         }
         return n; // Returns the word count
     }
@@ -540,6 +544,7 @@ public class SharedStrings implements Closeable {
                 }
                 forward[n++] = buf.toString();
                 if (status == 4) sst.push(forward[n - 1]);
+                nChar = end + 5;
             }
 
             // An integral page records
@@ -550,6 +555,7 @@ public class SharedStrings implements Closeable {
         return new int[] { nChar, n };
     }
 
+    // Returns the index round of <t>
     private int[] subT(char[] cb, int nChar, int len0, int len1) {
         do {
             // The next tag
@@ -568,27 +574,11 @@ public class SharedStrings implements Closeable {
             } else break;
         } while (nChar < len1);
 
-//        if (nChar < len0) {
-//            switch (cb[nChar + 1]) {
-//                case 't':
-//                    break;
-//                case 'r':
-//                    break;
-//                    // phoneticPr
-//                case 'p':
-//                    // Ignore
-//                    break;
-//                // Empty <si></si> tag
-//                case '/':
-//                    if (cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>')
-//                        return new int[] { nChar, nChar };
-//                    break;
-//            }
-//        }
-//
-
-
-
+        // Empty si
+        if (nChar < len1 && cb[nChar + 1] == '/' && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
+            // It will skip the </t> tag, so here you need to go back 4 characters in reverse
+            return new int[] { nChar - 4, nChar - 4 };
+        }
 
         for (; nChar < len0 && (cb[nChar + 1] != 't'
             || cb[nChar + 2] != '>' && cb[nChar + 2] != ' ' && cb[nChar + 2] != '/'); ++nChar)

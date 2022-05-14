@@ -529,6 +529,14 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void test226() throws IOException {
+        final String[] arr = {"ab", "", "r", "y", "", "6", "nrge"};
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#226.xlsx"))) {
+            String[] array = reader.sheet(0).rows().map(row -> row.getString(0)).toArray(String[]::new);
+            assert Arrays.equals(arr, array);
+        }
+    }
+
     public static class O {
         @ExcelColumn("亚马逊FBA子单号/箱唛号")
         private String fbaNo;
