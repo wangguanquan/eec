@@ -60,20 +60,20 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public abstract class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
-    int index = -1;
+    protected int index = -1;
     // Index to first column (zero base)
-    int fc = 0;
+    protected int fc = 0;
     // Index to last column (zero base)
-    int lc = -1;
+    protected int lc = -1;
     // Share cell
-    Cell[] cells;
+    protected Cell[] cells;
     /**
      * The Shared String Table
      */
-    SharedStrings sst;
+    protected SharedStrings sst;
     // The header row
     protected HeaderRow hr;
-    boolean unknownLength;
+    protected boolean unknownLength;
 
     // Cache formulas
     private PreCalc[] sharedCalc;
@@ -81,7 +81,7 @@ public abstract class Row {
     /**
      * The global styles
      */
-    Styles styles;
+    protected Styles styles;
 
     /**
      * The number of row. (one base)
@@ -171,13 +171,17 @@ public abstract class Row {
      *
      * @return header Row
      */
-    HeaderRow asHeader() {
-        HeaderRow hr = HeaderRow.with(this);
-        this.hr = hr;
-        return hr;
+    protected HeaderRow asHeader() {
+        return new HeaderRow().with(this);
     }
 
-    Row setHr(HeaderRow hr) {
+    /**
+     * Setting header row
+     *
+     * @param hr {@link HeaderRow}
+     * @return self
+     */
+    protected Row setHr(HeaderRow hr) {
         this.hr = hr;
         return this;
     }

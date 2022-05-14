@@ -41,32 +41,32 @@ import java.util.regex.Pattern;
  *
  * @author guanquan.wang on 2018-09-22
  */
-class XMLSheet implements Sheet {
+public class XMLSheet implements Sheet {
     final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
-    XMLSheet() { }
+    public XMLSheet() { }
 
-    String name;
-    int index; // per sheet index of workbook
+    protected String name;
+    protected int index; // per sheet index of workbook
 //        , size = -1; // size of rows per sheet
-    Path path;
-    int id;
+    protected Path path;
+    protected int id;
     /**
      * The Shared String Table
      */
-    SharedStrings sst;
+    protected SharedStrings sst;
     /**
      * The {@link Styles}
      */
-    Styles styles;
-    int startRow = -1; // row index of data
-    HeaderRow header;
-    boolean hidden; // state hidden
+    protected Styles styles;
+    protected int startRow = -1; // row index of data
+    protected HeaderRow header;
+    protected boolean hidden; // state hidden
 
     // Range address of the used area in the current sheet
-    Dimension dimension;
+    protected Dimension dimension;
     // XMLDrawings
-    Drawings drawings;
+    protected Drawings drawings;
 
 
     /**
@@ -74,7 +74,7 @@ class XMLSheet implements Sheet {
      *
      * @param name the worksheet name
      */
-    void setName(String name) {
+    protected void setName(String name) {
         this.name = name;
     }
 
@@ -83,7 +83,7 @@ class XMLSheet implements Sheet {
      *
      * @param path the temp path
      */
-    void setPath(Path path) {
+    protected void setPath(Path path) {
         this.path = path;
     }
 
@@ -92,7 +92,7 @@ class XMLSheet implements Sheet {
      *
      * @param sst the {@link SharedStrings}
      */
-    void setSst(SharedStrings sst) {
+    protected void setSst(SharedStrings sst) {
         this.sst = sst;
     }
 
@@ -101,7 +101,7 @@ class XMLSheet implements Sheet {
      *
      * @param styles the {@link Styles}
      */
-    void setStyles(Styles styles) {
+    protected void setStyles(Styles styles) {
         this.styles = styles;
     }
 
@@ -126,7 +126,7 @@ class XMLSheet implements Sheet {
         return index;
     }
 
-    void setIndex(int index) {
+    protected void setIndex(int index) {
         this.index = index;
     }
 
@@ -145,7 +145,7 @@ class XMLSheet implements Sheet {
      *
      * @param id the id of worksheet
      */
-    void setId(int id) {
+    protected void setId(int id) {
         this.id = id;
     }
 
@@ -154,7 +154,7 @@ class XMLSheet implements Sheet {
      *
      * @param drawings resource info
      */
-    void setDrawings(Drawings drawings) {
+    protected void setDrawings(Drawings drawings) {
         this.drawings = drawings;
     }
 
@@ -195,6 +195,8 @@ class XMLSheet implements Sheet {
 
     /**
      * Test Worksheet is hidden
+     *
+     * @return true: if current sheet is hidden
      */
     @Override
     public boolean isHidden() {
@@ -254,10 +256,10 @@ class XMLSheet implements Sheet {
     private BufferedReader reader;
     private char[] cb; // buffer
     private int nChar, length;
-    boolean eof = false, heof = false; // OPTIONS = false
-    long mark;
+    protected boolean eof = false, heof = false; // OPTIONS = false
+    protected long mark;
 
-    XMLRow sRow;
+    protected XMLRow sRow;
 
     /**
      * Load sheet.xml as BufferedReader
@@ -328,7 +330,7 @@ class XMLSheet implements Sheet {
         } else {
             eof = false;
             mark += nChar;
-            sRow = new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1);
+            sRow = createRow(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
 
         // Deep read if dimension information not write in header
@@ -490,9 +492,8 @@ class XMLSheet implements Sheet {
         Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
         if (nIter.hasNext()) {
             Row row = nIter.next();
-            if (header == null)
-                header = row.asHeader();
-            else row.setHr(header);
+            if (header == null) header = row.asHeader();
+            row.setHr(header);
         }
         return nIter;
     }
@@ -547,6 +548,10 @@ class XMLSheet implements Sheet {
         }
 
         return this;
+    }
+
+    protected XMLRow createRow(SharedStrings sst, Styles styles, int startRow) {
+        return new XMLRow(sst, styles, startRow);
     }
 
     /*
@@ -705,7 +710,7 @@ class XMLSheet implements Sheet {
         throws IOException { }
 
     Row createHeader(char[] cb, int start, int n) {
-        return new XMLRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
+        return createRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
     }
 
     @Override

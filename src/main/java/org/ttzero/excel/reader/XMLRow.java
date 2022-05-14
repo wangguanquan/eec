@@ -35,15 +35,15 @@ import static org.ttzero.excel.util.StringUtil.swap;
  * value. You can use the {@link #isEmpty()} method to
  * test whether the row data is an empty node. The empty node
  * is defined as: No values and styles and formats. Line like this.
- * <code><row r="x"/></code> You can get the data eq by cell
+ * {@code <row r="x"/>} You can get the data eq by cell
  * subscript like ResultSet: {@link #getInt(int)} to get the current
  * line The data in the second column, the subscript, starts at 0.
  *
  * @author guanquan.wang on 2018-09-22
  */
-class XMLRow extends Row {
-    int startRow;
-    StringBuilder buf;
+public class XMLRow extends Row {
+    protected int startRow;
+    protected StringBuilder buf;
 
     /**
      * The number of row. (one base)
@@ -71,9 +71,9 @@ class XMLRow extends Row {
     }
 
     @SuppressWarnings("unused")
-    XMLRow() { }
+    public XMLRow() { }
 
-    XMLRow(SharedStrings sst, Styles styles, int startRow) {
+    public XMLRow(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
@@ -81,12 +81,12 @@ class XMLRow extends Row {
     }
 
     /////////////////////////unsafe////////////////////////
-    char[] cb;
-    int from, to;
-    int cursor, e;
+    protected char[] cb;
+    protected int from, to;
+    protected int cursor, e;
 
     ///////////////////////////////////////////////////////
-    XMLRow with(char[] cb, int from, int size) {
+    protected XMLRow with(char[] cb, int from, int size) {
 //        LOGGER.debug(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
@@ -98,7 +98,7 @@ class XMLRow extends Row {
     }
 
     /* empty row*/
-    XMLRow empty(char[] cb, int from, int size) {
+    protected XMLRow empty(char[] cb, int from, int size) {
 //        LOGGER.debug(new String(cb, from, size));
         this.cb = cb;
         this.from = from;
@@ -123,7 +123,7 @@ class XMLRow extends Row {
         }
     }
 
-    int searchSpan() {
+    protected int searchSpan() {
         int i = from + 4, _lc = lc;
         for (; cb[i] != '>'; i++) {
             if (cb[i] <= ' ' && cb[i + 1] == 's' && cb[i + 2] == 'p'
@@ -158,7 +158,7 @@ class XMLRow extends Row {
     /**
      * Loop parse cell
      */
-    void parseCells() {
+    protected void parseCells() {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
@@ -241,7 +241,7 @@ class XMLRow extends Row {
         return cell;
     }
 
-    private long toLong(int a, int b) {
+    protected long toLong(int a, int b) {
         boolean _n;
         if (_n = cb[a] == '-') a++;
         long n = cb[a++] - '0';
@@ -251,15 +251,15 @@ class XMLRow extends Row {
         return _n ? -n : n;
     }
 
-    private String toString(int a, int b) {
+    protected String toString(int a, int b) {
         return new String(cb, a, b - a);
     }
 
-    private double toDouble(int a, int b) {
+    protected double toDouble(int a, int b) {
         return Double.parseDouble(toString(a, b));
     }
 
-    private boolean isNumber(int a, int b) {
+    protected boolean isNumber(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
         for (; a < b; ) {
@@ -269,7 +269,7 @@ class XMLRow extends Row {
         return a == b;
     }
 
-    private boolean isDouble(int a, int b) {
+    protected boolean isDouble(int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
         for (char i = 0, e = 0; a < b; ) {
@@ -296,7 +296,7 @@ class XMLRow extends Row {
     }
 
     /* Found specify target  */
-    private int get(char c) {
+    protected int get(char c) {
         // Ignore all attributes
         return get(null, c, null);
     }
@@ -309,7 +309,7 @@ class XMLRow extends Row {
      * @param attrConsumer an attribute consumer
      * @return the start index of value
      */
-    int get(Cell cell, char c, Attribute attrConsumer) {
+    protected int get(Cell cell, char c, Attribute attrConsumer) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -355,18 +355,18 @@ class XMLRow extends Row {
      *
      * @return the end index of string value
      */
-    private int getT() {
+    protected int getT() {
         return get('t');
     }
 
     /**
      * Found value tag range
      *
-     * Code like this {@code <v>0</v>
+     * Code like this {@code <v>0</v>}
      *
      * @return the end index of int value
      */
-    private int getV() {
+    protected int getV() {
         return get('v');
     }
 
@@ -375,7 +375,7 @@ class XMLRow extends Row {
      *
      * @param cell current {@link Cell}
      */
-    void parseCellValue(Cell cell) {
+    protected void parseCellValue(Cell cell) {
         // @Mark: Ignore Formula string default
 
         // Get value
@@ -490,7 +490,7 @@ class XMLCalcRow extends XMLRow {
      * Loop parse cell
      */
     @Override
-    void parseCells() {
+    protected void parseCells() {
         int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
@@ -516,7 +516,7 @@ class XMLCalcRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     @Override
-    void parseCellValue(Cell cell) {
+    protected void parseCellValue(Cell cell) {
         // If cell has formula
         if (cell.f || !hasCalcFunc) {
             // Parse calc
@@ -650,7 +650,7 @@ class XMLMergeRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     @Override
-    void parseCellValue(Cell cell) {
+    protected void parseCellValue(Cell cell) {
 
         // Parse value
         super.parseCellValue(cell);
