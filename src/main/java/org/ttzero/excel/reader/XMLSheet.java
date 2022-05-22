@@ -330,7 +330,7 @@ public class XMLSheet implements Sheet {
         } else {
             eof = false;
             mark += nChar;
-            sRow = createRow(sst, styles, this.startRow > 0 ? this.startRow : 1);
+            sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
 
         // Deep read if dimension information not write in header
@@ -550,8 +550,9 @@ public class XMLSheet implements Sheet {
         return this;
     }
 
-    protected XMLRow createRow(SharedStrings sst, Styles styles, int startRow) {
-        return new XMLRow(sst, styles, startRow);
+    @Override
+    public XMLRow createRow() {
+        return new XMLRow();
     }
 
     /*
@@ -710,7 +711,7 @@ public class XMLSheet implements Sheet {
         throws IOException { }
 
     Row createHeader(char[] cb, int start, int n) {
-        return createRow(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n);
+        return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n);
     }
 
     @Override
