@@ -71,13 +71,21 @@ public class XMLRow extends Row {
     }
 
     @SuppressWarnings("unused")
-    public XMLRow() { }
+    public XMLRow() {
+        this.startRow = 1;
+        buf = new StringBuilder();
+    }
 
     public XMLRow(SharedStrings sst, Styles styles, int startRow) {
+        buf = new StringBuilder();
+        init(sst, styles, startRow);
+    }
+
+    public XMLRow init(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
-        buf = new StringBuilder();
+        return this;
     }
 
     /////////////////////////unsafe////////////////////////

@@ -572,7 +572,7 @@ public class ExcelReader implements Closeable {
         int index = 0;
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
-            XMLSheet sheet = sheetFactory(option);
+            XMLSheet sheet = (XMLSheet) sheetFactory(option);
             sheet.setName(e.attributeValue("name"));
             sheet.setId(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
@@ -671,11 +671,17 @@ public class ExcelReader implements Closeable {
         return er;
     }
 
-    protected XMLSheet sheetFactory(int option) {
+    /**
+     * Create a read sheet
+     *
+     * @param option the reader option.
+     * @return Sheet extends XMLSheet
+     */
+    protected Sheet sheetFactory(int option) {
         XMLSheet sheet;
         switch (option) {
-            case VALUE_AND_CALC: sheet = new XMLCalcSheet(); break;
-            case COPY_ON_MERGED: sheet = new XMLMergeSheet(); break;
+            case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
+            case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
             // TODO full reader
 //            case VALUE_AND_CALC|COPY_ON_MERGED: break;
             default            : sheet = new XMLSheet();

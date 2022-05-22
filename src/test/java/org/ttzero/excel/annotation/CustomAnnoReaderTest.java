@@ -64,98 +64,10 @@ public class CustomAnnoReaderTest {
         protected XMLSheet sheetFactory(int option) {
             return new XMLSheet() {
                 @Override
-                protected XMLRow createRow(SharedStrings sst, Styles styles, int startRow) {
-                    return new XMLRow(sst, styles, startRow) {
-                        @Override
-                        protected HeaderRow asHeader() {
-                            return new HeaderRow() {
-                                @Override
-                                protected ListSheet.EntryColumn createColumn(AccessibleObject ao) {
-                                    ExcelProperty ep = ao.getAnnotation(ExcelProperty.class);
-                                    if (ep != null) {
-                                        Class<? extends Converter> converterClazz = ep.converter();
-                                        ListSheet.EntryColumn column;
-                                        if (converterClazz != Converter.AutoConverter.class) {
-                                            ConvertColumn cc = new ConvertColumn(ep.value()[0], converterClazz);
-
-                                            try {
-                                                cc.converter = converterClazz.newInstance();
-                                            } catch (IllegalAccessException | InstantiationException e1) {
-                                                LOGGER.warn("无法解析Converter: {}", converterClazz);
-                                            }
-                                            column = cc;
-                                        } else {
-                                            column = new ListSheet.EntryColumn(ep.value()[0]);
-                                        }
-                                        return column;
-                                    }
-                                    // Row Num
-                                    RowNum rowNum = ao.getAnnotation(RowNum.class);
-                                    if (rowNum != null) {
-                                        return new ListSheet.EntryColumn(EMPTY, RowNum.class);
-                                    }
-                                    return null;
-                                }
-
-                                @Override
-                                protected void methodPut(int i, org.ttzero.excel.reader.Row row, Object t) throws IllegalAccessException, InvocationTargetException {
-                                    Class<?> fieldClazz = columns[i].clazz;
-
-                                    // 兼容处理
-                                    if (Converter.class.isAssignableFrom(fieldClazz)) {
-                                        convert((ConvertColumn) columns[i], row, t);
-                                    } else {
-                                        super.methodPut(i, row, t);
-                                    }
-                                }
-
-                                @Override
-                                protected void fieldPut(int i, org.ttzero.excel.reader.Row row, Object t) throws IllegalAccessException {
-                                    Class<?> fieldClazz = columns[i].clazz;
-
-                                    // 兼容处理
-                                    if (Converter.class.isAssignableFrom(fieldClazz)) {
-                                        convert((ConvertColumn) columns[i], row, t);
-                                    } else {
-                                        super.fieldPut(i, row, t);
-                                    }
-                                }
-
-                                private void convert(ConvertColumn column, org.ttzero.excel.reader.Row row, Object t) {
-                                    Converter<?> converter = column.converter;
-                                    if (converter != null) {
-                                        try {
-                                            Object o = converter.convertToJavaData(toCellData(row, column.colIndex));
-                                            if (column.method != null) {
-                                                column.method.invoke(t, o);
-                                            } else {
-                                                column.field.set(t, o);
-                                            }
-                                        } catch (Exception e) {
-                                            throw new ExcelReadException(e);
-                                        }
-                                    }
-                                }
-
-                                private CellData toCellData(org.ttzero.excel.reader.Row row, int i) {
-                                    CellData cellData = new CellData();
-                                    switch (row.getCellType(i)) {
-                                        case STRING: cellData.setStringValue(row.getString(i)); break;
-                                        case INTEGER:
-                                        case LONG: cellData.setNumberValue(row.getDecimal(i)); break;
-                                        case BOOLEAN: cellData.setBooleanValue(row.getBoolean(i)); break;
-                                        default:
-                                            cellData.setData(row.getString(i)); break;
-                                    }
-                                    return cellData;
-                                }
-
-                            }.with(this);
-                        }
-                    };
+                public XMLRow createRow() {
+                    return new MyRow();
                 }
             };
-
         }
     }
 
@@ -170,6 +82,95 @@ public class CustomAnnoReaderTest {
         @Override
         public CellData convertToExcelData(Integer value) throws Exception {
             return value >= 0 && value < names.length ? new CellData<>(names[value]) : new CellData<>(names[0]);
+        }
+    }
+
+    public static class MyRow extends XMLRow {
+        @Override
+        protected HeaderRow asHeader() {
+            return new HeaderRow() {
+                @Override
+                protected ListSheet.EntryColumn createColumn(AccessibleObject ao) {
+                    ExcelProperty ep = ao.getAnnotation(ExcelProperty.class);
+                    if (ep != null) {
+                        Class<? extends Converter> converterClazz = ep.converter();
+                        ListSheet.EntryColumn column;
+                        if (converterClazz != Converter.AutoConverter.class) {
+                            ConvertColumn cc = new ConvertColumn(ep.value()[0], converterClazz);
+
+                            try {
+                                cc.converter = converterClazz.newInstance();
+                            } catch (IllegalAccessException | InstantiationException e1) {
+                                LOGGER.warn("无法解析Converter: {}", converterClazz);
+                            }
+                            column = cc;
+                        } else {
+                            column = new ListSheet.EntryColumn(ep.value()[0]);
+                        }
+                        return column;
+                    }
+                    // Row Num
+                    RowNum rowNum = ao.getAnnotation(RowNum.class);
+                    if (rowNum != null) {
+                        return new ListSheet.EntryColumn(EMPTY, RowNum.class);
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void methodPut(int i, org.ttzero.excel.reader.Row row, Object t) throws IllegalAccessException, InvocationTargetException {
+                    Class<?> fieldClazz = columns[i].clazz;
+
+                    // 兼容处理
+                    if (Converter.class.isAssignableFrom(fieldClazz)) {
+                        convert((ConvertColumn) columns[i], row, t);
+                    } else {
+                        super.methodPut(i, row, t);
+                    }
+                }
+
+                @Override
+                protected void fieldPut(int i, org.ttzero.excel.reader.Row row, Object t) throws IllegalAccessException {
+                    Class<?> fieldClazz = columns[i].clazz;
+
+                    // 兼容处理
+                    if (Converter.class.isAssignableFrom(fieldClazz)) {
+                        convert((ConvertColumn) columns[i], row, t);
+                    } else {
+                        super.fieldPut(i, row, t);
+                    }
+                }
+
+                private void convert(ConvertColumn column, org.ttzero.excel.reader.Row row, Object t) {
+                    Converter<?> converter = column.converter;
+                    if (converter != null) {
+                        try {
+                            Object o = converter.convertToJavaData(toCellData(row, column.colIndex));
+                            if (column.method != null) {
+                                column.method.invoke(t, o);
+                            } else {
+                                column.field.set(t, o);
+                            }
+                        } catch (Exception e) {
+                            throw new ExcelReadException(e);
+                        }
+                    }
+                }
+
+                private CellData toCellData(org.ttzero.excel.reader.Row row, int i) {
+                    CellData cellData = new CellData();
+                    switch (row.getCellType(i)) {
+                        case STRING: cellData.setStringValue(row.getString(i)); break;
+                        case INTEGER:
+                        case LONG: cellData.setNumberValue(row.getDecimal(i)); break;
+                        case BOOLEAN: cellData.setBooleanValue(row.getBoolean(i)); break;
+                        default:
+                            cellData.setData(row.getString(i)); break;
+                    }
+                    return cellData;
+                }
+
+            }.with(this);
         }
     }
 
