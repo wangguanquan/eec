@@ -449,6 +449,13 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.0 (2022-05-22)
+-------------
+- 增加StyleDesign用于样式处理（单元格或者整行样式处理）
+- 增加FreezePanes用于冻结网格
+- 修改部分BUG(#227,#232,#238,#243)
+- 读取文件支持自定义注解转对象(#237)
+
 Version 0.4.14 (2021-12-19)
 -------------
 - 提高对Numbers转xlsx的兼容性
@@ -470,13 +477,6 @@ Version 0.4.12.1 (2021-05-20)
 -------------
 - Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
 
-Version 0.4.12 (2021-05-18)
--------------
-- 增加获取图片功能(#168)
-- 支持row()方法转对象(#175)
-- 读取文件默认使用包装类而非基本类型，为了方便处理Null类型(#177)
-- 增加`@HeaderStyle`注解自定义头部样式，本次仅引入颜色的定制，后续将提供更丰富的样式支持
-
 
 [更多...](./CHANGELOG)
 
@@ -484,7 +484,7 @@ Version 0.4.12 (2021-05-18)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.4.14-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.0-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
