@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
@@ -548,6 +549,8 @@ public class ListSheet<T> extends Sheet {
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
+        // TODO Retrofit
+        ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
