@@ -298,9 +298,9 @@ public class ListSheet<T> extends Sheet {
                         e = column.getField().get(o);
                     else e = o;
 
-                    cellValueAndStyle.reset(rows, cell, e, columns[i]);
+                    cellValueAndStyle.reset(rows, cell, e, column);
                     // TODO setting thd style-design into extend-prop
-                    cellValueAndStyle.setStyleDesign(o, cell, columns[i], getStyleProcessor());
+                    cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -862,8 +862,11 @@ public class ListSheet<T> extends Sheet {
         public Method method;
         public Field field;
 
-        public EntryColumn() { }
+        public EntryColumn() {
+            super();
+        }
         public EntryColumn(String name) {
+            super();
             this.name = name;
         }
         public EntryColumn(String name, Class<?> clazz) {
