@@ -220,4 +220,14 @@ public class CSVSheet extends Sheet {
 //        }
 //        return !hasHeader;
 //    }
+
+    /**
+     * The Worksheet row limit
+     *
+     * @return the limit
+     */
+    @Override
+    protected int getRowLimit() {
+        return Integer.MAX_VALUE;
+    }
 }
