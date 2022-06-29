@@ -116,6 +116,30 @@ public class Column {
      * Specify the column index
      */
     public int colIndex = -1;
+    /**
+     * The previous Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column prev;
+    /**
+     * The next Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column next;
+    /**
+     * The tail Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column tail;
 
     /**
      * Constructor Column
@@ -721,5 +745,46 @@ public class Column {
     public Column setHeaderComment(Comment headerComment) {
         this.headerComment = headerComment;
         return this;
+    }
+
+    /**
+     * Append sub-column at the tail
+     *
+     * @param column a sub-column
+     * @return the {@link Column} self
+     */
+    public Column addSubColumn(Column column) {
+        if (this == column) {
+            return this;
+        }
+        if (next != null) {
+            int subSize = subColumnSize();
+            if (subSize >= 10) {
+                throw new ExcelWriteException("Too many sub-column occur. Max support 10, current is " + subSize);
+            }
+            column.prev = this.tail;
+            this.tail.next = column;
+            this.tail = column;
+        } else {
+            this.tail = column;
+            this.next = column;
+            column.prev = this;
+        }
+        return this;
+    }
+
+    /**
+     * Returns the size of sub-column
+     *
+     * @return size of sub-column(include root column)
+     */
+    public int subColumnSize() {
+        int i = 1;
+        if (next != null) {
+            Column next = this.next;
+            for (; next != tail; next = next.next, i++);
+            i++;
+        }
+        return i;
     }
 }

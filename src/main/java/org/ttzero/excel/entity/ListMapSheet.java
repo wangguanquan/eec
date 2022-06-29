@@ -191,7 +191,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             }
         } else {
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i].tail != null ? columns[i].tail : columns[i];
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }

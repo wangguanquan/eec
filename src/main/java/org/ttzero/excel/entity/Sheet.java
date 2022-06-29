@@ -33,6 +33,7 @@ import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -546,6 +547,8 @@ public abstract class Sheet implements Cloneable, Storable {
     public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
             this.columns = getHeaderColumns();
+            // Reverse
+            reverseHeadColumn();
             // Reset Common Properties
             resetCommonProperties(columns);
             // Sort column index
@@ -560,6 +563,8 @@ public abstract class Sheet implements Cloneable, Storable {
             // Check the limit of columns
             checkColumnLimit();
             headerReady |= (this.columns.length > 0);
+            // Reset Row limit
+            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 ? 0 : columns[0].subColumnSize());
         }
         return columns;
     }
@@ -568,6 +573,13 @@ public abstract class Sheet implements Cloneable, Storable {
         for (org.ttzero.excel.entity.Column column : columns) {
             if (column == null) continue;
             if (column.styles == null) column.styles = workbook.getStyles();
+            if (column.next != null) {
+                org.ttzero.excel.entity.Column col = column.next, tail = column.tail;
+                for (; col != tail; col = col.next) {
+                    if (col.styles == null)
+                        col.styles = workbook.getStyles();
+                }
+            }
         }
     }
 
@@ -1015,7 +1027,6 @@ public abstract class Sheet implements Cloneable, Storable {
                 if (rows > 0) rows--;
                 ignoreHeader();
             } else this.nonHeader = 0;
-            this.rowLimit = sheetWriter.getRowLimit() - (this.nonHeader ^ 1);
         }
     }
 
@@ -1191,6 +1202,73 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Map<String, Object> getExtPropAsMap() {
         return new HashMap<>(extProp);
+    }
+
+    /**
+     * Reverse and fill Header column
+     */
+    protected void reverseHeadColumn() {
+        if (!headerReady) this.columns = getHeaderColumns();
+        if (columns == null || columns.length == 0) return;
+        // Count the number of sub-columns
+        int[] lenArray = new int[columns.length];
+        int maxSubColumnSize = 1;
+        for (int i = 0, a, len = columns.length; i < len; i++) {
+            org.ttzero.excel.entity.Column col = columns[i];
+            a = col.subColumnSize();
+            lenArray[i] = a;
+            if (a > maxSubColumnSize) {
+                maxSubColumnSize = a;
+            }
+        }
+        // Single header column
+        if (maxSubColumnSize == 1) return;
+        // Reverse and fill empty column
+        for (int i = 0, len = columns.length; i < len; i++) {
+            org.ttzero.excel.entity.Column col = columns[i];
+            // Reverse header to tail
+            if (col.tail != null) {
+                org.ttzero.excel.entity.Column head = col.tail, tmp = head.prev;
+                // Switch prev and next point
+                for (; tmp != col; ) {
+                    org.ttzero.excel.entity.Column ptmp = tmp.prev;
+                    head.addSubColumn(tmp);
+                    tmp = ptmp;
+                }
+                head.addSubColumn(tmp);
+                head.prev = null;
+                head.tail.next = null;
+                columns[i] = head;
+                col = head;
+            }
+            // Fill empty column
+            if (lenArray[i] < maxSubColumnSize) {
+                for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
+                    col.addSubColumn(new org.ttzero.excel.entity.Column());
+                }
+            }
+        }
+        // TODO Add merge cell properties
+        for (int i = 0, len = columns.length; i < len; ) {
+            org.ttzero.excel.entity.Column column = columns[i], next = column;
+            int fc = i, fr = 0, lc = i, lr = 0, n = 0;
+            for (; next != null; next = next.next) {
+                n++;
+                if (StringUtil.isNotEmpty(next.name)) {
+                    // TODO 需要把前面已有的合并创建出来
+                    for (org.ttzero.excel.entity.Column right = lc + 1 < columns.length ? columns[lc + 1] : null
+                         ; right!= null && (next.name.equals(right.name) || StringUtil.isEmpty(right.name));
+                         right = lc + 1 < columns.length ? columns[lc + 1] : null) lc++;
+
+//                    if (fc < lc) {
+//
+//                    }
+                }
+            }
+
+            i++;
+        }
+        System.out.println();
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

@@ -327,16 +327,22 @@ public class ListObjectSheetTest extends WorkbookTest {
     };
 
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不及格" : n;
+    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不合格" : n;
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", "guanquan.wang")
-            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Column("学号", "id")
-                    , new Column("姓名", "name")
-                    , new Column("成绩", "score", conversion)
-                    .setStyleProcessor(sp)
+        new Workbook("2021小五班期未考试成绩")
+            .addSheet(new ListSheet<>("期末成绩",Student.randomTestData()
+                    , new Column("学号", "id", int.class)
+                    , new Column("姓名", "name", String.class)
+                    , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+                    .setStyleProcessor((o, style, sst) -> {
+                        if ((int)o < 60) {
+                            style = Styles.clearFill(style)
+                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                        }
+                        return style;
+                    })
                 )
             )
             .writeTo(defaultTestPath);

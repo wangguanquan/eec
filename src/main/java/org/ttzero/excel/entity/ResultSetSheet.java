@@ -264,7 +264,8 @@ public class ResultSetSheet extends Sheet {
             if (hasHeaderColumns()) {
                 org.ttzero.excel.entity.Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
-                    SQLColumn column = SQLColumn.of(columns[i]);
+                    boolean multiColumns = columns[i].tail != null;
+                    SQLColumn column = SQLColumn.of(multiColumns ? columns[i].tail : columns[i]);
                     newColumns[i] = column;
                     if (StringUtil.isEmpty(column.getName())) {
                         column.setName(metaData.getColumnLabel(i + 1));
@@ -276,6 +277,11 @@ public class ResultSetSheet extends Sheet {
                         what("The specified type " + column.clazz + " is different" +
                             " from metadata column type " + metaClazz);
                         column.clazz = metaClazz;
+                    }
+                    if (multiColumns) {
+                        columns[i].tail = column;
+                        // TODO 复制sub-column
+//                        org.ttzero.excel.entity.Column preLast =
                     }
                 }
                 columns = newColumns;

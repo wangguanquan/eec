@@ -435,19 +435,20 @@ public class ListSheet<T> extends Sheet {
                         column = new EntryColumn(gs, EMPTY, false);
                     }
                     if (column != null) {
-                        column.method = method;
-                        column.field = field;
-                        column.clazz = method.getReturnType();
-                        column.key = gs;
-                        if (isEmpty(column.name)) {
-                            column.name = gs;
+                        EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                        tail.method = method;
+                        tail.field = field;
+                        tail.clazz = method.getReturnType();
+                        tail.key = gs;
+                        if (isEmpty(tail.name)) {
+                            tail.name = gs;
                         }
                         list.add(column);
 
                         // Attach header style
-                        buildHeaderStyle(method, field, column);
+                        buildHeaderStyle(method, field, tail);
                         // Attach header comment
-                        buildHeaderComment(method, field, column);
+                        buildHeaderComment(method, field, tail);
                         continue;
                     }
                 }
@@ -459,20 +460,21 @@ public class ListSheet<T> extends Sheet {
                 }
                 if (column != null) {
                     list.add(column);
-                    column.field = field;
-                    column.key = gs;
-                    if (isEmpty(column.name)) {
-                        column.name = gs;
+                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    tail.field = field;
+                    tail.key = gs;
+                    if (isEmpty(tail.name)) {
+                        tail.name = gs;
                     }
                     if (method != null) {
-                        column.clazz = method.getReturnType();
-                        column.method = method;
-                    } else column.clazz = field.getType();
+                        tail.clazz = method.getReturnType();
+                        tail.method = method;
+                    } else tail.clazz = field.getType();
 
                     // Attach header style
-                    buildHeaderStyle(method, field, column);
+                    buildHeaderStyle(method, field, tail);
                     // Attach header comment
-                    buildHeaderComment(method, field, column);
+                    buildHeaderComment(method, field, tail);
                 }
             }
 
@@ -491,7 +493,7 @@ public class ListSheet<T> extends Sheet {
             list.toArray(columns);
         } else {
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i].tail != null ? columns[i].tail : columns[i];
                 if (!(hc instanceof EntryColumn)) {
                     hc = new EntryColumn(hc);
                     columns[i] = hc;
@@ -542,37 +544,71 @@ public class ListSheet<T> extends Sheet {
      * Override the method to extend custom comments
      *
      * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
-     * @return the Worksheet's {@link Column} information
+     * @return the Worksheet's {@link EntryColumn} information
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
         // Filter all ignore column
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
-        // TODO Retrofit
+        // Style Design
+        StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+
+        // Support multi header columns
         ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
+        if (cs != null) {
+            ExcelColumn[] ecs = cs.value();
+            EntryColumn root = null;
+            for (ExcelColumn ec : ecs) {
+                EntryColumn column = createColumnByAnnotation(ec);
+                if (sp != null) {
+                    column.styleProcessor = sp;
+                }
+                if (root == null) {
+                    root = column;
+                } else {
+                    root.addSubColumn(column);
+                }
+            }
+            return root;
+        }
+        // Single header column
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
-            EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
-            column.styles = workbook.getStyles();
-            // Number format
-            if (isNotEmpty(ec.format())) {
-                column.setNumFmt(ec.format());
-            }
-            // Wrap
-            column.setWrapText(ec.wrapText());
-            // Column index
-            if (ec.colIndex() > -1) {
-                column.colIndex = ec.colIndex();
-            }
-            // Style Design
-            StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+            EntryColumn column = createColumnByAnnotation(ec);
             if (sp != null) {
                 column.styleProcessor = sp;
             }
             return column;
         }
         return null;
+    }
+
+    /**
+     * Create column by {@code ExcelColumn} annotation
+     *
+     * @param ec {@code ExcelColumn} annotation
+     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     */
+    protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
+        if (ec == null) return null;
+        EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+        // Number format
+        if (isNotEmpty(ec.format())) {
+            column.setNumFmt(ec.format());
+        }
+        // Wrap
+        column.setWrapText(ec.wrapText());
+        // Column index
+        if (ec.colIndex() > -1) {
+            column.colIndex = ec.colIndex();
+        }
+        // Comment
+        HeaderComment comment = ec.comment();
+        if ((isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
+            column.headerComment = new Comment(comment.title(), comment.value());
+        }
+        return column;
     }
 
     /**
@@ -700,17 +736,18 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn column = createColumn(method);
                 if (column != null) {
                     list.add(column);
-                    column.method = method;
-                    column.clazz = method.getReturnType();
-                    column.key = method.getName();
-                    if (isEmpty(column.name)) {
-                        column.name = method.getName();
+                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    tail.method = method;
+                    tail.clazz = method.getReturnType();
+                    tail.key = method.getName();
+                    if (isEmpty(tail.name)) {
+                        tail.name = method.getName();
                     }
 
                     // Attach header style
                     buildHeaderStyle(method, null, column);
                     // Attach header comment
-                    buildHeaderComment(method, null, column);
+                    buildHeaderComment(method, null, tail);
                 }
             }
             return list;
@@ -942,6 +979,7 @@ public class ListSheet<T> extends Sheet {
             this.colIndex = other.colIndex;
             if (other.cellStyle != null) setCellStyle(other.cellStyle);
             if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+            // TODO support multi columns
         }
 
         public Method getMethod() {

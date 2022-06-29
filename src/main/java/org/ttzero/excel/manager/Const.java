@@ -187,8 +187,12 @@ public interface Const {
          */
         String FREEZE = "freeze";
         /**
-         * The style desing key
+         * The style design key
          */
         String STYLE_DESIGN = "styleDesign";
+        /**
+         * Merge cells key
+         */
+        String MERGE_CELLS  = "mergeCells ";
     }
 }

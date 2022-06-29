@@ -324,36 +324,40 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @throws IOException if I/O error occur
      */
-    protected void writeHeaderRow() throws IOException {
+    protected int writeHeaderRow() throws IOException {
         // Write header
-        int row = 1;
-        bw.write("<row r=\"");
-        bw.writeInt(row);
-        bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
-        bw.writeInt(columns[columns.length - 1].colIndex);
-        bw.write("\">");
+        int row = 0, subColumnSize = columns[0].subColumnSize();
+        for (int i = 0; i < subColumnSize; i++) {
+            row++;
+            bw.write("<row r=\"");
+            bw.writeInt(row);
+            bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
+            bw.writeInt(columns[columns.length - 1].colIndex);
+            bw.write("\">");
 
-        int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
+            int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
+// TODO
+            if (sheet.isAutoSize()) {
+                for (Column hc : columns) {
+                    writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                }
+            } else {
+                for (Column hc : columns) {
+                    writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                }
+            }
 
-        if (sheet.isAutoSize()) {
+            // Write header comments
             for (Column hc : columns) {
-                writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                if (hc.headerComment != null) {
+                    if (comments == null) comments = sheet.createComments();
+                    comments.addComment(new String(int2Col(hc.colIndex)) + row
+                        , hc.headerComment.getTitle(), hc.headerComment.getValue());
+                }
             }
-        } else {
-            for (Column hc : columns) {
-                writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
-            }
+            bw.write("</row>");
         }
-
-        // Write header comments
-        for (Column hc : columns) {
-            if (hc.headerComment != null) {
-                if (comments == null) comments = sheet.createComments();
-                comments.addComment(new String(int2Col(hc.colIndex)) + row
-                    , hc.headerComment.getTitle(), hc.headerComment.getValue());
-            }
-        }
-        bw.write("</row>");
+        return row;
     }
 
     /**
@@ -1038,14 +1042,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<cols>");
 //            if (sheet.isAutoSize()) {
             for (int i = 0; i < columns.length; i++) {
+                Column col = columns[i];
                 bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(columns[i].width > 0.0000001 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
+                bw.write(col.width > 0.0000001 ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
                 for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
-                bw.writeInt(columns[i].colIndex);
+                bw.writeInt(col.colIndex);
                 bw.write("\" max=\"");
-                bw.writeInt(columns[i].colIndex + 1);
+                bw.writeInt(col.colIndex + 1);
                 bw.write("\" bestFit=\"1\"/>");
             }
 //            } else {
@@ -1072,11 +1077,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void beforeSheetDate(boolean nonHeader) throws IOException {
         bw.write("<sheetData>");
 
+        int headerRow = 1;
         // The first header row
         if (!nonHeader) {
-            writeHeaderRow();
+            headerRow = writeHeaderRow();
         }
-        startRow = 1 + (sheet.getNonHeader() ^ 1);
+        startRow = headerRow + (sheet.getNonHeader() ^ 1);
     }
 
     /**

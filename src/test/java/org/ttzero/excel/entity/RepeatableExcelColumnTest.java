@@ -32,13 +32,13 @@ public class RepeatableExcelColumnTest extends WorkbookTest {
         new Workbook("Repeat Columns").addSheet(new ListSheet<>(RepeatableEntry.randomTestData())).writeTo(defaultTestPath);
     }
 
-    private static String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
-    private static String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
+    private static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
+    private static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
         , {"杭州市", "温州市", "绍兴市", "嘉兴市"}
         , {"广州市", "深圳市", "佛山市"}
     };
-    private static String[][][] areas = {{
+    private static final String[][][] areas = {{
         {"玄武区", "秦淮区", "鼓楼区", "雨花台区", "栖霞区"}
         , {"虎丘区", "吴中区", "相城区", "姑苏区", "吴江区"}
         , {"锡山区", "惠山区", "滨湖区", "新吴区", "江阴市"}
@@ -74,6 +74,8 @@ public class RepeatableExcelColumnTest extends WorkbookTest {
         @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
+        @ExcelColumn
+        @ExcelColumn
         @ExcelColumn("收件地址")
         @ExcelColumn("详细地址")
         private String detail;
