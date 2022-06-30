@@ -120,6 +120,10 @@ public interface Const {
          * Column width
          */
         int COLUMN_WIDTH = 255;
+        /**
+         * The header sub-columns length
+         */
+        int HEADER_SUB_COLUMNS = 10;
     }
 
     /**

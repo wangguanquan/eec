@@ -24,6 +24,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
@@ -759,8 +760,8 @@ public class Column {
         }
         if (next != null) {
             int subSize = subColumnSize();
-            if (subSize >= 10) {
-                throw new ExcelWriteException("Too many sub-column occur. Max support 10, current is " + subSize);
+            if (subSize >= Const.Limit.HEADER_SUB_COLUMNS) {
+                throw new ExcelWriteException("Too many sub-column occur. Max support " + Const.Limit.HEADER_SUB_COLUMNS + ", current is " + subSize);
             }
             column.prev = this.tail;
             this.tail.next = column;
@@ -786,5 +787,31 @@ public class Column {
             i++;
         }
         return i;
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @return an array containing all of the Column
+     */
+    public Column[] toArray() {
+        return toArray(new Column[subColumnSize()]);
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @param dist the array into which the elements of the column are to be stored
+     * @throws NullPointerException if the specified array is null
+     */
+    public Column[] toArray(Column[] dist) {
+        int len = Math.min(subColumnSize(), dist.length);
+        if (len < 1) return dist;
+        Column e = this;
+        for (int i = 0; i < len; i++) {
+            dist[i] = e;
+            e = e.next;
+        }
+        return dist;
     }
 }

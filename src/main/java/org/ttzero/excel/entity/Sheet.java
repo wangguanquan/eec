@@ -1249,25 +1249,31 @@ public abstract class Sheet implements Cloneable, Storable {
             }
         }
         // TODO Add merge cell properties
-        for (int i = 0, len = columns.length; i < len; ) {
-            org.ttzero.excel.entity.Column column = columns[i], next = column;
-            int fc = i, fr = 0, lc = i, lr = 0, n = 0;
-            for (; next != null; next = next.next) {
-                n++;
-                if (StringUtil.isNotEmpty(next.name)) {
-                    // TODO 需要把前面已有的合并创建出来
-                    for (org.ttzero.excel.entity.Column right = lc + 1 < columns.length ? columns[lc + 1] : null
-                         ; right!= null && (next.name.equals(right.name) || StringUtil.isEmpty(right.name));
-                         right = lc + 1 < columns.length ? columns[lc + 1] : null) lc++;
-
-//                    if (fc < lc) {
-//
-//                    }
-                }
-            }
-
-            i++;
+        org.ttzero.excel.entity.Column[][] columnsArray = new org.ttzero.excel.entity.Column[columns.length][];
+        for (int i = 0; i < columns.length; i++) {
+            columnsArray[i] = columns[i].toArray();
         }
+
+
+//        for (int i = 0, len = columns.length; i < len; ) {
+//            org.ttzero.excel.entity.Column column = columns[i], next = column;
+//            int fc = i, fr = 0, lc = i, lr = 0, n = 0;
+//            for (; next != null; next = next.next) {
+//                n++;
+//                if (StringUtil.isNotEmpty(next.name)) {
+//                    // TODO 需要把前面已有的合并创建出来
+//                    for (org.ttzero.excel.entity.Column right = lc + 1 < columns.length ? columns[lc + 1] : null
+//                         ; right!= null && (next.name.equals(right.name) || StringUtil.isEmpty(right.name));
+//                         right = lc + 1 < columns.length ? columns[lc + 1] : null) lc++;
+//
+////                    if (fc < lc) {
+////
+////                    }
+//                }
+//            }
+//
+//            i++;
+//        }
         System.out.println();
     }
 

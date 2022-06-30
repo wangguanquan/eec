@@ -49,6 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
@@ -326,8 +327,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected int writeHeaderRow() throws IOException {
         // Write header
-        int row = 0, subColumnSize = columns[0].subColumnSize();
-        for (int i = 0; i < subColumnSize; i++) {
+        int row = 0, subColumnSize = columns[0].subColumnSize(), defaultStyleIndex = sheet.defaultHeadStyleIndex();
+        Column[][] columnsArray = new Column[columns.length][];
+        for (int i = 0; i < columns.length; i++) {
+            columnsArray[i] = columns[i].toArray();
+        }
+        for (int i = subColumnSize - 1; i >= 0; i--) {
+
             row++;
             bw.write("<row r=\"");
             bw.writeInt(row);
@@ -335,20 +341,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.writeInt(columns[columns.length - 1].colIndex);
             bw.write("\">");
 
-            int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
-// TODO
             if (sheet.isAutoSize()) {
-                for (Column hc : columns) {
+                for (int j = 0, c = 0; j < columns.length; j++) {
+                    Column hc = columnsArray[j][i];
                     writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             } else {
-                for (Column hc : columns) {
+                for (int j = 0, c = 0; j < columns.length; j++) {
+                    Column hc = columnsArray[j][i];
                     writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             }
 
             // Write header comments
-            for (Column hc : columns) {
+            for (int j = 0; j < columns.length; j++) {
+                Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
                     if (comments == null) comments = sheet.createComments();
                     comments.addComment(new String(int2Col(hc.colIndex)) + row
@@ -1090,5 +1097,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @throws IOException if I/O error occur.
      */
-    protected void afterSheetData() throws IOException { }
+    protected void afterSheetData() throws IOException {
+        // Merge cells if exists
+        @SuppressWarnings("unchecked")
+        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.WorksheetExtendProperty.MERGE_CELLS);
+        if (mergeCells != null && !mergeCells.isEmpty()) {
+            bw.write("<mergeCells count=\"");
+            bw.writeInt(mergeCells.size());
+            bw.write("\">");
+            for (Dimension dim : mergeCells) {
+                bw.write("<mergeCell ref=\"");
+                bw.write(dim.toString());
+                bw.write("\"/>");
+            }
+            bw.write("</mergeCells>");
+        }
+    }
 }

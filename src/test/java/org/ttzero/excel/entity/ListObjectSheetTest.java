@@ -1387,15 +1387,15 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     public static class OrderEntry {
-        @ExcelColumn(colIndex = 0)
+        @ExcelColumn(colIndex = 4)
         private String s;
         @ExcelColumn( colIndex = 1)
         private Date date;
-        @ExcelColumn(colIndex = 2)
-        private Double d;
         @ExcelColumn(colIndex = 3)
+        private Double d;
+        @ExcelColumn(colIndex = 0)
         private String s2 = "a";
-        @ExcelColumn(colIndex = 4)
+        @ExcelColumn(colIndex = 2)
         private String s3 = "b";
         @ExcelColumn(colIndex = 5)
         private String s4 = "c";
