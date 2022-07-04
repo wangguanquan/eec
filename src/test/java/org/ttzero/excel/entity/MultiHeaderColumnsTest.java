@@ -19,6 +19,8 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,18 +29,55 @@ import java.util.List;
 /**
  * @author guanquan.wang at 2022-06-27 23:24
  */
-public class RepeatableExcelColumnTest extends WorkbookTest {
-    @Test public void testRepeatColumns() throws IOException {
-        new Workbook("Repeat Columns").addSheet(new ListSheet<>(RepeatableEntry.randomTestData())).writeTo(defaultTestPath);
+public class MultiHeaderColumnsTest extends WorkbookTest {
+    @Test public void testRepeatAnnotations() throws IOException {
+        new Workbook("Repeat Columns Annotation")
+            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
+            .writeTo(defaultTestPath);
     }
 
-    private static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
-    private static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
+    @Test public void testPagingRepeatAnnotations() throws IOException {
+        new Workbook("Repeat Paging Columns Annotation")
+            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)))
+            .setWorkbookWriter(new XMLWorkbookWriter() {
+                @Override
+                protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+                    return new XMLWorksheetWriter(sheet) {
+                        @Override
+                        public int getRowLimit() {
+                            return 500;
+                        }
+                    };
+                }
+            })
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
+        new Workbook("Multi Order columns 2")
+            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+                , new Column("共用表头").addSubColumn(new Column("学号", "id"))
+                , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
+                , new Column("成绩", "score")
+            )).writeTo(defaultTestPath);
+    }
+
+    @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
+        new Workbook("Multi Order columns 3")
+            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+                , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
+                , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
+                , new Column("成绩", "score")
+            )).writeTo(defaultTestPath);
+    }
+
+    public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
+    public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
         , {"杭州市", "温州市", "绍兴市", "嘉兴市"}
         , {"广州市", "深圳市", "佛山市"}
     };
-    private static final String[][][] areas = {{
+    public static final String[][][] areas = {{
         {"玄武区", "秦淮区", "鼓楼区", "雨花台区", "栖霞区"}
         , {"虎丘区", "吴中区", "相城区", "姑苏区", "吴江区"}
         , {"锡山区", "惠山区", "滨湖区", "新吴区", "江阴市"}

@@ -151,6 +151,15 @@ public class Column {
      * Constructor Column
      *
      * @param name  the column name
+     */
+    public Column(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Constructor Column
+     *
+     * @param name  the column name
      * @param clazz the cell type
      */
     public Column(String name, Class<?> clazz) {

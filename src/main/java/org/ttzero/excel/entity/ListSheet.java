@@ -493,10 +493,11 @@ public class ListSheet<T> extends Sheet {
             list.toArray(columns);
         } else {
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i].tail != null ? columns[i].tail : columns[i];
-                if (!(hc instanceof EntryColumn)) {
-                    hc = new EntryColumn(hc);
-                    columns[i] = hc;
+                org.ttzero.excel.entity.Column hc = columns[i];
+                hc = new EntryColumn(hc);
+                columns[i] = hc;
+                if (hc.tail != null) {
+                    hc = hc.tail;
                 }
                 EntryColumn ec = (EntryColumn) hc;
                 Method method = tmp.get(hc.key);
@@ -745,7 +746,7 @@ public class ListSheet<T> extends Sheet {
                     }
 
                     // Attach header style
-                    buildHeaderStyle(method, null, column);
+                    buildHeaderStyle(method, null, tail);
                     // Attach header comment
                     buildHeaderComment(method, null, tail);
                 }
@@ -979,7 +980,9 @@ public class ListSheet<T> extends Sheet {
             this.colIndex = other.colIndex;
             if (other.cellStyle != null) setCellStyle(other.cellStyle);
             if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
-            // TODO support multi columns
+            if (other.next != null) {
+                addSubColumn(new EntryColumn(other.next));
+            }
         }
 
         public Method getMethod() {

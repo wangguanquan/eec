@@ -80,6 +80,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @see ResultSetSheet
  * @see StatementSheet
  * @see CSVSheet
+ * @see EmptySheet
  *
  * @author guanquan.wang on 2017/9/26.
  */
@@ -174,16 +175,19 @@ public abstract class Sheet implements Cloneable, Storable {
         return id;
     }
 
-    public void setId(int id) {
+    public Sheet setId(int id) {
         this.id = id;
+        return this;
     }
 
-    public void setSheetWriter(IWorksheetWriter sheetWriter) {
+    public Sheet setSheetWriter(IWorksheetWriter sheetWriter) {
         this.sheetWriter = sheetWriter;
+        return this;
     }
 
-    public void setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
+    public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
         this.cellValueAndStyle = cellValueAndStyle;
+        return this;
     }
 
     public Sheet() {
@@ -1274,64 +1278,65 @@ public abstract class Sheet implements Cloneable, Storable {
             System.arraycopy(columns[i].toArray(), 0, array, y * i, y);
         }
 
-        // Mark `1`
-        int[] markArray = new int[n];
+        // Mark as 1 if visited
+        int[] marks = new int[n];
 
         int fc = 0, fr = 0, lc = 0, lr = 0;
         List<Dimension> mergeCells = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             // Skip if marked
-            if (markArray[i] == 1) continue;
+            if (marks[i] == 1) continue;
 
             org.ttzero.excel.entity.Column col = array[i];
-            markArray[i] = 1;
-            if (isNotEmpty(col.name)) {
-                int t, a = 0;
-                if (i + y < n && col.name.equals(array[i + y].name)) {
-                    fc = i / y; fr = i % y; lc = fc + 1; lr = fr;
-                    a = 1;
-                    markArray[i + y] = 1;
-                    for (int c; (c = i + (y * (a + 1))) < n; a++) {
-                        if (col.name.equals(array[c].name)) {
-                            lc++;
-                            markArray[c] = 1;
-                        } else break;
+            marks[i] = 1;
+            if (isEmpty(col.name)) {
+                continue;
+            }
+            int a = 0;
+            if (i + y < n && col.name.equals(array[i + y].name)) {
+                fc = i / y; fr = i % y; lc = fc + 1; lr = fr;
+                a = 1;
+                marks[i + y] = 1;
+                for (int c; (c = i + (y * (a + 1))) < n; a++) {
+                    if (col.name.equals(array[c].name)) {
+                        lc++;
+                        marks[c] = 1;
+                    } else break;
+                }
+            }
+            int tail = i / y * y + y, r;
+            if (i + 1 < tail && (col.name.equals(array[i + 1].name) || isEmpty(array[i + 1].name))) {
+                r = i + 1;
+                marks[r] = 1;
+                fc = i / y; fr = i % y; lc = fc + a; lr = fr;
+                A: for (; r < tail; r++) {
+                    for (int k = 0; k <= a; k++) {
+                        if (!col.name.equals(array[r + k * y].name) && isNotEmpty(array[r + k * y].name))
+                            break A;
                     }
-                }
-                int tail = i / y * y + y, r;
-                if (i + 1 < tail && (col.name.equals(array[i + 1].name) || isEmpty(array[i + 1].name))) {
-                    r = i + 1;
-                    markArray[r] = 1;
-                    fc = i / y; fr = i % y; lc = fc + a; lr = fr;
-                    A: for (; r < tail; r++) {
-                        for (int k = 0; k <= a; k++) {
-                            if (!col.name.equals(array[r + k * y].name) && isNotEmpty(array[r + k * y].name))
-                                break A;
-                        }
-                        for (int k = 0; k <= a; k++) {
-                            markArray[r + k * y] = 1;
-                        }
-                        lr++;
+                    for (int k = 0; k <= a; k++) {
+                        marks[r + k * y] = 1;
                     }
-                    i = r - 1;
+                    lr++;
                 }
-                // Add merged cells
-                if (fc < lc || fr < lr) {
-                    mergeCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
-                    // Reset
-                    fc = lc; fr = lr;
-                }
+                i = r - 1;
+            }
+            // Add merged cells
+            if (fc < lc || fr < lr) {
+                mergeCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
+                // Reset
+                fc = lc; fr = lr;
             }
         }
 
-        // Put the cells into ext-properties
+        // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
             putExtProp(Const.WorksheetExtendProperty.MERGE_CELLS, mergeCells);
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 String name = col.name;
                 Comment headerComment = col.headerComment;
-
+// TODO comment miss
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
                     for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
