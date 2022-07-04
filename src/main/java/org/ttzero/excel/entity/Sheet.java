@@ -32,8 +32,8 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
-import org.ttzero.excel.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,11 +42,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Each worksheet corresponds to one or more sheet.xml of physical.
@@ -549,10 +552,16 @@ public abstract class Sheet implements Cloneable, Storable {
             this.columns = getHeaderColumns();
             // Reverse
             reverseHeadColumn();
+
+            // Add merge cell properties
+            mergeHeaderCellsIfEquals();
+
             // Reset Common Properties
             resetCommonProperties(columns);
+
             // Sort column index
             sortColumns(columns);
+
             // Turn to one-base
             for (int i = 0; i < columns.length; i++) {
                 if (i > 0 && columns[i - 1].colIndex >= columns[i].colIndex) columns[i].colIndex = columns[i - 1].colIndex + 1;
@@ -1019,7 +1028,7 @@ public abstract class Sheet implements Cloneable, Storable {
             if (!noneHeader) {
                 int n = 0;
                 for (org.ttzero.excel.entity.Column column : columns) {
-                    if (isEmpty(column.name)) n++;
+                    if (isEmpty(column.name) && isEmpty(column.key)) n++;
                 }
                 noneHeader = n == columns.length;
             }
@@ -1210,6 +1219,7 @@ public abstract class Sheet implements Cloneable, Storable {
     protected void reverseHeadColumn() {
         if (!headerReady) this.columns = getHeaderColumns();
         if (columns == null || columns.length == 0) return;
+
         // Count the number of sub-columns
         int[] lenArray = new int[columns.length];
         int maxSubColumnSize = 1;
@@ -1223,6 +1233,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         // Single header column
         if (maxSubColumnSize == 1) return;
+
         // Reverse and fill empty column
         for (int i = 0, len = columns.length; i < len; i++) {
             org.ttzero.excel.entity.Column col = columns[i];
@@ -1248,33 +1259,99 @@ public abstract class Sheet implements Cloneable, Storable {
                 }
             }
         }
-        // TODO Add merge cell properties
-        org.ttzero.excel.entity.Column[][] columnsArray = new org.ttzero.excel.entity.Column[columns.length][];
-        for (int i = 0; i < columns.length; i++) {
-            columnsArray[i] = columns[i].toArray();
+    }
+
+    /**
+     * Merge cells if
+     */
+    protected void mergeHeaderCellsIfEquals() {
+        int x = columns.length, y = columns[0].subColumnSize(), n = x * y;
+        // Single header column
+        if (y <= 1) return;
+
+        org.ttzero.excel.entity.Column[] array = new org.ttzero.excel.entity.Column[n];
+        for (int i = 0; i < x; i++) {
+            System.arraycopy(columns[i].toArray(), 0, array, y * i, y);
         }
 
+        // Mark `1`
+        int[] markArray = new int[n];
 
-//        for (int i = 0, len = columns.length; i < len; ) {
-//            org.ttzero.excel.entity.Column column = columns[i], next = column;
-//            int fc = i, fr = 0, lc = i, lr = 0, n = 0;
-//            for (; next != null; next = next.next) {
-//                n++;
-//                if (StringUtil.isNotEmpty(next.name)) {
-//                    // TODO 需要把前面已有的合并创建出来
-//                    for (org.ttzero.excel.entity.Column right = lc + 1 < columns.length ? columns[lc + 1] : null
-//                         ; right!= null && (next.name.equals(right.name) || StringUtil.isEmpty(right.name));
-//                         right = lc + 1 < columns.length ? columns[lc + 1] : null) lc++;
-//
-////                    if (fc < lc) {
-////
-////                    }
-//                }
-//            }
-//
-//            i++;
-//        }
-        System.out.println();
+        int fc = 0, fr = 0, lc = 0, lr = 0;
+        List<Dimension> mergeCells = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            // Skip if marked
+            if (markArray[i] == 1) continue;
+
+            org.ttzero.excel.entity.Column col = array[i];
+            markArray[i] = 1;
+            if (isNotEmpty(col.name)) {
+                int t, a = 0;
+                if (i + y < n && col.name.equals(array[i + y].name)) {
+                    fc = i / y; fr = i % y; lc = fc + 1; lr = fr;
+                    a = 1;
+                    markArray[i + y] = 1;
+                    for (int c; (c = i + (y * (a + 1))) < n; a++) {
+                        if (col.name.equals(array[c].name)) {
+                            lc++;
+                            markArray[c] = 1;
+                        } else break;
+                    }
+                }
+                int tail = i / y * y + y, r;
+                if (i + 1 < tail && (col.name.equals(array[i + 1].name) || isEmpty(array[i + 1].name))) {
+                    r = i + 1;
+                    markArray[r] = 1;
+                    fc = i / y; fr = i % y; lc = fc + a; lr = fr;
+                    A: for (; r < tail; r++) {
+                        for (int k = 0; k <= a; k++) {
+                            if (!col.name.equals(array[r + k * y].name) && isNotEmpty(array[r + k * y].name))
+                                break A;
+                        }
+                        for (int k = 0; k <= a; k++) {
+                            markArray[r + k * y] = 1;
+                        }
+                        lr++;
+                    }
+                    i = r - 1;
+                }
+                // Add merged cells
+                if (fc < lc || fr < lr) {
+                    mergeCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
+                    // Reset
+                    fc = lc; fr = lr;
+                }
+            }
+        }
+
+        // Put the cells into ext-properties
+        if (!mergeCells.isEmpty()) {
+            putExtProp(Const.WorksheetExtendProperty.MERGE_CELLS, mergeCells);
+            for (Dimension dim : mergeCells) {
+                org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
+                String name = col.name;
+                Comment headerComment = col.headerComment;
+
+                // Clear name in merged cols range
+                for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
+                    for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
+                        org.ttzero.excel.entity.Column currentCol = array[m * y + o];
+                        currentCol.name = null;
+                        if (currentCol.headerComment != null) {
+                            if (headerComment == null) {
+                                headerComment = currentCol.headerComment;
+                            }
+                            currentCol.headerComment = null;
+                        }
+                    }
+                }
+
+                // Copy last col's name into first col
+                org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
+                lastCol.name = name;
+                lastCol.headerComment = headerComment;
+            }
+        }
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

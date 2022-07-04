@@ -30,6 +30,8 @@ import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.Grid;
+import org.ttzero.excel.reader.GridFactory;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -332,6 +334,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (int i = 0; i < columns.length; i++) {
             columnsArray[i] = columns[i].toArray();
         }
+        // Merge cells if exists
+        @SuppressWarnings("unchecked")
+        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.WorksheetExtendProperty.MERGE_CELLS);
+        Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
         for (int i = subColumnSize - 1; i >= 0; i--) {
 
             row++;
@@ -341,15 +347,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.writeInt(columns[columns.length - 1].colIndex);
             bw.write("\">");
 
+            String name;
             if (sheet.isAutoSize()) {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    writeStringAutoSize(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) ? hc.name : hc.key;
+                    writeStringAutoSize(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             } else {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    writeString(isNotEmpty(hc.getName()) ? hc.getName() : hc.key, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) ? hc.name : hc.key;
+                    writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             }
 
