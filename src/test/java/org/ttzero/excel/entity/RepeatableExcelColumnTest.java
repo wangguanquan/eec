@@ -74,11 +74,11 @@ public class RepeatableExcelColumnTest extends WorkbookTest {
         @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
-        @ExcelColumn
-        @ExcelColumn
         @ExcelColumn("收件地址")
         @ExcelColumn("详细地址")
         private String detail;
+        @ExcelColumn("abc")
+        private String a;
 
         public RepeatableEntry() {}
 
