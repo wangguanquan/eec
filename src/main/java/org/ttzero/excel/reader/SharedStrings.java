@@ -65,7 +65,7 @@ public class SharedStrings implements Closeable {
      *
      * @param data the shared strings
      */
-    SharedStrings(String[] data) {
+    public SharedStrings(String[] data) {
         max = data.length;
         offset_forward = 0;
         status = 1;
@@ -96,7 +96,7 @@ public class SharedStrings implements Closeable {
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
      */
-    SharedStrings(Path sstPath, int cacheSize, int hotSize) {
+    public SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
             this.page = tableSizeFor(cacheSize);
@@ -111,7 +111,7 @@ public class SharedStrings implements Closeable {
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
      */
-    SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
+    public SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
         this.sst = sst;
         max = sst.size();
         if (cacheSize > 0) {
@@ -228,7 +228,7 @@ public class SharedStrings implements Closeable {
      * @return the {@code SharedStrings}
      * @throws IOException if io error occur
      */
-    SharedStrings load() throws IOException {
+    public SharedStrings load() throws IOException {
         if (!exists(sstPath)) {
             max = 0;
             return this;
@@ -329,7 +329,7 @@ public class SharedStrings implements Closeable {
 
             if (vt < 0) vt = 0;
 
-            loadXml();
+            readMore();
         }
 
         String value = null;
@@ -375,7 +375,7 @@ public class SharedStrings implements Closeable {
                 }
                 total_sst++;
             } else {
-                loadXml();
+                readMore();
                 total_forward++;
             }
             if (forward[0] == null) {
@@ -423,7 +423,7 @@ public class SharedStrings implements Closeable {
     /**
      * Load string record from xml
      */
-    private void loadXml() {
+    protected void readMore() {
         int index = offset_forward / page;
         try {
             // Read xml file string value into IndexSharedStringTable
@@ -446,7 +446,7 @@ public class SharedStrings implements Closeable {
      * @return the word count
      * @throws IOException if I/O error occur
      */
-    private int readData() throws IOException {
+    protected int readData() throws IOException {
         // Read forward area data
         int n = 0, length, nChar;
         for (; (length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0; ) {
