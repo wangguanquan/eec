@@ -23,13 +23,16 @@ import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author guanquan.wang at 2022-06-27 23:24
  */
-public class MultiHeaderColumnsTest extends WorkbookTest {
+public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
         new Workbook("Repeat Columns Annotation")
             .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
@@ -54,7 +57,7 @@ public class MultiHeaderColumnsTest extends WorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Multi Order columns 2")
+        new Workbook("Multi specify columns 2")
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column("共用表头").addSubColumn(new Column("学号", "id"))
                 , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
@@ -63,12 +66,27 @@ public class MultiHeaderColumnsTest extends WorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
-        new Workbook("Multi Order columns 3")
+        new Workbook("Multi specify columns 3")
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
-                , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
+                , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score")
             )).writeTo(defaultTestPath);
+    }
+
+    @Test public void testResultSet() throws SQLException, IOException {
+        try (Connection con = getConnection()) {
+            new Workbook("Multi ResultSet columns 2", author)
+                .setConnection(con)
+                .addSheet("select id, name, age, create_date, update_date from student order by age"
+                    , new Column("通用").addSubColumn(new Column("学号", int.class))
+                    , new Column("通用").addSubColumn(new Column("性名", String.class))
+                    , new Column("通用").addSubColumn(new Column("年龄", int.class))
+                    , new Column("创建时间", Timestamp.class).setColIndex(0)
+                    , new Column("更新", Timestamp.class)
+                )
+                .writeTo(defaultTestPath);
+        }
     }
 
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
@@ -104,6 +122,8 @@ public class MultiHeaderColumnsTest extends WorkbookTest {
         private String orderNo;
         @ExcelColumn("收件人")
         private String recipient;
+        @ExcelColumn
+        @ExcelColumn
         @ExcelColumn("收件地址")
         @ExcelColumn("省")
         private String province;
