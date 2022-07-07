@@ -367,7 +367,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
                     if (comments == null) comments = sheet.createComments();
-                    comments.addComment(new String(int2Col(hc.colIndex)) + row
+                    comments.addComment(new String(int2Col(j + 1)) + row
                         , hc.headerComment.getTitle(), hc.headerComment.getValue());
                 }
             }
@@ -386,23 +386,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // End target --sheetData
         bw.write("</sheetData>");
 
-        // background image
-        if (sheet.getWaterMark() != null) {
-            // relationship
-            Relationship r = sheet.findRel("media/image"); // only one background image
-            if (r != null) {
-                bw.write("<picture r:id=\"");
-                bw.write(r.getId());
-                bw.write("\"/>");
-            }
-        }
-        // vmlDrawing
-        Relationship r = sheet.findRel("vmlDrawing");
-        if (r != null) {
-            bw.write("<legacyDrawing r:id=\"");
-            bw.write(r.getId());
-            bw.write("\"/>");
-        }
+        // Merge cells
+        writeMergeCells();
 
         // Others
         afterSheetData();
@@ -1107,6 +1092,32 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void afterSheetData() throws IOException {
+        // vmlDrawing
+        Relationship r = sheet.findRel("vmlDrawing");
+        if (r != null) {
+            bw.write("<legacyDrawing r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
+        }
+
+        // background image
+        if (sheet.getWaterMark() != null) {
+            // relationship
+            r = sheet.findRel("media/image"); // only one background image
+            if (r != null) {
+                bw.write("<picture r:id=\"");
+                bw.write(r.getId());
+                bw.write("\"/>");
+            }
+        }
+    }
+
+    /**
+     * Append merged cells if exists
+     *
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeMergeCells() throws IOException {
         // Merge cells if exists
         @SuppressWarnings("unchecked")
         List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.WorksheetExtendProperty.MERGE_CELLS);

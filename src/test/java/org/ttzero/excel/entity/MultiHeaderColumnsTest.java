@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
@@ -34,7 +35,7 @@ import java.util.List;
  */
 public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Columns Annotation")
+        new Workbook("Repeat Columns Annotation").setWaterMark(WaterMark.of("勿外传"))
             .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
             .writeTo(defaultTestPath);
     }
@@ -122,19 +123,19 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         private String orderNo;
         @ExcelColumn("收件人")
         private String recipient;
-        @ExcelColumn
-        @ExcelColumn
-        @ExcelColumn("收件地址")
+//        @ExcelColumn
+//        @ExcelColumn
+//        @ExcelColumn("收件地址")
         @ExcelColumn("省")
         private String province;
-        @ExcelColumn("收件地址")
+//        @ExcelColumn("收件地址")
         @ExcelColumn("市")
         private String city;
-        @ExcelColumn("收件地址")
+//        @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
-        @ExcelColumn("收件地址")
-        @ExcelColumn("详细地址")
+//        @ExcelColumn(value = "收件地址")
+        @ExcelColumn(value = "详细地址", comment = @HeaderComment(title = "abc:", value = "111"))
         private String detail;
         @ExcelColumn("abc")
         private String a;
