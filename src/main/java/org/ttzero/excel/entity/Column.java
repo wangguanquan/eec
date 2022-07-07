@@ -768,18 +768,17 @@ public class Column {
             return this;
         }
         if (next != null) {
-            int subSize = subColumnSize();
-            if (subSize >= Const.Limit.HEADER_SUB_COLUMNS) {
+            int subSize = subColumnSize(), appendSize = column.subColumnSize();
+            if (subSize + appendSize > Const.Limit.HEADER_SUB_COLUMNS) {
                 throw new ExcelWriteException("Too many sub-column occur. Max support " + Const.Limit.HEADER_SUB_COLUMNS + ", current is " + subSize);
             }
             column.prev = this.tail;
             this.tail.next = column;
-            this.tail = column;
         } else {
-            this.tail = column;
             this.next = column;
             column.prev = this;
         }
+        this.tail = column.tail != null ? column.tail : column;
         return this;
     }
 

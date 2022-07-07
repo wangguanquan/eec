@@ -264,9 +264,11 @@ public class ResultSetSheet extends Sheet {
             if (hasHeaderColumns()) {
                 org.ttzero.excel.entity.Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
-                    boolean multiColumns = columns[i].tail != null;
-                    SQLColumn column = SQLColumn.of(multiColumns ? columns[i].tail : columns[i]);
+                    SQLColumn column = SQLColumn.of(columns[i]);
                     newColumns[i] = column;
+                    if (column.tail != null) {
+                        column = (SQLColumn) column.tail;
+                    }
                     if (StringUtil.isEmpty(column.getName())) {
                         column.setName(metaData.getColumnLabel(i + 1));
                     }
@@ -277,11 +279,6 @@ public class ResultSetSheet extends Sheet {
                         what("The specified type " + column.clazz + " is different" +
                             " from metadata column type " + metaClazz);
                         column.clazz = metaClazz;
-                    }
-                    if (multiColumns) {
-                        columns[i].tail = column;
-                        // TODO 复制sub-column
-//                        org.ttzero.excel.entity.Column preLast =
                     }
                 }
                 columns = newColumns;
@@ -348,24 +345,29 @@ public class ResultSetSheet extends Sheet {
             this.sqlType = sqlType;
         }
 
+        public SQLColumn(org.ttzero.excel.entity.Column other) {
+            this.key = other.key;
+            this.name = other.name;
+            this.clazz = other.clazz;
+            this.share = other.share;
+            this.processor = other.processor;
+            this.styleProcessor = other.styleProcessor;
+            this.cellStyle = other.cellStyle;
+            this.width = other.width;
+            this.o = other.o;
+            this.styles = other.styles;
+            this.headerComment = other.headerComment;
+            this.cellComment = other.cellComment;
+            this.numFmt = other.numFmt;
+            this.ignoreValue = other.ignoreValue;
+            this.wrapText = other.wrapText;
+            if (other.next != null) {
+                addSubColumn(new SQLColumn(other.next));
+            }
+        }
+
         public static SQLColumn of(org.ttzero.excel.entity.Column other) {
-            SQLColumn self = new SQLColumn(other.name, 0, other.clazz);
-            self.key = other.key;
-            self.name = other.name;
-            self.clazz = other.clazz;
-            self.share = other.share;
-            self.processor = other.processor;
-            self.styleProcessor = other.styleProcessor;
-            self.cellStyle = other.cellStyle;
-            self.width = other.width;
-            self.o = other.o;
-            self.styles = other.styles;
-            self.headerComment = other.headerComment;
-            self.cellComment = other.cellComment;
-            self.numFmt = other.numFmt;
-            self.ignoreValue = other.ignoreValue;
-            self.wrapText = other.wrapText;
-            return self;
+            return new SQLColumn(other);
         }
     }
 }

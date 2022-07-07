@@ -1244,13 +1244,14 @@ public abstract class Sheet implements Cloneable, Storable {
             // Reverse header to tail
             if (col.tail != null) {
                 org.ttzero.excel.entity.Column head = col.tail, tmp = head.prev;
+                head.tail = null; head.prev = null; head.next = null;
                 // Switch prev and next point
-                for (; tmp != col; ) {
+                for (; tmp != null; ) {
                     org.ttzero.excel.entity.Column ptmp = tmp.prev;
+                    tmp.tail = null; tmp.prev = null; tmp.next = null;
                     head.addSubColumn(tmp);
                     tmp = ptmp;
                 }
-                head.addSubColumn(tmp);
                 head.prev = null;
                 head.tail.next = null;
                 columns[i] = head;

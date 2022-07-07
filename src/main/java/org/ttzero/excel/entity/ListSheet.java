@@ -493,8 +493,7 @@ public class ListSheet<T> extends Sheet {
             list.toArray(columns);
         } else {
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
-                hc = new EntryColumn(hc);
+                org.ttzero.excel.entity.Column hc = new EntryColumn(columns[i]);
                 columns[i] = hc;
                 if (hc.tail != null) {
                     hc = hc.tail;
