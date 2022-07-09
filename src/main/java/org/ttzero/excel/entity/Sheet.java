@@ -1270,7 +1270,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Merge cells if
      */
     protected void mergeHeaderCellsIfEquals() {
-        int x = columns.length, y = columns[0].subColumnSize(), n = x * y;
+        int x = columns.length, y = x > 0 ? columns[0].subColumnSize() : 0, n = x * y;
         // Single header column
         if (y <= 1) return;
 

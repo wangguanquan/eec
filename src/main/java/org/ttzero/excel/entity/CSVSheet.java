@@ -208,6 +208,9 @@ public class CSVSheet extends Sheet {
         }
     }
 
+    @Override
+    protected void mergeHeaderCellsIfEquals() { }
+
 //    /**
 //     * Check empty header row
 //     *
