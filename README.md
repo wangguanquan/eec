@@ -231,6 +231,12 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.1 (2022-07-10)
+-------------
+- 提升对非标准Office OpenXML生成的excel读取兼容性(#245, #247)
+- 提升读取Excel时Row转Java对象的兼容性(#254)
+- 修复部分BUG(#249, #252)
+
 Version 0.5.0 (2022-05-22)
 -------------
 - 增加StyleDesign用于样式处理（单元格或者整行样式处理）
@@ -255,10 +261,6 @@ Version 0.4.13 (2021-08-09)
 - 读取文件时`Worksheet#getIndex()`方法返回Sheet在文件中的下标而非id，并取消按id排序(#193)
 - 修复部分BUG(#182,#190)
 
-Version 0.4.12.1 (2021-05-20)
--------------
-- Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
-
 
 [更多...](./CHANGELOG)
 
@@ -266,7 +268,7 @@ Version 0.4.12.1 (2021-05-20)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.0-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.1-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
