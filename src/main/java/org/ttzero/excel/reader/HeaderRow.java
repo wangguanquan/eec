@@ -21,7 +21,6 @@ import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.util.ReflectUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
@@ -37,10 +36,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
 import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
@@ -51,7 +52,6 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
-import static org.ttzero.excel.util.ReflectUtil.mapping;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
@@ -104,13 +104,23 @@ public class HeaderRow extends Row {
     protected HeaderRow setClass(Class<?> clazz) {
         this.clazz = clazz;
         // Parse Field
-        Field[] declaredFields = listDeclaredFields(clazz);
+        Field[] declaredFields = listDeclaredFields(clazz, c -> !ignoreColumn(c));
+
         // Parse Method
-        Map<String, Method> tmp = attachOtherColumn(clazz);
+        Map<String, Method> tmp = new HashMap<>();
+        try {
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
+                    .getPropertyDescriptors();
+            for (PropertyDescriptor pd : propertyDescriptors) {
+                Method method = pd.getWriteMethod();
+                if (method != null) tmp.put(pd.getName(), method);
+            }
+        } catch (IntrospectionException e) {
+            LOGGER.warn("Get class {} methods failed.", clazz);
+        }
 
-        ListSheet.EntryColumn[] columns = new ListSheet.EntryColumn[declaredFields.length + tmp.size()];
-
-        int count = 0;
+        Map<String, ListSheet.EntryColumn> columnMap = new LinkedHashMap<>();
+        ListSheet.EntryColumn column, other;
         for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
             f.setAccessible(true);
@@ -119,24 +129,20 @@ public class HeaderRow extends Row {
             // The setter methods take precedence over property reflection
             Method method = tmp.get(gs);
             if (method != null) {
-                ListSheet.EntryColumn column = createColumn(method);
+                column = createColumn(method);
                 if (column != null) {
                     column.method = method;
-                    column.colIndex = check(column.name, gs);
+                    if (StringUtil.isEmpty(column.name)) column.name = method.getName();
+                    if (column.colIndex < 0) column.colIndex = check(column.name, gs);
                     if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
-                    columns[count++] = column;
-
-                    // Remove from mapper if attached
-                    tmp.remove(gs);
+                    if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
                     continue;
                 }
             }
 
-            ListSheet.EntryColumn column = createColumn(f);
+            column = createColumn(f);
             if (column != null) {
-                if (StringUtil.isEmpty(column.name)) {
-                    column.name = gs;
-                }
+                if (StringUtil.isEmpty(column.name)) column.name = gs;
                 if (method != null) {
                     column.method = method;
                     if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
@@ -144,60 +150,34 @@ public class HeaderRow extends Row {
                     column.field = f;
                     if (column.clazz == null) column.clazz = declaredFields[i].getType();
                 }
-                column.colIndex = check(column.name, gs);
-                columns[count++] = column;
+                if (column.colIndex < 0) column.colIndex = check(column.name, gs);
+                if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
             }
         }
 
-        if (!tmp.isEmpty()) {
-            for (Map.Entry<String, Method> entry : tmp.entrySet()) {
-                ListSheet.EntryColumn column = createColumn(entry.getValue());
-                if (column == null) {
-                    column = new ListSheet.EntryColumn(entry.getKey());
-                }
+        // Others
+        Map<String, Method> otherColumns = attachOtherColumn(clazz);
+
+        if (!otherColumns.isEmpty()) {
+            for (Map.Entry<String, Method> entry : otherColumns.entrySet()) {
+                column = createColumn(entry.getValue());
+                if (column == null) column = new ListSheet.EntryColumn(entry.getKey());
+                if (StringUtil.isEmpty(column.name)) column.name = entry.getKey();
                 column.method = entry.getValue();
-                column.colIndex = getIndex(column.name);
+                if (column.colIndex < 0) column.colIndex = getIndex(column.name);
                 if (column.clazz == null) column.clazz = entry.getValue().getParameterTypes()[0];
-                columns[count++] = column;
+
+                // Check if exists
+                if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
             }
         }
 
-        // Remove not mapped column
-        int j = 0;
-        for (int i = 0; i < count; i++) {
-            ListSheet.EntryColumn column = columns[i];
-            if (column.colIndex >= 0 || column.clazz == RowNum.class) {
-                if (i != j) {
-                    columns[j] = column;
-                }
-                j++;
-            }
-        }
-
-        this.columns = j < columns.length ? Arrays.copyOf(columns, j) : columns;
+        this.columns = columnMap.values().stream()
+                .filter(c -> c.colIndex >= 0 || c.clazz == RowNum.class)
+                .sorted(Comparator.comparingInt(a -> a.colIndex))
+                .toArray(ListSheet.EntryColumn[]::new);
 
         return this;
-    }
-
-    protected int methodMapping(Class<?> clazz, Method[] writeMethods, Map<String, Method> tmp) {
-        try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz)
-                .getPropertyDescriptors();
-            Method[] allMethods = clazz.getMethods()
-                , mergedMethods = new Method[propertyDescriptors.length];
-            for (int i = 0; i < propertyDescriptors.length; i++) {
-                Method method = propertyDescriptors[i].getWriteMethod();
-                if (method == null) continue;
-                int index = ReflectUtil.indexOf(allMethods, method);
-                // Subclass methods have higher priority
-                mergedMethods[i] = index >= 0 ? allMethods[index] : method;
-            }
-
-            return mapping(writeMethods, tmp, propertyDescriptors, mergedMethods);
-        } catch (IntrospectionException e) {
-            LOGGER.warn("Get {} property descriptor failed.", clazz);
-        }
-        return 0;
     }
 
     protected int check(String first, String second) {
@@ -528,11 +508,7 @@ public class HeaderRow extends Row {
             return Collections.emptyMap();
         }
 
-        Map<String, Method> tmp = new LinkedHashMap<>();
-
-        methodMapping(clazz, Arrays.stream(writeMethods).filter(m -> m.getParameterCount() == 1).toArray(Method[]::new), tmp);
-
-        return tmp;
+        return Arrays.stream(writeMethods).filter(m -> m.getParameterCount() == 1).collect(Collectors.toMap(Method::getName, a -> a, (a, b) -> b));
     }
 
     /**
@@ -550,7 +526,9 @@ public class HeaderRow extends Row {
         ao.setAccessible(true);
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
-            return new ListSheet.EntryColumn(ec.value());
+            ListSheet.EntryColumn column = new ListSheet.EntryColumn(ec.value());
+            column.setColIndex(ec.colIndex());
+            return column;
         }
         // Row Num
         RowNum rowNum = ao.getAnnotation(RowNum.class);
