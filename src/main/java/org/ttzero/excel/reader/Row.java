@@ -52,6 +52,7 @@ import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
+import static org.ttzero.excel.util.StringUtil.isNotBlank;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -230,7 +231,7 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                v = c.sv != null && isNotEmpty(c.sv.trim());
+                v = c.sv != null && isNotBlank(c.sv.trim());
                 break;
             case BLANK:
             case EMPTY_TAG:
@@ -284,11 +285,12 @@ public abstract class Row {
             case DOUBLE:
                 b |= (int) c.dv;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to Byte");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Byte");
         }
         return b;
     }
@@ -346,11 +348,12 @@ public abstract class Row {
             case DOUBLE:
                 cc |= (int) c.dv;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to Character");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Character");
         }
         return cc;
     }
@@ -401,22 +404,24 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        s = (short) Double.parseDouble(c.sv.trim());
+                        s = (short) Double.parseDouble(c.sv);
                     } else {
-                        s = Long.valueOf(c.sv.trim()).shortValue();
+                        s = Long.valueOf(c.sv).shortValue();
                     }
                 } else return null;
                 break;
             case BOOL:
                 s |= c.bv ? 1 : 0;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to short");
+//            default: throw new UncheckedTypeException("Can't convert cell value to short");
         }
         return s;
     }
@@ -467,23 +472,25 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        n = (int) Double.parseDouble(c.sv.trim());
+                        n = (int) Double.parseDouble(c.sv);
                     } else {
-                        n = Long.valueOf(c.sv.trim()).intValue();
+                        n = Long.valueOf(c.sv).intValue();
                     }
                 } else return null;
                 break;
             case BOOL:
                 n = c.bv ? 1 : 0;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
 
-            default: throw new UncheckedTypeException("Can't convert cell value to Integer");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Integer");
         }
         return n;
     }
@@ -534,22 +541,24 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        l = (long) Double.parseDouble(c.sv.trim());
+                        l = (long) Double.parseDouble(c.sv);
                     } else {
-                        l = Long.parseLong(c.sv.trim());
+                        l = Long.parseLong(c.sv);
                     }
                 } else return null;
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to long");
+//            default: throw new UncheckedTypeException("Can't convert cell value to long");
         }
         return l;
     }
@@ -683,15 +692,16 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
                     d = Double.parseDouble(c.sv.trim());
                 } else return null;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to double");
+//            default: throw new UncheckedTypeException("Can't convert cell value to double");
         }
         return d;
     }
@@ -742,14 +752,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                bd = c.sv != null ? new BigDecimal(c.sv.trim()) : null;
+                bd = isNotBlank(c.sv) ? new BigDecimal(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 bd = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
         }
         return bd;
     }
@@ -797,14 +808,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                date = c.sv != null ? toDate(c.sv.trim()) : null;
+                date = isNotBlank(c.sv) ? toDate(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 date = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
         }
         return date;
     }
@@ -852,14 +864,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ts = c.sv != null ? toTimestamp(c.sv.trim()) : null;
+                ts = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ts = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ts;
     }
@@ -899,14 +912,15 @@ public abstract class Row {
                     c.setSv(sst.get(c.nv));
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR: t = c.sv != null ? toTime(c.sv.trim()) : null; break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
-                t = null;
-                break;
+            case INLINESTR: t = isNotBlank(c.sv) ? toTime(c.sv.trim()) : null; break;
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
             default:
-                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
+                t = null;
+//                break;
+//            default:
+//                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
         }
         return t;
     }
@@ -954,14 +968,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ldt = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime() : null;
+                ldt = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime() : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ldt = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.time.LocalDateTime");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.time.LocalDateTime");
         }
         return ldt;
     }
@@ -1009,14 +1024,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ld = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null;
+                ld = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ld = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ld;
     }
@@ -1064,21 +1080,23 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     // 00:00:00
                     if (c.sv.length() == 8 && c.sv.charAt(2) == ':' && c.sv.charAt(5) == ':') {
-                        lt = toLocalTime(c.sv.trim());
+                        lt = toLocalTime(c.sv);
                     } else {
-                        lt = toTimestamp(c.sv.trim()).toLocalDateTime().toLocalTime();
+                        lt = toTimestamp(c.sv).toLocalDateTime().toLocalTime();
                     }
                 } else lt = null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 lt = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return lt;
     }
