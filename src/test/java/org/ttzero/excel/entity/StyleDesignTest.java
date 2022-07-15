@@ -22,6 +22,7 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.StyleProcessor;
@@ -42,29 +43,39 @@ public class StyleDesignTest extends WorkbookTest {
     @Test
     public void testStyleDesign() throws IOException {
         new Workbook("标识行样式", author)
-                .addSheet(new ListSheet<>("期末成绩", DesignStudent.randomTestData()))
-                .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>("期末成绩", DesignStudent.randomTestData()))
+            .writeTo(defaultTestPath);
     }
 
-    @Test public void testStyleDesign1() throws IOException {
+    @Test
+    public void testStyleDesign1() throws IOException {
         ListSheet<ListObjectSheetTest.Item> itemListSheet = new ListSheet<>("序列数", ListObjectSheetTest.Item.randomTestData());
         itemListSheet.setStyleProcessor(rainbowStyle);
         new Workbook("标识行样式1", author)
-                .addSheet(itemListSheet)
-                .writeTo(defaultTestPath);
+            .addSheet(itemListSheet)
+            .writeTo(defaultTestPath);
     }
 
-    @Test public void testStyleDesign2() throws IOException {
+    @Test
+    public void testStyleDesign2() throws IOException {
         new Workbook("标识行样式2", author)
-                .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst)->{
-                    if (item != null) {
-                        if (item.getId() < 10) {
-                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-                        }
-                    }
-                    return style;
-                }))
-                .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst) -> {
+                if (item != null && item.getId() < 10) {
+                    style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                }
+                return style;
+            }))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test
+    public void testStyleDesignSpecifyColumns() throws IOException {
+        new Workbook("标识行样式3", author)
+            .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()
+                , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> Styles.clearHorizontal(s) | Horizontals.CENTER)
+                , new Column("数学成绩", "score").setWidth(12D)
+                , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
+            )).writeTo(defaultTestPath);
     }
 
 
@@ -86,7 +97,7 @@ public class StyleDesignTest extends WorkbookTest {
         }
     }
 
-    public static StyleProcessor<ListObjectSheetTest.Item> rainbowStyle = (item, style, sst)->{
+    public static StyleProcessor<ListObjectSheetTest.Item> rainbowStyle = (item, style, sst) -> {
         if (item.getId() % 3 == 0) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
         } else if (item.getId() % 3 == 1) {
@@ -99,6 +110,7 @@ public class StyleDesignTest extends WorkbookTest {
 
 
     private static final Set<String> VIP_SET = new HashSet<>(Arrays.asList("a", "b", "x"));
+
     public static class NameMatch implements StyleProcessor<String> {
         @Override
         public int build(String name, int style, Styles sst) {
@@ -130,7 +142,7 @@ public class StyleDesignTest extends WorkbookTest {
         public static List<ListObjectSheetTest.Student> randomTestData(int pageNo, int limit) {
             List<ListObjectSheetTest.Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
-                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
+                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? new String(new char[]{(char) ('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;
