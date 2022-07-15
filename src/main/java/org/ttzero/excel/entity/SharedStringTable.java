@@ -359,7 +359,6 @@ public class SharedStringTable implements Closeable, Iterable<String> {
         if (i < 0) {
             this.buffer = grow(buffer);
             this.buffer.flip();
-            i = 1;
         }
 
         return i > 0;
@@ -375,6 +374,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
         int n = nextByteSize(buffer) + 4;
         int newCapacity = Math.max(tableSizeFor(n), buffer.limit() << 1);
         ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+        newBuffer.order(ByteOrder.LITTLE_ENDIAN);
         newBuffer.put(buffer);
         return newBuffer;
     }

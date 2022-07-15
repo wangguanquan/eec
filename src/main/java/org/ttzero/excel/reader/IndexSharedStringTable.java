@@ -406,7 +406,6 @@ public class IndexSharedStringTable extends SharedStringTable {
         if (i < 0) {
             this.readBuffer = grow(readBuffer);
             this.readBuffer.flip();
-            i = 1;
         }
 
         return i > 0;
