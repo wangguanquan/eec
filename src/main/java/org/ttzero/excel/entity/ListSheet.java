@@ -26,6 +26,7 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -489,6 +490,15 @@ public class ListSheet<T> extends Sheet {
             columns = new org.ttzero.excel.entity.Column[list.size()];
             list.toArray(columns);
         } else {
+            Method[] others = filterOthersMethodsCanExport(tmp, clazz);
+            Map<String, Method> otherMap = new HashMap<>();
+            for (Method m : others) {
+                ExcelColumn ec = m.getAnnotation(ExcelColumn.class);
+                if (ec != null && StringUtil.isNotEmpty(ec.value())) {
+                    otherMap.put(ec.value(), m);
+                }
+                otherMap.put(m.getName(), m);
+            }
             for (int i = 0; i < columns.length; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
                 if (!(hc instanceof EntryColumn)) {
@@ -499,8 +509,11 @@ public class ListSheet<T> extends Sheet {
                 Method method = tmp.get(hc.key);
                 if (method != null) {
                     method.setAccessible(true);
+                    ec.method = method;
+                } else if ((method = otherMap.get(hc.key)) != null) {
+                    method.setAccessible(true);
+                    ec.method = method;
                 }
-                ec.method = method;
 
                 for (Field field : declaredFields) {
                     if (field.getName().equals(hc.key)) {
@@ -683,14 +696,7 @@ public class ListSheet<T> extends Sheet {
      */
     protected List<org.ttzero.excel.entity.Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
         // Collect the method which has ExcelColumn annotation
-        Method[] readMethods = null;
-        try {
-            Collection<Method> values = existsMethodMapper.values();
-            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                    && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
-        } catch (IntrospectionException e) {
-            // Ignore
-        }
+        Method[] readMethods = filterOthersMethodsCanExport(existsMethodMapper, clazz);
 
         if (readMethods != null) {
             Set<Method> existsMethods = new HashSet<>(existsMethodMapper.values());
@@ -857,6 +863,26 @@ public class ListSheet<T> extends Sheet {
 
         // Put value into extend properties
         putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.of(panes.topRow(), panes.firstColumn()));
+    }
+
+    /**
+     * Filter methods that need to be exported
+     *
+     * @param existsMethodMapper all exists method collection by default
+     * @param clazz Class of &lt;T&gt;
+     * @return All Read-Method witch can be export
+     */
+    protected Method[] filterOthersMethodsCanExport(Map<String, Method> existsMethodMapper, Class<?> clazz) {
+        // Collect the method which has ExcelColumn annotation
+        Method[] readMethods = null;
+        try {
+            Collection<Method> values = existsMethodMapper.values();
+            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
+                && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
+        } catch (IntrospectionException e) {
+            // Ignore
+        }
+        return readMethods;
     }
 
     public static class EntryColumn extends org.ttzero.excel.entity.Column {
