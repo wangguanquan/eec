@@ -31,6 +31,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.ttzero.excel.reader.SharedStrings.tableSizeFor;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
@@ -201,7 +202,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; hasFullValue(buffer); ) {
+            for (; checkCapacityAndGrow(); ) {
                 int a = buffer.getInt();
                 // A char value
                 if (a < 0) {
@@ -272,7 +273,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; hasFullValue(buffer); ) {
+            for (; checkCapacityAndGrow(); ) {
                 int a = buffer.getInt();
                 // Found the first Null or Empty value
                 if (a == n) break A;
@@ -302,7 +303,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
             // EOF
             if (dist <= 0) break;
             buffer.flip();
-            for (; hasFullValue(buffer); ) {
+            for (; checkCapacityAndGrow(); ) {
                 int a = buffer.getInt();
                 // Character value
                 if (a < 0) {
@@ -349,19 +350,62 @@ public class SharedStringTable implements Closeable, Iterable<String> {
     }
 
     /**
+     * Check remaining data and grow if shortage
+     *
+     * @return true/false
+     */
+    protected boolean checkCapacityAndGrow() {
+        int i = hasFullValue(buffer);
+        if (i < 0) {
+            this.buffer = grow(buffer);
+            this.buffer.flip();
+            i = 1;
+        }
+
+        return i > 0;
+    }
+
+    /**
+     * Grow a new Buffer
+     *
+     * @param buffer Old buffer
+     * @return new capacity buffer at {@code WRITE STATUS}
+     */
+    public static ByteBuffer grow(ByteBuffer buffer) {
+        int n = nextByteSize(buffer) + 4;
+        int newCapacity = Math.max(tableSizeFor(n), buffer.limit() << 1);
+        ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+        newBuffer.put(buffer);
+        return newBuffer;
+    }
+
+    /**
      * Check the remaining data is complete
      *
      * @param buffer the ByteBuffer
-     * @return true or false
+     * @return 1: full 0: shortage -1: The length of the word exceeds the Buffer
      */
-    protected static boolean hasFullValue(ByteBuffer buffer) {
-        if (buffer.remaining() < 4) return false;
+    public static int hasFullValue(ByteBuffer buffer) {
+        int n = nextByteSize(buffer);
+        return n < 0 || n + 4 <= buffer.remaining() ? 1 : n > buffer.limit() - 4 ? -1 : 0;
+    }
+
+    /**
+     * Calculate the size of the next block of text
+     * <p>
+     * Note: The remaining bytes size must be judged before calling this method
+     *
+     * @param buffer Data Buffer
+     * @return block size
+     */
+    static int nextByteSize(ByteBuffer buffer) {
+        if (buffer.remaining() < 4) return 0;
         int position = buffer.position();
         int n = buffer.get(position)   & 0xFF;
         n |= (buffer.get(position + 1) & 0xFF) <<  8;
         n |= (buffer.get(position + 2) & 0xFF) << 16;
         n |= (buffer.get(position + 3) & 0xFF) << 24;
-        return n < 0 || n + 4 <= buffer.remaining();
+        return n;
     }
 
     /**
@@ -479,10 +523,11 @@ public class SharedStringTable implements Closeable, Iterable<String> {
 
     private static class SSTIterator implements Iterator<String> {
         private final SeekableByteChannel channel;
-        private final ByteBuffer buffer;
+        private ByteBuffer buffer;
         private byte[] bytes;
         @SuppressWarnings("unused")
         private int count; // ignore
+        private int fv; // Full Value Mark
         private final char[] chars;
         private SSTIterator(Path temp) {
             try {
@@ -504,7 +549,10 @@ public class SharedStringTable implements Closeable, Iterable<String> {
         @Override
         public boolean hasNext() {
             try {
-                if (buffer.remaining() < 6 || !hasFullValue(buffer)) {
+                if (buffer.remaining() < 6 || (fv = hasFullValue(buffer)) <= 0) {
+                    if (fv < 0) {
+                        this.buffer = grow(buffer);
+                    }
                     buffer.compact();
                     channel.read(buffer);
                     buffer.flip();

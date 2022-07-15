@@ -94,7 +94,7 @@ public class IndexSharedStringTable extends SharedStringTable {
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
         buffer = ByteBuffer.allocate(1 << 11);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
-        readBuffer = ByteBuffer.allocate(1 << 10);
+        readBuffer = ByteBuffer.allocate(1 << 12);
         readBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -114,7 +114,7 @@ public class IndexSharedStringTable extends SharedStringTable {
         channel.position(channel.size());
         buffer = ByteBuffer.allocate(1 << 11);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
-        readBuffer = ByteBuffer.allocate(1 << 10);
+        readBuffer = ByteBuffer.allocate(1 << 12);
         readBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -191,7 +191,7 @@ public class IndexSharedStringTable extends SharedStringTable {
             readBuffer.flip();
 
             skipTo(index);
-        } else if (!hasFullValue(readBuffer)) {
+        } else if (!checkCapacityAndGrow()) {
             readBuffer.compact();
             int dist = super.read(readBuffer);
             if (dist < 0) {
@@ -200,7 +200,7 @@ public class IndexSharedStringTable extends SharedStringTable {
             readBuffer.flip();
         }
 
-        if (hasFullValue(readBuffer)) {
+        if (checkCapacityAndGrow()) {
             this.index = index + 1;
             return parse(readBuffer);
         }
@@ -241,7 +241,7 @@ public class IndexSharedStringTable extends SharedStringTable {
                 skipTo(fromIndex);
             }
 
-            for ( ; hasFullValue(readBuffer); ) {
+            for ( ; checkCapacityAndGrow(); ) {
                 array[i++] = parse(readBuffer);
                 if (i >= array.length) break A;
             }
@@ -393,5 +393,22 @@ public class IndexSharedStringTable extends SharedStringTable {
         }
 
         super.close();
+    }
+
+    /**
+     * Check remaining data and grow if shortage
+     *
+     * @return true/false
+     */
+    @Override
+    protected boolean checkCapacityAndGrow() {
+        int i = hasFullValue(readBuffer);
+        if (i < 0) {
+            this.readBuffer = grow(readBuffer);
+            this.readBuffer.flip();
+            i = 1;
+        }
+
+        return i > 0;
     }
 }
