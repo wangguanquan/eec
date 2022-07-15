@@ -190,13 +190,14 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 columns[i++] = new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
             }
         } else {
+            Object o;
             for (int i = 0; i < columns.length; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
                 if (hc.getClazz() == null) {
-                    hc.setClazz(first.get(hc.key).getClass());
+                    hc.setClazz((o = first.get(hc.key)) != null ? o.getClass() : String.class);
                 }
             }
         }

@@ -337,6 +337,24 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void test257() throws IOException {
+        List<Map<String, ?>> list = new ArrayList<>();
+        list.add(new HashMap<String, String>(){{put("sub1", "moban1");}});
+        list.add(new HashMap<String, String>(){{put("sub2", "moban2");}});
+        list.add(new HashMap<String, String>(){{put("sub3", "moban3");}});
+
+        new Workbook("Issue#257").addSheet(new ListMapSheet(list
+                , new Column("ID", "id")
+                , new Column("子表单", "sub1")
+                , new Column("模板2", "sub2")
+                , new Column("模板3", "sub3")
+                , new Column("abc", "abc")
+                , new Column("模板2", "sub2")
+                , new Column("xx", "xx")
+                , new Column("xyz", "xyz")
+        )).writeTo(defaultTestPath);
+    }
+
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
