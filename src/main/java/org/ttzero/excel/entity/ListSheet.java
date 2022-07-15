@@ -637,7 +637,11 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Parse the global style processor
-        styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+        if (styleProcessor == null) {
+            @SuppressWarnings({"unchecked", "retype"})
+            StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+            this.styleProcessor = styleProcessor;
+        }
 
         // Freeze panes
         attachFreezePanes(clazz);
