@@ -82,6 +82,7 @@ public class ListSheet<T> extends Sheet {
      */
     public Sheet setStyleProcessor(StyleProcessor<T> styleProcessor) {
         this.styleProcessor = styleProcessor;
+        putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
         return this;
     }
 
@@ -274,8 +275,8 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Find the end index of row-block
-        int end = getEndIndex();
-        int len = columns.length;
+        int end = getEndIndex(), len = columns.length;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         try {
             for (; start < end; rows++, start++) {
                 Row row = rowBlock.next();
@@ -283,7 +284,7 @@ public class ListSheet<T> extends Sheet {
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
                 for (int i = 0; i < len; i++) {
-                    // clear cells
+                    // Clear cells
                     Cell cell = cells[i];
                     cell.clear();
 
@@ -297,9 +298,10 @@ public class ListSheet<T> extends Sheet {
                         e = column.getField().get(o);
                     else e = o;
 
-                    cellValueAndStyle.reset(rows, cell, e, columns[i]);
-                    // TODO setting thd style-design into extend-prop
-                    cellValueAndStyle.setStyleDesign(o, cell, columns[i], getStyleProcessor());
+                    cellValueAndStyle.reset(rows, cell, e, column);
+                    if (hasGlobalStyleProcessor) {
+                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
+                    }
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -541,7 +543,7 @@ public class ListSheet<T> extends Sheet {
      * Override the method to extend custom comments
      *
      * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
-     * @return the Worksheet's {@link Column} information
+     * @return the Worksheet's {@link org.ttzero.excel.entity.Column} information
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
         // Filter all ignore column
@@ -637,7 +639,11 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Parse the global style processor
-        styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+        if ((extPropMark & 2) != 2) {
+            @SuppressWarnings({"unchecked", "retype"})
+            StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+            putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
+        }
 
         // Freeze panes
         attachFreezePanes(clazz);
@@ -728,6 +734,11 @@ public class ListSheet<T> extends Sheet {
             if (size <= 0) {
                 columns = new org.ttzero.excel.entity.Column[0];
             }
+
+            // Mark Freeze Panes
+            if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) extPropMark |= 1;
+            // Mark global style design
+            if (getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null) extPropMark |= 1 << 1;
         }
         return columns;
     }
@@ -833,7 +844,7 @@ public class ListSheet<T> extends Sheet {
      */
     protected void attachFreezePanes(Class<?> clazz) {
         // Annotation setting has lower priority than setting method
-        if (getExtPropValue(Const.WorksheetExtendProperty.FREEZE) != null) {
+        if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) {
             return;
         }
         FreezePanes panes = clazz.getAnnotation(FreezePanes.class);
@@ -852,7 +863,7 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Put value into extend properties
-        putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.of(panes.topRow(), panes.firstColumn()));
+        putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(panes.topRow(), panes.firstColumn()));
     }
 
     public static class EntryColumn extends org.ttzero.excel.entity.Column {

@@ -158,13 +158,21 @@ public abstract class Sheet implements Cloneable, Storable {
      * Ignore header when export
      */
     protected int nonHeader = -1;
-
+    /**
+     * Limit row number in worksheet
+     */
     private int rowLimit;
 
     /**
      * Other extend properties
      */
     protected Map<String, Object> extProp = new HashMap<>();
+    /**
+     * The flag of the extended parameter. If there is an extended parameter,
+     * the corresponding bit is 1. The lower 16 bits are occupied by the system,
+     * and the upper 16 bits can be extended by themselves.
+     */
+    protected int extPropMark;
 
     public int getId() {
         return id;
