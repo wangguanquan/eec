@@ -639,10 +639,10 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Parse the global style processor
-        if ((extPropMark & 2) != 2) {
+        if (styleProcessor == null) {
             @SuppressWarnings({"unchecked", "retype"})
             StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
-            setStyleProcessor(styleProcessor);
+            if (styleProcessor != null) setStyleProcessor(styleProcessor);
         }
 
         // Freeze panes
