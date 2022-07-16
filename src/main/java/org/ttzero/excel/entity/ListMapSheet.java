@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 
 import java.util.Iterator;
@@ -177,10 +176,6 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     @Override
     protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        // Mark Freeze Panes
-        if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) extPropMark |= 1;
-        // Mark global style design
-        if (getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null) extPropMark |= 1 << 1;
         Map<String, ?> first = getFirst();
         // No data
         if (first == null) {

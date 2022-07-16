@@ -186,7 +186,6 @@ public class ResultSetSheet extends Sheet {
     public Sheet setStyleProcessor(StyleProcessor<ResultSet> styleProcessor) {
         this.styleProcessor = styleProcessor;
         putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
-        extPropMark |= 1 << 1;
         return this;
     }
 
@@ -287,10 +286,6 @@ public class ResultSetSheet extends Sheet {
         if (rs == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter ResultSet");
         }
-        // Mark Freeze Panes
-        if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) extPropMark |= 1;
-        // Mark global style design
-        if (getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null) extPropMark |= 1 << 1;
         int i = 0;
         try {
             ResultSetMetaData metaData = rs.getMetaData();

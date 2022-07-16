@@ -642,7 +642,7 @@ public class ListSheet<T> extends Sheet {
         if ((extPropMark & 2) != 2) {
             @SuppressWarnings({"unchecked", "retype"})
             StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
-            putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
+            setStyleProcessor(styleProcessor);
         }
 
         // Freeze panes
@@ -734,11 +734,6 @@ public class ListSheet<T> extends Sheet {
             if (size <= 0) {
                 columns = new org.ttzero.excel.entity.Column[0];
             }
-
-            // Mark Freeze Panes
-            if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) extPropMark |= 1;
-            // Mark global style design
-            if (getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null) extPropMark |= 1 << 1;
         }
         return columns;
     }

@@ -168,7 +168,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Map<String, Object> extProp = new HashMap<>();
     /**
-     * The flag of the extended parameter. If there is an extended parameter,
+     * The bit flag of the extended parameter. If there is an extended parameter,
      * the corresponding bit is 1. The lower 16 bits are occupied by the system,
      * and the upper 16 bits can be extended by themselves.
      */
@@ -568,6 +568,9 @@ public abstract class Sheet implements Cloneable, Storable {
             // Check the limit of columns
             checkColumnLimit();
             headerReady |= (this.columns.length > 0);
+
+            // Mark ext-properties
+            markExtProp();
         }
         return columns;
     }
@@ -1199,6 +1202,16 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Map<String, Object> getExtPropAsMap() {
         return new HashMap<>(extProp);
+    }
+
+    /**
+     * Mark ext-properties bit
+     */
+    protected void markExtProp() {
+        // Mark Freeze Panes
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null ? 1 : 0;
+        // Mark global style design
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
