@@ -171,14 +171,13 @@ public class XMLRow extends Row {
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
 
-        Cell cell;
-        int index = 0;
         // Parse cell value
-        if (unknownLength) {
-            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
-        } else {
-            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
-        }
+//        if (unknownLength) {
+        for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        } else {
+//            int index = 0;
+//            for (Cell cell; index++ < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        }
     }
 
     /**
@@ -499,7 +498,6 @@ class XMLCalcRow extends XMLRow {
      */
     @Override
     protected void parseCells() {
-        int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
@@ -509,13 +507,12 @@ class XMLCalcRow extends XMLRow {
             calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
         }
 
-        Cell cell;
         // Parse cell value
-        if (unknownLength) {
-            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
-        } else {
-            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
-        }
+//        if (unknownLength) {
+        for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        } else {
+//            for(Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        }
     }
 
     /**

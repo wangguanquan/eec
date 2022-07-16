@@ -212,7 +212,7 @@ public class SharedStrings implements Closeable {
      * @param cap the custom buffer size
      * @return Returns a power of two size
      */
-    static int tableSizeFor(int cap) {
+    public static int tableSizeFor(int cap) {
         int n = cap - 1;
         n |= n >>> 1;
         n |= n >>> 2;
