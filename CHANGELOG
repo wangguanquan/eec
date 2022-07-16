@@ -1,3 +1,9 @@
+Version 0.5.2 (2022-07-16)
+-------------
+- (严重)修复大量单元格字节超过1k时导致SST索引读取死循环问题(#258)
+- StatementSheet&ResultSetSheet添加StyleProcessor实现整行样式调整(#235)
+- 修复部分BUG(#257, #260)
+
 Version 0.5.1 (2022-07-10)
 -------------
 - 提升对非标准Office OpenXML生成的excel读取兼容性(#245, #247)

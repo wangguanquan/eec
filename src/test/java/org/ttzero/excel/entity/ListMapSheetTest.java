@@ -64,7 +64,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign4Map() throws IOException {
         new Workbook("Map标识行样式", author)
-                .addSheet(new ListMapSheet("Map", createAllTypeData(10)).setStyleProcessor((map, style, sst)->{
+                .addSheet(new ListMapSheet("Map", createAllTypeData(100)).setStyleProcessor((map, style, sst)->{
                     if ((Boolean) map.get("bv")) {
                         style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                     }
@@ -75,7 +75,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign4Map2() throws IOException {
         new Workbook("Map标识行样式2", author)
-            .addSheet(new ListMapSheet("Map", createAllTypeData(10)
+            .addSheet(new ListMapSheet("Map", createAllTypeData(100)
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
