@@ -140,7 +140,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
         Styles styles = hc.styles;
         if (null != styles && null != styleProcessor) {
-            cell.xf = styles.of(styleProcessor.build(o, hc.cellStyle != null ? hc.cellStyle : 0, styles));
+            cell.xf = styles.of(styleProcessor.build(o, styles.getStyleByIndex(cell.xf), styles));
         }
     }
 
