@@ -145,21 +145,24 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         if (!eof && left() < getRowBlockSize()) {
             append();
         }
-        int end = getEndIndex();
-        int len = columns.length;
+        int end = getEndIndex(), len = columns.length;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         for (; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
+            Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
-                Object e = data.get(start).get(hc.key);
-                // clear cells
+                Object e = rowDate.get(hc.key);
+                // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
 
                 cellValueAndStyle.reset(rows, cell, e, hc);
-                cellValueAndStyle.setStyleDesign(data.get(start), cell, columns[i], getStyleProcessor());
+                if (hasGlobalStyleProcessor) {
+                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
+                }
             }
         }
     }

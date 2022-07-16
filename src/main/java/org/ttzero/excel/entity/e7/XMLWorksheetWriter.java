@@ -971,7 +971,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(" tabSelected=\"1\"");
         }
 
-        Object o = sheet.getExtPropValue(Const.WorksheetExtendProperty.FREEZE);
+        // Freeze Panes
+        Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.FREEZE);
         if (o instanceof Panes) {
             Panes freezePanes = (Panes) o;
 

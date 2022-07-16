@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.StringUtil;
 
@@ -58,7 +60,10 @@ import static java.sql.Types.VARCHAR;
  */
 public class ResultSetSheet extends Sheet {
     protected ResultSet rs;
-
+    /**
+     * The row styleProcessor
+     */
+    private StyleProcessor<ResultSet> styleProcessor;
     /**
      * Constructor worksheet
      */
@@ -173,6 +178,27 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
+     * Setting a row style processor
+     *
+     * @param styleProcessor a row style processor
+     * @return current worksheet
+     */
+    public Sheet setStyleProcessor(StyleProcessor<ResultSet> styleProcessor) {
+        this.styleProcessor = styleProcessor;
+        putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
+        return this;
+    }
+
+    /**
+     * Returns the row style processor
+     *
+     * @return {@link StyleProcessor}
+     */
+    public StyleProcessor<ResultSet> getStyleProcessor() {
+        return styleProcessor;
+    }
+
+    /**
      * Release resources
      *
      * @throws IOException if I/O error occur
@@ -195,7 +221,7 @@ public class ResultSetSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len = columns.length, n = 0, limit = getRowLimit();
-
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         try {
             for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
                 Row row = rowBlock.next();
@@ -231,7 +257,9 @@ public class ResultSetSheet extends Sheet {
                     }
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
-                    //setStyleDesign(rs,cell,hc);
+                    if (hasGlobalStyleProcessor) {
+                        cellValueAndStyle.setStyleDesign(rs , cell, hc, getStyleProcessor());
+                    }
                 }
             }
         } catch (SQLException e) {

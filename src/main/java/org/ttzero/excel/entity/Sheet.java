@@ -158,13 +158,21 @@ public abstract class Sheet implements Cloneable, Storable {
      * Ignore header when export
      */
     protected int nonHeader = -1;
-
+    /**
+     * Limit row number in worksheet
+     */
     private int rowLimit;
 
     /**
      * Other extend properties
      */
     protected Map<String, Object> extProp = new HashMap<>();
+    /**
+     * The bit flag of the extended parameter. If there is an extended parameter,
+     * the corresponding bit is 1. The lower 16 bits are occupied by the system,
+     * and the upper 16 bits can be extended by themselves.
+     */
+    protected int extPropMark;
 
     public int getId() {
         return id;
@@ -560,6 +568,9 @@ public abstract class Sheet implements Cloneable, Storable {
             // Check the limit of columns
             checkColumnLimit();
             headerReady |= (this.columns.length > 0);
+
+            // Mark ext-properties
+            markExtProp();
         }
         return columns;
     }
@@ -1191,6 +1202,16 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Map<String, Object> getExtPropAsMap() {
         return new HashMap<>(extProp);
+    }
+
+    /**
+     * Mark ext-properties bit
+     */
+    protected void markExtProp() {
+        // Mark Freeze Panes
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null ? 1 : 0;
+        // Mark global style design
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

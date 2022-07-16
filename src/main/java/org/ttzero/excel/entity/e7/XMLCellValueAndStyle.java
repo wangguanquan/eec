@@ -138,9 +138,8 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      */
     @Override
     public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
-        Styles styles = hc.styles;
-        if (null != styles && null != styleProcessor) {
-            cell.xf = styles.of(styleProcessor.build(o, styles.getStyleByIndex(cell.xf), styles));
+        if (styleProcessor != null && hc.styles != null) {
+            cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles));
         }
     }
 
