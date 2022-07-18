@@ -21,11 +21,13 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -534,6 +536,19 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#226.xlsx"))) {
             String[] array = reader.sheet(0).rows().map(row -> row.getString(0)).toArray(String[]::new);
             assert Arrays.equals(arr, array);
+        }
+    }
+
+    @Test public void test354() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
+            OO[] list = reader.sheet(0).rows()
+                    .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
+                    .map(row -> row.to(OO.class))
+                    .filter(Objects::nonNull)
+                    .toArray(OO[]::new);
+
+            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
+            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
         }
     }
 
@@ -1103,4 +1118,55 @@ public class ExcelReaderTest {
             return buyNo + " " + price + " " + count;
         }
     }
+
+    public static class OO {
+        @IgnoreImport
+        @ExcelColumn(colIndex = 3)
+        private BigDecimal price;
+
+        @ExcelColumn(colIndex = 1)
+        private String refId;
+
+        private BigDecimal weight;
+
+        private String brandName, productName;
+
+        @ExcelColumn(colIndex = 0)
+        private String fbaNo;
+
+        @RowNum
+        private Integer rowNum;
+
+        @Override
+        public String toString() {
+            return "rowNum: " + rowNum + " => fbaNo: " + fbaNo + ", refId: " + refId + ", price: " + price + ", weight: " + weight + ", brand: " + brandName + ", productName: " + productName;
+        }
+
+        @ExcelColumn("单个产品净重KG(必填)")
+        public void abc(BigDecimal weight) {
+            this.weight = weight;
+        }
+
+        @ExcelColumn(colIndex = 3)
+        public void setPriceString(String price) {
+            if (StringUtil.isNotEmpty(price)) {
+                try {
+                    this.price = new BigDecimal(price);
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
+
+        @ExcelColumn(colIndex = 5)
+        public void setBrandName(String brandName) {
+            this.brandName = brandName;
+        }
+
+        @ExcelColumn(colIndex = 2)
+        public void setName(String productName) {
+            this.productName = productName;
+        }
+    }
+
 }

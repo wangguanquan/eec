@@ -184,19 +184,35 @@ public interface Const {
 
     /**
      * The worksheet extend properties key
+     * @deprecated Replace with {@link ExtendPropertyKey}
      */
+    @Deprecated
     interface WorksheetExtendProperty {
         /**
-         * Freeze panes key
+         * Freeze panes key(0-position)
+         */
+        String FREEZE = ExtendPropertyKey.FREEZE;
+        /**
+         * The style design key(1-position)
+         */
+        String STYLE_DESIGN = ExtendPropertyKey.STYLE_DESIGN;
+    }
+
+    /**
+     * The extend properties key
+     */
+    interface ExtendPropertyKey {
+        /**
+         * Freeze panes key(0-position)
          */
         String FREEZE = "freeze";
         /**
-         * The style design key
+         * The style design key(1-position)
          */
-        String STYLE_DESIGN = "styleDesign";
+        String STYLE_DESIGN = "style_design";
         /**
-         * Merge cells key
+         * Merge cells key(2-position)
          */
-        String MERGE_CELLS  = "mergeCells ";
+        String MERGE_CELLS  = "merge_cells";
     }
 }

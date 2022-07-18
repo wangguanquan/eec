@@ -212,7 +212,7 @@ public class SharedStrings implements Closeable {
      * @param cap the custom buffer size
      * @return Returns a power of two size
      */
-    static int tableSizeFor(int cap) {
+    public static int tableSizeFor(int cap) {
         int n = cap - 1;
         n |= n >>> 1;
         n |= n >>> 2;
@@ -580,7 +580,7 @@ public class SharedStrings implements Closeable {
             return new int[] { nChar - 4, nChar - 4 };
         }
 
-        for (; nChar < len0 && (cb[nChar + 1] != 't'
+        for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
             || cb[nChar + 2] != '>' && cb[nChar + 2] != ' ' && cb[nChar + 2] != '/'); ++nChar)
             ;
         if (nChar >= len0) return new int[] { -1 }; // Not found

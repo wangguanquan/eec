@@ -34,6 +34,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -72,6 +73,7 @@ public class Styles implements Storable {
 
     private final Map<Integer, Integer> map;
     private final AtomicInteger counter;
+    private int[] styleIndex;
     private Document document;
 
     private List<Font> fonts;
@@ -88,6 +90,7 @@ public class Styles implements Storable {
     private Styles() {
         map = new HashMap<>();
         counter = new AtomicInteger();
+        styleIndex = new int[10];
     }
 
     /**
@@ -102,6 +105,10 @@ public class Styles implements Storable {
         if (n == -1) {
             n = counter.getAndIncrement();
             map.put(s, n);
+            if (n >= styleIndex.length) {
+                styleIndex = Arrays.copyOf(styleIndex, styleIndex.length << 1);
+            }
+            styleIndex[n] = s;
         }
         return n;
     }
@@ -116,12 +123,7 @@ public class Styles implements Storable {
         if (styleIndex >= counter.get()) {
             return -1;
         }
-        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
-            if (entry.getValue() == styleIndex) {
-                return entry.getKey();
-            }
-        }
-        return -1;
+        return styleIndex >= 0 ? this.styleIndex[styleIndex] : -1;
     }
 
     /**
@@ -274,7 +276,7 @@ public class Styles implements Storable {
         int i = 0;
         for (Element e : sub) {
             String applyNumberFormat = getAttr(e, "applyNumberFormat");
-            if (isNotEmpty(applyNumberFormat) && Integer.parseInt(applyNumberFormat) == 1) {
+            if (isNotEmpty(applyNumberFormat) && ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat))){
                 String numFmtId = getAttr(e, "numFmtId");
                 int style = Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
                 self.map.put(i, style);

@@ -2,8 +2,8 @@
 
 [![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
 
-EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取、写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
-EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`logback`，前者用于小文件xml读取，后者统一日志接口。
+EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取/写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
+EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
 EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
@@ -38,21 +38,19 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 ## WIKI
 
-阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法（编写中）
+阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法
 
 
 ## 主要功能
 
-1. 支持大数据量导出，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
+1. 支持**大数据量导出**，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
 2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写。
-3. 支持 对象数组 和 Map数组 导出。
-4. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
-5. 导出excel默认隔行变色(俗称斑马线)，利于阅读
-6. 设置列宽自动调节（功能未完善）
-7. 设置水印（文字，本地＆网络图片）
-8. 提供Watch窗口查看操作细节也可以做进度条。
-9. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
-10. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
+3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
+4. 导出excel默认隔行变色(俗称斑马线)，利于阅读
+5. 设置水印（文字，本地＆网络图片）
+6. 提供Watch窗口查看操作细节也可以做进度条。
+7. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
+8. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
 
 ## 使用方法
 
@@ -106,23 +104,17 @@ public void testWrite(List<Student> students) throws IOException {
 
 #### 2. 高亮和数据转换
 
-高亮和数据转换是通过`@FunctionalInterface`实现，下面展示如何将低下60分的成绩输出为"不合格"并将单元格标红
+高亮和数据转换是通过`@FunctionalInterface`实现，Java Bean也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标红
 
 ```
 public void testStyleConversion(List<Student> students) throws IOException {
     new Workbook("2021小五班期未考试成绩")
         .addSheet(new ListSheet<>("期末成绩", students
-            , new Column("学号", "id", int.class)
-            , new Column("姓名", "name", String.class)
-            , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
-                .setStyleProcessor((o, style, sst) -> {
-                   if ((int)o < 60) {
-                       style = Styles.clearFill(style)
-                           | sst.addFill(new Fill(PatternType.solid, Color.orange));
-                   }
-                   return style;
-               })
-            )
+                , new Column("学号", "id", int.class)
+                , new Column("姓名", "name", String.class)
+                , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+            ).setStyleProcessor((o, style, sst) 
+                -> (int) o < 60 ? style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
         )
         .writeTo(Paths.get("f:/excel"));
 }
@@ -130,7 +122,7 @@ public void testStyleConversion(List<Student> students) throws IOException {
 
 内容如下图
 
-![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b2.png)
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3bx.png)
 
 ### 读取示例
 
@@ -194,9 +186,7 @@ reader.sheets()
 
 ### xls格式支持
 
-读取xls格式的方法与读取xlsx格式完全一样，读取文件时不需要判断是xls格式还是xlsx格式，因为EEC为其提供了完全一样的接口，内部会根据文件头去判断具体类型， 这种方式比判断文件后缀准确得多。
-
-pom.xml添加
+pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码只需要传入xls即可读取，
 
 ```
 <dependency>
@@ -205,6 +195,8 @@ pom.xml添加
     <version>0.5.0</version>
 </dependency>
 ```
+
+读取xls格式的方法与读取xlsx格式完全一样，读取文件时不需要判断是xls格式还是xlsx格式，因为EEC为其提供了完全一样的接口，内部会根据文件头去判断具体类型， 这种方式比判断文件后缀准确得多。
 
 你可以在 [search.maven.org](https://search.maven.org/artifact/org.ttzero/eec-e3-support) 查询eec-e3-support版本，两个工具的兼容性 [参考此表](https://github.com/wangguanquan/eec/wiki/EEC%E4%B8%8EE3-support%E5%85%BC%E5%AE%B9%E6%80%A7%E5%AF%B9%E7%85%A7%E8%A1%A8)
 
@@ -231,6 +223,18 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.2 (2022-07-16)
+-------------
+- (严重)修复大量单元格字节超过1k时导致SST索引读取死循环问题(#258)
+- StatementSheet&ResultSetSheet添加StyleProcessor实现整行样式调整(#235)
+- 修复部分BUG(#257, #260)
+
+Version 0.5.1 (2022-07-10)
+-------------
+- 提升对非标准Office OpenXML生成的excel读取兼容性(#245, #247)
+- 提升读取Excel时Row转Java对象的兼容性(#254)
+- 修复部分BUG(#249, #252)
+
 Version 0.5.0 (2022-05-22)
 -------------
 - 增加StyleDesign用于样式处理（单元格或者整行样式处理）
@@ -248,17 +252,6 @@ Version 0.4.14 (2021-12-19)
 - 修复已知BUG(#197,#202，#205,#219)
 - 将com.google.common包重命名为org.ttzero.excel.common解决内嵌引起的包冲突(#200)
 
-Version 0.4.13 (2021-08-09)
--------------
-- 支持xls获取图片
-- `@ExcelColumn`注解增加`colIndex`属性，用于指定列顺序(#188)
-- 读取文件时`Worksheet#getIndex()`方法返回Sheet在文件中的下标而非id，并取消按id排序(#193)
-- 修复部分BUG(#182,#190)
-
-Version 0.4.12.1 (2021-05-20)
--------------
-- Hotfix：HeaderStyle注解设置某列cell颜色会影响所有表头样式
-
 
 [更多...](./CHANGELOG)
 
@@ -266,7 +259,7 @@ Version 0.4.12.1 (2021-05-20)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.0-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.2-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

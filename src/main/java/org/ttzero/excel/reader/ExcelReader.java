@@ -54,9 +54,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -444,6 +446,9 @@ public class ExcelReader implements Closeable {
 
     // --- PROTECTED FUNCTIONS
 
+    public static final Set<String> MUST_CHECK_PART = new HashSet<>(Arrays.asList(Const.ContentType.WORKBOOK
+            , Const.ContentType.SHAREDSTRING, Const.ContentType.SHEET, Const.ContentType.STYLE));
+
     protected ContentType checkContentType(Path root) {
         SAXReader reader = new SAXReader();
         Document document;
@@ -460,8 +465,12 @@ public class ExcelReader implements Closeable {
             if ("Override".equals(e.getName())) {
                 ContentType.Override override = new ContentType.Override(e.attributeValue("ContentType"), e.attributeValue("PartName"));
                 if (!Files.exists(root.resolve(override.getPartName().substring(1)))) {
-                    FileUtil.rm_rf(root.toFile(), true);
-                    throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
+                    if (MUST_CHECK_PART.contains(override.getContentType())) {
+                        FileUtil.rm_rf(root.toFile(), true);
+                        throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
+                    } else {
+                        LOGGER.warn("{} is configured in [Content_Types].xml, but the corresponding file is missing.", override.getKey());
+                    }
                 }
                 contentType.add(override);
             }
