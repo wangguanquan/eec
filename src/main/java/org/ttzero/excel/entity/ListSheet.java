@@ -494,7 +494,9 @@ public class ListSheet<T> extends Sheet {
             if (list.isEmpty()) {
                 headerReady = eof = shouldClose = true;
                 this.end = 0;
-                LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
+                if (java.util.Map.class.isAssignableFrom(clazz))
+                    LOGGER.warn("List<Map> has detected, please use ListMapSheet for export.");
+                else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
                 return 0;
             }
             columns = new org.ttzero.excel.entity.Column[list.size()];
