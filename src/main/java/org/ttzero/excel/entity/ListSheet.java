@@ -284,6 +284,7 @@ public class ListSheet<T> extends Sheet {
                 row.index = rows;
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
+                boolean notNull = o != null;
                 for (int i = 0; i < len; i++) {
                     // Clear cells
                     Cell cell = cells[i];
@@ -293,11 +294,18 @@ public class ListSheet<T> extends Sheet {
                     EntryColumn column = (EntryColumn) columns[i];
                     if (column.isIgnoreValue())
                         e = null;
-                    else if (column.getMethod() != null)
-                        e = column.getMethod().invoke(o);
-                    else if (column.getField() != null)
-                        e = column.getField().get(o);
-                    else e = o;
+                    else if (notNull) {
+                        if (column.getMethod() != null)
+                            e = column.getMethod().invoke(o);
+                        else if (column.getField() != null)
+                            e = column.getField().get(o);
+                        else e = o;
+                    }
+                    /*
+                    The default processing of null values still retains the row style.
+                    If don't want any style and value, you can change it to {@code continue}
+                     */
+                    else e = null;
 
                     cellValueAndStyle.reset(rows, cell, e, column);
                     if (hasGlobalStyleProcessor) {

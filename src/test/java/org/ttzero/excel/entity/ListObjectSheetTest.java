@@ -48,10 +48,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -683,6 +681,14 @@ public class ListObjectSheetTest extends WorkbookTest {
                 assert subList.get(i).equals(list.get(i));
             }
         }
+    }
+
+    @Test public void testNullInList() throws IOException {
+        List<Item> list = Item.randomTestData(10);
+        list.add(0, null);
+        list.add(3, null);
+        list.add(null);
+        new Workbook("Null in list").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
     }
 
     public static class Item {
