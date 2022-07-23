@@ -600,7 +600,12 @@ public class Styles implements Storable {
     ////////////////////////////////To object//////////////////////////////////
     public NumFmt getNumFmt(int style) {
         int n = style >>> INDEX_NUMBER_FORMAT;
-        return n < numFmts.size() ? numFmts.get(n) : null;
+        if (n <= 0) return null;
+        if (n < 176) return BuiltInNumFmt.get(n);
+        for (NumFmt e : numFmts) {
+            if (e.id == n) return e;
+        }
+        return null;
     }
 
     public Fill getFill(int style) {

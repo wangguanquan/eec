@@ -64,10 +64,10 @@ public class NumFmt implements Comparable<NumFmt> {
      */
     TIME_FORMAT = new NumFmt("hh:mm:ss");
 
-    private String code;
-    private int id = -1;
+    protected String code;
+    protected int id = -1;
 
-    private NumFmt() { }
+    public NumFmt() { }
 
     NumFmt(int id, String code) {
         this.id = id;
@@ -153,7 +153,7 @@ public class NumFmt implements Comparable<NumFmt> {
      * @param base the cell value length
      * @return cell length
      */
-    public int calcNumWidth(int base) {
+    public double calcNumWidth(double base) {
         int n = 0;
         boolean ignore = false, comma = false;
         char[] cs = new char[1];
