@@ -149,8 +149,8 @@ public class XMLRow extends Row {
                 }
             }
         }
-        if (fc <= 0) fc = this.startRow;
         if (hr != null && lc < hr.lc) lc = hr.lc;
+        if (fc <= 0 || fc >= lc) fc = this.startRow;
         fc = fc - 1; // zero base
         if (cells == null || lc > cells.length) {
             cells = new Cell[lc > 0 ? lc : 100]; // default array length 100
@@ -171,14 +171,13 @@ public class XMLRow extends Row {
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
 
-        Cell cell;
-        int index = 0;
         // Parse cell value
-        if (unknownLength) {
-            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
-        } else {
-            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
-        }
+//        if (unknownLength) {
+        for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        } else {
+//            int index = 0;
+//            for (Cell cell; index++ < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        }
     }
 
     /**
@@ -499,7 +498,6 @@ class XMLCalcRow extends XMLRow {
      */
     @Override
     protected void parseCells() {
-        int index = 0;
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
@@ -509,13 +507,12 @@ class XMLCalcRow extends XMLRow {
             calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
         }
 
-        Cell cell;
         // Parse cell value
-        if (unknownLength) {
-            for(; (cell = nextCell()) != null; index++, parseCellValue(cell));
-        } else {
-            for(; index < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
-        }
+//        if (unknownLength) {
+        for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        } else {
+//            for(Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+//        }
     }
 
     /**

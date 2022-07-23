@@ -80,7 +80,7 @@ public class FreezeSheetTest extends WorkbookTest {
         new Workbook("Freeze Top Row2", author)
                 .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.row(2)))
+                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(2)))
                 .writeTo(defaultTestPath);
     }
 
@@ -88,7 +88,7 @@ public class FreezeSheetTest extends WorkbookTest {
         new Workbook("Freeze first Column2", author)
                 .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.col(2)))
+                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.col(2)))
                 .writeTo(defaultTestPath);
     }
 
@@ -96,7 +96,7 @@ public class FreezeSheetTest extends WorkbookTest {
         new Workbook("Freeze Panes Row2 Column2", author)
                 .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.WorksheetExtendProperty.FREEZE, Panes.of(2, 2)))
+                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(2, 2)))
                 .writeTo(defaultTestPath);
     }
 }

@@ -145,21 +145,24 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         if (!eof && left() < getRowBlockSize()) {
             append();
         }
-        int end = getEndIndex();
-        int len = columns.length;
+        int end = getEndIndex(), len = columns.length;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         for (; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
+            Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
-                Object e = data.get(start).get(hc.key);
-                // clear cells
+                Object e = rowDate.get(hc.key);
+                // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
 
                 cellValueAndStyle.reset(rows, cell, e, hc);
-                cellValueAndStyle.setStyleDesign(data.get(start), cell, columns[i], getStyleProcessor());
+                if (hasGlobalStyleProcessor) {
+                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
+                }
             }
         }
     }
@@ -190,13 +193,14 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 columns[i++] = new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
             }
         } else {
+            Object o;
             for (int i = 0; i < columns.length; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i].tail != null ? columns[i].tail : columns[i];
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
                 if (hc.getClazz() == null) {
-                    hc.setClazz(first.get(hc.key).getClass());
+                    hc.setClazz((o = first.get(hc.key)) != null ? o.getClass() : String.class);
                 }
             }
         }

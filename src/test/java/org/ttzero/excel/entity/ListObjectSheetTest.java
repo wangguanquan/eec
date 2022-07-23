@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
-import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
@@ -692,77 +691,6 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-
-    @Test public void testStyleDesign() throws IOException {
-        new Workbook("标识行样式", author)
-                .addSheet(new ListSheet<>("期末成绩",Student.randomTestData()))
-                .writeTo(defaultTestPath);
-    }
-
-    @Test public void testStyleDesign1() throws IOException {
-        ListSheet<Item> itemListSheet = new ListSheet<>("序列数",Item.randomTestData());
-        itemListSheet.setStyleProcessor(rainbowStyle);
-        new Workbook("标识行样式1", author)
-                .addSheet(itemListSheet)
-                .writeTo(defaultTestPath);
-    }
-
-    @Test public void testStyleDesign2() throws IOException {
-        new Workbook("标识行样式2", author)
-                .addSheet(new ListSheet<>("序列数",Item.randomTestData()).setStyleProcessor((item, style, sst)->{
-                    if (item != null) {
-                        if (item.getId() < 10) {
-                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-                        }
-                    }
-                    return style;
-                }))
-                .writeTo(defaultTestPath);
-    }
-
-
-    public static class StudentScoreStyle implements StyleProcessor<Student> {
-        @Override
-        public int build(Student o, int style, Styles sst) {
-            // 低于60分时背景色标黄
-            if (o.getScore() < 60) {
-                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
-                // 低于30分时加下划线
-            } else if (o.getScore() < 70) {
-                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-            } else if (o.getScore() > 90) {
-                // 获取原有字体+下划线（这样做可以保留原字体和大小）
-                Font newFont = sst.getFont(style).clone();
-                style = Styles.clearFont(style) | sst.addFont(newFont.underLine().bold());
-            }
-            return style;
-        }
-    }
-
-    public static StyleProcessor<Item> rainbowStyle = (item, style, sst)->{
-        if (item.getId() % 3 == 0) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-        } else if (item.getId() % 3 == 1) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.blue));
-        } else if (item.getId() % 3 == 2) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.pink));
-        }
-        return style;
-    };
-
-    static final Set<String> VIP_SET = new HashSet<>(Arrays.asList("a", "b", "x"));
-    public static class NameMatch implements StyleProcessor<String> {
-        @Override
-        public int build(String name, int style, Styles sst) {
-            if (VIP_SET.contains(name)) {
-                Font font = sst.getFont(style).clone();
-                style = Styles.clearFont(style) | sst.addFont(font.bold());
-            }
-            return style;
-        }
-    }
-
-
     public static class Item {
         @ExcelColumn
         private int id;
@@ -989,15 +917,9 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    /**
-     * Annotation Object
-     */
-    @StyleDesign(using = StudentScoreStyle.class)
-    //@WaringStyle(fillFgColor = "yellow")
     public static class Student {
         @IgnoreExport
         private int id;
-        @StyleDesign(using = NameMatch.class)
         @ExcelColumn("姓名")
         private String name;
         @ExcelColumn("成绩")

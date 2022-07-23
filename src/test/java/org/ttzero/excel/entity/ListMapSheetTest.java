@@ -19,10 +19,12 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -62,16 +64,31 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign4Map() throws IOException {
         new Workbook("Map标识行样式", author)
-                .addSheet(new ListMapSheet("Map", createAllTypeData(10)).setStyleProcessor((map, style, sst)->{
-                    if(map instanceof Map){
-                        Map<String, Object> map1 = (Map<String, Object>) map;
-                        if ((Boolean) map1.get("bv")) {
-                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
-                        }
+                .addSheet(new ListMapSheet("Map", createAllTypeData(100)).setStyleProcessor((map, style, sst)->{
+                    if ((Boolean) map.get("bv")) {
+                        style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                     }
                     return style;
                 }))
                 .writeTo(defaultTestPath);
+    }
+
+    @Test public void testStyleDesign4Map2() throws IOException {
+        new Workbook("Map标识行样式2", author)
+            .addSheet(new ListMapSheet("Map", createAllTypeData(100)
+                , new Column("boolean", "bv", boolean.class)
+                , new Column("char", "cv", char.class)
+                , new Column("short", "sv", short.class)
+                , new Column("int", "nv", int.class).setStyleProcessor((n,s,sst) -> ((int) n) < 0 ? Styles.clearHorizontal(s) | Horizontals.LEFT : s).setNumFmt("¥0.00_);[Red]-¥0.00_);¥0_)")
+                , new Column("long", "lv", long.class)
+                , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
+                , new Column("LocalTime", "ltv", LocalTime.class)).setStyleProcessor((map, style, sst)->{
+                if ((Boolean) map.get("bv")) {
+                    style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                }
+                return style;
+            }))
+            .writeTo(defaultTestPath);
     }
 
     @Test public void testHeaderColumn() throws IOException {
@@ -335,6 +352,24 @@ public class ListMapSheetTest extends WorkbookTest {
         } catch (TooManyColumnsException e) {
             assert true;
         }
+    }
+
+    @Test public void test257() throws IOException {
+        List<Map<String, ?>> list = new ArrayList<>();
+        list.add(new HashMap<String, String>(){{put("sub1", "moban1");}});
+        list.add(new HashMap<String, String>(){{put("sub2", "moban2");}});
+        list.add(new HashMap<String, String>(){{put("sub3", "moban3");}});
+
+        new Workbook("Issue#257").addSheet(new ListMapSheet(list
+                , new Column("ID", "id")
+                , new Column("子表单", "sub1")
+                , new Column("模板2", "sub2")
+                , new Column("模板3", "sub3")
+                , new Column("abc", "abc")
+                , new Column("模板2", "sub2")
+                , new Column("xx", "xx")
+                , new Column("xyz", "xyz")
+        )).writeTo(defaultTestPath);
     }
 
     public static List<Map<String, ?>> createTestData() {
