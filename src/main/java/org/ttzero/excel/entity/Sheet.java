@@ -867,7 +867,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 , 12, Font.Style.BOLD, Styles.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
-                | styles.addBorder(new Border().setBorder(BorderStyle.THIN, new Color(191, 191, 191)))
+                | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER
                 | Horizontals.CENTER;
     }
