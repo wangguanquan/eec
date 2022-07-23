@@ -336,7 +336,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // Merge cells if exists
         @SuppressWarnings("unchecked")
-        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.WorksheetExtendProperty.MERGE_CELLS);
+        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
         for (int i = subColumnSize - 1; i >= 0; i--) {
 
@@ -1121,7 +1121,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeMergeCells() throws IOException {
         // Merge cells if exists
         @SuppressWarnings("unchecked")
-        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.WorksheetExtendProperty.MERGE_CELLS);
+        List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         if (mergeCells != null && !mergeCells.isEmpty()) {
             bw.write("<mergeCells count=\"");
             bw.writeInt(mergeCells.size());
