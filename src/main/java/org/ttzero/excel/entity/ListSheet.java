@@ -94,7 +94,10 @@ public class ListSheet<T> extends Sheet {
      * @return {@link StyleProcessor}
      */
     public StyleProcessor<T> getStyleProcessor() {
-        return this.styleProcessor;
+        if (styleProcessor != null) return styleProcessor;
+        @SuppressWarnings("unchecked")
+        StyleProcessor<T> fromExtProp = (StyleProcessor<T>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        return this.styleProcessor = fromExtProp;
     }
 
 
