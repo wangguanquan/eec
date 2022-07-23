@@ -1353,12 +1353,11 @@ public abstract class Sheet implements Cloneable, Storable {
 
         // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
-            putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 String name = col.name;
                 Comment headerComment = col.headerComment;
-// TODO comment miss
+
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
                     for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
@@ -1378,6 +1377,11 @@ public abstract class Sheet implements Cloneable, Storable {
                 lastCol.name = name;
                 lastCol.headerComment = headerComment;
             }
+
+            @SuppressWarnings("unchecked")
+            List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+            if (existsMergeCells != null && !existsMergeCells.isEmpty()) existsMergeCells.addAll(mergeCells);
+            else putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
         }
     }
 
