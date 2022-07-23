@@ -215,7 +215,7 @@ public class Styles implements Storable {
 
         self.borders = new ArrayList<>();
         self.addBorder(Border.parse("none"));
-        self.addBorder(Border.parse("thin black"));
+        self.addBorder(Border.parse("thin #a6a6a6"));
 
         // cellXfs
         self.of(0); // General
