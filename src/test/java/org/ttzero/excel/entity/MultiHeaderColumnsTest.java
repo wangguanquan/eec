@@ -123,18 +123,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         private String orderNo;
         @ExcelColumn("收件人")
         private String recipient;
-//        @ExcelColumn
-//        @ExcelColumn
-//        @ExcelColumn("收件地址")
+        @ExcelColumn("收件地址")
         @ExcelColumn("省")
         private String province;
-//        @ExcelColumn("收件地址")
+        @ExcelColumn("收件地址")
         @ExcelColumn("市")
         private String city;
-//        @ExcelColumn("收件地址")
+        @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
-//        @ExcelColumn(value = "收件地址")
+        @ExcelColumn(value = "收件地址")
         @ExcelColumn(value = "详细地址", comment = @HeaderComment(title = "abc:", value = "111"))
         private String detail;
         @ExcelColumn("abc")
