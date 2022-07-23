@@ -1353,7 +1353,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
         // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
-            putExtProp(Const.WorksheetExtendProperty.MERGE_CELLS, mergeCells);
+            putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 String name = col.name;
