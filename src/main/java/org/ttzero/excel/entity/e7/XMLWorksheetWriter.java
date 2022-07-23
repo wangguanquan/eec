@@ -827,6 +827,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 len = 10.0D;
             }
             double width = Math.max(_l, len) + 1.86D;
+            if (hc.width > 0.000001D) width = Math.min(width, hc.width);
             if (width > Const.Limit.COLUMN_WIDTH) {
                 width = Const.Limit.COLUMN_WIDTH;
             }
@@ -1037,7 +1038,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //            if (sheet.isAutoSize()) {
             for (int i = 0; i < columns.length; i++) {
                 bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(columns[i].width > 0.0000001 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
+                bw.write(columns[i].width > 0.000001D ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
                 for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
