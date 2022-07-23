@@ -308,7 +308,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Default row height and width
         int fillSpace = 6;
-        BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38);
+        BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
         String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
         writeSheetFormat(fillSpace, defaultWidth);
 
@@ -591,8 +591,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
         writeString(s, row, column, xf);
         Column hc = columns[column];
-        int ln; // TODO get charset base on font style
-        if (hc.width == 0 && hc.o < (ln = s.getBytes(StandardCharsets.UTF_8).length)) {
+        double ln;
+        if (hc.o < (ln = stringWidth(s, xf))) {
             hc.o = ln;
         }
     }
@@ -782,56 +782,53 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
-            double width = hc.width;
-                // Fix width
-            if (width < 0.0000001) {
-                int _l = hc.name.getBytes(StandardCharsets.UTF_8).length, len;
-                Class<?> clazz = hc.getClazz();
-                // TODO Calculate text width based on font-family and font-size
-                if (isString(clazz)) {
-                    len = hc.o;
-                }
-                else if (isDate(clazz) || isLocalDate(clazz) || isDateTime(clazz) || isLocalDateTime(clazz)) {
-//                    len = 10;
-//                }
-//                else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                    if (hc.getNumFmt() != null) {
-                        len = hc.getNumFmt().calcNumWidth(0);
-                    } else len = 20;
-                }
-                else if (isChar(clazz)) {
-                    len = 1;
-                }
-                else if (isInt(clazz) || isLong(clazz)) {
-                    // TODO Calculate character width based on numFmt
-                    if (hc.getNumFmt() != null) {
-                        len = hc.getNumFmt().calcNumWidth(hc.o);
-                    } else len = hc.o;
-                }
-                else if (isFloat(clazz) || isDouble(clazz)) {
-                    // TODO Calculate character width based on numFmt
-                    if (hc.getNumFmt() != null) {
-                        len = hc.getNumFmt().calcNumWidth(hc.o);
-                    } else len = hc.o;
-                }
-                else if (isBigDecimal(clazz)) {
-                    len = hc.o;
-                }
-                else if (isTime(clazz) || isLocalTime(clazz)) {
-                    if (hc.getNumFmt() != null) {
-                        len = hc.getNumFmt().calcNumWidth(0);
-                    } else len = 8;
-                }
-                else if (isBool(clazz)) {
-                    len = 5;
-                }
-                else {
-                    len = 10;
-                }
-                width = _l > len ? _l + 3.38 : len + 3.38;
-                if (width > Const.Limit.COLUMN_WIDTH) {
-                    width = Const.Limit.COLUMN_WIDTH;
-                }
+            double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
+            Class<?> clazz = hc.getClazz();
+            if (isString(clazz)) {
+                len = hc.o;
+            }
+            else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(0);
+                } else len = hc.o;
+            }
+            else if (isDate(clazz) || isLocalDate(clazz)) {
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(0);
+                } else len = hc.o;
+            }
+            else if (isChar(clazz)) {
+                len = 1;
+            }
+            else if (isInt(clazz) || isLong(clazz)) {
+                // TODO Calculate character width based on numFmt
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(hc.o);
+                } else len = hc.o;
+            }
+            else if (isFloat(clazz) || isDouble(clazz)) {
+                // TODO Calculate character width based on numFmt
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(hc.o);
+                } else len = hc.o;
+            }
+            else if (isBigDecimal(clazz)) {
+                len = hc.o;
+            }
+            else if (isTime(clazz) || isLocalTime(clazz)) {
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(0);
+                } else len = hc.o;
+            }
+            else if (isBool(clazz)) {
+                len = 5.0D;
+            }
+            else {
+                len = 10.0D;
+            }
+            double width = Math.max(_l, len) + 1.86D;
+            if (width > Const.Limit.COLUMN_WIDTH) {
+                width = Const.Limit.COLUMN_WIDTH;
             }
             widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
         }
@@ -1086,4 +1083,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void afterSheetData() throws IOException { }
+
+    /**
+     * Char buffer
+     */
+    protected static char[] cacheChar = new char[1 << 8];
+
+    /**
+     * Calculate text width
+     *
+     * @param s      the string value
+     * @param xf     the style index
+     * @return cell width
+     */
+    protected double stringWidth(String s, int xf) {
+        int n = Math.min(s.length(), cacheChar.length);
+        double w = 0.0D;
+        s.getChars(0, n, cacheChar, 0);
+        // TODO Calculate text width based on font-family and font-size
+        for (int i = 0; i < n; w += cacheChar[i++] > 0x4E00 ? 1.86D : 1.0D);
+        return w;
+    }
 }

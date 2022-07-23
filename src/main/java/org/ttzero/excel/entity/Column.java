@@ -97,7 +97,7 @@ public class Column {
      * The cell width
      */
     public double width;
-    public int o;
+    public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
     /**
