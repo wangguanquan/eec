@@ -20,15 +20,20 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Dimension;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -76,6 +81,125 @@ public class StyleDesignTest extends WorkbookTest {
                 , new Column("数学成绩", "score").setWidth(12D)
                 , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
             )).writeTo(defaultTestPath);
+    }
+
+    @Test public void testMergedCells() throws IOException {
+        List<E> list = new ArrayList<>();
+        list.add(new E("暗暗", "男", "1", "数学", "3", 30, "教育a", "教育b"));
+        list.add(new E("暗暗", "男", "2", "语文", "1", 30, "教育a", "教育c"));
+        list.add(new E("暗暗", "男", "3", "历史", "1", 30, "教育b", "教育c"));
+        list.add(new E("张三", "女", "1", "英语", "1", 20, "教育d", "教育d"));
+        list.add(new E("张三", "女", "5", "物理", "7", 20, "教育x", "教育x"));
+        list.add(new E("李四", "男", "2", "语文", "1", 24, "教育c", "教育a"));
+        list.add(new E("李四", "男", "3", "历史", "1", 24, "教育b", "教育c"));
+        list.add(new E("王五", "男", "1", "高数", "2", 28, "教育c", "教育a"));
+        list.add(new E("王五", "男", "2", "JAvA", "3", 28, "教育b", "教育c"));
+
+        List<Dimension> mergeCells = new ArrayList<>();
+        String name = null;
+        int row = 2, nameFrom = row;
+        for (E e : list) {
+            if (!e.name.equals(name)) {
+                if (row > nameFrom + 1) {
+                    mergeCells.add(new Dimension(nameFrom + 1, (short) 1, row, (short) 1));
+                    mergeCells.add(new Dimension(nameFrom + 1, (short) 2, row, (short) 2));
+                    mergeCells.add(new Dimension(nameFrom + 1, (short) 6, row, (short) 6));
+                }
+                name = e.name;
+                nameFrom = row;
+            } else {
+                e.name = null;
+                e.sex = null;
+                e.age = null;
+            }
+            row++;
+        }
+        if (row > nameFrom + 1) {
+            mergeCells.add(new Dimension(nameFrom + 1, (short) 1, row, (short) 1));
+            mergeCells.add(new Dimension(nameFrom + 1, (short) 2, row, (short) 2));
+            mergeCells.add(new Dimension(nameFrom + 1, (short) 6, row, (short) 6));
+        }
+        new Workbook("Merged Cells").cancelOddFill().addSheet(new LightListSheet<>(list
+            , new Column("姓名", "name")
+            , new Column("性别", "sex")
+            , new Column("证书").addSubColumn(new Column("编号", "no"))
+            , new Column("证书").addSubColumn(new Column("类型", "type"))
+            , new Column("证书").addSubColumn(new Column("等级", "level"))
+            , new Column("年纪", "age")
+            , new Column("教育").addSubColumn(new Column("教育1", "jy1"))
+            , new Column("教育").addSubColumn(new Column("教育2", "jy2")))
+            .setStyleProcessor(new GroupStyleProcessor<>())
+            .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells))
+            .writeTo(defaultTestPath);
+    }
+
+    public static class E implements Group {
+        private String name, sex, no, type, level, jy1, jy2;
+        private Integer age;
+
+        public E(String name, String sex, String no, String type, String level, Integer age, String jy1, String jy2) {
+            this.name = name;
+            this.sex = sex;
+            this.no = no;
+            this.type = type;
+            this.level = level;
+            this.age = age;
+            this.jy1 = jy1;
+            this.jy2 = jy2;
+        }
+
+        @Override
+        public String groupBy() {
+            return name;
+        }
+    }
+
+    // =======================公共部分=======================
+    public interface Group {
+        String groupBy();
+    }
+
+    public static class GroupStyleProcessor<U extends Group> implements StyleProcessor<U> {
+        private String group;
+        private int s, o;
+        @Override
+        public int build(U u, int style, Styles sst) {
+            if (group == null) {
+                group = u.groupBy();
+                s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
+                return style;
+            }
+            if (u.groupBy() != null && !group.equals(u.groupBy())) {
+                group = u.groupBy();
+                o ^= 1;
+            }
+            return o == 1 ? Styles.clearFill(style) | s : style;
+        }
+    }
+
+    public static class LightListSheet<T> extends ListSheet<T> {
+        public LightListSheet(List<T> data, org.ttzero.excel.entity.Column... columns) {
+            super(data, columns);
+        }
+
+        @Override
+        protected int init() {
+            int v = super.init();
+            Styles styles = workbook.getStyles();
+            try {
+                Field field = Styles.class.getDeclaredField("borders");
+                field.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                List<Border> borders = (List<Border>) field.get(styles);
+                if (borders != null && borders.size() > 1) {
+                    Border border = borders.get(1);
+                    border.setBorder(BorderStyle.THIN, new Color(191, 191, 191));
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                // Ignore
+            }
+            return v;
+        }
     }
 
 
