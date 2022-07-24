@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
@@ -39,7 +38,6 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.nio.file.Paths;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -49,10 +47,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -657,10 +654,31 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void test264() throws IOException {
         Column[] columns = {new Column("ID", "id"), new Column("NAME", "name")};
         new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath.resolve(Paths.get("Issue 264.xlsx")));
+            .writeTo(defaultTestPath.resolve("Issue 264.xlsx"));
 
         new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath.resolve(Paths.get("Issue 264-1.xlsx")));
+            .writeTo(defaultTestPath.resolve("Issue 264-1.xlsx"));
+
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264-2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-1.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-2.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
     }
 
     public static class Item {

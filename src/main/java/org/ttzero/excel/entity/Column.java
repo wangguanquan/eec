@@ -116,6 +116,10 @@ public class Column {
      * Specify the column index
      */
     public int colIndex = -1;
+    /**
+     * The real col-Index used to write
+     */
+    int realColIndex;
 
     /**
      * Constructor Column
@@ -721,5 +725,12 @@ public class Column {
     public Column setHeaderComment(Comment headerComment) {
         this.headerComment = headerComment;
         return this;
+    }
+
+    /**
+     * Returns the real col-index(one base)
+     */
+    public int getRealColIndex() {
+        return realColIndex;
     }
 }

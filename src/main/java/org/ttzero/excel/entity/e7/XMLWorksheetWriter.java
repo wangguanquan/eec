@@ -330,7 +330,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<row r=\"");
         bw.writeInt(row);
         bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
-        bw.writeInt(columns[columns.length - 1].colIndex);
+        bw.writeInt(columns[columns.length - 1].getRealColIndex());
         bw.write("\">");
 
         int c = 0, defaultStyleIndex = sheet.defaultHeadStyleIndex();
@@ -349,7 +349,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (Column hc : columns) {
             if (hc.headerComment != null) {
                 if (comments == null) comments = sheet.createComments();
-                comments.addComment(new String(int2Col(hc.colIndex)) + row
+                comments.addComment(new String(int2Col(hc.getRealColIndex())) + row
                     , hc.headerComment.getTitle(), hc.headerComment.getValue());
             }
         }
@@ -556,7 +556,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(hc.colIndex));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         int i;
         if (StringUtil.isEmpty(s)) {
@@ -608,7 +608,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -646,7 +646,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -684,7 +684,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" t=\"s\" s=\"");
         bw.writeInt(xf);
@@ -704,7 +704,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -742,7 +742,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" t=\"b\" s=\"");
         bw.writeInt(xf);
@@ -761,7 +761,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].colIndex));
+        bw.write(int2Col(columns[column].getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -855,7 +855,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 int fill = 11; // fill 11 space
                 buffer.put((byte) ':');
                 fill--;
-                char[] col = int2Col(columns[columns.length - 1].colIndex);
+                char[] col = int2Col(columns[columns.length - 1].getRealColIndex());
                 buffer.put((new String(col) + (rows + 1)).getBytes(StandardCharsets.US_ASCII));
                 fill -= col.length;
                 fill -= stringSize(rows + 1);
@@ -947,7 +947,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (size > 0) {
             bw.write(':');
             n--;
-            char[] col = int2Col(columns[columns.length - 1].colIndex);
+            char[] col = int2Col(columns[columns.length - 1].getRealColIndex());
             bw.write(col);
             n -= col.length;
             bw.writeInt(size + 1);
@@ -1044,9 +1044,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write('"');
                 for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
-                bw.writeInt(columns[i].colIndex);
+                bw.writeInt(columns[i].getRealColIndex());
                 bw.write("\" max=\"");
-                bw.writeInt(columns[i].colIndex + 1);
+                bw.writeInt(columns[i].getRealColIndex() + 1);
                 bw.write("\" bestFit=\"1\"/>");
             }
 //            } else {
@@ -1055,9 +1055,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //                bw.write('"');
 //                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
 //                bw.write(" min=\"");
-//                bw.writeInt(columns[0].colIndex);
+//                bw.writeInt(columns[0].getRealColIndex());
 //                bw.write("\" max=\"");
-//                bw.writeInt(columns[columns.length - 1].colIndex + 1);
+//                bw.writeInt(columns[columns.length - 1].getRealColIndex() + 1);
 //                bw.write("\" bestFit=\"1\"/>");
 //            }
             bw.write("</cols>");
