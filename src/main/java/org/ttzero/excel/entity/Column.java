@@ -98,7 +98,7 @@ public class Column {
      * The cell width
      */
     public double width;
-    public int o;
+    public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
     /**
@@ -665,7 +665,7 @@ public class Column {
      * @return number format
      */
     public NumFmt getNumFmt() {
-        return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
+        return numFmt != null ? numFmt : (numFmt = styles.getNumFmt(cellStyle));
     }
 
     /**
@@ -679,7 +679,8 @@ public class Column {
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle() | wrapText;
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
-            style = styles.addNumFmt(DATETIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            numFmt = DATETIME_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
@@ -687,9 +688,11 @@ public class Column {
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
-            style = styles.addNumFmt(DATE_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            numFmt = DATE_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            style =  styles.addNumFmt(TIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            numFmt = TIME_FORMAT;
+            style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }

@@ -597,6 +597,8 @@ public class ListSheet<T> extends Sheet {
             if (sp != null) {
                 column.styleProcessor = sp;
             }
+            // Cell max width
+            column.width = ec.maxWidth();
             return column;
         }
         return null;

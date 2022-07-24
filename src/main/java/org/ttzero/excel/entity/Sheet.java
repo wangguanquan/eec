@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -35,6 +36,7 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
 
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -107,7 +109,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20;
+    protected double width = 20.38D;
     /**
      * The row number
      */
@@ -890,7 +892,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 , 12, Font.Style.BOLD, Styles.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
-                | styles.addBorder(Border.parse("thin black"))
+                | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER
                 | Horizontals.CENTER;
     }
