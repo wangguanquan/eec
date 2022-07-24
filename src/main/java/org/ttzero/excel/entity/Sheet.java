@@ -1236,6 +1236,8 @@ public abstract class Sheet implements Cloneable, Storable {
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null ? 1 : 0;
         // Mark global style design
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
+        // Mark global merged cells
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS) != null ? 1 << 2 : 0;
     }
 
     /**
@@ -1274,7 +1276,7 @@ public abstract class Sheet implements Cloneable, Storable {
                     tmp = ptmp;
                 }
                 head.prev = null;
-                head.tail.next = null;
+                if (head.tail != null) head.tail.next = null;
                 columns[i] = head;
                 col = head;
             }
