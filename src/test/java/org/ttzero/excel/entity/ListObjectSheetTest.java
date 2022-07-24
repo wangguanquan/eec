@@ -687,6 +687,14 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testNullInList() throws IOException {
+        List<Item> list = Item.randomTestData(10);
+        list.add(0, null);
+        list.add(3, null);
+        list.add(null);
+        new Workbook("Null in list").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+    }
+
     public static class Item {
         @ExcelColumn
         private int id;

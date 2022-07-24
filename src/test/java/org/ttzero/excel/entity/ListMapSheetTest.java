@@ -372,6 +372,15 @@ public class ListMapSheetTest extends WorkbookTest {
         )).writeTo(defaultTestPath);
     }
 
+    @Test public void testNullInListMap() throws IOException {
+        List<Map<String, ?>> list = createTestData(10);
+        list.add(0, null);
+        list.add(3, null);
+        list.add(null);
+        new Workbook("Null in list map").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+    }
+
+
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
