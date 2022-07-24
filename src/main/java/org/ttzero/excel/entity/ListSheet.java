@@ -514,24 +514,28 @@ public class ListSheet<T> extends Sheet {
                     hc = hc.tail;
                 }
                 EntryColumn ec = (EntryColumn) hc;
-                Method method = tmp.get(hc.key);
-                if (method != null) {
-                    method.setAccessible(true);
-                    ec.method = method;
-                } else if ((method = otherMap.get(hc.key)) != null) {
-                    method.setAccessible(true);
-                    ec.method = method;
-                }
-
-                for (Field field : declaredFields) {
-                    if (field.getName().equals(hc.key)) {
-                        field.setAccessible(true);
-                        ec.field = field;
-                        break;
+                if (ec.method == null) {
+                    Method method = tmp.get(hc.key);
+                    if (method != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
+                    } else if ((method = otherMap.get(hc.key)) != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
                     }
                 }
 
-                if (method == null && ec.field == null) {
+                if (ec.field == null) {
+                    for (Field field : declaredFields) {
+                        if (field.getName().equals(hc.key)) {
+                            field.setAccessible(true);
+                            ec.field = field;
+                            break;
+                        }
+                    }
+                }
+
+                if (ec.method == null && ec.field == null) {
                     LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
                             + "] not declare in class " + clazz);
                     hc.ignoreValue();
@@ -541,11 +545,11 @@ public class ListSheet<T> extends Sheet {
 
                 // Attach header style
                 if (hc.getHeaderStyleIndex() == -1) {
-                    buildHeaderStyle(method, ec.field, hc);
+                    buildHeaderStyle(ec.method, ec.field, hc);
                 }
                 // Attach header comment
                 if (hc.headerComment == null) {
-                    buildHeaderComment(method, ec.field, hc);
+                    buildHeaderComment(ec.method, ec.field, hc);
                 }
             }
         }

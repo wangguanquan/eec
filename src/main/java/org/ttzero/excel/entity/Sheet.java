@@ -577,11 +577,7 @@ public abstract class Sheet implements Cloneable, Storable {
             sortColumns(columns);
 
             // Turn to one-base
-            for (int i = 0; i < columns.length; i++) {
-                if (i > 0 && columns[i - 1].colIndex >= columns[i].colIndex) columns[i].colIndex = columns[i - 1].colIndex + 1;
-                else if (columns[i].colIndex <= i) columns[i].colIndex = i + 1;
-                else columns[i].colIndex++;
-            }
+            calculateRealColIndex();
 
             // Check the limit of columns
             checkColumnLimit();
@@ -641,6 +637,19 @@ public abstract class Sheet implements Cloneable, Storable {
         org.ttzero.excel.entity.Column t = columns[k];
         System.arraycopy(columns, n, columns, n + 1, k - n);
         columns[n] = t;
+    }
+
+    /**
+     * Calculate the true col-Index
+     */
+    protected void calculateRealColIndex() {
+        for (int i = 0; i < columns.length; i++) {
+            org.ttzero.excel.entity.Column hc = columns[i];
+            hc.realColIndex = hc.colIndex;
+            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
+            else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
+            else hc.realColIndex = hc.colIndex + 1;
+        }
     }
 
     /**
@@ -1036,7 +1045,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns.length > 0 ? columns[columns.length - 1].colIndex : 0
+        int a = columns.length > 0 ? columns[columns.length - 1].getRealColIndex() : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);

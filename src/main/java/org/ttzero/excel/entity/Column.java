@@ -141,6 +141,10 @@ public class Column {
      * @since 0.5.1
      */
     public Column tail;
+    /**
+     * The real col-Index used to write
+     */
+    int realColIndex;
 
     /**
      * Constructor Column
@@ -824,5 +828,12 @@ public class Column {
             e = e.next;
         }
         return dist;
+    }
+
+    /**
+     * Returns the real col-index(one base)
+     */
+    public int getRealColIndex() {
+        return realColIndex;
     }
 }
