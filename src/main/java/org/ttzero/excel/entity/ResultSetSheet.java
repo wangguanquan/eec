@@ -195,7 +195,10 @@ public class ResultSetSheet extends Sheet {
      * @return {@link StyleProcessor}
      */
     public StyleProcessor<ResultSet> getStyleProcessor() {
-        return styleProcessor;
+        if (styleProcessor != null) return styleProcessor;
+        @SuppressWarnings("unchecked")
+        StyleProcessor<ResultSet> fromExtProp = (StyleProcessor<ResultSet>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        return this.styleProcessor = fromExtProp;
     }
 
     /**
