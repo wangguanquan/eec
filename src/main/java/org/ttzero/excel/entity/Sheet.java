@@ -596,11 +596,8 @@ public abstract class Sheet implements Cloneable, Storable {
             if (column == null) continue;
             if (column.styles == null) column.styles = workbook.getStyles();
             if (column.next != null) {
-                org.ttzero.excel.entity.Column col = column.next, tail = column.tail;
-                for (; col != tail; col = col.next) {
-                    if (col.styles == null)
-                        col.styles = workbook.getStyles();
-                }
+                for (org.ttzero.excel.entity.Column col = column.next; col != null; col = col.next)
+                    col.styles = workbook.getStyles();
             }
         }
     }
@@ -649,6 +646,11 @@ public abstract class Sheet implements Cloneable, Storable {
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
             else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
             else hc.realColIndex = hc.colIndex + 1;
+
+            if (hc.next != null) {
+                for (org.ttzero.excel.entity.Column col = hc.next; col != null; col = col.next)
+                    col.realColIndex = hc.realColIndex;
+            }
         }
     }
 
