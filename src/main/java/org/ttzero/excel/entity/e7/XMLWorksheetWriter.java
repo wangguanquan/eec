@@ -95,9 +95,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected ExtBufferedWriter bw;
     protected Sheet sheet;
     protected Column[] columns;
-    protected final SharedStrings sst;
+    protected SharedStrings sst;
     protected Comments comments;
     protected int startRow;
+
+    public XMLWorksheetWriter() { }
 
     public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;

@@ -190,9 +190,23 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
+    /**
+     * Settings custom IWorksheetWriter
+     *
+     * @param sheetWriter {@link IWorksheetWriter}
+     * @return current Sheet
+     */
     public Sheet setSheetWriter(IWorksheetWriter sheetWriter) {
         this.sheetWriter = sheetWriter;
+        this.sheetWriter.setWorksheet(this);
         return this;
+    }
+
+    /**
+     * Returns {@link IWorksheetWriter}
+     */
+    public IWorksheetWriter getSheetWriter() {
+        return sheetWriter;
     }
 
     public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {

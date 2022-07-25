@@ -43,19 +43,12 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
         new Workbook("Repeat Paging Columns Annotation").setAutoSize(true)
-            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)))
-            .setWorkbookWriter(new XMLWorkbookWriter() {
+            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)).setSheetWriter(new XMLWorksheetWriter() {
                 @Override
-                protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
-                    return new XMLWorksheetWriter(sheet) {
-                        @Override
-                        public int getRowLimit() {
-                            return 500;
-                        }
-                    };
+                public int getRowLimit() {
+                    return 500;
                 }
-            })
-            .writeTo(defaultTestPath);
+            })).writeTo(defaultTestPath);
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
