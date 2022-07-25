@@ -125,11 +125,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
-        @ExcelColumn(value = "收件地址", comment = @HeaderComment(title = "abc:", value = "111"))
+        @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
         @ExcelColumn(value = "详细地址")
         private String detail;
-        @ExcelColumn("abc")
-        private String a;
 
         public RepeatableEntry() {}
 
@@ -145,7 +143,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         public static List<RepeatableEntry> randomTestData(int n) {
             List<RepeatableEntry> list = new ArrayList<>(n);
             for (int i = 0, p, c; i < n; i++) {
-                list.add(new RepeatableEntry(Integer.toString(Math.abs(random.nextInt())), getRandomString(), provinces[p = random.nextInt(provinces.length)], cities[p][c = random.nextInt(cities[p].length)], areas[p][c][random.nextInt(areas[p][c].length)], "xx街" + (random.nextInt(10) + 1) + "号"));
+                list.add(new RepeatableEntry(Integer.toString(Math.abs(random.nextInt())), getRandomString(8) + 2, provinces[p = random.nextInt(provinces.length)], cities[p][c = random.nextInt(cities[p].length)], areas[p][c][random.nextInt(areas[p][c].length)], "xx街" + (random.nextInt(10) + 1) + "号"));
             }
             return list;
         }
