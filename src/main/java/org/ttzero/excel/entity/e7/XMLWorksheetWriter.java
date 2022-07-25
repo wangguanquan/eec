@@ -1140,6 +1140,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     /**
      * Calculate text width
+     * FIXME reference {@link sun.swing.SwingUtilities2#stringWidth}
      *
      * @param s      the string value
      * @param xf     the style index
