@@ -151,17 +151,22 @@ new Workbook("Auto Width Test")
 public static class RepeatableEntry {
     @ExcelColumn("订单号")
     private String orderNo;
+
     @ExcelColumn("收件人")
     private String recipient;
+
     @ExcelColumn("收件地址")
     @ExcelColumn("省")
     private String province;
+
     @ExcelColumn("收件地址")
     @ExcelColumn("市")
     private String city;
+
     @ExcelColumn("收件地址")
     @ExcelColumn("区")
     private String area;
+
     @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
     @ExcelColumn(value = "详细地址")
     private String detail;
