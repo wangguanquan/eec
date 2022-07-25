@@ -1147,6 +1147,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @return cell width
      */
     protected double stringWidth(String s, int xf) {
+        if (StringUtil.isEmpty(s)) return 0.0D;
         int n = Math.min(s.length(), cacheChar.length);
         double w = 0.0D;
         s.getChars(0, n, cacheChar, 0);
