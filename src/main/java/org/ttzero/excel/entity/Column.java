@@ -683,7 +683,7 @@ public class Column {
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle() | wrapText;
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
-            numFmt = DATETIME_FORMAT;
+            if (numFmt == null) numFmt = DATETIME_FORMAT;
             style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
@@ -692,10 +692,10 @@ public class Column {
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
-            numFmt = DATE_FORMAT;
+            if (numFmt == null) numFmt = DATE_FORMAT;
             style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            numFmt = TIME_FORMAT;
+            if (numFmt == null) numFmt = TIME_FORMAT;
             style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style

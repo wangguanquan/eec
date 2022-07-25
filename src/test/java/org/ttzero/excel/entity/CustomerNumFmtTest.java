@@ -21,12 +21,12 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testDateFmt() throws IOException {
-        new Workbook("customize_data_format")
+        new Workbook("customize_date_format")
                 .setAutoSize(true)
                 .addSheet(new ListSheet<>(ItemFull.randomFull()
                 , new Column("编码", "code")
                 , new Column("姓名", "name")
-                , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分")
+                , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分ss秒")
         )).writeTo(defaultTestPath);
     }
 
