@@ -142,6 +142,13 @@ public class CustomerNumFmtTest extends WorkbookTest {
         assert width >= 26.86D && width <= 30.63D;
     }
 
+    @Test public void testAutoWidth() throws IOException {
+        new Workbook("Auto Width Test")
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(WidthTestItem.randomTestData()))
+            .writeTo(defaultTestPath);
+    }
+
     static class Item {
         @ExcelColumn
         String code;
@@ -195,6 +202,31 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
         Num(long num) {
             this.num = num;
+        }
+    }
+
+    public static class WidthTestItem {
+        @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
+        private Integer nv;
+        @ExcelColumn("字符串(en)")
+        private String sen;
+        @ExcelColumn("字符串(中文)")
+        private String scn;
+        @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
+        private Timestamp iv;
+
+        public static List<WidthTestItem> randomTestData() {
+            int size = random.nextInt(10 + 5);
+            List<WidthTestItem> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                WidthTestItem o = new WidthTestItem();
+                o.nv = random.nextInt();
+                o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
+                o.sen = getRandomString(20);
+                o.scn = "联想笔记本电脑拯救者R7000(标压 6核 R5-5600H 16G 512G RTX3050 100%sRGB)黑";
+                list.add(o);
+            }
+            return list;
         }
     }
 }
