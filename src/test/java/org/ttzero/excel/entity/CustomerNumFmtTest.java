@@ -19,15 +19,16 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.style.NumFmt;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
@@ -43,39 +44,102 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testFmtInAnnotation() throws IOException {
-        new Workbook("customize_numfmt").addSheet(new ListSheet<>(Item.random())).writeTo(defaultTestPath);
+        new Workbook("customize_numfmt").setAutoSize(true).addSheet(new ListSheet<>(Item.random())).writeTo(defaultTestPath);
     }
 
     @Test public void testFmtInAnnotationYmdHms() throws IOException {
-        new Workbook("customize_numfmt_full").addSheet(new ListSheet<>(ItemFull.randomFull())).writeTo(defaultTestPath);
+        new Workbook("customize_numfmt_full").setAutoSize(true).addSheet(new ListSheet<>(ItemFull.randomFull())).writeTo(defaultTestPath);
     }
 
     @Test public void testDateFmt() throws IOException {
         new Workbook("customize_date_format")
-                .setAutoSize(true)
-                .addSheet(new ListSheet<>(ItemFull.randomFull()
-                , new Column("编码", "code")
-                , new Column("姓名", "name")
-                , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分ss秒")
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(ItemFull.randomFull()
+            , new Column("编码", "code")
+            , new Column("姓名", "name")
+            , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分ss秒")
         )).writeTo(defaultTestPath);
     }
 
     @Test public void testNumFmt() throws IOException {
         new Workbook("customize_numfmt_full")
-                .setAutoSize(true)
-                .addSheet(new ListSheet<>(ItemFull.randomFull()
-                        , new Column("编码", "code")
-                        , new Column("姓名", "name")
-                        , new Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
-                        , new Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
-                )).writeTo(defaultTestPath);
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(ItemFull.randomFull()
+                , new Column("编码", "code")
+                , new Column("姓名", "name")
+                , new Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
+                , new Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
+            )).writeTo(defaultTestPath);
     }
 
     @Test public void testNegativeNumFmt() throws IOException {
         new Workbook("customize_negative")
-                .setAutoSize(true)
-                .addSheet(new ListSheet<>(Arrays.asList(new Num(12345678), new Num(0), new Num(-12345678))))
-                .writeTo(defaultTestPath);
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Arrays.asList(new Num(1234565435236543436L), new Num(0), new Num(-1234565435236543436L))))
+            .writeTo(defaultTestPath);
+    }
+
+    @Test public void testNumFmtWidth() {
+        NumberFormat nf = NumberFormat.getInstance();
+        nf.setGroupingUsed(false);
+        nf.setMaximumFractionDigits(6);
+
+        NumFmt fmt = new NumFmt("[Blue]###0.00_);[Red]-###0.00_);0_)");
+        double width;
+
+        width = fmt.calcNumWidth(nf.format(12345654352365434.36D).length());
+        assert width >= 20.86D && width <= 25.63D;
+
+        width = fmt.calcNumWidth(nf.format(-12345654352365434.36D).length());
+        assert width >= 21.5D && width <= 26.63D;
+
+        width = fmt.calcNumWidth(stringSize(1234565));
+        assert width >= 11.5D && width <= 13.63D;
+
+        width = fmt.calcNumWidth(stringSize(-1234565));
+        assert width >= 12.5D && width <= 14.63D;
+
+        fmt.setCode("[Blue]#,##0.00_);[Red]-#,##0.00_);0_)");
+        width = fmt.calcNumWidth(stringSize(1234565435236543436L));
+        assert width >= 29.0D && width <= 34.63D;
+
+        width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
+        assert width >= 30.5D && width <= 35.63D;
+
+        width = fmt.calcNumWidth(stringSize(1234565));
+        assert width >= 13.0D && width <= 15.63D;
+
+        width = fmt.calcNumWidth(stringSize(-1234565));
+        assert width >= 14.5D && width <= 16.63D;
+
+        fmt.setCode("[Blue]#,##0;[Red]-#,##0;0");
+        width = fmt.calcNumWidth(stringSize(1234565435236543436L));
+        assert width >= 25.5D && width <= 29.63D;
+
+        width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
+        assert width >= 26.5D && width <= 30.63D;
+
+        width = fmt.calcNumWidth(stringSize(1234565));
+        assert width >= 9.5D && width <= 12.63D;
+
+        width = fmt.calcNumWidth(stringSize(-1234565));
+        assert width >= 10.5D && width <= 13.63D;
+
+        fmt.setCode("yyyy-mm-dd");
+        width = fmt.calcNumWidth(0);
+        assert width >= 10.86D && width <= 12.63D;
+
+        fmt.setCode("yyyy-mm-dd hh:mm:ss");
+        width = fmt.calcNumWidth(0);
+        assert width >= 19.86D && width <= 23.63D;
+
+        fmt.setCode("hh:mm:ss");
+        width = fmt.calcNumWidth(0);
+        assert width >= 8.86D && width <= 10.63D;
+
+        fmt.setCode("yyyy年mm月dd日 hh日mm分ss秒");
+        width = fmt.calcNumWidth(0);
+        assert width >= 26.86D && width <= 30.63D;
     }
 
     static class Item {
@@ -127,9 +191,9 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
     static class Num {
         @ExcelColumn(format = "[Blue]#,##0.00_);[Red]-#,##0.00_);0_)")
-        int num;
+        long num;
 
-        Num(int num) {
+        Num(long num) {
             this.num = num;
         }
     }
