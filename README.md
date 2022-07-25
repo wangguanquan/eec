@@ -110,19 +110,68 @@ public void testWrite(List<Student> students) throws IOException {
 public void testStyleConversion(List<Student> students) throws IOException {
     new Workbook("2021小五班期未考试成绩")
         .addSheet(new ListSheet<>("期末成绩", students
-                , new Column("学号", "id", int.class)
-                , new Column("姓名", "name", String.class)
-                , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
-            ).setStyleProcessor((o, style, sst) 
-                -> (int) o < 60 ? style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
-        )
-        .writeTo(Paths.get("f:/excel"));
+             , new Column("学号", "id", int.class)
+             , new Column("姓名", "name", String.class)
+             , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+        ).setStyleProcessor((o, style, sst) -> 
+                o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+        ).writeTo(Paths.get("f:/excel"));
 }
 ```
 
 内容如下图
 
-![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3bx.png)
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b8.png)
+
+#### 3. 现在自动列宽更精准
+
+```
+// 测试类
+public static class WidthTestItem {
+    @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
+    private Integer nv;
+    @ExcelColumn("字符串(en)")
+    private String sen;
+    @ExcelColumn("字符串(中文)")
+    private String scn;
+    @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
+    private Timestamp iv;
+}
+
+new Workbook("Auto Width Test")
+    .setAutoSize(true) // 自动列宽
+    .addSheet(new ListSheet<>(randomTestData()))
+    .writeTo(Paths.get("f:/excel"));
+```
+![自动列宽](./images/auto_width.png)
+
+#### 4. 支持多行表头
+
+```
+public static class RepeatableEntry {
+    @ExcelColumn("订单号")
+    private String orderNo;
+    @ExcelColumn("收件人")
+    private String recipient;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("省")
+    private String province;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("市")
+    private String city;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("区")
+    private String area;
+    @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
+    @ExcelColumn(value = "详细地址")
+    private String detail;
+}
+```
+![多行表头](./images/multi-header.png)
+
+#### 5. 报表轻松制作
+
+![报表1](./images/report1.png)
 
 ### 读取示例
 
@@ -223,6 +272,14 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.3 (2022-07-25)
+-------------
+- 修复导出时日期少6天的问题(#269)
+- 支持多个ExcelColumn注解，可以实现多行表头(#210)
+- 微调表格样式使其更突出内容
+- 优化自动计算列宽的算法使其更精准
+- 修复部分BUG(#264,#265)
+
 Version 0.5.2 (2022-07-16)
 -------------
 - (严重)修复大量单元格字节超过1k时导致SST索引读取死循环问题(#258)
@@ -242,24 +299,13 @@ Version 0.5.0 (2022-05-22)
 - 修改部分BUG(#227,#232,#238,#243)
 - 读取文件支持自定义注解转对象(#237)
 
-Version 0.4.14 (2021-12-19)
--------------
-- 提高对Numbers转xlsx的兼容性
-- 值转换从原来的int类型扩大为Object
-- 增加@RowNum注解，用于注入行号
-- 修改ListSheet.EntryColumn的访问权限，方便实现更多高级特性
-- 支持单列数字无表头导出，现在可以简单的导出`List<String>`数据
-- 修复已知BUG(#197,#202，#205,#219)
-- 将com.google.common包重命名为org.ttzero.excel.common解决内嵌引起的包冲突(#200)
-
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.2-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.3-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

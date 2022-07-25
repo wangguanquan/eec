@@ -85,9 +85,9 @@ public class StyleDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
         List<E> list = new ArrayList<>();
-        list.add(new E("暗暗", "男", "1", "数学", "3", 30, "教育a", "教育b"));
-        list.add(new E("暗暗", "男", "2", "语文", "1", 30, "教育a", "教育c"));
-        list.add(new E("暗暗", "男", "3", "历史", "1", 30, "教育b", "教育c"));
+        list.add(new E("暗月月", "男", "1", "数学", "3", 30, "教育a", "教育b"));
+        list.add(new E("暗月月", "男", "2", "语文", "1", 30, "教育a", "教育c"));
+        list.add(new E("暗月月", "男", "3", "历史", "1", 30, "教育b", "教育c"));
         list.add(new E("张三", "女", "1", "英语", "1", 20, "教育d", "教育d"));
         list.add(new E("张三", "女", "5", "物理", "7", 20, "教育x", "教育x"));
         list.add(new E("李四", "男", "2", "语文", "1", 24, "教育c", "教育a"));
@@ -125,7 +125,7 @@ public class StyleDesignTest extends WorkbookTest {
             , new Column("证书").addSubColumn(new Column("编号", "no"))
             , new Column("证书").addSubColumn(new Column("类型", "type"))
             , new Column("证书").addSubColumn(new Column("等级", "level"))
-            , new Column("年纪", "age")
+            , new Column("年龄", "age")
             , new Column("教育").addSubColumn(new Column("教育1", "jy1"))
             , new Column("教育").addSubColumn(new Column("教育2", "jy2")))
             .setStyleProcessor(new GroupStyleProcessor<>())
