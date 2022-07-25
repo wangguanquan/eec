@@ -36,12 +36,13 @@ import java.util.List;
 public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
         new Workbook("Repeat Columns Annotation").setWaterMark(WaterMark.of("勿外传"))
+            .setAutoSize(true)
             .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Paging Columns Annotation")
+        new Workbook("Repeat Paging Columns Annotation").setAutoSize(true)
             .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)))
             .setWorkbookWriter(new XMLWorkbookWriter() {
                 @Override
@@ -58,7 +59,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Multi specify columns 2")
+        new Workbook("Multi specify columns 2").setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column("共用表头").addSubColumn(new Column("学号", "id"))
                 , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
@@ -67,7 +68,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
-        new Workbook("Multi specify columns 3")
+        new Workbook("Multi specify columns 3").setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
@@ -77,7 +78,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testResultSet() throws SQLException, IOException {
         try (Connection con = getConnection()) {
-            new Workbook("Multi ResultSet columns 2", author)
+            new Workbook("Multi ResultSet columns 2", author).setAutoSize(true)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student order by age"
                     , new Column("通用").addSubColumn(new Column("学号", int.class))
@@ -132,8 +133,8 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         @ExcelColumn("收件地址")
         @ExcelColumn("区")
         private String area;
-        @ExcelColumn(value = "收件地址")
-        @ExcelColumn(value = "详细地址", comment = @HeaderComment(title = "abc:", value = "111"))
+        @ExcelColumn(value = "收件地址", comment = @HeaderComment(title = "abc:", value = "111"))
+        @ExcelColumn(value = "详细地址")
         private String detail;
         @ExcelColumn("abc")
         private String a;
