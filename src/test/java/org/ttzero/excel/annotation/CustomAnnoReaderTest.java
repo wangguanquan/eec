@@ -49,9 +49,9 @@ public class CustomAnnoReaderTest {
     @Test public void testCustomeAnno() throws IOException {
         try (ExcelReader reader = new MyExcelReader(testResourceRoot().resolve("1.xlsx"))) {
             List<Entry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Entry.class)).collect(Collectors.toList());
-            assert "4 | 3 | XuSu2gFg32 | 2018-11-27 | true | F | false".equals(list.get(0).toString());
-            assert "5 | 5 | 7OZXtUuk | 2018-11-27 | true | P | false".equals(list.get(60).toString());
-            assert "3 | 2 | Ae9CNO6eTu | 2018-11-27 | true | B | false".equals(list.get(93).toString());
+            assert "4 | 3 | XuSu2gFg32 | 2018-11-21 | true | F | false".equals(list.get(0).toString());
+            assert "5 | 5 | 7OZXtUuk | 2018-11-21 | true | P | false".equals(list.get(60).toString());
+            assert "3 | 2 | Ae9CNO6eTu | 2018-11-21 | true | B | false".equals(list.get(93).toString());
         }
     }
 
