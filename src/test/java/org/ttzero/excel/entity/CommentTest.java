@@ -44,8 +44,8 @@ public class CommentTest extends WorkbookTest {
         private int id;
         @ExcelColumn(value = "姓名", comment = @HeaderComment(title = "王老师：", value = "学生姓名"))
         private String name;
+        @HeaderComment(title = "王老师：", value = "低于60分显示\"不合格\"")
         @ExcelColumn(value = "成绩")
-        @HeaderComment(title = "王老师：", value = "低于60分显示\"不及格\"")
         private int score;
 
         public Student() { }
