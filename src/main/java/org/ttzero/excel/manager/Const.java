@@ -213,6 +213,6 @@ public interface Const {
         /**
          * Merge cells key(2-position)
          */
-        String MERGE_CELLS  = "merge_cells ";
+        String MERGE_CELLS  = "merge_cells";
     }
 }
