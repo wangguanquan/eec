@@ -731,7 +731,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeNumeric(l, row, column, xf);
         Column hc = columns[column];
         int n;
-        if (hc.width == 0 && hc.o < (n = (l < 0L ? stringSize(-l) + 1 : stringSize(l)))) {
+        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
             hc.o = n;
         }
     }
