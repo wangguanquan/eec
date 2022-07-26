@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
@@ -149,6 +150,13 @@ public class CustomerNumFmtTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testAutoAndMaxWidth() throws IOException {
+        new Workbook("Auto Max Width Test")
+                .setAutoSize(true)
+                .addSheet(new ListSheet<>(MaxWidthTestItem.randomTestData()))
+                .writeTo(defaultTestPath);
+    }
+
     static class Item {
         @ExcelColumn
         String code;
@@ -207,19 +215,22 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
     public static class WidthTestItem {
         @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
-        private Integer nv;
+        Integer nv;
         @ExcelColumn("字符串(en)")
-        private String sen;
+        String sen;
         @ExcelColumn("字符串(中文)")
-        private String scn;
+        String scn;
         @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
-        private Timestamp iv;
+        Timestamp iv;
 
         public static List<WidthTestItem> randomTestData() {
+            return randomTestData(WidthTestItem::new);
+        }
+        public static List<WidthTestItem> randomTestData(Supplier<? extends WidthTestItem> supplier) {
             int size = random.nextInt(10 + 5);
             List<WidthTestItem> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                WidthTestItem o = new WidthTestItem();
+                WidthTestItem o = supplier.get();
                 o.nv = random.nextInt();
                 o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
                 o.sen = getRandomString(20);
@@ -227,6 +238,17 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 list.add(o);
             }
             return list;
+        }
+    }
+
+    public static class MaxWidthTestItem extends WidthTestItem {
+        @ExcelColumn(value = "字符串(中文)", maxWidth = 30.86D, wrapText = true)
+        public String getScn() {
+            return scn;
+        }
+
+        public static List<WidthTestItem> randomTestData() {
+            return randomTestData(MaxWidthTestItem::new);
         }
     }
 }
