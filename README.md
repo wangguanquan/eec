@@ -123,7 +123,7 @@ public void testStyleConversion(List<Student> students) throws IOException {
 
 ![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b8.png)
 
-#### 3. 现在自动列宽更精准
+#### 3. 自适应列宽更精准
 
 ```
 // 测试类
@@ -176,7 +176,15 @@ public static class RepeatableEntry {
 
 #### 5. 报表轻松制作
 
+现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki)
+
+记帐类
+
 ![报表1](./images/report1.png)
+
+统计类
+
+![报表2](./images/report2.png)
 
 ### 读取示例
 
