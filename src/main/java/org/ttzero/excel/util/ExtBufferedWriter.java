@@ -156,7 +156,7 @@ public class ExtBufferedWriter extends BufferedWriter {
     private char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
-        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        int size = stringSize(i);
         getChars(i, size, cache_char_array[size - 1]);
         return cache_char_array[size - 1];
     }
@@ -167,9 +167,15 @@ public class ExtBufferedWriter extends BufferedWriter {
 
     // Requires positive x
     public static int stringSize(int x) {
+        boolean negative = x < 0;
+        if (negative) x = ~x + 1;
+        int l;
         for (int i = 0; ; i++)
-            if (x <= sizeTable[i])
-                return i + 1;
+            if (x <= sizeTable[i]) {
+                l = i + 1;
+                break;
+            }
+        return negative ? l + 1 : l;
     }
 
     static void getChars(int i, int index, char[] buf) {
@@ -209,20 +215,26 @@ public class ExtBufferedWriter extends BufferedWriter {
     private char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
-        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        int size = stringSize(i);
         getChars(i, size, cache_char_array[size - 1]);
         return cache_char_array[size - 1];
     }
 
     // Requires positive x
     public static int stringSize(long x) {
+        boolean negative = x < 0;
+        if (negative) x = ~x + 1;
+        int l = 0, i = 1;
         long p = 10;
-        for (int i = 1; i < 19; i++) {
-            if (x < p)
-                return i;
+        for (; i < 19; i++) {
+            if (x < p) {
+                l = i;
+                break;
+            }
             p = 10 * p;
         }
-        return 19;
+        if (i >= 19) l = 19;
+        return negative ? l + 1 : l;
     }
 
     /**

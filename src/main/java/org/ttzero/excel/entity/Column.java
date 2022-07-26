@@ -24,6 +24,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
@@ -97,7 +98,7 @@ public class Column {
      * The cell width
      */
     public double width;
-    public int o;
+    public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
     /**
@@ -116,11 +117,48 @@ public class Column {
      * Specify the column index
      */
     public int colIndex = -1;
+    /**
+     * The previous Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column prev;
+    /**
+     * The next Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column next;
+    /**
+     * The tail Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column tail;
+    /**
+     * The real col-Index used to write
+     */
+    int realColIndex;
 
     /**
      * Constructor Column
      */
     public Column() { }
+
+    /**
+     * Constructor Column
+     *
+     * @param name  the column name
+     */
+    public Column(String name) {
+        this.name = name;
+    }
 
     /**
      * Constructor Column
@@ -631,7 +669,7 @@ public class Column {
      * @return number format
      */
     public NumFmt getNumFmt() {
-        return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
+        return numFmt != null ? numFmt : (numFmt = styles.getNumFmt(cellStyle));
     }
 
     /**
@@ -645,7 +683,8 @@ public class Column {
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle() | wrapText;
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
-            style = styles.addNumFmt(DATETIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = DATETIME_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
@@ -653,9 +692,11 @@ public class Column {
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
-            style = styles.addNumFmt(DATE_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = DATE_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            style =  styles.addNumFmt(TIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = TIME_FORMAT;
+            style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
@@ -721,5 +762,78 @@ public class Column {
     public Column setHeaderComment(Comment headerComment) {
         this.headerComment = headerComment;
         return this;
+    }
+
+    /**
+     * Append sub-column at the tail
+     *
+     * @param column a sub-column
+     * @return the {@link Column} self
+     */
+    public Column addSubColumn(Column column) {
+        if (this == column) {
+            return this;
+        }
+        if (next != null) {
+            int subSize = subColumnSize(), appendSize = column.subColumnSize();
+            if (subSize + appendSize > Const.Limit.HEADER_SUB_COLUMNS) {
+                throw new ExcelWriteException("Too many sub-column occur. Max support " + Const.Limit.HEADER_SUB_COLUMNS + ", current is " + subSize);
+            }
+            column.prev = this.tail;
+            this.tail.next = column;
+        } else {
+            this.next = column;
+            column.prev = this;
+        }
+        this.tail = column.tail != null ? column.tail : column;
+        return this;
+    }
+
+    /**
+     * Returns the size of sub-column
+     *
+     * @return size of sub-column(include root column)
+     */
+    public int subColumnSize() {
+        int i = 1;
+        if (next != null) {
+            Column next = this.next;
+            for (; next != tail; next = next.next, i++);
+            i++;
+        }
+        return i;
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @return an array containing all of the Column
+     */
+    public Column[] toArray() {
+        return toArray(new Column[subColumnSize()]);
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @param dist the array into which the elements of the column are to be stored
+     * @throws NullPointerException if the specified array is null
+     */
+    public Column[] toArray(Column[] dist) {
+        int len = Math.min(subColumnSize(), dist.length);
+        if (len < 1) return dist;
+        Column e = this;
+        for (int i = 0; i < len; i++) {
+            dist[i] = e;
+            e = e.next;
+        }
+        return dist;
+    }
+
+    /**
+     * Returns the real col-index(one base)
+     */
+    public int getRealColIndex() {
+        return realColIndex;
     }
 }

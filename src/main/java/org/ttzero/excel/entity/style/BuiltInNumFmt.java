@@ -35,6 +35,7 @@ import java.util.Locale;
  */
 public final class BuiltInNumFmt {
     private static final NumFmt[][] data;
+    private static final NumFmt[] idData;
 
     static {
         InputStream is = BuiltInNumFmt.class.getClassLoader().getResourceAsStream("numFmt");
@@ -94,6 +95,9 @@ public final class BuiltInNumFmt {
                 // Empty
             }
 
+            idData = new NumFmt[list.size()];
+            list.toArray(idData);
+
             data = new NumFmt[maxLen + 1][]; // accept zero size
             for (int i = 1; i <= maxLen; i++) {
                 final int length = i;
@@ -108,6 +112,7 @@ public final class BuiltInNumFmt {
             }
         } else {
             data = new NumFmt[0][];
+            idData = new NumFmt[0];
         }
     }
 
@@ -144,23 +149,12 @@ public final class BuiltInNumFmt {
      * @return the {@link NumFmt}
      */
     public static NumFmt get(int id) {
-        // TODO
-        return null;
+        return id >=0 && id < idData.length ? idData[id] : null;
     }
 
-    public static class NumFmt {
-        private String code;
-        private int id;
+    public static class NumFmt extends org.ttzero.excel.entity.style.NumFmt {
         private Locale locale;
         private boolean unicode;
-
-        public String getCode() {
-            return code;
-        }
-
-        public int getId() {
-            return id;
-        }
 
         public Locale getLocale() {
             return locale;

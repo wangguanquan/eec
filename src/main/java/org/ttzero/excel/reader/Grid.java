@@ -16,13 +16,9 @@
 
 package org.ttzero.excel.reader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -33,7 +29,7 @@ import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 /**
  * @author guanquan.wang at 2020-01-09 16:54
  */
-interface Grid {
+public interface Grid {
 
     /**
      * Mark `1` at the specified coordinates
@@ -457,39 +453,5 @@ interface Grid {
 
             return joiner.toString();
         }
-    }
-}
-
-final class GridFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GridFactory.class);
-    private GridFactory() { }
-    static Grid create(List<Dimension> mergeCells) {
-        Dimension dim = mergeCells.get(0);
-        int fr = dim.firstRow, lr = dim.lastRow;
-        short fc = dim.firstColumn, lc = dim.lastColumn;
-        int n = (lr - fr + 1) * (lc - fc + 1);
-        for (int j = 1, len = mergeCells.size(); j < len; j++) {
-            dim = mergeCells.get(j);
-            n += (dim.lastRow - dim.firstRow + 1) * (dim.lastColumn - dim.firstColumn + 1);
-            if (fr > dim.firstRow)    fr = dim.firstRow;
-            if (lr < dim.lastRow)     lr = dim.lastRow;
-            if (fc > dim.firstColumn) fc = dim.firstColumn;
-            if (lc < dim.lastColumn)  lc = dim.lastColumn;
-        }
-
-        Dimension range = new Dimension(fr, fc, lr, lc);
-        int r = lr - fr + 1
-            , c = lc - fc + 1;
-
-        n = r * c;
-
-        Grid grid = c <= 64 && r < 1 << 14 ? new Grid.FastGrid(range)
-            : n > 1 << 10 ? new Grid.FractureGrid(range) : new Grid.IndexGrid(range, n);
-
-        for (Dimension d : mergeCells) {
-            grid.mark(d);
-            LOGGER.debug("merged cells range {}", d);
-        }
-        return grid;
     }
 }

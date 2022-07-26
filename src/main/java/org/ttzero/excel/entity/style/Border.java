@@ -43,6 +43,11 @@ public class Border {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
     }
 
+    public Border(BorderStyle style, Color color) {
+        borders = new SubBorder[6];
+        setBorder(style, color);
+    }
+
     /**
      * Top line style
      *

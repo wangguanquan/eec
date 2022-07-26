@@ -757,7 +757,8 @@ public class ExcelReader implements Closeable {
         App app = new App();
         app.setCompany(root.elementText("Company"));
         app.setApplication(root.elementText("Application"));
-        app.setAppVersion(root.elementText("AppVersion"));
+        String v = root.elementText("AppVersion");
+        if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
 
         try {
             document = reader.read(Files.newInputStream(tmp.resolve("docProps/core.xml")));
@@ -781,7 +782,7 @@ public class ExcelReader implements Closeable {
 
             Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
             Class<?> type = f.getType();
-            String v = root.elementText(new QName(f.getName(), namespace));
+            v = root.elementText(new QName(f.getName(), namespace));
             if (isEmpty(v)) continue;
             if (type == String.class) {
                 try {

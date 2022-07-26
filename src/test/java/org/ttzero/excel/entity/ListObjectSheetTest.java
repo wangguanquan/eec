@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
@@ -48,10 +47,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -326,19 +324,18 @@ public class ListObjectSheetTest extends WorkbookTest {
     };
 
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不及格" : n;
+    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不合格" : n;
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", "guanquan.wang")
+        new Workbook("2021小五班期未考试成绩")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Column("学号", "id")
-                    , new Column("姓名", "name")
-                    , new Column("成绩", "score", conversion)
-                    .setStyleProcessor(sp)
-                )
-            )
-            .writeTo(defaultTestPath);
+                    , new Column("学号", "id", int.class)
+                    , new Column("姓名", "name", String.class)
+                    , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+                ).setStyleProcessor((o, style, sst) ->
+                    o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+            ).writeTo(defaultTestPath);
     }
 
     @Test public void testNullValue() throws IOException {
@@ -612,39 +609,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         workbook.writeTo(defaultTestPath);
     }
 
-    @Test public void testOrderColumn() throws IOException {
-        new Workbook(("Order column")).addSheet(new ListSheet<>(OrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
 
-    @Test public void testSameOrderColumn() throws IOException {
-        new Workbook(("Same order column")).addSheet(new ListSheet<>(SameOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testFractureOrderColumn() throws IOException {
-        new Workbook(("Fracture order column")).addSheet(new ListSheet<>(FractureOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testLargeOrderColumn() throws IOException {
-        new Workbook(("Large order column")).addSheet(new ListSheet<>(LargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testOverLargeOrderColumn() throws IOException {
-        try {
-            new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-            assert false;
-        } catch (TooManyColumnsException e) {
-            assert true;
-        }
-    }
-
-    @Test public void testOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Order column 2")
-            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                , new Column("学号", "id").setColIndex(3)
-                , new Column("姓名", "name")
-                , new Column("成绩", "score").setColIndex(5) // un-declare field
-            )).writeTo(defaultTestPath);
-    }
 
     @Test public void testBasicType() throws IOException {
         List<Integer> list = new ArrayList<>();
@@ -683,6 +648,44 @@ public class ListObjectSheetTest extends WorkbookTest {
                 assert subList.get(i).equals(list.get(i));
             }
         }
+    }
+
+    @Test public void test264() throws IOException {
+        Column[] columns = {new Column("ID", "id"), new Column("NAME", "name")};
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264.xlsx"));
+
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264-1.xlsx"));
+
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264-2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-1.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-2.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
+    }
+
+    @Test public void testNullInList() throws IOException {
+        List<Item> list = Item.randomTestData(10);
+        list.add(0, null);
+        list.add(3, null);
+        list.add(null);
+        new Workbook("Null in list").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
     }
 
     public static class Item {
@@ -1302,214 +1305,4 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    public static class OrderEntry {
-        @ExcelColumn(colIndex = 0)
-        private String s;
-        @ExcelColumn( colIndex = 1)
-        private Date date;
-        @ExcelColumn(colIndex = 2)
-        private Double d;
-        @ExcelColumn(colIndex = 3)
-        private String s2 = "a";
-        @ExcelColumn(colIndex = 4)
-        private String s3 = "b";
-        @ExcelColumn(colIndex = 5)
-        private String s4 = "c";
-
-        public OrderEntry() {}
-        public OrderEntry(String s, Date date, Double d) {
-            this.s = s;
-            this.date = date;
-            this.d = d;
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new OrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-
-        public String getS() {
-            return s;
-        }
-
-        public Date getDate() {
-            return date;
-        }
-
-        public Double getD() {
-            return d;
-        }
-
-        public String getS2() {
-            return s2;
-        }
-
-        public String getS3() {
-            return s3;
-        }
-
-        public String getS4() {
-            return s4;
-        }
-    }
-
-    public static class SameOrderEntry extends OrderEntry {
-        public SameOrderEntry() {}
-        public SameOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 5)
-        public Double getD() {
-            return super.getD();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 5)
-        public String getS2() {
-            return super.getS2();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new SameOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
-
-    public static class FractureOrderEntry extends OrderEntry {
-        public FractureOrderEntry() {}
-        public FractureOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
-        }
-
-        @Override
-        @ExcelColumn
-        public String getS() {
-            return super.getS();
-        }
-
-        @Override
-        @ExcelColumn
-        public Date getDate() {
-            return super.getDate();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 2)
-        public Double getD() {
-            return super.getD();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 0)
-        public String getS2() {
-            return super.getS2();
-        }
-
-        @Override
-        @ExcelColumn
-        public String getS3() {
-            return super.getS3();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 4)
-        public String getS4() {
-            return super.getS4();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new FractureOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
-
-    public static class LargeOrderEntry extends OrderEntry {
-        public LargeOrderEntry() {}
-        public LargeOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 1)
-        public String getS() {
-            return super.getS();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = Const.Limit.MAX_COLUMNS_ON_SHEET - 1)
-        public Date getDate() {
-            return super.getDate();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 189)
-        public String getS2() {
-            return super.getS2();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new LargeOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
-
-    public static class OverLargeOrderEntry extends OrderEntry {
-        public OverLargeOrderEntry() {}
-        public OverLargeOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 16_384)
-        public String getS() {
-            return super.getS();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new OverLargeOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
 }

@@ -43,7 +43,7 @@ public class XMLDrawings implements Drawings {
     /**
      * Root path
      */
-    private ExcelReader excelReader;
+    private final ExcelReader excelReader;
     /**
      * Source
      */
@@ -53,7 +53,7 @@ public class XMLDrawings implements Drawings {
      */
     private boolean parsed;
 
-    XMLDrawings(ExcelReader reader) {
+    public XMLDrawings(ExcelReader reader) {
         this.excelReader = reader;
     }
 
@@ -67,7 +67,12 @@ public class XMLDrawings implements Drawings {
         return parsed ? pictures : parse();
     }
 
-    private List<Drawings.Picture> parse() {
+    /**
+     * Parse picture
+     *
+     * @return list of {@link Drawings.Picture}
+     */
+    protected List<Drawings.Picture> parse() {
         parsed = true;
         // Empty excel, maybe throw exception here
         if (excelReader.sheets == null) return null;
@@ -115,7 +120,7 @@ public class XMLDrawings implements Drawings {
     }
 
     // Parse drawings.xml
-    private List<Picture> parseDrawings(Path path) {
+    protected List<Picture> parseDrawings(Path path) {
         SAXReader reader = new SAXReader();
         Document document;
         try {
@@ -182,7 +187,7 @@ public class XMLDrawings implements Drawings {
         return !pictures.isEmpty() ? pictures : null;
     }
 
-    Dimension dimension(Element e, Namespace xdr) {
+    protected Dimension dimension(Element e, Namespace xdr) {
         Element fromEle = e.element(QName.get("from", xdr));
         int[] f = dimEle(fromEle, xdr);
         Element toEle = e.element(QName.get("to", xdr));
@@ -191,7 +196,7 @@ public class XMLDrawings implements Drawings {
         return new Dimension(f[0] + 1, (short) (f[1] + 1), t[0] + 1, (short) (t[1] + 1));
     }
 
-    private int[] dimEle(Element e, Namespace xdr) {
+    protected int[] dimEle(Element e, Namespace xdr) {
         int c = 0, r = 0;
         if (e != null) {
             String col = e.element(QName.get("col", xdr)).getText(), row = e.element(QName.get("row", xdr)).getText();
@@ -199,5 +204,21 @@ public class XMLDrawings implements Drawings {
             r = Integer.parseInt(row);
         }
         return new int[] { r, c };
+    }
+
+    public List<Picture> getPictures() {
+        return pictures;
+    }
+
+    public void setPictures(List<Picture> pictures) {
+        this.pictures = pictures;
+    }
+
+    public boolean isParsed() {
+        return parsed;
+    }
+
+    public void setParsed(boolean parsed) {
+        this.parsed = parsed;
     }
 }

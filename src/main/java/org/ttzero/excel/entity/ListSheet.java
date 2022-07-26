@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
@@ -93,7 +94,10 @@ public class ListSheet<T> extends Sheet {
      * @return {@link StyleProcessor}
      */
     public StyleProcessor<T> getStyleProcessor() {
-        return this.styleProcessor;
+        if (styleProcessor != null) return styleProcessor;
+        @SuppressWarnings("unchecked")
+        StyleProcessor<T> fromExtProp = (StyleProcessor<T>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        return this.styleProcessor = fromExtProp;
     }
 
 
@@ -284,6 +288,7 @@ public class ListSheet<T> extends Sheet {
                 row.index = rows;
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
+                boolean notNull = o != null;
                 for (int i = 0; i < len; i++) {
                     // Clear cells
                     Cell cell = cells[i];
@@ -293,11 +298,18 @@ public class ListSheet<T> extends Sheet {
                     EntryColumn column = (EntryColumn) columns[i];
                     if (column.isIgnoreValue())
                         e = null;
-                    else if (column.getMethod() != null)
-                        e = column.getMethod().invoke(o);
-                    else if (column.getField() != null)
-                        e = column.getField().get(o);
-                    else e = o;
+                    else if (notNull) {
+                        if (column.getMethod() != null)
+                            e = column.getMethod().invoke(o);
+                        else if (column.getField() != null)
+                            e = column.getField().get(o);
+                        else e = o;
+                    }
+                    /*
+                    The default processing of null values still retains the row style.
+                    If don't want any style and value, you can change it to {@code continue}
+                     */
+                    else e = null;
 
                     cellValueAndStyle.reset(rows, cell, e, column);
                     if (hasGlobalStyleProcessor) {
@@ -437,19 +449,20 @@ public class ListSheet<T> extends Sheet {
                         column = new EntryColumn(gs, EMPTY, false);
                     }
                     if (column != null) {
-                        column.method = method;
-                        column.field = field;
-                        column.clazz = method.getReturnType();
-                        column.key = gs;
-                        if (isEmpty(column.name)) {
-                            column.name = gs;
+                        EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                        tail.method = method;
+                        tail.field = field;
+                        tail.clazz = method.getReturnType();
+                        tail.key = gs;
+                        if (isEmpty(tail.name)) {
+                            tail.name = gs;
                         }
                         list.add(column);
 
                         // Attach header style
-                        buildHeaderStyle(method, field, column);
+                        buildHeaderStyle(method, field, tail);
                         // Attach header comment
-                        buildHeaderComment(method, field, column);
+                        buildHeaderComment(method, field, tail);
                         continue;
                     }
                 }
@@ -461,20 +474,21 @@ public class ListSheet<T> extends Sheet {
                 }
                 if (column != null) {
                     list.add(column);
-                    column.field = field;
-                    column.key = gs;
-                    if (isEmpty(column.name)) {
-                        column.name = gs;
+                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    tail.field = field;
+                    tail.key = gs;
+                    if (isEmpty(tail.name)) {
+                        tail.name = gs;
                     }
                     if (method != null) {
-                        column.clazz = method.getReturnType();
-                        column.method = method;
-                    } else column.clazz = field.getType();
+                        tail.clazz = method.getReturnType();
+                        tail.method = method;
+                    } else tail.clazz = field.getType();
 
                     // Attach header style
-                    buildHeaderStyle(method, field, column);
+                    buildHeaderStyle(method, field, tail);
                     // Attach header comment
-                    buildHeaderComment(method, field, column);
+                    buildHeaderComment(method, field, tail);
                 }
             }
 
@@ -486,7 +500,9 @@ public class ListSheet<T> extends Sheet {
             if (list.isEmpty()) {
                 headerReady = eof = shouldClose = true;
                 this.end = 0;
-                LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
+                if (java.util.Map.class.isAssignableFrom(clazz))
+                    LOGGER.warn("List<Map> has detected, please use ListMapSheet for export.");
+                else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
                 return 0;
             }
             columns = new org.ttzero.excel.entity.Column[list.size()];
@@ -502,30 +518,34 @@ public class ListSheet<T> extends Sheet {
                 otherMap.put(m.getName(), m);
             }
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
-                if (!(hc instanceof EntryColumn)) {
-                    hc = new EntryColumn(hc);
-                    columns[i] = hc;
+                org.ttzero.excel.entity.Column hc = new EntryColumn(columns[i]);
+                columns[i] = hc;
+                if (hc.tail != null) {
+                    hc = hc.tail;
                 }
                 EntryColumn ec = (EntryColumn) hc;
-                Method method = tmp.get(hc.key);
-                if (method != null) {
-                    method.setAccessible(true);
-                    ec.method = method;
-                } else if ((method = otherMap.get(hc.key)) != null) {
-                    method.setAccessible(true);
-                    ec.method = method;
-                }
-
-                for (Field field : declaredFields) {
-                    if (field.getName().equals(hc.key)) {
-                        field.setAccessible(true);
-                        ec.field = field;
-                        break;
+                if (ec.method == null) {
+                    Method method = tmp.get(hc.key);
+                    if (method != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
+                    } else if ((method = otherMap.get(hc.key)) != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
                     }
                 }
 
-                if (method == null && ec.field == null) {
+                if (ec.field == null) {
+                    for (Field field : declaredFields) {
+                        if (field.getName().equals(hc.key)) {
+                            field.setAccessible(true);
+                            ec.field = field;
+                            break;
+                        }
+                    }
+                }
+
+                if (ec.method == null && ec.field == null) {
                     LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
                             + "] not declare in class " + clazz);
                     hc.ignoreValue();
@@ -535,11 +555,11 @@ public class ListSheet<T> extends Sheet {
 
                 // Attach header style
                 if (hc.getHeaderStyleIndex() == -1) {
-                    buildHeaderStyle(method, ec.field, hc);
+                    buildHeaderStyle(ec.method, ec.field, hc);
                 }
                 // Attach header comment
                 if (hc.headerComment == null) {
-                    buildHeaderComment(method, ec.field, hc);
+                    buildHeaderComment(ec.method, ec.field, hc);
                 }
             }
         }
@@ -556,35 +576,73 @@ public class ListSheet<T> extends Sheet {
      * Override the method to extend custom comments
      *
      * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
-     * @return the Worksheet's {@link org.ttzero.excel.entity.Column} information
+     * @return the Worksheet's {@link EntryColumn} information
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
         // Filter all ignore column
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
+        // Style Design
+        StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+
+        // Support multi header columns
+        ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
+        if (cs != null) {
+            ExcelColumn[] ecs = cs.value();
+            EntryColumn root = null;
+            for (ExcelColumn ec : ecs) {
+                EntryColumn column = createColumnByAnnotation(ec);
+                if (sp != null) {
+                    column.styleProcessor = sp;
+                }
+                if (root == null) {
+                    root = column;
+                } else {
+                    root.addSubColumn(column);
+                }
+            }
+            return root;
+        }
+        // Single header column
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
-            EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
-            column.styles = workbook.getStyles();
-            // Number format
-            if (isNotEmpty(ec.format())) {
-                column.setNumFmt(ec.format());
-            }
-            // Wrap
-            column.setWrapText(ec.wrapText());
-            // Column index
-            if (ec.colIndex() > -1) {
-                column.colIndex = ec.colIndex();
-            }
-            // Style Design
-            StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+            EntryColumn column = createColumnByAnnotation(ec);
             if (sp != null) {
                 column.styleProcessor = sp;
             }
+            // Cell max width
+            column.width = ec.maxWidth();
             return column;
         }
         return null;
+    }
+
+    /**
+     * Create column by {@code ExcelColumn} annotation
+     *
+     * @param ec {@code ExcelColumn} annotation
+     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     */
+    protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
+        if (ec == null) return null;
+        EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+        // Number format
+        if (isNotEmpty(ec.format())) {
+            column.setNumFmt(ec.format());
+        }
+        // Wrap
+        column.setWrapText(ec.wrapText());
+        // Column index
+        if (ec.colIndex() > -1) {
+            column.colIndex = ec.colIndex();
+        }
+        // Comment
+        HeaderComment comment = ec.comment();
+        if ((isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
+            column.headerComment = new Comment(comment.title(), comment.value());
+        }
+        return column;
     }
 
     /**
@@ -709,17 +767,18 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn column = createColumn(method);
                 if (column != null) {
                     list.add(column);
-                    column.method = method;
-                    column.clazz = method.getReturnType();
-                    column.key = method.getName();
-                    if (isEmpty(column.name)) {
-                        column.name = method.getName();
+                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    tail.method = method;
+                    tail.clazz = method.getReturnType();
+                    tail.key = method.getName();
+                    if (isEmpty(tail.name)) {
+                        tail.name = method.getName();
                     }
 
                     // Attach header style
-                    buildHeaderStyle(method, null, column);
+                    buildHeaderStyle(method, null, tail);
                     // Attach header comment
-                    buildHeaderComment(method, null, column);
+                    buildHeaderComment(method, null, tail);
                 }
             }
             return list;
@@ -891,8 +950,11 @@ public class ListSheet<T> extends Sheet {
         public Method method;
         public Field field;
 
-        public EntryColumn() { }
+        public EntryColumn() {
+            super();
+        }
         public EntryColumn(String name) {
+            super();
             this.name = name;
         }
         public EntryColumn(String name, Class<?> clazz) {
@@ -968,6 +1030,9 @@ public class ListSheet<T> extends Sheet {
             this.colIndex = other.colIndex;
             if (other.cellStyle != null) setCellStyle(other.cellStyle);
             if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+            if (other.next != null) {
+                addSubColumn(new EntryColumn(other.next));
+            }
         }
 
         public Method getMethod() {
