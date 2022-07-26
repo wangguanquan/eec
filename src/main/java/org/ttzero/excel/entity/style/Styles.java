@@ -276,7 +276,7 @@ public class Styles implements Storable {
         int i = 0;
         for (Element e : sub) {
             String applyNumberFormat = getAttr(e, "applyNumberFormat");
-            if (isNotEmpty(applyNumberFormat) && ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat))){
+            if (isNotEmpty(applyNumberFormat) && ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat))) {
                 String numFmtId = getAttr(e, "numFmtId");
                 int style = Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
                 self.map.put(i, style);
