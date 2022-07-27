@@ -56,7 +56,7 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 pom.xml添加
 
-```
+```xml
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
@@ -74,7 +74,7 @@ pom.xml添加
 #### 1. 简单导出
 对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出，也可以通过调用`forceExport`方法来强制导出。
 
-```
+```java
     private int id; // not export
 
     @ExcelColumn("渠道ID")
@@ -89,34 +89,30 @@ pom.xml添加
 
 默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以设置`colIndex`或者在`addSheet`时重置列头顺序。
 
-```
-public void testWrite(List<Student> students) throws IOException {
-    // 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
-    new Workbook("test object", "guanquan.wang")
-    
-        // 添加一个worksheet，可以通过addSheet添加多个worksheet
-        .addSheet(new ListSheet<>("学生信息", students))
-        
-        // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
-        .writeTo(Paths.get("f:/excel"));
-}
+```java
+// 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
+new Workbook("test object", "guanquan.wang")
+
+    // 添加一个worksheet，可以通过addSheet添加多个worksheet
+    .addSheet(new ListSheet<>("学生信息", students))
+
+    // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
+    .writeTo(Paths.get("f:/excel"));
 ```
 
 #### 2. 高亮和数据转换
 
 高亮和数据转换是通过`@FunctionalInterface`实现，Java Bean也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标红
 
-```
-public void testStyleConversion(List<Student> students) throws IOException {
-    new Workbook("2021小五班期未考试成绩")
-        .addSheet(new ListSheet<>("期末成绩", students
-             , new Column("学号", "id", int.class)
-             , new Column("姓名", "name", String.class)
-             , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
-        ).setStyleProcessor((o, style, sst) -> 
-                o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
-        ).writeTo(Paths.get("f:/excel"));
-}
+```java
+new Workbook("2021小五班期未考试成绩")
+    .addSheet(new ListSheet<>("期末成绩", students
+         , new Column("学号", "id", int.class)
+         , new Column("姓名", "name", String.class)
+         , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+    ).setStyleProcessor((o, style, sst) -> 
+            o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+    ).writeTo(Paths.get("f:/excel"));
 ```
 
 内容如下图
@@ -125,7 +121,7 @@ public void testStyleConversion(List<Student> students) throws IOException {
 
 #### 3. 自适应列宽更精准
 
-```
+```java
 // 测试类
 public static class WidthTestItem {
     @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
@@ -147,7 +143,7 @@ new Workbook("Auto Width Test")
 
 #### 4. 支持多行表头
 
-```
+```java
 public static class RepeatableEntry {
     @ExcelColumn("订单号")
     private String orderNo;
@@ -184,7 +180,7 @@ public static class RepeatableEntry {
 
 统计类
 
-![报表2](./images/report2.png)
+![报表2](images/report3.png)
 
 ### 读取示例
 
@@ -196,47 +192,40 @@ EEC使用`ExcelReader#read`静态方法读文件，其内部采用流式操作�
 
 #### 1. 使用stream操作
 
-```
-public void streamRead() {
-    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+```java
+try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+    reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+} catch (IOException e) {
+    e.printStackTrace();
 }
 ```
 
 #### 2. 将excel读入到数组或List中
 
-```
-/**
- * read excel to object array
- */
-public void readToList() {
-    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-        // 读取所有worksheet
-        Regist[] array = reader.sheets()
+```java
+try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+    // 读取所有worksheet
+    Regist[] array = reader.sheets()
 
-            // 读取数据行
-            .flatMap(Sheet::dataRows)
+        // 读取数据行
+        .flatMap(Sheet::dataRows)
 
-            // 将每行数据转换为Regist对象
-            .map(row -> row.to(Regist.class))
+        // 将每行数据转换为Regist对象
+        .map(row -> row.to(Regist.class))
 
-            // 转数组或者List
-            .toArray(Regist[]::new);
+        // 转数组或者List
+        .toArray(Regist[]::new);
 
-        // TODO 其它逻辑
+    // TODO 其它逻辑
 
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+} catch (IOException e) {
+    e.printStackTrace();
 }
 ```
 
 #### 3. 当然既然是Stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
-```
+```java
 reader.sheets()
     .flatMap(Sheet::dataRows)
     .map(row -> row.to(Regist.class))
@@ -250,7 +239,7 @@ reader.sheets()
 
 pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码只需要传入xls即可读取，
 
-```
+```xml
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
@@ -269,7 +258,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 
 代码示例
 
-```
+```java
 // CSV转Excel
 new Workbook("csv path test", author)
     .addSheet(new CSVSheet(csvPath)) // 添加CSVSheet并指定csv路径
