@@ -18,6 +18,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.reader.Cell;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -187,11 +188,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             columns = new org.ttzero.excel.entity.Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
-                // Ignore the null key
-                if (isEmpty(entry.getKey())) continue;
-                Object value = entry.getValue();
-                columns[i++] = new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+                org.ttzero.excel.entity.Column hc = createColumn(entry);
+                if (hc != null) columns[i++] = hc;
             }
+            if (i < size) columns = Arrays.copyOf(columns, i);
         } else {
             Object o;
             for (int i = 0; i < columns.length; i++) {
@@ -208,4 +208,18 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         return columns;
     }
 
+    /**
+     * Create column from {@link Map.Entry}
+     * <p>
+     * Override the method to extend custom comments
+     *
+     * @param entry the first entry from ListMap
+     * @return the Worksheet's {@link EntryColumn} information
+     */
+    protected org.ttzero.excel.entity.Column createColumn(Map.Entry<String, ?> entry) {
+        // Ignore the null key
+        if (isEmpty(entry.getKey())) return null;
+        Object value = entry.getValue();
+        return new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+    }
 }
