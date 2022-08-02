@@ -972,6 +972,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetViews>");
 
         bw.write("<sheetView workbookViewId=\"0\"");
+        // Default show grid lines
+        if (!sheet.isShowGridLines()) {
+            bw.write(" showGridLines=\"0\"");
+        }
         if (sheet.getId() == 1) { // Default select the first worksheet
             bw.write(" tabSelected=\"1\"");
         }

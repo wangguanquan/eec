@@ -52,4 +52,10 @@ public @interface HeaderStyle {
      */
     String fillFgColor() default "#666699";
 
+    /**
+     * Show grid lines
+     *
+     * @return true: show otherwise hidden
+     */
+    boolean showGridLines() default true;
 }

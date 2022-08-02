@@ -7,11 +7,11 @@ EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的�
 
 EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
-使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成1,000,000行x29列数据的读写。
+使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成100w行x29列数据的读写。
 
 EEC采用单线程、高IO设计，所以多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
 
-EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
+EEC在JVM参数`-Xmx6m -Xms1m`下读写`100w行x29列`内存使用截图
 
 写文件
 
@@ -75,16 +75,16 @@ pom.xml添加
 对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出，也可以通过调用`forceExport`方法来强制导出。
 
 ```java
-    private int id; // not export
+private int id; // not export
 
-    @ExcelColumn("渠道ID")
-    private int channelId;
+@ExcelColumn("渠道ID")
+private int channelId;
 
-    @ExcelColumn
-    private String account;
+@ExcelColumn
+private String account;
 
-    @ExcelColumn("注册时间")
-    private Timestamp registered;
+@ExcelColumn("注册时间")
+private Timestamp registered;
 ```
 
 默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以设置`colIndex`或者在`addSheet`时重置列头顺序。
@@ -233,7 +233,7 @@ reader.sheets()
     .collect(Collectors.toList());
 ```
 
-以上代码相当于`select * from 用户注册 where platform = 'iOS'`
+以上代码相当于SQL `select * from '用户注册' where platform = 'iOS'`
 
 ### xls格式支持
 

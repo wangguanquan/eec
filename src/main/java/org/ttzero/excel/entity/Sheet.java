@@ -181,6 +181,11 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected int extPropMark;
 
+    /**
+     * Show grid lines
+     */
+    protected Boolean showGridLines;
+
     public int getId() {
         return id;
     }
@@ -550,6 +555,33 @@ public abstract class Sheet implements Cloneable, Storable {
             addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
         }
         return comments;
+    }
+
+    /**
+     * Returns show grid lines flag
+     */
+    public boolean isShowGridLines() {
+        return showGridLines == null || showGridLines;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet showGridLines() {
+        this.showGridLines = true;
+        return this;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet hideGridLines() {
+        this.showGridLines = false;
+        return this;
     }
 
     /**
