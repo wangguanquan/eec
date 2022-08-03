@@ -1046,7 +1046,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
                 bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
+                if (col.isHide()) {
+                    bw.writeInt(0);
+                    bw.write("\" hidden=\"1");
+                }
+                else bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
                 for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");

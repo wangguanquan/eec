@@ -693,7 +693,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         private int id;
         @ExcelColumn(wrapText = true)
         private String name;
-
+        public Item() { }
         public Item(int id, String name) {
             this.id = id;
             this.name = name;
@@ -706,18 +706,21 @@ public class ListObjectSheetTest extends WorkbookTest {
         public String getName() {
             return name;
         }
-
         public static List<Item> randomTestData(int n) {
+            return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
+        }
+
+        public static List<Item> randomTestData(int n, Supplier<Item> supplier) {
             List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new Item(i, getRandomString()));
+                list.add(supplier.get());
             }
             return list;
         }
 
         public static List<Item> randomTestData() {
             int n = random.nextInt(100) + 1;
-            return randomTestData(n);
+            return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
         }
     }
 
