@@ -166,7 +166,9 @@ public interface Const {
 
     /**
      * The cell type
+     * @deprecated replace it with the number format
      */
+    @Deprecated
     interface ColumnType {
         /**
          * Standard

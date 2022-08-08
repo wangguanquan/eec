@@ -323,7 +323,7 @@ public abstract class Sheet implements Cloneable, Storable {
          *
          * @param type the cell type
          * @return the {@link org.ttzero.excel.entity.Column}
-         * @deprecated replace it with the {{@link #setNumFmt(String)}} method.
+         * @deprecated replace it with the {@link #setNumFmt(String)}.
          */
         @Deprecated
         public org.ttzero.excel.entity.Column setType(int type) {
