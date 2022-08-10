@@ -894,70 +894,64 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             final int block = (int) Math.min(1 << 11, position);
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
-            int left_size = 0, i;
-
+            int left_size = 0, i = 0;
             boolean eof, getit = false;
             CharBuffer charBuffer;
             // Skip if marked
-            channel.position(lastRowMark == 0L ? Math.max(0, position -= block) : lastRowMark);
-
-            for (; ; ) {
+            if (lastRowMark > 0L) {
+                channel.position(lastRowMark);
                 channel.read(buffer);
-                if (left_size > 0) {
-                    buffer.limit(block);
-                    buffer.put(left, 0, left_size);
-                    left_size = 0;
-                }
-                buffer.flip();
-                eof = buffer.limit() < block;
-
-                charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                int limit = charBuffer.limit(), c;
-                i = limit - 1;
-
-                // <mergeCells
-                c = 12;
-                for (; i >= c && (charBuffer.get(i) > ' ' || charBuffer.get(i - 1) != 's'
-                    || charBuffer.get(i - 2) != 'l' || charBuffer.get(i - 3) != 'l'
-                    || charBuffer.get(i - 4) != 'e' || charBuffer.get(i - 5) != 'C'
-                    || charBuffer.get(i - 6) != 'e' || charBuffer.get(i - 7) != 'g'
-                    || charBuffer.get(i - 8) != 'r' || charBuffer.get(i - 9) != 'e'
-                    || charBuffer.get(i - 10) != 'm' || charBuffer.get(i - 11) != '<'); i--)
-                    ;
-
-                // Not Found
-                if (i < c) {
-                    if (eof || (eof = position <= 0)) break;
-                    for (; i < limit && charBuffer.get(i) != '>'; i++) ;
-                    i++;
-                    if (i < limit - 1) {
-                        charBuffer.position(i);
-                        int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
-                        int last_size = buffer.limit() - newLimit;
-                        if (left == null || last_size > left.length) {
-                            left = new byte[last_size];
-                        }
-                        buffer.position(0);
-                        buffer.get(left, 0, last_size);
-                        left_size = last_size;
+                getit = true; // Unknown
+            } else {
+                left = new byte[12];
+                for (; ; ) {
+                    channel.position(position -= block - left_size);
+                    channel.read(buffer);
+                    if (left_size > 0) {
+                        buffer.limit(block);
+                        buffer.put(left, 0, left_size);
                     }
+                    buffer.flip();
+                    eof = buffer.limit() < block;
 
-                    position -= block + left_size;
-                    channel.position(Math.max(0, position));
+                    charBuffer = StandardCharsets.UTF_8.decode(buffer);
+                    int limit = charBuffer.limit(), c;
+                    i = limit - 1;
+
+                    // </sheetData>
+                    c = 12;
+                    for (; i >= c && (charBuffer.get(i) != '>' || charBuffer.get(i - 1) != 'a'
+                        || charBuffer.get(i - 2) != 't' || charBuffer.get(i - 3) != 'a'
+                        || charBuffer.get(i - 4) != 'D' || charBuffer.get(i - 5) != 't'
+                        || charBuffer.get(i - 6) != 'e' || charBuffer.get(i - 7) != 'e'
+                        || charBuffer.get(i - 8) != 'h' || charBuffer.get(i - 9) != 's'
+                        || charBuffer.get(i - 10) != '/' || charBuffer.get(i - 11) != '<'); i--)
+                        ;
+
+                    // Not Found
+                    if (i < c) {
+                        if (eof) break;
+                        buffer.position(0);
+                        left_size = 12;
+                        buffer.get(left, 0, left_size);
+                        buffer.clear();
+                        buffer.limit(block - left_size);
+                    }
+                    // Found the last row or empty worksheet
+                    else {
+                        charBuffer.position(i + 1);
+                        int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
+                        buffer.position(buffer.limit() - newLimit);
+                        getit = true;
+                        break;
+                    }
                 }
-                // Found the last row or empty worksheet
-                else {
-                    getit = true;
-                    break;
-                }
-                buffer.position(0);
-                buffer.limit(buffer.capacity() - left_size);
             }
 
             if (getit) {
-                charBuffer.position(i);
+                buffer.position(i);
                 // Find mergeCells tag
-                parseMerge(channel, charBuffer, buffer, block);
+                parseMerge(channel, buffer, block);
             }
         } catch (IOException e) {
             // Ignore error
@@ -965,63 +959,76 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         }
     }
 
-    void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block) throws IOException {
+    void parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
         // Find mergeCells tag
-        int limit = charBuffer.limit();
+        int limit = buffer.limit();
         List<Dimension> mergeCells = new ArrayList<>();
         boolean eof = false;
-        int i = charBuffer.position();
-        char[] chars = new char[20];
+        int i = buffer.position(), _i;
+        byte[] bytes = new byte[32];
         for (; ;) {
-            for (; i < limit - 11 && (charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'm'
-                || charBuffer.get(i + 2) != 'e' || charBuffer.get(i + 3) != 'r'
-                || charBuffer.get(i + 4) != 'g' || charBuffer.get(i + 5) != 'e'
-                || charBuffer.get(i + 6) != 'C' || charBuffer.get(i + 7) != 'e'
-                || charBuffer.get(i + 8) != 'l' || charBuffer.get(i + 9) != 'l'
-                || charBuffer.get(i + 10) > ' '); i++) ;
+            for (; i < limit - 11 && (buffer.get(i) != '<' || buffer.get(i + 1) != 'm'
+                || buffer.get(i + 2) != 'e' || buffer.get(i + 3) != 'r'
+                || buffer.get(i + 4) != 'g' || buffer.get(i + 5) != 'e'
+                || buffer.get(i + 6) != 'C' || buffer.get(i + 7) != 'e'
+                || buffer.get(i + 8) != 'l' || buffer.get(i + 9) != 'l'
+                || buffer.get(i + 10) > ' '); i++) ;
 
-            if (i >= limit - 11) {
+            if (i >= limit - 22) {
                 if (eof) break;
-                for (; i < charBuffer.limit() && charBuffer.get() != '<'; i++) ;
-                channel.position(channel.position() - (charBuffer.limit() - i));
+                buffer.position(limit - 22);
+                for (; i < buffer.limit() && buffer.get() != '<'; i++) ;
+                if (buffer.get(buffer.position() - 1) == '<') buffer.position(buffer.position() - 1);
 
-                buffer.clear();
+                buffer.compact();
+
                 channel.read(buffer);
                 buffer.flip();
-                if (buffer.limit() <= 0) break;
-
-                charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                limit = charBuffer.limit();
+                if ((limit = buffer.limit()) <= 0) break;
                 i = 0;
                 eof = limit < block;
             } else {
+                _i = i;
                 i += 11;
-                for (; i < limit - 5 && (charBuffer.get(i) != 'r' || charBuffer.get(i + 1) != 'e'
-                    || charBuffer.get(i + 2) != 'f' || charBuffer.get(i + 3) != '='
-                    || charBuffer.get(i + 4) != '"'); i++) ;
-                if (i > limit - 5) continue;
+                for (; i < limit - 5 && (buffer.get(i) != 'r' || buffer.get(i + 1) != 'e'
+                    || buffer.get(i + 2) != 'f' || buffer.get(i + 3) != '='
+                    || buffer.get(i + 4) != '"'); i++) ;
                 int f = i += 5;
-                for (; charBuffer.get(i) != '"'; i++) ;
-                if (i > limit) continue;
-                int n = i - f;
-                if (n > chars.length) {
-                    chars = new char[n];
-                }
+                for (; i < limit && buffer.get(i) != '"'; i++) ;
+                if (i >= limit) {
+                    buffer.position(_i);
+                    buffer.compact();
+                    channel.read(buffer);
+                    buffer.flip();
+                    if ((limit = buffer.limit()) <= 0) break;
 
-                charBuffer.position(f);
-                charBuffer.get(chars, 0, n);
-                mergeCells.add(Dimension.of(new String(chars, 0, n)));
-                charBuffer.position(++i);
+                    i = 0;
+                    eof = limit < block;
+                    continue;
+                }
+                int n = i - f;
+                if (n > bytes.length) bytes = new byte[n];
+
+                buffer.position(f);
+                buffer.get(bytes, 0, n);
+
+                mergeCells.add(Dimension.of(new String(bytes, 0, n, StandardCharsets.US_ASCII)));
+                buffer.get();
             }
         }
 
         if (!mergeCells.isEmpty()) {
             this.mergeCells = GridFactory.create(mergeCells);
-            LOGGER.debug("Grid: {}", this.mergeCells);
+            LOGGER.debug("Grid: Size: {} {}", this.mergeCells.size(), this.mergeCells.getClass());
         }
     }
 
     private void mergeCell(int row, Cell cell) {
         mergeCells.merge(row, cell);
+    }
+
+    @Override
+    public Grid getMergeGrid() {
+        return mergeCells;
     }
 }

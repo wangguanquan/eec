@@ -552,6 +552,19 @@ public class ExcelReaderTest {
         }
     }
 
+    @Test public void testLargeMerge() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
+            Grid grid = reader.sheet(0).asMergeSheet().getMergeGrid();
+            assert grid.test(3, 1);
+            assert grid.test(382, 1);
+            assert grid.test(722, 2);
+            assert grid.test(1374, 2);
+            assert grid.test(2101, 10);
+            assert grid.test(2201, 6);
+            assert !grid.test(2113, 5);
+        }
+    }
+
     public static class O {
         @ExcelColumn("亚马逊FBA子单号/箱唛号")
         private String fbaNo;
