@@ -81,6 +81,8 @@ public interface Grid {
 
     /**
      * Returns count of merged cells
+     *
+     * @return count of merged cells
      */
     int size();
 
