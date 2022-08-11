@@ -555,6 +555,7 @@ public class ExcelReaderTest {
     @Test public void testLargeMerge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
             Grid grid = reader.sheet(0).asMergeSheet().getMergeGrid();
+            assert grid.size() == 2608;
             assert grid.test(3, 1);
             assert grid.test(382, 1);
             assert grid.test(722, 2);
