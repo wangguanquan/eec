@@ -893,14 +893,14 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             long position = Files.size(path);
             final int block = (int) Math.min(1 << 11, position);
             ByteBuffer buffer = ByteBuffer.allocate(block);
-            byte[] left = null;
-            int left_size = 0, i = 0;
+            byte[] left;
+            int left_size = 0, i;
             boolean eof, getit = false;
-            CharBuffer charBuffer;
             // Skip if marked
             if (lastRowMark > 0L) {
                 channel.position(lastRowMark);
                 channel.read(buffer);
+                buffer.flip();
                 getit = true; // Unknown
             } else {
                 left = new byte[12];
@@ -914,18 +914,17 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                     buffer.flip();
                     eof = buffer.limit() < block;
 
-                    charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                    int limit = charBuffer.limit(), c;
+                    int limit = buffer.limit(), c;
                     i = limit - 1;
 
                     // </sheetData>
                     c = 12;
-                    for (; i >= c && (charBuffer.get(i) != '>' || charBuffer.get(i - 1) != 'a'
-                        || charBuffer.get(i - 2) != 't' || charBuffer.get(i - 3) != 'a'
-                        || charBuffer.get(i - 4) != 'D' || charBuffer.get(i - 5) != 't'
-                        || charBuffer.get(i - 6) != 'e' || charBuffer.get(i - 7) != 'e'
-                        || charBuffer.get(i - 8) != 'h' || charBuffer.get(i - 9) != 's'
-                        || charBuffer.get(i - 10) != '/' || charBuffer.get(i - 11) != '<'); i--)
+                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
+                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
+                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
+                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
+                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
+                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
                         ;
 
                     // Not Found
@@ -939,17 +938,16 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                     }
                     // Found the last row or empty worksheet
                     else {
-                        charBuffer.position(i + 1);
-                        int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
-                        buffer.position(buffer.limit() - newLimit);
+                        buffer.position(i + 1);
                         getit = true;
+                        // Align channel and buffer position
+                        channel.position(channel.position() + left_size);
                         break;
                     }
                 }
             }
 
             if (getit) {
-                buffer.position(i);
                 // Find mergeCells tag
                 parseMerge(channel, buffer, block);
             }
@@ -959,12 +957,11 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         }
     }
 
+    // Find mergeCell tags
     void parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
-        // Find mergeCells tag
-        int limit = buffer.limit();
         List<Dimension> mergeCells = new ArrayList<>();
         boolean eof = false;
-        int i = buffer.position(), _i;
+        int limit = buffer.limit(), i = buffer.position();
         byte[] bytes = new byte[32];
         for (; ;) {
             for (; i < limit - 11 && (buffer.get(i) != '<' || buffer.get(i + 1) != 'm'
@@ -979,16 +976,13 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 buffer.position(limit - 22);
                 for (; i < buffer.limit() && buffer.get() != '<'; i++) ;
                 if (buffer.get(buffer.position() - 1) == '<') buffer.position(buffer.position() - 1);
-
                 buffer.compact();
-
                 channel.read(buffer);
                 buffer.flip();
                 if ((limit = buffer.limit()) <= 0) break;
                 i = 0;
                 eof = limit < block;
             } else {
-                _i = i;
                 i += 11;
                 for (; i < limit - 5 && (buffer.get(i) != 'r' || buffer.get(i + 1) != 'e'
                     || buffer.get(i + 2) != 'f' || buffer.get(i + 3) != '='
@@ -996,7 +990,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 int f = i += 5;
                 for (; i < limit && buffer.get(i) != '"'; i++) ;
                 if (i >= limit) {
-                    buffer.position(_i);
                     buffer.compact();
                     channel.read(buffer);
                     buffer.flip();
@@ -1013,7 +1006,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 buffer.get(bytes, 0, n);
 
                 mergeCells.add(Dimension.of(new String(bytes, 0, n, StandardCharsets.US_ASCII)));
-                buffer.get();
+                buffer.get(); // Skip '"'
             }
         }
 
@@ -1022,6 +1015,15 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             LOGGER.debug("Grid: Size: {} {}", this.mergeCells.size(), this.mergeCells.getClass());
         }
     }
+
+    // For debug
+     static void watch(ByteBuffer buffer) {
+         int p = buffer.position();
+         byte[] bytes = new byte[Math.min(1 << 7, buffer.remaining())];
+         buffer.get(bytes, 0, bytes.length);
+         System.out.println(new String(bytes, 0, bytes.length, StandardCharsets.US_ASCII));
+         buffer.position(p);
+     }
 
     private void mergeCell(int row, Cell cell) {
         mergeCells.merge(row, cell);
