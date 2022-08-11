@@ -305,6 +305,9 @@ public interface Sheet extends Closeable {
 interface CalcSheet extends Sheet { }
 
 interface MergeSheet extends Sheet {
+    /**
+     * Returns CellMerged info
+     */
     Grid getMergeGrid();
 }
 
