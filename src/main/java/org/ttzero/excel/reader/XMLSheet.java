@@ -407,16 +407,22 @@ public class XMLSheet implements Sheet {
         int nChar = 0, length;
         // reload file
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            loopA: for (; ; ) {
+            if (mark > 0) {
+                reader.skip(mark);
                 length = reader.read(cb);
-                // find index of <sheetData>
-                for (; nChar < length - 12; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                        && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                        && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                        && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                        nChar += 11;
-                        break loopA;
+            } else {
+                loopA:
+                for (; ; ) {
+                    length = reader.read(cb);
+                    // find index of <sheetData>
+                    for (; nChar < length - 12; nChar++) {
+                        if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
+                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
+                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
+                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
+                            nChar += 11;
+                            break loopA;
+                        }
                     }
                 }
             }
@@ -449,6 +455,7 @@ public class XMLSheet implements Sheet {
 
                 // Read more
                 int last = cb.length - nChar;
+                // TODO copy into another buffer
                 System.arraycopy(cb, nChar, cb, 0, last);
                 // Not found
                 if (reader.read(cb, last, nChar) <= 0) {
