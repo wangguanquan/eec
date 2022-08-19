@@ -433,41 +433,42 @@ public class XMLSheet implements Sheet {
                 return null;
             }
 
-            boolean endTag = false;
-            int start;
-            // find the first not null row
-            loopB: while (true) {
-                start = nChar;
-                for (; cb[++nChar] != '>' && nChar < length; ) ;
-                if (nChar >= length - 6) break;
+            int start = nChar;
+            A: for (; ;) {
+                // find end of row tag
+                for (; ++nChar < length && cb[nChar] != '>'; ) ;
                 // Empty Row
-                if (cb[nChar++ - 1] != '/') {
-                    // find end of row tag
-                    for (; nChar < length - 6; nChar++) {
-                        if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                                && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                            nChar += 6;
-                            endTag = true;
-                            break loopB;
-                        }
+                if (cb[nChar++ - 1] == '/') {
+                    start = nChar;
+                    continue;
+                }
+                // Not empty
+                for (; nChar < length - 6; nChar++) {
+                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
+                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
+                        nChar += 6;
+                        break A;
                     }
                 }
 
-                // Read more
-                int last = cb.length - nChar;
-                // TODO copy into another buffer
-                System.arraycopy(cb, nChar, cb, 0, last);
-                // Not found
-                if (reader.read(cb, last, nChar) <= 0) {
-                    return null;
-                }
-                // From beginning
-                nChar = 0;
-            }
+                /* Load more when not found end of row tag */
+                int n;
+                char[] _cb = new char[cb.length << 1];
+                System.arraycopy(cb, start, _cb, 0, n = length - start);
+                cb = _cb;
 
-            if (!endTag) {
-                // too big
-                return null;
+                try {
+                    length = reader.read(cb, n, cb.length - n);
+                    // end of file
+                    if (length < 0) {
+                        reader.close(); // close reader
+                        return null;
+                    }
+                } catch (IOException e) {
+                    throw new ExcelReadException("Parse row data error", e);
+                }
+                start = 0;
+                length += n;
             }
 
             return func.accept(cb, start, nChar - start);
