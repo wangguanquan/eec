@@ -427,7 +427,7 @@ public class XMLSheet implements Sheet {
                 }
             }
 
-            boolean eof = cb[nChar] == '>';
+            boolean eof = length <= 0 || cb[nChar] == '>';
             if (eof) {
                 this.heof = true;
                 return null;
@@ -435,13 +435,6 @@ public class XMLSheet implements Sheet {
 
             int start = nChar;
             A: for (; ;) {
-                // find end of row tag
-                for (; ++nChar < length && cb[nChar] != '>'; ) ;
-                // Empty Row
-                if (cb[nChar++ - 1] == '/') {
-                    start = nChar;
-                    continue;
-                }
                 // Not empty
                 for (; nChar < length - 6; nChar++) {
                     if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
