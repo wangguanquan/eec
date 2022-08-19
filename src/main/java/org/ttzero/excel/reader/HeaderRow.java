@@ -248,7 +248,7 @@ public class HeaderRow extends Row {
         StringJoiner joiner = new StringJoiner(" | ");
         StringBuilder buf = new StringBuilder();
         int i = 0;
-        for (; i < names.length && names[i++] == null; ) ;
+        for (; i < names.length && names[i] == null; i++) ;
         char[] chars = new char[10];
         Arrays.fill(chars, 0, chars.length, '-');
         for (int j = i; i < names.length; i++) {
