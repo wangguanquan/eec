@@ -209,6 +209,8 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * Returns {@link IWorksheetWriter}
+     *
+     * @return custom IWorksheetWriter
      */
     public IWorksheetWriter getSheetWriter() {
         return sheetWriter;
@@ -559,6 +561,8 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * Returns show grid lines flag
+     *
+     * @return true if {@code showGridLines} is null or {@code true}
      */
     public boolean isShowGridLines() {
         return showGridLines == null || showGridLines;
