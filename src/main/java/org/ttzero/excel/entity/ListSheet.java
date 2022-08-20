@@ -662,8 +662,6 @@ public class ListSheet<T> extends Sheet {
         }
         if (hs != null) {
             column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillFgColor()));
-            if (hs.showGridLines()) showGridLines();
-            else hideGridLines();
         }
     }
 

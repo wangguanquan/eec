@@ -18,7 +18,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.annotation.HeaderStyle;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
@@ -39,13 +38,6 @@ public class GridLinesTest extends SQLWorkbookTest {
     @Test public void testListSheet() throws IOException {
         new Workbook("ListSheet ignore grid lines")
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).hideGridLines())
-            .writeTo(defaultTestPath);
-    }
-
-    @Test public void testListSheetAnnotation() throws IOException {
-        new Workbook("ListSheet annotation ignore grid lines")
-            .setAutoSize(true)
-            .addSheet(new ListSheet<>(HideGridLineAllType.randomTestData()).hideGridLines())
             .writeTo(defaultTestPath);
     }
 
@@ -99,7 +91,6 @@ public class GridLinesTest extends SQLWorkbookTest {
         }
     }
 
-    @HeaderStyle(showGridLines = false)
     public static class HideGridLineAllType extends ListObjectSheetTest.AllType {
         public static List<ListObjectSheetTest.AllType> randomTestData() {
             return randomTestData(HideGridLineAllType::new);
