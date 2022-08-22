@@ -241,7 +241,7 @@ public interface Grid {
 
         @Override
         public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
+            if (!test(r, cell.i)) return;
             Cell c = index.get(((long) r) << 16 | cell.i);
 
             if (cell.t == EMPTY_TAG || cell.t == BLANK) {
@@ -294,7 +294,7 @@ public interface Grid {
 
         @Override
         public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
+            if (!test(r, cell.i)) return;
             Scanner.Entry e = scanner.get(r, cell.i);
             if (e == null) return;
 
