@@ -973,9 +973,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetViews>");
 
         bw.write("<sheetView workbookViewId=\"0\"");
-        if (sheet.getId() == 1) { // Default select the first worksheet
-            bw.write(" tabSelected=\"1\"");
-        }
+        // Default show grid lines
+        if (!sheet.isShowGridLines()) bw.write(" showGridLines=\"0\"");
+        // Default select the first worksheet
+        if (sheet.getId() == 1) bw.write(" tabSelected=\"1\"");
 
         // Freeze Panes
         Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.FREEZE);

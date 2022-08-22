@@ -35,6 +35,8 @@ import java.lang.annotation.Target;
 public @interface ExcelColumns {
     /**
      * Repeat ExcelColumn
+     *
+     * @return header {@link ExcelColumn} array
      */
     ExcelColumn[] value();
 }

@@ -664,6 +664,17 @@ public class Column {
     }
 
     /**
+     * Setting a cell format of number or date type
+     *
+     * @param numFmt {@link NumFmt}
+     * @return the {@link Column}
+     */
+    public Column setNumFmt(NumFmt numFmt) {
+        this.numFmt = numFmt;
+        return this;
+    }
+
+    /**
      * Returns the column {@link NumFmt}
      *
      * @return number format
