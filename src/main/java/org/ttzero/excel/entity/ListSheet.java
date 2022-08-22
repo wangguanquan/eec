@@ -642,6 +642,8 @@ public class ListSheet<T> extends Sheet {
         if ((isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
             column.headerComment = new Comment(comment.title(), comment.value());
         }
+        // Hidden Column
+        if (ec.hide()) column.hide();
         return column;
     }
 
@@ -1028,6 +1030,8 @@ public class ListSheet<T> extends Sheet {
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;
             this.colIndex = other.colIndex;
+            this.hide = other.hide;
+            this.realColIndex = other.realColIndex;
             if (other.cellStyle != null) setCellStyle(other.cellStyle);
             if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
             if (other.next != null) {

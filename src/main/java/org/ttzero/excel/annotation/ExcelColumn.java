@@ -107,4 +107,14 @@ public @interface ExcelColumn {
      * @return max cell width, less than or equal to 0 means unset
      */
     double maxWidth() default 0.0D;
+
+    /**
+     * Hidden current column
+     * <p>
+     * Only set the column to hide, the data will still be written,
+     * you can right-click to "un-hide" to display in file
+     *
+     * @return true: hidden otherwise show
+     */
+    boolean hide() default false;
 }

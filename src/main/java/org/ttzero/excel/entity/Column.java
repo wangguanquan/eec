@@ -144,7 +144,14 @@ public class Column {
     /**
      * The real col-Index used to write
      */
-    int realColIndex;
+    public int realColIndex;
+    /**
+     * Hidden current column
+     * <p>
+     * Only set the column to hide, the data will still be written,
+     * you can right-click to "un-hide" to display in file
+     */
+    public boolean hide;
 
     /**
      * Constructor Column
@@ -849,5 +856,34 @@ public class Column {
      */
     public int getRealColIndex() {
         return realColIndex;
+    }
+
+    /**
+     * Returns hide flag
+     *
+     * @return true: hidden otherwise show
+     */
+    public boolean isHide() {
+        return hide;
+    }
+
+    /**
+     * Hidden current column
+     *
+     * @return current {@link Column}
+     */
+    public Column hide() {
+        this.hide = true;
+        return this;
+    }
+
+    /**
+     * Show current column
+     *
+     * @return current {@link Column}
+     */
+    public Column show() {
+        this.hide = false;
+        return this;
     }
 }
