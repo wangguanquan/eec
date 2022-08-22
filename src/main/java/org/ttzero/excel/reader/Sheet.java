@@ -286,6 +286,13 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Make worksheets parse value only
+     *
+     * @return a empty {@link Sheet}
+     */
+    Sheet asSheet();
+
+    /**
      * Make worksheets parse formulas
      *
      * @return a empty {@link CalcSheet}

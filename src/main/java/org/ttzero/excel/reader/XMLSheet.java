@@ -45,6 +45,31 @@ public class XMLSheet implements Sheet {
 
     public XMLSheet() { }
 
+    public XMLSheet(XMLSheet sheet) {
+        this.name = sheet.name;
+        this.index = sheet.index;
+        this.path = sheet.path;
+        this.sst = sheet.sst;
+        this.styles = sheet.styles;
+        this.id = sheet.id;
+        this.startRow = sheet.startRow;
+        this.header = sheet.header;
+        this.hidden = sheet.hidden;
+        this.dimension = sheet.dimension;
+        this.drawings = sheet.drawings;
+        this.reader = sheet.reader;
+        this.cb = sheet.cb;
+        this.nChar = sheet.nChar;
+        this.length = sheet.length;
+        this.eof = sheet.eof;
+        this.heof = sheet.heof;
+        this.mark = sheet.mark;
+        this.sRow = sheet.sRow;
+        this.lastRowMark = sheet.lastRowMark;
+
+        reset();
+    }
+
     protected String name;
     protected int index; // per sheet index of workbook
 //        , size = -1; // size of rows per sheet
@@ -698,6 +723,11 @@ public class XMLSheet implements Sheet {
     }
 
     @Override
+    public XMLSheet asSheet() {
+        return (this instanceof XMLCalcSheet || this instanceof XMLMergeSheet) ? new XMLSheet(this) : this;
+    }
+
+    @Override
     public XMLCalcSheet asCalcSheet() {
         return !(this instanceof XMLCalcSheet) ? new XMLCalcSheet(this) : (XMLCalcSheet) this;
     }
@@ -751,8 +781,11 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.length = sheet.length;
         this.eof = sheet.eof;
         this.heof = sheet.heof;
+        this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+
+        reset();
 
         if (this.path != null && reader != null && !ready) {
             this.load0();
@@ -849,8 +882,11 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.length = sheet.length;
         this.eof = sheet.eof;
         this.heof = sheet.heof;
+        this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+
+        reset();
 
         if (path != null && reader != null && !ready) {
             this.load0();
