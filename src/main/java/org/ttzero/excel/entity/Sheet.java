@@ -330,7 +330,7 @@ public abstract class Sheet implements Cloneable, Storable {
          *
          * @param type the cell type
          * @return the {@link org.ttzero.excel.entity.Column}
-         * @deprecated replace it with the {{@link #setNumFmt(String)}} method.
+         * @deprecated replace it with the {@link #setNumFmt(String)}.
          */
         @Deprecated
         public org.ttzero.excel.entity.Column setType(int type) {
@@ -613,7 +613,12 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
+            // Create header columns
             this.columns = getHeaderColumns();
+
+            // Ready Flag
+            headerReady |= (this.columns.length > 0);
+
             // Reverse
             reverseHeadColumn();
 
@@ -631,7 +636,6 @@ public abstract class Sheet implements Cloneable, Storable {
 
             // Check the limit of columns
             checkColumnLimit();
-            headerReady |= (this.columns.length > 0);
             // Reset Row limit
             this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 ? 0 : columns[0].subColumnSize());
 

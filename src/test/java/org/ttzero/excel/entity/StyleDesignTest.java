@@ -187,13 +187,22 @@ public class StyleDesignTest extends WorkbookTest {
             int v = super.init();
             Styles styles = workbook.getStyles();
             try {
-                Field field = Styles.class.getDeclaredField("borders");
-                field.setAccessible(true);
+                Field borderField = Styles.class.getDeclaredField("borders");
+                borderField.setAccessible(true);
                 @SuppressWarnings("unchecked")
-                List<Border> borders = (List<Border>) field.get(styles);
+                List<Border> borders = (List<Border>) borderField.get(styles);
                 if (borders != null && borders.size() > 1) {
                     Border border = borders.get(1);
                     border.setBorder(BorderStyle.THIN, new Color(191, 191, 191));
+                }
+
+                Field fontField = Styles.class.getDeclaredField("fonts");
+                fontField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                List<Font> fonts = (List<Font>) fontField.get(styles);
+                if (fonts != null && fonts.size() > 1) {
+                    fonts.get(0).setName("Microsoft JhengHei");
+                    fonts.get(1).setName("Microsoft JhengHei");
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 // Ignore
@@ -201,7 +210,6 @@ public class StyleDesignTest extends WorkbookTest {
             return v;
         }
     }
-
 
     public static class StudentScoreStyle implements StyleProcessor<DesignStudent> {
         @Override
