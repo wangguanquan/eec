@@ -1065,7 +1065,7 @@ public abstract class Sheet implements Cloneable, Storable {
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
-        } else {
+        } else if (nonHeader == -1) {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;

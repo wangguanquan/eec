@@ -433,60 +433,61 @@ public class XMLSheet implements Sheet {
         int nChar = 0, length;
         // reload file
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            loopA: for (; ; ) {
+            if (mark > 0) {
+                reader.skip(mark);
                 length = reader.read(cb);
-                // find index of <sheetData>
-                for (; nChar < length - 12; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                        && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                        && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                        && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                        nChar += 11;
-                        break loopA;
+            } else {
+                loopA:
+                for (; ; ) {
+                    length = reader.read(cb);
+                    // find index of <sheetData>
+                    for (; nChar < length - 12; nChar++) {
+                        if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
+                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
+                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
+                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
+                            nChar += 11;
+                            break loopA;
+                        }
                     }
                 }
             }
 
-            boolean eof = cb[nChar] == '>';
+            boolean eof = length <= 0 || cb[nChar] == '>';
             if (eof) {
                 this.heof = true;
                 return null;
             }
 
-            boolean endTag = false;
-            int start;
-            // find the first not null row
-            loopB: while (true) {
-                start = nChar;
-                for (; cb[++nChar] != '>' && nChar < length; ) ;
-                if (nChar >= length - 6) break;
-                // Empty Row
-                if (cb[nChar++ - 1] != '/') {
-                    // find end of row tag
-                    for (; nChar < length - 6; nChar++) {
-                        if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                                && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                            nChar += 6;
-                            endTag = true;
-                            break loopB;
-                        }
+            int start = nChar;
+            A: for (; ;) {
+                // Not empty
+                for (; nChar < length - 6; nChar++) {
+                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
+                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
+                        nChar += 6;
+                        break A;
                     }
                 }
 
-                // Read more
-                int last = cb.length - nChar;
-                System.arraycopy(cb, nChar, cb, 0, last);
-                // Not found
-                if (reader.read(cb, last, nChar) <= 0) {
-                    return null;
-                }
-                // From beginning
-                nChar = 0;
-            }
+                /* Load more when not found end of row tag */
+                int n;
+                char[] _cb = new char[cb.length << 1];
+                System.arraycopy(cb, start, _cb, 0, n = length - start);
+                cb = _cb;
 
-            if (!endTag) {
-                // too big
-                return null;
+                try {
+                    length = reader.read(cb, n, cb.length - n);
+                    // end of file
+                    if (length < 0) {
+                        reader.close(); // close reader
+                        return null;
+                    }
+                } catch (IOException e) {
+                    throw new ExcelReadException("Parse row data error", e);
+                }
+                start = 0;
+                length += n;
             }
 
             return func.accept(cb, start, nChar - start);
