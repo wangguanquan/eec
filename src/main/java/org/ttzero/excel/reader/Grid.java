@@ -79,6 +79,13 @@ public interface Grid {
      */
     void merge(int r, Cell cell);
 
+    /**
+     * Returns count of merged cells
+     *
+     * @return count of merged cells
+     */
+    int size();
+
 
     /**
      * Use binary to mark whether the cells are `merged` and set
@@ -157,6 +164,11 @@ public interface Grid {
             }
         }
 
+        @Override
+        public int size() {
+            return scanner.size();
+        }
+
         boolean range(int r, int c) {
             return r >= fr && r <= lr && c >= fc && c <= lc;
         }
@@ -201,6 +213,7 @@ public interface Grid {
     final class IndexGrid implements Grid {
         private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private final Map<Long, Cell> index;
+        private int size;
         IndexGrid(Dimension dim, int n) {
             fr = dim.firstRow;
             lr = dim.lastRow;
@@ -218,6 +231,7 @@ public interface Grid {
                     index.put(((long) i) << 16 | j, cell);
                 }
             }
+            size++;
         }
 
         @Override
@@ -229,6 +243,7 @@ public interface Grid {
         public void merge(int r, Cell cell) {
             if (!range(r, cell.i)) return;
             Cell c = index.get(((long) r) << 16 | cell.i);
+            if (c == null) return;
 
             if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
@@ -238,6 +253,11 @@ public interface Grid {
             else {
                 c.from(cell);
             }
+        }
+
+        @Override
+        public int size() {
+            return size;
         }
 
         boolean range(int r, int c) {
@@ -287,6 +307,11 @@ public interface Grid {
             else {
                 e.getCell().from(cell);
             }
+        }
+
+        @Override
+        public int size() {
+            return scanner.size;
         }
 
         boolean range(int r, int c) {

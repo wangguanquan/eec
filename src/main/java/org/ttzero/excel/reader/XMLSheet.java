@@ -23,7 +23,6 @@ import org.ttzero.excel.entity.style.Styles;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,6 +44,31 @@ public class XMLSheet implements Sheet {
     final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     public XMLSheet() { }
+
+    public XMLSheet(XMLSheet sheet) {
+        this.name = sheet.name;
+        this.index = sheet.index;
+        this.path = sheet.path;
+        this.sst = sheet.sst;
+        this.styles = sheet.styles;
+        this.id = sheet.id;
+        this.startRow = sheet.startRow;
+        this.header = sheet.header;
+        this.hidden = sheet.hidden;
+        this.dimension = sheet.dimension;
+        this.drawings = sheet.drawings;
+        this.reader = sheet.reader;
+        this.cb = sheet.cb;
+        this.nChar = sheet.nChar;
+        this.length = sheet.length;
+        this.eof = sheet.eof;
+        this.heof = sheet.heof;
+        this.mark = sheet.mark;
+        this.sRow = sheet.sRow;
+        this.lastRowMark = sheet.lastRowMark;
+
+        reset();
+    }
 
     protected String name;
     protected int index; // per sheet index of workbook
@@ -253,13 +277,14 @@ public class XMLSheet implements Sheet {
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
-    private BufferedReader reader;
-    private char[] cb; // buffer
-    private int nChar, length;
+    protected BufferedReader reader;
+    protected char[] cb; // buffer
+    protected int nChar, length;
     protected boolean eof = false, heof = false; // OPTIONS = false
     protected long mark;
 
     protected XMLRow sRow;
+    protected long lastRowMark;
 
     /**
      * Load sheet.xml as BufferedReader
@@ -269,11 +294,12 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet load() throws IOException {
-        LOGGER.debug("load {}", path.toString());
+        // Prevent multiple parsing
         if (sRow != null) {
             reset();
             return this;
         }
+        LOGGER.debug("Load {}", path.toString());
         reader = Files.newBufferedReader(path);
         cb = new char[8192];
         nChar = 0;
@@ -288,7 +314,6 @@ public class XMLSheet implements Sheet {
                 int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index += size.length()) : -1;
                 if (end > 0) {
                     String l_ = line.substring(index, end);
-                    LOGGER.debug("Dimension-Range: {}", l_);
                     Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
                     Matcher mat = pat.matcher(l_);
                     if (mat.matches()) {
@@ -341,6 +366,7 @@ public class XMLSheet implements Sheet {
         if (dimension == null) {
             dimension = new Dimension(1, (short) 1);
         }
+        LOGGER.debug("Dimension-Range: {}", dimension);
 
         return this;
     }
@@ -529,6 +555,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet reset() {
+        LOGGER.debug("Reset {}", path.toString());
         try {
             // Close the opening reader
             if (reader != null) {
@@ -556,126 +583,111 @@ public class XMLSheet implements Sheet {
     }
 
     /*
-    If the Dimension information is missing from the header,
-    you can skip to the end of the file and look at the line
-    number of the last line to confirm the scope of the entire worksheet.
+    If the Dimension information is not write in header,
+    Read from tail and look at the line number of the last line
+    to confirm the scope of the entire worksheet.
      */
     void parseDimension() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             long position = Files.size(path);
-            int block = (int) Math.min(1 << 11, position);
+            final int block = (int) Math.min(1 << 11, position), c = 7;
             ByteBuffer buffer = ByteBuffer.allocate(block);
             byte[] left = null;
             int left_size = 0, i;
 
-            CharBuffer charBuffer;
-            boolean eof;
+            boolean eof, getit = false;
             for (; ;) {
                 position -= block + left_size;
                 channel.position(Math.max(0, position));
                 channel.read(buffer);
-                eof = buffer.limit() < block;
                 if (left_size > 0) {
                     buffer.limit(block);
                     buffer.put(left, 0, left_size);
-                    left_size = 0;
                 }
                 buffer.flip();
+                eof = buffer.limit() < block;
 
-                charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                int limit = charBuffer.limit(), c;
+                int limit = buffer.limit();
                 i = limit - 1;
 
-                if(dimension == null) {
-                    c = 7;
-                    // <row r="
-                    for (; i >= c && (charBuffer.get(i) != '"' || charBuffer.get(i - 1) != '='
-                        || charBuffer.get(i - 2) != 'r' || charBuffer.get(i - 3) > ' '
-                        || charBuffer.get(i - 4) != 'w' || charBuffer.get(i - 5) != 'o'
-                        || charBuffer.get(i - 6) != 'r' || charBuffer.get(i - 7) != '<'); i--)
-                        ;
-                } else {
-                    // <mergeCells
-                    c = 12;
-                    for (; i >= c && (charBuffer.get(i) > ' ' || charBuffer.get(i - 1) != 's'
-                        || charBuffer.get(i - 2) != 'l' || charBuffer.get(i - 3) != 'l'
-                        || charBuffer.get(i - 4) != 'e' || charBuffer.get(i - 5) != 'C'
-                        || charBuffer.get(i - 6) != 'e' || charBuffer.get(i - 7) != 'g'
-                        || charBuffer.get(i - 8) != 'r' || charBuffer.get(i - 9) != 'e'
-                        || charBuffer.get(i - 10) != 'm' || charBuffer.get(i - 11) != '<'); i--)
-                        ;
-                }
+                // <row r="
+                for (; i >= c && (buffer.get(i) != '"' || buffer.get(i - 1) != '='
+                    || buffer.get(i - 2) != 'r' || buffer.get(i - 3) > ' '
+                    || buffer.get(i - 4) != 'w' || buffer.get(i - 5) != 'o'
+                    || buffer.get(i - 6) != 'r' || buffer.get(i - 7) != '<'); i--)
+                    ;
+
                 // Not Found
                 if (i < c) {
                     if (eof || (eof = position <= 0)) break;
-                    for (; i < limit && charBuffer.get(i) != '>'; i++) ;
+                    for (; i < limit && buffer.get(i) != '>'; i++) ;
                     i++;
                     if (i < limit - 1) {
-                        charBuffer.position(i);
-                        int newLimit = StandardCharsets.UTF_8.encode(charBuffer).limit();
-                        int last_size = buffer.limit() - newLimit;
-                        if (left == null || last_size > left.length) {
-                            left = new byte[last_size];
+                        buffer.position(i);
+                        left_size = i;
+                        if (left == null || left_size > left.length) {
+                            left = new byte[left_size];
                         }
                         buffer.position(0);
-                        buffer.get(left, 0, last_size);
-                        left_size = last_size;
-                    }
+                        buffer.get(left, 0, left_size);
+                    } else left_size = 0;
                 }
                 // Found the last row or empty worksheet
                 else {
+                    getit = true;
+                    buffer.position(i);
+                    // Align channel and buffer position
+                    if (left_size > 0) channel.position(channel.position() + left_size);
+                    lastRowMark = channel.position() - buffer.remaining();
                     break;
                 }
                 buffer.position(0);
                 buffer.limit(buffer.capacity() - left_size);
             }
 
-            if (eof) return;
-
-            charBuffer.position(i);
-            // Dimension
-            if (dimension == null) {
-                parseDim(channel, charBuffer, buffer);
-                charBuffer.position(i);
+            // Empty worksheet
+            if (!getit) {
+                dimension = Dimension.of("A1");
+                return;
             }
 
-            // Find mergeCells tag
-            parseMerge(channel, charBuffer, buffer, block);
+            // Dimension
+            parseDim(channel, buffer);
         } catch (IOException e) {
             // Ignore error
             LOGGER.debug("", e);
         }
     }
 
-    private int[] innerParse(CharBuffer charBuffer, int i) {
+    private int[] innerParse(ByteBuffer buffer, int i) {
         int row = 0;
-        for (; charBuffer.get(i) != '"'; i++)
-            row = row * 10 + (charBuffer.get(i) - '0');
+        for (; buffer.get(i) != '"'; i++)
+            row = row * 10 + (buffer.get(i) - '0');
         // spans="
         i++;
-        for (; charBuffer.limit() - i >= 7 && (charBuffer.get(i) != 's' || charBuffer.get(i + 1) != 'p'
-            || charBuffer.get(i + 2) != 'a' || charBuffer.get(i + 3) != 'n'
-            || charBuffer.get(i + 4) != 's' || charBuffer.get(i + 5) != '='
-            || charBuffer.get(i + 6) != '"'); i++) ;
+        for (; buffer.limit() - i >= 7 && (buffer.get(i) != 's' || buffer.get(i + 1) != 'p'
+            || buffer.get(i + 2) != 'a' || buffer.get(i + 3) != 'n'
+            || buffer.get(i + 4) != 's' || buffer.get(i + 5) != '='
+            || buffer.get(i + 6) != '"'); i++) ;
         i += 7;
         int cs = 0, ls = 0;
-        if (charBuffer.limit() <= i) {
+        if (buffer.limit() <= i) {
             eof = true; // EOF
             return new int[] { row, 1, 1 };
         }
-        for (; charBuffer.get(i) != ':'; i++)
-            cs = cs * 10 + (charBuffer.get(i) - '0');
+        for (; buffer.get(i) != ':'; i++)
+            cs = cs * 10 + (buffer.get(i) - '0');
         i++;
-        for (; charBuffer.get(i) != '"'; i++)
-            ls = ls * 10 + (charBuffer.get(i) - '0');
+        for (; buffer.get(i) != '"'; i++)
+            ls = ls * 10 + (buffer.get(i) - '0');
         return new int[] { row, cs, ls };
     }
 
-    private void parseDim(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer) throws IOException {
+    private void parseDim(SeekableByteChannel channel, ByteBuffer buffer) throws IOException {
         long rr = 0L;
-        int rc, i = charBuffer.position();
+        int rc, i = buffer.position();
 
-        int[] info = innerParse(charBuffer, ++i);
+        int[] info = innerParse(buffer, ++i);
         rc = (info[2] << 16) | (info[1] & 0x7FFF);
         rr |= ((long) info[0]) << 32;
 
@@ -686,15 +698,14 @@ public class XMLSheet implements Sheet {
             channel.read(buffer);
             buffer.flip();
 
-            charBuffer = StandardCharsets.UTF_8.decode(buffer);
             i = 0;
-            for (; charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'r'
-                || charBuffer.get(i + 2) != 'o' || charBuffer.get(i + 3) != 'w'
-                || charBuffer.get(i + 4) > ' ' || charBuffer.get(i + 5) != 'r'
-                || charBuffer.get(i + 6) != '=' || charBuffer.get(i + 7) != '"'; i++) ;
+            for (; buffer.get(i) != '<' || buffer.get(i + 1) != 'r'
+                || buffer.get(i + 2) != 'o' || buffer.get(i + 3) != 'w'
+                || buffer.get(i + 4) > ' ' || buffer.get(i + 5) != 'r'
+                || buffer.get(i + 6) != '=' || buffer.get(i + 7) != '"'; i++) ;
             i += 8;
 
-            info = innerParse(charBuffer, i);
+            info = innerParse(buffer, i);
             rr |= info[0];
             if (info[1] > (rc & 0x7FFF)) {
                 rc |= info[1] & 0x7FFF;
@@ -707,11 +718,13 @@ public class XMLSheet implements Sheet {
         dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
     }
 
-    void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block)
-        throws IOException { }
-
     Row createHeader(char[] cb, int start, int n) {
         return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n);
+    }
+
+    @Override
+    public XMLSheet asSheet() {
+        return (this instanceof XMLCalcSheet || this instanceof XMLMergeSheet) ? new XMLSheet(this) : this;
     }
 
     @Override
@@ -732,6 +745,15 @@ public class XMLSheet implements Sheet {
     interface HeaderRowFunc {
         Row accept(char[] cb, int start, int n);
     }
+
+    // For debug
+    static void watch(ByteBuffer buffer) {
+        int p = buffer.position();
+        byte[] bytes = new byte[Math.min(1 << 7, buffer.remaining())];
+        buffer.get(bytes, 0, bytes.length);
+        System.out.println(new String(bytes, 0, bytes.length, StandardCharsets.US_ASCII));
+        buffer.position(p);
+    }
 }
 
 /**
@@ -739,6 +761,7 @@ public class XMLSheet implements Sheet {
  */
 class XMLCalcSheet extends XMLSheet implements CalcSheet {
     private long[] calc; // Array of formula
+    boolean ready;
 
     XMLCalcSheet(XMLSheet sheet) {
         this.name = sheet.name;
@@ -746,6 +769,27 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.path = sheet.path;
         this.sst = sheet.sst;
         this.styles = sheet.styles;
+        this.id = sheet.id;
+        this.startRow = sheet.startRow;
+        this.header = sheet.header;
+        this.hidden = sheet.hidden;
+        this.dimension = sheet.dimension;
+        this.drawings = sheet.drawings;
+        this.reader = sheet.reader;
+        this.cb = sheet.cb;
+        this.nChar = sheet.nChar;
+        this.length = sheet.length;
+        this.eof = sheet.eof;
+        this.heof = sheet.heof;
+        this.mark = sheet.mark;
+        this.sRow = sheet.sRow;
+        this.lastRowMark = sheet.lastRowMark;
+
+        reset();
+
+        if (this.path != null && reader != null && !ready) {
+            this.load0();
+        }
     }
 
     /**
@@ -758,12 +802,18 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
     public XMLCalcSheet load() throws IOException {
         super.load();
 
+        load0();
+
+        return this;
+    }
+
+    void load0() {
+        if (ready) return;
         if (!eof && !(sRow instanceof XMLCalcRow)) {
             sRow = sRow.asCalcRow();
             if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
         }
-
-        return this;
+        ready = true;
     }
 
     /**
@@ -812,6 +862,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
     // A merge cells grid
     private Grid mergeCells;
+    boolean ready;
 
     XMLMergeSheet(XMLSheet sheet) {
         this.name = sheet.name;
@@ -819,6 +870,27 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.path = sheet.path;
         this.sst = sheet.sst;
         this.styles = sheet.styles;
+        this.id = sheet.id;
+        this.startRow = sheet.startRow;
+        this.header = sheet.header;
+        this.hidden = sheet.hidden;
+        this.dimension = sheet.dimension;
+        this.drawings = sheet.drawings;
+        this.reader = sheet.reader;
+        this.cb = sheet.cb;
+        this.nChar = sheet.nChar;
+        this.length = sheet.length;
+        this.eof = sheet.eof;
+        this.heof = sheet.heof;
+        this.mark = sheet.mark;
+        this.sRow = sheet.sRow;
+        this.lastRowMark = sheet.lastRowMark;
+
+        reset();
+
+        if (path != null && reader != null && !ready) {
+            this.load0();
+        }
     }
 
     /**
@@ -831,74 +903,160 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     public XMLMergeSheet load() throws IOException {
         super.load();
 
+        load0();
+
+        return this;
+    }
+
+    // Parse merge tag
+    void load0() {
+        if (ready) return;
         if (mergeCells == null && !eof) {
-            parseDimension();
+            parseMerge();
         }
 
         if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
             sRow = sRow.asMergeRow().setCopyValueFunc(this::mergeCell);
         }
-
-        return this;
+        ready = true;
     }
 
     /*
     Parse `mergeCells` tag
      */
-    @Override
-    void parseMerge(SeekableByteChannel channel, CharBuffer charBuffer, ByteBuffer buffer, int block) throws IOException {
-        // Find mergeCells tag
-        int limit = charBuffer.limit();
-        List<Dimension> mergeCells = null;
-        boolean eof = false;
-        int i = charBuffer.position();
-        for (; ;) {
-            for (; i < limit - 11 && (charBuffer.get(i) != '<' || charBuffer.get(i + 1) != 'm'
-                || charBuffer.get(i + 2) != 'e' || charBuffer.get(i + 3) != 'r'
-                || charBuffer.get(i + 4) != 'g' || charBuffer.get(i + 5) != 'e'
-                || charBuffer.get(i + 6) != 'C' || charBuffer.get(i + 7) != 'e'
-                || charBuffer.get(i + 8) != 'l' || charBuffer.get(i + 9) != 'l'
-                || charBuffer.get(i + 10) > ' '); i++) ;
-
-            if (i >= limit - 11) {
-                if (eof) break;
-                for (; i >= 0 && charBuffer.get(i) != '<'; i--) ;
-                if (i > 0) channel.position(channel.position() + i);
-
-                buffer.clear();
+    void parseMerge() {
+        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+            long position = Files.size(path);
+            final int block = (int) Math.min(1 << 11, position), c = 12;
+            ByteBuffer buffer = ByteBuffer.allocate(block);
+            byte[] left;
+            int left_size = 0, i, limit;
+            boolean eof, getit = false;
+            // Skip if marked
+            if (lastRowMark > 0L) {
+                channel.position(lastRowMark);
                 channel.read(buffer);
                 buffer.flip();
-                if (buffer.limit() <= 0) break;
+                getit = true; // Unknown
+            } else {
+                left = new byte[12];
+                for (; ; ) {
+                    channel.position(position -= block - left_size);
+                    channel.read(buffer);
+                    if (left_size > 0) {
+                        buffer.limit(block);
+                        buffer.put(left, 0, left_size);
+                    }
+                    buffer.flip();
+                    eof = buffer.limit() < block;
 
-                charBuffer = StandardCharsets.UTF_8.decode(buffer);
-                limit = charBuffer.limit();
+                    limit = buffer.limit();
+                    i = limit - 1;
+
+                    // </sheetData>
+                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
+                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
+                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
+                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
+                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
+                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
+                        ;
+
+                    // Not Found
+                    if (i < c) {
+                        if (eof) break;
+                        buffer.position(0);
+                        left_size = 12;
+                        buffer.get(left, 0, left_size);
+                        buffer.clear();
+                        buffer.limit(block - left_size);
+                    }
+                    // Found the last row or empty worksheet
+                    else {
+                        buffer.position(i + 1);
+                        getit = true;
+                        // Align channel and buffer position
+                        channel.position(channel.position() + left_size);
+                        break;
+                    }
+                }
+            }
+
+            if (getit) {
+                // Find mergeCells tag
+                parseMerge(channel, buffer, block);
+            }
+        } catch (IOException e) {
+            // Ignore error
+            LOGGER.warn("", e);
+        }
+    }
+
+    // Find mergeCell tags
+    void parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
+        List<Dimension> mergeCells = new ArrayList<>();
+        boolean eof = false;
+        int limit = buffer.limit(), i = buffer.position(), f, n;
+        byte[] bytes = new byte[32];
+        for (; ;) {
+            for (; i < limit - 11 && (buffer.get(i) != '<' || buffer.get(i + 1) != 'm'
+                || buffer.get(i + 2) != 'e' || buffer.get(i + 3) != 'r'
+                || buffer.get(i + 4) != 'g' || buffer.get(i + 5) != 'e'
+                || buffer.get(i + 6) != 'C' || buffer.get(i + 7) != 'e'
+                || buffer.get(i + 8) != 'l' || buffer.get(i + 9) != 'l'
+                || buffer.get(i + 10) > ' '); i++) ;
+
+            if (i >= limit - 22) {
+                if (eof) break;
+                buffer.position(limit - 22);
+                for (; i < buffer.limit() && buffer.get() != '<'; i++) ;
+                if (buffer.get(buffer.position() - 1) == '<') buffer.position(buffer.position() - 1);
+                buffer.compact();
+                channel.read(buffer);
+                buffer.flip();
+                if ((limit = buffer.limit()) <= 0) break;
                 i = 0;
                 eof = limit < block;
             } else {
                 i += 11;
-                for (; i < limit - 5 && (charBuffer.get(i) != 'r' || charBuffer.get(i + 1) != 'e'
-                    || charBuffer.get(i + 2) != 'f' || charBuffer.get(i + 3) != '='
-                    || charBuffer.get(i + 4) != '"'); i++) ;
-                if (i > limit - 5) continue;
-                int f = i += 5;
-                for (; charBuffer.get(i) != '"'; i++) ;
-                if (i > limit) continue;
-                char[] chars = new char[i - f];
-                charBuffer.position(f);
-                charBuffer.get(chars, 0, i - f);
-                if (mergeCells == null) mergeCells = new ArrayList<>();
-                mergeCells.add(Dimension.of(new String(chars)));
-                charBuffer.position(++i);
+                for (; i < limit - 5 && (buffer.get(i) != 'r' || buffer.get(i + 1) != 'e'
+                    || buffer.get(i + 2) != 'f' || buffer.get(i + 3) != '='
+                    || buffer.get(i + 4) != '"'); i++) ;
+                f = i += 5;
+                for (; i < limit && buffer.get(i) != '"'; i++) ;
+                if (i >= limit) {
+                    buffer.compact();
+                    channel.read(buffer);
+                    buffer.flip();
+                    if ((limit = buffer.limit()) <= 0) break;
+
+                    i = 0;
+                    eof = limit < block;
+                    continue;
+                }
+                n = i - f;
+                if (n > bytes.length) bytes = new byte[n];
+
+                buffer.position(f);
+                buffer.get(bytes, 0, n);
+
+                mergeCells.add(Dimension.of(new String(bytes, 0, n, StandardCharsets.US_ASCII)));
+                buffer.get(); // Skip '"'
             }
         }
 
-        if (mergeCells != null) {
+        if (!mergeCells.isEmpty()) {
             this.mergeCells = GridFactory.create(mergeCells);
-            LOGGER.debug("Grid: {}", this.mergeCells);
+            LOGGER.debug("Grid: Size: {} {}", this.mergeCells.size(), this.mergeCells.getClass());
         }
     }
 
     private void mergeCell(int row, Cell cell) {
         mergeCells.merge(row, cell);
+    }
+
+    @Override
+    public Grid getMergeGrid() {
+        return mergeCells;
     }
 }

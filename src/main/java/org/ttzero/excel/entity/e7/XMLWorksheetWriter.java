@@ -327,6 +327,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write the header row
      *
+     * @return row number
      * @throws IOException if I/O error occur
      */
     protected int writeHeaderRow() throws IOException {

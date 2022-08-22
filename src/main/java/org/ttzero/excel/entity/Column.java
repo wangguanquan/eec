@@ -817,6 +817,7 @@ public class Column {
      * Returns an array containing all of the sub-column
      *
      * @param dist the array into which the elements of the column are to be stored
+     * @return header columns
      * @throws NullPointerException if the specified array is null
      */
     public Column[] toArray(Column[] dist) {
@@ -832,6 +833,8 @@ public class Column {
 
     /**
      * Returns the real col-index(one base)
+     *
+     * @return real col-index(one base)
      */
     public int getRealColIndex() {
         return realColIndex;

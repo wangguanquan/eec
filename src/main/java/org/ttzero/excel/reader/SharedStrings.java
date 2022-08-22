@@ -110,6 +110,7 @@ public class SharedStrings implements Closeable {
      * @param sst {@link IndexSharedStringTable}
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
+     * @throws IOException if I/O error occur.
      */
     public SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
         this.sst = sst;
