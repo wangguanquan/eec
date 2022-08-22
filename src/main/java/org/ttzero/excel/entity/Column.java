@@ -789,9 +789,7 @@ public class Column {
      * @return the {@link Column} self
      */
     public Column addSubColumn(Column column) {
-        if (this == column) {
-            return this;
-        }
+        if (this == column) return this;
         if (next != null) {
             int subSize = subColumnSize(), appendSize = column.subColumnSize();
             if (subSize + appendSize > Const.Limit.HEADER_SUB_COLUMNS) {
@@ -856,6 +854,20 @@ public class Column {
      */
     public int getRealColIndex() {
         return realColIndex;
+    }
+
+    /**
+     * Trim tail nodes after write
+     *
+     * @return current
+     */
+    public Column trimTail() {
+        if (next != null) {
+            next.prev = null;
+            next = null;
+            tail = null;
+        }
+        return this;
     }
 
     /**
