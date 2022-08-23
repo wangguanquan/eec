@@ -386,8 +386,9 @@ public interface Grid {
 
             if (head != null) {
                 Node f = head, bf = null;
-                for (; f != null; f = f.next) {
-                    if (f.entry.getDim().firstRow > entry.getDim().firstRow) {
+                for (int p; f != null; f = f.next) {
+                    p = f.entry.getDim().firstRow - entry.getDim().firstRow;
+                    if (p > 0 || p == 0 && f.entry.getDim().firstColumn > entry.getDim().firstColumn) {
                         Node newNode = new Node(e, f);
                         if (f == head) head = newNode;
                         else bf.next = newNode;
