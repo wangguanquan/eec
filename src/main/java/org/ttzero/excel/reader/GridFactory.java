@@ -48,8 +48,8 @@ public class GridFactory {
 
         n = r * c;
 
-        Grid grid = c <= 64 && r < 1 << 14 ? new Grid.FastGrid(range)
-            : n > 1 << 10 ? new Grid.FractureGrid(range) : new Grid.IndexGrid(range, n);
+        Grid grid = c <= 64 && r < 1 << 15 ? new Grid.FastGrid(range)
+            : n > 1 << 17 ? new Grid.FractureGrid(range) : new Grid.IndexGrid(range, n);
 
         for (Dimension d : mergeCells) {
             grid.mark(d);
