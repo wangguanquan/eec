@@ -17,16 +17,12 @@
 
 package org.ttzero.excel.reader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 
 /**
  * @author guanquan.wang at 2022-07-04 11:56
  */
 public class GridFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GridFactory.class);
     private GridFactory() { }
     public static Grid create(List<Dimension> mergeCells) {
         Dimension dim = mergeCells.get(0);
@@ -53,7 +49,6 @@ public class GridFactory {
 
         for (Dimension d : mergeCells) {
             grid.mark(d);
-            LOGGER.debug("merged cells range {}", d);
         }
         return grid;
     }
