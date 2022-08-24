@@ -809,6 +809,11 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
 
     void load0() {
         if (ready) return;
+
+        // Parse calc.xml
+        long[][] calcArray = ExcelReader.parseCalcChain(path.getParent());
+        if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
+
         if (!eof && !(sRow instanceof XMLCalcRow)) {
             sRow = sRow.asCalcRow();
             if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
