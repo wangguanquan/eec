@@ -66,8 +66,6 @@ public class XMLSheet implements Sheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
-
-        if (path != null) reset();
     }
 
     protected String name;
@@ -786,7 +784,6 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.lastRowMark = sheet.lastRowMark;
 
         if (this.path != null) {
-            reset();
 
             if (reader != null && !ready) this.load0();
         }
@@ -892,8 +889,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.lastRowMark = sheet.lastRowMark;
 
         if (path != null) {
-            reset();
-
             if (reader != null && !ready) this.load0();
         }
     }
