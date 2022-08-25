@@ -100,7 +100,7 @@ public class GridTest {
 
         Grid grid = GridFactory.create(list);
 
-        assert grid.toString().equals("FastGrid\n" +
+        assert grid.toString().equals("FastGrid Size: 72B\n" +
             "00011001\n00000001\n00000001\n00000001\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
