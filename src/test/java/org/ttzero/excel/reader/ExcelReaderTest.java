@@ -568,15 +568,15 @@ public class ExcelReaderTest {
 
             Sheet sheet = mergeSheet.asCalcSheet();
             assert sheet.getClass() == XMLCalcSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
             sheet = sheet.asSheet();
             assert sheet.getClass() == XMLSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
             sheet = sheet.asMergeSheet();
             assert sheet.getClass() == XMLMergeSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
         }
     }
