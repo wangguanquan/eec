@@ -652,7 +652,8 @@ public class ExcelReaderTest {
                 }
                 if (row.getRowNum() >= 59 && row.getRowNum() <= 64) {
                     assert row.getInt(0) == 59;
-                    assert row.getInt(1) == 1; // formula=A60+1
+                    if (row.getRowNum() > 59) assert row.getInt(1) == 1; // formula=A60+1
+                    else assert row.getInt(1) == 60; // formula=A59+1
                 }
             }
         }
