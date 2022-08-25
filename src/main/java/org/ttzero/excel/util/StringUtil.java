@@ -180,4 +180,35 @@ public class StringUtil {
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);
     }
+
+    /**
+     * long size to string
+     *
+     * @param size file size in bytes
+     * @return String size
+     */
+    public static String formatBinarySize(long size) {
+        long kb = 1 << 10, mb = kb << 10, gb = mb << 10;
+        String s;
+        if (size >= gb) s = String.format("%.2fGB", (double) size / gb);
+        else if (size >= mb) s = String.format("%.2fMB", (double) size / mb);
+        else if (size >= kb) s = String.format("%.2fKB", (double) size / kb);
+        else s = String.format("%dB", size);
+        return s.replace(".00", "");
+    }
+
+
+    /**
+     * Time millis to String, like 1h:3s or 4m:1s
+     *
+     * @param t time millis
+     * @return string
+     */
+    public static String timeToString(long t) {
+        int n = (int) t / 1000;
+        int h = n / 3600, m = (n - h * 3600) / 60, s = n - h * 3600 - m * 60;
+        return "" + (h > 0 ? h + "h" : "")
+            + (m > 0 ? (h > 0 ? ":" : "") + m + "m" : "")
+            + ((h + m > 0 ? ":" : "") + s + "s");
+    }
 }
