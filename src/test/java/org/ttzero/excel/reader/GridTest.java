@@ -39,7 +39,7 @@ public class GridTest {
         assert grid instanceof Grid.FastGrid;
 
         grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:B16384")));
-        assert grid instanceof Grid.FractureGrid;
+        assert grid instanceof Grid.FastGrid;
 
     }
 
