@@ -369,8 +369,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
                     if (comments == null) comments = sheet.createComments();
-                    comments.addComment(new String(int2Col(hc.getRealColIndex())) + row
-                        , hc.headerComment.getTitle(), hc.headerComment.getValue());
+                    comments.addComment(new String(int2Col(hc.getRealColIndex())) + row, hc.headerComment);
                 }
             }
             bw.write("</row>");
@@ -1096,6 +1095,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // vmlDrawing
         Relationship r = sheet.findRel("vmlDrawing");
         if (r != null) {
+            bw.write("<legacyDrawing r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
+        }
+        // Compatible processing
+        else if (comments != null) {
+            sheet.addRel(r = new Relationship("../drawings/vmlDrawing" + sheet.getId() + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+            sheet.addRel(new Relationship("../comments" + sheet.getId() + Const.Suffix.XML, Const.Relationship.COMMENTS));
+
             bw.write("<legacyDrawing r:id=\"");
             bw.write(r.getId());
             bw.write("\"/>");

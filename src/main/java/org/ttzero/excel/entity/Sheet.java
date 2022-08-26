@@ -533,6 +533,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return Columns instance if exists
      */
     public Comments getComments() {
+        if (comments != null && comments.id == 0) {
+            comments.id = this.id;
+        }
         return comments;
     }
 
@@ -543,11 +546,13 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Comments createComments() {
         if (comments == null) {
-            comments = new Comments(id, workbook.getCreator());
+            comments = workbook != null ? new Comments(id, workbook.getCreator()) : new Comments();
             // FIXME Removed at excel version 2013
-            addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+            if (id > 0) {
+                addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
 
-            addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+                addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+            }
         }
         return comments;
     }

@@ -44,5 +44,17 @@ public @interface HeaderComment {
      */
     String title() default "";
 
+    /**
+     * Specify the comment width
+     *
+     * @return comment width
+     */
+    double width() default 100.8D;
 
+    /**
+     * Specify the comment height
+     *
+     * @return comment height
+     */
+    double height() default 60.6D;
 }
