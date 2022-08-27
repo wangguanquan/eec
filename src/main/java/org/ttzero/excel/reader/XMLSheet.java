@@ -66,8 +66,6 @@ public class XMLSheet implements Sheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
-
-        if (path != null) reset();
     }
 
     protected String name;
@@ -787,7 +785,6 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.lastRowMark = sheet.lastRowMark;
 
         if (this.path != null) {
-            reset();
 
             if (reader != null && !ready) this.load0();
         }
@@ -810,6 +807,11 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
 
     void load0() {
         if (ready) return;
+
+        // Parse calc.xml
+        long[][] calcArray = ExcelReader.parseCalcChain(path.getParent());
+        if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
+
         if (!eof && !(sRow instanceof XMLCalcRow)) {
             sRow = sRow.asCalcRow();
             if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
@@ -888,8 +890,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.lastRowMark = sheet.lastRowMark;
 
         if (path != null) {
-            reset();
-
             if (reader != null && !ready) this.load0();
         }
     }
@@ -1048,7 +1048,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
         if (!mergeCells.isEmpty()) {
             this.mergeCells = GridFactory.create(mergeCells);
-            LOGGER.debug("Grid: Size: {} {}", this.mergeCells.size(), this.mergeCells.getClass());
+            LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells);
         }
     }
 

@@ -568,16 +568,94 @@ public class ExcelReaderTest {
 
             Sheet sheet = mergeSheet.asCalcSheet();
             assert sheet.getClass() == XMLCalcSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
             sheet = sheet.asSheet();
             assert sheet.getClass() == XMLSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
             sheet = sheet.asMergeSheet();
             assert sheet.getClass() == XMLMergeSheet.class;
-            assert sheet.rows().count() == count;
+            assert sheet.reset().rows().count() == count;
 
+        }
+    }
+
+    @Test public void testSheetConvert() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            // Read two rows as value only
+            Iterator<Row> ite = sheet.iterator();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    print(" | ");
+
+                    assert !row.hasFormula(i);
+                }
+                if (row.getRowNum() == 1) assert "D".equals(row.getString(3));
+                if (row.getRowNum() == 2) assert StringUtil.isEmpty(row.getString(3));
+
+                println();
+                if (row.getRowNum() == 2) break;
+            }
+
+            // Read next 48 rows as calc sheet
+            sheet = sheet.asCalcSheet();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    if (row.hasFormula(i)) {
+                        print(", f=");
+                        print(row.getFormula(i));
+                    }
+                    print(" | ");
+                }
+                if (row.getRowNum() == 3) assert "SUM(A1:A10)".equals(row.getFormula(2));
+                if (row.getRowNum() == 11) assert "G11+1".equals(row.getFormula(7));
+                if (row.getRowNum() == 66) assert "A66+1".equals(row.getFormula(1));
+                if (row.getRowNum() == 11) assert row.getInt(4) == 15;
+                if (row.getRowNum() == 16) assert StringUtil.isEmpty(row.getString(4));
+
+                println();
+                if (row.getRowNum() == 50) break;
+            }
+
+            // Read last rows as merged sheet
+            sheet = sheet.asMergeSheet();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    print(" | ");
+
+                    assert !row.hasFormula(i);
+                }
+                println();
+
+                // Copy on merged
+                if (row.getRowNum() == 56) {
+                    assert row.getInt(1) == 57;
+                    assert row.getInt(2) == 57;
+                    assert row.getInt(3) == 57;
+                }
+                if (row.getRowNum() >= 59 && row.getRowNum() <= 64) {
+                    assert row.getInt(0) == 59;
+                    if (row.getRowNum() > 59) assert row.getInt(1) == 1; // formula=A60+1
+                    else assert row.getInt(1) == 60; // formula=A59+1
+                }
+            }
         }
     }
 

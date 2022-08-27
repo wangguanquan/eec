@@ -25,6 +25,7 @@ import java.util.StringJoiner;
 import static java.lang.Integer.numberOfTrailingZeros;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
+import static org.ttzero.excel.util.StringUtil.formatBinarySize;
 
 /**
  * @author guanquan.wang at 2020-01-09 16:54
@@ -180,7 +181,7 @@ public interface Grid {
         @Override
         public String toString() {
             StringJoiner joiner = new StringJoiner("\n");
-            joiner.add(getClass().getSimpleName());
+            joiner.add(getClass().getSimpleName() + " Size: " + formatBinarySize(g.length << 3));
             int last = lr - fr + 1, j = 0;
             A: for (long l : g) {
                 String s = append(Long.toBinaryString(l));
@@ -386,8 +387,9 @@ public interface Grid {
 
             if (head != null) {
                 Node f = head, bf = null;
-                for (; f != null; f = f.next) {
-                    if (f.entry.getDim().firstRow > entry.getDim().firstRow) {
+                for (int p; f != null; f = f.next) {
+                    p = f.entry.getDim().firstRow - entry.getDim().firstRow;
+                    if (p > 0 || p == 0 && f.entry.getDim().firstColumn > entry.getDim().firstColumn) {
                         Node newNode = new Node(e, f);
                         if (f == head) head = newNode;
                         else bf.next = newNode;
@@ -421,7 +423,7 @@ public interface Grid {
             if (val != null) {
                 int n = --val.entry.n;
                 // Insert entry ahead
-                if (n > 0 && val != head) {
+                if (n > 0 && val != head && val.entry.dim.width > 1) {
                     bf.next = val.next;
                     val.next = head;
                     head = val;
