@@ -222,6 +222,11 @@ public class Font implements Cloneable {
         return this;
     }
 
+    public Font deleteLine() {
+        style |= Style.DELETE;
+        return this;
+    }
+
     public boolean isItalic() {
         return (style & Style.ITALIC) == Style.ITALIC;
     }
@@ -232,24 +237,38 @@ public class Font implements Cloneable {
         return (style & Style.UNDERLINE) == Style.UNDERLINE;
     }
 
+    public boolean isDeleteLine() {
+        return (style & Style.DELETE) == Style.DELETE;
+    }
+
     public Font delItalic() {
-        style &= (Style.UNDERLINE | Style.BOLD);
+        style &= (Style.UNDERLINE | Style.BOLD | Style.DELETE);
         return this;
     }
 
     public Font delBold() {
-        style &= (Style.UNDERLINE | Style.ITALIC);
+        style &= (Style.UNDERLINE | Style.ITALIC | Style.DELETE);
         return this;
     }
 
     public Font delUnderLine() {
-        style &= (Style.BOLD | Style.ITALIC);
+        style &= (Style.BOLD | Style.ITALIC | Style.DELETE);
         return this;
     }
 
+    public Font delDeleteLine() {
+        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
+        return this;
+    }
+
+    private static final String[] NODE_NAME = {"u", "b", "i", "strike"};
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder("<font>").append(Const.lineSeparator);
+        // Font style
+        for (int n = style, i = 0; n > 0; n >>= 1, i++) {
+            if ((n & 1) == 1) buf.append("    <").append(NODE_NAME[i]).append("/>").append(Const.lineSeparator);
+        }
         // size
         buf.append("    <sz val=\"").append(size).append("\"/>").append(Const.lineSeparator);
         // color
@@ -270,34 +289,7 @@ public class Font implements Cloneable {
 //        ROMAN
 //        SCRIPT
 //        SWISS
-        switch (style) {
-            case 1:
-                buf.append("    <u/>").append(Const.lineSeparator);
-                break;
-            case 2:
-                buf.append("    <b/>").append(Const.lineSeparator);
-                break;
-            case 4:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                break;
-            case 3:
-                buf.append("    <u/>").append(Const.lineSeparator);
-                buf.append("    <b/>").append(Const.lineSeparator);
-                break;
-            case 5:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                buf.append("    <u/>").append(Const.lineSeparator);
-                break;
-            case 6:
-                buf.append("    <b/>").append(Const.lineSeparator);
-                buf.append("    <i/>").append(Const.lineSeparator);
-                break;
-            case 7:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                buf.append("    <b/>").append(Const.lineSeparator);
-                buf.append("    <u/>").append(Const.lineSeparator);
-                default:
-        }
+
         // charset
         if (charset > 0) {
             buf.append("    <charset val=\"").append(charset).append("\"/>").append(Const.lineSeparator);
@@ -345,15 +337,10 @@ public class Font implements Cloneable {
                 element.addElement("color").addAttribute("rgb", ColorIndex.toARGB(color));
             }
         }
-        if (isBold()) {
-            element.addElement("b");
+        for (int n = style, i = 0; n > 0; n >>= 1, i++) {
+            if ((n & 1) == 1) element.addElement(NODE_NAME[i]);
         }
-        if (isItalic()) {
-            element.addElement("i");
-        }
-        if (isUnderLine()) {
-            element.addElement("u");
-        }
+
         if (family > 0) {
             element.addElement("family").addAttribute("val", String.valueOf(family));
         }
@@ -386,10 +373,11 @@ public class Font implements Cloneable {
     // ######################################Static inner class######################################
 
     public static class Style {
-        public static final int NORMAL = 0;
-        public static final int ITALIC = 1 << 2;
-        public static final int BOLD = 1 << 1;
+        public static final int NORMAL    = 0;
         public static final int UNDERLINE = 1;
+        public static final int BOLD      = 1 << 1;
+        public static final int ITALIC    = 1 << 2;
+        public static final int DELETE    = 1 << 3;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name.toUpperCase());

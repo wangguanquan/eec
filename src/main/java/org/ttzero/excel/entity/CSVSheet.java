@@ -208,6 +208,9 @@ public class CSVSheet extends Sheet {
         }
     }
 
+    @Override
+    protected void mergeHeaderCellsIfEquals() { }
+
 //    /**
 //     * Check empty header row
 //     *
@@ -220,4 +223,14 @@ public class CSVSheet extends Sheet {
 //        }
 //        return !hasHeader;
 //    }
+
+    /**
+     * The Worksheet row limit
+     *
+     * @return the limit
+     */
+    @Override
+    protected int getRowLimit() {
+        return Integer.MAX_VALUE;
+    }
 }

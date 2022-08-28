@@ -154,7 +154,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
-                Object e = rowDate.get(hc.key);
+                Object e = rowDate != null ? rowDate.get(hc.key) : null;
                 // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
@@ -195,7 +195,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         } else {
             Object o;
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i].tail != null ? columns[i].tail : columns[i];
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }

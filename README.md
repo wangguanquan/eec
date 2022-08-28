@@ -56,7 +56,7 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 pom.xml添加
 
-```
+```xml
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec</artifactId>
@@ -74,7 +74,7 @@ pom.xml添加
 #### 1. 简单导出
 对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出，也可以通过调用`forceExport`方法来强制导出。
 
-```
+```java
     private int id; // not export
 
     @ExcelColumn("渠道ID")
@@ -89,40 +89,98 @@ pom.xml添加
 
 默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以设置`colIndex`或者在`addSheet`时重置列头顺序。
 
-```
-public void testWrite(List<Student> students) throws IOException {
-    // 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
-    new Workbook("test object", "guanquan.wang")
-    
-        // 添加一个worksheet，可以通过addSheet添加多个worksheet
-        .addSheet(new ListSheet<>("学生信息", students))
-        
-        // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
-        .writeTo(Paths.get("f:/excel"));
-}
+```java
+// 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
+new Workbook("test object", "guanquan.wang")
+
+    // 添加一个worksheet，可以通过addSheet添加多个worksheet
+    .addSheet(new ListSheet<>("学生信息", students))
+
+    // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
+    .writeTo(Paths.get("f:/excel"));
 ```
 
 #### 2. 高亮和数据转换
 
 高亮和数据转换是通过`@FunctionalInterface`实现，Java Bean也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标红
 
-```
-public void testStyleConversion(List<Student> students) throws IOException {
-    new Workbook("2021小五班期未考试成绩")
-        .addSheet(new ListSheet<>("期末成绩", students
-                , new Column("学号", "id", int.class)
-                , new Column("姓名", "name", String.class)
-                , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
-            ).setStyleProcessor((o, style, sst) 
-                -> (int) o < 60 ? style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
-        )
-        .writeTo(Paths.get("f:/excel"));
-}
+```java
+new Workbook("2021小五班期未考试成绩")
+    .addSheet(new ListSheet<>("期末成绩", students
+         , new Column("学号", "id", int.class)
+         , new Column("姓名", "name", String.class)
+         , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+    ).setStyleProcessor((o, style, sst) -> 
+            o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+    ).writeTo(Paths.get("f:/excel"));
 ```
 
 内容如下图
 
-![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3bx.png)
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b8.png)
+
+#### 3. 自适应列宽更精准
+
+```java
+// 测试类
+public static class WidthTestItem {
+    @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
+    private Integer nv;
+    @ExcelColumn("字符串(en)")
+    private String sen;
+    @ExcelColumn("字符串(中文)")
+    private String scn;
+    @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
+    private Timestamp iv;
+}
+
+new Workbook("Auto Width Test")
+    .setAutoSize(true) // 自动列宽
+    .addSheet(new ListSheet<>(randomTestData()))
+    .writeTo(Paths.get("f:/excel"));
+```
+![自动列宽](./images/auto_width.png)
+
+#### 4. 支持多行表头
+
+```java
+public static class RepeatableEntry {
+    @ExcelColumn("订单号")
+    private String orderNo;
+
+    @ExcelColumn("收件人")
+    private String recipient;
+
+    @ExcelColumn("收件地址")
+    @ExcelColumn("省")
+    private String province;
+
+    @ExcelColumn("收件地址")
+    @ExcelColumn("市")
+    private String city;
+
+    @ExcelColumn("收件地址")
+    @ExcelColumn("区")
+    private String area;
+
+    @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
+    @ExcelColumn(value = "详细地址")
+    private String detail;
+}
+```
+![多行表头](./images/multi-header.png)
+
+#### 5. 报表轻松制作
+
+现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki)
+
+记帐类
+
+![报表1](./images/report1.png)
+
+统计类
+
+![报表2](images/report3.png)
 
 ### 读取示例
 
@@ -134,47 +192,40 @@ EEC使用`ExcelReader#read`静态方法读文件，其内部采用流式操作�
 
 #### 1. 使用stream操作
 
-```
-public void streamRead() {
-    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-        reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+```java
+try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+    reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+} catch (IOException e) {
+    e.printStackTrace();
 }
 ```
 
 #### 2. 将excel读入到数组或List中
 
-```
-/**
- * read excel to object array
- */
-public void readToList() {
-    try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-        // 读取所有worksheet
-        Regist[] array = reader.sheets()
+```java
+try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+    // 读取所有worksheet
+    Regist[] array = reader.sheets()
 
-            // 读取数据行
-            .flatMap(Sheet::dataRows)
+        // 读取数据行
+        .flatMap(Sheet::dataRows)
 
-            // 将每行数据转换为Regist对象
-            .map(row -> row.to(Regist.class))
+        // 将每行数据转换为Regist对象
+        .map(row -> row.to(Regist.class))
 
-            // 转数组或者List
-            .toArray(Regist[]::new);
+        // 转数组或者List
+        .toArray(Regist[]::new);
 
-        // TODO 其它逻辑
+    // TODO 其它逻辑
 
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+} catch (IOException e) {
+    e.printStackTrace();
 }
 ```
 
 #### 3. 当然既然是Stream那么就可以使用流的全部功能，比如加一些过滤和聚合等。
 
-```
+```java
 reader.sheets()
     .flatMap(Sheet::dataRows)
     .map(row -> row.to(Regist.class))
@@ -188,7 +239,7 @@ reader.sheets()
 
 pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码只需要传入xls即可读取，
 
-```
+```xml
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
@@ -207,7 +258,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 
 代码示例
 
-```
+```java
 // CSV转Excel
 new Workbook("csv path test", author)
     .addSheet(new CSVSheet(csvPath)) // 添加CSVSheet并指定csv路径
@@ -223,6 +274,14 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.3 (2022-07-25)
+-------------
+- 修复导出时日期少6天的问题(#269)
+- 支持多个ExcelColumn注解，可以实现多行表头(#210)
+- 微调表格样式使其更突出内容
+- 优化自动计算列宽的算法使其更精准
+- 修复部分BUG(#264,#265)
+
 Version 0.5.2 (2022-07-16)
 -------------
 - (严重)修复大量单元格字节超过1k时导致SST索引读取死循环问题(#258)
@@ -242,24 +301,13 @@ Version 0.5.0 (2022-05-22)
 - 修改部分BUG(#227,#232,#238,#243)
 - 读取文件支持自定义注解转对象(#237)
 
-Version 0.4.14 (2021-12-19)
--------------
-- 提高对Numbers转xlsx的兼容性
-- 值转换从原来的int类型扩大为Object
-- 增加@RowNum注解，用于注入行号
-- 修改ListSheet.EntryColumn的访问权限，方便实现更多高级特性
-- 支持单列数字无表头导出，现在可以简单的导出`List<String>`数据
-- 修复已知BUG(#197,#202，#205,#219)
-- 将com.google.common包重命名为org.ttzero.excel.common解决内嵌引起的包冲突(#200)
-
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.2-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.3-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

@@ -1249,7 +1249,7 @@ public class CSVUtil {
                 System.arraycopy(MIN_INTEGER_CHARS, 0, cb, offset, MIN_INTEGER_CHARS.length);
                 offset += MIN_INTEGER_CHARS.length;
             } else {
-                int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+                int size = stringSize(i);
                 checkBound(size);
                 getChars(i, offset += size, cb);
             }
@@ -1261,7 +1261,7 @@ public class CSVUtil {
                 System.arraycopy(MIN_LONG_CHARS, 0, cb, offset, MIN_LONG_CHARS.length);
                 offset += MIN_LONG_CHARS.length;
             } else {
-                int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+                int size = stringSize(i);
                 checkBound(size);
                 getChars(i, offset += size, cb);
             }

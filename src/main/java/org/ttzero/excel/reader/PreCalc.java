@@ -27,7 +27,7 @@ import static org.ttzero.excel.reader.SharedStrings.toInt;
  *
  * @author guanquan.wang at 2020-01-05 18:40
  */
-class PreCalc {
+public class PreCalc {
     // Reference position
     private final long position;
     // calc string value
@@ -43,12 +43,12 @@ class PreCalc {
         private Node next;
     }
 
-    PreCalc(long position) {
+    public PreCalc(long position) {
         this.position = position;
     }
 
     /* Pre-processing formula strings for fast getting */
-    void setCalc(char[] cb) {
+    public void setCalc(char[] cb) {
         this.cb = cb;
 
         int len = cb.length;
@@ -113,7 +113,7 @@ class PreCalc {
         }
     }
 
-    String get(long coordinate) {
+    public String get(long coordinate) {
         if (head == null) {
             return new String(cb, 0, cb.length);
         } else {

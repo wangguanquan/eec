@@ -41,7 +41,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
-    public static final int DAYS_1900_TO_1970 = ~((int) LocalDate.of(1900, 1, 1).toEpochDay() + 3);
+    public static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
     public static final double SECOND_OF_DAY = 24 * 60 * 60.0D;
     public static final double MILLIS_OF_DAY = 24 * 60 * 60 * 1000.0D;
 
