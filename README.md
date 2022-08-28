@@ -172,7 +172,7 @@ public static class RepeatableEntry {
 
 #### 5. 报表轻松制作
 
-现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki)
+现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
 记帐类
 
@@ -243,7 +243,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.4</version>
 </dependency>
 ```
 
@@ -274,6 +274,15 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.4 (2022-08-28)
+-------------
+- 支持显示/隐藏网络线
+- 支持显示/隐藏指定列
+- 字体增加"删除线"样式
+- Comment增加width和height两属性，用于调整批注大小
+- BIFF8Sheet支持reset重置流用于反复读取
+- 修复部分BUG(#282,#285)
+
 Version 0.5.3 (2022-07-25)
 -------------
 - 修复导出时日期少6天的问题(#269)
@@ -294,20 +303,13 @@ Version 0.5.1 (2022-07-10)
 - 提升读取Excel时Row转Java对象的兼容性(#254)
 - 修复部分BUG(#249, #252)
 
-Version 0.5.0 (2022-05-22)
--------------
-- 增加StyleDesign用于样式处理（单元格或者整行样式处理）
-- 增加FreezePanes用于冻结网格
-- 修改部分BUG(#227,#232,#238,#243)
-- 读取文件支持自定义注解转对象(#237)
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.3-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.4-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
