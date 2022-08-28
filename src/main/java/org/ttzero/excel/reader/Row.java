@@ -150,7 +150,7 @@ public abstract class Row {
      * @param i the position of cell
      * @return the {@link Cell}
      */
-    protected Cell getCell(int i) {
+    public Cell getCell(int i) {
         rangeCheck(i);
         return i < lc ? cells[i] : UNALLOCATED_CELL;
     }
@@ -161,7 +161,7 @@ public abstract class Row {
      * @param name the column name
      * @return the {@link Cell}
      */
-    protected Cell getCell(String name) {
+    public Cell getCell(String name) {
         int i = hr.getIndex(name);
         rangeCheck(i);
         return i < lc ? cells[i] : UNALLOCATED_CELL;
