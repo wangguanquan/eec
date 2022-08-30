@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -50,6 +51,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -65,6 +67,20 @@ public class HeaderRow extends Row {
     protected Map<String, Integer> mapping;
     /* Storage header column */
     protected ListSheet.EntryColumn[] columns;
+
+    // `detailMessage` field declare in Throwable
+    protected static final Field detailMessageField;
+
+    static {
+        Field field = null;
+        try {
+            field = Throwable.class.getDeclaredField("detailMessage");
+            field.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            // Ignore
+        }
+        detailMessageField = field;
+    }
 
     protected HeaderRow() { }
 
@@ -296,11 +312,54 @@ public class HeaderRow extends Row {
     }
 
     void put(Row row, Object t) throws IllegalAccessException, InvocationTargetException {
-        for (int i = 0; i < columns.length; i++) {
-            if (columns[i].method != null)
-                methodPut(i, row, t);
-            else
-                fieldPut(i, row, t);
+        int i = 0;
+        try {
+            for (; i < columns.length; i++) {
+                if (columns[i].method != null)
+                    methodPut(i, row, t);
+                else
+                    fieldPut(i, row, t);
+            }
+        }
+        catch (IllegalAccessException | InvocationTargetException ex) {
+            throw ex;
+        }
+        catch (NumberFormatException | DateTimeException ex) {
+            ListSheet.EntryColumn c = columns[i];
+            String msg = "The undecorated value of cell '" + new String(int2Col(i)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
+            if (detailMessageField != null) {
+                detailMessageField.set(ex, msg);
+                throw ex;
+            } else
+                throw ex instanceof DateTimeException ? new DateTimeException(msg, ex) : new NumberFormatException(msg);
+        }
+        catch (NullPointerException ex) {
+            String msg = "Null value in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + '’';
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
+            if (detailMessageField != null) {
+                detailMessageField.set(ex, msg);
+                throw ex;
+            } else throw new ExcelReadException(msg, ex);
+        }
+        catch (UncheckedTypeException ex) {
+            ListSheet.EntryColumn c = columns[i];
+            String msg;
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + "'. " + ex.getMessage();
+            else msg = "The undecorated value of cell '" + new String(int2Col(i)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
+            if (detailMessageField != null) {
+                detailMessageField.set(ex, msg);
+                throw ex;
+            } else throw new UncheckedTypeException(msg, ex);
+        }
+        catch (Exception ex) {
+            ListSheet.EntryColumn c = columns[i];
+            String msg = "Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "' value is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + ')';
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
+            if (detailMessageField != null) {
+                detailMessageField.set(ex, msg);
+                throw ex;
+            } else throw new ExcelReadException(msg, ex);
         }
     }
 
