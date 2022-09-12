@@ -7,11 +7,11 @@ EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的�
 
 EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
-使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成1,000,000行x29列数据的读写。
+使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成100w行x29列数据的读写。
 
 EEC采用单线程、高IO设计，所以多核心、高内存并不能显著提高速度，高主频和一块好SSD能显著提升速度。
 
-EEC在JVM参数`-Xmx6m -Xms1m`下读写`1,000,000行x29列`内存使用截图
+EEC在JVM参数`-Xmx6m -Xms1m`下读写`100w行x29列`内存使用截图
 
 写文件
 
@@ -75,16 +75,16 @@ pom.xml添加
 对象数组导出时可以在对象上使用注解`@ExcelColumn("column name")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出，也可以通过调用`forceExport`方法来强制导出。
 
 ```java
-    private int id; // not export
+private int id; // not export
 
-    @ExcelColumn("渠道ID")
-    private int channelId;
+@ExcelColumn("渠道ID")
+private int channelId;
 
-    @ExcelColumn
-    private String account;
+@ExcelColumn
+private String account;
 
-    @ExcelColumn("注册时间")
-    private Timestamp registered;
+@ExcelColumn("注册时间")
+private Timestamp registered;
 ```
 
 默认情况下导出的列顺序与字段在对象中的定义顺序一致，也可以设置`colIndex`或者在`addSheet`时重置列头顺序。
@@ -172,7 +172,7 @@ public static class RepeatableEntry {
 
 #### 5. 报表轻松制作
 
-现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki)
+现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
 记帐类
 
@@ -233,7 +233,7 @@ reader.sheets()
     .collect(Collectors.toList());
 ```
 
-以上代码相当于`select * from 用户注册 where platform = 'iOS'`
+以上代码相当于SQL `select * from '用户注册' where platform = 'iOS'`
 
 ### xls格式支持
 
@@ -243,7 +243,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.4</version>
 </dependency>
 ```
 
@@ -274,6 +274,15 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.4 (2022-08-28)
+-------------
+- 支持显示/隐藏网络线
+- 支持显示/隐藏指定列
+- 字体增加"删除线"样式
+- Comment增加width和height两属性，用于调整批注大小
+- BIFF8Sheet支持reset重置流用于反复读取
+- 修复部分BUG(#282,#285)
+
 Version 0.5.3 (2022-07-25)
 -------------
 - 修复导出时日期少6天的问题(#269)
@@ -294,20 +303,13 @@ Version 0.5.1 (2022-07-10)
 - 提升读取Excel时Row转Java对象的兼容性(#254)
 - 修复部分BUG(#249, #252)
 
-Version 0.5.0 (2022-05-22)
--------------
-- 增加StyleDesign用于样式处理（单元格或者整行样式处理）
-- 增加FreezePanes用于冻结网格
-- 修改部分BUG(#227,#232,#238,#243)
-- 读取文件支持自定义注解转对象(#237)
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.3-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.4-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

@@ -144,7 +144,14 @@ public class Column {
     /**
      * The real col-Index used to write
      */
-    int realColIndex;
+    public int realColIndex;
+    /**
+     * Hidden current column
+     * <p>
+     * Only set the column to hide, the data will still be written,
+     * you can right-click to "un-hide" to display in file
+     */
+    public boolean hide;
 
     /**
      * Constructor Column
@@ -664,6 +671,17 @@ public class Column {
     }
 
     /**
+     * Setting a cell format of number or date type
+     *
+     * @param numFmt {@link NumFmt}
+     * @return the {@link Column}
+     */
+    public Column setNumFmt(NumFmt numFmt) {
+        this.numFmt = numFmt;
+        return this;
+    }
+
+    /**
      * Returns the column {@link NumFmt}
      *
      * @return number format
@@ -771,9 +789,7 @@ public class Column {
      * @return the {@link Column} self
      */
     public Column addSubColumn(Column column) {
-        if (this == column) {
-            return this;
-        }
+        if (this == column) return this;
         if (next != null) {
             int subSize = subColumnSize(), appendSize = column.subColumnSize();
             if (subSize + appendSize > Const.Limit.HEADER_SUB_COLUMNS) {
@@ -817,6 +833,7 @@ public class Column {
      * Returns an array containing all of the sub-column
      *
      * @param dist the array into which the elements of the column are to be stored
+     * @return header columns
      * @throws NullPointerException if the specified array is null
      */
     public Column[] toArray(Column[] dist) {
@@ -832,8 +849,53 @@ public class Column {
 
     /**
      * Returns the real col-index(one base)
+     *
+     * @return real col-index(one base)
      */
     public int getRealColIndex() {
         return realColIndex;
+    }
+
+    /**
+     * Trim tail nodes after write
+     *
+     * @return current
+     */
+    public Column trimTail() {
+        if (next != null) {
+            next.prev = null;
+            next = null;
+            tail = null;
+        }
+        return this;
+    }
+
+    /**
+     * Returns hide flag
+     *
+     * @return true: hidden otherwise show
+     */
+    public boolean isHide() {
+        return hide;
+    }
+
+    /**
+     * Hidden current column
+     *
+     * @return current {@link Column}
+     */
+    public Column hide() {
+        this.hide = true;
+        return this;
+    }
+
+    /**
+     * Show current column
+     *
+     * @return current {@link Column}
+     */
+    public Column show() {
+        this.hide = false;
+        return this;
     }
 }

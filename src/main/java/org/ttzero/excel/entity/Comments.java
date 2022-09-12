@@ -42,18 +42,18 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class Comments implements Storable, Closeable {
 
     /** Comments Cache*/
-    private final List<C> commentList;
-    private final int id;
-    private final String author;
-//    private final static int CACHE_SIZE = 20;
+    public List<C> commentList = new ArrayList<>();
+    public int id;
+    public String author;
 
-    Comments(int id, String author) {
+    public Comments() { }
+
+    public Comments(int id, String author) {
         this.id = id;
         this.author = author;
-        commentList = new ArrayList<>();
     }
 
-    public void addComment(String ref, String title, String value) {
+    public C addComment(String ref, String title, String value) {
         C c = new C();
         c.ref = ref;
         c.text = new ArrayList<>();
@@ -66,12 +66,28 @@ public class Comments implements Storable, Closeable {
 
         commentList.add(c);
 
-//        if (commentList.size() >= CACHE_SIZE) {
-//            flush();
-//        }
+        return c;
     }
 
-    private void parse(String val, boolean bold, List<R> list) {
+    public C addComment(String ref, Comment comment) {
+        C c = new C();
+        c.ref = ref;
+        c.text = new ArrayList<>();
+        c.width = comment.getWidth();
+        c.height = comment.getHeight();
+        if (isNotEmpty(comment.getTitle())) {
+            parse(comment.getTitle(), true, c.text);
+        }
+        if (isNotEmpty(comment.getValue())) {
+            parse(comment.getValue(), false, c.text);
+        }
+
+        commentList.add(c);
+
+        return c;
+    }
+
+    protected void parse(String val, boolean bold, List<R> list) {
         // a simple implement
         R r = new R();
         r.rPr = new Pr("宋体", 9);
@@ -132,7 +148,7 @@ public class Comments implements Storable, Closeable {
         vml(root);
     }
 
-    private void vml(Path root) throws IOException {
+    protected void vml(Path root) throws IOException {
         Path parent = root.resolve("drawings");
         if (!Files.exists(parent)) {
             FileUtil.mkdir(parent);
@@ -155,7 +171,7 @@ public class Comments implements Storable, Closeable {
             for (C c : commentList) {
                 long cr = ExcelReader.cellRangeToLong(c.ref);
                 writer.write(" <v:shape id=\"_x0000_s");writer.write(100 + i);
-                writer.write("\" type=\"#_x0000_t202\" style='width:100.8pt;height:60.6pt;z-index:");
+                writer.write("\" type=\"#_x0000_t202\" style='width:" + (c.width != null ? c.width : 100.8D) + "pt;height:" + (c.height != null ? c.height : 60.6D) + " pt;z-index:");
                 writer.writeInt(i++);
                 writer.write(";  visibility:hidden' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
                 writer.write("  <v:fill color2=\"#ffffe1\"/>");
@@ -178,9 +194,10 @@ public class Comments implements Storable, Closeable {
         }
     }
 
-    private static class C {
-        private String ref;
-        private List<R> text;
+    public static class C {
+        public String ref;
+        public List<R> text;
+        public Double width, height;
 
         @Override
         public String toString() {
@@ -193,9 +210,9 @@ public class Comments implements Storable, Closeable {
         }
     }
 
-    private static class R {
-        private Pr rPr;
-        private String t;
+    public static class R {
+        public Pr rPr;
+        public String t;
 
         @Override
         public String toString() {
@@ -204,9 +221,9 @@ public class Comments implements Storable, Closeable {
         }
     }
 
-    private static class Pr extends Font {
-        private static final String[] STYLE = {"", "<u/>", "<b/>", "<u/><b/>", "<i/>", "<i/><u/>", "<b/><i/>", "<i/><b/><u/>"};
-        Pr(String name, int size) {
+    public static class Pr extends Font {
+        public static final String[] STYLE = {"", "<u/>", "<b/>", "<u/><b/>", "<i/>", "<i/><u/>", "<b/><i/>", "<i/><b/><u/>"};
+        public Pr(String name, int size) {
             super(name, size);
         }
 

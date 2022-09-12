@@ -39,7 +39,7 @@ public class GridTest {
         assert grid instanceof Grid.FastGrid;
 
         grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:B16384")));
-        assert grid instanceof Grid.FractureGrid;
+        assert grid instanceof Grid.FastGrid;
 
     }
 
@@ -100,7 +100,7 @@ public class GridTest {
 
         Grid grid = GridFactory.create(list);
 
-        assert grid.toString().equals("FastGrid\n" +
+        assert grid.toString().equals("FastGrid Size: 72B\n" +
             "00011001\n00000001\n00000001\n00000001\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
@@ -165,8 +165,9 @@ public class GridTest {
     @Test public void testLinkedScanner() {
         Grid.Scanner scanner = new Grid.LinkedScanner();
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("E5:F8"), null));
-        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("D2:F2"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("B16:E17"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("A13:A20"), null));
 
         // Test iterator
@@ -174,10 +175,10 @@ public class GridTest {
             println(entry.getDim());
         }
 
-        assert "B2:C2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
+        assert "B2:C2->D2:F2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
 
         scanner.get(5, 5);
-        assert "E5:F8->B2:C2->A13:A20->B16:E17".equals(scanner.toString());
+        assert "E5:F8->B2:C2->D2:F2->A13:A20->B16:E17".equals(scanner.toString());
 
         scanner.get(5, 6);
         scanner.get(6, 5);
@@ -187,7 +188,7 @@ public class GridTest {
         scanner.get(8, 5);
         scanner.get(8, 6);
 
-        assert "B2:C2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
+        assert "B2:C2->D2:F2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
     }
 
     @Test public void testIndexGrid() {

@@ -327,6 +327,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write the header row
      *
+     * @return row number
      * @throws IOException if I/O error occur
      */
     protected int writeHeaderRow() throws IOException {
@@ -335,6 +336,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Column[][] columnsArray = new Column[columns.length][];
         for (int i = 0; i < columns.length; i++) {
             columnsArray[i] = columns[i].toArray();
+
+            // Free memory after write
+            columns[i].trimTail();
         }
         // Merge cells if exists
         @SuppressWarnings("unchecked")
@@ -369,8 +373,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
                     if (comments == null) comments = sheet.createComments();
-                    comments.addComment(new String(int2Col(hc.getRealColIndex())) + row
-                        , hc.headerComment.getTitle(), hc.headerComment.getValue());
+                    comments.addComment(new String(int2Col(hc.getRealColIndex())) + row, hc.headerComment);
                 }
             }
             bw.write("</row>");
@@ -972,9 +975,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetViews>");
 
         bw.write("<sheetView workbookViewId=\"0\"");
-        if (sheet.getId() == 1) { // Default select the first worksheet
-            bw.write(" tabSelected=\"1\"");
-        }
+        // Default show grid lines
+        if (!sheet.isShowGridLines()) bw.write(" showGridLines=\"0\"");
+        // Default select the first worksheet
+        if (sheet.getId() == 1) bw.write(" tabSelected=\"1\"");
 
         // Freeze Panes
         Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.FREEZE);
@@ -1046,7 +1050,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
                 bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
+                if (col.isHide()) {
+                    bw.writeInt(0);
+                    bw.write("\" hidden=\"1");
+                }
+                else bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
                 for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
@@ -1096,6 +1104,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // vmlDrawing
         Relationship r = sheet.findRel("vmlDrawing");
         if (r != null) {
+            bw.write("<legacyDrawing r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
+        }
+        // Compatible processing
+        else if (comments != null) {
+            sheet.addRel(r = new Relationship("../drawings/vmlDrawing" + sheet.getId() + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+            sheet.addRel(new Relationship("../comments" + sheet.getId() + Const.Suffix.XML, Const.Relationship.COMMENTS));
+
             bw.write("<legacyDrawing r:id=\"");
             bw.write(r.getId());
             bw.write("\"/>");

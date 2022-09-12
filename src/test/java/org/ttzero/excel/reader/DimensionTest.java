@@ -29,6 +29,8 @@ public class DimensionTest {
         assert d.firstRow == 1;
         assert d.lastColumn == 0;
         assert d.lastRow == 0;
+        assert d.width == 1;
+        assert d.height == 1;
     }
 
     @Test public void testFirstDim2() {
@@ -37,6 +39,8 @@ public class DimensionTest {
         assert d.firstRow == 3;
         assert d.lastColumn == 0;
         assert d.lastRow == 0;
+        assert d.width == 1;
+        assert d.height == 1;
     }
 
     @Test public void testLastDim() {
@@ -45,6 +49,8 @@ public class DimensionTest {
         assert d.firstRow == 0;
         assert d.lastColumn == 3;
         assert d.lastRow == 2;
+        assert d.width == 3;
+        assert d.height == 2;
     }
 
     @Test public void testFullDim() {
@@ -53,5 +59,7 @@ public class DimensionTest {
         assert d.firstRow == 1;
         assert d.lastColumn == 3;
         assert d.lastRow == 2;
+        assert d.width == 3;
+        assert d.height == 2;
     }
 }

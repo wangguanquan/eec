@@ -51,5 +51,4 @@ public @interface HeaderStyle {
      * @return color
      */
     String fillFgColor() default "#666699";
-
 }

@@ -144,13 +144,20 @@ public class SharedStringTable implements Closeable, Iterable<String> {
             return pushChar(key.charAt(0));
         }
         byte[] bytes = key.getBytes(UTF_8);
-        // The byte length exceeds 4k
-        if (bytes.length + 4 > defaultBufferSize) {
-           return -1;
-        }
-        if (buffer.remaining() < bytes.length + 4) {
+        int n = bytes.length + 4;
+        // Write to disk if full
+        if (buffer.remaining() < n) {
             flush();
+
+            // The byte length exceeds 4k
+            if (n > buffer.limit()) {
+                int newCapacity = Math.max(tableSizeFor(n), buffer.limit() << 1);
+                ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+                newBuffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer = newBuffer;
+            }
         }
+
         buffer.putInt(bytes.length);
         buffer.put(bytes);
         return count++;

@@ -394,7 +394,7 @@ public class ExcelReader implements Closeable {
     public ExcelReader parseFormula() {
         if (hasFormula) {
             // Formula string if exists
-            long[][] calcArray = parseCalcChain();
+            long[][] calcArray = parseCalcChain(self);
 
             if (calcArray == null) return this;
             int i = 0;
@@ -803,8 +803,8 @@ public class ExcelReader implements Closeable {
     }
 
     /* Parse `calcChain` */
-    private long[][] parseCalcChain() {
-        Path calcPath = self.resolve("xl/calcChain.xml");
+    static long[][] parseCalcChain(Path root) {
+        Path calcPath = root.resolve("xl/calcChain.xml");
         if (!FileUtil.exists(calcPath)) return null;
         Element calcChain;
         try {
@@ -816,7 +816,7 @@ public class ExcelReader implements Closeable {
         }
 
         Iterator<Element> ite = calcChain.elementIterator();
-        int i = 1, n = sheets().map(Sheet::getId).max(Integer::compareTo).orElse(0);
+        int i = 1, n = 10;
         long[][] array = new long[n][];
         int[] indices = new int[n];
         for (; ite.hasNext(); ) {
@@ -826,6 +826,13 @@ public class ExcelReader implements Closeable {
                 i = toInt(si.toCharArray(), 0, si.length());
             }
             if (isNotEmpty(r)) {
+                if (n < i) {
+                    n <<= 1;
+                    indices = Arrays.copyOf(indices, n);
+                    long[][] _array = new long[n][];
+                    for (int j = 0; j < n; j++) _array[j] = array[j]; // Do not copy hear.
+                    array = _array;
+                }
                 long[] sub = array[i - 1];
                 if (sub == null) {
                     sub = new long[10];

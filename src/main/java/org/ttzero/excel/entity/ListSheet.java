@@ -611,8 +611,6 @@ public class ListSheet<T> extends Sheet {
             if (sp != null) {
                 column.styleProcessor = sp;
             }
-            // Cell max width
-            column.width = ec.maxWidth();
             return column;
         }
         return null;
@@ -637,11 +635,10 @@ public class ListSheet<T> extends Sheet {
         if (ec.colIndex() > -1) {
             column.colIndex = ec.colIndex();
         }
-        // Comment
-        HeaderComment comment = ec.comment();
-        if ((isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
-            column.headerComment = new Comment(comment.title(), comment.value());
-        }
+        // Hidden Column
+        if (ec.hide()) column.hide();
+        // Cell max width
+        column.width = ec.maxWidth();
         return column;
     }
 
@@ -689,7 +686,7 @@ public class ListSheet<T> extends Sheet {
             }
         }
         if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
-            column.headerComment = new Comment(comment.title(), comment.value());
+            column.headerComment = new Comment(comment.title(), comment.value(), comment.width(), comment.height());
         }
     }
 
@@ -1028,6 +1025,8 @@ public class ListSheet<T> extends Sheet {
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;
             this.colIndex = other.colIndex;
+            this.hide = other.hide;
+            this.realColIndex = other.realColIndex;
             if (other.cellStyle != null) setCellStyle(other.cellStyle);
             if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
             if (other.next != null) {

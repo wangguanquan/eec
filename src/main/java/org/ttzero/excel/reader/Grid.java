@@ -25,6 +25,7 @@ import java.util.StringJoiner;
 import static java.lang.Integer.numberOfTrailingZeros;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
+import static org.ttzero.excel.util.StringUtil.formatBinarySize;
 
 /**
  * @author guanquan.wang at 2020-01-09 16:54
@@ -78,6 +79,13 @@ public interface Grid {
      * @param cell column number (from one)
      */
     void merge(int r, Cell cell);
+
+    /**
+     * Returns count of merged cells
+     *
+     * @return count of merged cells
+     */
+    int size();
 
 
     /**
@@ -157,6 +165,11 @@ public interface Grid {
             }
         }
 
+        @Override
+        public int size() {
+            return scanner.size();
+        }
+
         boolean range(int r, int c) {
             return r >= fr && r <= lr && c >= fc && c <= lc;
         }
@@ -168,7 +181,7 @@ public interface Grid {
         @Override
         public String toString() {
             StringJoiner joiner = new StringJoiner("\n");
-            joiner.add(getClass().getSimpleName());
+            joiner.add(getClass().getSimpleName() + " Size: " + formatBinarySize(g.length << 3));
             int last = lr - fr + 1, j = 0;
             A: for (long l : g) {
                 String s = append(Long.toBinaryString(l));
@@ -201,6 +214,7 @@ public interface Grid {
     final class IndexGrid implements Grid {
         private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private final Map<Long, Cell> index;
+        private int size;
         IndexGrid(Dimension dim, int n) {
             fr = dim.firstRow;
             lr = dim.lastRow;
@@ -218,6 +232,7 @@ public interface Grid {
                     index.put(((long) i) << 16 | j, cell);
                 }
             }
+            size++;
         }
 
         @Override
@@ -229,6 +244,7 @@ public interface Grid {
         public void merge(int r, Cell cell) {
             if (!range(r, cell.i)) return;
             Cell c = index.get(((long) r) << 16 | cell.i);
+            if (c == null) return;
 
             if (cell.t == EMPTY_TAG || cell.t == BLANK) {
                 // Copy value from the first merged cell
@@ -238,6 +254,11 @@ public interface Grid {
             else {
                 c.from(cell);
             }
+        }
+
+        @Override
+        public int size() {
+            return size;
         }
 
         boolean range(int r, int c) {
@@ -287,6 +308,11 @@ public interface Grid {
             else {
                 e.getCell().from(cell);
             }
+        }
+
+        @Override
+        public int size() {
+            return scanner.size;
         }
 
         boolean range(int r, int c) {
@@ -361,8 +387,9 @@ public interface Grid {
 
             if (head != null) {
                 Node f = head, bf = null;
-                for (; f != null; f = f.next) {
-                    if (f.entry.getDim().firstRow > entry.getDim().firstRow) {
+                for (int p; f != null; f = f.next) {
+                    p = f.entry.getDim().firstRow - entry.getDim().firstRow;
+                    if (p > 0 || p == 0 && f.entry.getDim().firstColumn > entry.getDim().firstColumn) {
                         Node newNode = new Node(e, f);
                         if (f == head) head = newNode;
                         else bf.next = newNode;
@@ -396,7 +423,7 @@ public interface Grid {
             if (val != null) {
                 int n = --val.entry.n;
                 // Insert entry ahead
-                if (n > 0 && val != head) {
+                if (n > 0 && val != head && val.entry.dim.width > 1) {
                     bf.next = val.next;
                     val.next = head;
                     head = val;

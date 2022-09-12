@@ -181,6 +181,11 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected int extPropMark;
 
+    /**
+     * Show grid lines
+     */
+    protected Boolean showGridLines;
+
     public int getId() {
         return id;
     }
@@ -204,6 +209,8 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * Returns {@link IWorksheetWriter}
+     *
+     * @return custom IWorksheetWriter
      */
     public IWorksheetWriter getSheetWriter() {
         return sheetWriter;
@@ -533,6 +540,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return Columns instance if exists
      */
     public Comments getComments() {
+        if (comments != null && comments.id == 0) {
+            comments.id = this.id;
+        }
         return comments;
     }
 
@@ -543,13 +553,44 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Comments createComments() {
         if (comments == null) {
-            comments = new Comments(id, workbook.getCreator());
+            comments = workbook != null ? new Comments(id, workbook.getCreator()) : new Comments();
             // FIXME Removed at excel version 2013
-            addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+            if (id > 0) {
+                addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
 
-            addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+                addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+            }
         }
         return comments;
+    }
+
+    /**
+     * Returns show grid lines flag
+     *
+     * @return true if {@code showGridLines} is null or {@code true}
+     */
+    public boolean isShowGridLines() {
+        return showGridLines == null || showGridLines;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet showGridLines() {
+        this.showGridLines = true;
+        return this;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet hideGridLines() {
+        this.showGridLines = false;
+        return this;
     }
 
     /**
@@ -1069,7 +1110,7 @@ public abstract class Sheet implements Cloneable, Storable {
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
-        } else {
+        } else if (nonHeader == -1) {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;
