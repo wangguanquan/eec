@@ -331,7 +331,7 @@ public class HeaderRow extends Row {
                 throw ex instanceof DateTimeException ? new DateTimeException(msg, ex) : new NumberFormatException(msg);
         }
         catch (NullPointerException ex) {
-            String msg = "Null value in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + '’';
+            String msg = "Null value in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + ')';
             if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);
@@ -341,7 +341,7 @@ public class HeaderRow extends Row {
         catch (UncheckedTypeException ex) {
             ListSheet.EntryColumn c = columns[i];
             String msg;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + "'. " + ex.getMessage();
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + "). " + ex.getMessage();
             else msg = "The undecorated value of cell '" + new String(int2Col(i)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);
