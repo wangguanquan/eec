@@ -1226,7 +1226,9 @@ public abstract class Row {
                 throw new UncheckedTypeException(hr.getClazz() + " new instance error.", e);
             }
             return t;
-        } else return (T) this;
+        }
+//        else return (T) this;
+        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
     }
 
     /**
@@ -1235,7 +1237,6 @@ public abstract class Row {
      * @param <T> the type of binding
      * @return T
      */
-    @SuppressWarnings("unchecked")
     public <T> T geet() {
         if (hr != null && hr.getClazz() != null) {
             T t = hr.getT();
@@ -1245,7 +1246,9 @@ public abstract class Row {
                 throw new UncheckedTypeException("call set method error.", e);
             }
             return t;
-        } else return (T) this;
+        }
+//        else return (T) this;
+        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
     }
     /////////////////////////////To object//////////////////////////////////
 

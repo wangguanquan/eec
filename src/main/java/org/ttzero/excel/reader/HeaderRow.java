@@ -270,12 +270,8 @@ public class HeaderRow extends Row {
         for (int j = i; i < names.length; i++) {
             joiner.add(names[i]);
             int n = simpleTestLength(names[i]) + (j == i || i == names.length - 1 ? 1 : 2);
-            if (n > chars.length) {
-                chars = new char[n];
-                Arrays.fill(chars, 0, n, '-');
-            } else {
-                Arrays.fill(chars, 0, n, '-');
-            }
+            if (n > chars.length) chars = new char[n];
+            Arrays.fill(chars, 0, n, '-');
 
             if (columns != null && i < columns.length && columns[i].clazz != RowNum.class) {
                 Class<?> c = columns[i].clazz;
