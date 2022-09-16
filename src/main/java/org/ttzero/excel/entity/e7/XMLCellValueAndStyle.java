@@ -96,6 +96,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param rows the data-row number
      * @param hc    the header column
      * @param o     the cell value
      * @param style the default style
@@ -103,12 +104,12 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      */
     private int getStyleIndex(int rows, Column hc, Object o, int style) {
         // Interlaced discoloration
-        if (autoOdd == 0 && isOdd(rows) && !Styles.hasFill(style)) {
+        if (autoOdd == 0 && ICellValueAndStyle.isOdd(rows) && !Styles.hasFill(style)) {
             style |= oddFill;
         }
         int styleIndex = hc.styles.of(style);
         if (hc.styleProcessor != null) {
-            style = hc.styleProcessor.build(o, style, hc.styles);
+            style = hc.styleProcessor.build(o, style, hc.styles, axis.reset(rows, hc.realColIndex - 1));
             styleIndex = hc.styles.of(style);
         }
         return styleIndex;
@@ -135,21 +136,13 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param cell the cell of row
      * @param hc the header column
      * @param styleProcessor a customize {@link StyleProcessor}
+     * @param rows the data-row number
      */
     @Override
-    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
+    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor, int rows) {
         if (styleProcessor != null && hc.styles != null) {
-            cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles));
+            cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles, axis.reset(rows, hc.realColIndex - 1)));
         }
-    }
-
-    /**
-     * Check the odd rows
-     *
-     * @return true if odd rows
-     */
-    private boolean isOdd(int rows) {
-        return (rows & 1) == 1;
     }
 
     /**

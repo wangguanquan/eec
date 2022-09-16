@@ -44,9 +44,13 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
  */
 public interface ICellValueAndStyle {
     /**
+     * Shared Cell axis
+     */
+    Axis axis = new Axis();
+    /**
      * Setting cell value and cell styles
      *
-     * @param row  the row number
+     * @param row  the data-row number
      * @param cell the cell
      * @param e    the cell value
      * @param hc   the header column
@@ -78,8 +82,9 @@ public interface ICellValueAndStyle {
      * @param cell the cell of row
      * @param hc the header column
      * @param styleProcessor a customize {@link StyleProcessor}
+     * @param rows the data-row number
      */
-    <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor);
+    <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor, int rows);
 
     /**
      * Setting cell value
@@ -177,5 +182,14 @@ public interface ICellValueAndStyle {
         } else {
             cell.blank();
         }
+    }
+
+    /**
+     * Check the odd rows
+     *
+     * @return true if odd rows
+     */
+    static boolean isOdd(int rows) {
+        return (rows & 1) == 1;
     }
 }

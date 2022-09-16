@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.processor;
 
+import org.ttzero.excel.entity.Axis;
 import org.ttzero.excel.entity.style.Styles;
 
 
@@ -38,9 +39,10 @@ public interface StyleProcessor<T> {
      * @param o     the value of cell
      * @param style the current style of cell
      * @param sst   the {@link Styles} entry
+     * @param axis  the axis of cell
      * @return new style of cell
      */
-    int build(T o, int style, Styles sst);
+    int build(T o, int style, Styles sst, Axis axis);
 
     /**
      * None processor
@@ -48,7 +50,7 @@ public interface StyleProcessor<T> {
     final class None implements StyleProcessor<Object> {
 
         @Override
-        public final int build(Object o, int style, Styles sst) {
+        public int build(Object o, int style, Styles sst, Axis axis) {
             return style;
         }
     }

@@ -61,7 +61,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test global style design for ResultSet", author)
-                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst)->{
+                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst, axis)->{
                     try {
                         if (rst.getInt("age") > 14) {
                             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));

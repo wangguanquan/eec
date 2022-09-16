@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 
 import java.awt.Color;
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -64,7 +63,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign4Map() throws IOException {
         new Workbook("Map标识行样式", author)
-                .addSheet(new ListMapSheet("Map", createAllTypeData(100)).setStyleProcessor((map, style, sst)->{
+                .addSheet(new ListMapSheet("Map", createAllTypeData(100)).setStyleProcessor((map, style, sst, axis)->{
                     if ((Boolean) map.get("bv")) {
                         style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                     }
@@ -79,10 +78,10 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
-                , new Column("int", "nv", int.class).setStyleProcessor((n,s,sst) -> ((int) n) < 0 ? Styles.clearHorizontal(s) | Horizontals.LEFT : s).setNumFmt("¥0.00_);[Red]-¥0.00_);¥0_)")
+                , new Column("int", "nv", int.class).setStyleProcessor((n,s,sst,axis) -> ((int) n) < 0 ? Styles.clearHorizontal(s) | Horizontals.LEFT : s).setNumFmt("¥0.00_);[Red]-¥0.00_);¥0_)")
                 , new Column("long", "lv", long.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
-                , new Column("LocalTime", "ltv", LocalTime.class)).setStyleProcessor((map, style, sst)->{
+                , new Column("LocalTime", "ltv", LocalTime.class)).setStyleProcessor((map, style, sst, axis)->{
                 if ((Boolean) map.get("bv")) {
                     style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                 }

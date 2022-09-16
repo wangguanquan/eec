@@ -130,16 +130,16 @@ public class ReportDesignTest extends WorkbookTest {
 
     public static Column[] createColumns() {
         return new Column[]{
-            new Column("日期", "date").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            new Column("日期", "date").setStyleProcessor((n, i, st, axis) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
             , new Column("客户名称", "customer")
             , new Column("商品名称", "productName").setWidth(30.68D).setWrapText(true)
-            , new Column("品牌", "brand").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
-            , new Column("单位", "unit").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            , new Column("品牌", "brand").setStyleProcessor((n, i, st, axis) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            , new Column("单位", "unit").setStyleProcessor((n, i, st, axis) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
             , new Column("数量", "num")
             , new Column("含税单价", "unitPrice").setNumFmt("#,##0.00_);0_)")
             , new Column("含税总额", "totalAmount").setNumFmt("#,##0.00_);0_)")
             , new Column("出库数量", "outNum")
-            , new Column("关联订单", "orderNo").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            , new Column("关联订单", "orderNo").setStyleProcessor((n, i, st, axis) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
         };
     }
 
@@ -204,7 +204,7 @@ public class ReportDesignTest extends WorkbookTest {
         private int s, o;
 
         @Override
-        public int build(U u, int style, Styles sst) {
+        public int build(U u, int style, Styles sst, Axis axis) {
             if (group == null) {
                 group = u.groupBy();
                 s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
@@ -219,10 +219,10 @@ public class ReportDesignTest extends WorkbookTest {
 
     public static class GroupStyleProcessor2<U extends Group & Summary> implements StyleProcessor<U> {
         private String group;
-        private int s, o, i;
+        private int s, o;
 
         @Override
-        public int build(U u, int style, Styles sst) {
+        public int build(U u, int style, Styles sst, Axis axis) {
             if (group == null) {
                 group = u.groupBy();
                 s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
@@ -236,9 +236,8 @@ public class ReportDesignTest extends WorkbookTest {
             } else if (u.groupBy() != null && !group.equals(u.groupBy())) {
                 group = u.groupBy();
                 o ^= 1;
-                i = 0;
             }
-            return o == 1 && ++i > 1 ? Styles.clearFill(style) | s : style;
+            return o == 1 && axis.col > 1 ? Styles.clearFill(style) | s : style;
         }
     }
 }

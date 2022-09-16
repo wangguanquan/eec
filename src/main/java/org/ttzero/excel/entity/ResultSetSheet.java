@@ -261,7 +261,7 @@ public class ResultSetSheet extends Sheet {
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
                     if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(rs , cell, hc, getStyleProcessor());
+                        cellValueAndStyle.setStyleDesign(rs , cell, hc, getStyleProcessor(), rows);
                     }
                 }
             }

@@ -64,7 +64,7 @@ public class StyleDesignTest extends WorkbookTest {
     @Test
     public void testStyleDesign2() throws IOException {
         new Workbook("标识行样式2", author)
-            .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst) -> {
+            .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst, axis) -> {
                 if (item != null && item.getId() < 10) {
                     style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                 }
@@ -77,7 +77,7 @@ public class StyleDesignTest extends WorkbookTest {
     public void testStyleDesignSpecifyColumns() throws IOException {
         new Workbook("标识行样式3", author)
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()
-                , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> Styles.clearHorizontal(s) | Horizontals.CENTER)
+                , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst, axis) -> Styles.clearHorizontal(s) | Horizontals.CENTER)
                 , new Column("数学成绩", "score").setWidth(12D)
                 , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
             )).writeTo(defaultTestPath);
@@ -163,7 +163,7 @@ public class StyleDesignTest extends WorkbookTest {
         private String group;
         private int s, o;
         @Override
-        public int build(U u, int style, Styles sst) {
+        public int build(U u, int style, Styles sst, Axis axis) {
             if (group == null) {
                 group = u.groupBy();
                 s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
@@ -213,7 +213,7 @@ public class StyleDesignTest extends WorkbookTest {
 
     public static class StudentScoreStyle implements StyleProcessor<DesignStudent> {
         @Override
-        public int build(DesignStudent o, int style, Styles sst) {
+        public int build(DesignStudent o, int style, Styles sst, Axis axis) {
             // 低于60分时背景色标黄
             if (o.getScore() < 60) {
                 style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
@@ -229,7 +229,7 @@ public class StyleDesignTest extends WorkbookTest {
         }
     }
 
-    public static StyleProcessor<ListObjectSheetTest.Item> rainbowStyle = (item, style, sst) -> {
+    public static StyleProcessor<ListObjectSheetTest.Item> rainbowStyle = (item, style, sst, axis) -> {
         if (item.getId() % 3 == 0) {
             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
         } else if (item.getId() % 3 == 1) {
@@ -245,7 +245,7 @@ public class StyleDesignTest extends WorkbookTest {
 
     public static class NameMatch implements StyleProcessor<String> {
         @Override
-        public int build(String name, int style, Styles sst) {
+        public int build(String name, int style, Styles sst, Axis axis) {
             if (VIP_SET.contains(name)) {
                 Font font = sst.getFont(style).clone();
                 style = Styles.clearFont(style) | sst.addFont(font.bold());

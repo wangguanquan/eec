@@ -60,7 +60,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
-                        .setStyleProcessor((o, style, sst) -> {
+                        .setStyleProcessor((o, style, sst, axis) -> {
                             int n = (int) o;
                             if (n < 10) {
                                 style = Styles.clearFill(style)
@@ -83,7 +83,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
                     , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
-                        .setStyleProcessor((o, style, sst) -> {
+                        .setStyleProcessor((o, style, sst, axis) -> {
                             int n = (int) o;
                             if (n > 14) {
                                 style = Styles.clearFill(style)

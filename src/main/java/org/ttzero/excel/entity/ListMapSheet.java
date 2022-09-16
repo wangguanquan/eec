@@ -162,7 +162,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
                 cellValueAndStyle.reset(rows, cell, e, hc);
                 if (hasGlobalStyleProcessor) {
-                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
+                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor(), rows);
                 }
             }
         }

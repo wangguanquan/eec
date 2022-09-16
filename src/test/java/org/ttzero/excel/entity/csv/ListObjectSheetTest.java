@@ -114,7 +114,7 @@ public class ListObjectSheetTest extends WorkbookTest{
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
-                    .setStyleProcessor((o, style, sst) -> {
+                    .setStyleProcessor((o, style, sst, axis) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, Color.orange));
@@ -133,7 +133,7 @@ public class ListObjectSheetTest extends WorkbookTest{
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
-                    .setStyleProcessor((o, style, sst) -> {
+                    .setStyleProcessor((o, style, sst, axis) -> {
                         if ((int) o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));

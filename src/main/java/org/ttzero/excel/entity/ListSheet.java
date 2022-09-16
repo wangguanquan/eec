@@ -313,7 +313,7 @@ public class ListSheet<T> extends Sheet {
 
                     cellValueAndStyle.reset(rows, cell, e, column);
                     if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
+                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor(), rows);
                     }
                 }
             }

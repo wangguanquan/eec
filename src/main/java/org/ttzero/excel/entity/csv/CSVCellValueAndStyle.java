@@ -67,9 +67,10 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param cell the cell of row
      * @param hc the header column
      * @param styleProcessor a customize {@link StyleProcessor}
+     * @param rows the data-row number
      */
     @Override
-    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) { }
+    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor, int rows) { }
 
     /**
      * Returns the worksheet name

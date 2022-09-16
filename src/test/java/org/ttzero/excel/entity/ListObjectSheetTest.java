@@ -141,7 +141,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
-                    .setStyleProcessor((o, style, sst) -> {
+                    .setStyleProcessor((o, style, sst, axis) -> {
                         if ((int) o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, Color.orange));
@@ -159,7 +159,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
-                    .setStyleProcessor((o, style, sst) -> {
+                    .setStyleProcessor((o, style, sst, axis) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
                                 | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
@@ -315,7 +315,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
-    public static StyleProcessor sp = (o, style, sst) -> {
+    public static StyleProcessor sp = (o, style, sst, axis) -> {
         if ((int)o < 60) {
             style = Styles.clearFill(style)
                 | sst.addFill(new Fill(PatternType.solid,Color.green, Color.blue));
@@ -333,7 +333,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                     , new Column("学号", "id", int.class)
                     , new Column("姓名", "name", String.class)
                     , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
-                ).setStyleProcessor((o, style, sst) ->
+                ).setStyleProcessor((o, style, sst, axis) ->
                     o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
             ).writeTo(defaultTestPath);
     }
