@@ -383,7 +383,6 @@ public class ResultSetSheet extends Sheet {
             this.share = other.share;
             this.processor = other.processor;
             this.styleProcessor = other.styleProcessor;
-            this.cellStyle = other.cellStyle;
             this.width = other.width;
             this.o = other.o;
             this.styles = other.styles;
@@ -392,6 +391,11 @@ public class ResultSetSheet extends Sheet {
             this.numFmt = other.numFmt;
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;
+            this.colIndex = other.colIndex;
+            this.hide = other.hide;
+            this.realColIndex = other.realColIndex;
+            if (other.cellStyle != null) setCellStyle(other.cellStyle);
+            if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
             if (other.next != null) {
                 addSubColumn(new SQLColumn(other.next));
             }
