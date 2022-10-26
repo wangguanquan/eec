@@ -624,6 +624,12 @@ public abstract class Sheet implements Cloneable, Storable {
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
+            // Sort column index
+            sortColumns(columns);
+
+            // Turn to one-base
+            calculateRealColIndex();
+
             // Reverse
             reverseHeadColumn();
 
@@ -632,12 +638,6 @@ public abstract class Sheet implements Cloneable, Storable {
 
             // Reset Common Properties
             resetCommonProperties(columns);
-
-            // Sort column index
-            sortColumns(columns);
-
-            // Turn to one-base
-            calculateRealColIndex();
 
             // Check the limit of columns
             checkColumnLimit();
@@ -1355,7 +1355,7 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    col.addSubColumn(new org.ttzero.excel.entity.Column());
+                    col.addSubColumn(new org.ttzero.excel.entity.Column().setColIndex(col.colIndex));
                 }
             }
         }

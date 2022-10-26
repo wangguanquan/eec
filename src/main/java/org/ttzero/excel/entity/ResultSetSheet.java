@@ -238,26 +238,28 @@ public class ResultSetSheet extends Sheet {
                     cell.clear();
 
                     Object e;
-                    switch (hc.sqlType) {
-                        case VARCHAR:
-                        case LONGVARCHAR:
-                        case NULL:        e = rs.getString(i);     break;
-                        case INTEGER:
-                        case TINYINT:
-                        case SMALLINT:
-                        case BIT:
-                        case CHAR:        e = rs.getInt(i);        break;
-                        case DATE:        e = rs.getDate(i);       break;
-                        case TIMESTAMP:   e = rs.getTimestamp(i);  break;
-                        case NUMERIC:
-                        case DECIMAL:     e = rs.getBigDecimal(i); break;
-                        case BIGINT:      e = rs.getLong(i);       break;
-                        case REAL:
-                        case FLOAT:
-                        case DOUBLE:      e = rs.getDouble(i);     break;
-                        case TIME:        e = rs.getTime(i);       break;
-                        default:          e = rs.getObject(i);     break;
-                    }
+                    if (hc.ri > 0) {
+                        switch (hc.sqlType) {
+                            case VARCHAR:
+                            case LONGVARCHAR:
+                            case NULL:           e = rs.getString(hc.ri);      break;
+                            case INTEGER:
+                            case TINYINT:
+                            case SMALLINT:
+                            case BIT:
+                            case CHAR:            e = rs.getInt(hc.ri);        break;
+                            case DATE:            e = rs.getDate(hc.ri);       break;
+                            case TIMESTAMP:       e = rs.getTimestamp(hc.ri);  break;
+                            case NUMERIC:
+                            case DECIMAL:         e = rs.getBigDecimal(hc.ri); break;
+                            case BIGINT:          e = rs.getLong(hc.ri);       break;
+                            case REAL:
+                            case FLOAT:
+                            case DOUBLE:          e = rs.getDouble(hc.ri);     break;
+                            case TIME:            e = rs.getTime(hc.ri);       break;
+                            default:              e = rs.getObject(hc.ri);     break;
+                        }
+                    } else e = null;
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
                     if (hasGlobalStyleProcessor) {
@@ -292,16 +294,24 @@ public class ResultSetSheet extends Sheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
             if (hasHeaderColumns()) {
                 org.ttzero.excel.entity.Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
                     SQLColumn column = SQLColumn.of(columns[i]);
                     newColumns[i] = column;
-                    if (column.tail != null) {
-                        column = (SQLColumn) column.tail;
+                    if (column.tail != null) column = (SQLColumn) column.tail;
+                    if (i + 1 > count) {
+                        LOGGER.warn("Column [{}] cannot be mapped.", columns[i].getName());
+                        continue;
                     }
-                    if (StringUtil.isEmpty(column.getName())) {
+                    if (StringUtil.isEmpty(column.getName()))
                         column.setName(metaData.getColumnLabel(i + 1));
+                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i + 1;
+
+                    if (column.ri < 0) {
+                        LOGGER.warn("Column [{}] cannot be mapped.", columns[i].getName());
+                        continue;
                     }
                     // FIXME maybe do not reset the types
                     column.sqlType = metaData.getColumnType(i + 1);
@@ -314,7 +324,6 @@ public class ResultSetSheet extends Sheet {
                 }
                 columns = newColumns;
             } else {
-                int count = metaData.getColumnCount();
                 columns = new org.ttzero.excel.entity.Column[count];
                 for (; ++i <= count; ) {
                     columns[i - 1] = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
@@ -334,6 +343,15 @@ public class ResultSetSheet extends Sheet {
             }
         }
         return columns;
+    }
+
+    protected int findByKey(ResultSetMetaData metaData, String key) throws SQLException {
+        for (int i = 1, len = metaData.getColumnCount(); i <= len; i++) {
+            if (key.equals(metaData.getColumnLabel(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -369,7 +387,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     private static class SQLColumn extends org.ttzero.excel.entity.Column {
-        int sqlType;
+        int sqlType, ri; // ResultSet index
 
         public SQLColumn(String name, int sqlType, Class<?> clazz) {
             super(name, clazz);

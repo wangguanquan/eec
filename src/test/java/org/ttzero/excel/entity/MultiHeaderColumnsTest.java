@@ -64,7 +64,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
-                , new Column("成绩", "score").setHeaderStyle(794694)
+                , new Column("成绩", "score")
             )).writeTo(defaultTestPath);
     }
 
@@ -77,7 +77,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     , new Column("通用").addSubColumn(new Column("性名", String.class))
                     , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(794691))
                     , new Column("创建时间", Timestamp.class)
-                    , new Column("更新", Timestamp.class)
+                    , new Column("更新", Timestamp.class).setColIndex(1)
                 )
                 .writeTo(defaultTestPath);
         }
