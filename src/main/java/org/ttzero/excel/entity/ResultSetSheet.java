@@ -326,8 +326,10 @@ public class ResultSetSheet extends Sheet {
             } else {
                 columns = new org.ttzero.excel.entity.Column[count];
                 for (; ++i <= count; ) {
-                    columns[i - 1] = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
+                    SQLColumn column = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
+                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i + 1;
+                    columns[i - 1] = column;
                 }
             }
         } catch (SQLException e) {
