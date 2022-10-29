@@ -596,7 +596,7 @@ public class XMLSheet implements Sheet {
 
             boolean eof, getit = false;
             for (; ;) {
-                position -= block + left_size;
+                position -= (block - left_size);
                 channel.position(Math.max(0, position));
                 channel.read(buffer);
                 if (left_size > 0) {
