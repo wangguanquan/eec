@@ -699,7 +699,7 @@ public class Column {
     public int getCellStyle(Class<?> clazz) {
         int style;
         if (isString(clazz)) {
-            style = Styles.defaultStringBorderStyle() | wrapText;
+            style = Styles.defaultStringBorderStyle();
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
             if (numFmt == null) numFmt = DATETIME_FORMAT;
             style = (1 << INDEX_BORDER) | Horizontals.CENTER;
@@ -724,7 +724,7 @@ public class Column {
             style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
         }
 
-        return style;
+        return style | wrapText;
     }
 
     /**
