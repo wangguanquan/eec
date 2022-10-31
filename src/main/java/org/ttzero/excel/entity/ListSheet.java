@@ -1021,6 +1021,7 @@ public class ListSheet<T> extends Sheet {
             this.o = other.o;
             this.styles = other.styles;
             this.headerComment = other.headerComment;
+            this.cellComment = other.cellComment;
             this.numFmt = other.numFmt;
             this.ignoreValue = other.ignoreValue;
             this.wrapText = other.wrapText;

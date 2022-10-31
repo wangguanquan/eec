@@ -624,6 +624,12 @@ public abstract class Sheet implements Cloneable, Storable {
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
+            // Sort column index
+            sortColumns(columns);
+
+            // Turn to one-base
+            calculateRealColIndex();
+
             // Reverse
             reverseHeadColumn();
 
@@ -632,12 +638,6 @@ public abstract class Sheet implements Cloneable, Storable {
 
             // Reset Common Properties
             resetCommonProperties(columns);
-
-            // Sort column index
-            sortColumns(columns);
-
-            // Turn to one-base
-            calculateRealColIndex();
 
             // Check the limit of columns
             checkColumnLimit();
@@ -1355,7 +1355,7 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    col.addSubColumn(new org.ttzero.excel.entity.Column());
+                    col.addSubColumn(new org.ttzero.excel.entity.Column().setColIndex(col.colIndex));
                 }
             }
         }
@@ -1431,6 +1431,12 @@ public abstract class Sheet implements Cloneable, Storable {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 String name = col.name;
                 Comment headerComment = col.headerComment;
+                double width = col.width;
+                Comment cellComment = col.cellComment;
+                NumFmt numFmt = col.numFmt;
+                boolean ignoreValue = col.ignoreValue;
+                int wrapText = col.wrapText;
+                Integer cellStyle = col.cellStyle, headerStyle = col.headerStyle;
 
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
@@ -1450,6 +1456,13 @@ public abstract class Sheet implements Cloneable, Storable {
                 org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
                 lastCol.name = name;
                 lastCol.headerComment = headerComment;
+                lastCol.width = width;
+                lastCol.cellComment = cellComment;
+                lastCol.numFmt = numFmt;
+                lastCol.ignoreValue = ignoreValue;
+                lastCol.wrapText = wrapText;
+                if (cellStyle != null) lastCol.setCellStyle(cellStyle);
+                if (headerStyle != null) lastCol.setHeaderStyle(headerStyle);
             }
 
             @SuppressWarnings("unchecked")

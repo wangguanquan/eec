@@ -73,11 +73,11 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             new Workbook("Multi ResultSet columns 2", author).setAutoSize(true)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student order by age"
-                    , new Column("通用").addSubColumn(new Column("学号", int.class))
+                    , new Column("通用").setHeaderStyle(794694).addSubColumn(new Column("学号", int.class))
                     , new Column("通用").addSubColumn(new Column("性名", String.class))
-                    , new Column("通用").addSubColumn(new Column("年龄", int.class))
-                    , new Column("创建时间", Timestamp.class).setColIndex(0)
-                    , new Column("更新", Timestamp.class)
+                    , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(794691))
+                    , new Column("创建时间", Timestamp.class)
+                    , new Column("更新", Timestamp.class).setColIndex(1)
                 )
                 .writeTo(defaultTestPath);
         }
