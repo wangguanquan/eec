@@ -22,9 +22,9 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.awt.Color;
-import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -378,6 +378,26 @@ public class ListMapSheetTest extends WorkbookTest {
         list.add(3, null);
         list.add(null);
         new Workbook("Null in list map").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+    }
+
+    @Test public void testLargeColumns() throws IOException {
+        int len = 1436;
+        List<Map<String, ?>> list = new ArrayList<>(len);
+        for (int i = 0; i < len; i++) {
+            Map<String, String> map = new HashMap<>();
+            for (int j = 0; j < 500; j++) {
+                map.put("key" + j, getRandomString());
+            }
+            list.add(map);
+        }
+
+        new Workbook().addSheet(new ListMapSheet(list)).writeTo(defaultTestPath.resolve("large map.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large map.xlsx"))) {
+            assert "A1:SF1437".equals(reader.sheet(0).getDimension().toString());
+            long count = reader.sheet(0).rows().filter(row -> !row.isEmpty()).count();
+            assert count == 1437;
+        }
     }
 
 
