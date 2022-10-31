@@ -328,7 +328,7 @@ public class ResultSetSheet extends Sheet {
                 for (; ++i <= count; ) {
                     SQLColumn column = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
-                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i + 1;
+                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i;
                     columns[i - 1] = column;
                 }
             }
