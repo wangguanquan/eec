@@ -823,7 +823,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 } else len = hc.o;
             }
             else if (isBigDecimal(clazz)) {
-                len = hc.o;
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(hc.o);
+                } else len = hc.o;
             }
             else if (isTime(clazz) || isLocalTime(clazz)) {
                 if (hc.getNumFmt() != null) {
