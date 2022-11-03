@@ -21,7 +21,10 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -55,7 +58,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column("共用表头").addSubColumn(new Column("学号", "id"))
                 , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
-                , new Column("成绩", "score")
+                , new Column("成绩", "score") {
+                @Override
+                public int getHeaderStyleIndex() {
+                    return styles.of(styles.addFont(this.getFont()) | Horizontals.CENTER);
+                }
+
+                public Font getFont() {
+                    return new Font("宋体", 12, Color.RED).bold();
+                }
+            }
             )).writeTo(defaultTestPath);
     }
 
