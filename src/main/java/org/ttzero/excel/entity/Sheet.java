@@ -594,6 +594,15 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Returns the columns
+     *
+     * @return array of column
+     */
+    public org.ttzero.excel.entity.Column[] getColumns() {
+        return columns;
+    }
+
+    /**
      * Returns the header column info
      * <p>
      * The copy sheet will use the parent worksheet header information.
