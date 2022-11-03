@@ -942,7 +942,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             } else {
                 left = new byte[12];
                 for (; ; ) {
-                    channel.position(position -= block - left_size);
+                    channel.position(Math.max(0, position -= block - left_size));
                     channel.read(buffer);
                     if (left_size > 0) {
                         buffer.limit(block);
