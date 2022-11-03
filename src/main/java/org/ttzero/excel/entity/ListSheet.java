@@ -1011,25 +1011,7 @@ public class ListSheet<T> extends Sheet {
         }
 
         public EntryColumn(org.ttzero.excel.entity.Column other) {
-            this.key = other.key;
-            this.name = other.name;
-            this.clazz = other.clazz;
-            this.share = other.share;
-            this.processor = other.processor;
-            this.styleProcessor = other.styleProcessor;
-            this.width = other.width;
-            this.o = other.o;
-            this.styles = other.styles;
-            this.headerComment = other.headerComment;
-            this.cellComment = other.cellComment;
-            this.numFmt = other.numFmt;
-            this.ignoreValue = other.ignoreValue;
-            this.wrapText = other.wrapText;
-            this.colIndex = other.colIndex;
-            this.hide = other.hide;
-            this.realColIndex = other.realColIndex;
-            if (other.cellStyle != null) setCellStyle(other.cellStyle);
-            if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+            super.from(other);
             if (other.next != null) {
                 addSubColumn(new EntryColumn(other.next));
             }

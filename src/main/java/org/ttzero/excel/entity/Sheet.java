@@ -1429,14 +1429,8 @@ public abstract class Sheet implements Cloneable, Storable {
         if (!mergeCells.isEmpty()) {
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
-                String name = col.name;
                 Comment headerComment = col.headerComment;
-                double width = col.width;
-                Comment cellComment = col.cellComment;
-                NumFmt numFmt = col.numFmt;
-                boolean ignoreValue = col.ignoreValue;
-                int wrapText = col.wrapText;
-                Integer cellStyle = col.cellStyle, headerStyle = col.headerStyle;
+                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column(col);
 
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
@@ -1454,15 +1448,8 @@ public abstract class Sheet implements Cloneable, Storable {
 
                 // Copy last col's name into first col
                 org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
-                lastCol.name = name;
+                lastCol.from(tmp);
                 lastCol.headerComment = headerComment;
-                lastCol.width = width;
-                lastCol.cellComment = cellComment;
-                lastCol.numFmt = numFmt;
-                lastCol.ignoreValue = ignoreValue;
-                lastCol.wrapText = wrapText;
-                if (cellStyle != null) lastCol.setCellStyle(cellStyle);
-                if (headerStyle != null) lastCol.setHeaderStyle(headerStyle);
             }
 
             @SuppressWarnings("unchecked")

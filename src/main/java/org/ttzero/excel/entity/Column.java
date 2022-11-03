@@ -89,11 +89,11 @@ public class Column {
     /**
      * The style index of cell, -1 if not be setting
      */
-    private int cellStyleIndex = -1;
+    protected int cellStyleIndex = -1;
     /**
      * The style index of header, -1 if not be setting
      */
-    private int headerStyleIndex = -1;
+    protected int headerStyleIndex = -1;
     /**
      * The cell width
      */
@@ -334,6 +334,49 @@ public class Column {
         this.cellStyle = cellStyle;
     }
 
+    /**
+     * Create column from exists column
+     *
+     * @param other the other column
+     */
+    public Column(Column other) {
+        from(other);
+    }
+
+    /**
+     * Copy properties from other column
+     *
+     * @param other the other column
+     * @return current
+     */
+    public Column from(Column other) {
+        this.key = other.key;
+        this.name = other.name;
+        this.clazz = other.clazz;
+        this.share = other.share;
+        this.processor = other.processor;
+        this.styleProcessor = other.styleProcessor;
+        this.width = other.width;
+        this.o = other.o;
+        this.styles = other.styles;
+        this.headerComment = other.headerComment;
+        this.cellComment = other.cellComment;
+        this.numFmt = other.numFmt;
+        this.ignoreValue = other.ignoreValue;
+        this.wrapText = other.wrapText;
+        this.colIndex = other.colIndex;
+        this.hide = other.hide;
+        this.realColIndex = other.realColIndex;
+        if (other.cellStyle != null) setCellStyle(other.cellStyle);
+        if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+        int i;
+        if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
+        if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
+//        if (other.next != null) {
+//            addSubColumn(new Column(other.next));
+//        }
+        return this;
+    }
     /**
      * Setting the cell's width
      *
