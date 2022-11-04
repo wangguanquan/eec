@@ -1435,6 +1435,7 @@ public abstract class Row {
     /**
      * Returns deep clone cells
      *
+     * @param newLength the length of the copy to be returned
      * @return cells
      */
     public Cell[] copyCells(int newLength) {

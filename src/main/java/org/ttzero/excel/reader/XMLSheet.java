@@ -572,6 +572,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Iterator<Row> iterator() {
+        // If the header row number is specified, the header will be parsed first
         if (header == null && hrf > 0) getHeader();
         return new RowSetIterator(this::nextRow, false);
     }
@@ -583,12 +584,17 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Iterator<Row> dataIterator() {
+        // If the header row number is specified, the header will be parsed first
         if (header == null && hrf > 0) getHeader();
         // iterator data rows
         Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
-        if (header == null) {
+        /*
+        If the header is not specified, the first row will be automatically
+         used as the header, if there is a header, the row will not be skipped
+         */
+        if (hrf == 0 && nIter.hasNext()) {
             Row row = nIter.next();
-            header = row.asHeader();
+            if (header == null) header = row.asHeader();
             row.setHr(header);
         }
         return nIter;
