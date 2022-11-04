@@ -138,7 +138,7 @@ public interface Sheet extends Closeable {
      * +-----------------------------+
      * |       |        COMMON       |
      * | TITLE +-------+------+------+
-     * |      |  SUB1 | SUB2  | SUB3 |
+     * |       |  SUB1 | SUB2 | SUB3 |
      * +------+-------+-------+------+
      * </pre></blockquote>
      *
