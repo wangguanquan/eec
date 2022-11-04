@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -28,16 +29,29 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 
 /**
  * @author guanquan.wang at 2022-06-27 23:24
  */
 public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Columns Annotation").setWaterMark(WaterMark.of("勿外传"))
+        List<RepeatableEntry> list = RepeatableEntry.randomTestData();
+        new Workbook().setWaterMark(WaterMark.of("勿外传"))
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"))) {
+            List<RepeatableEntry> readList = reader.sheet(0).header(1, 3).bind(RepeatableEntry.class).rows()
+                .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+        }
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
@@ -126,7 +140,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         @ExcelColumn("区")
         private String area;
         @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
-        @ExcelColumn(value = "详细地址")
+        @ExcelColumn("详细地址")
         private String detail;
 
         public RepeatableEntry() {}
@@ -175,6 +189,29 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         public String getDetail() {
             return detail;
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry) {
+                RepeatableEntry other = (RepeatableEntry) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(province, other.province)
+                    && Objects.equals(city, other.city)
+                    && Objects.equals(detail, other.detail);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
         }
     }
 }
