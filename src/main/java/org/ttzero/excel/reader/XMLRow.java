@@ -213,7 +213,7 @@ public class XMLRow extends Row {
                         throw new TooManyColumnsException(i, Const.Limit.MAX_COLUMNS_ON_SHEET);
                     }
                     // Resize cell buffer
-                    cells = cellCopyOf(Math.min(i + 99, Const.Limit.MAX_COLUMNS_ON_SHEET));
+                    cells = copyCells(Math.min(i + 99, Const.Limit.MAX_COLUMNS_ON_SHEET));
                 }
                 cell = cells[i - 1];
             }
@@ -287,19 +287,6 @@ public class XMLRow extends Row {
             else if (c < '0' || c > '9') return false;
         }
         return true;
-    }
-
-    protected Cell[] cellCopyOf(int newLength) {
-        Cell[] newCells = new Cell[newLength];
-        int oldRow = cells.length;
-        for (int k = 0; k < newLength; k++) {
-            newCells[k] = new Cell((short) (k + 1));
-            // Copy values
-            if (k < oldRow && cells[k] != null) {
-                newCells[k].from(cells[k]);
-            }
-        }
-        return newCells;
     }
 
     /* Found specify target  */

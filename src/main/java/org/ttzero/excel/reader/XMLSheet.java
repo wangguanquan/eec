@@ -89,6 +89,8 @@ public class XMLSheet implements Sheet {
     protected Dimension dimension;
     // XMLDrawings
     protected Drawings drawings;
+    // Header row
+    protected int hrf, hrl;
 
 
     /**
@@ -226,6 +228,21 @@ public class XMLSheet implements Sheet {
     }
 
     /**
+     * Specify the header rows endpoint
+     *
+     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @param toRow high endpoint (exclusive) of the worksheet
+     * @return current {@link Sheet}
+     */
+    @Override
+    public Sheet header(int fromRow, int toRow) {
+        rangeCheck(fromRow, toRow);
+        this.hrf = fromRow;
+        this.hrl = toRow;
+        return this;
+    }
+
+    /**
      * Set Worksheet state
      */
     XMLSheet setHidden(boolean hidden) {
@@ -242,13 +259,44 @@ public class XMLSheet implements Sheet {
     @Override
     public Row getHeader() {
         if (header == null && !heof) {
-            Row row = findRow0(this::createHeader);
+            Row row = hrf == 0 ? findRow0(this::createHeader) : getHeader(hrf, hrl);
             if (row != null) {
-                header = row.asHeader();
+                header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 sRow.setHr(header);
             }
         }
         return header;
+    }
+
+    // Mutable header rows
+    protected Row getHeader(int fromRow, int toRow) {
+        if (header == null && !heof) {
+            rangeCheck(fromRow, toRow);
+            Row[] rows = new Row[toRow - fromRow];
+            int i = 0, end = toRow - 1;
+            for (Row row = nextRow(); row != null; row = nextRow()) {
+                if (row.getRowNum() >= fromRow) {
+                    Row r = new Row() {};
+                    r.fc = row.fc;
+                    r.lc = row.lc;
+                    r.index = row.index;
+                    r.sst = row.sst;
+                    r.cells = row.copyCells();
+                    rows[i++] = r;
+                }
+                if (row.getRowNum() >= end) break;
+            }
+            return new HeaderRow().with(rows);
+        }
+        return header;
+    }
+
+    // Range check
+    static void rangeCheck(int fromRow, int toRow) {
+        if (fromRow <= 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromRow);
+        if (fromRow >= toRow)
+            throw new IllegalArgumentException("fromIndex(" + fromRow + ") > toIndex(" + toRow + ")");
     }
 
     /**
@@ -259,12 +307,33 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet bind(Class<?> clazz) {
+        // TODO Parse clazz first and then bind header rows
         if (getHeader() != null) {
             try {
                 header.setClassOnce(clazz);
             } catch (IllegalAccessException | InstantiationException e) {
                 throw new ExcelReadException(e);
             }
+        }
+        return this;
+    }
+
+    @Override
+    public Sheet bind(Class<?> clazz, Row row) {
+        if (row == null) throw new IllegalArgumentException("Specify the bind row must not be null.");
+        if (header != null) {
+            if (!row.equals(header)) {
+                header = (HeaderRow) row;
+                sRow.setHr(header);
+            }
+        } else {
+            header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
+            sRow.setHr(header);
+        }
+        try {
+            header.setClassOnce(clazz);
+        } catch (IllegalAccessException | InstantiationException e) {
+            throw new ExcelReadException(e);
         }
         return this;
     }
@@ -503,6 +572,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Iterator<Row> iterator() {
+        if (header == null && hrf > 0) getHeader();
         return new RowSetIterator(this::nextRow, false);
     }
 
@@ -513,11 +583,12 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Iterator<Row> dataIterator() {
+        if (header == null && hrf > 0) getHeader();
         // iterator data rows
         Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
-        if (nIter.hasNext()) {
+        if (header == null) {
             Row row = nIter.next();
-            if (header == null) header = row.asHeader();
+            header = row.asHeader();
             row.setHr(header);
         }
         return nIter;

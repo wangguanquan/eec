@@ -108,8 +108,30 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Specify the header rows endpoint
+     *
+     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @param toRow high endpoint (exclusive) of the worksheet
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     * @throws IllegalArgumentException if {@code toRow} less or equal than {@code fromRow}
+     */
+    Sheet header(int fromRow, int toRow);
+
+    /**
      * Returns the header of the list.
-     * The first non-empty line defaults to the header information.
+     * The first non-empty line defaults to the header information. You can also call {@link #header(int, int)}
+     * to specify multiple header rows. If there are multiple rows of headers, ':' will be used for stitching.
+     *
+     * <blockquote><pre>
+     * +-----------------------------+
+     * |       |        COMMON       |
+     * | TITLE +-------+------+------+
+     * |      |  SUB1 | SUB2  | SUB3 |
+     * +------+-------+-------+------+
+     * </pre></blockquote>
+     *
+     * The above table will return "TITLE", "COMMON:SUB1", "COMMON:SUB2", "COMMON:SUB3"
      *
      * @return the {@link HeaderRow}
      */
@@ -122,6 +144,27 @@ public interface Sheet extends Closeable {
      * @return the {@link Sheet}
      */
     Sheet bind(Class<?> clazz);
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @param toRow high endpoint (exclusive) of the worksheet
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRow, int toRow) {
+        return bind(clazz, header(fromRow, toRow).getHeader());
+    }
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param row specify a custom header row
+     * @return the {@link Sheet}
+     */
+    Sheet bind(Class<?> clazz, Row row);
 
     /**
      * Load the sheet data

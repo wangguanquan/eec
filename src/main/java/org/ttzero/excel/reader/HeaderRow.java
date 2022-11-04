@@ -17,6 +17,7 @@
 package org.ttzero.excel.reader;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListSheet;
@@ -68,13 +69,10 @@ public class HeaderRow extends Row {
 
     protected HeaderRow() { }
 
-    public HeaderRow with(Row row) {
+    public HeaderRow with(Row ... rows) {
+        Row row = rows[rows.length - 1];
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
-        for (int i = row.fc; i < row.lc; i++) {
-            this.names[i] = row.getString(i);
-            this.mapping.put(this.names[i], i);
-        }
         // Extends from row
         this.fc = row.fc;
         this.lc = row.lc;
@@ -83,10 +81,37 @@ public class HeaderRow extends Row {
         for (int i = 0; i < row.fc; i++) {
             this.cells[i] = new Cell();
         }
-        for (int i = row.fc; i < row.lc; i++) {
-            Cell cell = new Cell();
-            cell.setSv(this.names[i]);
-            this.cells[i] = cell;
+
+        if (rows.length == 1) {
+            for (int i = row.fc; i < row.lc; i++) {
+                this.names[i] = row.getString(i);
+                this.mapping.put(this.names[i], i);
+
+                Cell cell = new Cell();
+                cell.setSv(this.names[i]);
+                this.cells[i] = cell;
+            }
+        } else {
+            // Copy on merge cells
+            mergeCellsIfNull(rows);
+
+            StringBuilder buf = new StringBuilder();
+            for (int i = row.fc; i < row.lc; i++) {
+                buf.delete(0, buf.length());
+                for (Row r : rows) {
+                    String tmp = r.getString(i);
+                    if (StringUtil.isNotEmpty(tmp)) {
+                        buf.append(tmp).append(':');
+                    }
+                }
+                if (buf.length() > 1) buf.deleteCharAt(buf.length() - 1);
+                this.names[i] = buf.toString();
+                this.mapping.put(this.names[i], i);
+
+                Cell cell = new Cell();
+                cell.setSv(this.names[i]);
+                this.cells[i] = cell;
+            }
         }
         return this;
     }
@@ -524,6 +549,21 @@ public class HeaderRow extends Row {
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
+        // Support multi header columns
+        ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
+        if (cs != null) {
+            ExcelColumn[] ecs = cs.value();
+            StringJoiner joiner = new StringJoiner(":");
+            int colIndex = -1;
+            for (ExcelColumn ec : ecs) {
+                if (StringUtil.isNotEmpty(ec.value())) joiner.add(ec.value());
+                if (ec.colIndex() > -1) colIndex = ec.colIndex();
+            }
+            ListSheet.EntryColumn column = new ListSheet.EntryColumn(joiner.toString());
+            column.setColIndex(colIndex);
+            return column;
+        }
+        // Single header column
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
             ListSheet.EntryColumn column = new ListSheet.EntryColumn(ec.value());
@@ -536,5 +576,22 @@ public class HeaderRow extends Row {
             return new ListSheet.EntryColumn(EMPTY, RowNum.class);
         }
         return null;
+    }
+
+    /**
+     * Copy column name on merge cells
+     *
+     * @param rows the header rows
+     */
+    protected void mergeCellsIfNull(Row[] rows) {
+        Row row = rows[rows.length - 1];
+        int r = rows.length, c = row.lc - row.fc;
+        Cell[] cells = new Cell[r * c];
+        for (int i = 0; i < r; i++) System.arraycopy(rows[i].cells, 0, cells, c * i, c);
+        // TODO header rows more than 2
+        for (int i = 0, len = r * c; i < len; i++) {
+            if (row.getString(cells[i]) == null && (i % c) > 1 && StringUtil.isNotEmpty(row.getString(cells[i - 1])) && i + c < len && StringUtil.isNotEmpty(row.getString(cells[i + c])))
+                cells[i].setSv(row.getString(cells[i - 1]));
+        }
     }
 }
