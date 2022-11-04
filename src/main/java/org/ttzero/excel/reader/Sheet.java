@@ -111,6 +111,17 @@ public interface Sheet extends Closeable {
      * Specify the header rows endpoint
      *
      * @param fromRow low endpoint (inclusive) of the worksheet
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     */
+    default Sheet header(int fromRow) {
+        return header(fromRow, fromRow + 1);
+    }
+
+    /**
+     * Specify the header rows endpoint
+     *
+     * @param fromRow low endpoint (inclusive) of the worksheet
      * @param toRow high endpoint (exclusive) of the worksheet
      * @return current {@link Sheet}
      * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
@@ -144,6 +155,17 @@ public interface Sheet extends Closeable {
      * @return the {@link Sheet}
      */
     Sheet bind(Class<?> clazz);
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRow) {
+        return bind(clazz, header(fromRow).getHeader());
+    }
 
     /**
      * Set the binding type
