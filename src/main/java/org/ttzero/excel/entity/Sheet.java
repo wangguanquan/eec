@@ -1446,6 +1446,7 @@ public abstract class Sheet implements Cloneable, Storable {
                     for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
                         org.ttzero.excel.entity.Column currentCol = array[m * y + o];
                         currentCol.name = null;
+                        currentCol.key = null;
                         if (currentCol.headerComment != null) {
                             if (headerComment == null) {
                                 headerComment = currentCol.headerComment;
