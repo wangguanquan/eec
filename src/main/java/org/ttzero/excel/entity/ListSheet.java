@@ -1012,6 +1012,11 @@ public class ListSheet<T> extends Sheet {
 
         public EntryColumn(org.ttzero.excel.entity.Column other) {
             super.from(other);
+            if (other instanceof EntryColumn) {
+                EntryColumn o = (EntryColumn) other;
+                this.method = o.method;
+                this.field = o.field;
+            }
             if (other.next != null) {
                 addSubColumn(new EntryColumn(other.next));
             }

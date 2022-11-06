@@ -398,6 +398,11 @@ public class ResultSetSheet extends Sheet {
 
         public SQLColumn(org.ttzero.excel.entity.Column other) {
             super.from(other);
+            if (other instanceof SQLColumn) {
+                SQLColumn o = (SQLColumn) other;
+                this.sqlType = o.sqlType;
+                this.ri = o.ri;
+            }
             if (other.next != null) {
                 addSubColumn(new SQLColumn(other.next));
             }
