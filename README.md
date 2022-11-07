@@ -5,7 +5,7 @@
 EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取/写入以及xls格式的读取(xls支持版本BIFF8也就是excel 97~2003格式)。
 EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
-EEC最大特点是`高速`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
+EEC最大特点是`高性能`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
 
 使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成100w行x29列数据的读写。
 
@@ -274,6 +274,12 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.5 (2022-11-07)
+-------------
+- Row转对象时如果出异常将提示具体的行和列信息(#284)
+- 导出结束后删除zip包(#296)
+- 修复部分BUG(#297,#298)
+
 Version 0.5.4 (2022-08-28)
 -------------
 - 支持显示/隐藏网络线
@@ -297,11 +303,6 @@ Version 0.5.2 (2022-07-16)
 - StatementSheet&ResultSetSheet添加StyleProcessor实现整行样式调整(#235)
 - 修复部分BUG(#257, #260)
 
-Version 0.5.1 (2022-07-10)
--------------
-- 提升对非标准Office OpenXML生成的excel读取兼容性(#245, #247)
-- 提升读取Excel时Row转Java对象的兼容性(#254)
-- 修复部分BUG(#249, #252)
 
 [更多...](./CHANGELOG)
 
@@ -309,7 +310,7 @@ Version 0.5.1 (2022-07-10)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.4-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.5-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
