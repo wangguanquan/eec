@@ -125,12 +125,13 @@ public interface Sheet extends Closeable {
      * @param toRow high endpoint (exclusive) of the worksheet
      * @return current {@link Sheet}
      * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
-     * @throws IllegalArgumentException if {@code toRow} less or equal than {@code fromRow}
+     * @throws IllegalArgumentException if {@code toRow} less than or equal to {@code fromRow}
      */
     Sheet header(int fromRow, int toRow);
 
     /**
      * Returns the header of the list.
+     *
      * The first non-empty line defaults to the header information. You can also call {@link #header(int, int)}
      * to specify multiple header rows. If there are multiple rows of headers, ':' will be used for stitching.
      *
