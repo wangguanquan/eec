@@ -594,6 +594,15 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Returns the columns
+     *
+     * @return array of column
+     */
+    public org.ttzero.excel.entity.Column[] getColumns() {
+        return columns;
+    }
+
+    /**
      * Returns the header column info
      * <p>
      * The copy sheet will use the parent worksheet header information.
@@ -624,6 +633,12 @@ public abstract class Sheet implements Cloneable, Storable {
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
+            // Sort column index
+            sortColumns(columns);
+
+            // Turn to one-base
+            calculateRealColIndex();
+
             // Reverse
             reverseHeadColumn();
 
@@ -632,12 +647,6 @@ public abstract class Sheet implements Cloneable, Storable {
 
             // Reset Common Properties
             resetCommonProperties(columns);
-
-            // Sort column index
-            sortColumns(columns);
-
-            // Turn to one-base
-            calculateRealColIndex();
 
             // Check the limit of columns
             checkColumnLimit();
@@ -1355,7 +1364,7 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    col.addSubColumn(new org.ttzero.excel.entity.Column());
+                    col.addSubColumn(new org.ttzero.excel.entity.Column().setColIndex(col.colIndex));
                 }
             }
         }
@@ -1429,14 +1438,15 @@ public abstract class Sheet implements Cloneable, Storable {
         if (!mergeCells.isEmpty()) {
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
-                String name = col.name;
                 Comment headerComment = col.headerComment;
+                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column(col);
 
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
                     for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
                         org.ttzero.excel.entity.Column currentCol = array[m * y + o];
                         currentCol.name = null;
+                        currentCol.key = null;
                         if (currentCol.headerComment != null) {
                             if (headerComment == null) {
                                 headerComment = currentCol.headerComment;
@@ -1448,7 +1458,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
                 // Copy last col's name into first col
                 org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
-                lastCol.name = name;
+                lastCol.from(tmp);
                 lastCol.headerComment = headerComment;
             }
 

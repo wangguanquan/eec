@@ -357,13 +357,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             if (sheet.isAutoSize()) {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) ? hc.name : hc.key;
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) && !isFirstMergedCell(mergeCells, i + 1, j + 1) ? null : hc.key;
                     writeStringAutoSize(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             } else {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) ? hc.name : hc.key;
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) && !isFirstMergedCell(mergeCells, i + 1, j + 1) ? null : hc.key;
                     writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             }
@@ -823,7 +823,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 } else len = hc.o;
             }
             else if (isBigDecimal(clazz)) {
-                len = hc.o;
+                if (hc.getNumFmt() != null) {
+                    len = hc.getNumFmt().calcNumWidth(hc.o);
+                } else len = hc.o;
             }
             else if (isTime(clazz) || isLocalTime(clazz)) {
                 if (hc.getNumFmt() != null) {
@@ -1174,4 +1176,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (int i = 0; i < n; w += cacheChar[i++] > 0x4E00 ? 1.86D : 1.0D);
         return w;
     }
+
+    /**
+     * Test whether the coordinate is the first cell of the merged cell,
+     * and use {@link Grid#test} to determine yes before calling this method
+     *
+     * @param mergeCells all merged cells
+     * @param row the cell row
+     * @param col the cell column
+     * @return true if the is first cell in merged
+     */
+    public static boolean isFirstMergedCell(List<Dimension> mergeCells, int row, int col) {
+        for (Dimension dim : mergeCells) {
+            if (dim.checkRange(row, col) && row == dim.firstRow && col == dim.firstColumn) return true;
+        }
+        return false;
+    }
+
 }

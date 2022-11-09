@@ -111,18 +111,21 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     public void writeTo(Path path) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         reMarkPath(zip, path);
+        FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         Files.copy(zip, os);
+        FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(File file) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         FileUtil.cp(zip, file);
+        FileUtil.rm(zip);
     }
 
 
