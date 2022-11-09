@@ -48,7 +48,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"))) {
-            List<RepeatableEntry> readList = reader.sheet(0).header(1, 3).bind(RepeatableEntry.class).rows()
+            List<RepeatableEntry> readList = reader.sheet(0).header(1, 5).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
             assert list.size() == readList.size();
@@ -138,20 +138,34 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }};
 
     public static class RepeatableEntry {
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn
         @ExcelColumn("订单号")
         private String orderNo;
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn("A")
         @ExcelColumn("收件人")
         private String recipient;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("A")
         @ExcelColumn("省")
         private String province;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("A")
         @ExcelColumn("市")
         private String city;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("B")
         @ExcelColumn("区")
         private String area;
+        @ExcelColumn("TOP")
         @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
+        @ExcelColumn("B")
         @ExcelColumn("详细地址")
         private String detail;
 
