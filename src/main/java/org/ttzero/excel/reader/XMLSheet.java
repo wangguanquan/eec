@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The open-xml format Worksheet
@@ -66,6 +67,8 @@ public class XMLSheet implements Sheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.hrf = sheet.hrf;
+        this.hrl = sheet.hrl;
     }
 
     protected String name;
@@ -268,25 +271,43 @@ public class XMLSheet implements Sheet {
         return header;
     }
 
-    // Mutable header rows
     protected Row getHeader(int fromRow, int toRow) {
         if (header == null && !heof) {
             rangeCheck(fromRow, toRow);
-            Row[] rows = new Row[toRow - fromRow];
-            int i = 0, end = toRow - 1;
-            for (Row row = nextRow(); row != null; row = nextRow()) {
-                if (row.getRowNum() >= fromRow) {
-                    Row r = new Row() {};
-                    r.fc = row.fc;
-                    r.lc = row.lc;
-                    r.index = row.index;
-                    r.sst = row.sst;
-                    r.cells = row.copyCells();
-                    rows[i++] = r;
+            // Mutable header rows
+            if (toRow - fromRow > 1) {
+                Row[] rows = new Row[toRow - fromRow];
+                int i = 0, end = toRow - 1;
+                for (Row row = nextRow(); row != null; row = nextRow()) {
+                    if (row.getRowNum() >= fromRow) {
+                        Row r = new Row() {
+                        };
+                        r.fc = row.fc;
+                        r.lc = row.lc;
+                        r.index = row.index;
+                        r.sst = row.sst;
+                        r.cells = row.copyCells();
+                        rows[i++] = r;
+                    }
+                    if (row.getRowNum() >= end) break;
                 }
-                if (row.getRowNum() >= end) break;
+
+                // Parse merged cells
+                XMLSheet tmp = new XMLSheet(this);
+                tmp.reader = null;
+                List<Dimension> mergeCells = tmp.asMergeSheet().parseMerge();
+                if (mergeCells != null) {
+                    mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRow || dim.lastRow > fromRow).collect(Collectors.toList());
+                }
+
+                return new HeaderRow().with(mergeCells, rows);
             }
-            return new HeaderRow().with(rows);
+            // Single row
+            else {
+                Row row = nextRow();
+                for (; row != null && row.getRowNum() < fromRow; row = nextRow());
+                return new HeaderRow().with(row);
+            }
         }
         return header;
     }
@@ -307,7 +328,6 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet bind(Class<?> clazz) {
-        // TODO Parse clazz first and then bind header rows
         if (getHeader() != null) {
             try {
                 header.setClassOnce(clazz);
@@ -321,12 +341,7 @@ public class XMLSheet implements Sheet {
     @Override
     public Sheet bind(Class<?> clazz, Row row) {
         if (row == null) throw new IllegalArgumentException("Specify the bind row must not be null.");
-        if (header != null) {
-            if (!row.equals(header)) {
-                header = (HeaderRow) row;
-                sRow.setHr(header);
-            }
-        } else {
+        if (!row.equals(header)) {
             header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
             sRow.setHr(header);
         }
@@ -1002,7 +1017,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     /*
     Parse `mergeCells` tag
      */
-    void parseMerge() {
+    List<Dimension> parseMerge() {
         try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             long position = Files.size(path);
             final int block = (int) Math.min(1 << 11, position), c = 12;
@@ -1015,7 +1030,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                 channel.position(lastRowMark);
                 channel.read(buffer);
                 buffer.flip();
-                getit = true; // Unknown
+                getit = true;
             } else {
                 left = new byte[12];
                 for (; ; ) {
@@ -1062,16 +1077,17 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
             if (getit) {
                 // Find mergeCells tag
-                parseMerge(channel, buffer, block);
+                return parseMerge(channel, buffer, block);
             }
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
         }
+        return null;
     }
 
     // Find mergeCell tags
-    void parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
+    List<Dimension> parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
         List<Dimension> mergeCells = new ArrayList<>();
         boolean eof = false;
         int limit = buffer.limit(), i = buffer.position(), f, n;
@@ -1126,7 +1142,9 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         if (!mergeCells.isEmpty()) {
             this.mergeCells = GridFactory.create(mergeCells);
             LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells);
+            return mergeCells;
         }
+        return null;
     }
 
     private void mergeCell(int row, Cell cell) {

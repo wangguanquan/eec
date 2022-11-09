@@ -88,6 +88,10 @@ public class HeaderRow extends Row {
     protected HeaderRow() { }
 
     public HeaderRow with(Row ... rows) {
+        return with(null, rows);
+    }
+
+    public HeaderRow with(List<Dimension> mergeCells, Row ... rows) {
         Row row = rows[rows.length - 1];
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
@@ -111,7 +115,7 @@ public class HeaderRow extends Row {
             }
         } else {
             // Copy on merge cells
-            mergeCellsIfNull(rows);
+            mergeCellsIfNull(mergeCells, rows);
 
             StringBuilder buf = new StringBuilder();
             for (int i = row.fc; i < row.lc; i++) {
@@ -727,17 +731,27 @@ public class HeaderRow extends Row {
     /**
      * Copy column name on merge cells
      *
+     * @param mergeCells merged cell in header rows
      * @param rows the header rows
      */
-    protected void mergeCellsIfNull(Row[] rows) {
-        Row row = rows[rows.length - 1];
-        int r = rows.length, c = row.lc - row.fc;
-        Cell[] cells = new Cell[r * c];
-        for (int i = 0; i < r; i++) System.arraycopy(rows[i].cells, 0, cells, c * i, c);
-        // TODO header rows more than 2
-        for (int i = 0, len = r * c; i < len; i++) {
-            if (row.getString(cells[i]) == null && (i % c) > 1 && StringUtil.isNotEmpty(row.getString(cells[i - 1])) && i + c < len && StringUtil.isNotEmpty(row.getString(cells[i + c])))
-                cells[i].setSv(row.getString(cells[i - 1]));
+    protected void mergeCellsIfNull(List<Dimension> mergeCells, Row[] rows) {
+        if (mergeCells == null) return;
+        mergeCells = mergeCells.stream().filter(d -> d.getWidth() > 1).collect(Collectors.toList());
+        if (mergeCells.isEmpty()) return;
+
+        Map<Long, Dimension> map = mergeCells.stream().collect(Collectors.toMap(a -> ((long) a.firstRow) << 16 | a.firstColumn, a -> a, (a, b) -> a));
+
+        for (Row row : rows) {
+            for (int i = fc; i < lc; ) {
+                Cell cell = row.cells[i];
+                Dimension d = map.get(((long) row.getRowNum()) << 16 | cell.i);
+                if (d != null) {
+                    String v = row.getString(cell);
+                    for (int j = d.firstColumn + 1; j <= d.lastColumn; j++) {
+                        row.cells[++i].setSv(v);
+                    }
+                } else i++;
+            }
         }
     }
 }
