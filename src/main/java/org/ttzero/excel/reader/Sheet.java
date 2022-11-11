@@ -387,6 +387,13 @@ interface MergeSheet extends Sheet {
      * Returns CellMerged info
      */
     Grid getMergeGrid();
+
+    /**
+     * Returns all merged cells
+     *
+     * @return If no merged cells are returned, Null is returned
+     */
+    List<Dimension> getMergeCells();
 }
 
 //interface FullSheet extends CalcSheet, MergeSheet { }

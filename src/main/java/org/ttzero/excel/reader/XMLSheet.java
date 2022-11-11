@@ -1007,7 +1007,12 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     void load0() {
         if (ready) return;
         if (mergeCells == null && !eof) {
-            parseMerge();
+            List<Dimension> mergeCells = parseMerge();
+
+            if (mergeCells != null && !mergeCells.isEmpty()) {
+                this.mergeCells = GridFactory.create(mergeCells);
+                LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells);
+            }
         }
 
         if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
@@ -1141,12 +1146,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
             }
         }
 
-        if (!mergeCells.isEmpty()) {
-            this.mergeCells = GridFactory.create(mergeCells);
-            LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells);
-            return mergeCells;
-        }
-        return null;
+        return mergeCells;
     }
 
     private void mergeCell(int row, Cell cell) {
@@ -1156,5 +1156,10 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     @Override
     public Grid getMergeGrid() {
         return mergeCells;
+    }
+
+    @Override
+    public List<Dimension> getMergeCells() {
+        return parseMerge();
     }
 }
