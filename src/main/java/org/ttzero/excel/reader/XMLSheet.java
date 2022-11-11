@@ -232,12 +232,17 @@ public class XMLSheet implements Sheet {
 
     /**
      * Specify the header rows endpoint
+     * <p>
+     * Note: After specifying the header row number, the row-pointer will move to the
+     * next row of the header range. The {@link #bind(Class)}, {@link #bind(Class, int)},
+     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
+     * and {@link #dataIterator()} will all be affected.
      *
      * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
      * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
      * @return current {@link Sheet}
-     * @throws IndexOutOfBoundsException if {@code fromRowNum} less than 1
-     * @throws IllegalArgumentException if {@code toRowNum} less than {@code fromRowNum}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     * @throws IllegalArgumentException if {@code toRow} less than {@code fromRow}
      */
     @Override
     public Sheet header(int fromRowNum, int toRowNum) {
@@ -274,44 +279,41 @@ public class XMLSheet implements Sheet {
     }
 
     protected Row getHeader(int fromRowNum, int toRowNum) {
-        if (header == null && !heof) {
-            rangeCheck(fromRowNum, toRowNum);
-            // Mutable header rows
-            if (toRowNum - fromRowNum > 0) {
-                Row[] rows = new Row[toRowNum - fromRowNum + 1];
-                int i = 0;
-                for (Row row = nextRow(); row != null; row = nextRow()) {
-                    if (row.getRowNum() >= fromRowNum) {
-                        Row r = new Row() {
-                        };
-                        r.fc = row.fc;
-                        r.lc = row.lc;
-                        r.index = row.index;
-                        r.sst = row.sst;
-                        r.cells = row.copyCells();
-                        rows[i++] = r;
-                    }
-                    if (row.getRowNum() >= toRowNum) break;
+        if (header != null) return header;
+        rangeCheck(fromRowNum, toRowNum);
+        // Mutable header rows
+        if (toRowNum - fromRowNum > 0) {
+            Row[] rows = new Row[toRowNum - fromRowNum + 1];
+            int i = 0;
+            for (Row row = nextRow(); row != null; row = nextRow()) {
+                if (row.getRowNum() >= fromRowNum) {
+                    Row r = new Row() { };
+                    r.fc = row.fc;
+                    r.lc = row.lc;
+                    r.index = row.index;
+                    r.sst = row.sst;
+                    r.cells = row.copyCells();
+                    rows[i++] = r;
                 }
-
-                // Parse merged cells
-                XMLSheet tmp = new XMLSheet(this);
-                tmp.reader = null;
-                List<Dimension> mergeCells = tmp.asMergeSheet().parseMerge();
-                if (mergeCells != null) {
-                    mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
-                }
-
-                return new HeaderRow().with(mergeCells, rows);
+                if (row.getRowNum() >= toRowNum) break;
             }
-            // Single row
-            else {
-                Row row = nextRow();
-                for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-                return new HeaderRow().with(row);
+
+            // Parse merged cells
+            XMLSheet tmp = new XMLSheet(this);
+            tmp.reader = null;
+            List<Dimension> mergeCells = tmp.asMergeSheet().parseMerge();
+            if (mergeCells != null) {
+                mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
             }
+
+            return new HeaderRow().with(mergeCells, rows);
         }
-        return header;
+        // Single row
+        else {
+            Row row = nextRow();
+            for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
+            return new HeaderRow().with(row);
+        }
     }
 
     // Range check
