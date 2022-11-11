@@ -110,24 +110,29 @@ public interface Sheet extends Closeable {
     /**
      * Specify the header rows endpoint
      *
-     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
      * @return current {@link Sheet}
      * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
      */
-    default Sheet header(int fromRow) {
-        return header(fromRow, fromRow + 1);
+    default Sheet header(int fromRowNum) {
+        return header(fromRowNum, fromRowNum);
     }
 
     /**
      * Specify the header rows endpoint
+     * <p>
+     * Note: After specifying the header row number, the row-pointer will move to the
+     * next row of the header range. The {@link #bind(Class)}, {@link #bind(Class, int)},
+     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
+     * and {@link #dataIterator()} will all be affected.
      *
-     * @param fromRow low endpoint (inclusive) of the worksheet
-     * @param toRow high endpoint (exclusive) of the worksheet
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
      * @return current {@link Sheet}
      * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
-     * @throws IllegalArgumentException if {@code toRow} less than or equal to {@code fromRow}
+     * @throws IllegalArgumentException if {@code toRow} less than {@code fromRow}
      */
-    Sheet header(int fromRow, int toRow);
+    Sheet header(int fromRowNum, int toRowNum);
 
     /**
      * Returns the header of the list.
@@ -161,23 +166,23 @@ public interface Sheet extends Closeable {
      * Set the binding type
      *
      * @param clazz the binding type
-     * @param fromRow low endpoint (inclusive) of the worksheet
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
      * @return the {@link Sheet}
      */
-    default Sheet bind(Class<?> clazz, int fromRow) {
-        return bind(clazz, header(fromRow).getHeader());
+    default Sheet bind(Class<?> clazz, int fromRowNum) {
+        return bind(clazz, header(fromRowNum).getHeader());
     }
 
     /**
      * Set the binding type
      *
      * @param clazz the binding type
-     * @param fromRow low endpoint (inclusive) of the worksheet
-     * @param toRow high endpoint (exclusive) of the worksheet
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
      * @return the {@link Sheet}
      */
-    default Sheet bind(Class<?> clazz, int fromRow, int toRow) {
-        return bind(clazz, header(fromRow, toRow).getHeader());
+    default Sheet bind(Class<?> clazz, int fromRowNum, int toRowNum) {
+        return bind(clazz, header(fromRowNum, toRowNum).getHeader());
     }
 
     /**
