@@ -48,7 +48,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"))) {
-            List<RepeatableEntry> readList = reader.sheet(0).header(1, 5).bind(RepeatableEntry.class).rows()
+            List<RepeatableEntry> readList = reader.sheet(0).header(1, 4).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
             assert list.size() == readList.size();
