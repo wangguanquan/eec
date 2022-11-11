@@ -233,15 +233,17 @@ public class XMLSheet implements Sheet {
     /**
      * Specify the header rows endpoint
      *
-     * @param fromRow low endpoint (inclusive) of the worksheet
-     * @param toRow high endpoint (exclusive) of the worksheet
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
      * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRowNum} less than 1
+     * @throws IllegalArgumentException if {@code toRowNum} less than {@code fromRowNum}
      */
     @Override
-    public Sheet header(int fromRow, int toRow) {
-        rangeCheck(fromRow, toRow);
-        this.hrf = fromRow;
-        this.hrl = toRow;
+    public Sheet header(int fromRowNum, int toRowNum) {
+        rangeCheck(fromRowNum, toRowNum);
+        this.hrf = fromRowNum;
+        this.hrl = toRowNum;
         return this;
     }
 
@@ -271,15 +273,15 @@ public class XMLSheet implements Sheet {
         return header;
     }
 
-    protected Row getHeader(int fromRow, int toRow) {
+    protected Row getHeader(int fromRowNum, int toRowNum) {
         if (header == null && !heof) {
-            rangeCheck(fromRow, toRow);
+            rangeCheck(fromRowNum, toRowNum);
             // Mutable header rows
-            if (toRow - fromRow > 1) {
-                Row[] rows = new Row[toRow - fromRow];
-                int i = 0, end = toRow - 1;
+            if (toRowNum - fromRowNum > 0) {
+                Row[] rows = new Row[toRowNum - fromRowNum + 1];
+                int i = 0;
                 for (Row row = nextRow(); row != null; row = nextRow()) {
-                    if (row.getRowNum() >= fromRow) {
+                    if (row.getRowNum() >= fromRowNum) {
                         Row r = new Row() {
                         };
                         r.fc = row.fc;
@@ -289,7 +291,7 @@ public class XMLSheet implements Sheet {
                         r.cells = row.copyCells();
                         rows[i++] = r;
                     }
-                    if (row.getRowNum() >= end) break;
+                    if (row.getRowNum() >= toRowNum) break;
                 }
 
                 // Parse merged cells
@@ -297,7 +299,7 @@ public class XMLSheet implements Sheet {
                 tmp.reader = null;
                 List<Dimension> mergeCells = tmp.asMergeSheet().parseMerge();
                 if (mergeCells != null) {
-                    mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRow || dim.lastRow > fromRow).collect(Collectors.toList());
+                    mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
                 }
 
                 return new HeaderRow().with(mergeCells, rows);
@@ -305,7 +307,7 @@ public class XMLSheet implements Sheet {
             // Single row
             else {
                 Row row = nextRow();
-                for (; row != null && row.getRowNum() < fromRow; row = nextRow());
+                for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
                 return new HeaderRow().with(row);
             }
         }
@@ -313,11 +315,11 @@ public class XMLSheet implements Sheet {
     }
 
     // Range check
-    static void rangeCheck(int fromRow, int toRow) {
-        if (fromRow <= 0)
-            throw new IndexOutOfBoundsException("fromIndex = " + fromRow);
-        if (fromRow >= toRow)
-            throw new IllegalArgumentException("fromIndex(" + fromRow + ") > toIndex(" + toRow + ")");
+    static void rangeCheck(int fromRowNum, int toRowNum) {
+        if (fromRowNum <= 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromRowNum);
+        if (fromRowNum > toRowNum)
+            throw new IllegalArgumentException("fromIndex(" + fromRowNum + ") > toIndex(" + toRowNum + ")");
     }
 
     /**
