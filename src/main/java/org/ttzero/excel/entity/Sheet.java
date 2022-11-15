@@ -1439,7 +1439,7 @@ public abstract class Sheet implements Cloneable, Storable {
             for (Dimension dim : mergeCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 Comment headerComment = col.headerComment;
-                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column(col);
+                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column().from(col);
 
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {

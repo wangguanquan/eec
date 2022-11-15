@@ -341,6 +341,7 @@ public class Column {
      */
     public Column(Column other) {
         from(other);
+        if (other.next != null) addSubColumn(new Column(other.next));
     }
 
     /**
@@ -372,9 +373,7 @@ public class Column {
         int i;
         if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
         if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
-//        if (other.next != null) {
-//            addSubColumn(new Column(other.next));
-//        }
+
         return this;
     }
     /**
