@@ -742,14 +742,16 @@ public class HeaderRow extends Row {
         Map<Long, Dimension> map = mergeCells.stream().collect(Collectors.toMap(a -> ((long) a.firstRow) << 16 | a.firstColumn, a -> a, (a, b) -> a));
 
         for (Row row : rows) {
-            for (int i = fc; i < lc; ) {
+            for (int i = row.fc; i < row.lc; ) {
                 Cell cell = row.cells[i];
                 Dimension d = map.get(((long) row.getRowNum()) << 16 | cell.i);
                 if (d != null) {
                     String v = row.getString(cell);
-                    for (int j = d.firstColumn + 1; j <= d.lastColumn; j++) {
-                        row.cells[++i].setSv(v);
+                    if (d.lastColumn > row.lc) {
+                        row.cells = row.copyCells(d.lastColumn);
+                        row.lc = d.lastColumn;
                     }
+                    for (int j = d.firstColumn + 1; j <= d.lastColumn; j++) row.cells[++i].setSv(v);
                 } else i++;
             }
         }
