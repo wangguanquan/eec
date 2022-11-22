@@ -1018,7 +1018,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         }
 
         if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
-            sRow = sRow.asMergeRow().setCopyValueFunc(this::mergeCell);
+            sRow = sRow.asMergeRow().setCopyValueFunc(mergeCells, this::mergeCell);
         }
         ready = true;
     }
