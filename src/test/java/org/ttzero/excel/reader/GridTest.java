@@ -203,11 +203,22 @@ public class GridTest {
         Grid grid = new Grid.IndexGrid(range, 2 * 17);
         for (Dimension dim : list) grid.mark(dim);
 
-        assert !grid.test(1, 1);
-        assert grid.test(2, 2);
-        assert grid.test(2, 5);
-        assert !grid.test(3, 3);
-        assert !grid.test(6, 2);
+        Cell c = new Cell((short) 1);
+        assert grid.merge(1, c) == 1;
+        assert grid.merge(2, c) == 2;
+        c.i = 7;
+        assert grid.merge(1, c) == 1;
+        assert grid.merge(2, c) == 2;
+
+        c.i = 8;
+        assert grid.merge(1, c) == 1;
+        c.i = 9;
+        assert grid.merge(1, c) == 2;
+
+        c.i = 26;
+        assert grid.merge(1, c) == 1;
+        c.i = 27;
+        assert grid.merge(1, c) == 2;
     }
 
     @Test public void testFractureGrid() {
