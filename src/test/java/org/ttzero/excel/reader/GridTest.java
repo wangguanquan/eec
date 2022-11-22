@@ -192,7 +192,16 @@ public class GridTest {
     }
 
     @Test public void testIndexGrid() {
-        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("B2:E2")));
+        Dimension range = new Dimension(1, (short)1, 2, (short)17);
+        List<Dimension> list = Arrays.asList(Dimension.of("H1:I1"), Dimension.of("J1:K1")
+            , Dimension.of("L1:M1"), Dimension.of("N1:O1"), Dimension.of("P1:Q1"), Dimension.of("R1:S1")
+            , Dimension.of("T1:U1"), Dimension.of("V1:W1"), Dimension.of("X1:Y1"), Dimension.of("Z1:AA1")
+            , Dimension.of("A1:A2"), Dimension.of("B1:B2"), Dimension.of("C1:C2"), Dimension.of("D1:D2")
+            , Dimension.of("E1:E2"), Dimension.of("F1:F2"), Dimension.of("G1:G2")
+        );
+
+        Grid grid = new Grid.IndexGrid(range, 2 * 17);
+        for (Dimension dim : list) grid.mark(dim);
 
         assert !grid.test(1, 1);
         assert grid.test(2, 2);
