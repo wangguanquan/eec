@@ -249,6 +249,7 @@ public class XMLSheet implements Sheet {
         rangeCheck(fromRowNum, toRowNum);
         this.hrf = fromRowNum;
         this.hrl = toRowNum;
+        this.header = null; // Clear header if exists
         return this;
     }
 
