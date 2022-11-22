@@ -62,9 +62,9 @@ public abstract class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
     protected int index = -1;
-    // Index to first column (zero base)
+    // Index to first column (zero base, inclusive)
     protected int fc = 0;
-    // Index to last column (zero base)
+    // Index to last column (zero base, exclusive)
     protected int lc = -1;
     // Share cell
     protected Cell[] cells;
