@@ -73,6 +73,8 @@ public class HeaderRow extends Row {
 
     // `detailMessage` field declare in Throwable
     protected static final Field detailMessageField;
+    // Specify total rows of header
+    protected int headRows;
 
     static {
         Field field = null;
@@ -85,13 +87,20 @@ public class HeaderRow extends Row {
         detailMessageField = field;
     }
 
-    protected HeaderRow() { }
-
     public HeaderRow with(Row ... rows) {
-        return with(null, rows);
+        return with(null, rows.length, rows);
+    }
+
+    public HeaderRow with(int headRows, Row ... rows) {
+        return with(null, headRows, rows);
     }
 
     public HeaderRow with(List<Dimension> mergeCells, Row ... rows) {
+        return with(mergeCells, rows.length, rows);
+    }
+
+    public HeaderRow with(List<Dimension> mergeCells, int headRows, Row ... rows) {
+        this.headRows = headRows;
         Row row = rows[rows.length - 1];
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
@@ -104,7 +113,7 @@ public class HeaderRow extends Row {
             this.cells[i] = new Cell();
         }
 
-        if (rows.length == 1) {
+        if (headRows == 1) {
             for (int i = row.fc; i < row.lc; i++) {
                 this.names[i] = row.getString(i);
                 this.mapping.put(this.names[i], i);
@@ -224,7 +233,7 @@ public class HeaderRow extends Row {
             }
         }
 
-        // TODO Merge cells
+        // Merge cells
         org.ttzero.excel.entity.Sheet listSheet = new ListSheet<Object>() {
             @Override
             public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
@@ -689,8 +698,8 @@ public class HeaderRow extends Row {
         if (cs != null) {
             ExcelColumn[] ecs = cs.value();
             ListSheet.EntryColumn root = null;
-            for (ExcelColumn ec : ecs) {
-                ListSheet.EntryColumn column = createColumnByAnnotation(ec);
+            for (int i = Math.max(0, ecs.length - headRows); i < ecs.length; i++) {
+                ListSheet.EntryColumn column = createColumnByAnnotation(ecs[i]);
                 if (root == null) {
                     root = column;
                 } else {
