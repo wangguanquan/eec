@@ -1455,6 +1455,42 @@ public abstract class Row {
     }
 
     /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @return current Row
+     */
+    public Row setCells(Cell[] cells) {
+        this.cells = cells;
+        this.fc = 0;
+        this.lc = cells.length;
+        return this;
+    }
+
+    /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @param fromIndex specify the first cells index(one base)
+     * @param toIndex specify the last cells index(one base)
+     * @return current Rows
+     */
+    public Row setCells(Cell[] cells, int fromIndex, int toIndex) {
+        if (fromIndex < 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+        if (toIndex > cells.length)
+            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+        if (fromIndex > toIndex)
+            throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                ") > toIndex(" + toIndex + ")");
+
+        this.cells = cells;
+        this.fc = fromIndex;
+        this.lc = toIndex;
+        return this;
+    }
+
+    /**
      * Convert to column index
      *
      * @param cb character buffer
