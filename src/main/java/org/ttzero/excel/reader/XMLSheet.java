@@ -249,7 +249,6 @@ public class XMLSheet implements Sheet {
         rangeCheck(fromRowNum, toRowNum);
         this.hrf = fromRowNum;
         this.hrl = toRowNum;
-        this.header = null; // Clear header if exists
         return this;
     }
 
@@ -666,6 +665,11 @@ public class XMLSheet implements Sheet {
             length = reader.read(cb);
             nChar = 0;
             eof = length <= 0;
+            hrf = 0;
+            hrl = 0;
+            header = null;
+            sRow.fc = 0;
+            sRow.index = sRow.lc = -1;
         } catch (IOException e) {
             throw new ExcelReadException("Reset worksheet[" + getName() + "] error occur.", e);
         }
