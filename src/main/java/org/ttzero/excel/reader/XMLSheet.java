@@ -274,6 +274,8 @@ public class XMLSheet implements Sheet {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 sRow.setHr(header);
             }
+        } else if (hrl > 0 && hrl > sRow.index) {
+            for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
         }
         return header;
     }
@@ -281,6 +283,8 @@ public class XMLSheet implements Sheet {
     protected Row getHeader(int fromRowNum, int toRowNum) {
         if (header != null) return header;
         rangeCheck(fromRowNum, toRowNum);
+        if (sRow.index > -1 && fromRowNum < sRow.index)
+            throw new IndexOutOfBoundsException("Current row num " + sRow.index + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
         // Mutable header rows
         if (toRowNum - fromRowNum > 0) {
             Row[] rows = new Row[toRowNum - fromRowNum + 1];
@@ -299,9 +303,9 @@ public class XMLSheet implements Sheet {
             }
 
             // Parse merged cells
-            XMLSheet tmp = new XMLSheet(this);
-            tmp.reader = null;
-            List<Dimension> mergeCells = tmp.asMergeSheet().parseMerge();
+            XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
+            tmp.reader = null; // Prevent streams from being consumed by mistake
+            List<Dimension> mergeCells = tmp.parseMerge();
             if (mergeCells != null) {
                 mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
             }
@@ -369,6 +373,7 @@ public class XMLSheet implements Sheet {
     protected boolean eof = false, heof = false; // OPTIONS = false
     protected long mark;
 
+    // Shared row data, Record the current row
     protected XMLRow sRow;
     protected long lastRowMark;
 
@@ -592,7 +597,7 @@ public class XMLSheet implements Sheet {
     @Override
     public Iterator<Row> iterator() {
         // If the header row number is specified, the header will be parsed first
-        if (header == null && hrf > 0) getHeader();
+        if (hrf > 0) getHeader();
         return new RowSetIterator(this::nextRow, false);
     }
 
@@ -604,7 +609,7 @@ public class XMLSheet implements Sheet {
     @Override
     public Iterator<Row> dataIterator() {
         // If the header row number is specified, the header will be parsed first
-        if (header == null && hrf > 0) getHeader();
+        if (hrf > 0) getHeader();
         // iterator data rows
         Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
         /*
