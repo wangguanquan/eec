@@ -355,19 +355,6 @@ public class ExcelReaderTest {
         }
     }
 
-
-    @Test public void testMergeExcel() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
-        }
-    }
-
-    @Test public void testMergeExcel2() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
-        }
-    }
-
     @Ignore
     @Test public void testReaderLarge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
@@ -559,35 +546,6 @@ public class ExcelReaderTest {
             list = reader.sheet(0).reset().bind(OO.class, 7).rows().map(row -> (OO) row.get()).toArray(OO[]::new);
             assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
             assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
-        }
-    }
-
-    @Test public void testLargeMerge() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
-            MergeSheet mergeSheet = reader.sheet(0).asMergeSheet();
-            Grid grid = mergeSheet.getMergeGrid();
-            assert grid.size() == 2608;
-            assert grid.test(3, 1);
-            assert grid.test(382, 1);
-            assert grid.test(722, 2);
-            assert grid.test(1374, 2);
-            assert grid.test(2101, 10);
-            assert grid.test(2201, 6);
-            assert !grid.test(2113, 5);
-            long count = mergeSheet.rows().count();
-
-            Sheet sheet = mergeSheet.asCalcSheet();
-            assert sheet.getClass() == XMLCalcSheet.class;
-            assert sheet.reset().rows().count() == count;
-
-            sheet = sheet.asSheet();
-            assert sheet.getClass() == XMLSheet.class;
-            assert sheet.reset().rows().count() == count;
-
-            sheet = sheet.asMergeSheet();
-            assert sheet.getClass() == XMLMergeSheet.class;
-            assert sheet.reset().rows().count() == count;
-
         }
     }
 

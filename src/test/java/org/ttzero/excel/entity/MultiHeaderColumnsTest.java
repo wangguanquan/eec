@@ -21,9 +21,11 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.reader.HeaderRow;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -106,6 +108,54 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     , new Column("更新", Timestamp.class).setColIndex(1)
                 )
                 .writeTo(defaultTestPath);
+        }
+    }
+
+    @Test public void testRepeatAnnotations2() throws IOException {
+        List<RepeatableEntry> list = RepeatableEntry.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"))) {
+            List<RepeatableEntry> readList = reader.sheet(0).header(2, 4).bind(RepeatableEntry.class).rows()
+                .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Specify single header row
+            org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
+            Cell[] cells = new Cell[6];
+            cells[0] = new Cell((short) 1).setSv("订单号");
+            cells[1] = new Cell((short) 2).setSv("收件人");
+            cells[2] = new Cell((short) 3).setSv("省");
+            cells[3] = new Cell((short) 4).setSv("市");
+            cells[4] = new Cell((short) 5).setSv("区");
+            cells[5] = new Cell((short) 6).setSv("详细地址");
+            headerRow.setCells(cells);
+            readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(headerRow))
+                .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Specify 2 header rows
+            org.ttzero.excel.reader.Row headerRow2 = new org.ttzero.excel.reader.Row() {};
+            Cell[] cells2 = new Cell[6];
+            cells2[0] = new Cell((short) 1).setSv("订单号");
+            cells2[1] = new Cell((short) 2).setSv("A:收件人");
+            cells2[2] = new Cell((short) 3).setSv("A:省");
+            cells2[3] = new Cell((short) 4).setSv("A:市");
+            cells2[4] = new Cell((short) 5).setSv("B:区");
+            cells2[5] = new Cell((short) 6).setSv("B:详细地址");
+            headerRow2.setCells(cells2);
+            readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(2, headerRow2))
+                .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
         }
     }
 
