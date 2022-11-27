@@ -657,6 +657,11 @@ public class XMLSheet implements Sheet {
     public XMLSheet reset() {
         LOGGER.debug("Reset {}", path.toString());
         try {
+            hrf = 0;
+            hrl = 0;
+            header = null;
+            sRow.fc = 0;
+            sRow.index = sRow.lc = -1;
             // Close the opening reader
             if (reader != null) {
                 reader.close();
@@ -670,11 +675,6 @@ public class XMLSheet implements Sheet {
             length = reader.read(cb);
             nChar = 0;
             eof = length <= 0;
-            hrf = 0;
-            hrl = 0;
-            header = null;
-            sRow.fc = 0;
-            sRow.index = sRow.lc = -1;
         } catch (IOException e) {
             throw new ExcelReadException("Reset worksheet[" + getName() + "] error occur.", e);
         }
