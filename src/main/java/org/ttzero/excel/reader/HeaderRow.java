@@ -363,6 +363,15 @@ public class HeaderRow extends Row {
     }
 
     /**
+     * Get the name of columns
+     *
+     * @return name of columns
+     */
+    public String[] getNames() {
+        return this.names;
+    }
+
+    /**
      * Returns the position in cell range
      *
      * @param columnName the column name

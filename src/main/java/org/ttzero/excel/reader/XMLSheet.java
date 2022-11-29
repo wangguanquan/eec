@@ -288,9 +288,14 @@ public class XMLSheet implements Sheet {
         // Mutable header rows
         if (toRowNum - fromRowNum > 0) {
             Row[] rows = new Row[toRowNum - fromRowNum + 1];
-            int i = 0;
+            int i = 0, lc = -1;
+            boolean changeLc = false;
             for (Row row = nextRow(); row != null; row = nextRow()) {
                 if (row.getRowNum() >= fromRowNum) {
+                    if (row.lc > lc) {
+                        lc = row.lc;
+                        if (i > 0) changeLc = true;
+                    }
                     Row r = new Row() { };
                     r.fc = row.fc;
                     r.lc = row.lc;
@@ -300,6 +305,12 @@ public class XMLSheet implements Sheet {
                     rows[i++] = r;
                 }
                 if (row.getRowNum() >= toRowNum) break;
+            }
+            if (changeLc) {
+                for (Row row : rows) {
+                    row.lc = lc;
+                    row.cells = row.copyCells(lc);
+                }
             }
 
             // Parse merged cells
