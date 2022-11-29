@@ -21,9 +21,13 @@ import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -223,10 +227,23 @@ public interface Sheet extends Closeable {
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
      * @param path the output storage path
      * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(Path path) throws IOException {
+        saveAsCSV(path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file.
+     *
+     * @param path the output storage path
+     * @param charset specify a charset, default is UTF-8
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(Path path, Charset charset) throws IOException {
         // Create path if not exists
         if (!exists(path)) {
             FileUtil.mkdir(path);
@@ -235,21 +252,48 @@ public interface Sheet extends Closeable {
             path = path.resolve(getName() + Const.Suffix.CSV);
         }
 
-        saveAsCSV(Files.newOutputStream(path));
+        saveAsCSV(Files.newOutputStream(path), charset);
     }
 
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
      * @param os the output
      * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(OutputStream os) throws IOException {
-        try (CSVUtil.Writer writer = CSVUtil.newWriter(os)) {
+        saveAsCSV(os, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default separator character is ','.
+     *
+     * @param os the output
+     * @param charset specify a charset
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(OutputStream os, Charset charset) throws IOException {
+        saveAsCSV(new BufferedWriter(new OutputStreamWriter(os, charset)));
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
+     * @param bw buffer writer
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(BufferedWriter bw) throws IOException {
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
             for (Iterator<Row> iter = iterator(); iter.hasNext(); ) {
                 Row row = iter.next();
-                if (row.isEmpty()) continue;
-                for (int i = row.fc; i < row.lc; i++) {
+                if (row.isEmpty()) {
+                    writer.newLine();
+                    continue;
+                }
+                for (int i = 0; i < row.lc; i++) {
                     Cell c = row.cells[i];
                     switch (c.t) {
                         case SST:
