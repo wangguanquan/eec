@@ -312,7 +312,7 @@ public class Font implements Cloneable {
         hash = style << 24;
         hash += size << 16;
         hash += name.hashCode() << 8;
-        hash += color.hashCode();
+        hash += color != null ? color.hashCode() : 0;
         return hash;
     }
 
