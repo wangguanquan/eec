@@ -21,6 +21,11 @@ import org.dom4j.Element;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * Border line styles and colors
@@ -260,7 +265,7 @@ public class Border {
             , up = borders[5] != null ? 2 : 0;
         int hash = down | up;
         for (SubBorder sub : borders) {
-            hash += sub.hashCode();
+            hash += sub != null ? sub.hashCode() : 0;
         }
         return hash;
     }
@@ -350,7 +355,7 @@ public class Border {
 
         @Override
         public int hashCode() {
-            int hash = color.hashCode();
+            int hash = color != null ? color.hashCode() : 0;
             return (style.ordinal() << 24) | (hash << 8 >>> 8);
         }
 
@@ -378,6 +383,39 @@ public class Border {
             element.addAttribute("diagonalUp", "1");
         }
         return element;
+    }
+
+    public static List<Border> domToBorder(Element root) {
+        // Borders tags
+        Element ele = root.element("borders");
+        // Break if there don't contains 'borders' tag
+        if (ele == null) {
+            return Collections.emptyList();
+        }
+        return ele.elements().stream().map(Border::parseBorderTag).collect(Collectors.toList());
+    }
+
+    static Border parseBorderTag(Element tag) {
+        List<Element> sub = tag.elements();
+        Border border = new Border();
+        for (Element e : sub) {
+            int i = StringUtil.indexOf(direction, e.getName());
+            // unknown element
+            if (i < 0) continue;
+            BorderStyle style = BorderStyle.getByName(getAttr(e, "style"));
+            if (style == null) style = BorderStyle.NONE;
+            Color color = Styles.parseColor(e.element("color"));
+            border.setBorder(i, style, color);
+        }
+        String diagonalDown = getAttr(tag, "diagonalDown");
+        if ("1".equals(diagonalDown) || "true".equalsIgnoreCase(diagonalDown)) {
+            // TODO
+        }
+        String diagonalUp = getAttr(tag, "diagonalUp");
+        if ("1".equals(diagonalUp) || "true".equalsIgnoreCase(diagonalUp)) {
+            // TODO
+        }
+        return border;
     }
 
     protected void writeProperties(Element element, SubBorder subBorder) {

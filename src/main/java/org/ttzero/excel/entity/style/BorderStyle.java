@@ -50,7 +50,7 @@ public enum BorderStyle {
     public static BorderStyle getByName(String name) {
         BorderStyle[] borderStyles = values();
         for (BorderStyle borderStyle : borderStyles) {
-            if (borderStyle.name.equals(name)) {
+            if (borderStyle.name.equalsIgnoreCase(name)) {
                 return borderStyle;
             }
         }

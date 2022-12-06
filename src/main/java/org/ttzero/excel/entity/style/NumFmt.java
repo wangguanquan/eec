@@ -19,7 +19,13 @@ package org.ttzero.excel.entity.style;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * To create a custom number format, you start by selecting one of the built-in number formats as a starting point.
@@ -220,6 +226,24 @@ public class NumFmt implements Comparable<NumFmt> {
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
             .addAttribute("numFmtId", String.valueOf(id));
+    }
+
+    public static List<NumFmt> domToNumFmt(Element root) {
+        // Number format
+        Element ele = root.element("numFmts");
+        // Break if there don't contains 'numFmts' tag
+        if (ele == null) {
+            return Collections.emptyList();
+        }
+        List<Element> sub = ele.elements();
+        List<NumFmt> numFmts = new ArrayList<>(sub.size());
+        for (Element e : sub) {
+            String id = getAttr(e, "numFmtId"), code = getAttr(e, "formatCode");
+            numFmts.add(new NumFmt(Integer.parseInt(id), code));
+        }
+        // Sort by id
+        numFmts.sort(Comparator.comparingInt(NumFmt::getId));
+        return numFmts;
     }
 
     @Override

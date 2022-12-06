@@ -22,7 +22,12 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * @author guanquan.wang at 2018-02-02 16:51
@@ -351,6 +356,37 @@ public class Font implements Cloneable {
             element.addElement("charset").addAttribute("val", String.valueOf(charset));
         }
         return element;
+    }
+
+    public static List<Font> domToFont(Element root) {
+        // Fonts tags
+        Element ele = root.element("fonts");
+        // Break if there don't contains 'fonts' tag
+        if (ele == null) {
+            return Collections.emptyList();
+        }
+        return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
+    }
+
+    static Font parseFontTag(Element tag) {
+        List<Element> sub = tag.elements();
+        Font font = new Font();
+        for (Element e : sub) {
+            switch (e.getName()) {
+                case "sz"     : font.size = Integer.valueOf(getAttr(e, "val"));     break;
+                case "color"  : font.color = Styles.parseColor(e);                  break;
+                case "name"   : font.name = getAttr(e, "val");                      break;
+                case "charset": font.charset = Integer.parseInt(getAttr(e, "val")); break;
+                case "scheme" : font.scheme = getAttr(e, "val");                    break;
+                case "family" : font.family = Integer.valueOf(getAttr(e, "val"));   break;
+                case "u"      : font.style |= Style.UNDERLINE;                      break;
+                case "b"      : font.style |= Style.BOLD;                           break;
+                case "i"      : font.style |= Style.ITALIC;                         break;
+                case "strike" : font.style |= Style.DELETE;                         break;
+            }
+        }
+
+        return font;
     }
 
     @Override public Font clone() {
