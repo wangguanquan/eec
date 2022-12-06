@@ -1230,6 +1230,38 @@ public abstract class Row {
     }
 
     /**
+     * Returns the cell styles
+     *
+     * @param columnIndex the cell index from zero
+     * @return the style value
+     */
+    public int getCellStyle(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return getCellStyle(c);
+    }
+
+    /**
+     * Returns the cell styles
+     *
+     * @param columnName the cell name
+     * @return the style value
+     */
+    public int getCellStyle(String columnName) {
+        Cell c = getCell(columnName);
+        return getCellStyle(c);
+    }
+
+    /**
+     * Returns the cell styles
+     *
+     * @param c the {@link Cell}
+     * @return the style value
+     */
+    public int getCellStyle(Cell c) {
+        return styles.getStyleByIndex(c.xf);
+    }
+
+    /**
      * Returns the binding type if is bound, otherwise returns Row
      *
      * @param <T> the type of binding
