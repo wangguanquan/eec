@@ -124,6 +124,15 @@ public abstract class Row {
     }
 
     /**
+     * Returns a global {@link Styles}
+     *
+     * @return a style entry
+     */
+    public Styles getStyles() {
+        return styles;
+    }
+
+    /**
      * Test unused row (not contains any filled or formatted or value)
      *
      * @return true if unused
