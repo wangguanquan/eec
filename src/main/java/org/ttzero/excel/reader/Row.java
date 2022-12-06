@@ -224,7 +224,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Boolean}
      */
-    protected Boolean getBoolean(Cell c) {
+    public Boolean getBoolean(Cell c) {
         boolean v;
         switch (c.t) {
             case BOOL:
@@ -279,7 +279,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Byte}
      */
-    protected Byte getByte(Cell c) {
+    public Byte getByte(Cell c) {
         byte b = 0;
         switch (c.t) {
             case NUMERIC:
@@ -332,7 +332,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Character}
      */
-    protected Character getChar(Cell c) {
+    public Character getChar(Cell c) {
         char cc = 0;
         switch (c.t) {
             case SST:
@@ -395,7 +395,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Short}
      */
-    protected Short getShort(Cell c) {
+    public Short getShort(Cell c) {
         short s = 0;
         switch (c.t) {
             case NUMERIC:
@@ -463,7 +463,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Integer}
      */
-    protected Integer getInt(Cell c) {
+    public Integer getInt(Cell c) {
         int n;
         switch (c.t) {
             case NUMERIC:
@@ -532,7 +532,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Long}
      */
-    protected Long getLong(Cell c) {
+    public Long getLong(Cell c) {
         long l;
         switch (c.t) {
             case LONG:
@@ -600,7 +600,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return string
      */
-    protected String getString(Cell c) {
+    public String getString(Cell c) {
         String s;
         switch (c.t) {
             case SST:
@@ -656,6 +656,17 @@ public abstract class Row {
     }
 
     /**
+     * Get {@code Float} value by cell
+     *
+     * @param c the {@link Cell}
+     * @return {@code Float}
+     */
+    public Float getFloat(Cell c) {
+        Double d = getDouble(c);
+        return d != null ? Float.valueOf(d.toString()) : null;
+    }
+
+    /**
      * Get {@code Double} value by column index
      *
      * @param columnIndex the cell index
@@ -683,7 +694,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Double}
      */
-    protected Double getDouble(Cell c) {
+    public Double getDouble(Cell c) {
         double d;
         switch (c.t) {
             case DOUBLE:
@@ -743,7 +754,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return BigDecimal
      */
-    protected BigDecimal getDecimal(Cell c) {
+    public BigDecimal getDecimal(Cell c) {
         BigDecimal bd;
         switch (c.t) {
             case DOUBLE:
@@ -802,7 +813,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return BigDecimal
      */
-    protected Date getDate(Cell c) {
+    public Date getDate(Cell c) {
         Date date;
         switch (c.t) {
             case NUMERIC:
@@ -858,7 +869,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.sql.Timestamp
      */
-    protected Timestamp getTimestamp(Cell c) {
+    public Timestamp getTimestamp(Cell c) {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
@@ -912,7 +923,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.sql.Time
      */
-    protected java.sql.Time getTime(Cell c) {
+    public java.sql.Time getTime(Cell c) {
         java.sql.Time t;
         switch (c.t) {
             case DOUBLE: t = toTime(c.dv); break;
@@ -962,7 +973,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalDateTime
      */
-    protected LocalDateTime getLocalDateTime(Cell c) {
+    public LocalDateTime getLocalDateTime(Cell c) {
         LocalDateTime ldt;
         switch (c.t) {
             case NUMERIC:
@@ -1018,7 +1029,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalDate
      */
-    protected LocalDate getLocalDate(Cell c) {
+    public LocalDate getLocalDate(Cell c) {
         LocalDate ld;
         switch (c.t) {
             case NUMERIC:
@@ -1074,7 +1085,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalTime
      */
-    protected LocalTime getLocalTime(Cell c) {
+    public LocalTime getLocalTime(Cell c) {
         LocalTime lt;
         switch (c.t) {
             case NUMERIC:
@@ -1180,7 +1191,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return the {@link CellType}
      */
-    protected CellType getCellType(Cell c) {
+    public CellType getCellType(Cell c) {
         CellType type;
         switch (c.t) {
             case SST:
