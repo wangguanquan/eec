@@ -580,6 +580,10 @@ public class ExcelReader implements Closeable {
 //            FileUtil.rm_rf(tmp.toFile(), true);
 //            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
 //        }
+        // Construct a empty Styles
+        if (styles == null) {
+            styles = Styles.forReader();
+        }
 
         this.option = option;
         hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
