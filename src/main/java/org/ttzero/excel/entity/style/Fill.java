@@ -219,4 +219,8 @@ public class Fill implements Cloneable {
         }
         return other;
     }
+
+    @Override public String toString() {
+        return patternType != null && patternType != PatternType.none ? fgColor + " " + patternType : PatternType.none.toString();
+    }
 }
