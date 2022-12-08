@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static org.ttzero.excel.reader.Cell.BLANK;
@@ -1354,6 +1355,16 @@ public abstract class Row {
             }
         }
         return joiner.toString();
+    }
+
+    /**
+     * Convert row data to LinkedMap(sort by column index)
+     *
+     * @return the key is name or index(if not name here)
+     */
+    public Map<String, Object> toMap() {
+        // TODO
+        return null;
     }
 
     /**
