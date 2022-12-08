@@ -373,12 +373,12 @@ public class Font implements Cloneable {
         Font font = new Font();
         for (Element e : sub) {
             switch (e.getName()) {
-                case "sz"     : font.size = Integer.valueOf(getAttr(e, "val"));     break;
+                case "sz"     : font.size = Integer.parseInt(getAttr(e, "val"));    break;
                 case "color"  : font.color = Styles.parseColor(e);                  break;
                 case "name"   : font.name = getAttr(e, "val");                      break;
                 case "charset": font.charset = Integer.parseInt(getAttr(e, "val")); break;
                 case "scheme" : font.scheme = getAttr(e, "val");                    break;
-                case "family" : font.family = Integer.valueOf(getAttr(e, "val"));   break;
+                case "family" : font.family = Integer.parseInt(getAttr(e, "val"));  break;
                 case "u"      : font.style |= Style.UNDERLINE;                      break;
                 case "b"      : font.style |= Style.BOLD;                           break;
                 case "i"      : font.style |= Style.ITALIC;                         break;
