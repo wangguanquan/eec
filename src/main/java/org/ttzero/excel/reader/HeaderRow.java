@@ -147,7 +147,7 @@ public class HeaderRow extends Row {
         return this;
     }
 
-    final boolean is(Class<?> clazz) {
+    public final boolean is(Class<?> clazz) {
         return this.clazz != null && this.clazz == clazz;
     }
 
@@ -338,7 +338,7 @@ public class HeaderRow extends Row {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> T getT() {
+    public <T> T getT() {
         return (T) t;
     }
 
