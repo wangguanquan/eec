@@ -20,16 +20,21 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.beans.IntrospectionException;
@@ -54,6 +59,18 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
+import static org.ttzero.excel.reader.Cell.BLANK;
+import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.CHARACTER;
+import static org.ttzero.excel.reader.Cell.DATE;
+import static org.ttzero.excel.reader.Cell.DATETIME;
+import static org.ttzero.excel.reader.Cell.DECIMAL;
+import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.LONG;
+import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.SST;
+import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -1308,4 +1325,310 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+    public static class Template {
+        @ExcelColumn(maxWidth = 12.0D, wrapText = true)
+        String v1;
+        @ExcelColumn(maxWidth = 20.0, wrapText = true)
+        String v2;
+        @ExcelColumn(maxWidth = 25.0D, wrapText = true)
+        String v3;
+
+        static Template of(String v1, String v2, String v3) {
+            Template v = new Template();
+            v.v1 = v1;
+            v.v2 = v2;
+            v.v3 = v3;
+            return v;
+        }
+    }
+
+    @Test public void testWrite2() throws IOException {
+        List<Template> list = new ArrayList<>();
+        list.add(Template.of("备注说明\r\n第二行\r\n第三行\r\n第四行", "岗位名称", "岁位"));
+        list.add(Template.of("字段名称", "*岗位名称", "岗位描述"));
+        list.add(Template.of("示例", "生产统计员", "按照产品规格、价格、工序、员工、车间等不同对象和要求进行统计数据资料分析"));
+
+        new Workbook().addSheet(
+            new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
+                .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
+                .setSheetWriter(new XMLWorksheetWriter() {
+                    protected int startRow(int rows, int columns) throws IOException {
+                        // Row number
+                        int r = rows + startRow;
+                        // logging
+                        if (r % 1_0000 == 0) {
+                            sheet.what("0014", String.valueOf(r));
+                        }
+
+                        bw.write("<row r=\"");
+                        bw.writeInt(r);
+                        // default data row height 16.5
+                        bw.write("\" spans=\"1:");
+                        bw.writeInt(columns);
+                        bw.write("\" ht=\"62.25\" customHeight=\"1\">");
+                        return r;
+                    }
+                })
+        ).writeTo(defaultTestPath);
+    }
+
+    public static class TemplateStyleProcessor implements StyleProcessor<Template> {
+        String k;
+        int c = 0;
+        @Override
+        public int build(Template o, int style, Styles sst) {
+            if (!o.v1.equals(k)) {
+                k = o.v1;
+                c = 0;
+            }
+            switch (o.v1) {
+                case "备注说明":
+                    if (c > 0)
+                        style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, new Color(188, 219, 162)));
+                    break;
+                case "字段名称":
+                    Font font = sst.getFont(style);
+                    style = Styles.clearFont(style) | sst.addFont(font.clone().bold());
+                    if (c > 0)
+                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    break;
+                case "示例":
+                    if (c == 1)
+                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    break;
+            }
+            c++;
+            return style;
+        }
+    }
+
+
+    @Test public void testTileWriter() throws IOException {
+        List<TileEntity> data = TileEntity.randomTestData();
+        new Workbook().cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
+    }
+
+    public static class TileEntity {
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "差异", maxWidth = 8.6D)
+        private String diff;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "序号", maxWidth = 6.8D)
+        private Integer no;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "商品", maxWidth = 12.0D)
+        private String product;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "数量", maxWidth = 6.8D)
+        private Integer num;
+
+        public static List<TileEntity> randomTestData() {
+            int n = 23;
+            List<TileEntity> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                TileEntity e = new TileEntity();
+                e.no = i + 1;
+                e.product = getRandomString(10);
+                e.num = random.nextInt(20) + 1;
+                list.add(e);
+            }
+            return list;
+        }
+    }
+
+    /**
+     * 自定义平铺WorksheetWriter
+     */
+    public static class TileXMLWorksheetWriter extends XMLWorksheetWriter {
+        private int tile; // 平铺的数量，也就是每行重复输出多少条数据
+        private String date; // 可忽略，仅仅是表头上的日期
+
+        public TileXMLWorksheetWriter(int tile) {
+            this.tile = tile;
+        }
+
+        public TileXMLWorksheetWriter(int tile, String date) {
+            this.tile = tile;
+            this.date = date;
+        }
+
+        public int getTile() {
+            return tile;
+        }
+
+        public void setTile(int tile) {
+            this.tile = tile;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        @Override
+        protected void writeBefore() throws IOException {
+            // The header columns
+            columns = sheet.getAndSortHeaderColumns();
+            // Give new columns
+            tileColumns();
+
+            boolean nonHeader = sheet.getNonHeader() == 1;
+
+            bw.write(Const.EXCEL_XML_DECLARATION);
+            // Declaration
+            bw.newLine();
+            // Root node
+            writeRootNode();
+
+            // Dimension
+            writeDimension();
+
+            // SheetViews default value
+            writeSheetViews();
+
+            // Default row height and width
+            int fillSpace = 6;
+            BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
+            String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+            writeSheetFormat(fillSpace, defaultWidth);
+
+            // cols
+            writeCols(fillSpace, defaultWidth);
+
+            // Write body data
+            beforeSheetDate(nonHeader);
+        }
+
+        protected void tileColumns() {
+            if (tile == 1) return;
+
+            int x = columns.length, y = x * tile, t = columns[columns.length - 1].getRealColIndex();
+            // Bound check
+            if (y > Const.Limit.MAX_COLUMNS_ON_SHEET)
+                throw new TooManyColumnsException(y, Const.Limit.MAX_COLUMNS_ON_SHEET);
+
+            Column[] _columns = new Column[y];
+            for (int i = 0; i < y; i++) {
+                // 第一个对象的表头不需要复制
+                Column col = i < x ? columns[i] : new Column(columns[i % x]).addSubColumn(new Column());
+                col.realColIndex = columns[i % x].realColIndex + t * (i / x);
+                _columns[i] = col;
+
+                // 替换拣货单上的日期
+                Column _col = col;
+                do {
+                    if (StringUtil.isNotEmpty(_col.getName()) && _col.getName().contains("{date}"))
+                        _col.setName(_col.getName().replace("{date}", date));
+                }
+                while ((_col = _col.next) != null);
+            }
+
+            this.columns = _columns;
+
+            // FIXME 这里强行指定合并替换掉原本的头
+            List<Dimension> mergeCells = Collections.singletonList(new Dimension(1, (short) 1, 1, (short) y));
+            sheet.putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+        }
+
+        @Override
+        protected void writeRow(Row row) throws IOException {
+            Cell[] cells = row.getCells();
+            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+
+            for (int i = 0; i < len; i++) {
+                Cell cell = cells[i];
+                int xf = cell.xf, col = i + c * y;
+                switch (cell.t) {
+                    case INLINESTR:
+                    case SST:
+                        writeString(cell.sv, r, col, xf);
+                        break;
+                    case NUMERIC:
+                        writeNumeric(cell.nv, r, col, xf);
+                        break;
+                    case LONG:
+                        writeNumeric(cell.lv, r, col, xf);
+                        break;
+                    case DATE:
+                    case DATETIME:
+                    case DOUBLE:
+                    case TIME:
+                        writeDouble(cell.dv, r, col, xf);
+                        break;
+                    case BOOL:
+                        writeBool(cell.bv, r, col, xf);
+                        break;
+                    case DECIMAL:
+                        writeDecimal(cell.mv, r, col, xf);
+                        break;
+                    case CHARACTER:
+                        writeChar(cell.cv, r, col, xf);
+                        break;
+                    case BLANK:
+                        writeNull(r, col, xf);
+                        break;
+                    default:
+                }
+            }
+            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
+            if (y == tile - 1)
+                bw.write("</row>");
+        }
+
+        @Override
+        protected void writeRowAutoSize(Row row) throws IOException {
+            Cell[] cells = row.getCells();
+            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+
+            for (int i = 0; i < len; i++) {
+                Cell cell = cells[i];
+                int xf = cell.xf, col = i + c * y;
+                switch (cell.t) {
+                    case INLINESTR:
+                    case SST:
+                        writeStringAutoSize(cell.sv, r, col, xf);
+                        break;
+                    case NUMERIC:
+                        writeNumericAutoSize(cell.nv, r, col, xf);
+                        break;
+                    case LONG:
+                        writeNumericAutoSize(cell.lv, r, col, xf);
+                        break;
+                    case DATE:
+                    case DATETIME:
+                    case DOUBLE:
+                    case TIME:
+                        writeDoubleAutoSize(cell.dv, r, col, xf);
+                        break;
+                    case BOOL:
+                        writeBool(cell.bv, r, col, xf);
+                        break;
+                    case DECIMAL:
+                        writeDecimalAutoSize(cell.mv, r, col, xf);
+                        break;
+                    case CHARACTER:
+                        writeChar(cell.cv, r, col, xf);
+                        break;
+                    case BLANK:
+                        writeNull(r, col, xf);
+                        break;
+                    default:
+                }
+            }
+            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
+            if (y == tile - 1)
+                bw.write("</row>");
+        }
+
+        @Override
+        protected void writeAfter(int total) throws IOException {
+            if (total > 0 && (total - 1) % tile < tile - 1) bw.write("</row>");
+            super.writeAfter(total);
+        }
+    }
 }
