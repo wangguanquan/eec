@@ -159,6 +159,49 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testRepeatAnnotations3() throws IOException {
+        List<RepeatableEntry3> list = RepeatableEntry3.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"))) {
+            List<RepeatableEntry3> readList;
+
+            // header row 4
+//            readList = reader.sheet(0).header(4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+//
+//            // header rows 3-4
+//            readList = reader.sheet(0).reset().header(3, 4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+//
+//            // header rows 2-4
+//            readList = reader.sheet(0).reset().header(2, 4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+
+            // header rows 1-4
+            readList = reader.sheet(0).reset().header(1, 4).bind(RepeatableEntry3.class).rows()
+                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
@@ -265,6 +308,86 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         public String getDetail() {
             return detail;
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry) {
+                RepeatableEntry other = (RepeatableEntry) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(province, other.province)
+                    && Objects.equals(city, other.city)
+                    && Objects.equals(detail, other.detail);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
+        }
+    }
+
+    public static class RepeatableEntry3 {
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn
+        @ExcelColumn("订单号")
+        private String orderNo;
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn("A")
+        @ExcelColumn("收件人")
+        private String recipient;
+        @ExcelColumn("TOP")
+        @ExcelColumn("收件地址")
+        @ExcelColumn("A")
+        @ExcelColumn("省")
+        private String province;
+        @ExcelColumn("TOP")
+        @ExcelColumn("市")
+        @ExcelColumn("市")
+        @ExcelColumn("市")
+        private String city;
+        @ExcelColumn("TOP")
+        @ExcelColumn("收件地址")
+        @ExcelColumn("B")
+        @ExcelColumn("区")
+        private String area;
+        @ExcelColumn("详细地址")
+        @ExcelColumn(value = "详细地址", comment = @HeaderComment("精确到门牌号"))
+        @ExcelColumn("详细地址")
+        @ExcelColumn("详细地址")
+        private String detail;
+
+        public RepeatableEntry3() {}
+
+        public RepeatableEntry3(String orderNo, String recipient, String province, String city, String area, String detail) {
+            this.orderNo = orderNo;
+            this.recipient = recipient;
+            this.province = province;
+            this.city = city;
+            this.area = area;
+            this.detail = detail;
+        }
+
+        public static List<RepeatableEntry3> randomTestData(int n) {
+            List<RepeatableEntry3> list = new ArrayList<>(n);
+            for (int i = 0, p, c; i < n; i++) {
+                list.add(new RepeatableEntry3(Integer.toString(Math.abs(random.nextInt())), getRandomString(8) + 2, provinces[p = random.nextInt(provinces.length)], cities[p][c = random.nextInt(cities[p].length)], areas[p][c][random.nextInt(areas[p][c].length)], "xx街" + (random.nextInt(10) + 1) + "号"));
+            }
+            return list;
+        }
+
+        public static List<RepeatableEntry3> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
         }
 
         @Override
