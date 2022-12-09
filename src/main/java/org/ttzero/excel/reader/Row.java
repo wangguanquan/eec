@@ -114,7 +114,7 @@ public abstract class Row {
     }
 
     /**
-     * Returns the index of the last column (zero base).
+     * Returns the index of the last column (zero base, exclude).
      * The last index of column is increment the max available index
      *
      * @return the last column index
@@ -130,6 +130,38 @@ public abstract class Row {
      */
     public boolean isEmpty() {
         return lc - fc <= 0;
+    }
+
+    /**
+     * Tests the value of all cells is null or whitespace
+     *
+     * @return true if all cell value is null
+     */
+    public boolean isBlank() {
+        if (lc > fc) {
+            boolean blank;
+            for (int i = fc; i < lc; i++) {
+                Cell c = cells[i];
+                switch (c.t) {
+                    case SST:
+                        if (c.sv == null) {
+                            c.setSv(sst.get(c.nv));
+                        }
+                        // @Mark:=>There is no missing `break`, this is normal logic here
+                    case INLINESTR:
+                        blank = StringUtil.isBlank(c.sv);
+                        break;
+                    case BLANK:
+                    case EMPTY_TAG:
+                    case UNALLOCATED:
+                        blank = true;
+                        break;
+                    default: blank = false;
+                }
+                if (!blank) return false;
+            }
+        }
+        return true;
     }
 
     /**
