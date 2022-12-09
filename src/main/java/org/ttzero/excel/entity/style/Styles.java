@@ -682,12 +682,20 @@ public class Styles implements Storable {
      */
     public static Color parseColor(Element element) {
         if (element == null) return null;
-        String rgb = getAttr(element, "rgb"), indexed = getAttr(element, "indexed");
+        String rgb = getAttr(element, "rgb"), indexed = getAttr(element, "indexed")
+            , auto = getAttr(element, "auto"), theme = getAttr(element, "theme");
         Color c = null;
         if (StringUtil.isNotEmpty(rgb)) {
             c = ColorIndex.toColor(rgb);
         } else if (StringUtil.isNotEmpty(indexed)) {
             c = ColorIndex.getColor(Integer.parseInt(indexed));
+        } else if ("1".equals(auto) || "true".equalsIgnoreCase(auto)) {
+            c = ColorIndex.getColor(8);
+        }
+        // TODO support theme colors
+        else if (StringUtil.isNotEmpty(theme)) {
+            // FIXME
+            c = ColorIndex.getColor(8);
         }
         return c;
     }

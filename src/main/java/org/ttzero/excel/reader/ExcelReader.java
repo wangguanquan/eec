@@ -585,6 +585,8 @@ public class ExcelReader implements Closeable {
             styles = Styles.forReader();
         }
 
+        // TODO Parse theme
+
         this.option = option;
         hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
 
