@@ -45,7 +45,7 @@ public class Border {
     private final SubBorder[] borders;
 
     public Border() {
-        borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
+        borders = new SubBorder[6]; // top-right-bottom-left-diagonalDown-diagonalUp
     }
 
     public Border(BorderStyle style, Color color) {
@@ -397,6 +397,12 @@ public class Border {
 
     static Border parseBorderTag(Element tag) {
         List<Element> sub = tag.elements();
+        // Diagonal attr
+        String diagonalDown = getAttr(tag, "diagonalDown");
+        int padding = ("1".equals(diagonalDown) || "true".equalsIgnoreCase(diagonalDown)) ? 1 : 0;
+        String diagonalUp = getAttr(tag, "diagonalUp");
+        padding |= ("1".equals(diagonalUp) || "true".equalsIgnoreCase(diagonalUp)) ? 1 << 1 : 0;
+
         Border border = new Border();
         for (Element e : sub) {
             int i = StringUtil.indexOf(direction, e.getName());
@@ -405,16 +411,11 @@ public class Border {
             BorderStyle style = BorderStyle.getByName(getAttr(e, "style"));
             if (style == null) style = BorderStyle.NONE;
             Color color = Styles.parseColor(e.element("color"));
-            border.setBorder(i, style, color);
+            if (i < 4) border.setBorder(i, style, color);
+            else if ((padding & 1) == 1) border.setBorder(4, style, color);
+            else if ((padding & 2) == 2) border.setBorder(5, style, color);
         }
-        String diagonalDown = getAttr(tag, "diagonalDown");
-        if ("1".equals(diagonalDown) || "true".equalsIgnoreCase(diagonalDown)) {
-            // TODO
-        }
-        String diagonalUp = getAttr(tag, "diagonalUp");
-        if ("1".equals(diagonalUp) || "true".equalsIgnoreCase(diagonalUp)) {
-            // TODO
-        }
+
         return border;
     }
 
