@@ -227,10 +227,10 @@ public class Styles implements Storable {
      */
     public static Styles forReader() {
         Styles styles = new Styles();
-        styles.numFmts = Collections.emptyList();
-        styles.fonts = Collections.emptyList();
-        styles.fills = Collections.emptyList();
-        styles.borders = Collections.emptyList();
+        styles.numFmts = new ArrayList<>();
+        styles.fonts = new ArrayList<>();
+        styles.fills = new ArrayList<>();
+        styles.borders = new ArrayList<>();
         return styles;
     }
 
