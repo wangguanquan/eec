@@ -397,8 +397,8 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         @Override
         public boolean equals(Object o) {
-            if (o instanceof RepeatableEntry) {
-                RepeatableEntry other = (RepeatableEntry) o;
+            if (o instanceof RepeatableEntry3) {
+                RepeatableEntry3 other = (RepeatableEntry3) o;
                 return Objects.equals(orderNo, other.orderNo)
                     && Objects.equals(recipient, other.recipient)
                     && Objects.equals(province, other.province)
