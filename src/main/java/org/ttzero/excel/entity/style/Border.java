@@ -45,7 +45,7 @@ public class Border {
     private final SubBorder[] borders;
 
     public Border() {
-        borders = new SubBorder[6]; // top-right-bottom-left-diagonalDown-diagonalUp
+        borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
     }
 
     public Border(BorderStyle style, Color color) {
@@ -431,6 +431,16 @@ public class Border {
                 colorEle.addAttribute("rgb", ColorIndex.toARGB(subBorder.color));
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return (borders[0] != null ? borders[0].style : BorderStyle.NONE) + " "
+            + (borders[1] != null ? borders[1].style : BorderStyle.NONE) + " "
+            + (borders[2] != null ? borders[2].style : BorderStyle.NONE) + " "
+            + (borders[3] != null ? borders[3].style : BorderStyle.NONE) + " "
+            + (borders[4] != null ? borders[4].style : BorderStyle.NONE) + " "
+            + (borders[5] != null ? borders[5].style : BorderStyle.NONE);
     }
 
 }
