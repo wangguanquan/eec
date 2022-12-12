@@ -372,7 +372,7 @@ public class Styles implements Storable {
             i = fonts.size();
             fonts.add(font);
         }
-        return (i + 1) << INDEX_FONT;
+        return i << INDEX_FONT;
     }
 
     /**
@@ -490,7 +490,7 @@ public class Styles implements Storable {
 
             Element newXf = cellXfs.addElement("xf");
             newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
-                .addAttribute(attrNames[1], String.valueOf(Math.max(styles[1] - 1, 0)))
+                .addAttribute(attrNames[1], String.valueOf(styles[1]))
                 .addAttribute(attrNames[2], String.valueOf(styles[2]))
                 .addAttribute(attrNames[3], String.valueOf(styles[3]))
                 .addAttribute("xfId", "0")
@@ -571,7 +571,7 @@ public class Styles implements Storable {
     }
 
     public static int defaultStringBorderStyle() {
-        return  (1 << INDEX_BORDER) | (2 << INDEX_FONT) | Horizontals.LEFT;
+        return  (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.LEFT;
     }
 
     public static int defaultIntBorderStyle() {
@@ -605,7 +605,7 @@ public class Styles implements Storable {
     }
 
     public static boolean hasFont(int style) {
-        return style << 8 >>> (INDEX_FONT + 8) != 0;
+        return true; // Font is required
     }
 
     public static boolean hasFill(int style) {
@@ -644,7 +644,7 @@ public class Styles implements Storable {
     }
 
     public Font getFont(int style) {
-        return fonts.get(Math.max(0, (style << 8 >>> (INDEX_FONT + 8)) - 1));
+        return fonts.get(Math.max(0, style << 8 >>> (INDEX_FONT + 8)));
     }
 
     public Border getBorder(int style) {
