@@ -21,6 +21,7 @@ import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -179,7 +180,7 @@ public class Fill implements Cloneable {
         Element ele = root.element("fills");
         // Break if there don't contains 'fills' tag
         if (ele == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         return ele.elements().stream().map(Fill::parseFillTag).collect(Collectors.toList());
     }

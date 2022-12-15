@@ -233,7 +233,7 @@ public class NumFmt implements Comparable<NumFmt> {
         Element ele = root.element("numFmts");
         // Break if there don't contains 'numFmts' tag
         if (ele == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         List<Element> sub = ele.elements();
         List<NumFmt> numFmts = new ArrayList<>(sub.size());

@@ -22,6 +22,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -363,7 +364,7 @@ public class Font implements Cloneable {
         Element ele = root.element("fonts");
         // Break if there don't contains 'fonts' tag
         if (ele == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
     }

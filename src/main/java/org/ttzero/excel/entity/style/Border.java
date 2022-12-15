@@ -21,6 +21,7 @@ import org.dom4j.Element;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -390,7 +391,7 @@ public class Border {
         Element ele = root.element("borders");
         // Break if there don't contains 'borders' tag
         if (ele == null) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
         return ele.elements().stream().map(Border::parseBorderTag).collect(Collectors.toList());
     }
