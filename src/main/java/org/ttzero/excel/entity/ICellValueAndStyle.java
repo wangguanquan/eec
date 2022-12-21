@@ -101,6 +101,9 @@ public interface ICellValueAndStyle {
             setNullValue(row, cell, hc);
             return;
         }
+        if(clazz == null){
+            clazz = e.getClass();
+        }
         if (isString(clazz)) {
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
