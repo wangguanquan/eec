@@ -153,41 +153,7 @@ public class Styles implements Storable {
     public static Styles create(I18N i18N) {
         Styles self = new Styles();
 
-        DocumentFactory factory = DocumentFactory.getInstance();
-        TopNS ns = self.getClass().getAnnotation(TopNS.class);
-        Element rootElement;
-        if (ns != null) {
-            rootElement = factory.createElement(ns.value(), ns.uri()[0]);
-        } else {
-            rootElement = factory.createElement("styleSheet", Const.SCHEMA_MAIN);
-        }
-        // number format
-        rootElement.addElement("numFmts").addAttribute("count", "0");
-        // font
-        rootElement.addElement("fonts").addAttribute("count", "0");
-        // fill
-        rootElement.addElement("fills").addAttribute("count", "0");
-        // border
-        rootElement.addElement("borders").addAttribute("count", "0");
-        // cellStyleXfs
-        Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
-        cellStyleXfs.addElement("xf")   // General style
-            .addAttribute("borderId", "0")
-            .addAttribute("fillId", "0")
-            .addAttribute("fontId", "0")
-            .addAttribute("numFmtId", "0")
-            .addElement("alignment")
-            .addAttribute("vertical", "center");
-        // cellXfs
-        rootElement.addElement("cellXfs").addAttribute("count", "0");
-        // cellStyles
-        Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
-        cellStyles.addElement("cellStyle")
-            .addAttribute("builtinId", "0")
-            .addAttribute("name", i18N.get("general"))
-            .addAttribute("xfId", "0");
-
-        self.document = factory.createDocument(rootElement);
+        self.document = createDocument();
 
         self.numFmts = new ArrayList<>();
 
@@ -318,7 +284,7 @@ public class Styles implements Storable {
             self.styleIndex[i] = style;
             i++;
         }
-        self.counter.set(i);
+        self.counter.set(i - 1);
         // Test number format
         for (Integer styleIndex : self.map.values()) {
             self.isDate(styleIndex);
@@ -456,6 +422,7 @@ public class Styles implements Storable {
      */
     @Override
     public void writeTo(Path styleFile) throws IOException {
+        if (document == null) document = createDocument();
         Element root = document.getRootElement();
 
         // Number format
@@ -527,6 +494,44 @@ public class Styles implements Storable {
         });
 
         FileUtil.writeToDiskNoFormat(document, styleFile);
+    }
+
+    public static Document createDocument() {
+        DocumentFactory factory = DocumentFactory.getInstance();
+        TopNS ns = Styles.class.getAnnotation(TopNS.class);
+        Element rootElement;
+        if (ns != null) {
+            rootElement = factory.createElement(ns.value(), ns.uri()[0]);
+        } else {
+            rootElement = factory.createElement("styleSheet", Const.SCHEMA_MAIN);
+        }
+        // number format
+        rootElement.addElement("numFmts").addAttribute("count", "0");
+        // font
+        rootElement.addElement("fonts").addAttribute("count", "0");
+        // fill
+        rootElement.addElement("fills").addAttribute("count", "0");
+        // border
+        rootElement.addElement("borders").addAttribute("count", "0");
+        // cellStyleXfs
+        Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
+        cellStyleXfs.addElement("xf")   // General style
+            .addAttribute("borderId", "0")
+            .addAttribute("fillId", "0")
+            .addAttribute("fontId", "0")
+            .addAttribute("numFmtId", "0")
+            .addElement("alignment")
+            .addAttribute("vertical", "center");
+        // cellXfs
+        rootElement.addElement("cellXfs").addAttribute("count", "0");
+        // cellStyles
+        Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
+        cellStyles.addElement("cellStyle")
+            .addAttribute("builtinId", "0")
+            .addAttribute("name", "常规")
+            .addAttribute("xfId", "0");
+
+        return factory.createDocument(rootElement);
     }
 
     ////////////////////////clear style///////////////////////////////
