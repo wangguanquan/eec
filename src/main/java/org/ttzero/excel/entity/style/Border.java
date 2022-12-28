@@ -21,6 +21,12 @@ import org.dom4j.Element;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * Border line styles and colors
@@ -260,7 +266,7 @@ public class Border {
             , up = borders[5] != null ? 2 : 0;
         int hash = down | up;
         for (SubBorder sub : borders) {
-            hash += sub.hashCode();
+            hash += sub != null ? sub.hashCode() : 0;
         }
         return hash;
     }
@@ -350,7 +356,7 @@ public class Border {
 
         @Override
         public int hashCode() {
-            int hash = color.hashCode();
+            int hash = color != null ? color.hashCode() : 0;
             return (style.ordinal() << 24) | (hash << 8 >>> 8);
         }
 
@@ -380,6 +386,40 @@ public class Border {
         return element;
     }
 
+    public static List<Border> domToBorder(Element root) {
+        // Borders tags
+        Element ele = root.element("borders");
+        // Break if there don't contains 'borders' tag
+        if (ele == null) {
+            return new ArrayList<>();
+        }
+        return ele.elements().stream().map(Border::parseBorderTag).collect(Collectors.toList());
+    }
+
+    static Border parseBorderTag(Element tag) {
+        List<Element> sub = tag.elements();
+        // Diagonal attr
+        String diagonalDown = getAttr(tag, "diagonalDown");
+        int padding = ("1".equals(diagonalDown) || "true".equalsIgnoreCase(diagonalDown)) ? 1 : 0;
+        String diagonalUp = getAttr(tag, "diagonalUp");
+        padding |= ("1".equals(diagonalUp) || "true".equalsIgnoreCase(diagonalUp)) ? 1 << 1 : 0;
+
+        Border border = new Border();
+        for (Element e : sub) {
+            int i = StringUtil.indexOf(direction, e.getName());
+            // unknown element
+            if (i < 0) continue;
+            BorderStyle style = BorderStyle.getByName(getAttr(e, "style"));
+            if (style == null) style = BorderStyle.NONE;
+            Color color = Styles.parseColor(e.element("color"));
+            if (i < 4) border.setBorder(i, style, color);
+            else if ((padding & 1) == 1) border.setBorder(4, style, color);
+            else if ((padding & 2) == 2) border.setBorder(5, style, color);
+        }
+
+        return border;
+    }
+
     protected void writeProperties(Element element, SubBorder subBorder) {
         if (subBorder != null && subBorder.style != BorderStyle.NONE) {
             element.addAttribute("style", subBorder.style.getName());
@@ -392,6 +432,16 @@ public class Border {
                 colorEle.addAttribute("rgb", ColorIndex.toARGB(subBorder.color));
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return (borders[0] != null ? borders[0].style : BorderStyle.NONE) + " "
+            + (borders[1] != null ? borders[1].style : BorderStyle.NONE) + " "
+            + (borders[2] != null ? borders[2].style : BorderStyle.NONE) + " "
+            + (borders[3] != null ? borders[3].style : BorderStyle.NONE) + " "
+            + (borders[4] != null ? borders[4].style : BorderStyle.NONE) + " "
+            + (borders[5] != null ? borders[5].style : BorderStyle.NONE);
     }
 
 }

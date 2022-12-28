@@ -139,6 +139,10 @@ public class ExcelReader implements Closeable {
      * Picture or Tables
      */
     protected Drawings drawings;
+    /**
+     * A global styles
+     */
+    protected Styles styles;
 
     /**
      * Constructor Excel Reader
@@ -565,13 +569,23 @@ public class ExcelReader implements Closeable {
         // Load Styles
         Path s = tmp.resolve("xl/styles.xml");
 
-        Styles styles;
         if (exists(s)) {
-            styles = Styles.load(s);
-        } else {
-            FileUtil.rm_rf(tmp.toFile(), true);
-            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+            try {
+                styles = Styles.load(s);
+            } catch (Exception ex) {
+                LOGGER.warn("Parse style failed.", ex);
+            }
         }
+//        else {
+//            FileUtil.rm_rf(tmp.toFile(), true);
+//            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+//        }
+        // Construct a empty Styles
+        if (styles == null) {
+            styles = Styles.forReader();
+        }
+
+        // TODO Parse theme
 
         this.option = option;
         hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
@@ -899,5 +913,14 @@ public class ExcelReader implements Closeable {
      */
     public List<Drawings.Picture> listPictures() {
         return drawings != null ? drawings.listPictures() : null;
+    }
+
+    /**
+     * Returns a global {@link Styles}
+     *
+     * @return a style entry
+     */
+    public Styles getStyles() {
+        return styles;
     }
 }

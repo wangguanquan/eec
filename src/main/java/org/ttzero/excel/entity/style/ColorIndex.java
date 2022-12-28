@@ -43,6 +43,10 @@ public class ColorIndex {
         return colors[index];
     }
 
+    public static Color getColor(int index) {
+        return new Color(index < 0 || index >= colors.length ? colors[8] : colors[index]);
+    }
+
     public static int indexOf(Color color) {
         return indexOf(color.getRGB());
     }
@@ -83,5 +87,13 @@ public class ColorIndex {
             }
         }
         return new String(chars);
+    }
+
+    public static Color toColor(String rgb) {
+        // Remove the alpha option of the color
+        if (rgb.length() == 8 && rgb.startsWith("FF")) {
+            rgb = "#" + rgb.substring(2);
+        }
+        return Styles.toColor(rgb);
     }
 }

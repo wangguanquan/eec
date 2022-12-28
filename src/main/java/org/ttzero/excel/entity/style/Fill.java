@@ -21,8 +21,13 @@ import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * @author guanquan.wang at 2018-02-06 08:55
@@ -170,6 +175,35 @@ public class Fill implements Cloneable {
         return element;
     }
 
+    public static List<Fill> domToFill(Element root) {
+        // Fills tags
+        Element ele = root.element("fills");
+        // Break if there don't contains 'fills' tag
+        if (ele == null) {
+            return new ArrayList<>();
+        }
+        return ele.elements().stream().map(Fill::parseFillTag).collect(Collectors.toList());
+    }
+
+    static Fill parseFillTag(Element tag) {
+        Element e = tag.element("patternFill");
+        Fill fill = new Fill();
+        try {
+            fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
+        } catch (IllegalArgumentException ex) {
+            // Ignore
+        }
+        Element fgColor = e.element("fgColor");
+        if (fgColor != null) {
+            fill.fgColor = Styles.parseColor(fgColor);
+        }
+        Element bgColor = e.element("bgColor");
+        if (bgColor != null) {
+            fill.bgColor = Styles.parseColor(bgColor);
+        }
+        return fill;
+    }
+
     @Override public Fill clone() {
         Fill other;
         try {
@@ -185,5 +219,9 @@ public class Fill implements Cloneable {
             other.fgColor = new Color(fgColor.getRGB());
         }
         return other;
+    }
+
+    @Override public String toString() {
+        return patternType != null && patternType != PatternType.none ? fgColor + " " + patternType : PatternType.none.toString();
     }
 }

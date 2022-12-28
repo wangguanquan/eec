@@ -27,6 +27,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -152,41 +153,7 @@ public class Styles implements Storable {
     public static Styles create(I18N i18N) {
         Styles self = new Styles();
 
-        DocumentFactory factory = DocumentFactory.getInstance();
-        TopNS ns = self.getClass().getAnnotation(TopNS.class);
-        Element rootElement;
-        if (ns != null) {
-            rootElement = factory.createElement(ns.value(), ns.uri()[0]);
-        } else {
-            rootElement = factory.createElement("styleSheet", Const.SCHEMA_MAIN);
-        }
-        // number format
-        rootElement.addElement("numFmts").addAttribute("count", "0");
-        // font
-        rootElement.addElement("fonts").addAttribute("count", "0");
-        // fill
-        rootElement.addElement("fills").addAttribute("count", "0");
-        // border
-        rootElement.addElement("borders").addAttribute("count", "0");
-        // cellStyleXfs
-        Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
-        cellStyleXfs.addElement("xf")   // General style
-            .addAttribute("borderId", "0")
-            .addAttribute("fillId", "0")
-            .addAttribute("fontId", "0")
-            .addAttribute("numFmtId", "0")
-            .addElement("alignment")
-            .addAttribute("vertical", "center");
-        // cellXfs
-        rootElement.addElement("cellXfs").addAttribute("count", "0");
-        // cellStyles
-        Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
-        cellStyles.addElement("cellStyle")
-            .addAttribute("builtinId", "0")
-            .addAttribute("name", i18N.get("general"))
-            .addAttribute("xfId", "0");
-
-        self.document = factory.createDocument(rootElement);
+        self.document = createDocument();
 
         self.numFmts = new ArrayList<>();
 
@@ -225,7 +192,12 @@ public class Styles implements Storable {
      * @return Styles
      */
     public static Styles forReader() {
-        return new Styles();
+        Styles styles = new Styles();
+        styles.numFmts = new ArrayList<>();
+        styles.fonts = new ArrayList<>();
+        styles.fills = new ArrayList<>();
+        styles.borders = new ArrayList<>();
+        return styles;
     }
 
     /**
@@ -246,41 +218,75 @@ public class Styles implements Storable {
 
         Styles self = new Styles();
         Element root = document.getRootElement();
-        // Number format
-        Element numFmts = root.element("numFmts");
-        // Break if there don't contains 'numFmts' tag
-        if (numFmts == null) {
-            return self;
-        }
-        List<Element> sub = numFmts.elements();
-        self.numFmts = new ArrayList<>();
-        for (Element e : sub) {
-            String id = getAttr(e, "numFmtId"), code = getAttr(e, "formatCode");
-            self.numFmts.add(new NumFmt(Integer.parseInt(id), code));
-        }
-        // Sort by id
-        self.numFmts.sort(Comparator.comparingInt(NumFmt::getId));
 
-        /*
-        Ignore other styles, there only parse number format
-        It's use for Excel reader
-         */
+        // Parse Number format
+        self.numFmts = NumFmt.domToNumFmt(root);
+
+        // Parse Fonts
+        self.fonts = Font.domToFont(root);
+
+        // Parse Fills
+        self.fills = Fill.domToFill(root);
+
+        // Parse Borders
+        self.borders = Border.domToBorder(root);
 
         // Cell xf
         Element cellXfs = root.element("cellXfs");
-        sub = cellXfs.elements();
+        List<Element> sub = cellXfs.elements();
         int i = 0;
         for (Element e : sub) {
+            int style = 0;
+            // NumFmt
             String applyNumberFormat = getAttr(e, "applyNumberFormat");
-            if (isNotEmpty(applyNumberFormat) && ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat))) {
+            if ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat)) {
                 String numFmtId = getAttr(e, "numFmtId");
-                int style = Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
-                self.map.put(i, style);
+                style |= Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
             }
+            // Font
+            String applyFont = getAttr(e, "applyFont");
+            if ("1".equals(applyFont) || "true".equalsIgnoreCase(applyFont)) {
+                String fontId = getAttr(e, "fontId");
+                style |= Integer.parseInt(fontId) << INDEX_FONT;
+            }
+            // Fill
+            String applyFill = getAttr(e, "applyFill");
+            if ("1".equals(applyFill) || "true".equalsIgnoreCase(applyFill)) {
+                String fillId = getAttr(e, "fillId");
+                style |= Integer.parseInt(fillId) << INDEX_FILL;
+            }
+            // Border
+            String applyBorder = getAttr(e, "applyBorder");
+            if ("1".equals(applyBorder) || "true".equalsIgnoreCase(applyBorder)) {
+                String borderId = getAttr(e, "borderId");
+                style |= Integer.parseInt(borderId) << INDEX_BORDER;
+            }
+            // Alignment
+            String applyAlignment = getAttr(e, "applyAlignment");
+            if ("1".equals(applyAlignment) || "true".equalsIgnoreCase(applyAlignment)) {
+                Element alignment = e.element("alignment");
+                String horizontal = getAttr(alignment, "horizontal");
+                int index;
+                if (StringUtil.isNotEmpty(horizontal) && (index = StringUtil.indexOf(Horizontals._names, horizontal)) >= 0) {
+                    style |= index << INDEX_HORIZONTAL;
+                }
+                String vertical = getAttr(alignment, "vertical");
+                if (StringUtil.isNotEmpty(vertical) && (index = StringUtil.indexOf(Verticals._names, vertical)) >= 0) {
+                    style |= index << INDEX_VERTICAL;
+                }
+                String wrapText = getAttr(alignment, "wrapText");
+                style |= ("1".equals(wrapText) || "true".equalsIgnoreCase(wrapText) ? 1 : 0) << INDEX_WRAP_TEXT;
+            }
+            self.map.put(style, i);
+            if (i >= self.styleIndex.length) {
+                self.styleIndex = Arrays.copyOf(self.styleIndex, self.styleIndex.length << 1);
+            }
+            self.styleIndex[i] = style;
             i++;
         }
+        self.counter.set(i - 1);
         // Test number format
-        for (Integer styleIndex : self.map.keySet()) {
+        for (Integer styleIndex : self.map.values()) {
             self.isDate(styleIndex);
         }
 
@@ -337,7 +343,7 @@ public class Styles implements Storable {
             i = fonts.size();
             fonts.add(font);
         }
-        return (i + 1) << INDEX_FONT;
+        return i << INDEX_FONT;
     }
 
     /**
@@ -416,6 +422,7 @@ public class Styles implements Storable {
      */
     @Override
     public void writeTo(Path styleFile) throws IOException {
+        if (document == null) document = createDocument();
         Element root = document.getRootElement();
 
         // Number format
@@ -455,7 +462,7 @@ public class Styles implements Storable {
 
             Element newXf = cellXfs.addElement("xf");
             newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
-                .addAttribute(attrNames[1], String.valueOf(Math.max(styles[1] - 1, 0)))
+                .addAttribute(attrNames[1], String.valueOf(styles[1]))
                 .addAttribute(attrNames[2], String.valueOf(styles[2]))
                 .addAttribute(attrNames[3], String.valueOf(styles[3]))
                 .addAttribute("xfId", "0")
@@ -487,6 +494,44 @@ public class Styles implements Storable {
         });
 
         FileUtil.writeToDiskNoFormat(document, styleFile);
+    }
+
+    public static Document createDocument() {
+        DocumentFactory factory = DocumentFactory.getInstance();
+        TopNS ns = Styles.class.getAnnotation(TopNS.class);
+        Element rootElement;
+        if (ns != null) {
+            rootElement = factory.createElement(ns.value(), ns.uri()[0]);
+        } else {
+            rootElement = factory.createElement("styleSheet", Const.SCHEMA_MAIN);
+        }
+        // number format
+        rootElement.addElement("numFmts").addAttribute("count", "0");
+        // font
+        rootElement.addElement("fonts").addAttribute("count", "0");
+        // fill
+        rootElement.addElement("fills").addAttribute("count", "0");
+        // border
+        rootElement.addElement("borders").addAttribute("count", "0");
+        // cellStyleXfs
+        Element cellStyleXfs = rootElement.addElement("cellStyleXfs").addAttribute("count", "1");
+        cellStyleXfs.addElement("xf")   // General style
+            .addAttribute("borderId", "0")
+            .addAttribute("fillId", "0")
+            .addAttribute("fontId", "0")
+            .addAttribute("numFmtId", "0")
+            .addElement("alignment")
+            .addAttribute("vertical", "center");
+        // cellXfs
+        rootElement.addElement("cellXfs").addAttribute("count", "0");
+        // cellStyles
+        Element cellStyles = rootElement.addElement("cellStyles").addAttribute("count", "1");
+        cellStyles.addElement("cellStyle")
+            .addAttribute("builtinId", "0")
+            .addAttribute("name", "常规")
+            .addAttribute("xfId", "0");
+
+        return factory.createDocument(rootElement);
     }
 
     ////////////////////////clear style///////////////////////////////
@@ -536,7 +581,7 @@ public class Styles implements Storable {
     }
 
     public static int defaultStringBorderStyle() {
-        return  (1 << INDEX_BORDER) | (2 << INDEX_FONT) | Horizontals.LEFT;
+        return  (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.LEFT;
     }
 
     public static int defaultIntBorderStyle() {
@@ -570,7 +615,7 @@ public class Styles implements Storable {
     }
 
     public static boolean hasFont(int style) {
-        return style << 8 >>> (INDEX_FONT + 8) != 0;
+        return true; // Font is required
     }
 
     public static boolean hasFill(int style) {
@@ -609,7 +654,7 @@ public class Styles implements Storable {
     }
 
     public Font getFont(int style) {
-        return fonts.get(Math.max(0, (style << 8 >>> (INDEX_FONT + 8)) - 1));
+        return fonts.get(Math.max(0, style << 8 >>> (INDEX_FONT + 8)));
     }
 
     public Border getBorder(int style) {
@@ -640,6 +685,32 @@ public class Styles implements Storable {
     }
 
     /**
+     * Parse color tag
+     *
+     * @param element color tag
+     * @return awt.Color or null
+     */
+    public static Color parseColor(Element element) {
+        if (element == null) return null;
+        String rgb = getAttr(element, "rgb"), indexed = getAttr(element, "indexed")
+            , auto = getAttr(element, "auto"), theme = getAttr(element, "theme");
+        Color c = null;
+        if (StringUtil.isNotEmpty(rgb)) {
+            c = ColorIndex.toColor(rgb);
+        } else if (StringUtil.isNotEmpty(indexed)) {
+            c = ColorIndex.getColor(Integer.parseInt(indexed));
+        } else if ("1".equals(auto) || "true".equalsIgnoreCase(auto)) {
+            c = ColorIndex.getColor(8);
+        }
+        // TODO support theme colors
+        else if (StringUtil.isNotEmpty(theme)) {
+            // FIXME
+            c = ColorIndex.getColor(8);
+        }
+        return c;
+    }
+
+    /**
      * Test the style is data format
      *
      * @param styleIndex the style index
@@ -649,8 +720,8 @@ public class Styles implements Storable {
         // Test from cache
         if (fastTestDateFmt(styleIndex)) return true;
 
-        Integer style = map.get(styleIndex);
-        if (style == null) return false;
+        if (styleIndex > counter.get()) return false;
+        int style = this.styleIndex[styleIndex];
         int nf = style >> INDEX_NUMBER_FORMAT & 0xFF;
 
         // No number format
