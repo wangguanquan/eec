@@ -312,10 +312,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeSheetViews();
 
         // Default row height and width
-        int fillSpace = 6;
+        int fillSpace = 13;
         BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
         String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-        writeSheetFormat(fillSpace, defaultWidth);
+//        writeSheetFormat(fillSpace, defaultWidth);
 
         // cols
         writeCols(fillSpace, defaultWidth);
@@ -792,6 +792,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
+            if (hc.isHide()) {
+                widths[i] = "0\" hidden=\"1";
+                continue;
+            }
             double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
             Class<?> clazz = hc.getClazz();
             if (isString(clazz)) {
@@ -847,7 +851,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // resize each column width ...
         try (SeekableByteChannel channel = Files.newByteChannel(path.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ)) {
-            ByteBuffer buffer = ByteBuffer.allocate(387 + columns.length * 73);
+            ByteBuffer buffer = ByteBuffer.allocate(316 + columns.length * 80);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
             int n = channel.read(buffer);
@@ -1048,34 +1052,23 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeCols(int fillSpace, String defaultWidth) throws IOException {
         if (columns.length > 0) {
             bw.write("<cols>");
-//            if (sheet.isAutoSize()) {
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
+                int w = defaultWidth.length();
                 bw.write("<col customWidth=\"1\" width=\"");
                 if (col.isHide()) {
-                    bw.writeInt(0);
-                    bw.write("\" hidden=\"1");
+                    bw.write("0\" hidden=\"1");
+                    w = 12;
                 }
                 else bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
-                for (int j = fillSpace - defaultWidth.length(); j-- > 0; ) bw.write(32); // Fill space
+                for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
                 bw.writeInt(col.getRealColIndex());
                 bw.write("\" max=\"");
-                bw.writeInt(col.getRealColIndex() + 1);
+                bw.writeInt(col.getRealColIndex());
                 bw.write("\" bestFit=\"1\"/>");
             }
-//            } else {
-//                bw.write("<col customWidth=\"1\" width=\"");
-//                bw.write(columns[i].width >= 1.0 ? new BigDecimal(columns[i].width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : stringWidth);
-//                bw.write('"');
-//                for (int j = n; j-- > 0; ) bw.write(32); // Fill space
-//                bw.write(" min=\"");
-//                bw.writeInt(columns[0].getRealColIndex());
-//                bw.write("\" max=\"");
-//                bw.writeInt(columns[columns.length - 1].getRealColIndex() + 1);
-//                bw.write("\" bestFit=\"1\"/>");
-//            }
             bw.write("</cols>");
         }
     }
@@ -1090,8 +1083,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetData>");
 
         int headerRow = 1;
-        // The first header row
-        if (!nonHeader) {
+        // Write header rows
+        if (!nonHeader && columns.length > 0) {
             headerRow = writeHeaderRow();
         }
         startRow = headerRow + (sheet.getNonHeader() ^ 1);
