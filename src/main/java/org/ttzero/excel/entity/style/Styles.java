@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -455,10 +454,8 @@ public class Styles implements Storable {
 
         Element cellXfs = root.element("cellXfs").addAttribute("count", String.valueOf(map.size()));
 
-        List<Map.Entry<Integer, Integer>> list = new ArrayList<>(map.entrySet());
-        list.sort(Comparator.comparingInt(Map.Entry::getValue));
-        list.forEach(e -> {
-            int[] styles = unpack(e.getKey());
+        for (int i = 0, len = counter.get(); i < len; i++) {
+            int[] styles = unpack(styleIndex[i]);
 
             Element newXf = cellXfs.addElement("xf");
             newXf.addAttribute(attrNames[0], String.valueOf(styles[0]))
@@ -491,7 +488,7 @@ public class Styles implements Storable {
             if (styles[6] > 0) {
                 subEle.addAttribute(attrNames[6], "1");
             }
-        });
+        }
 
         FileUtil.writeToDiskNoFormat(document, styleFile);
     }
