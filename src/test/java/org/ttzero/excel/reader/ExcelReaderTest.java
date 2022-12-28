@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -656,6 +657,19 @@ public class ExcelReaderTest {
                     else assert row.getInt(1) == 60; // formula=A59+1
                 }
             }
+        }
+    }
+
+    @Test public void testRowToMap() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == 94;
+            assert list.get(0).toString().equals("{渠道ID=4, 游戏=极品飞车, account=XuSu2gFg32, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=F}");
+            Map<String, Object> row9 = list.get(8); // Include header row
+            assert "LOL".equals(row9.get("游戏"));
+            assert "1WRQMx".equals(row9.get("account"));
+            assert (Boolean) row9.get("是否满30级");
+            assert list.get(93).toString().equals("{渠道ID=3, 游戏=WOW, account=Ae9CNO6eTu, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=B}");
         }
     }
 

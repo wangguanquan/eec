@@ -28,7 +28,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static org.ttzero.excel.reader.Cell.BLANK;
@@ -1354,6 +1357,57 @@ public abstract class Row {
             }
         }
         return joiner.toString();
+    }
+
+    /**
+     * Convert row data to LinkedMap(sort by column index)
+     *
+     * @return the key is name or index(if not name here)
+     */
+    public Map<String, Object> toMap() {
+        if (isEmpty() || hr == null) return Collections.emptyMap();
+        // Maintain the column orders
+        Map<String, Object> data = new LinkedHashMap<>(hr.lc - hr.fc);
+        String[] names = hr.names;
+        String key;
+        for (int i = hr.fc; i < hr.lc; i++) {
+            Cell c = cells[i];
+            key = names[i];
+            // Ignore null key
+            if (key == null) continue;
+            switch (c.t) {
+                case SST:
+                    if (c.sv == null) {
+                        c.setSv(sst.get(c.nv));
+                    }
+                    // @Mark:=>There is no missing `break`, this is normal logic here
+                case INLINESTR:
+                    data.put(key, c.sv);
+                    break;
+                case BOOL:
+                    data.put(key, c.bv);
+                    break;
+                case NUMERIC:
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.nv);
+                    else data.put(key, toTimestamp(c.nv));
+                    break;
+                case LONG:
+                    data.put(key, c.lv);
+                    break;
+                case DOUBLE:
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.dv);
+                    else if (c.dv > 1.00001) data.put(key, toTimestamp(c.dv));
+                    else data.put(key, toLocalTime(c.dv));
+                    break;
+                case BLANK:
+                case EMPTY_TAG:
+                    data.put(key, EMPTY);
+                    break;
+                default:
+                    data.put(key, null);
+            }
+        }
+        return data;
     }
 
     /**
