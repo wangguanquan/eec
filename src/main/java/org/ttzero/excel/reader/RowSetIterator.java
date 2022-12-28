@@ -39,8 +39,8 @@ public class RowSetIterator implements Iterator<Row> {
             return true;
         } else {
             if (onlyDataRow) {
-                // Skip empty rows
-                for (; (nextRow = supplier.get()) != null && nextRow.isEmpty(); ) ;
+                // Skip blank rows
+                for (; (nextRow = supplier.get()) != null && nextRow.isBlank(); ) ;
             } else {
                 nextRow = supplier.get();
             }
