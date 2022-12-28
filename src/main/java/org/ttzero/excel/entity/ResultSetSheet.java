@@ -388,7 +388,7 @@ public class ResultSetSheet extends Sheet {
         return clazz;
     }
 
-    private static class SQLColumn extends org.ttzero.excel.entity.Column {
+    public static class SQLColumn extends org.ttzero.excel.entity.Column {
         int sqlType, ri; // ResultSet index
 
         public SQLColumn(String name, int sqlType, Class<?> clazz) {

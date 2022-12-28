@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
-import static org.ttzero.excel.reader.Cell.BLANK;
-import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.util.StringUtil.formatBinarySize;
 
 /**
@@ -77,8 +75,9 @@ public interface Grid {
      *
      * @param r row number (from one)
      * @param cell column number (from one)
+     * @return not a mered cell will returns 0, 1 means current cell is the first merged cells otherwise returns 2
      */
-    void merge(int r, Cell cell);
+    int merge(int r, Cell cell);
 
     /**
      * Returns count of merged cells
@@ -151,18 +150,22 @@ public interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!test(r, cell.i)) return;
+        public int merge(int r, Cell cell) {
+            Scanner.Entry e;
+            if (!test(r, cell.i) || (e = scanner.get(r, cell.i)) == null) return 0;
 
-            Scanner.Entry e = scanner.get(r, cell.i);
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            Dimension dim = e.getDim();
+            int i = 2;
+            if (dim.firstRow != r || dim.firstColumn != cell.i) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
-            // Current cell has value
+            // First merged cell
             else {
                 e.getCell().from(cell);
+                i = 1;
             }
+            return i;
         }
 
         @Override
@@ -215,6 +218,7 @@ public interface Grid {
         private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private final Map<Long, Cell> index;
         private int size;
+        private long[] topCells;
         IndexGrid(Dimension dim, int n) {
             fr = dim.firstRow;
             lr = dim.lastRow;
@@ -222,6 +226,7 @@ public interface Grid {
             lc = dim.lastColumn;
 
             index = new HashMap<>(n);
+            topCells = new long[1 << 6];
         }
 
         @Override
@@ -232,7 +237,24 @@ public interface Grid {
                     index.put(((long) i) << 16 | j, cell);
                 }
             }
+
+            if (topCells.length <= size) {
+                long[] _cells = new long[size + 64];
+                System.arraycopy(topCells, 0, _cells, 0, size);
+                topCells = _cells;
+            }
+
+            long v = ((long) dim.firstRow) << 16 | dim.firstColumn;
+            int i = Arrays.binarySearch(topCells, 0, size, v);
+            insert(topCells, size, i > 0 ? i : ~i, v);
+
             size++;
+        }
+
+        // Insert value into array, Ignore bound check
+        static void insert(long[] array, int size, int index, long value) {
+            if (index < size) System.arraycopy(array, index, array, index + 1, size - index);
+            array[index] = value;
         }
 
         @Override
@@ -241,19 +263,22 @@ public interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
-            Cell c = index.get(((long) r) << 16 | cell.i);
-            if (c == null) return;
+        public int merge(int r, Cell cell) {
+            Cell c;
+            long v;
+            if ((c = index.get(v = (((long) r) << 16 | cell.i))) == null) return 0;
 
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            int i = 2;
+            if (Arrays.binarySearch(topCells, 0, size, v) < 0) {
                 // Copy value from the first merged cell
                 cell.from(c);
             }
             // Current cell has value
             else {
                 c.from(cell);
+                i = 1;
             }
+            return i;
         }
 
         @Override
@@ -295,19 +320,22 @@ public interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
-            Scanner.Entry e = scanner.get(r, cell.i);
-            if (e == null) return;
+        public int merge(int r, Cell cell) {
+            Scanner.Entry e;
+            if (!range(r, cell.i) || (e = scanner.get(r, cell.i)) == null) return 0;
 
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            Dimension dim = e.getDim();
+            int i = 2;
+            if (dim.firstRow != r || dim.firstColumn != cell.i) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
-            // Current cell has value
+            // First merged cell
             else {
                 e.getCell().from(cell);
+                i = 1;
             }
+            return i;
         }
 
         @Override

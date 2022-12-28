@@ -21,8 +21,11 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.reader.HeaderRow;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -31,16 +34,29 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 
 /**
  * @author guanquan.wang at 2022-06-27 23:24
  */
 public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Columns Annotation").setWaterMark(WaterMark.of("勿外传"))
+        List<RepeatableEntry> list = RepeatableEntry.randomTestData();
+        new Workbook().setWaterMark(WaterMark.of("勿外传"))
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"))) {
+            List<RepeatableEntry> readList = reader.sheet(0).header(1, 4).bind(RepeatableEntry.class).rows()
+                .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+        }
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
@@ -95,6 +111,97 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testRepeatAnnotations2() throws IOException {
+        List<RepeatableEntry> list = RepeatableEntry.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"))) {
+            List<RepeatableEntry> readList = reader.sheet(0).header(2, 4).bind(RepeatableEntry.class).rows()
+                .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Specify single header row
+            org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
+            Cell[] cells = new Cell[6];
+            cells[0] = new Cell((short) 1).setSv("订单号");
+            cells[1] = new Cell((short) 2).setSv("收件人");
+            cells[2] = new Cell((short) 3).setSv("省");
+            cells[3] = new Cell((short) 4).setSv("市");
+            cells[4] = new Cell((short) 5).setSv("区");
+            cells[5] = new Cell((short) 6).setSv("详细地址");
+            headerRow.setCells(cells);
+            readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(headerRow))
+                .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Specify 2 header rows
+            org.ttzero.excel.reader.Row headerRow2 = new org.ttzero.excel.reader.Row() {};
+            Cell[] cells2 = new Cell[6];
+            cells2[0] = new Cell((short) 1).setSv("订单号");
+            cells2[1] = new Cell((short) 2).setSv("A:收件人");
+            cells2[2] = new Cell((short) 3).setSv("A:省");
+            cells2[3] = new Cell((short) 4).setSv("A:市");
+            cells2[4] = new Cell((short) 5).setSv("B:区");
+            cells2[5] = new Cell((short) 6).setSv("B:详细地址");
+            headerRow2.setCells(cells2);
+            readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(2, headerRow2))
+                .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+        }
+    }
+
+    @Test public void testRepeatAnnotations3() throws IOException {
+        List<RepeatableEntry3> list = RepeatableEntry3.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"))) {
+            List<RepeatableEntry3> readList;
+
+            // header row 4
+//            readList = reader.sheet(0).header(4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+//
+//            // header rows 3-4
+//            readList = reader.sheet(0).reset().header(3, 4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+//
+//            // header rows 2-4
+//            readList = reader.sheet(0).reset().header(2, 4).bind(RepeatableEntry3.class).rows()
+//                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+//
+//            assert list.size() == readList.size();
+//            for (int i = 0, len = list.size(); i < len; i++)
+//                assert list.get(i).equals(readList.get(i));
+
+            // header rows 1-4
+            readList = reader.sheet(0).reset().header(1, 4).bind(RepeatableEntry3.class).rows()
+                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
@@ -124,21 +231,35 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }};
 
     public static class RepeatableEntry {
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn
         @ExcelColumn("订单号")
         private String orderNo;
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn("A")
         @ExcelColumn("收件人")
         private String recipient;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("A")
         @ExcelColumn("省")
         private String province;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("A")
         @ExcelColumn("市")
         private String city;
+        @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
+        @ExcelColumn("B")
         @ExcelColumn("区")
         private String area;
+        @ExcelColumn("TOP")
         @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
-        @ExcelColumn(value = "详细地址")
+        @ExcelColumn("B")
+        @ExcelColumn("详细地址")
         private String detail;
 
         public RepeatableEntry() {}
@@ -187,6 +308,109 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         public String getDetail() {
             return detail;
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry) {
+                RepeatableEntry other = (RepeatableEntry) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(province, other.province)
+                    && Objects.equals(city, other.city)
+                    && Objects.equals(detail, other.detail);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
+        }
+    }
+
+    public static class RepeatableEntry3 {
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn
+        @ExcelColumn("订单号")
+        private String orderNo;
+        @ExcelColumn("TOP")
+        @ExcelColumn("K")
+        @ExcelColumn("A")
+        @ExcelColumn("收件人")
+        private String recipient;
+        @ExcelColumn("TOP")
+        @ExcelColumn("收件地址")
+        @ExcelColumn("A")
+        @ExcelColumn("省")
+        private String province;
+        @ExcelColumn("TOP")
+        @ExcelColumn("市")
+        @ExcelColumn("市")
+        @ExcelColumn("市")
+        private String city;
+        @ExcelColumn("TOP")
+        @ExcelColumn("收件地址")
+        @ExcelColumn("B")
+        @ExcelColumn("区")
+        private String area;
+        @ExcelColumn("详细地址")
+        @ExcelColumn(value = "详细地址", comment = @HeaderComment("精确到门牌号"))
+        @ExcelColumn("详细地址")
+        @ExcelColumn("详细地址")
+        private String detail;
+
+        public RepeatableEntry3() {}
+
+        public RepeatableEntry3(String orderNo, String recipient, String province, String city, String area, String detail) {
+            this.orderNo = orderNo;
+            this.recipient = recipient;
+            this.province = province;
+            this.city = city;
+            this.area = area;
+            this.detail = detail;
+        }
+
+        public static List<RepeatableEntry3> randomTestData(int n) {
+            List<RepeatableEntry3> list = new ArrayList<>(n);
+            for (int i = 0, p, c; i < n; i++) {
+                list.add(new RepeatableEntry3(Integer.toString(Math.abs(random.nextInt())), getRandomString(8) + 2, provinces[p = random.nextInt(provinces.length)], cities[p][c = random.nextInt(cities[p].length)], areas[p][c][random.nextInt(areas[p][c].length)], "xx街" + (random.nextInt(10) + 1) + "号"));
+            }
+            return list;
+        }
+
+        public static List<RepeatableEntry3> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry3) {
+                RepeatableEntry3 other = (RepeatableEntry3) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(province, other.province)
+                    && Objects.equals(city, other.city)
+                    && Objects.equals(detail, other.detail);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
         }
     }
 }

@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 public class Cell {
     public Cell() { }
     public Cell(short i) { this.i = i; }
+    public Cell(int i) { this.i = (short) (i & 0x7FFF); }
     public static final char SST         = 's';
     public static final char BOOL        = 'b';
     public static final char FUNCTION    = 'f';
@@ -103,69 +104,82 @@ public class Cell {
      */
     public transient short i;
 
-    public void setT(char t) {
+    public Cell setT(char t) {
         this.t = t;
+        return this;
     }
 
-    public void setSv(String sv) {
+    public Cell setSv(String sv) {
         this.t = INLINESTR;
         this.sv = sv;
+        return this;
     }
 
-    public void setNv(int nv) {
+    public Cell setNv(int nv) {
         this.t = NUMERIC;
         this.nv = nv;
+        return this;
     }
 
-    public void setDv(double dv) {
+    public Cell setDv(double dv) {
         this.t = DOUBLE;
         this.dv = dv;
+        return this;
     }
 
-    public void setBv(boolean bv) {
+    public Cell setBv(boolean bv) {
         this.t = BOOL;
         this.bv = bv;
+        return this;
     }
 
-    public void setCv(char c) {
+    public Cell setCv(char c) {
         this.t = CHARACTER;
         this.cv = c;
+        return this;
     }
 
-    public void blank() {
+    public Cell blank() {
         this.t = BLANK;
+        return this;
     }
 
-    public void emptyTag() {
+    public Cell emptyTag() {
         this.t = EMPTY_TAG;
+        return this;
     }
 
-    public void setLv(long lv) {
+    public Cell setLv(long lv) {
         this.t = LONG;
         this.lv = lv;
+        return this;
     }
 
-    public void setMv(BigDecimal mv) {
+    public Cell setMv(BigDecimal mv) {
         this.t = DECIMAL;
         this.mv = mv;
+        return this;
     }
 
-    public void setIv(double i) {
+    public Cell setIv(double i) {
         this.t = DATETIME;
         this.dv = i;
+        return this;
     }
 
-    public void setAv(int a) {
+    public Cell setAv(int a) {
         this.t = DATE;
         this.nv = a;
+        return this;
     }
 
-    public void setTv(double t) {
+    public Cell setTv(double t) {
         this.t = TIME;
         this.dv = t;
+        return this;
     }
 
-    public void clear() {
+    public Cell clear() {
         this.t  = UNALLOCATED;
         this.sv = null;
         this.nv = 0;
@@ -178,6 +192,7 @@ public class Cell {
         this.fv = null;
         this.f  = false;
         this.si = -1;
+        return this;
     }
 
     public Cell from(Cell cell) {

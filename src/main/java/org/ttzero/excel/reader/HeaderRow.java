@@ -17,6 +17,7 @@
 package org.ttzero.excel.reader;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListSheet;
@@ -26,6 +27,7 @@ import org.ttzero.excel.util.StringUtil;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -35,11 +37,12 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -70,6 +73,8 @@ public class HeaderRow extends Row {
 
     // `detailMessage` field declare in Throwable
     protected static final Field detailMessageField;
+    // Specify total rows of header
+    protected int headRows;
 
     static {
         Field field = null;
@@ -82,15 +87,23 @@ public class HeaderRow extends Row {
         detailMessageField = field;
     }
 
-    protected HeaderRow() { }
+    public HeaderRow with(Row ... rows) {
+        return with(null, rows.length, rows);
+    }
 
-    public HeaderRow with(Row row) {
+    public HeaderRow with(int headRows, Row ... rows) {
+        return with(null, headRows, rows);
+    }
+
+    public HeaderRow with(List<Dimension> mergeCells, Row ... rows) {
+        return with(mergeCells, rows.length, rows);
+    }
+
+    public HeaderRow with(List<Dimension> mergeCells, int headRows, Row ... rows) {
+        this.headRows = headRows;
+        Row row = rows[rows.length - 1];
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
-        for (int i = row.fc; i < row.lc; i++) {
-            this.names[i] = row.getString(i);
-            this.mapping.put(this.names[i], i);
-        }
         // Extends from row
         this.fc = row.fc;
         this.lc = row.lc;
@@ -99,15 +112,42 @@ public class HeaderRow extends Row {
         for (int i = 0; i < row.fc; i++) {
             this.cells[i] = new Cell();
         }
-        for (int i = row.fc; i < row.lc; i++) {
-            Cell cell = new Cell();
-            cell.setSv(this.names[i]);
-            this.cells[i] = cell;
+
+        if (headRows == 1) {
+            for (int i = row.fc; i < row.lc; i++) {
+                this.names[i] = row.getString(i);
+                this.mapping.put(this.names[i], i);
+
+                Cell cell = new Cell();
+                cell.setSv(this.names[i]);
+                this.cells[i] = cell;
+            }
+        } else {
+            // Copy on merge cells
+            mergeCellsIfNull(mergeCells, rows);
+
+            StringBuilder buf = new StringBuilder();
+            for (int i = row.fc; i < row.lc; i++) {
+                buf.delete(0, buf.length());
+                for (Row r : rows) {
+                    String tmp = r.getString(i);
+                    if (StringUtil.isNotEmpty(tmp)) {
+                        buf.append(tmp).append(':');
+                    }
+                }
+                if (buf.length() > 1) buf.deleteCharAt(buf.length() - 1);
+                this.names[i] = buf.toString();
+                this.mapping.put(this.names[i], i);
+
+                Cell cell = new Cell();
+                cell.setSv(this.names[i]);
+                this.cells[i] = cell;
+            }
         }
         return this;
     }
 
-    final boolean is(Class<?> clazz) {
+    public final boolean is(Class<?> clazz) {
         return this.clazz != null && this.clazz == clazz;
     }
 
@@ -135,7 +175,8 @@ public class HeaderRow extends Row {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
 
-        Map<String, ListSheet.EntryColumn> columnMap = new LinkedHashMap<>();
+        List<ListSheet.EntryColumn> list = new ArrayList<>();
+//        Map<String, ListSheet.EntryColumn> columnMap = new LinkedHashMap<>();
         ListSheet.EntryColumn column, other;
         for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
@@ -147,27 +188,31 @@ public class HeaderRow extends Row {
             if (method != null) {
                 column = createColumn(method);
                 if (column != null) {
-                    column.method = method;
-                    if (StringUtil.isEmpty(column.name)) column.name = method.getName();
-                    if (column.colIndex < 0) column.colIndex = check(column.name, gs);
-                    if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
-                    if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
+                    ListSheet.EntryColumn tail = column.tail != null ? (ListSheet.EntryColumn) column.tail : column;
+                    tail.method = method;
+                    if (StringUtil.isEmpty(tail.name)) tail.name = method.getName();
+                    if (tail.clazz == null) tail.clazz = method.getParameterTypes()[0];
+//                    if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+//                    if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
+                    list.add(column);
                     continue;
                 }
             }
 
             column = createColumn(f);
             if (column != null) {
-                if (StringUtil.isEmpty(column.name)) column.name = gs;
+                ListSheet.EntryColumn tail = column.tail != null ? (ListSheet.EntryColumn) column.tail : column;
+                if (StringUtil.isEmpty(tail.name)) tail.name = gs;
                 if (method != null) {
-                    column.method = method;
-                    if (column.clazz == null) column.clazz = method.getParameterTypes()[0];
+                    tail.method = method;
+                    if (tail.clazz == null) tail.clazz = method.getParameterTypes()[0];
                 } else {
-                    column.field = f;
-                    if (column.clazz == null) column.clazz = declaredFields[i].getType();
+                    tail.field = f;
+                    if (tail.clazz == null) tail.clazz = declaredFields[i].getType();
                 }
-                if (column.colIndex < 0) column.colIndex = check(column.name, gs);
-                if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
+//                if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+//                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
+                list.add(column);
             }
         }
 
@@ -178,22 +223,91 @@ public class HeaderRow extends Row {
             for (Map.Entry<String, Method> entry : otherColumns.entrySet()) {
                 column = createColumn(entry.getValue());
                 if (column == null) column = new ListSheet.EntryColumn(entry.getKey());
-                if (StringUtil.isEmpty(column.name)) column.name = entry.getKey();
-                column.method = entry.getValue();
-                if (column.colIndex < 0) column.colIndex = getIndex(column.name);
-                if (column.clazz == null) column.clazz = entry.getValue().getParameterTypes()[0];
-
-                // Check if exists
-                if ((other = columnMap.get(column.getName())) == null || other.getMethod() == null) columnMap.put(column.name, column);
+                ListSheet.EntryColumn tail = column.tail != null ? (ListSheet.EntryColumn) column.tail : column;
+                if (StringUtil.isEmpty(tail.name)) tail.name = entry.getKey();
+                tail.method = entry.getValue();
+                if (tail.clazz == null) tail.clazz = entry.getValue().getParameterTypes()[0];
+//                if (tail.colIndex < 0) tail.colIndex = getIndex(tail.name);
+//                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
+                list.add(column);
             }
         }
 
-        this.columns = columnMap.values().stream()
+        // Merge cells
+        org.ttzero.excel.entity.Sheet listSheet = new ListSheet<Object>() {
+            @Override
+            public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
+                columns = new org.ttzero.excel.entity.Column[list.size()];
+                list.toArray(columns);
+                headerReady = true;
+
+                // Reverse
+                reverseHeadColumn();
+
+                // Add merge cell properties
+                mergeHeaderCellsIfEquals();
+
+                // Sort column index
+                sortColumns(columns);
+
+                // Turn to one-base
+                calculateRealColIndex();
+
+                return columns;
+            }
+        };
+        org.ttzero.excel.entity.Column[] columns = listSheet.getAndSortHeaderColumns();
+        @SuppressWarnings("unchecked")
+        List<Dimension> mergeCells = (List<Dimension>) listSheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+        // Ignore all vertical merged cells
+        mergeCells = mergeCells != null && !mergeCells.isEmpty() ? mergeCells.stream().filter(c -> c.firstColumn < c.lastColumn).collect(Collectors.toList()) : null;
+        if (mergeCells != null && !mergeCells.isEmpty()) {
+            Grid mergedGrid = GridFactory.create(mergeCells);
+            for (org.ttzero.excel.entity.Column c : columns) {
+                org.ttzero.excel.entity.Column[] sub = c.toArray();
+                for (int j = sub.length - 1, t; j >= 0; j--) {
+                    if (mergedGrid.test(t = sub.length - j, c.realColIndex) && isTopRow(mergeCells, t, c.realColIndex)) {
+                        Cell cell = new Cell((short) c.realColIndex);
+                        if (StringUtil.isNotEmpty(sub[j].getName())) cell.setSv(sub[j].getName());
+                        else cell.t = Cell.EMPTY_TAG;
+                        mergedGrid.merge(t, cell);
+                        sub[j].name = cell.sv;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0, len = columns.length; i < len; i++) {
+            org.ttzero.excel.entity.Column c = columns[i];
+            if (c.tail != null) {
+                StringJoiner joiner = new StringJoiner(":");
+                org.ttzero.excel.entity.Column[] sub = c.toArray();
+                for (int j = sub.length - 1; j >= 0; j--) {
+                    if (StringUtil.isNotEmpty(sub[j].getName())) joiner.add(sub[j].getName());
+                }
+                c.name = joiner.toString();
+                c.trimTail();
+            } else if (!(c instanceof ListSheet.EntryColumn)) {
+                columns[i] = c = new ListSheet.EntryColumn(c);
+            }
+
+            if (c.colIndex < 0) c.colIndex = getIndex(c.name);
+        }
+
+        this.columns = Arrays.stream(columns)
                 .filter(c -> c.colIndex >= 0 || c.clazz == RowNum.class)
                 .sorted(Comparator.comparingInt(a -> a.colIndex))
+                .map(e -> (e instanceof ListSheet.EntryColumn) ? (ListSheet.EntryColumn) e : new ListSheet.EntryColumn(e))
                 .toArray(ListSheet.EntryColumn[]::new);
 
         return this;
+    }
+
+    static boolean isTopRow(List<Dimension> mergeCells, int row, int col) {
+        for (Dimension dim : mergeCells) {
+            if (dim.checkRange(row, col) && row == dim.firstRow) return true;
+        }
+        return false;
     }
 
     protected int check(String first, String second) {
@@ -224,7 +338,7 @@ public class HeaderRow extends Row {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> T getT() {
+    public <T> T getT() {
         return (T) t;
     }
 
@@ -249,13 +363,22 @@ public class HeaderRow extends Row {
     }
 
     /**
+     * Get the name of columns
+     *
+     * @return name of columns
+     */
+    public String[] getNames() {
+        return this.names;
+    }
+
+    /**
      * Returns the position in cell range
      *
      * @param columnName the column name
      * @return the position if found otherwise -1
      */
     public int getIndex(String columnName) {
-        Integer index = mapping.get(columnName);
+        Integer index = mapping != null ? mapping.get(columnName) : null;
         return index != null ? index : -1;
     }
 
@@ -579,17 +702,76 @@ public class HeaderRow extends Row {
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
-        ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
-        if (ec != null) {
-            ListSheet.EntryColumn column = new ListSheet.EntryColumn(ec.value());
-            column.setColIndex(ec.colIndex());
-            return column;
+        // Support multi header columns
+        ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
+        if (cs != null) {
+            ExcelColumn[] ecs = cs.value();
+            ListSheet.EntryColumn root = null;
+            for (int i = Math.max(0, ecs.length - headRows); i < ecs.length; i++) {
+                ListSheet.EntryColumn column = createColumnByAnnotation(ecs[i]);
+                if (root == null) {
+                    root = column;
+                } else {
+                    root.addSubColumn(column);
+                }
+            }
+            return root;
         }
+        // Single header column
+        ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
+        if (ec != null) return createColumnByAnnotation(ec);
         // Row Num
         RowNum rowNum = ao.getAnnotation(RowNum.class);
-        if (rowNum != null) {
-            return new ListSheet.EntryColumn(EMPTY, RowNum.class);
-        }
+        if (rowNum != null) return createColumnByAnnotation(rowNum);
         return null;
+    }
+
+    /**
+     * Create column by {@code ExcelColumn} annotation
+     *
+     * @param anno an java annotation
+     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     */
+    protected ListSheet.EntryColumn createColumnByAnnotation(Annotation anno) {
+        ListSheet.EntryColumn column = null;
+        if (anno instanceof ExcelColumn) {
+            ExcelColumn ec = (ExcelColumn) anno;
+            column = new ListSheet.EntryColumn(ec.value());
+            column.setColIndex(ec.colIndex());
+            // Hidden Column
+            if (ec.hide()) column.hide();
+        } else if (anno instanceof RowNum) {
+            column = new ListSheet.EntryColumn(EMPTY, RowNum.class);
+        }
+        return column;
+    }
+
+    /**
+     * Copy column name on merge cells
+     *
+     * @param mergeCells merged cell in header rows
+     * @param rows the header rows
+     */
+    protected void mergeCellsIfNull(List<Dimension> mergeCells, Row[] rows) {
+        if (mergeCells == null) return;
+        mergeCells = mergeCells.stream().filter(d -> d.getWidth() > 1).collect(Collectors.toList());
+        if (mergeCells.isEmpty()) return;
+
+        Map<Long, Dimension> map = mergeCells.stream().collect(Collectors.toMap(a -> ((long) a.firstRow) << 16 | a.firstColumn, a -> a, (a, b) -> a));
+
+        for (Row row : rows) {
+            for (int i = row.fc; i < row.lc; ) {
+                Cell cell = row.cells[i];
+                Dimension d = map.get(((long) row.getRowNum()) << 16 | cell.i);
+                if (d != null) {
+                    String v = row.getString(cell);
+                    if (d.lastColumn > row.lc) {
+                        row.cells = row.copyCells(d.lastColumn);
+                        row.lc = d.lastColumn;
+                    }
+                    for (int j = d.firstColumn + 1; j <= d.lastColumn; j++) row.cells[++i].setSv(v);
+                } else i++;
+            }
+        }
     }
 }

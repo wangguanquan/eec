@@ -65,9 +65,9 @@ public abstract class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
     protected int index = -1;
-    // Index to first column (zero base)
+    // Index to first column (zero base, inclusive)
     protected int fc = 0;
-    // Index to last column (zero base)
+    // Index to last column (zero base, exclusive)
     protected int lc = -1;
     // Share cell
     protected Cell[] cells;
@@ -1562,6 +1562,70 @@ public abstract class Row {
             return EMPTY;
 
         return sharedCalc[i].get(coordinate);
+    }
+
+    /**
+     * Returns deep clone cells
+     *
+     * @return cells
+     */
+    public Cell[] copyCells() {
+        return copyCells(cells.length);
+    }
+
+    /**
+     * Returns deep clone cells
+     *
+     * @param newLength the length of the copy to be returned
+     * @return cells
+     */
+    public Cell[] copyCells(int newLength) {
+        Cell[] newCells = new Cell[newLength];
+        int oldRow = cells.length;
+        for (int k = 0; k < newLength; k++) {
+            newCells[k] = new Cell((short) (k + 1));
+            // Copy values
+            if (k < oldRow && cells[k] != null) {
+                newCells[k].from(cells[k]);
+            }
+        }
+        return newCells;
+    }
+
+    /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @return current Row
+     */
+    public Row setCells(Cell[] cells) {
+        this.cells = cells;
+        this.fc = 0;
+        this.lc = cells.length;
+        return this;
+    }
+
+    /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @param fromIndex specify the first cells index(one base)
+     * @param toIndex specify the last cells index(one base)
+     * @return current Rows
+     */
+    public Row setCells(Cell[] cells, int fromIndex, int toIndex) {
+        if (fromIndex < 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+        if (toIndex > cells.length)
+            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+        if (fromIndex > toIndex)
+            throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                ") > toIndex(" + toIndex + ")");
+
+        this.cells = cells;
+        this.fc = fromIndex;
+        this.lc = toIndex;
+        return this;
     }
 
     /**

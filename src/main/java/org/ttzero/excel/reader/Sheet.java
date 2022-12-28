@@ -108,8 +108,47 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Specify the header rows endpoint
+     *
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     */
+    default Sheet header(int fromRowNum) {
+        return header(fromRowNum, fromRowNum);
+    }
+
+    /**
+     * Specify the header rows endpoint
+     * <p>
+     * Note: After specifying the header row number, the row-pointer will move to the
+     * next row of the header range. The {@link #bind(Class)}, {@link #bind(Class, int)},
+     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
+     * and {@link #dataIterator()} will all be affected.
+     *
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     * @throws IllegalArgumentException if {@code toRow} less than {@code fromRow}
+     */
+    Sheet header(int fromRowNum, int toRowNum);
+
+    /**
      * Returns the header of the list.
-     * The first non-empty line defaults to the header information.
+     *
+     * The first non-empty line defaults to the header information. You can also call {@link #header(int, int)}
+     * to specify multiple header rows. If there are multiple rows of headers, ':' will be used for stitching.
+     *
+     * <blockquote><pre>
+     * +-----------------------------+
+     * |       |        COMMON       |
+     * | TITLE +-------+------+------+
+     * |       |  SUB1 | SUB2 | SUB3 |
+     * +------+-------+-------+------+
+     * </pre></blockquote>
+     *
+     * The above table will return "TITLE", "COMMON:SUB1", "COMMON:SUB2", "COMMON:SUB3"
      *
      * @return the {@link HeaderRow}
      */
@@ -122,6 +161,38 @@ public interface Sheet extends Closeable {
      * @return the {@link Sheet}
      */
     Sheet bind(Class<?> clazz);
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRowNum) {
+        return bind(clazz, header(fromRowNum).getHeader());
+    }
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRowNum, int toRowNum) {
+        return bind(clazz, header(fromRowNum, toRowNum).getHeader());
+    }
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param row specify a custom header row
+     * @return the {@link Sheet}
+     */
+    Sheet bind(Class<?> clazz, Row row);
 
     /**
      * Load the sheet data
@@ -316,6 +387,13 @@ interface MergeSheet extends Sheet {
      * Returns CellMerged info
      */
     Grid getMergeGrid();
+
+    /**
+     * Returns all merged cells
+     *
+     * @return If no merged cells are returned, Null is returned
+     */
+    List<Dimension> getMergeCells();
 }
 
 //interface FullSheet extends CalcSheet, MergeSheet { }

@@ -25,6 +25,7 @@ import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.reader.SharedStrings.unescape;
 import static org.ttzero.excel.util.StringUtil.swap;
@@ -213,7 +214,7 @@ public class XMLRow extends Row {
                         throw new TooManyColumnsException(i, Const.Limit.MAX_COLUMNS_ON_SHEET);
                     }
                     // Resize cell buffer
-                    cells = cellCopyOf(Math.min(i + 99, Const.Limit.MAX_COLUMNS_ON_SHEET));
+                    cells = copyCells(Math.min(i + 99, Const.Limit.MAX_COLUMNS_ON_SHEET));
                 }
                 cell = cells[i - 1];
             }
@@ -287,19 +288,6 @@ public class XMLRow extends Row {
             else if (c < '0' || c > '9') return false;
         }
         return true;
-    }
-
-    protected Cell[] cellCopyOf(int newLength) {
-        Cell[] newCells = new Cell[newLength];
-        int oldRow = cells.length;
-        for (int k = 0; k < newLength; k++) {
-            newCells[k] = new Cell((short) (k + 1));
-            // Copy values
-            if (k < oldRow && cells[k] != null) {
-                newCells[k].from(cells[k]);
-            }
-        }
-        return newCells;
     }
 
     /* Found specify target  */
@@ -415,6 +403,7 @@ public class XMLRow extends Row {
                     cell.blank(); // Reset type to BLANK if null value
                 }
                 break;
+            case UNALLOCATED: return; // Not [break] header
             default:
                 a = getV();
                 if (a < cursor) {
@@ -635,7 +624,9 @@ class XMLCalcRow extends XMLRow {
  */
 class XMLMergeRow extends XMLRow {
     // InterfaceFunction
-    private MergeValueFunc func;
+    protected MergeValueFunc func;
+    // A merge cells grid
+    protected Grid mergeCells;
 
     XMLMergeRow(XMLRow row) {
         this.sst = row.sst;
@@ -644,10 +635,45 @@ class XMLMergeRow extends XMLRow {
         this.buf = row.buf;
     }
 
-    XMLMergeRow setCopyValueFunc(MergeValueFunc func) {
+    XMLMergeRow setCopyValueFunc(Grid mergeCells, MergeValueFunc func) {
+        this.mergeCells = mergeCells;
         this.func = func;
         return this;
     }
+
+
+    /**
+     * Loop parse cell
+     */
+    @Override
+    protected void parseCells() {
+        cursor = searchSpan();
+        for (; cb[cursor++] != '>'; ) ;
+        unknownLength = lc < 0;
+
+        // Parse cell value
+        int i = 1, r = getRowNum();
+        for (Cell cell; (cell = nextCell()) != null; ) {
+            if (cell.i > i) for (; i < cell.i; i++) parseCellValue(cells[i - 1]);
+            parseCellValue(cell);
+            i++;
+        }
+
+        /*
+         Some tools handle merged cells that ignore all cells
+          in the merged range except for the first one,
+          so compatibility is required here for cells that are outside the spans range
+         */
+        for (; mergeCells.test(r, i); i++) {
+            if (lc < i) {
+                // Give a new cells
+                if (cells.length < i) cells = copyCells(i);
+                lc = i;
+            }
+            parseCellValue(cells[i - 1]);
+        }
+    }
+
 
     /**
      * Parse cell value
