@@ -284,7 +284,7 @@ public class Styles implements Storable {
             self.styleIndex[i] = style;
             i++;
         }
-        self.counter.set(i - 1);
+        self.counter.set(i);
         // Test number format
         for (Integer styleIndex : self.map.values()) {
             self.isDate(styleIndex);
