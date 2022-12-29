@@ -83,6 +83,15 @@ public class ResultSetSheet extends Sheet {
     /**
      * Constructor worksheet
      *
+     * @param columns the header info
+     */
+    public ResultSetSheet(final org.ttzero.excel.entity.Column... columns) {
+        super(columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
      * @param name    the worksheet name
      * @param columns the header info
      */

@@ -222,7 +222,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     public Sheet() {
-        this(null);
+        relManager = new RelManager();
     }
 
     /**
@@ -232,6 +232,16 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet(String name) {
         this.name = name;
+        relManager = new RelManager();
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param columns the header info
+     */
+    public Sheet(final org.ttzero.excel.entity.Column... columns) {
+        this.columns = columns;
         relManager = new RelManager();
     }
 

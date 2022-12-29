@@ -375,7 +375,7 @@ public class Styles implements Storable {
         return i << INDEX_BORDER;
     }
 
-    private static int[] unpack(int style) {
+    public static int[] unpack(int style) {
         int[] styles = new int[7];
         styles[0] = style >>> INDEX_NUMBER_FORMAT;
         styles[1] = style << 8 >>> (INDEX_FONT + 8);
@@ -387,7 +387,7 @@ public class Styles implements Storable {
         return styles;
     }
 
-    private static int pack(int[] styles) {
+    public static int pack(int[] styles) {
         return styles[0] << INDEX_NUMBER_FORMAT
             | styles[1] << INDEX_FONT
             | styles[2] << INDEX_FILL
