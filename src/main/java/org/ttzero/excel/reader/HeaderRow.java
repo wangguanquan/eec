@@ -286,7 +286,6 @@ public class HeaderRow extends Row {
                     if (StringUtil.isNotEmpty(sub[j].getName())) joiner.add(sub[j].getName());
                 }
                 c.name = joiner.toString();
-                c.trimTail();
             } else if (!(c instanceof ListSheet.EntryColumn)) {
                 columns[i] = c = new ListSheet.EntryColumn(c);
             }
