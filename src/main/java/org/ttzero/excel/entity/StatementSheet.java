@@ -61,6 +61,15 @@ public class StatementSheet extends ResultSetSheet {
     /**
      * Constructor worksheet
      *
+     * @param columns the header info
+     */
+    public StatementSheet(final org.ttzero.excel.entity.Column... columns) {
+        super(columns);
+    }
+
+    /**
+     * Constructor worksheet
+     *
      * @param name    the worksheet name
      * @param columns the header info
      */
