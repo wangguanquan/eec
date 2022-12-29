@@ -95,6 +95,21 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testMultiHeaderAndSpecifyColIndex() throws SQLException, IOException {
+        try (Connection con = getConnection()) {
+            new Workbook("Multi Header And Specify Col-index", author).setAutoSize(true)
+                .setConnection(con)
+                .addSheet("select id, name, age, create_date, update_date from student order by age"
+                    , new Column("通用").setHeaderStyle(794694).addSubColumn(new Column("学号", int.class))
+                    , new Column("通用").addSubColumn(new Column("性名", String.class).setColIndex(13))
+                    , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(794691).setColIndex(14))
+                    , new Column("创建时间", Timestamp.class).setColIndex(15)
+                    , new Column("更新", Timestamp.class).setColIndex(16)
+                )
+                .writeTo(defaultTestPath);
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}

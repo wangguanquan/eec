@@ -674,27 +674,27 @@ public abstract class Sheet implements Cloneable, Storable {
         if (columns.length <= 1) return;
         int j = 0;
         for (int i = 0; i < columns.length; i++) {
-            if (columns[i].colIndex >= 0) {
-                int n = search(columns, j, columns[i].colIndex);
+            if (columns[i].getTail().colIndex >= 0) {
+                int n = search(columns, j, columns[i].getTail().colIndex);
                 if (n < i) insert(columns, n, i);
                 j++;
             }
         }
         // Finished
         if (j == columns.length) return;
-        int n = columns[0].colIndex;
+        int n = columns[0].getTail().colIndex;
         for (int i = 0; i < columns.length && j < columns.length; ) {
             if (n > i) {
                 for (int k = Math.min(n - i, columns.length - j); k > 0; k--, j++)
                     insert(columns, i++, j);
             } else i++;
-            if (i < columns.length) n = columns[i].colIndex;
+            if (i < columns.length) n = columns[i].getTail().colIndex;
         }
     }
 
     protected int search(org.ttzero.excel.entity.Column[] columns, int n, int k) {
         int i = 0;
-        for (; i < n && columns[i].colIndex <= k; i++) ;
+        for (; i < n && columns[i].getTail().colIndex <= k; i++) ;
         return i;
     }
 
@@ -709,14 +709,14 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected void calculateRealColIndex() {
         for (int i = 0; i < columns.length; i++) {
-            org.ttzero.excel.entity.Column hc = columns[i];
+            org.ttzero.excel.entity.Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
             else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
             else hc.realColIndex = hc.colIndex + 1;
 
-            if (hc.next != null) {
-                for (org.ttzero.excel.entity.Column col = hc.next; col != null; col = col.next)
+            if (hc.prev != null) {
+                for (org.ttzero.excel.entity.Column col = hc.prev; col != null; col = col.prev)
                     col.realColIndex = hc.realColIndex;
             }
         }
@@ -1391,7 +1391,7 @@ public abstract class Sheet implements Cloneable, Storable {
         for (int i = 0; i < n; i++) {
             // Skip if marked
             if (marks[i] == 1) continue;
-
+// TODO col.realIndex
             org.ttzero.excel.entity.Column col = array[i];
             marks[i] = 1;
             if (isEmpty(col.name)) {
