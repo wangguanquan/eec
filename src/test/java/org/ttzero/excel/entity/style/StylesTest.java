@@ -156,7 +156,8 @@ public class StylesTest {
 
 
         assert !Styles.hasNumFmt(Styles.clearNumFmt(style));
-        assert !Styles.hasFont(Styles.clearFont(style));
+        // Font is required
+//        assert !Styles.hasFont(Styles.clearFont(style));
         assert !Styles.hasFill(Styles.clearFill(style));
         assert !Styles.hasBorder(Styles.clearBorder(style));
         assert !Styles.hasVertical(Styles.clearVertical(style));
