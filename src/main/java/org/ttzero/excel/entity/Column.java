@@ -899,19 +899,19 @@ public class Column {
         return realColIndex;
     }
 
-    /**
-     * Trim tail nodes after write
-     *
-     * @return current
-     */
-    public Column trimTail() {
-        if (next != null) {
-            next.prev = null;
-            next = null;
-            tail = null;
-        }
-        return this;
-    }
+//    /**
+//     * Trim tail nodes after write
+//     * NOTE: Cannot delete the tail columns, otherwise automatic paging loses headers.
+//     * @return current
+//     */
+//    public Column trimTail() {
+//        if (next != null) {
+//            next.prev = null;
+//            next = null;
+//            tail = null;
+//        }
+//        return this;
+//    }
 
     /**
      * Returns hide flag

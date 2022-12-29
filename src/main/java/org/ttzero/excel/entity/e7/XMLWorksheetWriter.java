@@ -344,7 +344,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             columnsArray[i] = columns[i].toArray();
 
             // Free memory after write
-            columns[i].trimTail();
+//            columns[i].trimTail();
         }
         // Merge cells if exists
         @SuppressWarnings("unchecked")
