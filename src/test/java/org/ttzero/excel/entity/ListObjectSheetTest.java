@@ -317,7 +317,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testArray() throws IOException {
-        new Workbook()
+        new Workbook("ListSheet Array as List")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
@@ -325,7 +325,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testSingleList() throws IOException {
-        new Workbook()
+        new Workbook("ListSheet Single List")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
@@ -538,7 +538,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     // #132
     @Test public void testEmptyList() throws IOException {
-        new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
+        new Workbook("ListObject empty list").addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
     }
     
     @Test public void testNoForceExport() throws IOException {
@@ -1342,13 +1342,13 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testWrite2() throws IOException {
+    @Test public void testCustomerRowHeight() throws IOException {
         List<Template> list = new ArrayList<>();
         list.add(Template.of("备注说明\r\n第二行\r\n第三行\r\n第四行", "岗位名称", "岁位"));
         list.add(Template.of("字段名称", "*岗位名称", "岗位描述"));
         list.add(Template.of("示例", "生产统计员", "按照产品规格、价格、工序、员工、车间等不同对象和要求进行统计数据资料分析"));
 
-        new Workbook().addSheet(
+        new Workbook("Customer row height").addSheet(
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
                 .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
                 .setSheetWriter(new XMLWorksheetWriter() {
@@ -1405,7 +1405,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testTileWriter() throws IOException {
         List<TileEntity> data = TileEntity.randomTestData();
-        new Workbook().cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
+        new Workbook("Dynamic title").cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
     }
 
     public static class TileEntity {

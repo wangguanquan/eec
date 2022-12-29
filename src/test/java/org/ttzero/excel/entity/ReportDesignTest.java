@@ -38,15 +38,13 @@ import java.util.List;
  */
 public class ReportDesignTest extends WorkbookTest {
 
-    @Test
-    public void testMergedCells() throws IOException {
-        new Workbook().cancelOddFill().setAutoSize(true)
+    @Test public void testMergedCells() throws IOException {
+        new Workbook("Group Style Processor").cancelOddFill().setAutoSize(true)
             .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()))
             .writeTo(defaultTestPath);
     }
 
-    @Test
-    public void testMergedCells1() throws IOException {
+    @Test public void testMergedCells1() throws IOException {
         List<E> list = testData();
         // 用于保存合并单元格
         List<Dimension> mergeCells = new ArrayList<>();
@@ -109,7 +107,7 @@ public class ReportDesignTest extends WorkbookTest {
         row++;
         mergeCells.add(new Dimension(row, (short) 1, row, (short) 5));
 
-        new Workbook().cancelOddFill().setAutoSize(true)
+        new Workbook("Report Design").cancelOddFill().setAutoSize(true)
             .addSheet(new ListSheet<>(list, createColumns())
                 .setStyleProcessor(new GroupStyleProcessor2<>())
                 .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells)).writeTo(defaultTestPath);

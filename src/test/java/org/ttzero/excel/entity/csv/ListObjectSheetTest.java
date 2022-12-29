@@ -162,7 +162,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     }
 
     @Test public void testArray() throws IOException {
-        new Workbook()
+        new Workbook("ListObjectSheet array to csv")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
@@ -171,7 +171,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     }
 
     @Test public void testSingleList() throws IOException {
-        new Workbook()
+        new Workbook("ListObject single list to csv")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
