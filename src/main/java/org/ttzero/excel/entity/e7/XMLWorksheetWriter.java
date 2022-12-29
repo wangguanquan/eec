@@ -312,8 +312,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeSheetViews();
 
         // Default row height and width
-        int fillSpace = 13;
+        int fillSpace = 17; // Column width xxx.xx (6byte) + hidden property (11byte)
         BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
+        // Overflow column width limit
+        if (width.compareTo(new BigDecimal(Const.Limit.COLUMN_WIDTH)) > 0) {
+            width = new BigDecimal(Const.Limit.COLUMN_WIDTH);
+        }
         String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
 //        writeSheetFormat(fillSpace, defaultWidth);
 
@@ -792,10 +796,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
-            if (hc.isHide()) {
-                widths[i] = "0\" hidden=\"1";
-                continue;
-            }
             double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
             Class<?> clazz = hc.getClazz();
             if (isString(clazz)) {
@@ -880,12 +880,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // Rewrite cols
             position = findPosition(buffer, "<cols>");
             if (position > 0) {
-                for (String s : widths) {
+                for (int i = 0; i < columns.length; i++) {
+                    String s = widths[i];
                     position = findPosition(buffer, "width=\"");
                     if (position == -1) continue;
                     buffer.put(s.getBytes(StandardCharsets.US_ASCII));
                     buffer.put((byte) '"');
-                    for (int j = 6 - s.length(); j-- > 0; ) buffer.put((byte) 32); // Fill space
+                    int fillSpace = 17;
+                    if (columns[i].isHide()) {
+                        buffer.put(" hidden=\"1\"".getBytes(StandardCharsets.US_ASCII));
+                        fillSpace -= 11;
+                    }
+                    for (int j = fillSpace - s.length(); j-- > 0; ) buffer.put((byte) 32); // Fill space
                 }
             }
 
@@ -1057,8 +1063,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 int w = defaultWidth.length();
                 bw.write("<col customWidth=\"1\" width=\"");
                 if (col.isHide()) {
-                    bw.write("0\" hidden=\"1");
-                    w = 12;
+                    bw.write(defaultWidth);
+                    bw.write("\" hidden=\"1");
+                    w += 11;
                 }
                 else bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
