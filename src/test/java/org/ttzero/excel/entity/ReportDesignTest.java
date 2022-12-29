@@ -40,7 +40,7 @@ public class ReportDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
         new Workbook("Group Style Processor").cancelOddFill().setAutoSize(true)
-            .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()))
+            .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
             .writeTo(defaultTestPath);
     }
 
@@ -110,7 +110,7 @@ public class ReportDesignTest extends WorkbookTest {
         new Workbook("Report Design").cancelOddFill().setAutoSize(true)
             .addSheet(new ListSheet<>(list, createColumns())
                 .setStyleProcessor(new GroupStyleProcessor2<>())
-                .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells)).writeTo(defaultTestPath);
+                .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath);
 
     }
 
