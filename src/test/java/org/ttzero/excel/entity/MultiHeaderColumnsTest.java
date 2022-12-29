@@ -97,13 +97,26 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testAutoSizeAndHideCol() throws IOException {
         new Workbook("Auto Size And Hide Column").setAutoSize(true)
-                .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
-                        , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
-                        , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name").setColIndex(1000).hide())
-                        , new Column("成绩", "score")
-                )).writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+                , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
+                , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name").setColIndex(1000).hide())
+                , new Column("成绩", "score")
+            )).writeTo(defaultTestPath);
     }
 
+    @Test public void testAutoSizeAndHideColPaging() throws IOException {
+        new Workbook("Auto Size And Hide Column").setAutoSize(true)
+            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+                , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
+                , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
+                , new Column("成绩", "score").hide()
+            ).setSheetWriter(new XMLWorksheetWriter() {
+                @Override
+                public int getRowLimit() {
+                    return 10;
+                }
+            })).writeTo(defaultTestPath);
+    }
 
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
