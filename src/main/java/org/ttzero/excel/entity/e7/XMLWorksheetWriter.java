@@ -220,6 +220,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
             sheetPath, StandardCharsets.UTF_8));
 
+        if (sst == null) this.sst = sheet.getSst();
+
         return sheetPath;
     }
 
