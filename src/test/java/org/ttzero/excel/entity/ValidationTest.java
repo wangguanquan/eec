@@ -46,7 +46,7 @@ public class ValidationTest extends WorkbookTest {
         validations.add(new DateValidation().between("2022-01-01", "2022-12-31").dimension(Dimension.of("A2")));
         // 限制时间小于下午6点（因为此时下班...）
         validations.add(new TimeValidation().lessThan(DateUtil.toTimeValue(Time.valueOf("18:00:00"))).dimension(Dimension.of("B2")));
-        new Workbook().addSheet(new EmptySheet().putExtProp("dataValidations", validations).setSheetWriter(new ValidationWorksheetWriter())).writeTo(defaultTestPath);
+        new Workbook("Validation Test").addSheet(new EmptySheet().putExtProp("dataValidations", validations).setSheetWriter(new ValidationWorksheetWriter())).writeTo(defaultTestPath);
     }
 
     public static abstract class Validation {
