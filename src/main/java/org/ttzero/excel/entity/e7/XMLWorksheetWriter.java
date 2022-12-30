@@ -321,7 +321,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeCols(fillSpace, defaultWidth);
 
         // Write body data
-        beforeSheetDate(nonHeader);
+        beforeSheetData(nonHeader);
     }
 
     /**
@@ -1086,12 +1086,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param nonHeader mark none header
      * @throws IOException if I/O error occur.
      */
-    protected void beforeSheetDate(boolean nonHeader) throws IOException {
+    protected void beforeSheetData(boolean nonHeader) throws IOException {
         bw.write("<sheetData>");
 
         int headerRow = 1;
-        // The first header row
-        if (!nonHeader) {
+        // Write header rows
+        if (!nonHeader && columns.length > 0) {
             headerRow = writeHeaderRow();
         }
         startRow = headerRow + (sheet.getNonHeader() ^ 1);

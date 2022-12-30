@@ -633,23 +633,26 @@ public abstract class Sheet implements Cloneable, Storable {
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
-            // Sort column index
-            sortColumns(columns);
+            if (headerReady) {
+                // Sort column index
+                sortColumns(columns);
 
-            // Turn to one-base
-            calculateRealColIndex();
+                // Turn to one-base
+                calculateRealColIndex();
 
-            // Reverse
-            reverseHeadColumn();
+                // Reverse
+                reverseHeadColumn();
 
-            // Add merge cell properties
-            mergeHeaderCellsIfEquals();
+                // Add merge cell properties
+                mergeHeaderCellsIfEquals();
 
-            // Reset Common Properties
-            resetCommonProperties(columns);
+                // Reset Common Properties
+                resetCommonProperties(columns);
 
-            // Check the limit of columns
-            checkColumnLimit();
+                // Check the limit of columns
+                checkColumnLimit();
+            }
+
             // Reset Row limit
             this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 ? 0 : columns[0].subColumnSize());
 
@@ -1021,7 +1024,7 @@ public abstract class Sheet implements Cloneable, Storable {
         // clear first
         rowBlock.clear();
 
-        if (columns.length > 0) {
+        if (columns.length > 0 || forceExport == 1) {
             resetBlockData();
         }
 
@@ -1119,7 +1122,7 @@ public abstract class Sheet implements Cloneable, Storable {
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
-        } else if (nonHeader == -1) {
+        } else if (nonHeader == -1 && headerReady) {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;
@@ -1249,7 +1252,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit;
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()));
     }
 
     /**
