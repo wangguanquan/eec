@@ -1367,7 +1367,9 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    col.addSubColumn(new org.ttzero.excel.entity.Column().setColIndex(col.colIndex));
+                    org.ttzero.excel.entity.Column sub = new org.ttzero.excel.entity.Column().setColIndex(col.colIndex);
+                    sub.realColIndex = col.realColIndex;
+                    col.addSubColumn(sub);
                 }
             }
         }
@@ -1389,12 +1391,14 @@ public abstract class Sheet implements Cloneable, Storable {
         // Mark as 1 if visited
         int[] marks = new int[n];
 
+        // FIXME If you do not write data from the first row, the code logic here
+        //  should start the calculation with the specified row
         int fc = 0, fr = 0, lc = 0, lr = 0;
-        List<Dimension> mergeCells = new ArrayList<>();
+        List<Dimension> mergeCells = new ArrayList<>(), _tmpCells = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             // Skip if marked
             if (marks[i] == 1) continue;
-// TODO col.realIndex
+
             org.ttzero.excel.entity.Column col = array[i];
             marks[i] = 1;
             if (isEmpty(col.name)) {
@@ -1431,7 +1435,8 @@ public abstract class Sheet implements Cloneable, Storable {
             }
             // Add merged cells
             if (fc < lc || fr < lr) {
-                mergeCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
+                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].realColIndex, y - fr, (short) array[y - fr - 1 + lc * y].realColIndex));
+                _tmpCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
                 // Reset
                 fc = lc; fr = lr;
             }
@@ -1439,7 +1444,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
         // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
-            for (Dimension dim : mergeCells) {
+            for (Dimension dim : _tmpCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 Comment headerComment = col.headerComment;
                 org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column(col);
