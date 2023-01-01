@@ -227,7 +227,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideColPaging() throws IOException {
-        new Workbook("Auto Size And Hide Column").setAutoSize(true)
+        new Workbook("Auto Size And Hide Column Paging").setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
