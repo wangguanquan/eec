@@ -26,6 +26,7 @@ import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.reader.HeaderRow;
+import org.ttzero.excel.reader.Row;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -56,6 +58,22 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             assert list.size() == readList.size();
             for (int i = 0, len = list.size(); i < len; i++)
                 assert list.get(i).equals(readList.get(i));
+
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(1, 4).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == mapList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry src = list.get(i);
+
+                assert sub.get("TOP:K:订单号").equals(src.orderNo);
+                assert sub.get("TOP:K:A:收件人").equals(src.recipient);
+                assert sub.get("TOP:收件地址:A:省").equals(src.province);
+                assert sub.get("TOP:收件地址:A:市").equals(src.city);
+                assert sub.get("TOP:收件地址:B:区").equals(src.area);
+                assert sub.get("TOP:收件地址:B:详细地址").equals(src.detail);
+            }
         }
     }
 
