@@ -241,17 +241,17 @@ public class HeaderRow extends Row {
                 list.toArray(columns);
                 headerReady = true;
 
-                // Reverse
-                reverseHeadColumn();
-
-                // Add merge cell properties
-                mergeHeaderCellsIfEquals();
-
                 // Sort column index
                 sortColumns(columns);
 
                 // Turn to one-base
                 calculateRealColIndex();
+
+                // Reverse
+                reverseHeadColumn();
+
+                // Add merge cell properties
+                mergeHeaderCellsIfEquals();
 
                 return columns;
             }
