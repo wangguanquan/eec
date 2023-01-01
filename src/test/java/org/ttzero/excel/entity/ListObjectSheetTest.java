@@ -1499,7 +1499,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             writeCols(fillSpace, defaultWidth);
 
             // Write body data
-            beforeSheetDate(nonHeader);
+            beforeSheetData(nonHeader);
         }
 
         protected void tileColumns() {

@@ -40,7 +40,7 @@ public class CSVUtilTest {
     private Path path;
     private Random random;
     private final char[] base = "abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ\t0123456789\"".toCharArray();
-    private char[][] cache_char_array = new char[25][];
+    private final char[][] cache_char_array = new char[25][];
 
 
     @Before public void before() {

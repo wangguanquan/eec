@@ -22,7 +22,6 @@ import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ResultSetSheet;
 import org.ttzero.excel.entity.SQLWorkbookTest;
-import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.Workbook;
 
 import java.io.IOException;
