@@ -664,7 +664,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
 
             // Reset Row limit
-            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 ? 0 : columns[0].subColumnSize());
+            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize());
 
             // Mark ext-properties
             markExtProp();
