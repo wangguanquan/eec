@@ -940,4 +940,13 @@ public class Column {
         this.hide = false;
         return this;
     }
+
+    /**
+     * Returns the last column
+     *
+     * @return the last column (real column)
+     */
+    public Column getTail() {
+        return tail != null ? tail : this;
+    }
 }

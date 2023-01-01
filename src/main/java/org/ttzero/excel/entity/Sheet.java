@@ -643,23 +643,26 @@ public abstract class Sheet implements Cloneable, Storable {
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
-            // Sort column index
-            sortColumns(columns);
+            if (headerReady) {
+                // Sort column index
+                sortColumns(columns);
 
-            // Turn to one-base
-            calculateRealColIndex();
+                // Turn to one-base
+                calculateRealColIndex();
 
-            // Reverse
-            reverseHeadColumn();
+                // Reverse
+                reverseHeadColumn();
 
-            // Add merge cell properties
-            mergeHeaderCellsIfEquals();
+                // Add merge cell properties
+                mergeHeaderCellsIfEquals();
 
-            // Reset Common Properties
-            resetCommonProperties(columns);
+                // Reset Common Properties
+                resetCommonProperties(columns);
 
-            // Check the limit of columns
-            checkColumnLimit();
+                // Check the limit of columns
+                checkColumnLimit();
+            }
+
             // Reset Row limit
             this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 ? 0 : columns[0].subColumnSize());
 
@@ -684,27 +687,27 @@ public abstract class Sheet implements Cloneable, Storable {
         if (columns.length <= 1) return;
         int j = 0;
         for (int i = 0; i < columns.length; i++) {
-            if (columns[i].colIndex >= 0) {
-                int n = search(columns, j, columns[i].colIndex);
+            if (columns[i].getTail().colIndex >= 0) {
+                int n = search(columns, j, columns[i].getTail().colIndex);
                 if (n < i) insert(columns, n, i);
                 j++;
             }
         }
         // Finished
         if (j == columns.length) return;
-        int n = columns[0].colIndex;
+        int n = columns[0].getTail().colIndex;
         for (int i = 0; i < columns.length && j < columns.length; ) {
             if (n > i) {
                 for (int k = Math.min(n - i, columns.length - j); k > 0; k--, j++)
                     insert(columns, i++, j);
             } else i++;
-            if (i < columns.length) n = columns[i].colIndex;
+            if (i < columns.length) n = columns[i].getTail().colIndex;
         }
     }
 
     protected int search(org.ttzero.excel.entity.Column[] columns, int n, int k) {
         int i = 0;
-        for (; i < n && columns[i].colIndex <= k; i++) ;
+        for (; i < n && columns[i].getTail().colIndex <= k; i++) ;
         return i;
     }
 
@@ -719,14 +722,14 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected void calculateRealColIndex() {
         for (int i = 0; i < columns.length; i++) {
-            org.ttzero.excel.entity.Column hc = columns[i];
+            org.ttzero.excel.entity.Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
             else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
             else hc.realColIndex = hc.colIndex + 1;
 
-            if (hc.next != null) {
-                for (org.ttzero.excel.entity.Column col = hc.next; col != null; col = col.next)
+            if (hc.prev != null) {
+                for (org.ttzero.excel.entity.Column col = hc.prev; col != null; col = col.prev)
                     col.realColIndex = hc.realColIndex;
             }
         }
@@ -1031,7 +1034,7 @@ public abstract class Sheet implements Cloneable, Storable {
         // clear first
         rowBlock.clear();
 
-        if (columns.length > 0) {
+        if (columns.length > 0 || forceExport == 1) {
             resetBlockData();
         }
 
@@ -1129,7 +1132,7 @@ public abstract class Sheet implements Cloneable, Storable {
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
-        } else if (nonHeader == -1) {
+        } else if (nonHeader == -1 && headerReady) {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;
@@ -1259,7 +1262,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit;
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()));
     }
 
     /**
@@ -1374,7 +1377,9 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    col.addSubColumn(new org.ttzero.excel.entity.Column().setColIndex(col.colIndex));
+                    org.ttzero.excel.entity.Column sub = new org.ttzero.excel.entity.Column().setColIndex(col.colIndex);
+                    sub.realColIndex = col.realColIndex;
+                    col.addSubColumn(sub);
                 }
             }
         }
@@ -1396,8 +1401,10 @@ public abstract class Sheet implements Cloneable, Storable {
         // Mark as 1 if visited
         int[] marks = new int[n];
 
+        // FIXME If you do not write data from the first row, the code logic here
+        //  should start the calculation with the specified row
         int fc = 0, fr = 0, lc = 0, lr = 0;
-        List<Dimension> mergeCells = new ArrayList<>();
+        List<Dimension> mergeCells = new ArrayList<>(), _tmpCells = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             // Skip if marked
             if (marks[i] == 1) continue;
@@ -1438,7 +1445,8 @@ public abstract class Sheet implements Cloneable, Storable {
             }
             // Add merged cells
             if (fc < lc || fr < lr) {
-                mergeCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
+                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].realColIndex, y - fr, (short) array[y - fr - 1 + lc * y].realColIndex));
+                _tmpCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
                 // Reset
                 fc = lc; fr = lr;
             }
@@ -1446,7 +1454,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
         // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
-            for (Dimension dim : mergeCells) {
+            for (Dimension dim : _tmpCells) {
                 org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 Comment headerComment = col.headerComment;
                 org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column().from(col);

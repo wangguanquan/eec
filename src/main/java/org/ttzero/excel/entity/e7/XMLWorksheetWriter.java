@@ -327,7 +327,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeCols(fillSpace, defaultWidth);
 
         // Write body data
-        beforeSheetDate(nonHeader);
+        beforeSheetData(nonHeader);
     }
 
     /**
@@ -363,13 +363,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             if (sheet.isAutoSize()) {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) && !isFirstMergedCell(mergeCells, i + 1, j + 1) ? null : hc.key;
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
                     writeStringAutoSize(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             } else {
                 for (int j = 0, c = 0; j < columns.length; j++) {
                     Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, j + 1) && !isFirstMergedCell(mergeCells, i + 1, j + 1) ? null : hc.key;
+                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
                     writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
                 }
             }
@@ -1088,7 +1088,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param nonHeader mark none header
      * @throws IOException if I/O error occur.
      */
-    protected void beforeSheetDate(boolean nonHeader) throws IOException {
+    protected void beforeSheetData(boolean nonHeader) throws IOException {
         bw.write("<sheetData>");
 
         int headerRow = 1;

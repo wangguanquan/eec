@@ -458,7 +458,7 @@ public class ListSheet<T> extends Sheet {
                         column = new EntryColumn(gs, EMPTY, false);
                     }
                     if (column != null) {
-                        EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                        EntryColumn tail = (EntryColumn) column.getTail();
                         tail.method = method;
                         tail.field = field;
                         tail.clazz = method.getReturnType();
@@ -483,7 +483,7 @@ public class ListSheet<T> extends Sheet {
                 }
                 if (column != null) {
                     list.add(column);
-                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    EntryColumn tail = (EntryColumn) column.getTail();
                     tail.field = field;
                     tail.key = gs;
                     if (isEmpty(tail.name)) {
@@ -773,7 +773,7 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn column = createColumn(method);
                 if (column != null) {
                     list.add(column);
-                    EntryColumn tail = column.tail != null ? (EntryColumn) column.tail : column;
+                    EntryColumn tail = (EntryColumn) column.getTail();
                     tail.method = method;
                     tail.clazz = method.getReturnType();
                     tail.key = method.getName();
