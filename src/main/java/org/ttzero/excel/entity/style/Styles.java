@@ -272,7 +272,7 @@ public class Styles implements Storable {
                 String vertical = getAttr(alignment, "vertical");
                 if (StringUtil.isNotEmpty(vertical) && (index = StringUtil.indexOf(Verticals._names, vertical)) >= 0) {
                     style |= index << INDEX_VERTICAL;
-                }
+                } else style |= Verticals.BOTTOM;
                 String wrapText = getAttr(alignment, "wrapText");
                 style |= ("1".equals(wrapText) || "true".equalsIgnoreCase(wrapText) ? 1 : 0) << INDEX_WRAP_TEXT;
             }
