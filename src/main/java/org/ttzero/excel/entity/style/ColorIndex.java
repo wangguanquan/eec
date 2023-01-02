@@ -27,7 +27,7 @@ import java.awt.Color;
  */
 public class ColorIndex {
     /** color cache */
-    private static final int[] colors = {
+    public static final int[] colors = {
         0,         0,         0,         0,         0,         0,         0,         0,
         -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
         -8388608,  -16744448, -16777088, -8355840,  -8388480,  -16744320, -4144960,  -8355712,
@@ -36,6 +36,14 @@ public class ColorIndex {
         -16724737, -3342337,  -3342388,  -103,      -6697729,  -26164,    -3368449,  -13159,
         -13408513, -13382452, -6697984,  -13312,    -26368,    -39424,    -10066279, -6908266,
         -16764058, -13395610, -16764160, -13421824, -6737152,  -6737050,  -13421671, -13421773
+    };
+
+    /** Defined 10 base theme color */
+    public static final Color[] themeColors = {
+        Color.decode("#000000"), Color.decode("#FFFFFF"), Color.decode("#1F497D"),
+        Color.decode("#EEECE1"), Color.decode("#4F81BD"), Color.decode("#C0504D"),
+        Color.decode("#9BBB59"), Color.decode("#8064A2"), Color.decode("#4BACC6"),
+        Color.decode("#F79646")
     };
 
     public static int get(int index) {

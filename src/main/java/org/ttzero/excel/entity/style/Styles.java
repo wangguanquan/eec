@@ -692,17 +692,23 @@ public class Styles implements Storable {
         String rgb = getAttr(element, "rgb"), indexed = getAttr(element, "indexed")
             , auto = getAttr(element, "auto"), theme = getAttr(element, "theme");
         Color c = null;
+        // Standard Alpha Red Green Blue color value (ARGB).
         if (StringUtil.isNotEmpty(rgb)) {
             c = ColorIndex.toColor(rgb);
-        } else if (StringUtil.isNotEmpty(indexed)) {
+        }
+        // Indexed color value. Only used for backwards compatibility.
+        // References a color in indexedColors.
+        else if (StringUtil.isNotEmpty(indexed)) {
             c = ColorIndex.getColor(Integer.parseInt(indexed));
-        } else if ("1".equals(auto) || "true".equalsIgnoreCase(auto)) {
+        }
+        // A boolean value indicating the color is automatic and system color dependent.
+        else if ("1".equals(auto) || "true".equalsIgnoreCase(auto)) {
             c = ColorIndex.getColor(8);
         }
-        // TODO support theme colors
+        // Theme colors
         else if (StringUtil.isNotEmpty(theme)) {
-            // FIXME
-            c = ColorIndex.getColor(8);
+            String tint = getAttr(element, "tint");
+            c = HlsColor.calculateColor(theme, tint);
         }
         return c;
     }
