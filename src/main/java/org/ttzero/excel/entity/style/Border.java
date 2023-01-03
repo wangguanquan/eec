@@ -254,6 +254,78 @@ public class Border {
         return this;
     }
 
+    /**
+     * Returns top line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getBorderTop() {
+        return borders[2];
+    }
+
+    /**
+     * Returns right line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getBorderRight() {
+        return borders[1];
+    }
+
+    /**
+     * Returns bottom line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getBorderBottom() {
+        return borders[3];
+    }
+
+    /**
+     * Returns left line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getBorderLeft() {
+        return borders[0];
+    }
+
+    /**
+     * Returns Diagonal-Down line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getDiagonalDown() {
+        return borders[4];
+    }
+
+    /**
+     * Returns Diagonal-Up line style
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getDiagonalUp() {
+        return borders[5];
+    }
+
+    /**
+     * Returns the specify axis border, the order is left-right-top-bottom-diagonalDown-diagonalUp
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder getBorder(int axis) {
+        return axis >= 0 && axis < borders.length ? borders[axis] : null;
+    }
+
+    /**
+     * Returns all borders
+     *
+     * @return {@link SubBorder}
+     */
+    public SubBorder[] getBorders() {
+        return borders;
+    }
+
     Border delBorder(int index) {
         borders[index] = null;
         return this;
@@ -344,13 +416,21 @@ public class Border {
         return border;
     }
 
-    private static class SubBorder {
-        private final BorderStyle style;
-        private final Color color;
+    public static class SubBorder {
+        public final BorderStyle style;
+        public final Color color;
 
         public SubBorder(BorderStyle style, Color color) {
             this.style = style;
             this.color = color;
+        }
+
+        public BorderStyle getStyle() {
+            return style;
+        }
+
+        public Color getColor() {
+            return color;
         }
 
         @Override
