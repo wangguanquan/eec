@@ -149,7 +149,16 @@ public final class BuiltInNumFmt {
      * @return the {@link NumFmt}
      */
     public static NumFmt get(int id) {
-        return id >=0 && id < idData.length ? idData[id] : null;
+        NumFmt fmt = null;
+        if (id >= 0) {
+            if (id < idData.length) {
+                fmt = idData[id];
+            } else if (id < 176) {
+                fmt = new NumFmt();
+                fmt.id = id;
+            }
+        }
+        return fmt;
     }
 
     public static class NumFmt extends org.ttzero.excel.entity.style.NumFmt {
