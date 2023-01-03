@@ -373,6 +373,7 @@ public class Workbook implements Storable {
     /**
      * Specify a custom global {@link Styles}
      *
+     * @param styles custom Styles
      * @return the {@link Workbook}
      */
     public Workbook setStyles(Styles styles) {

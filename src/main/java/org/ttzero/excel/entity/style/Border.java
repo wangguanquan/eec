@@ -309,8 +309,9 @@ public class Border {
     }
 
     /**
-     * Returns the specify axis border, the order is left-right-top-bottom-diagonalDown-diagonalUp
+     * Returns the specify axis border
      *
+     * @param axis border axis (left-right-top-bottom-diagonalDown-diagonalUp)
      * @return {@link SubBorder}
      */
     public SubBorder getBorder(int axis) {
