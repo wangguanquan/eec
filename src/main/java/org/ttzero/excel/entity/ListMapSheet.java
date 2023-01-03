@@ -16,7 +16,12 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.Grid;
+import org.ttzero.excel.reader.GridFactory;
+import org.ttzero.excel.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -230,5 +235,42 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         if (isEmpty(entry.getKey())) return null;
         Object value = entry.getValue();
         return new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+    }
+
+    /**
+     * Merge cells if
+     */
+    @Override
+    protected void mergeHeaderCellsIfEquals() {
+        super.mergeHeaderCellsIfEquals();
+
+        @SuppressWarnings("unchecked")
+        List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+        if (existsMergeCells != null) {
+            Grid grid = GridFactory.create(existsMergeCells);
+            for (org.ttzero.excel.entity.Column col : columns) {
+                if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
+                    org.ttzero.excel.entity.Column next = col.next;
+                    for (; next != null && StringUtil.isEmpty(next.key); next = next.next);
+                    if (next != null) col.key = next.key; // Keep the key to get the value
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns a row-block. The row-block is content by 32 rows
+     *
+     * @return a row-block
+     */
+    @Override
+    public RowBlock nextBlock() {
+        // clear first
+        rowBlock.clear();
+
+        // As default as force export
+        resetBlockData();
+
+        return rowBlock.flip();
     }
 }

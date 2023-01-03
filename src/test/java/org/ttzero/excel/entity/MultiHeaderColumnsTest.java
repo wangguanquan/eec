@@ -27,13 +27,17 @@ import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Row;
+import org.ttzero.excel.entity.style.NumFmt;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -256,6 +260,38 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     return 10;
                 }
             })).writeTo(defaultTestPath);
+    }
+
+    @Test public void testMapRepeatHeader() throws IOException {
+        new Workbook("Map Repeat Header")
+            .addSheet(new ListMapSheet("Map"
+                  , new Column("aaa").addSubColumn(new Column("boolean", "bv"))
+                  , new Column("aaa").addSubColumn(new Column("char", "cv"))
+                  , new Column("short", "sv")
+                  , new Column("int", "nv")
+                  , new Column("long", "lv")
+                  , new Column("LocalDateTime", "ldtv").setNumFmt(NumFmt.DATETIME_FORMAT)
+                  , new Column("LocalTime", "ltv").setNumFmt(NumFmt.TIME_FORMAT)) {
+                  int i = 3;
+
+                  @Override
+                  protected List<Map<String, ?>> more() {
+                      List<Map<String, Object>> a = new ArrayList<>();
+                      for (; i > 0; i--) {
+                          Map<String, Object> data = new HashMap<>();
+                          data.put("bv", random.nextInt(10) < 3);
+                          data.put("cv", random.nextInt(26) + 'A');
+                          data.put("sv", random.nextInt());
+                          data.put("nv", random.nextInt());
+                          data.put("lv", random.nextInt());
+                          data.put("ldtv", LocalDateTime.now());
+                          data.put("ltv", LocalTime.now());
+                          a.add(data);
+                      }
+                      return new ArrayList<>(a);
+                  }
+              }
+            ).writeTo(defaultTestPath);
     }
 
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
