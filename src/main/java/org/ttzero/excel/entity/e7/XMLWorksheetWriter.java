@@ -841,6 +841,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             else if (isBool(clazz)) {
                 len = 5.0D;
             }
+            else if (hc.getNumFmt() != null) {
+                len = hc.getNumFmt().calcNumWidth(0);
+            }
             else {
                 len = 10.0D;
             }
