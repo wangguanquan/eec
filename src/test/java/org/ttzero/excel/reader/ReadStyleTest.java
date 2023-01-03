@@ -28,7 +28,6 @@ import org.ttzero.excel.entity.style.Styles;
 import java.awt.Color;
 import java.io.IOException;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
