@@ -96,10 +96,13 @@ public interface ICellValueAndStyle {
             conversion(row, cell, e, hc);
             return;
         }
-
         if (e == null) {
             setNullValue(row, cell, hc);
             return;
+        }
+        if (clazz == null) {
+            clazz = e.getClass();
+            hc.setClazz(clazz);
         }
         if (isString(clazz)) {
             cell.setSv(e.toString());
