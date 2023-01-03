@@ -18,6 +18,8 @@
 package org.ttzero.excel.reader;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -57,6 +59,15 @@ public class ReadStyleTest {
                         assert font.getName().equals("Cascadia Mono");
                         assert font.getSize() == 24;
                         assert "right".equals(Horizontals.of(styles.getHorizontal(style)));
+
+                        Border border = styles.getBorder(style);
+                        Border.SubBorder leftBorder = border.getBorderLeft();
+                        assert leftBorder.getStyle() == BorderStyle.HAIR;
+                        assert leftBorder.getColor().equals(Color.RED);
+
+                        Border.SubBorder bottomBorder = border.getBorderBottom();
+                        assert bottomBorder.getStyle() == BorderStyle.DOUBLE;
+                        assert bottomBorder.getColor().equals(Color.BLACK);
                     } else if ("E7".equals(rc)) {
                         Font font = styles.getFont(style);
                         assert font.isBold();
