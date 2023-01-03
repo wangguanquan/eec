@@ -1481,7 +1481,7 @@ public abstract class Row {
                 case DOUBLE:
                     if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.dv);
                     else if (c.dv > 1.00001) data.put(key, toTimestamp(c.dv));
-                    else data.put(key, toLocalTime(c.dv));
+                    else data.put(key, toTime(c.dv));
                     break;
                 case BLANK:
                 case EMPTY_TAG:
