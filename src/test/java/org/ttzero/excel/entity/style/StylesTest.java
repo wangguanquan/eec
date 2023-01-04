@@ -24,6 +24,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FILL;
@@ -182,5 +183,10 @@ public class StylesTest {
         assert color3.getRed() <= 231 && color3.getRed() >= 229;
         assert color3.getGreen() <= 185 && color3.getGreen() >= 183;
         assert color3.getBlue() <= 184 && color3.getBlue() >= 182;
+
+        Color color4 = HlsColor.calculateColor(new Color(0, 0, 0), "0.39997558519241921");
+        assert color4.getRed() <= 103 && color4.getRed() >= 101;
+        assert color4.getGreen() <= 103 && color4.getGreen() >= 101;
+        assert color4.getBlue() <= 103 && color4.getBlue() >= 101;
     }
 }
