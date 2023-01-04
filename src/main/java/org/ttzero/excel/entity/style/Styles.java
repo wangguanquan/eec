@@ -211,7 +211,7 @@ public class Styles implements Storable {
      * @return the {@link Styles} Object
      */
     public static Styles load(Path path) {
-        // load workbook.xml
+        // load styles.xml
         SAXReader reader = new SAXReader();
         Document document;
         try {
@@ -716,7 +716,7 @@ public class Styles implements Storable {
             try {
                 t = Integer.parseInt(theme);
             } catch (NumberFormatException ex) { }
-            if (t < 0 || t > 9) {
+            if (t < 0 || t > 11) {
                 LOGGER.warn("Unknown theme color index {}", t);
                 t = 0;
             }
