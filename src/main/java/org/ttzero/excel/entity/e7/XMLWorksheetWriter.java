@@ -845,7 +845,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 len = hc.getNumFmt().calcNumWidth(0);
             }
             else {
-                len = 10.0D;
+                len = hc.o > 0 ? hc.o : 10.0D;
             }
             double width = Math.max(_l, len) + 1.86D;
             if (hc.width > 0.000001D) width = Math.min(width, hc.width);
