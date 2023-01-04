@@ -135,6 +135,13 @@ public class HlsColor {
         return lum;
     }
 
+    /**
+     * Convert RGB to HSL and then adjust the luminance part
+     *
+     * @param theme rgb color
+     * @param tintV tint a double from {@code -1.0 .. 1.0}
+     * @return rgb color
+     */
     public static Color calculateColor(Color theme, String tintV) {
         Double tint = null;
         if (StringUtil.isNotEmpty(tintV)) {
