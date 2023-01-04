@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity.style;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.I18N;
 import org.ttzero.excel.entity.Storable;
@@ -70,7 +72,10 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  */
 @TopNS(prefix = "", uri = Const.SCHEMA_MAIN, value = "styleSheet")
 public class Styles implements Storable {
-
+    /**
+     * LOGGER
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(Styles.class);
     private final Map<Integer, Integer> map;
     private final AtomicInteger counter;
     private int[] styleIndex;
@@ -707,8 +712,18 @@ public class Styles implements Storable {
         }
         // Theme colors
         else if (StringUtil.isNotEmpty(theme)) {
+            int t = 0;
+            try {
+                t = Integer.parseInt(theme);
+            } catch (NumberFormatException ex) { }
+            if (t < 0 || t > 9) {
+                LOGGER.warn("Unknown theme color index {}", t);
+                t = 0;
+            }
+            // FIXME read theme.xml
+            Color themeColor = ColorIndex.themeColors[t];
             String tint = getAttr(element, "tint");
-            c = HlsColor.calculateColor(theme, tint);
+            c = HlsColor.calculateColor(themeColor, tint);
         }
         return c;
     }
