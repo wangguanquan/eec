@@ -122,6 +122,8 @@ public class HlsColor {
      * <p>
      * In loading the value, it is converted to HLS where HLS values are (0..HLSMAX), where HLSMAX is currently 255.
      * <p>
+     * Referer: <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.color?view=openxml-2.8.1">Tint</a>
+     *
      * @param tint Specifies the tint value applied to the color.
      * @param lum Luminance part
      * @return calculate tint Luminance
