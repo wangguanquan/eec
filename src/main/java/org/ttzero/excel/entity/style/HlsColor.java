@@ -22,24 +22,27 @@ import org.ttzero.excel.util.StringUtil;
 import java.awt.Color;
 
 /**
- * Hue-Luminance-Saturation Color
+ * Hue-Luminance-Saturation Color Util (OpenXML theme color)
  *
  * @author guanquan.wang at 2023-01-02 15:59
  */
 public class HlsColor {
-    public double a;
+    /**
+     * Alpha
+     */
+    public float a;
     /**
      * Hue
      */
-    public double h;
+    public float h;
     /**
      * Luminance
      */
-    public double l;
+    public float l;
     /**
      * Saturation
      */
-    public double s;
+    public float s;
 
     /**
      * Convert rgba color to hls Color
@@ -49,25 +52,25 @@ public class HlsColor {
      */
     public static HlsColor rgbToHls(Color rgbColor) {
         HlsColor hlsColor = new HlsColor();
-        double r = rgbColor.getRed() / 255.0D, g = rgbColor.getGreen() / 255.0D
-            , b = rgbColor.getBlue() / 255.0D, a = rgbColor.getAlpha() / 255.0D;
-        double min = Math.min(r, Math.min(g, b));
-        double max = Math.max(r, Math.max(g, b));
-        double delta = max - min;
+        float r = rgbColor.getRed() / 255.0F, g = rgbColor.getGreen() / 255.0F
+            , b = rgbColor.getBlue() / 255.0F, a = rgbColor.getAlpha() / 255.0F;
+        float min = Math.min(r, Math.min(g, b));
+        float max = Math.max(r, Math.max(g, b));
+        float delta = max - min;
         if (max == min) {
-            hlsColor.h = 0D;
-            hlsColor.s = 0D;
+            hlsColor.h = 0F;
+            hlsColor.s = 0F;
             hlsColor.l = max;
             return hlsColor;
         }
-        hlsColor.l = (min + max) / 2.0D;
-        if (hlsColor.l < 0.5D) hlsColor.s = delta / (max + min);
-        else hlsColor.s = delta / (2.0D - max - min);
+        hlsColor.l = (min + max) / 2.0F;
+        if (hlsColor.l < 0.5F) hlsColor.s = delta / (max + min);
+        else hlsColor.s = delta / (2.0F - max - min);
         if (r == max) hlsColor.h = (g - b) / delta;
-        if (g == max) hlsColor.h = 2.0D + (b - r) / delta;
-        if (b == max) hlsColor.h = 4.0D + (r - g) / delta;
-        hlsColor.h *= 60D;
-        if (hlsColor.h < 0D) hlsColor.h += 360D;
+        if (g == max) hlsColor.h = 2.0F + (b - r) / delta;
+        if (b == max) hlsColor.h = 4.0F + (r - g) / delta;
+        hlsColor.h *= 60F;
+        if (hlsColor.h < 0F) hlsColor.h += 360F;
         hlsColor.a = a;
         return hlsColor;
     }
@@ -80,63 +83,78 @@ public class HlsColor {
      */
     public static Color hlsToRgb(HlsColor hlsColor) {
         Color rgbColor;
-        if (hlsColor.s == 0D) {
-            rgbColor = new Color((int) (hlsColor.l * 255D), (int) (hlsColor.l * 255D), (int) (hlsColor.l * 255D), (int) (hlsColor.a * 255D));
+        if (hlsColor.s == 0) {
+            rgbColor = new Color(hlsColor.l, hlsColor.l, hlsColor.l, hlsColor.a);
             return rgbColor;
         }
-        double t1;
-        if (hlsColor.l < 0.5D) t1 = hlsColor.l * (1.0D + hlsColor.s);
+        float t1;
+        if (hlsColor.l < 0.5F) t1 = hlsColor.l * (1.0F + hlsColor.s);
         else t1 = hlsColor.l + hlsColor.s - (hlsColor.l * hlsColor.s);
-        double t2 = 2.0 * hlsColor.l - t1;
-        double h = hlsColor.h / 360D;
-        double tR = h + (1.0D / 3.0D);
-        double r = setColor(t1, t2, tR);
-        double tG = h;
-        double g = setColor(t1, t2, tG);
-        double tB = h - (1.0D / 3.0D);
-        double b = setColor(t1, t2, tB);
-        rgbColor = new Color((int) (r * 255D), (int) (g * 255D), (int) (b * 255D), (int) (hlsColor.a * 255D));
+        float t2 = 2.0F * hlsColor.l - t1;
+        float h = hlsColor.h / 360F;
+        float tR = h + (1.0F / 3.0F);
+        float r = hueToRGB(t1, t2, tR);
+        float tG = h;
+        float g = hueToRGB(t1, t2, tG);
+        float tB = h - (1.0F / 3.0F);
+        float b = hueToRGB(t1, t2, tB);
+//        rgbColor = new Color((int) (r * 255), (int) (g * 255), (int) (b * 255), (int) (hlsColor.a * 255));
+        rgbColor = new Color(r, g, b, hlsColor.a);
         return rgbColor;
     }
 
-    private static double setColor(double t1, double t2, double t3) {
-        if (t3 < 0D) t3 += 1.0D;
-        if (t3 > 1D) t3 -= 1.0D;
-        double color;
-        if (6.0D * t3 < 1D) color = t2 + (t1 - t2) * 6.0D * t3;
-        else if (2.0D * t3 < 1D) color = t1;
-        else if (3.0D * t3 < 2D) color = t2 + (t1 - t2) * ((2.0D / 3.0D) - t3) * 6.0D;
+    private static float hueToRGB(float t1, float t2, float t3) {
+        if (t3 < 0) t3 += 1.0F;
+        if (t3 > 1) t3 -= 1.0F;
+        float color;
+        if (6.0F * t3 < 1) color = t2 + (t1 - t2) * 6.0F * t3;
+        else if (2.0F * t3 < 1) color = t1;
+        else if (3.0F * t3 < 2) color = t2 + (t1 - t2) * ((2.0F / 3.0F) - t3) * 6.0F;
         else color = t2;
         return color;
     }
 
-    public static double calculateFinalLumValue(Double tint, double lum) {
+    /**
+     * If tint is supplied, then it is applied to the value of the color to determine the final color applied.
+     * <p>
+     * The tint value is stored as a double from {@code -1.0 .. 1.0}, where {@code -1.0} means {@code 100%} darken
+     * and {@code 1.0} means {@code 100%} lighten. Also, {@code 0.0} means no change.
+     * <p>
+     * In loading the value, it is converted to HLS where HLS values are (0..HLSMAX), where HLSMAX is currently 255.
+     * <p>
+     * Referer: <a href="https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.color?view=openxml-2.8.1">Tint</a>
+     *
+     * @param tint Specifies the tint value applied to the color.
+     * @param lum Luminance part
+     * @return calculate tint Luminance
+     */
+    public static float calculateFinalLumValue(Double tint, float lum) {
         if (tint == null) return lum;
-        if (tint < 0D) lum = lum * (1.0D + tint);
-        else lum = lum * (1.0D - tint) + (255D - 255D * (1.0D - tint));
+        if (tint < 0) lum = (float) (lum * (1 + tint));
+        else lum = (float) (lum * (1 - tint) + (255 - 255 * (1 - tint)));
         return lum;
     }
 
-    public static Color calculateColor(String themeV, String tintV) {
-        int theme = 0;
+    /**
+     * Convert RGB to HSL and then adjust the luminance part
+     *
+     * @param theme rgb color
+     * @param tintV tint a double from {@code -1.0 .. 1.0}
+     * @return rgb color
+     */
+    public static Color calculateColor(Color theme, String tintV) {
         Double tint = null;
-        try {
-            theme = Integer.parseInt(themeV);
-            if (StringUtil.isNotEmpty(tintV)) {
+        if (StringUtil.isNotEmpty(tintV)) {
+            try {
                 tint = Double.parseDouble(tintV);
+            } catch (NumberFormatException ex) {
+                // Ignore
             }
-        } catch (NumberFormatException ex) {
-            // Ignore
         }
 
-        Color color;
         // Theme value range 0 ... 9
-        if (theme >= 0 && theme <= 9) {
-            Color base = ColorIndex.themeColors[theme];
-            HlsColor hls = rgbToHls(base);
-            hls.l = calculateFinalLumValue(tint, hls.l * 255D) / 255D;
-            color = hlsToRgb(hls);
-        } else color = ColorIndex.themeColors[0];
-        return color;
+        HlsColor hls = rgbToHls(theme);
+        hls.l = calculateFinalLumValue(tint, hls.l * 255) / 255;
+        return hlsToRgb(hls);
     }
 }

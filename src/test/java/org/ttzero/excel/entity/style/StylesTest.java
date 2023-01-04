@@ -20,9 +20,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.ttzero.excel.entity.I18N;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FILL;
@@ -165,4 +167,26 @@ public class StylesTest {
         assert !Styles.hasWrapText(Styles.clearWrapText(style));
     }
 
+    @Test public void testThemeColor() {
+        // +-1
+        Color color1 = HlsColor.calculateColor(Color.decode("#F79646"), "0.39997558519241921");
+        assert color1.getRed() <= 251 && color1.getRed() >= 249;
+        assert color1.getGreen() <= 192 && color1.getGreen() >= 190;
+        assert color1.getBlue() <= 144 && color1.getBlue() >= 142;
+
+        Color color2 = HlsColor.calculateColor(Color.decode("#4F81BD"), "0.79998168889431442");
+        assert color2.getRed() <= 221 && color2.getRed() >= 219;
+        assert color2.getGreen() <= 231 && color2.getGreen() >= 229;
+        assert color2.getBlue() <= 242 && color2.getBlue() >= 240;
+
+        Color color3 = HlsColor.calculateColor(Color.decode("#C0504D"), "0.59999389629810485");
+        assert color3.getRed() <= 231 && color3.getRed() >= 229;
+        assert color3.getGreen() <= 185 && color3.getGreen() >= 183;
+        assert color3.getBlue() <= 184 && color3.getBlue() >= 182;
+
+        Color color4 = HlsColor.calculateColor(new Color(0, 0, 0), "0.39997558519241921");
+        assert color4.getRed() <= 103 && color4.getRed() >= 101;
+        assert color4.getGreen() <= 103 && color4.getGreen() >= 101;
+        assert color4.getBlue() <= 103 && color4.getBlue() >= 101;
+    }
 }

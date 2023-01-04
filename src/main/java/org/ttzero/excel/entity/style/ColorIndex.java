@@ -38,12 +38,14 @@ public class ColorIndex {
         -16764058, -13395610, -16764160, -13421824, -6737152,  -6737050,  -13421671, -13421773
     };
 
-    /** Defined 10 base theme color */
+    /** Defined 12 base theme color */
     public static final Color[] themeColors = {
-        Color.decode("#000000"), Color.decode("#FFFFFF"), Color.decode("#1F497D"),
-        Color.decode("#EEECE1"), Color.decode("#4F81BD"), Color.decode("#C0504D"),
-        Color.decode("#9BBB59"), Color.decode("#8064A2"), Color.decode("#4BACC6"),
-        Color.decode("#F79646")
+            new Color(  0,   0,   0), new Color(255, 255, 255),
+            new Color( 31,  73, 125), new Color(238, 236, 225),
+            new Color( 79, 129, 189), new Color(192,  80,  77),
+            new Color(155, 187,  89), new Color(128, 100, 162),
+            new Color( 75, 172, 198), new Color(247, 150,  70),
+            new Color(  0,   0, 255), new Color(128,   0, 128)
     };
 
     public static int get(int index) {
