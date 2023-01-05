@@ -57,7 +57,7 @@ public class ReflectUtil {
     public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass) {
         Field[] fields = beanClass.getDeclaredFields();
         int i = fields.length, last = 0;
-        for (; (beanClass = beanClass.getSuperclass()) != stopClass; ) {
+        for (; (beanClass = beanClass.getSuperclass()) != stopClass && beanClass != null; ) {
             Field[] subFields = beanClass.getDeclaredFields();
             if (subFields.length > 0) {
                 if (subFields.length > last) {
