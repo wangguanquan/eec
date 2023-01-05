@@ -140,6 +140,7 @@ public class ReflectUtil {
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
+        if (beanClass == stopClass) return new Method[0];
         MethodDescriptor[] methodDescriptors = Introspector.getBeanInfo(beanClass, stopClass).getMethodDescriptors();
         Method[] allMethods = beanClass.getMethods();
         Method[] methods;
