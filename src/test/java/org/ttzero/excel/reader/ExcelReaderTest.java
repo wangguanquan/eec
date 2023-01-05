@@ -516,6 +516,11 @@ public class ExcelReaderTest {
                     .map(row -> row.to(O.class))
                     .filter(Objects::nonNull)
                     .forEach(Print::println);
+
+            List<O> list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(O.class)).collect(Collectors.toList());
+            assert list.size() == 2;
+            assert list.get(0).fbaNo.equals("FBA15DRV4JP4U000001");
+            assert list.get(1).fbaNo.equals("FBA15DRV4JP4U000002");
         }
     }
 
