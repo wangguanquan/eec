@@ -83,6 +83,7 @@ public class I18N {
         char[] oldValue = msg.toCharArray();
         int[] indexs = search(oldValue);
         int len = Math.min(indexs.length, args.length), size = 0;
+        if (len < 1) return msg;
         for (int i = 0; i < len; size += args[i++].length()) ;
         StringBuilder buf = new StringBuilder(oldValue.length + size - (len << 1));
         buf.append(oldValue, 0, indexs[0]).append(args[0]);
