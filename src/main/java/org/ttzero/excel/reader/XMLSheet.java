@@ -1034,7 +1034,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
             if (mergeCells != null && !mergeCells.isEmpty()) {
                 this.mergeCells = GridFactory.create(mergeCells);
-                LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells);
+                LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells.getClass());
             }
         }
 
