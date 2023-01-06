@@ -85,7 +85,7 @@ public class CustomAnnoReaderTest {
 
     public static class MyRow extends XMLRow {
         @Override
-        protected HeaderRow asHeader() {
+        public HeaderRow asHeader() {
             return new HeaderRow() {
                 @Override
                 protected ListSheet.EntryColumn createColumn(AccessibleObject ao) {
