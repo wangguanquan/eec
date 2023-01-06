@@ -139,26 +139,9 @@ public abstract class Row {
      */
     public boolean isBlank() {
         if (lc > fc) {
-            boolean blank;
             for (int i = fc; i < lc; i++) {
                 Cell c = cells[i];
-                switch (c.t) {
-                    case SST:
-                        if (c.sv == null) {
-                            c.setSv(sst.get(c.nv));
-                        }
-                        // @Mark:=>There is no missing `break`, this is normal logic here
-                    case INLINESTR:
-                        blank = StringUtil.isBlank(c.sv);
-                        break;
-                    case BLANK:
-                    case EMPTY_TAG:
-                    case UNALLOCATED:
-                        blank = true;
-                        break;
-                    default: blank = false;
-                }
-                if (!blank) return false;
+                if (!isBlank(c)) return false;
             }
         }
         return true;
@@ -1239,6 +1222,55 @@ public abstract class Row {
             default: type = CellType.STRING;
         }
         return type;
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param columnIndex the cell index
+     * @return true if cell value is blank
+     */
+    public boolean isBlank(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return isBlank(c);
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param columnName the cell name
+     * @return true if cell value is blank
+     */
+    public boolean isBlank(String columnName) {
+        Cell c = getCell(columnName);
+        return isBlank(c);
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param c the {@link Cell}
+     * @return true if cell value is blank
+     */
+    protected boolean isBlank(Cell c) {
+        boolean blank;
+        switch (c.t) {
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR:
+                blank = StringUtil.isBlank(c.sv);
+                break;
+            case BLANK:
+            case EMPTY_TAG:
+            case UNALLOCATED:
+                blank = true;
+                break;
+            default: blank = false;
+        }
+        return blank;
     }
 
     /**
