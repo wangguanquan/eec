@@ -276,7 +276,7 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ## CHANGELOG
 Version 0.5.6 (2023-01-07)
 -------------
-- 读取文肵时支持指定表头，对于多行表头尤为有效
+- 读取文件时支持指定表头，对于多行表头尤为有效
 - 提供Row#toMap方法将行数据转为LinkedHashMap(#294)
 - 提供Row#isBlank方法用于判断所有单元格的值是否为空(#314)
 - 读取文件转时支持自定义HeaderRow
