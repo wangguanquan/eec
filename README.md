@@ -164,7 +164,7 @@ public static class RepeatableEntry {
     private String area;
 
     @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
-    @ExcelColumn(value = "详细地址")
+    @ExcelColumn("详细地址")
     private String detail;
 }
 ```
@@ -234,6 +234,19 @@ reader.sheets()
 ```
 
 以上代码相当于SQL `select * from '用户注册' where platform = 'iOS'`
+
+#### 4. 多表头读取
+
+如果要读取多行表头转对象或者Map时可以通过`Sheet#header(fromRowNum, toRowNum)`来指定表头所在的行号，如上方“记帐类报表”则可以使用如下代码读取
+
+```java
+reader.sheet(0)
+    .header(1, 2) // 指定表头所在的行号
+    .map(Row::toMap) // Row 转 Map
+    .forEach(Print::println)
+```
+
+更多关于多表头使用方法可以参考 [WIKI](https://github.com/wangguanquan/eec/wiki/%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4#%E8%AF%BB%E5%8F%96%E5%B8%A6%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%96%87%E4%BB%B6)
 
 ### xls格式支持
 
