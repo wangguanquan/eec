@@ -248,27 +248,23 @@ public class Styles implements Storable {
                 style |= Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
             }
             // Font
-            String applyFont = getAttr(e, "applyFont");
-            if ("1".equals(applyFont) || "true".equalsIgnoreCase(applyFont)) {
-                String fontId = getAttr(e, "fontId");
+            String applyFont = getAttr(e, "applyFont"), fontId = getAttr(e, "fontId");
+            if ("1".equals(applyFont) || "true".equalsIgnoreCase(applyFont) || StringUtil.isNotEmpty(fontId) && !"0".equals(fontId)) {
                 style |= Integer.parseInt(fontId) << INDEX_FONT;
             }
             // Fill
-            String applyFill = getAttr(e, "applyFill");
-            if ("1".equals(applyFill) || "true".equalsIgnoreCase(applyFill)) {
-                String fillId = getAttr(e, "fillId");
+            String applyFill = getAttr(e, "applyFill"), fillId = getAttr(e, "fillId");
+            if ("1".equals(applyFill) || "true".equalsIgnoreCase(applyFill) || StringUtil.isNotEmpty(fillId) && !"0".equals(fillId)) {
                 style |= Integer.parseInt(fillId) << INDEX_FILL;
             }
             // Border
-            String applyBorder = getAttr(e, "applyBorder");
-            if ("1".equals(applyBorder) || "true".equalsIgnoreCase(applyBorder)) {
-                String borderId = getAttr(e, "borderId");
+            String applyBorder = getAttr(e, "applyBorder"), borderId = getAttr(e, "borderId");
+            if ("1".equals(applyBorder) || "true".equalsIgnoreCase(applyBorder) || StringUtil.isNotEmpty(borderId) && !"0".equals(borderId)) {
                 style |= Integer.parseInt(borderId) << INDEX_BORDER;
             }
             // Alignment
-            String applyAlignment = getAttr(e, "applyAlignment");
-            if ("1".equals(applyAlignment) || "true".equalsIgnoreCase(applyAlignment)) {
-                Element alignment = e.element("alignment");
+            Element alignment = e.element("alignment");
+            if (alignment != null) {
                 String horizontal = getAttr(alignment, "horizontal");
                 int index;
                 if (StringUtil.isNotEmpty(horizontal) && (index = StringUtil.indexOf(Horizontals._names, horizontal)) >= 0) {
