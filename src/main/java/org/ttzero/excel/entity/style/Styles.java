@@ -242,24 +242,23 @@ public class Styles implements Storable {
         for (Element e : sub) {
             int style = 0;
             // NumFmt
-            String applyNumberFormat = getAttr(e, "applyNumberFormat");
-            if ("1".equals(applyNumberFormat) || "true".equalsIgnoreCase(applyNumberFormat)) {
-                String numFmtId = getAttr(e, "numFmtId");
+            String numFmtId = getAttr(e, "numFmtId"); // applyNumberFormat = getAttr(e, "applyNumberFormat");
+            if (StringUtil.isNotEmpty(numFmtId) && !"0".equals(numFmtId)) {
                 style |= Integer.parseInt(numFmtId) << INDEX_NUMBER_FORMAT;
             }
             // Font
-            String applyFont = getAttr(e, "applyFont"), fontId = getAttr(e, "fontId");
-            if ("1".equals(applyFont) || "true".equalsIgnoreCase(applyFont) || StringUtil.isNotEmpty(fontId) && !"0".equals(fontId)) {
+            String fontId = getAttr(e, "fontId"); // applyFont = getAttr(e, "applyFont");
+            if (StringUtil.isNotEmpty(fontId) && !"0".equals(fontId)) {
                 style |= Integer.parseInt(fontId) << INDEX_FONT;
             }
             // Fill
-            String applyFill = getAttr(e, "applyFill"), fillId = getAttr(e, "fillId");
-            if ("1".equals(applyFill) || "true".equalsIgnoreCase(applyFill) || StringUtil.isNotEmpty(fillId) && !"0".equals(fillId)) {
+            String fillId = getAttr(e, "fillId"); // applyFill = getAttr(e, "applyFill");
+            if (StringUtil.isNotEmpty(fillId) && !"0".equals(fillId)) {
                 style |= Integer.parseInt(fillId) << INDEX_FILL;
             }
             // Border
-            String applyBorder = getAttr(e, "applyBorder"), borderId = getAttr(e, "borderId");
-            if ("1".equals(applyBorder) || "true".equalsIgnoreCase(applyBorder) || StringUtil.isNotEmpty(borderId) && !"0".equals(borderId)) {
+            String borderId = getAttr(e, "borderId"); // applyBorder = getAttr(e, "applyBorder");
+            if (StringUtil.isNotEmpty(borderId) && !"0".equals(borderId)) {
                 style |= Integer.parseInt(borderId) << INDEX_BORDER;
             }
             // Alignment
