@@ -24,7 +24,6 @@ import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FILL;
@@ -188,5 +187,25 @@ public class StylesTest {
         assert color4.getRed() <= 103 && color4.getRed() >= 101;
         assert color4.getGreen() <= 103 && color4.getGreen() >= 101;
         assert color4.getBlue() <= 103 && color4.getBlue() >= 101;
+    }
+
+    @Test public void testRound2() {
+        assert Font.round10(11) == 110;
+        assert Font.round10(11.1) == 110;
+        assert Font.round10(11.2) == 110;
+        assert Font.round10(11.22) == 110;
+        assert Font.round10(11.23) == 115;
+        assert Font.round10(11.3) == 115;
+        assert Font.round10(11.5) == 115;
+        assert Font.round10(11.7) == 115;
+        assert Font.round10(11.72) == 115;
+        assert Font.round10(11.73) == 120;
+        assert Font.round10(11.8) == 120;
+
+        Font font = Font.parse("italic_bold_12.24_宋体");
+        assert font.isItalic();
+        assert font.isBold();
+        assert font.getSize2() == 12.5D;
+        assert font.getName().equals("宋体");
     }
 }
