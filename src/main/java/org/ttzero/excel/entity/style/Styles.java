@@ -22,7 +22,6 @@ import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.I18N;
 import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.reader.ExcelReadException;
 import org.ttzero.excel.util.FileUtil;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -217,7 +216,11 @@ public class Styles implements Storable {
         try {
             document = reader.read(Files.newInputStream(path));
         } catch (DocumentException | IOException e) {
-            throw new ExcelReadException(e);
+            LOGGER.warn("Read the style failed and ignore the style to be continue.", e);
+            Styles self = forReader();
+            // Add a default font
+            self.addFont(new Font("Arial", 11, Color.black));
+            return self;
         }
 
         Styles self = new Styles();
