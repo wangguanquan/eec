@@ -153,7 +153,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         write(Double.toString(d));
     }
 
-    private char[] toChars(int i) {
+    public char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = stringSize(i);
@@ -212,7 +212,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private char[] toChars(long i) {
+    public char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = stringSize(i);
@@ -293,7 +293,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private final static char[] digitTens = {
+    public final static char[] digitTens = {
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
         '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
@@ -306,7 +306,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
     };
 
-    private final static char[] digitOnes = {
+    public final static char[] digitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -319,13 +319,22 @@ public class ExtBufferedWriter extends BufferedWriter {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     };
 
-    private final static char[] digits = {
+    public final static char[] digits = {
         '0', '1', '2', '3', '4', '5',
         '6', '7', '8', '9', 'a', 'b',
         'c', 'd', 'e', 'f', 'g', 'h',
         'i', 'j', 'k', 'l', 'm', 'n',
         'o', 'p', 'q', 'r', 's', 't',
         'u', 'v', 'w', 'x', 'y', 'z'
+    };
+
+    public final static char[] digits_uppercase = {
+        '0', '1', '2', '3', '4', '5',
+        '6', '7', '8', '9', 'A', 'B',
+        'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'N',
+        'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z'
     };
 
 }
