@@ -216,7 +216,7 @@ public class Styles implements Storable {
         try {
             document = reader.read(Files.newInputStream(path));
         } catch (DocumentException | IOException e) {
-            LOGGER.warn("Read the style failed and ignore the style to be continue.", e);
+            LOGGER.warn("Read the style failed and ignore the style to continue.", e);
             Styles self = forReader();
             // Add a default font
             self.addFont(new Font("Arial", 11, Color.black));
@@ -224,6 +224,8 @@ public class Styles implements Storable {
         }
 
         Styles self = new Styles();
+        Path themePath = path.getParent().resolve("theme/theme1.xml");
+        if (Files.exists(themePath) && !Files.isDirectory(themePath)) Theme.load(themePath);
         Element root = document.getRootElement();
 
         // Parse Number format
@@ -718,7 +720,6 @@ public class Styles implements Storable {
                 LOGGER.warn("Unknown theme color index {}", t);
                 t = 0;
             }
-            // FIXME read theme.xml
             Color themeColor = ColorIndex.themeColors[t];
             String tint = getAttr(element, "tint");
             c = HlsColor.calculateColor(themeColor, tint);
