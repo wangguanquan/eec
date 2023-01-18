@@ -105,6 +105,8 @@ public class ColorIndex {
         // Remove the alpha option of the color
         if (rgb.length() == 8 && rgb.startsWith("FF")) {
             rgb = "#" + rgb.substring(2);
+        } else if (rgb.length() == 6 && rgb.charAt(0) != '#') {
+            rgb = "#" + rgb;
         }
         return Styles.toColor(rgb);
     }
