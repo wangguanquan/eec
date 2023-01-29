@@ -363,9 +363,13 @@ public class Font implements Cloneable {
         element.addElement("name").addAttribute("val", name);
         if (color != null) {
             int index;
-            if ((index = ColorIndex.indexOf(color)) > -1) {
+            if (color instanceof BuildInColor) {
+                element.addElement("color").addAttribute("indexed", String.valueOf(((BuildInColor) color).getIndexed()));
+            }
+            else if ((index = ColorIndex.indexOf(color)) > -1) {
                 element.addElement("color").addAttribute("indexed", String.valueOf(index));
-            } else {
+            }
+            else {
                 element.addElement("color").addAttribute("rgb", ColorIndex.toARGB(color));
             }
         }

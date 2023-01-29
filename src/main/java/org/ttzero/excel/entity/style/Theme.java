@@ -110,10 +110,10 @@ public class Theme {
                 try {
                     color = ColorIndex.toColor(v);
                 } catch (Exception ex) {
-                    color = ColorIndex.getColor(8); // black if exception
+                    color = new BuildInColor(64); // auto if exception
                 }
             }
-        } else color = ColorIndex.getColor(8); // black if unknown tag
+        } else color = new BuildInColor(64); // auto if unknown tag
         c.color = color;
         return c;
     }

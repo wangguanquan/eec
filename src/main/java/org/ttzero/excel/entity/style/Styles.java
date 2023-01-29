@@ -704,11 +704,12 @@ public class Styles implements Storable {
         // Indexed color value. Only used for backwards compatibility.
         // References a color in indexedColors.
         else if (StringUtil.isNotEmpty(indexed)) {
-            c = ColorIndex.getColor(Integer.parseInt(indexed));
+            // if indexed greater than 64 means auto.
+            c = new BuildInColor(Integer.parseInt(indexed));
         }
         // A boolean value indicating the color is automatic and system color dependent.
         else if ("1".equals(auto) || "true".equalsIgnoreCase(auto)) {
-            c = ColorIndex.getColor(8);
+            c = new BuildInColor(64);
         }
         // Theme colors
         else if (StringUtil.isNotEmpty(theme)) {

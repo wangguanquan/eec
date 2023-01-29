@@ -505,10 +505,14 @@ public class Border {
             element.addAttribute("style", subBorder.style.getName());
             Element colorEle = element.element("color");
             if (colorEle == null) colorEle = element.addElement("color");
-            int colorIndex;
-            if ((colorIndex = ColorIndex.indexOf(subBorder.color)) > -1) {
-                colorEle.addAttribute("indexed", String.valueOf(colorIndex));
-            } else {
+            int index;
+            if (subBorder.color instanceof BuildInColor) {
+                colorEle.addAttribute("indexed", String.valueOf(((BuildInColor) subBorder.color).getIndexed()));
+            }
+            else if ((index = ColorIndex.indexOf(subBorder.color)) > -1) {
+                element.addAttribute("indexed", String.valueOf(index));
+            }
+            else {
                 colorEle.addAttribute("rgb", ColorIndex.toARGB(subBorder.color));
             }
         }
