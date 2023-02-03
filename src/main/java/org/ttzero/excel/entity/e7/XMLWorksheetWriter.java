@@ -98,6 +98,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected SharedStrings sst;
     protected Comments comments;
     protected int startRow;
+    protected long pStart, pEnd;
 
     public XMLWorksheetWriter() { }
 
@@ -793,7 +794,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
         // There has no column to reset width
-        if (columns.length <= 0 || rows <= 1) return;
+        if (columns.length <= 0 || rows <= 0) return;
         String[] widths = new String[columns.length];
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
@@ -856,9 +857,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // resize each column width ...
         try (SeekableByteChannel channel = Files.newByteChannel(path.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ)) {
-            ByteBuffer buffer = ByteBuffer.allocate(316 + columns.length * 80);
+            long[] offset = findHeaderOffset(channel);
+            if (((int) offset[1]) <= 0) return;
+            ByteBuffer buffer = ByteBuffer.allocate((int) offset[1]);
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-
+            channel.position(offset[0]);
             int n = channel.read(buffer);
             if (n < 0) {
                 throw new ExcelWriteException("Write worksheet [" + sheet.getName() + "] error.");
@@ -904,7 +907,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             buffer.position(n);
             buffer.flip();
             // Move to header
-            channel.position(0);
+            channel.position(offset[0]);
             channel.write(buffer);
         }
     }
@@ -967,6 +970,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeDimension() throws IOException {
+        pStart = bw.getWrittenChars();
         bw.append("<dimension ref=\"A1"); // FIXME Setting the column or row's start-index
         int n = 11, size = sheet.size(); // fill 11 space
         if (size > 0) {
@@ -1065,14 +1069,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<cols>");
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
-                int w = defaultWidth.length();
+                String width = col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+                int w = width.length();
                 bw.write("<col customWidth=\"1\" width=\"");
+                bw.write(width);
                 if (col.isHide()) {
-                    bw.write(defaultWidth);
                     bw.write("\" hidden=\"1");
                     w += 11;
                 }
-                else bw.write(col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth);
                 bw.write('"');
                 for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
                 bw.write(" min=\"");
@@ -1092,6 +1096,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void beforeSheetData(boolean nonHeader) throws IOException {
+        pEnd = bw.getWrittenChars();
         bw.write("<sheetData>");
 
         int headerRow = 1;
@@ -1196,6 +1201,27 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             if (dim.checkRange(row, col) && row == dim.firstRow && col == dim.firstColumn) return true;
         }
         return false;
+    }
+
+    protected long[] findHeaderOffset(SeekableByteChannel channel) throws IOException {
+        // The header data is all ascii characters, so the char length is used directly as the byte length
+        if (pEnd > pStart) return new long[] { pStart, pEnd - pStart };
+
+        // TODO From disk
+//        long pos = channel.position();
+//        try {
+//            ByteBuffer buffer = ByteBuffer.allocate(1 << 12);
+//            channel.position(0);
+//            for (; channel.read(buffer) > 0; ) {
+//                buffer.flip();
+//
+//            }
+//
+//            return new long[] { 0, position };
+//        } finally {
+//            channel.position(pos);
+//        }
+        return new long[] { 0, 0 };
     }
 
 }
