@@ -38,7 +38,7 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  * @see BorderStyle
  * @author guanquan.wang on 2018-02-06 08:55
  */
-public class Border {
+public class Border implements Cloneable {
 
     private static final Color defaultColor = new Color(51, 51, 51); // #333333
 
@@ -528,4 +528,13 @@ public class Border {
             + (borders[5] != null ? borders[5].style : BorderStyle.NONE);
     }
 
+    @Override
+    public Border clone() {
+        Border newBorder = new Border();
+        for (int i = 0; i < borders.length; i++) {
+            if (borders[i] == null) continue;
+            newBorder.borders[i] = new SubBorder(borders[i].style, borders[i].color);
+        }
+        return newBorder;
+    }
 }
