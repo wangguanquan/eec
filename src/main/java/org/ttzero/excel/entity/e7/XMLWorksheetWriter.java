@@ -98,7 +98,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected SharedStrings sst;
     protected Comments comments;
     protected int startRow;
-    protected long pStart, pEnd;
+    protected long pStart, pEnd; // The position dimension to sheetData
 
     public XMLWorksheetWriter() { }
 
@@ -1205,23 +1205,49 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     protected long[] findHeaderOffset(SeekableByteChannel channel) throws IOException {
         // The header data is all ascii characters, so the char length is used directly as the byte length
-        if (pEnd > pStart) return new long[] { pStart, pEnd - pStart };
+        if (pEnd > 0) {
+            long start = Math.max(0L, pStart);
+            return new long[] { start, pEnd - start};
+        }
 
-        // TODO From disk
-//        long pos = channel.position();
-//        try {
-//            ByteBuffer buffer = ByteBuffer.allocate(1 << 12);
-//            channel.position(0);
-//            for (; channel.read(buffer) > 0; ) {
-//                buffer.flip();
-//
-//            }
-//
-//            return new long[] { 0, position };
-//        } finally {
-//            channel.position(pos);
-//        }
-        return new long[] { 0, 0 };
+        // From disk
+        long pos = channel.position(), position = 0L;
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(1 << 12);
+            channel.position(0L);
+            out: for (; channel.read(buffer) > 0; ) {
+                buffer.flip();
+                int i = 0, limit = buffer.remaining();
+
+                for (; ;) {
+                    for (; i < limit && buffer.get(i) != '<'; i++) ;
+                    // Overflow
+                    if (i >= limit) {
+                        position += i;
+                        buffer.clear();
+                        continue out;
+                    }
+                    // Incomplete key
+                    else if (i > limit - 10) {
+                        buffer.position(i);
+                        position += buffer.position();
+                        buffer.compact();
+                        continue out;
+                    }
+                    // Find <sheetData
+                    else if (buffer.get(i + 1) == 's' && buffer.get(i + 2) == 'h' && buffer.get(i + 3) == 'e'
+                        && buffer.get(i + 4) == 'e' && buffer.get(i + 5) == 't' && buffer.get(i + 6) == 'D'
+                        && buffer.get(i + 7) == 'a' && buffer.get(i + 8) == 't' && buffer.get(i + 9) == 'a') {
+                        position += i;
+                        break out;
+                    }
+                    i++;
+                }
+            }
+
+            return new long[] { 0, position };
+        } finally {
+            channel.position(pos);
+        }
     }
-
 }
