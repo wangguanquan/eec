@@ -186,6 +186,11 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Boolean showGridLines;
 
+    /**
+     * Specify custom header row height
+     */
+    protected double headerRowHeight = 20.5D, rowHeight = -1D;
+
     public int getId() {
         return id;
     }
@@ -600,6 +605,52 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet hideGridLines() {
         this.showGridLines = false;
+        return this;
+    }
+
+    /**
+     * Returns the header row height
+     *
+     * @return header row height
+     */
+    public double getHeaderRowHeight() {
+        return headerRowHeight;
+    }
+
+    /**
+     * Specify custom header row height
+     *
+     * If it is negative, it means that there is no special setting
+     * , and the default height is generally about {@code 13.5}
+     *
+     * @param headerRowHeight row height or negative number
+     * @return current {@link Sheet}
+     */
+    public Sheet setHeaderRowHeight(double headerRowHeight) {
+        this.headerRowHeight = headerRowHeight;
+        return this;
+    }
+
+    /**
+     * Returns the row height
+     *
+     * @return row height
+     */
+    public double getRowHeight() {
+        return rowHeight;
+    }
+
+    /**
+     * Specify custom row height
+     *
+     * If it is negative, it means that there is no special setting
+     * , and the default height is generally about {@code 13.5}
+     *
+     * @param rowHeight row height or negative number
+     * @return current {@link Sheet}
+     */
+    public Sheet setRowHeight(double rowHeight) {
+        this.rowHeight = rowHeight;
         return this;
     }
 

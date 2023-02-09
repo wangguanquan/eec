@@ -32,6 +32,8 @@ public class Row {
     int xf;
     // Share cell
     Cell[] cells;
+    // height
+    public double height;
 
     public int getIndex() {
         return index;
@@ -84,5 +86,14 @@ public class Row {
             calloc(n);
         }
         return cells;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public Row setHeight(double height) {
+        this.height = height;
+        return this;
     }
 }

@@ -165,6 +165,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         for (; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
+            row.height = getRowHeight();
             Cell[] cells = row.realloc(len);
             Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {

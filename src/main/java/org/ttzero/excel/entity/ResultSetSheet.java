@@ -238,6 +238,7 @@ public class ResultSetSheet extends Sheet {
             for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
                 Row row = rowBlock.next();
                 row.index = rows;
+                row.height = getRowHeight();
                 Cell[] cells = row.realloc(len);
                 for (int i = 1; i <= len; i++) {
                     SQLColumn hc = (SQLColumn) columns[i - 1];
