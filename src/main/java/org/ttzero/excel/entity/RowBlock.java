@@ -127,6 +127,10 @@ public class RowBlock implements Iterator<Row> {
         return rows[n - 1];
     }
 
+    public Row get(int position) {
+        return rows[position];
+    }
+
     public int size() {
         return n;
     }
