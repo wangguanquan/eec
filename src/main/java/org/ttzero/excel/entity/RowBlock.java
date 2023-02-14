@@ -127,8 +127,21 @@ public class RowBlock implements Iterator<Row> {
         return rows[n - 1];
     }
 
+    public Row get(int position) {
+        return rows[position];
+    }
+
     public int size() {
         return n;
     }
 
+    public void position(int position) {
+        if (position < 0 || position >= n)
+            throw new ArrayIndexOutOfBoundsException("Index: " + position + ", Size: " + n);
+        i = position;
+    }
+
+    public int position() {
+        return i;
+    }
 }

@@ -356,7 +356,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             row++;
             bw.write("<row r=\"");
             bw.writeInt(row);
-            bw.write("\" customHeight=\"1\" ht=\"20.5\" spans=\"1:");
+            // Custom row height
+            if (sheet.getHeaderRowHeight() >= 0D) {
+                bw.write("\" customHeight=\"1\" ht=\"");
+                bw.write(sheet.getHeaderRowHeight());
+            }
+            bw.write("\" spans=\"1:");
             bw.writeInt(columns[columns.length - 1].getRealColIndex());
             bw.write("\">");
 
@@ -441,7 +446,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param columns the column length
      * @return the row index (one base)
      * @throws IOException if I/O error occur
+     * @deprecated replace with {@link #startRow(int, int, double)}
      */
+    @Deprecated
     protected int startRow(int rows, int columns) throws IOException {
         // Row number
         int r = rows + startRow;
@@ -460,6 +467,36 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * Write begin of row
+     *
+     * @param rows    the row index (zero base)
+     * @param columns the column length
+     * @param rowHeight the row height
+     * @return the row index (one base)
+     * @throws IOException if I/O error occur
+     */
+    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
+        // Row number
+        int r = rows + startRow;
+        // logging
+        if (r % 1_0000 == 0) {
+            sheet.what("0014", String.valueOf(r));
+        }
+
+        bw.write("<row r=\"");
+        bw.writeInt(r);
+        // default data row height 16.5
+        if (rowHeight >= 0D) {
+            bw.write("\" customHeight=\"1\" ht=\"");
+            bw.write(rowHeight);
+        }
+        bw.write("\" spans=\"1:");
+        bw.writeInt(columns);
+        bw.write("\">");
+        return r;
+    }
+
+    /**
      * Write a row data
      *
      * @param row a row data
@@ -467,7 +504,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row.getIndex(), len);
+        int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
 
         for (int i = 0; i < len; i++) {
             Cell cell = cells[i];
@@ -516,7 +553,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeRowAutoSize(Row row) throws IOException {
         Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row.getIndex(), len);
+        int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
 
         for (int i = 0; i < len; i++) {
             Cell cell = cells[i];

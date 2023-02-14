@@ -295,6 +295,7 @@ public class ListSheet<T> extends Sheet {
             for (; start < end; rows++, start++) {
                 Row row = rowBlock.next();
                 row.index = rows;
+                row.height = getRowHeight();
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
                 boolean notNull = o != null;
