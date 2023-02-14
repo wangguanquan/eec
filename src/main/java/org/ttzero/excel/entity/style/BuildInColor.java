@@ -38,15 +38,15 @@ public class BuildInColor extends Color {
         return indexed;
     }
 
-    @Override
-    public int hashCode() {
-        return indexed;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof BuildInColor && ((BuildInColor) o).indexed == indexed;
-    }
+//    @Override
+//    public int hashCode() {
+//        return indexed;
+//    }
+//
+//    @Override
+//    public boolean equals(Object o) {
+//        return o instanceof BuildInColor && ((BuildInColor) o).indexed == indexed;
+//    }
 
     @Override
     public String toString() {
