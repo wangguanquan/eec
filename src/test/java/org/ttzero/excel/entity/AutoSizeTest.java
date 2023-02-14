@@ -49,7 +49,8 @@ public class AutoSizeTest extends WorkbookTest {
         }
         new Workbook("服务数据")
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("服务报表1", reports)).writeTo(Paths.get("d://tmp/"));
+            .addSheet(new ListSheet<>("服务报表1", reports))
+            .writeTo(defaultTestPath);
     }
 
     @Test public void testAutoSize2() throws IOException {
@@ -63,7 +64,9 @@ public class AutoSizeTest extends WorkbookTest {
         }
         new Workbook("服务数据")
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("服务报表1", reports).putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1))).writeTo(Paths.get("d://tmp/"));
+            .addSheet(new ListMapSheet("服务报表1", reports)
+            .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1)))
+            .writeTo(defaultTestPath);
     }
 
     @FreezePanes(topRow = 1)
