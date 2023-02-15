@@ -95,9 +95,9 @@ public class Column {
      */
     protected int headerStyleIndex = -1;
     /**
-     * The cell width
+     * The cell width and height
      */
-    public double width;
+    public double width, headerHeight = -1D;
     public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
@@ -358,6 +358,7 @@ public class Column {
         this.processor = other.processor;
         this.styleProcessor = other.styleProcessor;
         this.width = other.width;
+        this.headerHeight = other.headerHeight;
         this.o = other.o;
         this.styles = other.styles;
         this.headerComment = other.headerComment;
@@ -383,10 +384,24 @@ public class Column {
      * @return the {@link Column}
      */
     public Column setWidth(double width) {
-        if (width < 0.00000001) {
+        if (width < 0) {
             throw new ExcelWriteException("Width " + width + " less than 0.");
         }
         this.width = width;
+        return this;
+    }
+
+    /**
+     * Setting the cell's height, The row height is equal to the maximum cell height
+     *
+     * @param headerHeight the header height value
+     * @return the {@link Column}
+     */
+    public Column setHeaderHeight(double headerHeight) {
+        if (headerHeight < 0) {
+            throw new ExcelWriteException("Height " + headerHeight + " less than 0.");
+        }
+        this.headerHeight = headerHeight;
         return this;
     }
 
