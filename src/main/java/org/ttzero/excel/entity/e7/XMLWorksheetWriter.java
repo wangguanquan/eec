@@ -357,9 +357,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<row r=\"");
             bw.writeInt(row);
             // Custom row height
-            if (sheet.getHeaderRowHeight() >= 0D) {
+            double ht = getHeaderHeight(columnsArray, i);
+            if (ht < 0) ht = sheet.getHeaderRowHeight();
+            if (ht >= 0D) {
                 bw.write("\" customHeight=\"1\" ht=\"");
-                bw.write(sheet.getHeaderRowHeight());
+                bw.write(ht);
             }
             bw.write("\" spans=\"1:");
             bw.writeInt(columns[columns.length - 1].getRealColIndex());
@@ -1106,7 +1108,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<cols>");
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
-                String width = col.width > 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+                String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
                 int w = width.length();
                 bw.write("<col customWidth=\"1\" width=\"");
                 bw.write(width);
@@ -1286,5 +1288,16 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         } finally {
             channel.position(pos);
         }
+    }
+
+    /**
+     * Returns the maximum cell height
+     *
+     * @return cell height or -1
+     */
+    public double getHeaderHeight(Column[][] columnsArray, int row) {
+        double h = -1D;
+        for (Column[] cols : columnsArray) h = Math.max(cols[row].headerHeight, h);
+        return h;
     }
 }
