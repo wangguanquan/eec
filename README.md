@@ -241,7 +241,7 @@ reader.sheets()
 
 ```java
 reader.sheet(0)
-    .header(1, 2) // 指定表头所在的行号
+    .header(1, 2) // 指定表头所在的行第1行和第二行均为表头
     .map(Row::toMap) // Row 转 Map
     .forEach(Print::println)
 ```
@@ -287,6 +287,12 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.7 (2023-02-17)
+-------------
+- 修复读取font-size时因为浮点数造成异常
+- 修复auto-size重置列宽时抛Buffer异常
+- 新增 #setRowHeight, #setHeaderRowHeight 方法设置行高
+
 Version 0.5.6 (2023-01-07)
 -------------
 - 读取文件时支持指定表头，对于多行表头尤为有效
@@ -311,14 +317,6 @@ Version 0.5.4 (2022-08-28)
 - BIFF8Sheet支持reset重置流用于反复读取
 - 修复部分BUG(#282,#285)
 
-Version 0.5.3 (2022-07-25)
--------------
-- 修复导出时日期少6天的问题(#269)
-- 支持多个ExcelColumn注解，可以实现多行表头(#210)
-- 微调表格样式使其更突出内容
-- 优化自动计算列宽的算法使其更精准
-- 修复部分BUG(#264,#265)
-
 
 [更多...](./CHANGELOG)
 
@@ -326,7 +324,7 @@ Version 0.5.3 (2022-07-25)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.6-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.7-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

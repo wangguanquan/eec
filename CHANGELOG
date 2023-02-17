@@ -1,6 +1,6 @@
-Version 0.5.6 ()
+Version 0.5.7 (2023-02-17)
 -------------
-- 修复读取浮点数font-size时异常
+- 修复读取font-size时因为浮点数造成异常
 - 修复auto-size重置列宽时抛Buffer异常
 - 新增 #setRowHeight, #setHeaderRowHeight 方法设置行高
 
