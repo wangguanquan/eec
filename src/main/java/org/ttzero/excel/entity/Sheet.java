@@ -27,6 +27,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
@@ -132,11 +133,21 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Automatic interlacing color
      */
+    @Deprecated
     protected int autoOdd = -1;
     /**
      * Odd row's background color
      */
+    @Deprecated
     protected int oddFill;
+    /**
+     * The zebra-line fill style value
+     */
+    protected int zebraFillStyle = -1;
+    /**
+     * The zebra-line fill style
+     */
+    protected Fill zebraFill;
     /**
      * A copy worksheet flag
      */
@@ -224,6 +235,10 @@ public abstract class Sheet implements Cloneable, Storable {
     public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
         this.cellValueAndStyle = cellValueAndStyle;
         return this;
+    }
+
+    public ICellValueAndStyle getCellValueAndStyle() {
+        return cellValueAndStyle;
     }
 
     public Sheet() {
@@ -483,19 +498,22 @@ public abstract class Sheet implements Cloneable, Storable {
      * Cancel the odd row's fill style
      *
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #cancelZebraLine()}
      */
+    @Deprecated
     public Sheet cancelOddStyle() {
-        this.autoOdd = 1;
-        return this;
+        return cancelZebraLine();
     }
 
     /**
      * Returns auto setting odd background flag
      *
      * @return 1: auto setting, others none
+     * @deprecated replace with {@code getZebraFill() != null}
      */
+    @Deprecated
     public int getAutoOdd() {
-        return autoOdd;
+        return zebraFill != null ? 1 : 0;
     }
 
     /**
@@ -503,9 +521,13 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param autoOdd 1: setting, others none
      * @return current {@link Sheet}
+     * @deprecated will be delete
      */
+    @Deprecated
     public Sheet setAutoOdd(int autoOdd) {
-        this.autoOdd = autoOdd;
+        if (autoOdd == 1) {
+            if (zebraFill == null) setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
+        } else setZebraLine(null);
         return this;
     }
 
@@ -514,19 +536,74 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param fill the fill style
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #setZebraLine(Fill)}
      */
+    @Deprecated
     public Sheet setOddFill(Fill fill) {
-        this.oddFill = workbook.getStyles().addFill(fill);
-        return this;
+        return setZebraLine(fill);
     }
 
     /**
      * Returns the odd columns fill style
      *
      * @return the fill style value
+     * @deprecated replace with {@link #getZebraFillStyle()}
      */
+    @Deprecated
     public int getOddFill() {
-        return oddFill;
+        return getZebraFillStyle();
+    }
+
+    /**
+     * Setting the zebra-line fill style, default fill color is #EFF5EB
+     *
+     * @param fill the zebra-line {@link Fill} style
+     * @return current {@link Workbook}
+     */
+    public Sheet setZebraLine(Fill fill) {
+        this.zebraFill = fill;
+        return this;
+    }
+
+    /**
+     * Cancel the zebra-line style
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet cancelZebraLine() {
+        this.zebraFill = null;
+        this.zebraFillStyle = 0;
+        return this;
+    }
+
+    /**
+     * Returns the zebra-line fill style
+     *
+     * @return the zebra-line {@link Fill} style
+     */
+    public Fill getZebraFill() {
+        return zebraFill;
+    }
+
+    /**
+     * Returns the zebra-line fill style value
+     *
+     * @return the zebra-line {@link Fill} style
+     */
+    public int getZebraFillStyle() {
+        if (zebraFillStyle < 0 && zebraFill != null) {
+            this.zebraFillStyle = workbook.getStyles().addFill(zebraFill);
+        }
+        return zebraFillStyle;
+    }
+
+    /**
+     * Setting zebra-line style, the default fill color is #EFF5EB
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet defaultZebraLine() {
+        return setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
     }
 
     /**

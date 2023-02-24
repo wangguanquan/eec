@@ -18,7 +18,6 @@ package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
-import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
@@ -31,19 +30,6 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isShort;
  * @author guanquan.wang at 2019-09-25 11:25
  */
 public class XMLCellValueAndStyle implements ICellValueAndStyle {
-    /**
-     * Automatic interlacing color
-     */
-    private final int autoOdd;
-    /**
-     * Odd row's background color
-     */
-    private final int oddFill;
-
-    public XMLCellValueAndStyle(int autoOdd, int oddFill) {
-        this.autoOdd = autoOdd;
-        this.oddFill = oddFill;
-    }
 
     /**
      * Int value conversion to others
@@ -101,17 +87,11 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param style the default style
      * @return the style index in xf
      */
-    private int getStyleIndex(int rows, Column hc, Object o, int style) {
-        // Interlaced discoloration
-        if (autoOdd == 0 && isOdd(rows) && !Styles.hasFill(style)) {
-            style |= oddFill;
-        }
-        int styleIndex = hc.styles.of(style);
+    protected int getStyleIndex(int rows, Column hc, Object o, int style) {
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
-            styleIndex = hc.styles.of(style);
         }
-        return styleIndex;
+        return hc.styles.of(style);
     }
 
     /**
@@ -141,15 +121,6 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
         if (styleProcessor != null && hc.styles != null) {
             cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles));
         }
-    }
-
-    /**
-     * Check the odd rows
-     *
-     * @return true if odd rows
-     */
-    private boolean isOdd(int rows) {
-        return (rows & 1) == 1;
     }
 
     /**
