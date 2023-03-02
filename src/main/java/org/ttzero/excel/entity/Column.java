@@ -97,7 +97,7 @@ public class Column {
     /**
      * The cell width and height
      */
-    public double width, headerHeight = -1D;
+    public double width = -1D, headerHeight = -1D;
     public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
@@ -152,6 +152,10 @@ public class Column {
      * you can right-click to "un-hide" to display in file
      */
     public boolean hide;
+    /**
+     * Auto column width flag
+     */
+    public int autoWidth;
 
     /**
      * Constructor Column
@@ -963,5 +967,46 @@ public class Column {
      */
     public Column getTail() {
         return tail != null ? tail : this;
+    }
+
+    /**
+     * Setting auto resize cell's width
+     *
+     * @return current {@link Column}
+     */
+    public Column autoWidth() {
+        this.autoWidth = 1;
+        return this;
+    }
+
+    /**
+     * Setting fixed column width
+     *
+     * @return current {@link Column}
+     */
+    public Column fixedWidth() {
+        this.autoWidth = 2;
+        return this;
+    }
+
+    /**
+     * Setting fixed column width
+     *
+     * @param width the column width
+     * @return current {@link Column}
+     */
+    public Column fixedWidth(double width) {
+        this.autoWidth = 2;
+        this.width = width;
+        return this;
+    }
+
+    /**
+     * Returns the re-size setting
+     *
+     * @return 0: not setting 1: auto-size 2:fix-size
+     */
+    public int getAutoWidth() {
+        return autoWidth;
     }
 }

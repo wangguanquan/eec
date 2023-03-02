@@ -795,6 +795,11 @@ public abstract class Sheet implements Cloneable, Storable {
                 for (org.ttzero.excel.entity.Column col = column.next; col != null; col = col.next)
                     col.styles = workbook.getStyles();
             }
+
+            // Column width
+            if (column.getAutoWidth() == 0 && getAutoWidth() > 0) {
+                column.autoWidth = getAutoWidth();
+            }
         }
     }
 

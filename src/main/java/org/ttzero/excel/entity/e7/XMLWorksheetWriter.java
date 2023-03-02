@@ -124,21 +124,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeBefore();
 
         if (rowBlock != null && rowBlock.hasNext()) {
-            if (sheet.isAutoSize()) {
-                do {
-                    // write row-block data auto size
-                    writeAutoSizeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            } else {
-                do {
-                    // write row-block data
-                    writeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            }
+//            if (sheet.isAutoSize()) {
+//                do {
+//                    // write row-block data auto size
+//                    writeAutoSizeRowBlock(rowBlock);
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                } while ((rowBlock = supplier.get()) != null);
+//            } else {
+            do {
+                // write row-block data
+                writeRowBlock(rowBlock);
+                // end of row
+                if (rowBlock.isEOF()) break;
+            } while ((rowBlock = supplier.get()) != null);
+//            }
         }
 
         int total = rowBlock != null ? rowBlock.getTotal() : 0;
@@ -150,11 +150,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         sheet.afterSheetAccess(workSheetPath);
 
         // resize
-        if (sheet.isAutoSize()) {
-            // close writer before resize
-            close();
-            resizeColumnWidth(sheetPath.toFile(), total);
-        }
+//        if (sheet.isAutoSize()) {
+        // close writer before resize
+        close();
+        resizeColumnWidth(sheetPath.toFile(), total);
+//        }
     }
 
     /**
@@ -174,25 +174,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeBefore();
 
         if (rowBlock.hasNext()) {
-            if (sheet.isAutoSize()) {
-                for (; ; ) {
-                    // write row-block data
-                    writeAutoSizeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                    // Get the next block
-                    rowBlock = sheet.nextBlock();
-                }
-            } else {
-                for (; ; ) {
-                    // write row-block data
-                    writeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                    // Get the next block
-                    rowBlock = sheet.nextBlock();
-                }
+//            if (sheet.isAutoSize()) {
+//                for (; ; ) {
+//                    // write row-block data
+//                    writeAutoSizeRowBlock(rowBlock);
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                    // Get the next block
+//                    rowBlock = sheet.nextBlock();
+//                }
+//            } else {
+            for (; ; ) {
+                // write row-block data
+                writeRowBlock(rowBlock);
+                // end of row
+                if (rowBlock.isEOF()) break;
+                // Get the next block
+                rowBlock = sheet.nextBlock();
             }
+//            }
         }
 
         // write end
@@ -202,11 +202,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         sheet.afterSheetAccess(workSheetPath);
 
         // resize
-        if (sheet.isAutoSize()) {
-            // close writer before resize
-            close();
-            resizeColumnWidth(sheetPath.toFile(), rowBlock.getTotal());
-        }
+//        if (sheet.isAutoSize()) {
+        // close writer before resize
+        close();
+        resizeColumnWidth(sheetPath.toFile(), rowBlock.getTotal());
+//        }
     }
 
     protected Path initWriter(Path root) throws IOException {
@@ -368,19 +368,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\">");
 
             String name;
-            if (sheet.isAutoSize()) {
-                for (int j = 0, c = 0; j < columns.length; j++) {
-                    Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
-                    writeStringAutoSize(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
-                }
-            } else {
-                for (int j = 0, c = 0; j < columns.length; j++) {
-                    Column hc = columnsArray[j][i];
-                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
-                    writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
-                }
+//            if (sheet.isAutoWidth()) {
+//                for (int j = 0, c = 0; j < columns.length; j++) {
+//                    Column hc = columnsArray[j][i];
+//                    name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
+//                    writeStringAutoSize(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+//                }
+//            } else {
+            for (int j = 0, c = 0; j < columns.length; j++) {
+                Column hc = columnsArray[j][i];
+                name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
+                writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
             }
+//            }
 
             // Write header comments
             for (int j = 0; j < columns.length; j++) {
@@ -437,6 +437,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @param rowBlock the row-block
      */
+    @Deprecated
     private void writeAutoSizeRowBlock(RowBlock rowBlock) throws IOException {
         for (; rowBlock.hasNext(); writeRowAutoSize(rowBlock.next())) ;
     }
@@ -553,6 +554,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param row a row data
      * @throws IOException if I/O error occur
      */
+    @Deprecated
     protected void writeRowAutoSize(Row row) throws IOException {
         Cell[] cells = row.getCells();
         int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
@@ -633,6 +635,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.escapeWrite(s); // escape text
             bw.write("</t></is></c>");
         }
+
+        // TODO optimize If auto-width
+        if (hc.getAutoWidth() == 1) {
+            double ln;
+            if (hc.o < (ln = stringWidth(s, xf))) hc.o = ln;
+        }
     }
 
     /**
@@ -644,13 +652,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param xf     the style index
      * @throws IOException if I/O error occur
      */
+    @Deprecated
     protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
         writeString(s, row, column, xf);
-        Column hc = columns[column];
-        double ln;
-        if (hc.o < (ln = stringWidth(s, xf))) {
-            hc.o = ln;
-        }
+//        Column hc = columns[column];
+//        double ln;
+//        if (hc.o < (ln = stringWidth(s, xf))) {
+//            hc.o = ln;
+//        }
     }
 
     /**
@@ -663,14 +672,21 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
+        Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
         bw.write("\"><v>");
         bw.write(d);
         bw.write("</v></c>");
+
+        // TODO optimize If auto-width
+        if (hc.getAutoWidth() == 1) {
+            int n;
+            if (hc.o < (n = Double.toString(d).length())) hc.o = n;
+        }
     }
 
     /**
@@ -682,13 +698,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param xf     the style index
      * @throws IOException if I/O error occur
      */
+    @Deprecated
     protected void writeDoubleAutoSize(double d, int row, int column, int xf) throws IOException {
         writeDouble(d, row, column, xf);
-        Column hc = columns[column];
-        int n;
-        if (hc.width == 0 && hc.o < (n = Double.toString(d).length())) {
-            hc.o = n;
-        }
+//        Column hc = columns[column];
+//        int n;
+//        if (hc.width == 0 && hc.o < (n = Double.toString(d).length())) {
+//            hc.o = n;
+//        }
     }
 
     /**
@@ -701,14 +718,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
+        Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
         bw.write("\"><v>");
         bw.write(bd.toString());
         bw.write("</v></c>");
+        // TODO optimize If auto-width
+        if (hc.getAutoWidth() == 1) {
+            int l;
+            if (hc.o < (l = bd.toString().length())) hc.o = l;
+        }
     }
 
     /**
@@ -720,13 +743,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param xf     the style index
      * @throws IOException if I/O error occur
      */
+    @Deprecated
     protected void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
         writeDecimal(bd, row, column, xf);
-        Column hc = columns[column];
-        int l;
-        if (hc.width == 0 && hc.o < (l = bd.toString().length())) {
-            hc.o = l;
-        }
+//        Column hc = columns[column];
+//        int l;
+//        if (hc.width == 0 && hc.o < (l = bd.toString().length())) {
+//            hc.o = l;
+//        }
     }
 
     /**
@@ -759,14 +783,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
+        Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
         bw.write("\"><v>");
         bw.write(l);
         bw.write("</v></c>");
+        // TODO optimize If auto-width
+        if (hc.getAutoWidth() == 1) {
+            int n;
+            if (hc.o < (n = stringSize(l))) hc.o = n;
+        }
     }
 
     /**
@@ -778,13 +808,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param xf     the style index
      * @throws IOException if I/O error occur
      */
+    @Deprecated
     protected void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
         writeNumeric(l, row, column, xf);
-        Column hc = columns[column];
-        int n;
-        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
-            hc.o = n;
-        }
+//        Column hc = columns[column];
+//        int n;
+//        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
+//            hc.o = n;
+//        }
     }
 
     /**
@@ -838,6 +869,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
+            int k = hc.getAutoWidth();
+            // If fixed width
+            if (k == 2) {
+                double width = hc.width >= 0.0D ? hc.width : sheet.getDefaultWidth();
+                widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+                continue;
+            }
             double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
             Class<?> clazz = hc.getClazz();
             if (isString(clazz)) {
