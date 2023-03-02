@@ -16,32 +16,32 @@ public class HeaderStyleTest extends WorkbookTest {
     @Test
     public void testOriginal() throws IOException {
         Head itemFull = new Head();
-        new Workbook("customize_header_style_original").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook("customize_header_style_original").setAutoWidth(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
     }
 
     @Test
     public void testFillBgColor() throws IOException {
         Head1 itemFull = new Head1();
-        new Workbook("customize_header_style_bgc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook("customize_header_style_bgc").setAutoWidth(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
     }
 
     @Test
     public void testFontColor() throws IOException {
         Head2 itemFull = new Head2();
-        new Workbook("customize_header_style_fc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook("customize_header_style_fc").setAutoWidth(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
 
     }
 
     @Test public void testAnnoOnClassTest() throws IOException {
         Head3 itemFull = new Head3();
-        new Workbook("annotation on class").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook("annotation on class").setAutoWidth(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
     }
 
     @Test public void testAnnoOnClassAndMethodTest() throws IOException {
         Head4 itemFull = new Head4();
-        new Workbook("annotation on class and method").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook("annotation on class and method").setAutoWidth(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
     }
 
     private static class Head {

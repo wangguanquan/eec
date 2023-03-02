@@ -101,8 +101,8 @@ public @interface ExcelColumn {
     int colIndex() default -1;
 
     /**
-     * If {@link Sheet#autoSize()} is {@code true}, The column width take the minimum of `width` and `maxWidth`,
-     * if `autoWidth` is {@code false}, The column width use `maxWidth` directly as the column width
+     * If {@link Sheet#autoWidth()} is {@code true}, The column width take the minimum of `width` and `maxWidth`,
+     * otherwise the column width use `maxWidth` directly as the column width
      *
      * @return max cell width, less than or equal to 0 means unset
      */

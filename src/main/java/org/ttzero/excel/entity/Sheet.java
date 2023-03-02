@@ -105,7 +105,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * To mark the cell auto-width
      */
-    protected int autoSize;
+    protected int autoWidth;
     /**
      * The default cell width
      */
@@ -428,19 +428,75 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting auto resize cell's width
      *
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #autoWidth()}
      */
+    @Deprecated
     public Sheet autoSize() {
-        this.autoSize = 1;
-        return this;
+        return autoWidth();
     }
 
     /**
      * Setting fix column width
      *
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedWidth()}
      */
+    @Deprecated
     public Sheet fixSize() {
-        this.autoSize = 2;
+        return fixedWidth();
+    }
+
+    /**
+     * Setting fix column width
+     *
+     * @param width the column width
+     * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedWidth(double)}
+     */
+    @Deprecated
+    public Sheet fixSize(double width) {
+        return fixedWidth(width);
+    }
+
+    /**
+     * Returns the re-size setting
+     *
+     * @return 1: auto-size 2:fix-size
+     * @deprecated rename to {@link #getAutoWidth()}
+     */
+    @Deprecated
+    public int getAutoSize() {
+        return getAutoWidth();
+    }
+
+    /**
+     * Test is auto size column width
+     *
+     * @return true if auto-size
+     * @deprecated rename to {@link #isAutoWidth()}
+     */
+    @Deprecated
+    public boolean isAutoSize() {
+        return isAutoWidth();
+    }
+
+    /**
+     * Setting auto resize cell's width
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet autoWidth() {
+        this.autoWidth = 1;
+        return this;
+    }
+
+    /**
+     * Setting fixed column width
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet fixedWidth() {
+        this.autoWidth = 2;
         return this;
     }
 
@@ -450,12 +506,20 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param width the column width
      * @return current {@link Sheet}
      */
-    public Sheet fixSize(double width) {
-        this.autoSize = 2;
+    public Sheet fixedWidth(double width) {
+        if (width < 0.0D) {
+            LOGGER.warn("Negative number {}", width);
+            width = 0.0D;
+        }
+        else if (width > Const.Limit.COLUMN_WIDTH) {
+            LOGGER.warn("Maximum width is {}, current is {}", Const.Limit.COLUMN_WIDTH, width);
+            width = Const.Limit.COLUMN_WIDTH;
+        }
+        this.autoWidth = 2;
         this.width = width;
         if (headerReady) {
             for (org.ttzero.excel.entity.Column hc : columns) {
-                hc.setWidth(width);
+                hc.fixedWidth(width);
             }
         }
         return this;
@@ -464,19 +528,19 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns the re-size setting
      *
-     * @return 1: auto-size 2:fix-size
+     * @return 1: auto-width 2:fix-width
      */
-    public int getAutoSize() {
-        return autoSize;
+    public int getAutoWidth() {
+        return autoWidth;
     }
 
     /**
-     * Test is auto size column width
+     * Test is auto-width column width
      *
-     * @return true if auto-size
+     * @return true if auto-width
      */
-    public boolean isAutoSize() {
-        return autoSize == 1;
+    public boolean isAutoWidth() {
+        return autoWidth == 1;
     }
 
     /**

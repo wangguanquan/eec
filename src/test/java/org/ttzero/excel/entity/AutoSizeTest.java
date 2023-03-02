@@ -48,7 +48,7 @@ public class AutoSizeTest extends WorkbookTest {
             reports.add(e);
         }
         new Workbook("服务数据")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>("服务报表1", reports))
             .writeTo(defaultTestPath);
     }
@@ -63,7 +63,7 @@ public class AutoSizeTest extends WorkbookTest {
             reports.add(map);
         }
         new Workbook("服务数据")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListMapSheet("服务报表1", reports)
             .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1)))
             .writeTo(defaultTestPath);

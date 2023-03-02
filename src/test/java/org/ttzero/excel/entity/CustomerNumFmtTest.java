@@ -45,16 +45,16 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testFmtInAnnotation() throws IOException {
-        new Workbook("customize_numfmt").setAutoSize(true).addSheet(new ListSheet<>(Item.random())).writeTo(defaultTestPath);
+        new Workbook("customize_numfmt").setAutoWidth(true).addSheet(new ListSheet<>(Item.random())).writeTo(defaultTestPath);
     }
 
     @Test public void testFmtInAnnotationYmdHms() throws IOException {
-        new Workbook("customize_numfmt_full").setAutoSize(true).addSheet(new ListSheet<>(ItemFull.randomFull())).writeTo(defaultTestPath);
+        new Workbook("customize_numfmt_full").setAutoWidth(true).addSheet(new ListSheet<>(ItemFull.randomFull())).writeTo(defaultTestPath);
     }
 
     @Test public void testDateFmt() throws IOException {
         new Workbook("customize_date_format")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(ItemFull.randomFull()
             , new Column("编码", "code")
             , new Column("姓名", "name")
@@ -64,7 +64,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
     @Test public void testNumFmt() throws IOException {
         new Workbook("customize_numfmt_full")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(ItemFull.randomFull()
                 , new Column("编码", "code")
                 , new Column("姓名", "name")
@@ -75,7 +75,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
     @Test public void testNegativeNumFmt() throws IOException {
         new Workbook("customize_negative")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(Arrays.asList(new Num(1234565435236543436L), new Num(0), new Num(-1234565435236543436L))))
             .writeTo(defaultTestPath);
     }
@@ -145,14 +145,14 @@ public class CustomerNumFmtTest extends WorkbookTest {
 
     @Test public void testAutoWidth() throws IOException {
         new Workbook("Auto Width Test")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(WidthTestItem.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAutoAndMaxWidth() throws IOException {
         new Workbook("Auto Max Width Test")
-                .setAutoSize(true)
+                .setAutoWidth(true)
                 .addSheet(new ListSheet<>(MaxWidthTestItem.randomTestData()))
                 .writeTo(defaultTestPath);
     }

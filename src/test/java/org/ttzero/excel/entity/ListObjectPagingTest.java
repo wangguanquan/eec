@@ -76,7 +76,7 @@ public class ListObjectPagingTest extends WorkbookTest {
     @Test public void testPagingCustomizeDataSource() throws IOException {
         new Workbook("paging customize datasource", author)
             .watch(Print::println)
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new CustomizeDataSourceSheet())
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);

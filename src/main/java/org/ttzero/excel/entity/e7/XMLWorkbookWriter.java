@@ -370,11 +370,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
                 sheet.setSheetWriter(worksheetWriter);
             }
-            if (sheet.getAutoSize() == 0) {
-                if (workbook.isAutoSize()) {
-                    sheet.autoSize();
+            if (sheet.getAutoWidth() == 0) {
+                if (workbook.isAutoWidth()) {
+                    sheet.autoWidth();
                 } else {
-                    sheet.fixSize();
+                    sheet.fixedWidth();
                 }
             }
             if (sheet.getAutoOdd() == -1) {

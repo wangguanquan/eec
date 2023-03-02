@@ -96,9 +96,9 @@ public class Workbook implements Storable {
     private int size;
     private Connection con;
     /**
-     * Auto size flag
+     * Auto column width flag
      */
-    private boolean autoSize;
+    private boolean autoWidth;
     /**
      * Automatic interlacing fill, default fill color is '#E2EDDA'
      */
@@ -324,9 +324,32 @@ public class Workbook implements Storable {
      *
      * @param autoSize boolean value
      * @return the {@link Workbook}
+     * @deprecated rename to {@link #setAutoWidth(boolean)}
      */
+    @Deprecated
     public Workbook setAutoSize(boolean autoSize) {
-        this.autoSize = autoSize;
+        return setAutoWidth(autoSize);
+    }
+
+    /**
+     * Returns whether to auto-adjust the column width
+     *
+     * @return true if auto-adjust the column width
+     * @deprecated rename to {@link #isAutoWidth()}
+     */
+    @Deprecated
+    public boolean isAutoSize() {
+        return isAutoWidth();
+    }
+
+    /**
+     * Setting auto-adjust the column width
+     *
+     * @param autoWidth boolean value
+     * @return the {@link Workbook}
+     */
+    public Workbook setAutoWidth(boolean autoWidth) {
+        this.autoWidth = autoWidth;
         return this;
     }
 
@@ -335,8 +358,8 @@ public class Workbook implements Storable {
      *
      * @return true if auto-adjust the column width
      */
-    public boolean isAutoSize() {
-        return autoSize;
+    public boolean isAutoWidth() {
+        return autoWidth;
     }
 
     /**

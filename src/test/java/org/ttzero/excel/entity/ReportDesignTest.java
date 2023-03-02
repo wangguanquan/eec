@@ -39,7 +39,7 @@ import java.util.List;
 public class ReportDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
-        new Workbook("Group Style Processor").cancelOddFill().setAutoSize(true)
+        new Workbook("Group Style Processor").cancelOddFill().setAutoWidth(true)
             .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
             .writeTo(defaultTestPath);
     }
@@ -107,7 +107,7 @@ public class ReportDesignTest extends WorkbookTest {
         row++;
         mergeCells.add(new Dimension(row, (short) 1, row, (short) 5));
 
-        new Workbook("Report Design").cancelOddFill().setAutoSize(true)
+        new Workbook("Report Design").cancelOddFill().setAutoWidth(true)
             .addSheet(new ListSheet<>(list, createColumns())
                 .setStyleProcessor(new GroupStyleProcessor2<>())
                 .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath);

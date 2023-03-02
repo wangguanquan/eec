@@ -295,7 +295,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width")
                 .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixSize(10))
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixedWidth(10))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }

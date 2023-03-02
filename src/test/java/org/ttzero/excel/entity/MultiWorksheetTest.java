@@ -38,7 +38,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
     public void testMultiWorksheet() throws IOException {
         new Workbook("test multi worksheet", author)
                 .watch(Print::println)
-                .setAutoSize(true)
+                .setAutoWidth(true)
                 // The first worksheet
                 .addSheet("E", ListMapSheetTest.createTestData())
                 // The other worksheet
@@ -56,7 +56,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
 
             new Workbook("test multi dataSource worksheet", author)
                 .watch(Print::println)
-                .setAutoSize(true)
+                .setAutoWidth(true)
                 .setConnection(con)
                 // List<Map>
                 .addSheet("ListMap", ListMapSheetTest.createAllTypeData())

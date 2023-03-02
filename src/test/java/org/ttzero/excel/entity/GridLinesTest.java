@@ -43,7 +43,7 @@ public class GridLinesTest extends SQLWorkbookTest {
 
     @Test public void testListSheetPaging() throws IOException {
         new Workbook("ListSheet Paging ignore grid lines")
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).hideGridLines()
                 .setSheetWriter(new XMLWorksheetWriter() {
                 @Override

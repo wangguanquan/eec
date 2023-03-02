@@ -51,7 +51,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
         List<RepeatableEntry> list = RepeatableEntry.randomTestData();
         new Workbook().setWaterMark(WaterMark.of("勿外传"))
-            .setAutoSize(true)
+            .setAutoWidth(true)
             .addSheet(new ListSheet<>(list))
             .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
 
@@ -82,7 +82,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Paging Columns Annotation").setAutoSize(true)
+        new Workbook("Repeat Paging Columns Annotation").setAutoWidth(true)
             .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)).setSheetWriter(new XMLWorksheetWriter() {
                 @Override
                 public int getRowLimit() {
@@ -92,7 +92,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Multi specify columns 2").setAutoSize(true)
+        new Workbook("Multi specify columns 2").setAutoWidth(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column("共用表头").addSubColumn(new Column("学号", "id"))
                 , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
@@ -110,7 +110,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
-        new Workbook("Multi specify columns 3").setAutoSize(true)
+        new Workbook("Multi specify columns 3").setAutoWidth(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
@@ -120,7 +120,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testResultSet() throws SQLException, IOException {
         try (Connection con = getConnection()) {
-            new Workbook("Multi ResultSet columns 2", author).setAutoSize(true)
+            new Workbook("Multi ResultSet columns 2", author).setAutoWidth(true)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student order by age"
                     , new Column("通用").setHeaderStyle(532550).addSubColumn(new Column("学号", int.class))
@@ -135,7 +135,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testMultiHeaderAndSpecifyColIndex() throws SQLException, IOException {
         try (Connection con = getConnection()) {
-            new Workbook("Multi Header And Specify Col-index", author).setAutoSize(true)
+            new Workbook("Multi Header And Specify Col-index", author).setAutoWidth(true)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student limit 10"
                     , new Column("通用").addSubColumn(new Column("学号", int.class))
@@ -240,7 +240,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideCol() throws IOException {
-        new Workbook("Auto Size And Hide Column").setAutoSize(true)
+        new Workbook("Auto Size And Hide Column").setAutoWidth(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name").setColIndex(1000).hide())
@@ -249,7 +249,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideColPaging() throws IOException {
-        new Workbook("Auto Size And Hide Column Paging").setAutoSize(true)
+        new Workbook("Auto Size And Hide Column Paging").setAutoWidth(true)
             .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))

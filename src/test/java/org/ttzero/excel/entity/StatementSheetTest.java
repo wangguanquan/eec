@@ -61,7 +61,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
     private void testWrite(boolean autoSize) throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement", author)
-                .setAutoSize(autoSize)
+                .setAutoWidth(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student order by age"
                     , new Column("学号", int.class)
@@ -77,7 +77,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
     private void testStyleProcessor(boolean autoSize) throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor", author)
-                .setAutoSize(autoSize)
+                .setAutoWidth(autoSize)
                 .setConnection(con)
                 .addSheet("select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
@@ -102,7 +102,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement", author)
                 .setConnection(con)
-                .setAutoSize(autoSize)
+                .setAutoWidth(autoSize)
                 .watch(Print::println)
                 .addSheet("select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
@@ -319,7 +319,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width", author)
                 .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10").fixSize(10))
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10").fixedWidth(10))
                 .writeTo(defaultTestPath);
         }
     }
