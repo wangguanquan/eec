@@ -872,8 +872,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int k = hc.getAutoWidth();
             // If fixed width
             if (k == 2) {
-                double width = hc.width >= 0.0D ? hc.width + 0.65D : sheet.getDefaultWidth();
-                widths[i] = BigDecimal.valueOf(Math.min(width, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+                double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
+                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
                 continue;
             }
             double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
