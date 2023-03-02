@@ -23,7 +23,6 @@ import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.manager.Const;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -33,9 +32,9 @@ import java.util.Map;
 /**
  * @author guanquan.wang at 2023-02-04 22:15
  */
-public class AutoSizeTest extends WorkbookTest {
+public class AutoWidthTest extends WorkbookTest {
 
-    @Test public void testAutoSize() throws IOException {
+    @Test public void testAutoWidth() throws IOException {
         List<ServerReport> reports = new ArrayList<>(2);
         for (int i = 0; i < 2; i++) {
             ServerReport e = new ServerReport();
@@ -53,7 +52,7 @@ public class AutoSizeTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
-    @Test public void testAutoSize2() throws IOException {
+    @Test public void testAutoWidth2() throws IOException {
         List<Map<String, ?>> reports = new ArrayList<>(2);
         for (int i = 0; i < 2; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -67,6 +66,34 @@ public class AutoSizeTest extends WorkbookTest {
             .addSheet(new ListMapSheet("服务报表1", reports)
             .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1)))
             .writeTo(defaultTestPath);
+    }
+
+    @Test public void testAutoWidthAndFixedWidth() throws IOException {
+        new Workbook("auto-width and fixed-width")
+            .setAutoWidth(true)
+            .addSheet(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id").fixedWidth(16)
+                , new Column("姓名", "name")
+                , new Column("成绩", "score")
+            ).writeTo(defaultTestPath);
+    }
+
+    @Test public void testSpecifyColumnAutoWidth() throws IOException {
+        new Workbook("specify column fixed-width")
+            .addSheet(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id")
+                , new Column("姓名", "name").autoWidth()
+                , new Column("成绩", "score")
+            ).writeTo(defaultTestPath);
+    }
+
+    @Test public void testFixedAndAutoWidth() throws IOException {
+        new Workbook("fixed and fixed-width")
+            .addSheet(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id").fixedWidth(10)
+                , new Column("姓名", "name").autoWidth()
+                , new Column("成绩", "score")
+            ).writeTo(defaultTestPath);
     }
 
     @FreezePanes(topRow = 1)
