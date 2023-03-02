@@ -71,28 +71,28 @@ public class AutoWidthTest extends WorkbookTest {
     @Test public void testAutoWidthAndFixedWidth() throws IOException {
         new Workbook("auto-width and fixed-width")
             .setAutoWidth(true)
-            .addSheet(ListObjectSheetTest.Student.randomTestData()
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
                 , new Column("学号", "id").fixedWidth(16)
                 , new Column("姓名", "name")
-                , new Column("成绩", "score")
+                , new Column("成绩", "score"))
             ).writeTo(defaultTestPath);
     }
 
     @Test public void testSpecifyColumnAutoWidth() throws IOException {
-        new Workbook("specify column fixed-width")
-            .addSheet(ListObjectSheetTest.Student.randomTestData()
+        new Workbook("specify column auto-width")
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name").autoWidth()
-                , new Column("成绩", "score")
+                , new Column("成绩", "score")).fixedWidth(10)
             ).writeTo(defaultTestPath);
     }
 
     @Test public void testFixedAndAutoWidth() throws IOException {
         new Workbook("fixed and fixed-width")
-            .addSheet(ListObjectSheetTest.Student.randomTestData()
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
                 , new Column("学号", "id").fixedWidth(10)
                 , new Column("姓名", "name").autoWidth()
-                , new Column("成绩", "score")
+                , new Column("成绩", "score"))
             ).writeTo(defaultTestPath);
     }
 
