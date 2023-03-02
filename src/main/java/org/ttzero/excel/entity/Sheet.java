@@ -109,7 +109,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20.38D;
+    protected double width = 20D;
     /**
      * The row number
      */
@@ -797,8 +797,8 @@ public abstract class Sheet implements Cloneable, Storable {
             }
 
             // Column width
-            if (column.getAutoWidth() == 0 && getAutoWidth() > 0) {
-                column.autoWidth = getAutoWidth();
+            if (column.getAutoWidth() == 0 && autoWidth > 0) {
+                column.option |= autoWidth << 1;
             }
         }
     }
