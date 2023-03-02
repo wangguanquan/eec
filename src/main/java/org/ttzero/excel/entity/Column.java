@@ -373,6 +373,7 @@ public class Column {
         this.colIndex = other.colIndex;
         this.hide = other.hide;
         this.realColIndex = other.realColIndex;
+        this.autoWidth = other.autoWidth;
         if (other.cellStyle != null) setCellStyle(other.cellStyle);
         if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
         int i;
