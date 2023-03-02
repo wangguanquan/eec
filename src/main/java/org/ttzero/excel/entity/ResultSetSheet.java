@@ -248,7 +248,7 @@ public class ResultSetSheet extends Sheet {
                     cell.clear();
 
                     Object e;
-                    if (hc.ri > 0) {
+                    if (hc.ri > 0 && !hc.isIgnoreValue()) {
                         switch (hc.sqlType) {
                             case VARCHAR:
                             case LONGVARCHAR:
