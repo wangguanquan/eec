@@ -109,7 +109,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20D;
+    protected double width = 8.38D;
     /**
      * The row number
      */
