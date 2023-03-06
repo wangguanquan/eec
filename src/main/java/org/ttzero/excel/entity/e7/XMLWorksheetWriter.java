@@ -329,7 +329,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Default row height and width
         int fillSpace = 17; // Column width xxx.xx (6byte) + hidden property (11byte)
-        BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
+        BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 15.5D).add(new BigDecimal("0.65"));
         // Overflow column width limit
         if (width.compareTo(new BigDecimal(Const.Limit.COLUMN_WIDTH)) > 0) {
             width = new BigDecimal(Const.Limit.COLUMN_WIDTH);
@@ -1149,7 +1149,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write the sheet format
      *
      * @param fillSpace The number of characters to pad when recalculating the width.
-     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
+     * @param defaultWidth The default cell width, {@code 15.5} will be use if it not be setting.
      * @throws IOException if I/O error occur.
      */
     protected void writeSheetFormat(int fillSpace, String defaultWidth) throws IOException {
@@ -1164,7 +1164,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write the default column info, The specified column width will be overwritten in these method.
      *
      * @param fillSpace The number of characters to pad when recalculating the width.
-     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
+     * @param defaultWidth The default cell width, {@code 15.5} will be use if it not be setting.
      * @throws IOException if I/O error occur.
      */
     protected void writeCols(int fillSpace, String defaultWidth) throws IOException {
