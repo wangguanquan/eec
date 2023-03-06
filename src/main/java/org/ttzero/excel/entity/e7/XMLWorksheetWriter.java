@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -97,8 +98,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Column[] columns;
     protected SharedStrings sst;
     protected Comments comments;
-    protected int startRow;
-    protected long pStart, pEnd; // The position dimension to sheetData
+    protected int startRow, totalRows;
+//    protected long pStart, pEnd; // The position dimension to sheetData
+    /**
+     * If there are any auto-width columns
+     */
+    protected boolean includeAutoWidth;
 
     public XMLWorksheetWriter() { }
 
@@ -123,6 +128,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // write before
         writeBefore();
 
+        // Write body data
+        beforeSheetData(sheet.getNonHeader() == 1);
+
         if (rowBlock != null && rowBlock.hasNext()) {
 //            if (sheet.isAutoSize()) {
 //                do {
@@ -141,20 +149,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //            }
         }
 
-        int total = rowBlock != null ? rowBlock.getTotal() : 0;
+        totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
 
         // write end
-        writeAfter(total);
+        writeAfter(totalRows);
 
         // Write some final info
         sheet.afterSheetAccess(workSheetPath);
 
-        // resize
-//        if (sheet.isAutoSize()) {
-        // close writer before resize
-        close();
-        resizeColumnWidth(sheetPath.toFile(), total);
-//        }
+        // Resize if include auto-width column
+        if (includeAutoWidth) {
+            // close writer before resize
+            close();
+            resizeColumnWidth(sheetPath.toFile(), totalRows);
+        }
     }
 
     /**
@@ -172,6 +180,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // write before
         writeBefore();
+
+        // Write body data
+        beforeSheetData(sheet.getNonHeader() == 1);
 
         if (rowBlock.hasNext()) {
 //            if (sheet.isAutoSize()) {
@@ -195,18 +206,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 //            }
         }
 
+        totalRows = rowBlock.getTotal();
+
         // write end
-        writeAfter(rowBlock.getTotal());
+        writeAfter(totalRows);
 
         // Write some final info
         sheet.afterSheetAccess(workSheetPath);
 
-        // resize
-//        if (sheet.isAutoSize()) {
-        // close writer before resize
-        close();
-        resizeColumnWidth(sheetPath.toFile(), rowBlock.getTotal());
-//        }
+        // Resize if include auto-width column
+        if (includeAutoWidth) {
+            // Close writer before resize
+            close();
+            resizeColumnWidth(sheetPath.toFile(), totalRows);
+        }
     }
 
     protected Path initWriter(Path root) throws IOException {
@@ -327,8 +340,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // cols
         writeCols(fillSpace, defaultWidth);
 
-        // Write body data
-        beforeSheetData(nonHeader);
     }
 
     /**
@@ -865,7 +876,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void resizeColumnWidth(File path, int rows) throws IOException {
         // There has no column to reset width
         if (columns.length <= 0 || rows <= 0) return;
-        String[] widths = new String[columns.length];
+//        String[] widths = new String[columns.length];
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
@@ -873,7 +884,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // If fixed width
             if (k == 2) {
                 double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
-                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+//                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+                hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                 continue;
             }
             double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
@@ -930,78 +942,90 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             if (width > Const.Limit.COLUMN_WIDTH) {
                 width = Const.Limit.COLUMN_WIDTH;
             }
-            widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+//            widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+            hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
-        // resize each column width ...
+
+        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
+        _writer.totalRows = totalRows;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        _writer.bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
+        _writer.writeBefore();
+        _writer.bw.close();
+
+        // Resize each column width ...
         try (SeekableByteChannel channel = Files.newByteChannel(path.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ)) {
-            long[] offset = findHeaderOffset(channel);
-            if (((int) offset[1]) <= 0) return;
-            ByteBuffer buffer = ByteBuffer.allocate((int) offset[1]);
+            ByteBuffer buffer = ByteBuffer.wrap(baos.toByteArray());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            channel.position(offset[0]);
-            int n = channel.read(buffer);
-            if (n < 0) {
-                throw new ExcelWriteException("Write worksheet [" + sheet.getName() + "] error.");
-            }
-            // Ready to read
-            buffer.flip();
-
-            // Rewrite dimension
-            int position = findPosition(buffer, "<dimension ");
-            // Get it
-            if (position > 0) {
-                buffer.put("ref=\"A1".getBytes(StandardCharsets.US_ASCII));
-                int fill = 11; // fill 11 space
-                buffer.put((byte) ':');
-                fill--;
-                char[] col = int2Col(columns[columns.length - 1].getRealColIndex());
-                buffer.put((new String(col) + (rows + 1)).getBytes(StandardCharsets.US_ASCII));
-                fill -= col.length;
-                fill -= stringSize(rows + 1);
-                buffer.put((byte) '"');
-                for (; fill-->0;) buffer.put((byte) 32); // Fill space
-            }
-
-            // Rewrite cols
-            position = findPosition(buffer, "<cols>");
-            if (position > 0) {
-                for (int i = 0; i < columns.length; i++) {
-                    String s = widths[i];
-                    position = findPosition(buffer, "width=\"");
-                    if (position == -1) continue;
-                    buffer.put(s.getBytes(StandardCharsets.US_ASCII));
-                    buffer.put((byte) '"');
-                    int fillSpace = 17;
-                    if (columns[i].isHide()) {
-                        buffer.put(" hidden=\"1\"".getBytes(StandardCharsets.US_ASCII));
-                        fillSpace -= 11;
-                    }
-                    for (int j = fillSpace - s.length(); j-- > 0; ) buffer.put((byte) 32); // Fill space
-                }
-            }
-
-            // Ready to write
-            buffer.position(n);
-            buffer.flip();
-            // Move to header
-            channel.position(offset[0]);
             channel.write(buffer);
+//            long[] offset = findHeaderOffset(channel);
+//            if (((int) offset[1]) <= 0) return;
+//            ByteBuffer buffer = ByteBuffer.allocate((int) offset[1]);
+//            buffer.order(ByteOrder.LITTLE_ENDIAN);
+//            channel.position(offset[0]);
+//            int n = channel.read(buffer);
+//            if (n < 0) {
+//                throw new ExcelWriteException("Write worksheet [" + sheet.getName() + "] error.");
+//            }
+//            // Ready to read
+//            buffer.flip();
+//
+//            // Rewrite dimension
+//            int position = findPosition(buffer, "<dimension ");
+//            // Get it
+//            if (position > 0) {
+//                buffer.put("ref=\"A1".getBytes(StandardCharsets.US_ASCII));
+//                int fill = 11; // fill 11 space
+//                buffer.put((byte) ':');
+//                fill--;
+//                char[] col = int2Col(columns[columns.length - 1].getRealColIndex());
+//                buffer.put((new String(col) + (rows + 1)).getBytes(StandardCharsets.US_ASCII));
+//                fill -= col.length;
+//                fill -= stringSize(rows + 1);
+//                buffer.put((byte) '"');
+//                for (; fill-->0;) buffer.put((byte) 32); // Fill space
+//            }
+//
+//            // Rewrite cols
+//            position = findPosition(buffer, "<cols>");
+//            if (position > 0) {
+//                for (int i = 0; i < columns.length; i++) {
+//                    String s = widths[i];
+//                    position = findPosition(buffer, "width=\"");
+//                    if (position == -1) continue;
+//                    buffer.put(s.getBytes(StandardCharsets.US_ASCII));
+//                    buffer.put((byte) '"');
+//                    int fillSpace = 17;
+//                    if (columns[i].isHide()) {
+//                        buffer.put(" hidden=\"1\"".getBytes(StandardCharsets.US_ASCII));
+//                        fillSpace -= 11;
+//                    }
+//                    for (int j = fillSpace - s.length(); j-- > 0; ) buffer.put((byte) 32); // Fill space
+//                }
+//            }
+//
+//            // Ready to write
+//            buffer.position(n);
+//            buffer.flip();
+//            // Move to header
+//            channel.position(offset[0]);
+//            channel.write(buffer);
         }
     }
 
-    private int findPosition(ByteBuffer buffer, String key) {
-        byte[] values = key.getBytes(StandardCharsets.UTF_8);
-        for (; ; ) {
-            for (; buffer.hasRemaining() && buffer.get() != values[0]; );
-            if (!buffer.hasRemaining()) break;
-            int j = 1;
-            for (; j < values.length && buffer.hasRemaining() && buffer.get() == values[j++]; );
-            if (j == values.length) {
-                return 1;
-            }
-        }
-        return -1;
-    }
+//    private int findPosition(ByteBuffer buffer, String key) {
+//        byte[] values = key.getBytes(StandardCharsets.UTF_8);
+//        for (; ; ) {
+//            for (; buffer.hasRemaining() && buffer.get() != values[0]; );
+//            if (!buffer.hasRemaining()) break;
+//            int j = 1;
+//            for (; j < values.length && buffer.hasRemaining() && buffer.get() == values[j++]; );
+//            if (j == values.length) {
+//                return 1;
+//            }
+//        }
+//        return -1;
+//    }
 
     /**
      * Release resources
@@ -1047,17 +1071,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeDimension() throws IOException {
-        pStart = bw.getWrittenChars();
+//        pStart = bw.getWrittenChars();
         bw.append("<dimension ref=\"A1"); // FIXME Setting the column or row's start-index
-        int n = 11, size = sheet.size(); // fill 11 space
-        if (size > 0) {
+        int n = 11; // fill 11 space
+        if (totalRows > 0) {
             bw.write(':');
             n--;
-            char[] col = int2Col(columns[columns.length - 1].getRealColIndex());
+            Column hc = columns[columns.length - 1];
+            char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            bw.writeInt(size + 1);
-            n -= stringSize(size + 1);
+            int t = totalRows + startRow + hc.subColumnSize();
+            bw.writeInt(t);
+            n -= stringSize(t);
         }
         bw.write('"');
         for (; n-->0;) bw.write(32); // Fill space
@@ -1146,6 +1172,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<cols>");
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
+                // Mark auto-width
+                includeAutoWidth |= col.getAutoWidth() == 1;
                 String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
                 int w = width.length();
                 bw.write("<col customWidth=\"1\" width=\"");
@@ -1173,7 +1201,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void beforeSheetData(boolean nonHeader) throws IOException {
-        pEnd = bw.getWrittenChars();
+        // Start to write sheet data
         bw.write("<sheetData>");
 
         int headerRow = 1;
@@ -1280,53 +1308,53 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         return false;
     }
 
-    protected long[] findHeaderOffset(SeekableByteChannel channel) throws IOException {
-        // The header data is all ascii characters, so the char length is used directly as the byte length
-        if (pEnd > 0) {
-            long start = Math.max(0L, pStart);
-            return new long[] { start, pEnd - start};
-        }
-
-        // From disk
-        long pos = channel.position(), position = 0L;
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(1 << 12);
-            channel.position(0L);
-            out: for (; channel.read(buffer) > 0; ) {
-                buffer.flip();
-                int i = 0, limit = buffer.remaining();
-
-                for (; ;) {
-                    for (; i < limit && buffer.get(i) != '<'; i++) ;
-                    // Overflow
-                    if (i >= limit) {
-                        position += i;
-                        buffer.clear();
-                        continue out;
-                    }
-                    // Incomplete key
-                    else if (i > limit - 10) {
-                        buffer.position(i);
-                        position += buffer.position();
-                        buffer.compact();
-                        continue out;
-                    }
-                    // Find <sheetData
-                    else if (buffer.get(i + 1) == 's' && buffer.get(i + 2) == 'h' && buffer.get(i + 3) == 'e'
-                        && buffer.get(i + 4) == 'e' && buffer.get(i + 5) == 't' && buffer.get(i + 6) == 'D'
-                        && buffer.get(i + 7) == 'a' && buffer.get(i + 8) == 't' && buffer.get(i + 9) == 'a') {
-                        position += i;
-                        break out;
-                    }
-                    i++;
-                }
-            }
-
-            return new long[] { 0, position };
-        } finally {
-            channel.position(pos);
-        }
-    }
+//    protected long[] findHeaderOffset(SeekableByteChannel channel) throws IOException {
+//        // The header data is all ascii characters, so the char length is used directly as the byte length
+//        if (pEnd > 0) {
+//            long start = Math.max(0L, pStart);
+//            return new long[] { start, pEnd - start};
+//        }
+//
+//        // From disk
+//        long pos = channel.position(), position = 0L;
+//        try {
+//            ByteBuffer buffer = ByteBuffer.allocate(1 << 12);
+//            channel.position(0L);
+//            out: for (; channel.read(buffer) > 0; ) {
+//                buffer.flip();
+//                int i = 0, limit = buffer.remaining();
+//
+//                for (; ;) {
+//                    for (; i < limit && buffer.get(i) != '<'; i++) ;
+//                    // Overflow
+//                    if (i >= limit) {
+//                        position += i;
+//                        buffer.clear();
+//                        continue out;
+//                    }
+//                    // Incomplete key
+//                    else if (i > limit - 10) {
+//                        buffer.position(i);
+//                        position += buffer.position();
+//                        buffer.compact();
+//                        continue out;
+//                    }
+//                    // Find <sheetData
+//                    else if (buffer.get(i + 1) == 's' && buffer.get(i + 2) == 'h' && buffer.get(i + 3) == 'e'
+//                        && buffer.get(i + 4) == 'e' && buffer.get(i + 5) == 't' && buffer.get(i + 6) == 'D'
+//                        && buffer.get(i + 7) == 'a' && buffer.get(i + 8) == 't' && buffer.get(i + 9) == 'a') {
+//                        position += i;
+//                        break out;
+//                    }
+//                    i++;
+//                }
+//            }
+//
+//            return new long[] { 0, position };
+//        } finally {
+//            channel.position(pos);
+//        }
+//    }
 
     /**
      * Returns the maximum cell height
