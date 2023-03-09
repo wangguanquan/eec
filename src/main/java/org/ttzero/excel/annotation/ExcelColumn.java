@@ -102,11 +102,11 @@ public @interface ExcelColumn {
 
     /**
      * If {@link Sheet#autoSize()} is {@code true}, The column width take the minimum of `width` and `maxWidth`,
-     * if `autoWidth` is {@code false}, The column width use `maxWidth` directly as the column width
+     * otherwise the column width use `maxWidth` directly as the column width
      *
-     * @return max cell width, less than or equal to 0 means unset
+     * @return max cell width, negative number means unset
      */
-    double maxWidth() default 0.0D;
+    double maxWidth() default -1D;
 
     /**
      * Hidden current column

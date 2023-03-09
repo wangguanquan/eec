@@ -97,7 +97,7 @@ public class Column {
     /**
      * The cell width and height
      */
-    public double width, headerHeight = -1D;
+    public double width = -1D, headerHeight = -1D;
     public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
