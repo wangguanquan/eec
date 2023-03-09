@@ -319,7 +319,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width", author)
                 .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10").fixSize(10))
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10").fixedSize(10))
                 .writeTo(defaultTestPath);
         }
     }

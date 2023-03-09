@@ -374,7 +374,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 if (workbook.isAutoSize()) {
                     sheet.autoSize();
                 } else {
-                    sheet.fixSize();
+                    sheet.fixedSize();
                 }
             }
             if (sheet.getAutoOdd() == -1) {
