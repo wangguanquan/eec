@@ -368,7 +368,7 @@ public class Column {
         this.key = other.key;
         this.name = other.name;
         this.clazz = other.clazz;
-        this.share = other.share;
+//        this.share = other.share;
         this.processor = other.processor;
         this.styleProcessor = other.styleProcessor;
         this.width = other.width;
@@ -797,7 +797,7 @@ public class Column {
             style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
         }
 
-        return style | wrapText;
+        return style | (option & 1);
     }
 
     /**
@@ -959,7 +959,7 @@ public class Column {
      * @return current {@link Column}
      */
     public Column hide() {
-        this.hide = true;
+        this.option |= 1 << 4;
         return this;
     }
 
