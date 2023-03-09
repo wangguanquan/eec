@@ -981,4 +981,45 @@ public class Column {
     public Column getTail() {
         return tail != null ? tail : this;
     }
+
+    /**
+     * Setting auto resize cell's width
+     *
+     * @return current {@link Column}
+     */
+    public Column autoSize() {
+        this.option |= 1 << 1;
+        return this;
+    }
+
+    /**
+     * Setting fix column width
+     *
+     * @return current {@link Column}
+     */
+    public Column fixedSize() {
+        this.option |= 1 << 2;
+        return this;
+    }
+
+    /**
+     * Setting fixed column width
+     *
+     * @param width the column width
+     * @return current {@link Column}
+     */
+    public Column fixedSize(double width) {
+        this.option |= 1 << 2;
+        this.width = width;
+        return this;
+    }
+
+    /**
+     * Returns the re-size setting
+     *
+     * @return 0: not setting 1: auto-size 2:fixed-size
+     */
+    public int getAutoSize() {
+        return option >> 1 & 3;
+    }
 }
