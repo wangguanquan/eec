@@ -85,8 +85,6 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-@TopNS(prefix = {"", "r"}, value = "worksheet"
-        , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet implements Cloneable, Storable {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 

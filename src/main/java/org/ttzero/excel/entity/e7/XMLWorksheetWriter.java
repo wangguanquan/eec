@@ -88,6 +88,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 /**
  * @author guanquan.wang at 2019-04-22 16:31
  */
+@TopNS(prefix = {"", "r"}, value = "worksheet"
+    , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // the storage path
@@ -979,8 +981,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeRootNode() throws IOException {
-        if (sheet.getClass().isAnnotationPresent(TopNS.class)) {
-            TopNS topNS = sheet.getClass().getAnnotation(TopNS.class);
+        if (getClass().isAnnotationPresent(TopNS.class)) {
+            TopNS topNS = getClass().getAnnotation(TopNS.class);
             bw.write('<');
             bw.write(topNS.value());
             String[] prefixs = topNS.prefix(), urls = topNS.uri();
