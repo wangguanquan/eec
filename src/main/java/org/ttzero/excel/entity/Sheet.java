@@ -31,7 +31,6 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
-import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
@@ -272,94 +271,6 @@ public abstract class Sheet implements Cloneable, Storable {
         this.columns = columns;
         this.waterMark = waterMark;
         relManager = new RelManager();
-    }
-
-    /**
-     * Will be deleted soon
-     *
-     * @deprecated use the new {@link org.ttzero.excel.entity.Column}
-     */
-    @Deprecated
-    public static class Column extends org.ttzero.excel.entity.Column {
-        public Column() {
-        }
-
-        public Column(String name, Class<?> clazz) {
-            super(name, clazz);
-        }
-
-        public Column(String name, String key) {
-            super(name, key);
-        }
-
-        public Column(String name, String key, Class<?> clazz) {
-            super(name, key, clazz);
-        }
-
-        public Column(String name, Class<?> clazz, ConversionProcessor processor) {
-            super(name, clazz, processor);
-        }
-
-        public Column(String name, String key, ConversionProcessor processor) {
-            super(name, key, processor);
-        }
-
-        public Column(String name, Class<?> clazz, boolean share) {
-            super(name, clazz, share);
-        }
-
-        public Column(String name, String key, boolean share) {
-            super(name, key, share);
-        }
-
-        public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
-            super(name, clazz, processor, share);
-        }
-
-        public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
-            super(name, key, clazz, processor);
-        }
-
-        public Column(String name, String key, ConversionProcessor processor, boolean share) {
-            super(name, key, processor, share);
-        }
-
-        public Column(String name, Class<?> clazz, int cellStyle) {
-            super(name, clazz, cellStyle);
-        }
-
-        public Column(String name, String key, int cellStyle) {
-            super(name, key, cellStyle);
-        }
-
-        public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
-            super(name, clazz, cellStyle, share);
-        }
-
-        public Column(String name, String key, int cellStyle, boolean share) {
-            super(name, key, cellStyle, share);
-        }
-
-        /**
-         * Setting the cell type
-         *
-         * @param type the cell type
-         * @return the {@link org.ttzero.excel.entity.Column}
-         * @deprecated replace it with the {@link #setNumFmt(String)}.
-         */
-        @Deprecated
-        public org.ttzero.excel.entity.Column setType(int type) {
-            switch (type) {
-                case Const.ColumnType.PARENTAGE:
-                    setNumFmt("0.00%_);[Red]-0.00% ");
-                    break;
-                case Const.ColumnType.RMB:
-                    setNumFmt("¥0.00_);[Red]-¥0.00 ");
-                    break;
-                default:
-            }
-            return this;
-        }
     }
 
     /**
