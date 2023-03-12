@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
+import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
@@ -132,6 +133,10 @@ public class Workbook implements Storable {
      * Force export all attributes
      */
     private int forceExport;
+    /**
+     * A global ContentType attributes
+     */
+    private ContentType contentType;
 
     /**
      * Create a unnamed workbook
@@ -166,6 +171,7 @@ public class Workbook implements Storable {
         this.creator = creator;
         sheets = new Sheet[3]; // Create three worksheet
         i18N = new I18N();
+        contentType = new ContentType();
     }
 
     /**
@@ -999,5 +1005,36 @@ public class Workbook implements Storable {
             init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
+    }
+
+    /**
+     * Add a content-type
+     *
+     * @param type {@link ContentType.Type}
+     * @return current {@link Workbook}
+     */
+    public Workbook addContentType(ContentType.Type type) {
+        contentType.add(type);
+        return this;
+    }
+
+    /**
+     * Add a content-type refer
+     *
+     * @param rel {@link Relationship}
+     * @return current {@link Workbook}
+     */
+    public Workbook addContentTypeRel(Relationship rel) {
+        contentType.addRel(rel);
+        return this;
+    }
+
+    /**
+     * Returns the global ContentType
+     *
+     * @return {@link ContentType}
+     */
+    public ContentType getContentType() {
+        return contentType;
     }
 }

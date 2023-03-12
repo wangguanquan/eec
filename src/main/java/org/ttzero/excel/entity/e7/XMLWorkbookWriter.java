@@ -136,10 +136,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager.add(rel);
     }
 
-    private void writeXML(Path root) throws IOException {
+    private void writeGlobalAttribute(Path root) throws IOException {
 
         // Content type
-        ContentType contentType = new ContentType();
+        ContentType contentType = workbook.getContentType();
         contentType.add(new ContentType.Default(Const.ContentType.RELATIONSHIP, "rels"));
         contentType.add(new ContentType.Default(Const.ContentType.XML, "xml"));
         contentType.add(new ContentType.Override(Const.ContentType.SHAREDSTRING, "/xl/sharedStrings.xml"));
@@ -147,10 +147,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
 
         // Write app
-        writeApp(root, contentType);
+        writeApp(root);
 
         // Write core
-        writeCore(root, contentType);
+        writeCore(root);
 
         Path themeP = root.resolve("theme");
         if (!exists(themeP)) {
@@ -187,9 +187,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
 
         for (int i = 0; i < size; i++) {
-            Sheet sheet;
+            Sheet sheet = workbook.getSheetAt(i);
             contentType.add(new ContentType.Override(Const.ContentType.SHEET
-                , "/xl/worksheets/sheet" + (sheet = workbook.getSheetAt(i)).getId() + Const.Suffix.XML));
+                , "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
             Comments comments = sheet.getComments();
             if (comments != null) {
                 comments.writeTo(root);
@@ -197,8 +197,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                     , "/xl/comments" + sheet.getId() + Const.Suffix.XML));
                 contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
             }
+            // Marker
+            WaterMark wm = sheet.getWaterMark();
+            if (wm != null) {
+                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
+            }
         } // END
-
 
         // write content type
         contentType.writeTo(root.getParent());
@@ -223,7 +227,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    private void writeApp(Path root, ContentType contentType) throws IOException {
+    private void writeApp(Path root) throws IOException {
 
         // docProps
         App app = new App();
@@ -249,11 +253,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         app.setTitlePards(titleParts);
 
         app.writeTo(root.getParent().resolve("docProps/app.xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
-        contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
+        workbook.addContentType(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"))
+            .addContentTypeRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
     }
 
-    private void writeCore(Path root, ContentType contentType) throws IOException {
+    private void writeCore(Path root) throws IOException {
         Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
         if (StringUtil.isEmpty(core.getCreator())) {
             if (workbook.getCreator() != null) {
@@ -267,8 +271,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         if (core.getModified() == null) core.setModified(new Date());
 
         core.writeTo(root.getParent().resolve("docProps/core.xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
-        contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
+        workbook.addContentType(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"))
+            .addContentTypeRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
     }
 
     private void madeMark(Path parent) throws IOException {
@@ -419,7 +423,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
 
             // Write SharedString, Styles and workbook.xml
-            writeXML(xl);
+            writeGlobalAttribute(xl);
             if (workbook.getWaterMark() != null)
                 workbook.getWaterMark().delete() ; // Delete template image
             workbook.what("0003");
