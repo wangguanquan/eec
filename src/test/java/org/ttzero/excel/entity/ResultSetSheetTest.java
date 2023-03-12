@@ -42,7 +42,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("result set", author)
                 .watch(Print::println)
-                .setConnection(con)
                 .addSheet(rs
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)

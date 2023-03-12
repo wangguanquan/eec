@@ -1352,7 +1352,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
                 .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
                 .setSheetWriter(new XMLWorksheetWriter() {
-                    protected int startRow(int rows, int columns) throws IOException {
+                    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
                         // Row number
                         int r = rows + startRow;
                         // logging
@@ -1537,7 +1537,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         protected void writeRow(Row row) throws IOException {
             Cell[] cells = row.getCells();
             int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
 
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i];
@@ -1583,7 +1583,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         protected void writeRowAutoSize(Row row) throws IOException {
             Cell[] cells = row.getCells();
             int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
 
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i];

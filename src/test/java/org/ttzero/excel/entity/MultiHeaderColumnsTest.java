@@ -121,14 +121,13 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testResultSet() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("Multi ResultSet columns 2", author).setAutoSize(true)
-                .setConnection(con)
-                .addSheet("select id, name, age, create_date, update_date from student order by age"
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student order by age"
                     , new Column("通用").setHeaderStyle(532550).addSubColumn(new Column("学号", int.class))
                     , new Column("通用").addSubColumn(new Column("性名", String.class))
                     , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(532550))
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class).setColIndex(1)
-                )
+                ))
                 .writeTo(defaultTestPath);
         }
     }
@@ -136,14 +135,13 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testMultiHeaderAndSpecifyColIndex() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("Multi Header And Specify Col-index", author).setAutoSize(true)
-                .setConnection(con)
-                .addSheet("select id, name, age, create_date, update_date from student limit 10"
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
                     , new Column("通用").addSubColumn(new Column("学号", int.class))
                     , new Column("通用").addSubColumn(new Column("性名", String.class).setColIndex(13))
                     , new Column("通用").addSubColumn(new Column("年龄", int.class).setColIndex(14))
                     , new Column("创建时间", Timestamp.class).setColIndex(15)
                     , new Column("更新", Timestamp.class).setColIndex(16)
-                )
+                ))
                 .writeTo(defaultTestPath);
         }
     }

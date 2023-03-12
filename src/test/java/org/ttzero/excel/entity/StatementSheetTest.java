@@ -62,14 +62,13 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("statement", author)
                 .setAutoSize(autoSize)
-                .setConnection(con)
-                .addSheet("select id, name, age, create_date, update_date from student order by age"
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student order by age"
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
                     , new Column("创建时间", Timestamp.class).setColIndex(0)
                     , new Column("更新", Timestamp.class)
-                )
+                ))
                 .writeTo(defaultTestPath);
         }
     }
@@ -78,8 +77,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor", author)
                 .setAutoSize(autoSize)
-                .setConnection(con)
-                .addSheet("select id, name, age, create_date, update_date from student"
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
@@ -93,7 +91,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         })
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class)
-                )
+                ))
                 .writeTo(defaultTestPath);
         }
     }
@@ -101,10 +99,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
     private void testIntConversion(boolean autoSize) throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement", author)
-                .setConnection(con)
                 .setAutoSize(autoSize)
                 .watch(Print::println)
-                .addSheet("select id, name, age, create_date, update_date from student"
+                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
                     , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
@@ -118,7 +115,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                         })
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class)
-                )
+                ))
                 .writeTo(defaultTestPath);
         }
     }

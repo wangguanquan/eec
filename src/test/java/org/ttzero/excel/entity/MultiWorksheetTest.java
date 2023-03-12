@@ -57,13 +57,12 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
             new Workbook("test multi dataSource worksheet", author)
                 .watch(Print::println)
                 .setAutoSize(true)
-                .setConnection(con)
                 // List<Map>
-                .addSheet("ListMap", ListMapSheetTest.createAllTypeData())
+                .addSheet(new ListMapSheet("ListMap", ListMapSheetTest.createAllTypeData()))
                 // List<Object>
-                .addSheet("ListObject", ListObjectSheetTest.Item.randomTestData())
+                .addSheet(new ListSheet<>("ListObject", ListObjectSheetTest.Item.randomTestData()))
                 // Statement
-                .addSheet("Statement", "select id, name, age from student"
+                .addSheet(new StatementSheet("Statement", con, "select id, name, age from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
                     , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
@@ -75,7 +74,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                             }
                             return style;
                         })
-                )
+                ))
                 // Empty
                 .addSheet(new EmptySheet("Empty"))
                 // ResultSet

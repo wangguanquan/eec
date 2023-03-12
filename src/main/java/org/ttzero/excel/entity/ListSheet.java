@@ -295,10 +295,9 @@ public class ListSheet<T> extends Sheet {
             for (; start < end; rows++, start++) {
                 Row row = rowBlock.next();
                 row.index = rows;
-                row.height = getRowHeight();
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
-                boolean notNull = o != null;
+                boolean isNull = o == null;
                 for (int i = 0; i < len; i++) {
                     // Clear cells
                     Cell cell = cells[i];
@@ -306,26 +305,26 @@ public class ListSheet<T> extends Sheet {
 
                     Object e;
                     EntryColumn column = (EntryColumn) columns[i];
-                    if (column.isIgnoreValue())
+                    /*
+                    The default processing of null values still retains the row style.
+                    If don't want any style and value, you can change it to {@code continue}
+                     */
+                    if (column.isIgnoreValue() || isNull)
                         e = null;
-                    else if (notNull) {
+                    else {
                         if (column.getMethod() != null)
                             e = column.getMethod().invoke(o);
                         else if (column.getField() != null)
                             e = column.getField().get(o);
                         else e = o;
                     }
-                    /*
-                    The default processing of null values still retains the row style.
-                    If don't want any style and value, you can change it to {@code continue}
-                     */
-                    else e = null;
 
                     cellValueAndStyle.reset(rows, cell, e, column);
                     if (hasGlobalStyleProcessor) {
                         cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
                     }
                 }
+                row.height = getRowHeight();
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ExcelWriteException(e);
