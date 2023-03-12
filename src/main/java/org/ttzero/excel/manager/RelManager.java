@@ -54,7 +54,7 @@ public class RelManager implements Serializable {
         return relManager;
     }
 
-    public synchronized void add(Relationship rel) {
+    public synchronized Relationship add(Relationship rel) {
         if (relationships == null) {
             relationships = new ArrayList<>();
         }
@@ -66,6 +66,7 @@ public class RelManager implements Serializable {
             rel.setId("rId" + (relationships.size() + 1));
             relationships.add(rel);
         }
+        return rel;
     }
 
     private int indexOf(String target) {
