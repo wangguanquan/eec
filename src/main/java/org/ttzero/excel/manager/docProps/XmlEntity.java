@@ -25,7 +25,6 @@ import org.ttzero.excel.manager.Attr;
 import org.ttzero.excel.manager.NS;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.ExcelWriteException;
-import org.ttzero.excel.entity.Tuple2;
 import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;

@@ -20,7 +20,6 @@ package org.ttzero.excel.manager.docProps;
 import org.ttzero.excel.manager.Attr;
 import org.ttzero.excel.manager.NS;
 import org.ttzero.excel.manager.TopNS;
-import org.ttzero.excel.entity.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;

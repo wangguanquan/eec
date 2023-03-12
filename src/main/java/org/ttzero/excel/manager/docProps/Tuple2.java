@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.entity;
+package org.ttzero.excel.manager.docProps;
 
 import java.util.Objects;
 
