@@ -85,7 +85,7 @@ public class ResultSetSheet extends Sheet {
      *
      * @param columns the header info
      */
-    public ResultSetSheet(final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(final Column... columns) {
         super(columns);
     }
 
@@ -95,7 +95,7 @@ public class ResultSetSheet extends Sheet {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public ResultSetSheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -106,7 +106,7 @@ public class ResultSetSheet extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ResultSetSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
@@ -136,7 +136,7 @@ public class ResultSetSheet extends Sheet {
      * @param rs      the ResultSet
      * @param columns the header info
      */
-    public ResultSetSheet(ResultSet rs, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(ResultSet rs, final Column... columns) {
         this(null, rs, null, columns);
     }
 
@@ -147,7 +147,7 @@ public class ResultSetSheet extends Sheet {
      * @param rs      the ResultSet
      * @param columns the header info
      */
-    public ResultSetSheet(String name, ResultSet rs, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(String name, ResultSet rs, final Column... columns) {
         this(name, rs, null, columns);
     }
 
@@ -158,7 +158,7 @@ public class ResultSetSheet extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ResultSetSheet(ResultSet rs, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(ResultSet rs, WaterMark waterMark, final Column... columns) {
         this(null, rs, waterMark, columns);
     }
 
@@ -170,7 +170,7 @@ public class ResultSetSheet extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         this.rs = rs;
     }
@@ -296,7 +296,7 @@ public class ResultSetSheet extends Sheet {
      * @return the header information
      */
     @Override
-    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected Column[] getHeaderColumns() {
         if (headerReady) return columns;
         if (rs == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter ResultSet");
@@ -306,7 +306,7 @@ public class ResultSetSheet extends Sheet {
             ResultSetMetaData metaData = rs.getMetaData();
             int count = metaData.getColumnCount();
             if (hasHeaderColumns()) {
-                org.ttzero.excel.entity.Column[] newColumns = new SQLColumn[columns.length];
+                Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
                     SQLColumn column = SQLColumn.of(columns[i]);
                     newColumns[i] = column;
@@ -334,7 +334,7 @@ public class ResultSetSheet extends Sheet {
                 }
                 columns = newColumns;
             } else {
-                columns = new org.ttzero.excel.entity.Column[count];
+                columns = new Column[count];
                 for (; ++i <= count; ) {
                     SQLColumn column = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
@@ -398,7 +398,7 @@ public class ResultSetSheet extends Sheet {
         return clazz;
     }
 
-    public static class SQLColumn extends org.ttzero.excel.entity.Column {
+    public static class SQLColumn extends Column {
         int sqlType, ri; // ResultSet index
 
         public SQLColumn(String name, int sqlType, Class<?> clazz) {
@@ -406,7 +406,7 @@ public class ResultSetSheet extends Sheet {
             this.sqlType = sqlType;
         }
 
-        public SQLColumn(org.ttzero.excel.entity.Column other) {
+        public SQLColumn(Column other) {
             super.from(other);
             if (other instanceof SQLColumn) {
                 SQLColumn o = (SQLColumn) other;
@@ -418,7 +418,7 @@ public class ResultSetSheet extends Sheet {
             }
         }
 
-        public static SQLColumn of(org.ttzero.excel.entity.Column other) {
+        public static SQLColumn of(Column other) {
             return new SQLColumn(other);
         }
     }

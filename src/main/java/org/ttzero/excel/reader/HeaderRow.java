@@ -20,6 +20,7 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.StringUtil;
@@ -236,8 +237,8 @@ public class HeaderRow extends Row {
         // Merge cells
         org.ttzero.excel.entity.Sheet listSheet = new ListSheet<Object>() {
             @Override
-            public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
-                columns = new org.ttzero.excel.entity.Column[list.size()];
+            public Column[] getAndSortHeaderColumns() {
+                columns = new Column[list.size()];
                 list.toArray(columns);
                 headerReady = true;
 
@@ -256,15 +257,15 @@ public class HeaderRow extends Row {
                 return columns;
             }
         };
-        org.ttzero.excel.entity.Column[] columns = listSheet.getAndSortHeaderColumns();
+        Column[] columns = listSheet.getAndSortHeaderColumns();
         @SuppressWarnings("unchecked")
         List<Dimension> mergeCells = (List<Dimension>) listSheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         // Ignore all vertical merged cells
         mergeCells = mergeCells != null && !mergeCells.isEmpty() ? mergeCells.stream().filter(c -> c.firstColumn < c.lastColumn).collect(Collectors.toList()) : null;
         if (mergeCells != null && !mergeCells.isEmpty()) {
             Grid mergedGrid = GridFactory.create(mergeCells);
-            for (org.ttzero.excel.entity.Column c : columns) {
-                org.ttzero.excel.entity.Column[] sub = c.toArray();
+            for (Column c : columns) {
+                Column[] sub = c.toArray();
                 for (int j = sub.length - 1, t; j >= 0; j--) {
                     if (mergedGrid.test(t = sub.length - j, c.realColIndex) && isTopRow(mergeCells, t, c.realColIndex)) {
                         Cell cell = new Cell((short) c.realColIndex);
@@ -278,10 +279,10 @@ public class HeaderRow extends Row {
         }
 
         for (int i = 0, len = columns.length; i < len; i++) {
-            org.ttzero.excel.entity.Column c = columns[i];
+            Column c = columns[i];
             if (c.tail != null) {
                 StringJoiner joiner = new StringJoiner(":");
-                org.ttzero.excel.entity.Column[] sub = c.toArray();
+                Column[] sub = c.toArray();
                 for (int j = sub.length - 1; j >= 0; j--) {
                     if (StringUtil.isNotEmpty(sub[j].getName())) joiner.add(sub[j].getName());
                 }
@@ -729,7 +730,7 @@ public class HeaderRow extends Row {
      * Create column by {@code ExcelColumn} annotation
      *
      * @param anno an java annotation
-     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     * @return {@link Column} or null if annotation is null
      */
     protected ListSheet.EntryColumn createColumnByAnnotation(Annotation anno) {
         ListSheet.EntryColumn column = null;

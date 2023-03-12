@@ -633,8 +633,8 @@ public class ListObjectSheetTest extends WorkbookTest {
         for (int i = 0; i < 35; i++) list.add(i);
         new Workbook().addSheet(new ListSheet<Integer>(list) {
             @Override
-            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)};
+            public Column[] getHeaderColumns() {
+                return new Column[]{new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)};
             }
         }.ignoreHeader().cancelOddStyle()).writeTo(defaultTestPath.resolve("Integer array.xlsx"));
 
@@ -651,8 +651,8 @@ public class ListObjectSheetTest extends WorkbookTest {
         List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
         new Workbook().addSheet(new ListSheet<String>(list) {
             @Override
-            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(String.class) };
+            public Column[] getHeaderColumns() {
+                return new Column[]{ new ListSheet.EntryColumn().setClazz(String.class) };
             }
         }.ignoreHeader()).writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
 

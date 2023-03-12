@@ -122,7 +122,7 @@ public class ListSheet<T> extends Sheet {
      *
      * @param columns the header info
      */
-    public ListSheet(final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(final Column... columns) {
         super(columns);
     }
 
@@ -132,7 +132,7 @@ public class ListSheet<T> extends Sheet {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public ListSheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -143,7 +143,7 @@ public class ListSheet<T> extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
@@ -174,7 +174,7 @@ public class ListSheet<T> extends Sheet {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListSheet(List<T> data, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(List<T> data, final Column... columns) {
         this(null, data, columns);
     }
 
@@ -185,7 +185,7 @@ public class ListSheet<T> extends Sheet {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListSheet(String name, List<T> data, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(String name, List<T> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
@@ -196,7 +196,7 @@ public class ListSheet<T> extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListSheet(List<T> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
@@ -208,7 +208,7 @@ public class ListSheet<T> extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListSheet(String name, List<T> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         setData(data);
     }
@@ -437,7 +437,7 @@ public class ListSheet<T> extends Sheet {
 
         if (!hasHeaderColumns()) {
             // Get ExcelColumn annotation method
-            List<org.ttzero.excel.entity.Column> list = new ArrayList<>(declaredFields.length);
+            List<Column> list = new ArrayList<>(declaredFields.length);
 
             for (int i = 0; i < declaredFields.length; i++) {
                 Field field = declaredFields[i];
@@ -503,7 +503,7 @@ public class ListSheet<T> extends Sheet {
             }
 
             // Attach some custom column
-            List<org.ttzero.excel.entity.Column> attachList = attachOtherColumn(tmp, clazz);
+            List<Column> attachList = attachOtherColumn(tmp, clazz);
             if (attachList != null) list.addAll(attachList);
 
             // No column to write
@@ -515,7 +515,7 @@ public class ListSheet<T> extends Sheet {
                 else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
                 return 0;
             }
-            columns = new org.ttzero.excel.entity.Column[list.size()];
+            columns = new Column[list.size()];
             list.toArray(columns);
         } else {
             Method[] others = filterOthersMethodsCanExport(tmp, clazz);
@@ -528,7 +528,7 @@ public class ListSheet<T> extends Sheet {
                 otherMap.put(m.getName(), m);
             }
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = new EntryColumn(columns[i]);
+                Column hc = new EntryColumn(columns[i]);
                 columns[i] = hc;
                 if (hc.tail != null) {
                     hc = hc.tail;
@@ -630,7 +630,7 @@ public class ListSheet<T> extends Sheet {
      * Create column by {@code ExcelColumn} annotation
      *
      * @param ec {@code ExcelColumn} annotation
-     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     * @return {@link Column} or null if annotation is null
      */
     protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
         if (ec == null) return null;
@@ -659,7 +659,7 @@ public class ListSheet<T> extends Sheet {
      * @param sub the defined field
      * @param column the header column
      */
-    protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, org.ttzero.excel.entity.Column column) {
+    protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderStyle hs = null;
         if (main != null) {
             hs = main.getAnnotation(HeaderStyle.class);
@@ -679,7 +679,7 @@ public class ListSheet<T> extends Sheet {
      * @param sub the defined field
      * @param column the header column
      */
-    protected void buildHeaderComment(AccessibleObject main, AccessibleObject sub, org.ttzero.excel.entity.Column column) {
+    protected void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderComment comment = null;
         if (main != null) {
             comment = main.getAnnotation(HeaderComment.class);
@@ -711,7 +711,7 @@ public class ListSheet<T> extends Sheet {
         if (headerStyle != null) {
             style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
         }
-        for (org.ttzero.excel.entity.Column column : columns) {
+        for (Column column : columns) {
             if (style > 0 && column.getHeaderStyleIndex() == -1)
                 column.setHeaderStyle(style);
         }
@@ -759,15 +759,15 @@ public class ListSheet<T> extends Sheet {
      *
      * @param existsMethodMapper all exists method collection by default
      * @param clazz Class of &lt;T&gt;
-     * @return list of {@link org.ttzero.excel.entity.Column} or null if no more columns to attach
+     * @return list of {@link Column} or null if no more columns to attach
      */
-    protected List<org.ttzero.excel.entity.Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
+    protected List<Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
         // Collect the method which has ExcelColumn annotation
         Method[] readMethods = filterOthersMethodsCanExport(existsMethodMapper, clazz);
 
         if (readMethods != null) {
             Set<Method> existsMethods = new HashSet<>(existsMethodMapper.values());
-            List<org.ttzero.excel.entity.Column> list = new ArrayList<>();
+            List<Column> list = new ArrayList<>();
             for (Method method : readMethods) {
                 // Exclusions exists
                 if (existsMethods.contains(method)) continue;
@@ -799,12 +799,12 @@ public class ListSheet<T> extends Sheet {
      * @return array of column
      */
     @Override
-    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected Column[] getHeaderColumns() {
         if (!headerReady) {
             // create header columns
             int size = init();
             if (size <= 0) {
-                columns = new org.ttzero.excel.entity.Column[0];
+                columns = new Column[0];
             }
         }
         return columns;
@@ -953,7 +953,7 @@ public class ListSheet<T> extends Sheet {
         return readMethods;
     }
 
-    public static class EntryColumn extends org.ttzero.excel.entity.Column {
+    public static class EntryColumn extends Column {
         public Method method;
         public Field field;
 
@@ -1020,7 +1020,7 @@ public class ListSheet<T> extends Sheet {
             super(name, key, cellStyle, share);
         }
 
-        public EntryColumn(org.ttzero.excel.entity.Column other) {
+        public EntryColumn(Column other) {
             super.from(other);
             if (other instanceof EntryColumn) {
                 EntryColumn o = (EntryColumn) other;
