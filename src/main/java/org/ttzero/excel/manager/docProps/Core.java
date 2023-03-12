@@ -17,9 +17,9 @@
 package org.ttzero.excel.manager.docProps;
 
 
-import org.ttzero.excel.annotation.Attr;
-import org.ttzero.excel.annotation.NS;
-import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.manager.Attr;
+import org.ttzero.excel.manager.NS;
+import org.ttzero.excel.manager.TopNS;
 
 import java.util.Date;
 
