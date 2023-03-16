@@ -26,7 +26,7 @@ public class Verticals {
         , BOTH   = 3 << Styles.INDEX_VERTICAL // Vertical Justification
         ;
 
-    private static final String[] _names = {"center", "bottom", "top", "both"};
+    public static final String[] _names = {"center", "bottom", "top", "both"};
 
     public static String of(int n) {
         return _names[n];

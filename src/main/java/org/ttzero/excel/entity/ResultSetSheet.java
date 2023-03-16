@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.StringUtil;
 
@@ -58,7 +60,10 @@ import static java.sql.Types.VARCHAR;
  */
 public class ResultSetSheet extends Sheet {
     protected ResultSet rs;
-
+    /**
+     * The row styleProcessor
+     */
+    private StyleProcessor<ResultSet> styleProcessor;
     /**
      * Constructor worksheet
      */
@@ -73,6 +78,15 @@ public class ResultSetSheet extends Sheet {
      */
     public ResultSetSheet(String name) {
         super(name);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param columns the header info
+     */
+    public ResultSetSheet(final org.ttzero.excel.entity.Column... columns) {
+        super(columns);
     }
 
     /**
@@ -173,6 +187,30 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
+     * Setting a row style processor
+     *
+     * @param styleProcessor a row style processor
+     * @return current worksheet
+     */
+    public Sheet setStyleProcessor(StyleProcessor<ResultSet> styleProcessor) {
+        this.styleProcessor = styleProcessor;
+        putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
+        return this;
+    }
+
+    /**
+     * Returns the row style processor
+     *
+     * @return {@link StyleProcessor}
+     */
+    public StyleProcessor<ResultSet> getStyleProcessor() {
+        if (styleProcessor != null) return styleProcessor;
+        @SuppressWarnings("unchecked")
+        StyleProcessor<ResultSet> fromExtProp = (StyleProcessor<ResultSet>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        return this.styleProcessor = fromExtProp;
+    }
+
+    /**
      * Release resources
      *
      * @throws IOException if I/O error occur
@@ -195,11 +233,12 @@ public class ResultSetSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len = columns.length, n = 0, limit = getRowLimit();
-
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         try {
             for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
                 Row row = rowBlock.next();
                 row.index = rows;
+                row.height = getRowHeight();
                 Cell[] cells = row.realloc(len);
                 for (int i = 1; i <= len; i++) {
                     SQLColumn hc = (SQLColumn) columns[i - 1];
@@ -209,28 +248,33 @@ public class ResultSetSheet extends Sheet {
                     cell.clear();
 
                     Object e;
-                    switch (hc.sqlType) {
-                        case VARCHAR:
-                        case LONGVARCHAR:
-                        case NULL:        e = rs.getString(i);     break;
-                        case INTEGER:
-                        case TINYINT:
-                        case SMALLINT:
-                        case BIT:
-                        case CHAR:        e = rs.getInt(i);        break;
-                        case DATE:        e = rs.getDate(i);       break;
-                        case TIMESTAMP:   e = rs.getTimestamp(i);  break;
-                        case NUMERIC:
-                        case DECIMAL:     e = rs.getBigDecimal(i); break;
-                        case BIGINT:      e = rs.getLong(i);       break;
-                        case REAL:
-                        case FLOAT:
-                        case DOUBLE:      e = rs.getDouble(i);     break;
-                        case TIME:        e = rs.getTime(i);       break;
-                        default:          e = rs.getObject(i);     break;
-                    }
+                    if (hc.ri > 0) {
+                        switch (hc.sqlType) {
+                            case VARCHAR:
+                            case LONGVARCHAR:
+                            case NULL:           e = rs.getString(hc.ri);      break;
+                            case INTEGER:
+                            case TINYINT:
+                            case SMALLINT:
+                            case BIT:
+                            case CHAR:            e = rs.getInt(hc.ri);        break;
+                            case DATE:            e = rs.getDate(hc.ri);       break;
+                            case TIMESTAMP:       e = rs.getTimestamp(hc.ri);  break;
+                            case NUMERIC:
+                            case DECIMAL:         e = rs.getBigDecimal(hc.ri); break;
+                            case BIGINT:          e = rs.getLong(hc.ri);       break;
+                            case REAL:
+                            case FLOAT:
+                            case DOUBLE:          e = rs.getDouble(hc.ri);     break;
+                            case TIME:            e = rs.getTime(hc.ri);       break;
+                            default:              e = rs.getObject(hc.ri);     break;
+                        }
+                    } else e = null;
 
                     cellValueAndStyle.reset(rows, cell, e, hc);
+                    if (hasGlobalStyleProcessor) {
+                        cellValueAndStyle.setStyleDesign(rs , cell, hc, getStyleProcessor());
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -260,13 +304,24 @@ public class ResultSetSheet extends Sheet {
         int i = 0;
         try {
             ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
             if (hasHeaderColumns()) {
                 org.ttzero.excel.entity.Column[] newColumns = new SQLColumn[columns.length];
                 for (; i < columns.length; i++) {
                     SQLColumn column = SQLColumn.of(columns[i]);
                     newColumns[i] = column;
-                    if (StringUtil.isEmpty(column.getName())) {
+                    if (column.tail != null) column = (SQLColumn) column.tail;
+                    if (i + 1 > count) {
+                        LOGGER.warn("Column [{}] cannot be mapped.", columns[i].getName());
+                        continue;
+                    }
+                    if (StringUtil.isEmpty(column.getName()))
                         column.setName(metaData.getColumnLabel(i + 1));
+                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i + 1;
+
+                    if (column.ri < 0) {
+                        LOGGER.warn("Column [{}] cannot be mapped.", columns[i].getName());
+                        continue;
                     }
                     // FIXME maybe do not reset the types
                     column.sqlType = metaData.getColumnType(i + 1);
@@ -279,11 +334,12 @@ public class ResultSetSheet extends Sheet {
                 }
                 columns = newColumns;
             } else {
-                int count = metaData.getColumnCount();
                 columns = new org.ttzero.excel.entity.Column[count];
                 for (; ++i <= count; ) {
-                    columns[i - 1] = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
+                    SQLColumn column = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
+                    column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i;
+                    columns[i - 1] = column;
                 }
             }
         } catch (SQLException e) {
@@ -299,6 +355,15 @@ public class ResultSetSheet extends Sheet {
             }
         }
         return columns;
+    }
+
+    protected int findByKey(ResultSetMetaData metaData, String key) throws SQLException {
+        for (int i = 1, len = metaData.getColumnCount(); i <= len; i++) {
+            if (key.equals(metaData.getColumnLabel(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -333,32 +398,28 @@ public class ResultSetSheet extends Sheet {
         return clazz;
     }
 
-    private static class SQLColumn extends org.ttzero.excel.entity.Column {
-        int sqlType;
+    public static class SQLColumn extends org.ttzero.excel.entity.Column {
+        int sqlType, ri; // ResultSet index
 
         public SQLColumn(String name, int sqlType, Class<?> clazz) {
             super(name, clazz);
             this.sqlType = sqlType;
         }
 
+        public SQLColumn(org.ttzero.excel.entity.Column other) {
+            super.from(other);
+            if (other instanceof SQLColumn) {
+                SQLColumn o = (SQLColumn) other;
+                this.sqlType = o.sqlType;
+                this.ri = o.ri;
+            }
+            if (other.next != null) {
+                addSubColumn(new SQLColumn(other.next));
+            }
+        }
+
         public static SQLColumn of(org.ttzero.excel.entity.Column other) {
-            SQLColumn self = new SQLColumn(other.name, 0, other.clazz);
-            self.key = other.key;
-            self.name = other.name;
-            self.clazz = other.clazz;
-            self.share = other.share;
-            self.processor = other.processor;
-            self.styleProcessor = other.styleProcessor;
-            self.cellStyle = other.cellStyle;
-            self.width = other.width;
-            self.o = other.o;
-            self.styles = other.styles;
-            self.headerComment = other.headerComment;
-            self.cellComment = other.cellComment;
-            self.numFmt = other.numFmt;
-            self.ignoreValue = other.ignoreValue;
-            self.wrapText = other.wrapText;
-            return self;
+            return new SQLColumn(other);
         }
     }
 }

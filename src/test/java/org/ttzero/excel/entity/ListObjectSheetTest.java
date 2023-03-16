@@ -20,17 +20,21 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.beans.IntrospectionException;
@@ -48,11 +52,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.Print.println;
+import static org.ttzero.excel.reader.Cell.BLANK;
+import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.CHARACTER;
+import static org.ttzero.excel.reader.Cell.DATE;
+import static org.ttzero.excel.reader.Cell.DATETIME;
+import static org.ttzero.excel.reader.Cell.DECIMAL;
+import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.LONG;
+import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.SST;
+import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -299,7 +317,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testArray() throws IOException {
-        new Workbook()
+        new Workbook("ListSheet Array as List")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
@@ -307,7 +325,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testSingleList() throws IOException {
-        new Workbook()
+        new Workbook("ListSheet Single List")
             .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
@@ -317,25 +335,24 @@ public class ListObjectSheetTest extends WorkbookTest {
     public static StyleProcessor sp = (o, style, sst) -> {
         if ((int)o < 60) {
             style = Styles.clearFill(style)
-                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                | sst.addFill(new Fill(PatternType.solid,Color.green, Color.blue));
         }
         return style;
     };
 
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
-    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不及格" : n;
+    public static ConversionProcessor conversion = n -> (int) n < 60 ? "不合格" : n;
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", "guanquan.wang")
+        new Workbook("2021小五班期未考试成绩")
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                    , new Column("学号", "id")
-                    , new Column("姓名", "name")
-                    , new Column("成绩", "score", conversion)
-                    .setStyleProcessor(sp)
-                )
-            )
-            .writeTo(defaultTestPath);
+                    , new Column("学号", "id", int.class)
+                    , new Column("姓名", "name", String.class)
+                    , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
+                ).setStyleProcessor((o, style, sst) ->
+                    o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+            ).writeTo(defaultTestPath);
     }
 
     @Test public void testNullValue() throws IOException {
@@ -521,7 +538,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     // #132
     @Test public void testEmptyList() throws IOException {
-        new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
+        new Workbook("ListObject empty list").addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
     }
     
     @Test public void testNoForceExport() throws IOException {
@@ -609,39 +626,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         workbook.writeTo(defaultTestPath);
     }
 
-    @Test public void testOrderColumn() throws IOException {
-        new Workbook(("Order column")).addSheet(new ListSheet<>(OrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
 
-    @Test public void testSameOrderColumn() throws IOException {
-        new Workbook(("Same order column")).addSheet(new ListSheet<>(SameOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testFractureOrderColumn() throws IOException {
-        new Workbook(("Fracture order column")).addSheet(new ListSheet<>(FractureOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testLargeOrderColumn() throws IOException {
-        new Workbook(("Large order column")).addSheet(new ListSheet<>(LargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testOverLargeOrderColumn() throws IOException {
-        try {
-            new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-            assert false;
-        } catch (TooManyColumnsException e) {
-            assert true;
-        }
-    }
-
-    @Test public void testOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Order column 2")
-            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                , new Column("学号", "id").setColIndex(3)
-                , new Column("姓名", "name")
-                , new Column("成绩", "score").setColIndex(5) // un-declare field
-            )).writeTo(defaultTestPath);
-    }
 
     @Test public void testBasicType() throws IOException {
         List<Integer> list = new ArrayList<>();
@@ -682,12 +667,50 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void test264() throws IOException {
+        Column[] columns = {new Column("ID", "id"), new Column("NAME", "name")};
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264.xlsx"));
+
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264-1.xlsx"));
+
+        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
+            .writeTo(defaultTestPath.resolve("Issue 264-2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-1.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-2.xlsx"))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            if (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert "ID".equals(row.getString(0));
+                assert "NAME".equals(row.getString(1));
+            }
+        }
+    }
+
+    @Test public void testNullInList() throws IOException {
+        List<Item> list = Item.randomTestData(10);
+        list.add(0, null);
+        list.add(3, null);
+        list.add(null);
+        new Workbook("Null in list").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+    }
+
     public static class Item {
         @ExcelColumn
         private int id;
         @ExcelColumn(wrapText = true)
         private String name;
-
+        public Item() { }
         public Item(int id, String name) {
             this.id = id;
             this.name = name;
@@ -700,18 +723,21 @@ public class ListObjectSheetTest extends WorkbookTest {
         public String getName() {
             return name;
         }
-
         public static List<Item> randomTestData(int n) {
+            return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
+        }
+
+        public static List<Item> randomTestData(int n, Supplier<Item> supplier) {
             List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new Item(i, getRandomString()));
+                list.add(supplier.get());
             }
             return list;
         }
 
         public static List<Item> randomTestData() {
             int n = random.nextInt(100) + 1;
-            return randomTestData(n);
+            return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
         }
     }
 
@@ -747,10 +773,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         @ExcelColumn
         private LocalTime ltv;
 
-        public static List<AllType> randomTestData(int size) {
+        public static List<AllType> randomTestData(int size, Supplier<AllType> sup) {
             List<AllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                AllType o = new AllType();
+                AllType o = sup.get();
                 o.bv = random.nextInt(10) == 5;
                 o.cv = charArray[random.nextInt(charArray.length)];
                 o.sv = (short) (random.nextInt() & 0xFFFF);
@@ -772,8 +798,12 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
 
         public static List<AllType> randomTestData() {
+            return randomTestData(AllType::new);
+        }
+
+        public static List<AllType> randomTestData(Supplier<AllType> sup) {
             int size = random.nextInt(100) + 1;
-            return randomTestData(size);
+            return randomTestData(size, sup);
         }
 
         public boolean isBv() {
@@ -904,9 +934,6 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    /**
-     * Annotation Object
-     */
     public static class Student {
         @IgnoreExport
         private int id;
@@ -949,8 +976,8 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
-            for (int i = pageNo * limit, n = i + limit; i < n; i++) {
-                Student e = new Student(i, getRandomString(), random.nextInt(50) + 50);
+            for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
+                Student e = new Student(i, (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;
@@ -1298,214 +1325,310 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    public static class OrderEntry {
-        @ExcelColumn(colIndex = 0)
-        private String s;
-        @ExcelColumn( colIndex = 1)
-        private Date date;
-        @ExcelColumn(colIndex = 2)
-        private Double d;
-        @ExcelColumn(colIndex = 3)
-        private String s2 = "a";
-        @ExcelColumn(colIndex = 4)
-        private String s3 = "b";
-        @ExcelColumn(colIndex = 5)
-        private String s4 = "c";
+    public static class Template {
+        @ExcelColumn(maxWidth = 12.0D, wrapText = true)
+        String v1;
+        @ExcelColumn(maxWidth = 20.0, wrapText = true)
+        String v2;
+        @ExcelColumn(maxWidth = 25.0D, wrapText = true)
+        String v3;
 
-        public OrderEntry() {}
-        public OrderEntry(String s, Date date, Double d) {
-            this.s = s;
-            this.date = date;
-            this.d = d;
+        static Template of(String v1, String v2, String v3) {
+            Template v = new Template();
+            v.v1 = v1;
+            v.v2 = v2;
+            v.v3 = v3;
+            return v;
         }
+    }
 
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
+    @Test public void testCustomerRowHeight() throws IOException {
+        List<Template> list = new ArrayList<>();
+        list.add(Template.of("备注说明\r\n第二行\r\n第三行\r\n第四行", "岗位名称", "岁位"));
+        list.add(Template.of("字段名称", "*岗位名称", "岗位描述"));
+        list.add(Template.of("示例", "生产统计员", "按照产品规格、价格、工序、员工、车间等不同对象和要求进行统计数据资料分析"));
+
+        new Workbook("Customer row height").addSheet(
+            new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
+                .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
+                .setSheetWriter(new XMLWorksheetWriter() {
+                    protected int startRow(int rows, int columns) throws IOException {
+                        // Row number
+                        int r = rows + startRow;
+                        // logging
+                        if (r % 1_0000 == 0) {
+                            sheet.what("0014", String.valueOf(r));
+                        }
+
+                        bw.write("<row r=\"");
+                        bw.writeInt(r);
+                        // default data row height 16.5
+                        bw.write("\" spans=\"1:");
+                        bw.writeInt(columns);
+                        bw.write("\" ht=\"62.25\" customHeight=\"1\">");
+                        return r;
+                    }
+                })
+        ).writeTo(defaultTestPath);
+    }
+
+    public static class TemplateStyleProcessor implements StyleProcessor<Template> {
+        String k;
+        int c = 0;
+        @Override
+        public int build(Template o, int style, Styles sst) {
+            if (!o.v1.equals(k)) {
+                k = o.v1;
+                c = 0;
+            }
+            switch (o.v1) {
+                case "备注说明":
+                    if (c > 0)
+                        style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, new Color(188, 219, 162)));
+                    break;
+                case "字段名称":
+                    Font font = sst.getFont(style);
+                    style = Styles.clearFont(style) | sst.addFont(font.clone().bold());
+                    if (c > 0)
+                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    break;
+                case "示例":
+                    if (c == 1)
+                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    break;
+            }
+            c++;
+            return style;
+        }
+    }
+
+
+    @Test public void testTileWriter() throws IOException {
+        List<TileEntity> data = TileEntity.randomTestData();
+        new Workbook("Dynamic title").cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
+    }
+
+    public static class TileEntity {
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "差异", maxWidth = 8.6D)
+        private String diff;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "序号", maxWidth = 6.8D)
+        private Integer no;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "商品", maxWidth = 12.0D)
+        private String product;
+        @ExcelColumn("{date} 拣货单")
+        @ExcelColumn(value = "数量", maxWidth = 6.8D)
+        private Integer num;
+
+        public static List<TileEntity> randomTestData() {
+            int n = 23;
+            List<TileEntity> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
-                list.add(new OrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
+                TileEntity e = new TileEntity();
+                e.no = i + 1;
+                e.product = getRandomString(10);
+                e.num = random.nextInt(20) + 1;
+                list.add(e);
             }
             return list;
         }
+    }
 
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
+    /**
+     * 自定义平铺WorksheetWriter
+     */
+    public static class TileXMLWorksheetWriter extends XMLWorksheetWriter {
+        private int tile; // 平铺的数量，也就是每行重复输出多少条数据
+        private String date; // 可忽略，仅仅是表头上的日期
+
+        public TileXMLWorksheetWriter(int tile) {
+            this.tile = tile;
         }
 
-        public String getS() {
-            return s;
+        public TileXMLWorksheetWriter(int tile, String date) {
+            this.tile = tile;
+            this.date = date;
         }
 
-        public Date getDate() {
+        public int getTile() {
+            return tile;
+        }
+
+        public void setTile(int tile) {
+            this.tile = tile;
+        }
+
+        public String getDate() {
             return date;
         }
 
-        public Double getD() {
-            return d;
-        }
-
-        public String getS2() {
-            return s2;
-        }
-
-        public String getS3() {
-            return s3;
-        }
-
-        public String getS4() {
-            return s4;
-        }
-    }
-
-    public static class SameOrderEntry extends OrderEntry {
-        public SameOrderEntry() {}
-        public SameOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
+        public void setDate(String date) {
+            this.date = date;
         }
 
         @Override
-        @ExcelColumn(colIndex = 5)
-        public Double getD() {
-            return super.getD();
+        protected void writeBefore() throws IOException {
+            // The header columns
+            columns = sheet.getAndSortHeaderColumns();
+            // Give new columns
+            tileColumns();
+
+            boolean nonHeader = sheet.getNonHeader() == 1;
+
+            bw.write(Const.EXCEL_XML_DECLARATION);
+            // Declaration
+            bw.newLine();
+            // Root node
+            writeRootNode();
+
+            // Dimension
+            writeDimension();
+
+            // SheetViews default value
+            writeSheetViews();
+
+            // Default row height and width
+            int fillSpace = 6;
+            BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
+            String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+            writeSheetFormat(fillSpace, defaultWidth);
+
+            // cols
+            writeCols(fillSpace, defaultWidth);
+
+            // Write body data
+            beforeSheetData(nonHeader);
         }
 
-        @Override
-        @ExcelColumn(colIndex = 5)
-        public String getS2() {
-            return super.getS2();
-        }
+        protected void tileColumns() {
+            if (tile == 1) return;
 
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new SameOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
+            int x = columns.length, y = x * tile, t = columns[columns.length - 1].getRealColIndex();
+            // Bound check
+            if (y > Const.Limit.MAX_COLUMNS_ON_SHEET)
+                throw new TooManyColumnsException(y, Const.Limit.MAX_COLUMNS_ON_SHEET);
+
+            Column[] _columns = new Column[y];
+            for (int i = 0; i < y; i++) {
+                // 第一个对象的表头不需要复制
+                Column col = i < x ? columns[i] : new Column(columns[i % x]).addSubColumn(new Column());
+                col.realColIndex = columns[i % x].realColIndex + t * (i / x);
+                _columns[i] = col;
+
+                // 替换拣货单上的日期
+                Column _col = col;
+                do {
+                    if (StringUtil.isNotEmpty(_col.getName()) && _col.getName().contains("{date}"))
+                        _col.setName(_col.getName().replace("{date}", date));
+                }
+                while ((_col = _col.next) != null);
             }
-            return list;
-        }
 
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
+            this.columns = _columns;
 
-    public static class FractureOrderEntry extends OrderEntry {
-        public FractureOrderEntry() {}
-        public FractureOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
+            // FIXME 这里强行指定合并替换掉原本的头
+            List<Dimension> mergeCells = Collections.singletonList(new Dimension(1, (short) 1, 1, (short) y));
+            sheet.putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
         }
 
         @Override
-        @ExcelColumn
-        public String getS() {
-            return super.getS();
-        }
+        protected void writeRow(Row row) throws IOException {
+            Cell[] cells = row.getCells();
+            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
 
-        @Override
-        @ExcelColumn
-        public Date getDate() {
-            return super.getDate();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 2)
-        public Double getD() {
-            return super.getD();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 0)
-        public String getS2() {
-            return super.getS2();
-        }
-
-        @Override
-        @ExcelColumn
-        public String getS3() {
-            return super.getS3();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 4)
-        public String getS4() {
-            return super.getS4();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new FractureOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
+            for (int i = 0; i < len; i++) {
+                Cell cell = cells[i];
+                int xf = cell.xf, col = i + c * y;
+                switch (cell.t) {
+                    case INLINESTR:
+                    case SST:
+                        writeString(cell.sv, r, col, xf);
+                        break;
+                    case NUMERIC:
+                        writeNumeric(cell.nv, r, col, xf);
+                        break;
+                    case LONG:
+                        writeNumeric(cell.lv, r, col, xf);
+                        break;
+                    case DATE:
+                    case DATETIME:
+                    case DOUBLE:
+                    case TIME:
+                        writeDouble(cell.dv, r, col, xf);
+                        break;
+                    case BOOL:
+                        writeBool(cell.bv, r, col, xf);
+                        break;
+                    case DECIMAL:
+                        writeDecimal(cell.mv, r, col, xf);
+                        break;
+                    case CHARACTER:
+                        writeChar(cell.cv, r, col, xf);
+                        break;
+                    case BLANK:
+                        writeNull(r, col, xf);
+                        break;
+                    default:
+                }
             }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
-
-    public static class LargeOrderEntry extends OrderEntry {
-        public LargeOrderEntry() {}
-        public LargeOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
+            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
+            if (y == tile - 1)
+                bw.write("</row>");
         }
 
         @Override
-        @ExcelColumn(colIndex = 1)
-        public String getS() {
-            return super.getS();
-        }
+        protected void writeRowAutoSize(Row row) throws IOException {
+            Cell[] cells = row.getCells();
+            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
 
-        @Override
-        @ExcelColumn(colIndex = Const.Limit.MAX_COLUMNS_ON_SHEET - 1)
-        public Date getDate() {
-            return super.getDate();
-        }
-
-        @Override
-        @ExcelColumn(colIndex = 189)
-        public String getS2() {
-            return super.getS2();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new LargeOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
+            for (int i = 0; i < len; i++) {
+                Cell cell = cells[i];
+                int xf = cell.xf, col = i + c * y;
+                switch (cell.t) {
+                    case INLINESTR:
+                    case SST:
+                        writeStringAutoSize(cell.sv, r, col, xf);
+                        break;
+                    case NUMERIC:
+                        writeNumericAutoSize(cell.nv, r, col, xf);
+                        break;
+                    case LONG:
+                        writeNumericAutoSize(cell.lv, r, col, xf);
+                        break;
+                    case DATE:
+                    case DATETIME:
+                    case DOUBLE:
+                    case TIME:
+                        writeDoubleAutoSize(cell.dv, r, col, xf);
+                        break;
+                    case BOOL:
+                        writeBool(cell.bv, r, col, xf);
+                        break;
+                    case DECIMAL:
+                        writeDecimalAutoSize(cell.mv, r, col, xf);
+                        break;
+                    case CHARACTER:
+                        writeChar(cell.cv, r, col, xf);
+                        break;
+                    case BLANK:
+                        writeNull(r, col, xf);
+                        break;
+                    default:
+                }
             }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
-        }
-    }
-
-    public static class OverLargeOrderEntry extends OrderEntry {
-        public OverLargeOrderEntry() {}
-        public OverLargeOrderEntry(String s, Date date, Double d) {
-            super(s, date, d);
+            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
+            if (y == tile - 1)
+                bw.write("</row>");
         }
 
         @Override
-        @ExcelColumn(colIndex = 16_384)
-        public String getS() {
-            return super.getS();
-        }
-
-        public static List<OrderEntry> randomTestData(int n) {
-            List<OrderEntry> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                list.add(new OverLargeOrderEntry(getRandomString(), new Timestamp(System.currentTimeMillis() - random.nextInt(9999999)), (double) i));
-            }
-            return list;
-        }
-
-        public static List<OrderEntry> randomTestData() {
-            int n = random.nextInt(100) + 1;
-            return randomTestData(n);
+        protected void writeAfter(int total) throws IOException {
+            if (total > 0 && (total - 1) % tile < tile - 1) bw.write("</row>");
+            super.writeAfter(total);
         }
     }
 }

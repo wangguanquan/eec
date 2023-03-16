@@ -24,6 +24,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 
@@ -88,16 +89,16 @@ public class Column {
     /**
      * The style index of cell, -1 if not be setting
      */
-    private int cellStyleIndex = -1;
+    protected int cellStyleIndex = -1;
     /**
      * The style index of header, -1 if not be setting
      */
-    private int headerStyleIndex = -1;
+    protected int headerStyleIndex = -1;
     /**
-     * The cell width
+     * The cell width and height
      */
-    public double width;
-    public int o;
+    public double width, headerHeight = -1D;
+    public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
     /**
@@ -116,11 +117,55 @@ public class Column {
      * Specify the column index
      */
     public int colIndex = -1;
+    /**
+     * The previous Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column prev;
+    /**
+     * The next Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column next;
+    /**
+     * The tail Column point
+     *
+     * Support multi header columns
+     *
+     * @since 0.5.1
+     */
+    public Column tail;
+    /**
+     * The real col-Index used to write
+     */
+    public int realColIndex;
+    /**
+     * Hidden current column
+     * <p>
+     * Only set the column to hide, the data will still be written,
+     * you can right-click to "un-hide" to display in file
+     */
+    public boolean hide;
 
     /**
      * Constructor Column
      */
     public Column() { }
+
+    /**
+     * Constructor Column
+     *
+     * @param name  the column name
+     */
+    public Column(String name) {
+        this.name = name;
+    }
 
     /**
      * Constructor Column
@@ -290,16 +335,73 @@ public class Column {
     }
 
     /**
+     * Create column from exists column
+     *
+     * @param other the other column
+     */
+    public Column(Column other) {
+        from(other);
+        if (other.next != null) addSubColumn(new Column(other.next));
+    }
+
+    /**
+     * Copy properties from other column
+     *
+     * @param other the other column
+     * @return current
+     */
+    public Column from(Column other) {
+        this.key = other.key;
+        this.name = other.name;
+        this.clazz = other.clazz;
+        this.share = other.share;
+        this.processor = other.processor;
+        this.styleProcessor = other.styleProcessor;
+        this.width = other.width;
+        this.headerHeight = other.headerHeight;
+        this.o = other.o;
+        this.styles = other.styles;
+        this.headerComment = other.headerComment;
+        this.cellComment = other.cellComment;
+        this.numFmt = other.numFmt;
+        this.ignoreValue = other.ignoreValue;
+        this.wrapText = other.wrapText;
+        this.colIndex = other.colIndex;
+        this.hide = other.hide;
+        this.realColIndex = other.realColIndex;
+        if (other.cellStyle != null) setCellStyle(other.cellStyle);
+        if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+        int i;
+        if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
+        if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
+
+        return this;
+    }
+    /**
      * Setting the cell's width
      *
      * @param width the width value
      * @return the {@link Column}
      */
     public Column setWidth(double width) {
-        if (width < 0.00000001) {
+        if (width < 0) {
             throw new ExcelWriteException("Width " + width + " less than 0.");
         }
         this.width = width;
+        return this;
+    }
+
+    /**
+     * Setting the cell's height, The row height is equal to the maximum cell height
+     *
+     * @param headerHeight the header height value
+     * @return the {@link Column}
+     */
+    public Column setHeaderHeight(double headerHeight) {
+        if (headerHeight < 0) {
+            throw new ExcelWriteException("Height " + headerHeight + " less than 0.");
+        }
+        this.headerHeight = headerHeight;
         return this;
     }
 
@@ -626,12 +728,23 @@ public class Column {
     }
 
     /**
+     * Setting a cell format of number or date type
+     *
+     * @param numFmt {@link NumFmt}
+     * @return the {@link Column}
+     */
+    public Column setNumFmt(NumFmt numFmt) {
+        this.numFmt = numFmt;
+        return this;
+    }
+
+    /**
      * Returns the column {@link NumFmt}
      *
      * @return number format
      */
     public NumFmt getNumFmt() {
-        return numFmt != null ? numFmt : styles.getNumFmt(cellStyle);
+        return numFmt != null ? numFmt : (numFmt = styles.getNumFmt(cellStyle));
     }
 
     /**
@@ -643,9 +756,10 @@ public class Column {
     public int getCellStyle(Class<?> clazz) {
         int style;
         if (isString(clazz)) {
-            style = Styles.defaultStringBorderStyle() | wrapText;
+            style = Styles.defaultStringBorderStyle();
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
-            style = styles.addNumFmt(DATETIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = DATETIME_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
@@ -653,9 +767,11 @@ public class Column {
         } else if (isFloat(clazz) || isDouble(clazz) || isBigDecimal(clazz)) {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
-            style = styles.addNumFmt(DATE_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = DATE_FORMAT;
+            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
-            style =  styles.addNumFmt(TIME_FORMAT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
+            if (numFmt == null) numFmt = TIME_FORMAT;
+            style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
@@ -665,7 +781,7 @@ public class Column {
             style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
         }
 
-        return style;
+        return style | wrapText;
     }
 
     /**
@@ -721,5 +837,131 @@ public class Column {
     public Column setHeaderComment(Comment headerComment) {
         this.headerComment = headerComment;
         return this;
+    }
+
+    /**
+     * Append sub-column at the tail
+     *
+     * @param column a sub-column
+     * @return the {@link Column} self
+     */
+    public Column addSubColumn(Column column) {
+        if (this == column) return this;
+        if (next != null) {
+            int subSize = subColumnSize(), appendSize = column.subColumnSize();
+            if (subSize + appendSize > Const.Limit.HEADER_SUB_COLUMNS) {
+                throw new ExcelWriteException("Too many sub-column occur. Max support " + Const.Limit.HEADER_SUB_COLUMNS + ", current is " + subSize);
+            }
+            column.prev = this.tail;
+            this.tail.next = column;
+        } else {
+            this.next = column;
+            column.prev = this;
+        }
+        this.tail = column.tail != null ? column.tail : column;
+        return this;
+    }
+
+    /**
+     * Returns the size of sub-column
+     *
+     * @return size of sub-column(include root column)
+     */
+    public int subColumnSize() {
+        int i = 1;
+        if (next != null) {
+            Column next = this.next;
+            for (; next != tail; next = next.next, i++);
+            i++;
+        }
+        return i;
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @return an array containing all of the Column
+     */
+    public Column[] toArray() {
+        return toArray(new Column[subColumnSize()]);
+    }
+
+    /**
+     * Returns an array containing all of the sub-column
+     *
+     * @param dist the array into which the elements of the column are to be stored
+     * @return header columns
+     * @throws NullPointerException if the specified array is null
+     */
+    public Column[] toArray(Column[] dist) {
+        int len = Math.min(subColumnSize(), dist.length);
+        if (len < 1) return dist;
+        Column e = this;
+        for (int i = 0; i < len; i++) {
+            dist[i] = e;
+            e = e.next;
+        }
+        return dist;
+    }
+
+    /**
+     * Returns the real col-index(one base)
+     *
+     * @return real col-index(one base)
+     */
+    public int getRealColIndex() {
+        return realColIndex;
+    }
+
+//    /**
+//     * Trim tail nodes after write
+//     * NOTE: Cannot delete the tail columns, otherwise automatic paging loses headers.
+//     * @return current
+//     */
+//    public Column trimTail() {
+//        if (next != null) {
+//            next.prev = null;
+//            next = null;
+//            tail = null;
+//        }
+//        return this;
+//    }
+
+    /**
+     * Returns hide flag
+     *
+     * @return true: hidden otherwise show
+     */
+    public boolean isHide() {
+        return hide;
+    }
+
+    /**
+     * Hidden current column
+     *
+     * @return current {@link Column}
+     */
+    public Column hide() {
+        this.hide = true;
+        return this;
+    }
+
+    /**
+     * Show current column
+     *
+     * @return current {@link Column}
+     */
+    public Column show() {
+        this.hide = false;
+        return this;
+    }
+
+    /**
+     * Returns the last column
+     *
+     * @return the last column (real column)
+     */
+    public Column getTail() {
+        return tail != null ? tail : this;
     }
 }

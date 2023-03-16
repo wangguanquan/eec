@@ -28,7 +28,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 import static org.ttzero.excel.reader.Cell.BLANK;
@@ -52,6 +55,7 @@ import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
+import static org.ttzero.excel.util.StringUtil.isNotBlank;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -60,20 +64,20 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public abstract class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
-    int index = -1;
-    // Index to first column (zero base)
-    int fc = 0;
-    // Index to last column (zero base)
-    int lc = -1;
+    protected int index = -1;
+    // Index to first column (zero base, inclusive)
+    protected int fc = 0;
+    // Index to last column (zero base, exclusive)
+    protected int lc = -1;
     // Share cell
-    Cell[] cells;
+    protected Cell[] cells;
     /**
      * The Shared String Table
      */
-    SharedStrings sst;
+    protected SharedStrings sst;
     // The header row
     protected HeaderRow hr;
-    boolean unknownLength;
+    protected boolean unknownLength;
 
     // Cache formulas
     private PreCalc[] sharedCalc;
@@ -81,7 +85,7 @@ public abstract class Row {
     /**
      * The global styles
      */
-    Styles styles;
+    protected Styles styles;
 
     /**
      * The number of row. (one base)
@@ -113,7 +117,7 @@ public abstract class Row {
     }
 
     /**
-     * Returns the index of the last column (zero base).
+     * Returns the index of the last column (zero base, exclude).
      * The last index of column is increment the max available index
      *
      * @return the last column index
@@ -123,12 +127,36 @@ public abstract class Row {
     }
 
     /**
+     * Returns a global {@link Styles}
+     *
+     * @return a style entry
+     */
+    public Styles getStyles() {
+        return styles;
+    }
+
+    /**
      * Test unused row (not contains any filled or formatted or value)
      *
      * @return true if unused
      */
     public boolean isEmpty() {
         return lc - fc <= 0;
+    }
+
+    /**
+     * Tests the value of all cells is null or whitespace
+     *
+     * @return true if all cell value is null
+     */
+    public boolean isBlank() {
+        if (lc > fc) {
+            for (int i = fc; i < lc; i++) {
+                Cell c = cells[i];
+                if (!isBlank(c)) return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -149,7 +177,7 @@ public abstract class Row {
      * @param i the position of cell
      * @return the {@link Cell}
      */
-    protected Cell getCell(int i) {
+    public Cell getCell(int i) {
         rangeCheck(i);
         return i < lc ? cells[i] : UNALLOCATED_CELL;
     }
@@ -160,7 +188,7 @@ public abstract class Row {
      * @param name the column name
      * @return the {@link Cell}
      */
-    protected Cell getCell(String name) {
+    public Cell getCell(String name) {
         int i = hr.getIndex(name);
         rangeCheck(i);
         return i < lc ? cells[i] : UNALLOCATED_CELL;
@@ -171,13 +199,17 @@ public abstract class Row {
      *
      * @return header Row
      */
-    HeaderRow asHeader() {
-        HeaderRow hr = HeaderRow.with(this);
-        this.hr = hr;
-        return hr;
+    public HeaderRow asHeader() {
+        return new HeaderRow().with(this);
     }
 
-    Row setHr(HeaderRow hr) {
+    /**
+     * Setting header row
+     *
+     * @param hr {@link HeaderRow}
+     * @return self
+     */
+    public Row setHr(HeaderRow hr) {
         this.hr = hr;
         return this;
     }
@@ -210,7 +242,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Boolean}
      */
-    protected Boolean getBoolean(Cell c) {
+    public Boolean getBoolean(Cell c) {
         boolean v;
         switch (c.t) {
             case BOOL:
@@ -226,7 +258,7 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                v = c.sv != null && isNotEmpty(c.sv.trim());
+                v = c.sv != null && isNotBlank(c.sv.trim());
                 break;
             case BLANK:
             case EMPTY_TAG:
@@ -265,7 +297,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Byte}
      */
-    protected Byte getByte(Cell c) {
+    public Byte getByte(Cell c) {
         byte b = 0;
         switch (c.t) {
             case NUMERIC:
@@ -280,11 +312,12 @@ public abstract class Row {
             case DOUBLE:
                 b |= (int) c.dv;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to Byte");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Byte");
         }
         return b;
     }
@@ -317,7 +350,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Character}
      */
-    protected Character getChar(Cell c) {
+    public Character getChar(Cell c) {
         char cc = 0;
         switch (c.t) {
             case SST:
@@ -342,11 +375,12 @@ public abstract class Row {
             case DOUBLE:
                 cc |= (int) c.dv;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to Character");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Character");
         }
         return cc;
     }
@@ -379,7 +413,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Short}
      */
-    protected Short getShort(Cell c) {
+    public Short getShort(Cell c) {
         short s = 0;
         switch (c.t) {
             case NUMERIC:
@@ -397,22 +431,24 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        s = (short) Double.parseDouble(c.sv.trim());
+                        s = (short) Double.parseDouble(c.sv);
                     } else {
-                        s = Long.valueOf(c.sv.trim()).shortValue();
+                        s = Long.valueOf(c.sv).shortValue();
                     }
                 } else return null;
                 break;
             case BOOL:
                 s |= c.bv ? 1 : 0;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to short");
+//            default: throw new UncheckedTypeException("Can't convert cell value to short");
         }
         return s;
     }
@@ -445,7 +481,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Integer}
      */
-    protected Integer getInt(Cell c) {
+    public Integer getInt(Cell c) {
         int n;
         switch (c.t) {
             case NUMERIC:
@@ -463,23 +499,25 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        n = (int) Double.parseDouble(c.sv.trim());
+                        n = (int) Double.parseDouble(c.sv);
                     } else {
-                        n = Long.valueOf(c.sv.trim()).intValue();
+                        n = Long.valueOf(c.sv).intValue();
                     }
                 } else return null;
                 break;
             case BOOL:
                 n = c.bv ? 1 : 0;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
 
-            default: throw new UncheckedTypeException("Can't convert cell value to Integer");
+//            default: throw new UncheckedTypeException("Can't convert cell value to Integer");
         }
         return n;
     }
@@ -512,7 +550,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Long}
      */
-    protected Long getLong(Cell c) {
+    public Long getLong(Cell c) {
         long l;
         switch (c.t) {
             case LONG:
@@ -530,22 +568,24 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     if (c.sv.indexOf('E') >= 0 || c.sv.indexOf('e') >= 0) {
-                        l = (long) Double.parseDouble(c.sv.trim());
+                        l = (long) Double.parseDouble(c.sv);
                     } else {
-                        l = Long.parseLong(c.sv.trim());
+                        l = Long.parseLong(c.sv);
                     }
                 } else return null;
                 break;
             case BOOL:
                 l = c.bv ? 1L : 0L;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to long");
+//            default: throw new UncheckedTypeException("Can't convert cell value to long");
         }
         return l;
     }
@@ -578,7 +618,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return string
      */
-    protected String getString(Cell c) {
+    public String getString(Cell c) {
         String s;
         switch (c.t) {
             case SST:
@@ -634,6 +674,17 @@ public abstract class Row {
     }
 
     /**
+     * Get {@code Float} value by cell
+     *
+     * @param c the {@link Cell}
+     * @return {@code Float}
+     */
+    public Float getFloat(Cell c) {
+        Double d = getDouble(c);
+        return d != null ? Float.valueOf(d.toString()) : null;
+    }
+
+    /**
      * Get {@code Double} value by column index
      *
      * @param columnIndex the cell index
@@ -661,7 +712,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return {@code Double}
      */
-    protected Double getDouble(Cell c) {
+    public Double getDouble(Cell c) {
         double d;
         switch (c.t) {
             case DOUBLE:
@@ -679,15 +730,16 @@ public abstract class Row {
                 }
             // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
                     d = Double.parseDouble(c.sv.trim());
                 } else return null;
                 break;
-            case BLANK:
-            case EMPTY_TAG:
-            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+//            case UNALLOCATED:
+            default:
                 return null;
-            default: throw new UncheckedTypeException("Can't convert cell value to double");
+//            default: throw new UncheckedTypeException("Can't convert cell value to double");
         }
         return d;
     }
@@ -720,7 +772,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return BigDecimal
      */
-    protected BigDecimal getDecimal(Cell c) {
+    public BigDecimal getDecimal(Cell c) {
         BigDecimal bd;
         switch (c.t) {
             case DOUBLE:
@@ -738,14 +790,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                bd = c.sv != null ? new BigDecimal(c.sv.trim()) : null;
+                bd = isNotBlank(c.sv) ? new BigDecimal(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 bd = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.math.BigDecimal");
         }
         return bd;
     }
@@ -778,7 +831,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return BigDecimal
      */
-    protected Date getDate(Cell c) {
+    public Date getDate(Cell c) {
         Date date;
         switch (c.t) {
             case NUMERIC:
@@ -793,14 +846,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                date = c.sv != null ? toDate(c.sv.trim()) : null;
+                date = isNotBlank(c.sv) ? toDate(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 date = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.util.Date");
         }
         return date;
     }
@@ -833,7 +887,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.sql.Timestamp
      */
-    protected Timestamp getTimestamp(Cell c) {
+    public Timestamp getTimestamp(Cell c) {
         Timestamp ts;
         switch (c.t) {
             case NUMERIC:
@@ -848,14 +902,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ts = c.sv != null ? toTimestamp(c.sv.trim()) : null;
+                ts = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()) : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ts = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ts;
     }
@@ -886,7 +941,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.sql.Time
      */
-    protected java.sql.Time getTime(Cell c) {
+    public java.sql.Time getTime(Cell c) {
         java.sql.Time t;
         switch (c.t) {
             case DOUBLE: t = toTime(c.dv); break;
@@ -895,14 +950,15 @@ public abstract class Row {
                     c.setSv(sst.get(c.nv));
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR: t = c.sv != null ? toTime(c.sv.trim()) : null; break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
-                t = null;
-                break;
+            case INLINESTR: t = isNotBlank(c.sv) ? toTime(c.sv.trim()) : null; break;
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
             default:
-                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
+                t = null;
+//                break;
+//            default:
+//                throw new UncheckedTypeException("Can't convert cell value to java.sql.Time");
         }
         return t;
     }
@@ -935,7 +991,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalDateTime
      */
-    protected LocalDateTime getLocalDateTime(Cell c) {
+    public LocalDateTime getLocalDateTime(Cell c) {
         LocalDateTime ldt;
         switch (c.t) {
             case NUMERIC:
@@ -950,14 +1006,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ldt = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime() : null;
+                ldt = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime() : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ldt = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.time.LocalDateTime");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.time.LocalDateTime");
         }
         return ldt;
     }
@@ -990,7 +1047,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalDate
      */
-    protected LocalDate getLocalDate(Cell c) {
+    public LocalDate getLocalDate(Cell c) {
         LocalDate ld;
         switch (c.t) {
             case NUMERIC:
@@ -1005,14 +1062,15 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                ld = c.sv != null ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null;
+                ld = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 ld = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return ld;
     }
@@ -1045,7 +1103,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return java.time.LocalTime
      */
-    protected LocalTime getLocalTime(Cell c) {
+    public LocalTime getLocalTime(Cell c) {
         LocalTime lt;
         switch (c.t) {
             case NUMERIC:
@@ -1060,21 +1118,23 @@ public abstract class Row {
                 }
                 // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR:
-                if (c.sv != null) {
+                if (isNotBlank(c.sv)) {
+                    c.sv = c.sv.trim();
                     // 00:00:00
                     if (c.sv.length() == 8 && c.sv.charAt(2) == ':' && c.sv.charAt(5) == ':') {
-                        lt = toLocalTime(c.sv.trim());
+                        lt = toLocalTime(c.sv);
                     } else {
-                        lt = toTimestamp(c.sv.trim()).toLocalDateTime().toLocalTime();
+                        lt = toTimestamp(c.sv).toLocalDateTime().toLocalTime();
                     }
                 } else lt = null;
                 break;
-            case UNALLOCATED:
-            case BLANK:
-            case EMPTY_TAG:
+//            case UNALLOCATED:
+//            case BLANK:
+//            case EMPTY_TAG:
+            default:
                 lt = null;
-                break;
-            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
+//                break;
+//            default: throw new UncheckedTypeException("Can't convert cell value to java.sql.Timestamp");
         }
         return lt;
     }
@@ -1149,7 +1209,7 @@ public abstract class Row {
      * @param c the {@link Cell}
      * @return the {@link CellType}
      */
-    protected CellType getCellType(Cell c) {
+    public CellType getCellType(Cell c) {
         CellType type;
         switch (c.t) {
             case SST:
@@ -1188,6 +1248,87 @@ public abstract class Row {
     }
 
     /**
+     * Returns the cell styles
+     *
+     * @param columnIndex the cell index from zero
+     * @return the style value
+     */
+    public int getCellStyle(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return getCellStyle(c);
+    }
+
+    /**
+     * Returns the cell styles
+     *
+     * @param columnName the cell name
+     * @return the style value
+     */
+    public int getCellStyle(String columnName) {
+        Cell c = getCell(columnName);
+        return getCellStyle(c);
+    }
+
+    /**
+     * Returns the cell styles
+     *
+     * @param c the {@link Cell}
+     * @return the style value
+     */
+    public int getCellStyle(Cell c) {
+        return styles.getStyleByIndex(c.xf);
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param columnIndex the cell index
+     * @return true if cell value is blank
+     */
+    public boolean isBlank(int columnIndex) {
+        Cell c = getCell(columnIndex);
+        return isBlank(c);
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param columnName the cell name
+     * @return true if cell value is blank
+     */
+    public boolean isBlank(String columnName) {
+        Cell c = getCell(columnName);
+        return isBlank(c);
+    }
+
+    /**
+     * Tests the specify cell value is blank
+     *
+     * @param c the {@link Cell}
+     * @return true if cell value is blank
+     */
+    public boolean isBlank(Cell c) {
+        boolean blank;
+        switch (c.t) {
+            case SST:
+                if (c.sv == null) {
+                    c.setSv(sst.get(c.nv));
+                }
+                // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR:
+                blank = StringUtil.isBlank(c.sv);
+                break;
+            case BLANK:
+            case EMPTY_TAG:
+            case UNALLOCATED:
+                blank = true;
+                break;
+            default: blank = false;
+        }
+        return blank;
+    }
+
+    /**
      * Returns the binding type if is bound, otherwise returns Row
      *
      * @param <T> the type of binding
@@ -1204,7 +1345,9 @@ public abstract class Row {
                 throw new UncheckedTypeException(hr.getClazz() + " new instance error.", e);
             }
             return t;
-        } else return (T) this;
+        }
+//        else return (T) this;
+        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
     }
 
     /**
@@ -1213,7 +1356,6 @@ public abstract class Row {
      * @param <T> the type of binding
      * @return T
      */
-    @SuppressWarnings("unchecked")
     public <T> T geet() {
         if (hr != null && hr.getClazz() != null) {
             T t = hr.getT();
@@ -1223,7 +1365,9 @@ public abstract class Row {
                 throw new UncheckedTypeException("call set method error.", e);
             }
             return t;
-        } else return (T) this;
+        }
+//        else return (T) this;
+        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
     }
     /////////////////////////////To object//////////////////////////////////
 
@@ -1332,6 +1476,57 @@ public abstract class Row {
     }
 
     /**
+     * Convert row data to LinkedMap(sort by column index)
+     *
+     * @return the key is name or index(if not name here)
+     */
+    public Map<String, Object> toMap() {
+        if (isEmpty() || hr == null) return Collections.emptyMap();
+        // Maintain the column orders
+        Map<String, Object> data = new LinkedHashMap<>(hr.lc - hr.fc);
+        String[] names = hr.names;
+        String key;
+        for (int i = hr.fc; i < hr.lc; i++) {
+            Cell c = cells[i];
+            key = names[i];
+            // Ignore null key
+            if (key == null) continue;
+            switch (c.t) {
+                case SST:
+                    if (c.sv == null) {
+                        c.setSv(sst.get(c.nv));
+                    }
+                    // @Mark:=>There is no missing `break`, this is normal logic here
+                case INLINESTR:
+                    data.put(key, c.sv);
+                    break;
+                case BOOL:
+                    data.put(key, c.bv);
+                    break;
+                case NUMERIC:
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.nv);
+                    else data.put(key, toTimestamp(c.nv));
+                    break;
+                case LONG:
+                    data.put(key, c.lv);
+                    break;
+                case DOUBLE:
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.dv);
+                    else if (c.dv > 1.00001) data.put(key, toTimestamp(c.dv));
+                    else data.put(key, toTime(c.dv));
+                    break;
+                case BLANK:
+                case EMPTY_TAG:
+                    data.put(key, EMPTY);
+                    break;
+                default:
+                    data.put(key, null);
+            }
+        }
+        return data;
+    }
+
+    /**
      * Add function shared ref
      * <blockquote><pre>
      * 63   : Not used
@@ -1399,6 +1594,70 @@ public abstract class Row {
             return EMPTY;
 
         return sharedCalc[i].get(coordinate);
+    }
+
+    /**
+     * Returns deep clone cells
+     *
+     * @return cells
+     */
+    public Cell[] copyCells() {
+        return copyCells(cells.length);
+    }
+
+    /**
+     * Returns deep clone cells
+     *
+     * @param newLength the length of the copy to be returned
+     * @return cells
+     */
+    public Cell[] copyCells(int newLength) {
+        Cell[] newCells = new Cell[newLength];
+        int oldRow = cells.length;
+        for (int k = 0; k < newLength; k++) {
+            newCells[k] = new Cell((short) (k + 1));
+            // Copy values
+            if (k < oldRow && cells[k] != null) {
+                newCells[k].from(cells[k]);
+            }
+        }
+        return newCells;
+    }
+
+    /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @return current Row
+     */
+    public Row setCells(Cell[] cells) {
+        this.cells = cells;
+        this.fc = 0;
+        this.lc = cells.length;
+        return this;
+    }
+
+    /**
+     * Setting custom {@link Cell}
+     *
+     * @param cells row cells
+     * @param fromIndex specify the first cells index(one base)
+     * @param toIndex specify the last cells index(one base)
+     * @return current Rows
+     */
+    public Row setCells(Cell[] cells, int fromIndex, int toIndex) {
+        if (fromIndex < 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+        if (toIndex > cells.length)
+            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+        if (fromIndex > toIndex)
+            throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                ") > toIndex(" + toIndex + ")");
+
+        this.cells = cells;
+        this.fc = fromIndex;
+        this.lc = toIndex;
+        return this;
     }
 
     /**

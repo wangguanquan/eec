@@ -36,6 +36,19 @@ public class CommentTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testCommentLongText() throws IOException {
+        Sheet sheet = new ListSheet<>(Student.randomTestData());
+        Comments comments = sheet.getComments();
+        if (comments == null) comments = sheet.createComments();
+        comments.addComment("C5", new Comment("提示：", "1、第一行批注内容较多时无法完全显示内容，增加弹出框大小设置\n" +
+            "2、第二行批注内容较多时无法完全显示内容\n" +
+            "3、第三行批注内容较多时无法完全显示内容\n" +
+            "4、第四行批注内容较多时无法完全显示内容", 180D, 80D));
+        new Workbook("long text comment test")
+            .addSheet(sheet)
+            .writeTo(defaultTestPath);
+    }
+
     /**
      * Annotation Object
      */
@@ -44,8 +57,8 @@ public class CommentTest extends WorkbookTest {
         private int id;
         @ExcelColumn(value = "姓名", comment = @HeaderComment(title = "王老师：", value = "学生姓名"))
         private String name;
+        @HeaderComment(title = "王老师：", value = "低于60分显示\"不合格\"")
         @ExcelColumn(value = "成绩")
-        @HeaderComment(title = "王老师：", value = "低于60分显示\"不及格\"")
         private int score;
 
         public Student() { }

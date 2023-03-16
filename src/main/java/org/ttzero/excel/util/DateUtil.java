@@ -41,7 +41,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
-    public static final int DAYS_1900_TO_1970 = ~((int) LocalDate.of(1900, 1, 1).toEpochDay() + 3);
+    public static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
     public static final double SECOND_OF_DAY = 24 * 60 * 60.0D;
     public static final double MILLIS_OF_DAY = 24 * 60 * 60 * 1000.0D;
 
@@ -205,7 +205,7 @@ public class DateUtil {
      * @return java.util.Date
      */
     public static java.util.Date toDate(double d) {
-        if (d - DAYS_1900_TO_1970 < .00001) {
+        if (d < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
@@ -240,7 +240,7 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(double d) {
-        if (d - DAYS_1900_TO_1970 < .00001) {
+        if (d < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
@@ -249,7 +249,7 @@ public class DateUtil {
 
 
     public static LocalDateTime toLocalDateTime(double d) {
-        if (d - DAYS_1900_TO_1970 < .00001) {
+        if (d < DAYS_1900_TO_1970) {
             throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
         }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s

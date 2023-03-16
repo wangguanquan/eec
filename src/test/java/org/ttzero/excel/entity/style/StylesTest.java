@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.ttzero.excel.entity.I18N;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -156,7 +157,8 @@ public class StylesTest {
 
 
         assert !Styles.hasNumFmt(Styles.clearNumFmt(style));
-        assert !Styles.hasFont(Styles.clearFont(style));
+        // Font is required
+//        assert !Styles.hasFont(Styles.clearFont(style));
         assert !Styles.hasFill(Styles.clearFill(style));
         assert !Styles.hasBorder(Styles.clearBorder(style));
         assert !Styles.hasVertical(Styles.clearVertical(style));
@@ -164,4 +166,46 @@ public class StylesTest {
         assert !Styles.hasWrapText(Styles.clearWrapText(style));
     }
 
+    @Test public void testThemeColor() {
+        // +-1
+        Color color1 = HlsColor.calculateColor(Color.decode("#F79646"), "0.39997558519241921");
+        assert color1.getRed() <= 251 && color1.getRed() >= 249;
+        assert color1.getGreen() <= 192 && color1.getGreen() >= 190;
+        assert color1.getBlue() <= 144 && color1.getBlue() >= 142;
+
+        Color color2 = HlsColor.calculateColor(Color.decode("#4F81BD"), "0.79998168889431442");
+        assert color2.getRed() <= 221 && color2.getRed() >= 219;
+        assert color2.getGreen() <= 231 && color2.getGreen() >= 229;
+        assert color2.getBlue() <= 242 && color2.getBlue() >= 240;
+
+        Color color3 = HlsColor.calculateColor(Color.decode("#C0504D"), "0.59999389629810485");
+        assert color3.getRed() <= 231 && color3.getRed() >= 229;
+        assert color3.getGreen() <= 185 && color3.getGreen() >= 183;
+        assert color3.getBlue() <= 184 && color3.getBlue() >= 182;
+
+        Color color4 = HlsColor.calculateColor(new Color(0, 0, 0), "0.39997558519241921");
+        assert color4.getRed() <= 103 && color4.getRed() >= 101;
+        assert color4.getGreen() <= 103 && color4.getGreen() >= 101;
+        assert color4.getBlue() <= 103 && color4.getBlue() >= 101;
+    }
+
+    @Test public void testRound2() {
+        assert Font.round10(11) == 110;
+        assert Font.round10(11.1) == 110;
+        assert Font.round10(11.2) == 110;
+        assert Font.round10(11.22) == 110;
+        assert Font.round10(11.23) == 115;
+        assert Font.round10(11.3) == 115;
+        assert Font.round10(11.5) == 115;
+        assert Font.round10(11.7) == 115;
+        assert Font.round10(11.72) == 115;
+        assert Font.round10(11.73) == 120;
+        assert Font.round10(11.8) == 120;
+
+        Font font = Font.parse("italic_bold_12.24_宋体");
+        assert font.isItalic();
+        assert font.isBold();
+        assert font.getSize2() == 12.5D;
+        assert font.getName().equals("宋体");
+    }
 }

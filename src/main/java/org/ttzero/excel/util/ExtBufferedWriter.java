@@ -27,6 +27,7 @@ import java.io.Writer;
  */
 public class ExtBufferedWriter extends BufferedWriter {
     private static final int defaultCharBufferSize = 8192;
+    private long cn; // Char length
 
     public ExtBufferedWriter(Writer out) {
         this(out, defaultCharBufferSize);
@@ -153,10 +154,37 @@ public class ExtBufferedWriter extends BufferedWriter {
         write(Double.toString(d));
     }
 
-    private char[] toChars(int i) {
+    @Override
+    public void write(int c) throws IOException {
+        super.write(c);
+        cn++;
+    }
+
+    @Override
+    public void write(char[] cbuf, int off, int len) throws IOException {
+        super.write(cbuf, off, len);
+        cn += len;
+    }
+
+    @Override
+    public void write(String s, int off, int len) throws IOException {
+        super.write(s, off, len);
+        cn += len;
+    }
+
+    /**
+     * Returns the number of characters that have been written
+     *
+     * @return number of characters
+     */
+    public long getWrittenChars() {
+        return cn;
+    }
+
+    public char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
-        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        int size = stringSize(i);
         getChars(i, size, cache_char_array[size - 1]);
         return cache_char_array[size - 1];
     }
@@ -167,9 +195,15 @@ public class ExtBufferedWriter extends BufferedWriter {
 
     // Requires positive x
     public static int stringSize(int x) {
+        boolean negative = x < 0;
+        if (negative) x = ~x + 1;
+        int l;
         for (int i = 0; ; i++)
-            if (x <= sizeTable[i])
-                return i + 1;
+            if (x <= sizeTable[i]) {
+                l = i + 1;
+                break;
+            }
+        return negative ? l + 1 : l;
     }
 
     static void getChars(int i, int index, char[] buf) {
@@ -206,23 +240,29 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private char[] toChars(long i) {
+    public char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
-        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        int size = stringSize(i);
         getChars(i, size, cache_char_array[size - 1]);
         return cache_char_array[size - 1];
     }
 
     // Requires positive x
     public static int stringSize(long x) {
+        boolean negative = x < 0;
+        if (negative) x = ~x + 1;
+        int l = 0, i = 1;
         long p = 10;
-        for (int i = 1; i < 19; i++) {
-            if (x < p)
-                return i;
+        for (; i < 19; i++) {
+            if (x < p) {
+                l = i;
+                break;
+            }
             p = 10 * p;
         }
-        return 19;
+        if (i >= 19) l = 19;
+        return negative ? l + 1 : l;
     }
 
     /**
@@ -281,7 +321,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private final static char[] digitTens = {
+    public final static char[] digitTens = {
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
         '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
@@ -294,7 +334,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
     };
 
-    private final static char[] digitOnes = {
+    public final static char[] digitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -307,13 +347,22 @@ public class ExtBufferedWriter extends BufferedWriter {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     };
 
-    private final static char[] digits = {
+    public final static char[] digits = {
         '0', '1', '2', '3', '4', '5',
         '6', '7', '8', '9', 'a', 'b',
         'c', 'd', 'e', 'f', 'g', 'h',
         'i', 'j', 'k', 'l', 'm', 'n',
         'o', 'p', 'q', 'r', 's', 't',
         'u', 'v', 'w', 'x', 'y', 'z'
+    };
+
+    public final static char[] digits_uppercase = {
+        '0', '1', '2', '3', '4', '5',
+        '6', '7', '8', '9', 'A', 'B',
+        'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'N',
+        'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z'
     };
 
 }

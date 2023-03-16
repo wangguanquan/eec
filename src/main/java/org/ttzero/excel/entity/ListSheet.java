@@ -17,11 +17,17 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumns;
+import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
-import org.ttzero.excel.processor.ConversionProcessor;
-import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.processor.ConversionProcessor;
+import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -41,12 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * List is the most important data source, you can pass all
@@ -67,6 +72,36 @@ public class ListSheet<T> extends Sheet {
     private int size;
 
     /**
+     * The row styleProcessor
+     */
+    protected StyleProcessor<T> styleProcessor;
+
+    /**
+     * Setting a row style processor
+     *
+     * @param styleProcessor a row style processor
+     * @return current worksheet
+     */
+    public Sheet setStyleProcessor(StyleProcessor<T> styleProcessor) {
+        this.styleProcessor = styleProcessor;
+        putExtProp(Const.ExtendPropertyKey.STYLE_DESIGN, styleProcessor);
+        return this;
+    }
+
+    /**
+     * Returns the row style processor
+     *
+     * @return {@link StyleProcessor}
+     */
+    public StyleProcessor<T> getStyleProcessor() {
+        if (styleProcessor != null) return styleProcessor;
+        @SuppressWarnings("unchecked")
+        StyleProcessor<T> fromExtProp = (StyleProcessor<T>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        return this.styleProcessor = fromExtProp;
+    }
+
+
+    /**
      * Constructor worksheet
      */
     public ListSheet() {
@@ -80,6 +115,15 @@ public class ListSheet<T> extends Sheet {
      */
     public ListSheet(String name) {
         super(name);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param columns the header info
+     */
+    public ListSheet(final org.ttzero.excel.entity.Column... columns) {
+        super(columns);
     }
 
     /**
@@ -122,6 +166,7 @@ public class ListSheet<T> extends Sheet {
         super(name);
         setData(data);
     }
+
 
     /**
      * Constructor worksheet
@@ -233,6 +278,7 @@ public class ListSheet<T> extends Sheet {
         super.close();
     }
 
+
     /**
      * Reset the row-block data
      */
@@ -243,16 +289,18 @@ public class ListSheet<T> extends Sheet {
         }
 
         // Find the end index of row-block
-        int end = getEndIndex();
-        int len = columns.length;
+        int end = getEndIndex(), len = columns.length;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         try {
             for (; start < end; rows++, start++) {
                 Row row = rowBlock.next();
                 row.index = rows;
+                row.height = getRowHeight();
                 Cell[] cells = row.realloc(len);
                 T o = data.get(start);
+                boolean notNull = o != null;
                 for (int i = 0; i < len; i++) {
-                    // clear cells
+                    // Clear cells
                     Cell cell = cells[i];
                     cell.clear();
 
@@ -260,13 +308,23 @@ public class ListSheet<T> extends Sheet {
                     EntryColumn column = (EntryColumn) columns[i];
                     if (column.isIgnoreValue())
                         e = null;
-                    else if (column.getMethod() != null)
-                        e = column.getMethod().invoke(o);
-                    else if (column.getField() != null)
-                        e = column.getField().get(o);
-                    else e = o;
+                    else if (notNull) {
+                        if (column.getMethod() != null)
+                            e = column.getMethod().invoke(o);
+                        else if (column.getField() != null)
+                            e = column.getField().get(o);
+                        else e = o;
+                    }
+                    /*
+                    The default processing of null values still retains the row style.
+                    If don't want any style and value, you can change it to {@code continue}
+                     */
+                    else e = null;
 
-                    cellValueAndStyle.reset(rows, cell, e, columns[i]);
+                    cellValueAndStyle.reset(rows, cell, e, column);
+                    if (hasGlobalStyleProcessor) {
+                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
+                    }
                 }
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -401,19 +459,20 @@ public class ListSheet<T> extends Sheet {
                         column = new EntryColumn(gs, EMPTY, false);
                     }
                     if (column != null) {
-                        column.method = method;
-                        column.field = field;
-                        column.clazz = method.getReturnType();
-                        column.key = gs;
-                        if (isEmpty(column.name)) {
-                            column.name = gs;
+                        EntryColumn tail = (EntryColumn) column.getTail();
+                        tail.method = method;
+                        tail.field = field;
+                        tail.clazz = method.getReturnType();
+                        tail.key = gs;
+                        if (isEmpty(tail.name)) {
+                            tail.name = gs;
                         }
                         list.add(column);
 
                         // Attach header style
-                        buildHeaderStyle(method, field, column);
+                        buildHeaderStyle(method, field, tail);
                         // Attach header comment
-                        buildHeaderComment(method, field, column);
+                        buildHeaderComment(method, field, tail);
                         continue;
                     }
                 }
@@ -425,20 +484,21 @@ public class ListSheet<T> extends Sheet {
                 }
                 if (column != null) {
                     list.add(column);
-                    column.field = field;
-                    column.key = gs;
-                    if (isEmpty(column.name)) {
-                        column.name = gs;
+                    EntryColumn tail = (EntryColumn) column.getTail();
+                    tail.field = field;
+                    tail.key = gs;
+                    if (isEmpty(tail.name)) {
+                        tail.name = gs;
                     }
                     if (method != null) {
-                        column.clazz = method.getReturnType();
-                        column.method = method;
-                    } else column.clazz = field.getType();
+                        tail.clazz = method.getReturnType();
+                        tail.method = method;
+                    } else tail.clazz = field.getType();
 
                     // Attach header style
-                    buildHeaderStyle(method, field, column);
+                    buildHeaderStyle(method, field, tail);
                     // Attach header comment
-                    buildHeaderComment(method, field, column);
+                    buildHeaderComment(method, field, tail);
                 }
             }
 
@@ -450,34 +510,52 @@ public class ListSheet<T> extends Sheet {
             if (list.isEmpty()) {
                 headerReady = eof = shouldClose = true;
                 this.end = 0;
-                LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
+                if (java.util.Map.class.isAssignableFrom(clazz))
+                    LOGGER.warn("List<Map> has detected, please use ListMapSheet for export.");
+                else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
                 return 0;
             }
             columns = new org.ttzero.excel.entity.Column[list.size()];
             list.toArray(columns);
         } else {
+            Method[] others = filterOthersMethodsCanExport(tmp, clazz);
+            Map<String, Method> otherMap = new HashMap<>();
+            for (Method m : others) {
+                ExcelColumn ec = m.getAnnotation(ExcelColumn.class);
+                if (ec != null && StringUtil.isNotEmpty(ec.value())) {
+                    otherMap.put(ec.value(), m);
+                }
+                otherMap.put(m.getName(), m);
+            }
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
-                if (!(hc instanceof EntryColumn)) {
-                    hc = new EntryColumn(hc);
-                    columns[i] = hc;
+                org.ttzero.excel.entity.Column hc = new EntryColumn(columns[i]);
+                columns[i] = hc;
+                if (hc.tail != null) {
+                    hc = hc.tail;
                 }
                 EntryColumn ec = (EntryColumn) hc;
-                Method method = tmp.get(hc.key);
-                if (method != null) {
-                    method.setAccessible(true);
-                }
-                ec.method = method;
-
-                for (Field field : declaredFields) {
-                    if (field.getName().equals(hc.key)) {
-                        field.setAccessible(true);
-                        ec.field = field;
-                        break;
+                if (ec.method == null) {
+                    Method method = tmp.get(hc.key);
+                    if (method != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
+                    } else if ((method = otherMap.get(hc.key)) != null) {
+                        method.setAccessible(true);
+                        ec.method = method;
                     }
                 }
 
-                if (method == null && ec.field == null) {
+                if (ec.field == null) {
+                    for (Field field : declaredFields) {
+                        if (field.getName().equals(hc.key)) {
+                            field.setAccessible(true);
+                            ec.field = field;
+                            break;
+                        }
+                    }
+                }
+
+                if (ec.method == null && ec.field == null) {
                     LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
                             + "] not declare in class " + clazz);
                     hc.ignoreValue();
@@ -487,11 +565,11 @@ public class ListSheet<T> extends Sheet {
 
                 // Attach header style
                 if (hc.getHeaderStyleIndex() == -1) {
-                    buildHeaderStyle(method, ec.field, hc);
+                    buildHeaderStyle(ec.method, ec.field, hc);
                 }
                 // Attach header comment
                 if (hc.headerComment == null) {
-                    buildHeaderComment(method, ec.field, hc);
+                    buildHeaderComment(ec.method, ec.field, hc);
                 }
             }
         }
@@ -508,30 +586,70 @@ public class ListSheet<T> extends Sheet {
      * Override the method to extend custom comments
      *
      * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
-     * @return the Worksheet's {@link Column} information
+     * @return the Worksheet's {@link EntryColumn} information
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
         // Filter all ignore column
         if (ignoreColumn(ao)) return null;
 
         ao.setAccessible(true);
+        // Style Design
+        StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+
+        // Support multi header columns
+        ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
+        if (cs != null) {
+            ExcelColumn[] ecs = cs.value();
+            EntryColumn root = null;
+            for (ExcelColumn ec : ecs) {
+                EntryColumn column = createColumnByAnnotation(ec);
+                if (sp != null) {
+                    column.styleProcessor = sp;
+                }
+                if (root == null) {
+                    root = column;
+                } else {
+                    root.addSubColumn(column);
+                }
+            }
+            return root;
+        }
+        // Single header column
         ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
         if (ec != null) {
-            EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
-            column.styles = workbook.getStyles();
-            // Number format
-            if (isNotEmpty(ec.format())) {
-                column.setNumFmt(ec.format());
-            }
-            // Wrap
-            column.setWrapText(ec.wrapText());
-            // Column index
-            if (ec.colIndex() > -1) {
-                column.colIndex = ec.colIndex();
+            EntryColumn column = createColumnByAnnotation(ec);
+            if (sp != null) {
+                column.styleProcessor = sp;
             }
             return column;
         }
         return null;
+    }
+
+    /**
+     * Create column by {@code ExcelColumn} annotation
+     *
+     * @param ec {@code ExcelColumn} annotation
+     * @return {@link org.ttzero.excel.entity.Column} or null if annotation is null
+     */
+    protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
+        if (ec == null) return null;
+        EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+        // Number format
+        if (isNotEmpty(ec.format())) {
+            column.setNumFmt(ec.format());
+        }
+        // Wrap
+        column.setWrapText(ec.wrapText());
+        // Column index
+        if (ec.colIndex() > -1) {
+            column.colIndex = ec.colIndex();
+        }
+        // Hidden Column
+        if (ec.hide()) column.hide();
+        // Cell max width
+        column.width = ec.maxWidth();
+        return column;
     }
 
     /**
@@ -578,7 +696,7 @@ public class ListSheet<T> extends Sheet {
             }
         }
         if (comment != null && (isNotEmpty(comment.value()) || isNotEmpty(comment.title()))) {
-            column.headerComment = new Comment(comment.title(), comment.value());
+            column.headerComment = new Comment(comment.title(), comment.value(), comment.width(), comment.height());
         }
     }
 
@@ -597,6 +715,33 @@ public class ListSheet<T> extends Sheet {
             if (style > 0 && column.getHeaderStyleIndex() == -1)
                 column.setHeaderStyle(style);
         }
+
+        // Parse the global style processor
+        if (styleProcessor == null) {
+            @SuppressWarnings({"unchecked", "retype"})
+            StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+            if (styleProcessor != null) setStyleProcessor(styleProcessor);
+        }
+
+        // Freeze panes
+        attachFreezePanes(clazz);
+    }
+
+    /**
+     * Set custom styleProcessor for declarations on Entry Class
+     *
+     * @param styleDesign {@link StyleDesign}
+     * @return a style processor
+     */
+    protected StyleProcessor<?> getDesignStyle(StyleDesign styleDesign) {
+        if (styleDesign != null && !StyleProcessor.None.class.isAssignableFrom(styleDesign.using())) {
+            try {
+                return styleDesign.using().newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                LOGGER.warn("Construct {} error occur, it will be ignore.", styleDesign.using(), e);
+            }
+        }
+        return null;
     }
 
     /**
@@ -618,14 +763,7 @@ public class ListSheet<T> extends Sheet {
      */
     protected List<org.ttzero.excel.entity.Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
         // Collect the method which has ExcelColumn annotation
-        Method[] readMethods = null;
-        try {
-            Collection<Method> values = existsMethodMapper.values();
-            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                    && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
-        } catch (IntrospectionException e) {
-            // Ignore
-        }
+        Method[] readMethods = filterOthersMethodsCanExport(existsMethodMapper, clazz);
 
         if (readMethods != null) {
             Set<Method> existsMethods = new HashSet<>(existsMethodMapper.values());
@@ -636,17 +774,18 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn column = createColumn(method);
                 if (column != null) {
                     list.add(column);
-                    column.method = method;
-                    column.clazz = method.getReturnType();
-                    column.key = method.getName();
-                    if (isEmpty(column.name)) {
-                        column.name = method.getName();
+                    EntryColumn tail = (EntryColumn) column.getTail();
+                    tail.method = method;
+                    tail.clazz = method.getReturnType();
+                    tail.key = method.getName();
+                    if (isEmpty(tail.name)) {
+                        tail.name = method.getName();
                     }
 
                     // Attach header style
-                    buildHeaderStyle(method, null, column);
+                    buildHeaderStyle(method, null, tail);
                     // Attach header comment
-                    buildHeaderComment(method, null, column);
+                    buildHeaderComment(method, null, tail);
                 }
             }
             return list;
@@ -765,12 +904,64 @@ public class ListSheet<T> extends Sheet {
         return null;
     }
 
+    /**
+     * Parse and attach freeze info
+     *
+     * @param clazz Class of &lt;T&gt;
+     */
+    protected void attachFreezePanes(Class<?> clazz) {
+        // Annotation setting has lower priority than setting method
+        if (getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null) {
+            return;
+        }
+        FreezePanes panes = clazz.getAnnotation(FreezePanes.class);
+        if (panes == null) {
+            return;
+        }
+
+        // Validity check
+        if (panes.topRow() < 0 || panes.firstColumn() < 0) {
+            throw new IllegalArgumentException("negative number occur.");
+        }
+
+        // Zero means unfreeze
+        if ((panes.topRow() | panes.firstColumn()) == 0) {
+            return;
+        }
+
+        // Put value into extend properties
+        putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(panes.topRow(), panes.firstColumn()));
+    }
+
+    /**
+     * Filter methods that need to be exported
+     *
+     * @param existsMethodMapper all exists method collection by default
+     * @param clazz Class of &lt;T&gt;
+     * @return All Read-Method witch can be export
+     */
+    protected Method[] filterOthersMethodsCanExport(Map<String, Method> existsMethodMapper, Class<?> clazz) {
+        // Collect the method which has ExcelColumn annotation
+        Method[] readMethods = null;
+        try {
+            Collection<Method> values = existsMethodMapper.values();
+            readMethods = listReadMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
+                && method.getAnnotation(IgnoreExport.class) == null && !values.contains(method));
+        } catch (IntrospectionException e) {
+            // Ignore
+        }
+        return readMethods;
+    }
+
     public static class EntryColumn extends org.ttzero.excel.entity.Column {
         public Method method;
         public Field field;
 
-        public EntryColumn() { }
+        public EntryColumn() {
+            super();
+        }
         public EntryColumn(String name) {
+            super();
             this.name = name;
         }
         public EntryColumn(String name, Class<?> clazz) {
@@ -830,22 +1021,15 @@ public class ListSheet<T> extends Sheet {
         }
 
         public EntryColumn(org.ttzero.excel.entity.Column other) {
-            this.key = other.key;
-            this.name = other.name;
-            this.clazz = other.clazz;
-            this.share = other.share;
-            this.processor = other.processor;
-            this.styleProcessor = other.styleProcessor;
-            this.width = other.width;
-            this.o = other.o;
-            this.styles = other.styles;
-            this.headerComment = other.headerComment;
-            this.numFmt = other.numFmt;
-            this.ignoreValue = other.ignoreValue;
-            this.wrapText = other.wrapText;
-            this.colIndex = other.colIndex;
-            if (other.cellStyle != null) setCellStyle(other.cellStyle);
-            if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
+            super.from(other);
+            if (other instanceof EntryColumn) {
+                EntryColumn o = (EntryColumn) other;
+                this.method = o.method;
+                this.field = o.field;
+            }
+            if (other.next != null) {
+                addSubColumn(new EntryColumn(other.next));
+            }
         }
 
         public Method getMethod() {

@@ -53,11 +53,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -138,6 +139,10 @@ public class ExcelReader implements Closeable {
      * Picture or Tables
      */
     protected Drawings drawings;
+    /**
+     * A global styles
+     */
+    protected Styles styles;
 
     /**
      * Constructor Excel Reader
@@ -393,7 +398,7 @@ public class ExcelReader implements Closeable {
     public ExcelReader parseFormula() {
         if (hasFormula) {
             // Formula string if exists
-            long[][] calcArray = parseCalcChain();
+            long[][] calcArray = parseCalcChain(self);
 
             if (calcArray == null) return this;
             int i = 0;
@@ -443,9 +448,12 @@ public class ExcelReader implements Closeable {
         return this;
     }
 
-    // --- PRIVATE FUNCTIONS
+    // --- PROTECTED FUNCTIONS
 
-    private ContentType checkContentType(Path root) {
+    public static final Set<String> MUST_CHECK_PART = new HashSet<>(Arrays.asList(Const.ContentType.WORKBOOK
+            , Const.ContentType.SHAREDSTRING, Const.ContentType.SHEET, Const.ContentType.STYLE));
+
+    protected ContentType checkContentType(Path root) {
         SAXReader reader = new SAXReader();
         Document document;
         // Read [Content_Types].xml
@@ -461,8 +469,12 @@ public class ExcelReader implements Closeable {
             if ("Override".equals(e.getName())) {
                 ContentType.Override override = new ContentType.Override(e.attributeValue("ContentType"), e.attributeValue("PartName"));
                 if (!Files.exists(root.resolve(override.getPartName().substring(1)))) {
-                    FileUtil.rm_rf(root.toFile(), true);
-                    throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
+                    if (MUST_CHECK_PART.contains(override.getContentType())) {
+                        FileUtil.rm_rf(root.toFile(), true);
+                        throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
+                    } else {
+                        LOGGER.warn("{} is configured in [Content_Types].xml, but the corresponding file is missing.", override.getKey());
+                    }
                 }
                 contentType.add(override);
             }
@@ -470,7 +482,37 @@ public class ExcelReader implements Closeable {
         return contentType;
     }
 
-    private ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+    public ExcelReader(InputStream is) throws IOException {
+        this(is, 0, 0, VALUE_ONLY);
+    }
+
+    public ExcelReader(InputStream is, int option) throws IOException {
+        this(is, 0, 0, option);
+    }
+
+    public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
+        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        if (temp == null) {
+            throw new IOException("Create temp directory error. Please check your permission");
+        }
+        FileUtil.cp(stream, temp);
+
+        init(temp, bufferSize, cacheSize, option);
+    }
+
+    public ExcelReader(Path path) throws IOException {
+        init(path, 0, 0, VALUE_ONLY);
+    }
+
+    public ExcelReader(Path path, int option) throws IOException {
+        init(path, 0, 0, option);
+    }
+
+    public ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+        init(path, bufferSize, cacheSize, option);
+    }
+
+    protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         // Store template stream as zip file
         Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
         LOGGER.debug("Unzip file to：{}", tmp);
@@ -527,13 +569,23 @@ public class ExcelReader implements Closeable {
         // Load Styles
         Path s = tmp.resolve("xl/styles.xml");
 
-        Styles styles;
         if (exists(s)) {
-            styles = Styles.load(s);
-        } else {
-            FileUtil.rm_rf(tmp.toFile(), true);
-            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+            try {
+                styles = Styles.load(s);
+            } catch (Exception ex) {
+                LOGGER.warn("Parse style failed.", ex);
+            }
         }
+//        else {
+//            FileUtil.rm_rf(tmp.toFile(), true);
+//            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
+//        }
+        // Construct a empty Styles
+        if (styles == null) {
+            styles = Styles.forReader();
+        }
+
+        // TODO Parse theme
 
         this.option = option;
         hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
@@ -543,7 +595,7 @@ public class ExcelReader implements Closeable {
         int index = 0;
         for (; sheetIter.hasNext(); ) {
             Element e = sheetIter.next();
-            XMLSheet sheet = sheetFactory(option);
+            XMLSheet sheet = (XMLSheet) sheetFactory(option);
             sheet.setName(e.attributeValue("name"));
             sheet.setId(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
@@ -582,6 +634,7 @@ public class ExcelReader implements Closeable {
         if ((option >> 1 & 1) == 1) {
             parseFormula();
         }
+        return this;
     }
 
     /**
@@ -641,11 +694,17 @@ public class ExcelReader implements Closeable {
         return er;
     }
 
-    private XMLSheet sheetFactory(int option) {
+    /**
+     * Create a read sheet
+     *
+     * @param option the reader option.
+     * @return Sheet extends XMLSheet
+     */
+    protected Sheet sheetFactory(int option) {
         XMLSheet sheet;
         switch (option) {
-            case VALUE_AND_CALC: sheet = new XMLCalcSheet(); break;
-            case COPY_ON_MERGED: sheet = new XMLMergeSheet(); break;
+            case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
+            case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
             // TODO full reader
 //            case VALUE_AND_CALC|COPY_ON_MERGED: break;
             default            : sheet = new XMLSheet();
@@ -659,7 +718,7 @@ public class ExcelReader implements Closeable {
      * @param path documents path
      * @return enum of ExcelType
      */
-    private static ExcelType getType(Path path) {
+    public static ExcelType getType(Path path) {
         ExcelType type;
         try (InputStream is = Files.newInputStream(path)) {
             byte[] bytes = new byte[8];
@@ -712,7 +771,8 @@ public class ExcelReader implements Closeable {
         App app = new App();
         app.setCompany(root.elementText("Company"));
         app.setApplication(root.elementText("Application"));
-        app.setAppVersion(root.elementText("AppVersion"));
+        String v = root.elementText("AppVersion");
+        if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
 
         try {
             document = reader.read(Files.newInputStream(tmp.resolve("docProps/core.xml")));
@@ -736,7 +796,7 @@ public class ExcelReader implements Closeable {
 
             Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
             Class<?> type = f.getType();
-            String v = root.elementText(new QName(f.getName(), namespace));
+            v = root.elementText(new QName(f.getName(), namespace));
             if (isEmpty(v)) continue;
             if (type == String.class) {
                 try {
@@ -757,8 +817,8 @@ public class ExcelReader implements Closeable {
     }
 
     /* Parse `calcChain` */
-    private long[][] parseCalcChain() {
-        Path calcPath = self.resolve("xl/calcChain.xml");
+    static long[][] parseCalcChain(Path root) {
+        Path calcPath = root.resolve("xl/calcChain.xml");
         if (!FileUtil.exists(calcPath)) return null;
         Element calcChain;
         try {
@@ -770,7 +830,7 @@ public class ExcelReader implements Closeable {
         }
 
         Iterator<Element> ite = calcChain.elementIterator();
-        int i = 1, n = sheets().map(Sheet::getId).max(Integer::compareTo).orElse(0);
+        int i = 1, n = 10;
         long[][] array = new long[n][];
         int[] indices = new int[n];
         for (; ite.hasNext(); ) {
@@ -780,6 +840,13 @@ public class ExcelReader implements Closeable {
                 i = toInt(si.toCharArray(), 0, si.length());
             }
             if (isNotEmpty(r)) {
+                if (n < i) {
+                    n <<= 1;
+                    indices = Arrays.copyOf(indices, n);
+                    long[][] _array = new long[n][];
+                    for (int j = 0; j < n; j++) _array[j] = array[j]; // Do not copy hear.
+                    array = _array;
+                }
                 long[] sub = array[i - 1];
                 if (sub == null) {
                     sub = new long[10];
@@ -846,5 +913,14 @@ public class ExcelReader implements Closeable {
      */
     public List<Drawings.Picture> listPictures() {
         return drawings != null ? drawings.listPictures() : null;
+    }
+
+    /**
+     * Returns a global {@link Styles}
+     *
+     * @return a style entry
+     */
+    public Styles getStyles() {
+        return styles;
     }
 }

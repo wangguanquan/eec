@@ -21,11 +21,13 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +41,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -353,19 +356,6 @@ public class ExcelReaderTest {
         }
     }
 
-
-    @Test public void testMergeExcel() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
-        }
-    }
-
-    @Test public void testMergeExcel2() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
-        }
-    }
-
     @Ignore
     @Test public void testReaderLarge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
@@ -454,7 +444,7 @@ public class ExcelReaderTest {
             reader.sheets().flatMap(Sheet::rows).forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
                     if (row.hasFormula(i)) {
-                        print(new Dimension(row.getRowNum(), (short) (i + 1), 0, (short) 0));
+                        print(new Dimension(row.getRowNum(), (short) (i + 1)));
                         print(": ");
                         print(row.getFormula(i));
                         println('|');
@@ -526,6 +516,133 @@ public class ExcelReaderTest {
                     .map(row -> row.to(O.class))
                     .filter(Objects::nonNull)
                     .forEach(Print::println);
+
+            List<O> list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(O.class)).collect(Collectors.toList());
+            assert list.size() == 2;
+            assert list.get(0).fbaNo.equals("FBA15DRV4JP4U000001");
+            assert list.get(1).fbaNo.equals("FBA15DRV4JP4U000002");
+        }
+    }
+
+    @Test public void test226() throws IOException {
+        final String[] arr = {"ab", "", "r", "y", "", "6", "nrge"};
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#226.xlsx"))) {
+            String[] array = reader.sheet(0).rows().map(row -> row.getString(0)).toArray(String[]::new);
+            assert Arrays.equals(arr, array);
+        }
+    }
+
+    @Test public void test354() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
+            OO[] list = reader.sheet(0).rows()
+                    .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
+                    .map(row -> row.to(OO.class))
+                    .filter(Objects::nonNull)
+                    .toArray(OO[]::new);
+
+            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
+            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+
+            // Specify header rows
+            list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(OO.class)).toArray(OO[]::new);
+            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
+            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+
+            // Bind Java bean
+            list = reader.sheet(0).reset().bind(OO.class, 7).rows().map(row -> (OO) row.get()).toArray(OO[]::new);
+            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
+            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+        }
+    }
+
+    @Test public void testSheetConvert() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            // Read two rows as value only
+            Iterator<Row> ite = sheet.iterator();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    print(" | ");
+
+                    assert !row.hasFormula(i);
+                }
+                if (row.getRowNum() == 1) assert "D".equals(row.getString(3));
+                if (row.getRowNum() == 2) assert StringUtil.isEmpty(row.getString(3));
+
+                println();
+                if (row.getRowNum() == 2) break;
+            }
+
+            // Read next 48 rows as calc sheet
+            sheet = sheet.asCalcSheet();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    if (row.hasFormula(i)) {
+                        print(", f=");
+                        print(row.getFormula(i));
+                    }
+                    print(" | ");
+                }
+                if (row.getRowNum() == 3) assert "SUM(A1:A10)".equals(row.getFormula(2));
+                if (row.getRowNum() == 11) assert "G11+1".equals(row.getFormula(7));
+                if (row.getRowNum() == 66) assert "A66+1".equals(row.getFormula(1));
+                if (row.getRowNum() == 11) assert row.getInt(4) == 15;
+                if (row.getRowNum() == 16) assert StringUtil.isEmpty(row.getString(4));
+
+                println();
+                if (row.getRowNum() == 50) break;
+            }
+
+            // Read last rows as merged sheet
+            sheet = sheet.asMergeSheet();
+            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                for (int i = row.fc; i < row.lc; i++) {
+                    print(int2Col(i + 1));
+                    print(row.getRowNum());
+                    print(": v=");
+                    print(row.getString(i));
+                    print(" | ");
+
+                    assert !row.hasFormula(i);
+                }
+                println();
+
+                // Copy on merged
+                if (row.getRowNum() == 56) {
+                    assert row.getInt(1) == 57;
+                    assert row.getInt(2) == 57;
+                    assert row.getInt(3) == 57;
+                }
+                if (row.getRowNum() >= 59 && row.getRowNum() <= 64) {
+                    assert row.getInt(0) == 59;
+                    if (row.getRowNum() > 59) assert row.getInt(1) == 1; // formula=A60+1
+                    else assert row.getInt(1) == 60; // formula=A59+1
+                }
+            }
+        }
+    }
+
+    @Test public void testRowToMap() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == 94;
+            assert list.get(0).toString().equals("{渠道ID=4, 游戏=极品飞车, account=XuSu2gFg32, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=F}");
+            Map<String, Object> row9 = list.get(8); // Include header row
+            assert "LOL".equals(row9.get("游戏"));
+            assert "1WRQMx".equals(row9.get("account"));
+            assert (Boolean) row9.get("是否满30级");
+            assert list.get(93).toString().equals("{渠道ID=3, 游戏=WOW, account=Ae9CNO6eTu, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=B}");
         }
     }
 
@@ -1095,4 +1212,55 @@ public class ExcelReaderTest {
             return buyNo + " " + price + " " + count;
         }
     }
+
+    public static class OO {
+        @IgnoreImport
+        @ExcelColumn(colIndex = 3)
+        private BigDecimal price;
+
+        @ExcelColumn(colIndex = 1)
+        private String refId;
+
+        private BigDecimal weight;
+
+        private String brandName, productName;
+
+        @ExcelColumn(colIndex = 0)
+        private String fbaNo;
+
+        @RowNum
+        private Integer rowNum;
+
+        @Override
+        public String toString() {
+            return "rowNum: " + rowNum + " => fbaNo: " + fbaNo + ", refId: " + refId + ", price: " + price + ", weight: " + weight + ", brand: " + brandName + ", productName: " + productName;
+        }
+
+        @ExcelColumn("单个产品净重KG(必填)")
+        public void abc(BigDecimal weight) {
+            this.weight = weight;
+        }
+
+        @ExcelColumn(colIndex = 3)
+        public void setPriceString(String price) {
+            if (StringUtil.isNotEmpty(price)) {
+                try {
+                    this.price = new BigDecimal(price);
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
+
+        @ExcelColumn(colIndex = 5)
+        public void setBrandName(String brandName) {
+            this.brandName = brandName;
+        }
+
+        @ExcelColumn(colIndex = 2)
+        public void setName(String productName) {
+            this.productName = productName;
+        }
+    }
+
 }

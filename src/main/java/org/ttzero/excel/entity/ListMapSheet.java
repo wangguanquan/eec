@@ -16,8 +16,14 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.Grid;
+import org.ttzero.excel.reader.GridFactory;
+import org.ttzero.excel.util.StringUtil;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +54,15 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      */
     public ListMapSheet(String name) {
         super(name);
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param columns the header info
+     */
+    public ListMapSheet(final org.ttzero.excel.entity.Column... columns) {
+        super(columns);
     }
 
     /**
@@ -145,20 +160,25 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         if (!eof && left() < getRowBlockSize()) {
             append();
         }
-        int end = getEndIndex();
-        int len = columns.length;
+        int end = getEndIndex(), len = columns.length;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         for (; start < end; rows++, start++) {
             Row row = rowBlock.next();
             row.index = rows;
+            row.height = getRowHeight();
             Cell[] cells = row.realloc(len);
+            Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
                 org.ttzero.excel.entity.Column hc = columns[i];
-                Object e = data.get(start).get(hc.key);
-                // clear cells
+                Object e = rowDate != null ? rowDate.get(hc.key) : null;
+                // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
 
                 cellValueAndStyle.reset(rows, cell, e, hc);
+                if (hasGlobalStyleProcessor) {
+                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
+                }
             }
         }
     }
@@ -183,19 +203,19 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             columns = new org.ttzero.excel.entity.Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
-                // Ignore the null key
-                if (isEmpty(entry.getKey())) continue;
-                Object value = entry.getValue();
-                columns[i++] = new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+                org.ttzero.excel.entity.Column hc = createColumn(entry);
+                if (hc != null) columns[i++] = hc;
             }
+            if (i < size) columns = Arrays.copyOf(columns, i);
         } else {
+            Object o;
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                org.ttzero.excel.entity.Column hc = columns[i].getTail();
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
                 if (hc.getClazz() == null) {
-                    hc.setClazz(first.get(hc.key).getClass());
+                    hc.setClazz((o = first.get(hc.key)) != null ? o.getClass() : String.class);
                 }
             }
         }
@@ -203,4 +223,55 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         return columns;
     }
 
+    /**
+     * Create column from {@link Map.Entry}
+     * <p>
+     * Override the method to extend custom comments
+     *
+     * @param entry the first entry from ListMap
+     * @return the Worksheet's {@link EntryColumn} information
+     */
+    protected org.ttzero.excel.entity.Column createColumn(Map.Entry<String, ?> entry) {
+        // Ignore the null key
+        if (isEmpty(entry.getKey())) return null;
+        Object value = entry.getValue();
+        return new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+    }
+
+    /**
+     * Merge cells if
+     */
+    @Override
+    protected void mergeHeaderCellsIfEquals() {
+        super.mergeHeaderCellsIfEquals();
+
+        @SuppressWarnings("unchecked")
+        List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+        if (existsMergeCells != null) {
+            Grid grid = GridFactory.create(existsMergeCells);
+            for (org.ttzero.excel.entity.Column col : columns) {
+                if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
+                    org.ttzero.excel.entity.Column next = col.next;
+                    for (; next != null && StringUtil.isEmpty(next.key); next = next.next);
+                    if (next != null) col.key = next.key; // Keep the key to get the value
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns a row-block. The row-block is content by 32 rows
+     *
+     * @return a row-block
+     */
+    @Override
+    public RowBlock nextBlock() {
+        // clear first
+        rowBlock.clear();
+
+        // As default as force export
+        resetBlockData();
+
+        return rowBlock.flip();
+    }
 }

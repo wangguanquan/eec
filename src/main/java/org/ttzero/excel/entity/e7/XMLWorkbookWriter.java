@@ -111,18 +111,21 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     public void writeTo(Path path) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         reMarkPath(zip, path);
+        FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         Files.copy(zip, os);
+        FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(File file) throws IOException {
         Path zip = workbook.getTemplate() == null ? createTemp() : template();
         FileUtil.cp(zip, file);
+        FileUtil.rm(zip);
     }
 
 
@@ -363,11 +366,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         Sheet[] sheets = workbook.getSheets();
         for (int i = 0; i < sheets.length; i++) {
             Sheet sheet = sheets[i];
-            IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
-//            if ((n = sheet.getHeaderColumns().length) > worksheetWriter.getColumnLimit()) {
-//                throw new TooManyColumnsException(n, worksheetWriter.getColumnLimit());
-//            }
-            sheet.setSheetWriter(worksheetWriter);
+            if (sheet.getSheetWriter() == null) {
+                IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
+                sheet.setSheetWriter(worksheetWriter);
+            }
             if (sheet.getAutoSize() == 0) {
                 if (workbook.isAutoSize()) {
                     sheet.autoSize();

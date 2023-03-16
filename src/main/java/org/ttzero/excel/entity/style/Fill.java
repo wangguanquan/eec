@@ -21,8 +21,12 @@ import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
-import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * @author guanquan.wang at 2018-02-06 08:55
@@ -150,24 +154,60 @@ public class Fill implements Cloneable {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         Element patternFill = element.addElement("patternFill").addAttribute("patternType", patternType.name());
 
+        int index;
         if (fgColor != null) {
-            int colorIndex = ColorIndex.indexOf(fgColor);
-            if (colorIndex > -1) {
-                patternFill.addElement("fgColor").addAttribute("indexed", String.valueOf(colorIndex));
-            } else {
+            if (fgColor instanceof BuildInColor) {
+                patternFill.addElement("fgColor").addAttribute("indexed", String.valueOf(((BuildInColor) fgColor).getIndexed()));
+            }
+            else if ((index = ColorIndex.indexOf(fgColor)) > -1) {
+                patternFill.addElement("fgColor").addAttribute("indexed", String.valueOf(index));
+            }
+            else {
                 patternFill.addElement("fgColor").addAttribute("rgb", ColorIndex.toARGB(fgColor));
             }
         }
         if (bgColor != null) {
-            int colorIndex = ColorIndex.indexOf(bgColor);
-            if (colorIndex > -1) {
-                patternFill.addElement("bgColor").addAttribute("indexed", String.valueOf(colorIndex));
-            } else {
+            if (bgColor instanceof BuildInColor) {
+                patternFill.addElement("bgColor").addAttribute("indexed", String.valueOf(((BuildInColor) bgColor).getIndexed()));
+            }
+            else if ((index = ColorIndex.indexOf(bgColor)) > -1) {
+                patternFill.addElement("bgColor").addAttribute("indexed", String.valueOf(index));
+            }
+            else {
                 patternFill.addElement("bgColor").addAttribute("rgb", ColorIndex.toARGB(bgColor));
             }
         }
 
         return element;
+    }
+
+    public static List<Fill> domToFill(Element root) {
+        // Fills tags
+        Element ele = root.element("fills");
+        // Break if there don't contains 'fills' tag
+        if (ele == null) {
+            return new ArrayList<>();
+        }
+        return ele.elements().stream().map(Fill::parseFillTag).collect(Collectors.toList());
+    }
+
+    static Fill parseFillTag(Element tag) {
+        Element e = tag.element("patternFill");
+        Fill fill = new Fill();
+        try {
+            fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
+        } catch (IllegalArgumentException ex) {
+            // Ignore
+        }
+        Element fgColor = e.element("fgColor");
+        if (fgColor != null) {
+            fill.fgColor = Styles.parseColor(fgColor);
+        }
+        Element bgColor = e.element("bgColor");
+        if (bgColor != null) {
+            fill.bgColor = Styles.parseColor(bgColor);
+        }
+        return fill;
     }
 
     @Override public Fill clone() {
@@ -185,5 +225,27 @@ public class Fill implements Cloneable {
             other.fgColor = new Color(fgColor.getRGB());
         }
         return other;
+    }
+
+    @Override public String toString() {
+        if (patternType == null || patternType == PatternType.none) return "<fill><patternFill patternType=\"none\"/></fill>";
+        StringBuilder buf = new StringBuilder("<fill><patternFill patternType=\"").append(patternType).append("\">");
+        int index;
+        if (fgColor != null) {
+            if (fgColor instanceof BuildInColor)
+                buf.append("<fgColor indexed=\"").append(((BuildInColor) fgColor).getIndexed()).append("\"/>");
+            else if ((index = ColorIndex.indexOf(fgColor)) > -1)
+                buf.append("<fgColor indexed=\"").append(index).append("\"/>");
+            else buf.append("<fgColor rgb=\"").append(ColorIndex.toARGB(fgColor)).append("\"/>");
+        }
+        if (bgColor != null) {
+            if (bgColor instanceof BuildInColor)
+                buf.append("<bgColor indexed=\"").append(((BuildInColor) bgColor).getIndexed()).append("\"/>");
+            else if ((index = ColorIndex.indexOf(bgColor)) > -1)
+                buf.append("<bgColor indexed=\"").append(index).append("\"/>");
+            else buf.append("<bgColor rgb=\"").append(ColorIndex.toARGB(bgColor)).append("\"/>");
+        }
+        buf.append("</patternFill></fill>");
+        return buf.toString();
     }
 }

@@ -32,7 +32,7 @@ public class Horizontals {
         , DISTRIBUTED = 7 << Styles.INDEX_HORIZONTAL // Distributed Horizontal Alignment
         ;
 
-    private static final String[] _names = {
+    public static final String[] _names = {
             "general"
             ,"left"
             ,"right"

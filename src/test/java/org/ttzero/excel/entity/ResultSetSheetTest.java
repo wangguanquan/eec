@@ -18,7 +18,11 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.entity.style.Styles;
 
+import java.awt.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -46,6 +50,27 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class)
                 )
+                .writeTo(defaultTestPath);
+        }
+    }
+
+    @Test public void testStyleDesign4RS() throws IOException, SQLException {
+        try (
+            Connection con = getConnection();
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student limit 10");
+            ResultSet rs = ps.executeQuery()
+        ) {
+            new Workbook("test global style design for ResultSet", author)
+                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst)->{
+                    try {
+                        if (rst.getInt("age") > 14) {
+                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));
+                        }
+                    } catch (SQLException ex) {
+                        // Ignore
+                    }
+                    return style;
+                }))
                 .writeTo(defaultTestPath);
         }
     }

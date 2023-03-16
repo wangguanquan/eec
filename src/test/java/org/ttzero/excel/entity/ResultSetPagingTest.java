@@ -17,7 +17,11 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.entity.style.Styles;
 
+import java.awt.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,8 +33,7 @@ import java.sql.Timestamp;
  * @author guanquan.wang at 2019-04-29 15:16
  */
 public class ResultSetPagingTest extends SQLWorkbookTest {
-    @Test
-    public void testPaging() throws SQLException, IOException {
+    @Test public void testPaging() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student");
             ResultSet rs = ps.executeQuery();
@@ -46,6 +49,30 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
                 )
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
+            ps.close();
+        }
+    }
+
+
+    @Test public void testStyleDesignPaging() throws SQLException, IOException {
+        try (Connection con = getConnection()) {
+            PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student");
+            ResultSet rs = ps.executeQuery();
+            new Workbook("test global style design for ResultSet Paging", author)
+                .watch(Print::println)
+                .setConnection(con)
+                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst)->{
+                    try {
+                        if (rst.getInt("age") > 14) {
+                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));
+                        }
+                    } catch (SQLException ex) {
+                        // Ignore
+                    }
+                    return style;
+                }))
+                .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
+                .writeTo(defaultTestPath);
             ps.close();
         }
     }

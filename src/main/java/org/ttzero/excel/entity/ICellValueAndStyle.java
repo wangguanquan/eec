@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
 
@@ -70,6 +71,17 @@ public interface ICellValueAndStyle {
     int getStyleIndex(int rows, Column hc, Object o);
 
     /**
+     * Setting all cell style of the specified row
+     *
+     * @param <T> the row's class
+     * @param o the row data
+     * @param cell the cell of row
+     * @param hc the header column
+     * @param styleProcessor a customize {@link StyleProcessor}
+     */
+    <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor);
+
+    /**
      * Setting cell value
      *
      * @param row the row number
@@ -84,10 +96,13 @@ public interface ICellValueAndStyle {
             conversion(row, cell, e, hc);
             return;
         }
-
         if (e == null) {
             setNullValue(row, cell, hc);
             return;
+        }
+        if (clazz == null) {
+            clazz = e.getClass();
+            hc.setClazz(clazz);
         }
         if (isString(clazz)) {
             cell.setSv(e.toString());

@@ -109,6 +109,15 @@ public class RelManager implements Serializable {
         return null;
     }
 
+    public Relationship getByType(String type) {
+        if (relationships == null || relationships.isEmpty() || StringUtil.isEmpty(type))
+            return null;
+        for (Relationship rel : relationships) {
+            if (type.equals(rel.getType())) return rel;
+        }
+        return null;
+    }
+
     public void write(Path parent, String name) throws IOException {
         if (relationships == null || relationships.isEmpty()) {
             return;

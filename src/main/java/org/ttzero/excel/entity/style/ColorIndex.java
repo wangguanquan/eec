@@ -27,8 +27,8 @@ import java.awt.Color;
  */
 public class ColorIndex {
     /** color cache */
-    private static final int[] colors = {
-        0,         0,         0,         0,         0,         0,         0,         0,
+    public static final int[] colors = {
+        -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
         -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
         -8388608,  -16744448, -16777088, -8355840,  -8388480,  -16744320, -4144960,  -8355712,
         -6710785,  -6737050,  -52,       -3342337,  -10092442, -32640,    -16750900, -3355393,
@@ -38,9 +38,33 @@ public class ColorIndex {
         -16764058, -13395610, -16764160, -13421824, -6737152,  -6737050,  -13421671, -13421773
     };
 
+    /** Defined 12 base theme color */
+    public static final Color[] themeColors = {
+            // lt1, dk1
+            new Color(255, 255, 255), new Color(  0,   0,   0),
+            // lt2, dk2
+            new Color(238, 236, 225), new Color( 31,  73, 125),
+            new Color( 79, 129, 189), new Color(192,  80,  77),
+            new Color(155, 187,  89), new Color(128, 100, 162),
+            new Color( 75, 172, 198), new Color(247, 150,  70),
+            new Color(  0,   0, 255), new Color(128,   0, 128)
+    };
+
+    /**
+     * {@link BuildInColor}
+     */
+    @Deprecated
     public static int get(int index) {
         if (index < 0 || index >= colors.length) return 8;
         return colors[index];
+    }
+
+    /**
+     * {@link BuildInColor}
+     */
+    @Deprecated
+    public static Color getColor(int index) {
+        return new Color(index < 0 || index >= colors.length ? colors[8] : colors[index]);
     }
 
     public static int indexOf(Color color) {
@@ -48,8 +72,8 @@ public class ColorIndex {
     }
 
     public static int indexOf(int rgb) {
+        if (rgb >= 0) return -1; // alpha=0
         int i = 8;
-        if (rgb >= 0) return i;
         for ( ; i < colors.length; i++) {
             if (colors[i] == rgb) break;
         }
@@ -83,5 +107,15 @@ public class ColorIndex {
             }
         }
         return new String(chars);
+    }
+
+    public static Color toColor(String rgb) {
+        // Remove the alpha option of the color
+        if (rgb.length() == 8 && rgb.startsWith("FF")) {
+            rgb = "#" + rgb.substring(2);
+        } else if (rgb.length() == 6 && rgb.charAt(0) != '#') {
+            rgb = "#" + rgb;
+        }
+        return Styles.toColor(rgb);
     }
 }

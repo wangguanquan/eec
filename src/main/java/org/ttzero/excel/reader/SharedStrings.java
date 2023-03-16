@@ -65,7 +65,7 @@ public class SharedStrings implements Closeable {
      *
      * @param data the shared strings
      */
-    SharedStrings(String[] data) {
+    public SharedStrings(String[] data) {
         max = data.length;
         offset_forward = 0;
         status = 1;
@@ -96,7 +96,7 @@ public class SharedStrings implements Closeable {
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
      */
-    SharedStrings(Path sstPath, int cacheSize, int hotSize) {
+    public SharedStrings(Path sstPath, int cacheSize, int hotSize) {
         this.sstPath = sstPath;
         if (cacheSize > 0) {
             this.page = tableSizeFor(cacheSize);
@@ -110,8 +110,9 @@ public class SharedStrings implements Closeable {
      * @param sst {@link IndexSharedStringTable}
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
+     * @throws IOException if I/O error occur.
      */
-    SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
+    public SharedStrings(IndexSharedStringTable sst, int cacheSize, int hotSize) throws IOException {
         this.sst = sst;
         max = sst.size();
         if (cacheSize > 0) {
@@ -212,7 +213,7 @@ public class SharedStrings implements Closeable {
      * @param cap the custom buffer size
      * @return Returns a power of two size
      */
-    static int tableSizeFor(int cap) {
+    public static int tableSizeFor(int cap) {
         int n = cap - 1;
         n |= n >>> 1;
         n |= n >>> 2;
@@ -228,7 +229,7 @@ public class SharedStrings implements Closeable {
      * @return the {@code SharedStrings}
      * @throws IOException if io error occur
      */
-    SharedStrings load() throws IOException {
+    public SharedStrings load() throws IOException {
         if (!exists(sstPath)) {
             max = 0;
             return this;
@@ -268,7 +269,7 @@ public class SharedStrings implements Closeable {
             forward = new String[page];
             backward = new String[page];
         } else {
-            forward = new String[max];
+            forward = new String[page];
         }
     }
 
@@ -329,7 +330,7 @@ public class SharedStrings implements Closeable {
 
             if (vt < 0) vt = 0;
 
-            loadXml();
+            readMore();
         }
 
         String value = null;
@@ -375,7 +376,7 @@ public class SharedStrings implements Closeable {
                 }
                 total_sst++;
             } else {
-                loadXml();
+                readMore();
                 total_forward++;
             }
             if (forward[0] == null) {
@@ -423,7 +424,7 @@ public class SharedStrings implements Closeable {
     /**
      * Load string record from xml
      */
-    private void loadXml() {
+    protected void readMore() {
         int index = offset_forward / page;
         try {
             // Read xml file string value into IndexSharedStringTable
@@ -446,7 +447,7 @@ public class SharedStrings implements Closeable {
      * @return the word count
      * @throws IOException if I/O error occur
      */
-    private int readData() throws IOException {
+    protected int readData() throws IOException {
         // Read forward area data
         int n = 0, length, nChar;
         for (; (length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0; ) {
@@ -472,12 +473,16 @@ public class SharedStrings implements Closeable {
                 ++offsetM;
                 break;
             } else if (length < cb.length && nChar == length - 6) { // EOF '</sst>'
-                if (max == -1) { // Reset totals when unknown size
-                    max = offsetM * page + n;
-                }
+//                if (max == -1) { // Reset totals when unknown size
+//                    max = offsetM * page + n;
+//                }
                 ++offsetM; // out of index range
                 break;
             }
+        }
+        // Reset totals when unknown size
+        if (max < n) {
+            max = offsetM * page + n;
         }
         return n; // Returns the word count
     }
@@ -494,6 +499,7 @@ public class SharedStrings implements Closeable {
                     forward[n++] = EMPTY;
                     if (status == 4) sst.push(forward[n - 1]);
                     nChar += 5;
+                    continue;
                 } else nChar += 4;
             }
 
@@ -539,6 +545,7 @@ public class SharedStrings implements Closeable {
                 }
                 forward[n++] = buf.toString();
                 if (status == 4) sst.push(forward[n - 1]);
+                nChar = end + 5;
             }
 
             // An integral page records
@@ -549,6 +556,7 @@ public class SharedStrings implements Closeable {
         return new int[] { nChar, n };
     }
 
+    // Returns the index round of <t>
     private int[] subT(char[] cb, int nChar, int len0, int len1) {
         do {
             // The next tag
@@ -567,10 +575,18 @@ public class SharedStrings implements Closeable {
             } else break;
         } while (nChar < len1);
 
+        // Empty si
+        if (nChar < len1 && cb[nChar + 1] == '/' && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
+            // It will skip the </t> tag, so here you need to go back 4 characters in reverse
+            return new int[] { nChar - 4, nChar - 4 };
+        }
+
         for (; nChar < len0 && (cb[nChar] != '<' || cb[nChar + 1] != 't'
-            || cb[nChar + 2] != '>' && cb[nChar + 2] != ' '); ++nChar)
+            || cb[nChar + 2] != '>' && cb[nChar + 2] != ' ' && cb[nChar + 2] != '/'); ++nChar)
             ;
         if (nChar >= len0) return new int[] { -1 }; // Not found
+        // Empty tag
+        if (cb[nChar + 2] == '/' && cb[nChar + 3] == '>') return new int[] { nChar, nChar };
         int a = nChar += 3;
         if (cb[nChar - 1] == ' ') { // space="preserve"
             for (; nChar < len0 && cb[nChar++] != '>'; ) ;

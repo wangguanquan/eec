@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -32,8 +33,10 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
 
+import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,9 +44,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Each worksheet corresponds to one or more sheet.xml of physical.
@@ -74,6 +82,7 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  * @see ResultSetSheet
  * @see StatementSheet
  * @see CSVSheet
+ * @see EmptySheet
  *
  * @author guanquan.wang on 2017/9/26.
  */
@@ -100,7 +109,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20;
+    protected double width = 20.38D;
     /**
      * The row number
      */
@@ -156,27 +165,69 @@ public abstract class Sheet implements Cloneable, Storable {
      * Ignore header when export
      */
     protected int nonHeader = -1;
-
+    /**
+     * Limit row number in worksheet
+     */
     private int rowLimit;
+
+    /**
+     * Other extend properties
+     */
+    protected Map<String, Object> extProp = new HashMap<>();
+    /**
+     * The bit flag of the extended parameter. If there is an extended parameter,
+     * the corresponding bit is 1. The lower 16 bits are occupied by the system,
+     * and the upper 16 bits can be extended by themselves.
+     */
+    protected int extPropMark;
+
+    /**
+     * Show grid lines
+     */
+    protected Boolean showGridLines;
+
+    /**
+     * Specify custom header row height
+     */
+    protected double headerRowHeight = 20.5D, rowHeight = -1D;
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public Sheet setId(int id) {
         this.id = id;
+        return this;
     }
 
-    public void setSheetWriter(IWorksheetWriter sheetWriter) {
+    /**
+     * Settings custom IWorksheetWriter
+     *
+     * @param sheetWriter {@link IWorksheetWriter}
+     * @return current Sheet
+     */
+    public Sheet setSheetWriter(IWorksheetWriter sheetWriter) {
         this.sheetWriter = sheetWriter;
+        this.sheetWriter.setWorksheet(this);
+        return this;
     }
 
-    public void setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
+    /**
+     * Returns {@link IWorksheetWriter}
+     *
+     * @return custom IWorksheetWriter
+     */
+    public IWorksheetWriter getSheetWriter() {
+        return sheetWriter;
+    }
+
+    public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
         this.cellValueAndStyle = cellValueAndStyle;
+        return this;
     }
 
     public Sheet() {
-        this(null);
+        relManager = new RelManager();
     }
 
     /**
@@ -186,6 +237,16 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet(String name) {
         this.name = name;
+        relManager = new RelManager();
+    }
+
+    /**
+     * Constructor worksheet
+     *
+     * @param columns the header info
+     */
+    public Sheet(final org.ttzero.excel.entity.Column... columns) {
+        this.columns = columns;
         relManager = new RelManager();
     }
 
@@ -284,7 +345,7 @@ public abstract class Sheet implements Cloneable, Storable {
          *
          * @param type the cell type
          * @return the {@link org.ttzero.excel.entity.Column}
-         * @deprecated replace it with the {{@link #setNumFmt(String)}} method.
+         * @deprecated replace it with the {@link #setNumFmt(String)}.
          */
         @Deprecated
         public org.ttzero.excel.entity.Column setType(int type) {
@@ -304,7 +365,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns workbook
      *
-     * @return the {@link Workbook}
+     * @return current {@link Workbook}
      */
     public Workbook getWorkbook() {
         return workbook;
@@ -314,7 +375,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the workbook
      *
      * @param workbook the {@link Workbook}
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setWorkbook(Workbook workbook) {
         this.workbook = workbook;
@@ -348,7 +409,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns shared string
      *
-     * @return the {@link SharedStrings}
+     * @return global {@link SharedStrings} in workbook
      */
     public SharedStrings getSst() {
         return workbook.getSst();
@@ -366,7 +427,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting auto resize cell's width
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet autoSize() {
         this.autoSize = 1;
@@ -376,7 +437,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting fix column width
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet fixSize() {
         this.autoSize = 2;
@@ -387,7 +448,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting fix column width
      *
      * @param width the column width
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet fixSize(double width) {
         this.autoSize = 2;
@@ -421,26 +482,38 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Cancel the odd row's fill style
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet cancelOddStyle() {
         this.autoOdd = 1;
         return this;
     }
 
+    /**
+     * Returns auto setting odd background flag
+     *
+     * @return 1: auto setting, others none
+     */
     public int getAutoOdd() {
         return autoOdd;
     }
 
-    public void setAutoOdd(int autoOdd) {
+    /**
+     * Setting auto setting odd background flag
+     *
+     * @param autoOdd 1: setting, others none
+     * @return current {@link Sheet}
+     */
+    public Sheet setAutoOdd(int autoOdd) {
         this.autoOdd = autoOdd;
+        return this;
     }
 
     /**
      * Setting the odd row's fill style
      *
      * @param fill the fill style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setOddFill(Fill fill) {
         this.oddFill = workbook.getStyles().addFill(fill);
@@ -469,7 +542,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the worksheet name
      *
      * @param name the worksheet name
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setName(String name) {
         this.name = name;
@@ -482,6 +555,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return Columns instance if exists
      */
     public Comments getComments() {
+        if (comments != null && comments.id == 0) {
+            comments.id = this.id;
+        }
         return comments;
     }
 
@@ -492,13 +568,99 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Comments createComments() {
         if (comments == null) {
-            comments = new Comments(id, workbook.getCreator());
+            comments = workbook != null ? new Comments(id, workbook.getCreator()) : new Comments();
             // FIXME Removed at excel version 2013
-            addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
+            if (id > 0) {
+                addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
 
-            addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+                addRel(new Relationship("../comments" + id + Const.Suffix.XML, Const.Relationship.COMMENTS));
+            }
         }
         return comments;
+    }
+
+    /**
+     * Returns show grid lines flag
+     *
+     * @return true if {@code showGridLines} is null or {@code true}
+     */
+    public boolean isShowGridLines() {
+        return showGridLines == null || showGridLines;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet showGridLines() {
+        this.showGridLines = true;
+        return this;
+    }
+
+    /**
+     * Setting show grid lines flag
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet hideGridLines() {
+        this.showGridLines = false;
+        return this;
+    }
+
+    /**
+     * Returns the header row height
+     *
+     * @return header row height
+     */
+    public double getHeaderRowHeight() {
+        return headerRowHeight;
+    }
+
+    /**
+     * Specify custom header row height
+     *
+     * If it is negative, it means that there is no special setting
+     * , and the default height is generally about {@code 13.5}
+     *
+     * @param headerRowHeight row height or negative number
+     * @return current {@link Sheet}
+     */
+    public Sheet setHeaderRowHeight(double headerRowHeight) {
+        this.headerRowHeight = headerRowHeight;
+        return this;
+    }
+
+    /**
+     * Returns the row height
+     *
+     * @return row height
+     */
+    public double getRowHeight() {
+        return rowHeight;
+    }
+
+    /**
+     * Specify custom row height
+     *
+     * If it is negative, it means that there is no special setting
+     * , and the default height is generally about {@code 13.5}
+     *
+     * @param rowHeight row height or negative number
+     * @return current {@link Sheet}
+     */
+    public Sheet setRowHeight(double rowHeight) {
+        this.rowHeight = rowHeight;
+        return this;
+    }
+
+    /**
+     * Returns the columns
+     *
+     * @return array of column
+     */
+    public org.ttzero.excel.entity.Column[] getColumns() {
+        return columns;
     }
 
     /**
@@ -526,21 +688,37 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
+            // Create header columns
             this.columns = getHeaderColumns();
-            // Reset Common Properties
-            resetCommonProperties(columns);
-            // Sort column index
-            sortColumns(columns);
-            // Turn to one-base
-            for (int i = 0; i < columns.length; i++) {
-                if (i > 0 && columns[i - 1].colIndex >= columns[i].colIndex) columns[i].colIndex = columns[i - 1].colIndex + 1;
-                else if (columns[i].colIndex <= i) columns[i].colIndex = i + 1;
-                else columns[i].colIndex++;
+
+            // Ready Flag
+            headerReady |= (this.columns.length > 0);
+
+            if (headerReady) {
+                // Sort column index
+                sortColumns(columns);
+
+                // Turn to one-base
+                calculateRealColIndex();
+
+                // Reverse
+                reverseHeadColumn();
+
+                // Add merge cell properties
+                mergeHeaderCellsIfEquals();
+
+                // Reset Common Properties
+                resetCommonProperties(columns);
+
+                // Check the limit of columns
+                checkColumnLimit();
             }
 
-            // Check the limit of columns
-            checkColumnLimit();
-            headerReady |= (this.columns.length > 0);
+            // Reset Row limit
+            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize());
+
+            // Mark ext-properties
+            markExtProp();
         }
         return columns;
     }
@@ -549,6 +727,10 @@ public abstract class Sheet implements Cloneable, Storable {
         for (org.ttzero.excel.entity.Column column : columns) {
             if (column == null) continue;
             if (column.styles == null) column.styles = workbook.getStyles();
+            if (column.next != null) {
+                for (org.ttzero.excel.entity.Column col = column.next; col != null; col = col.next)
+                    col.styles = workbook.getStyles();
+            }
         }
     }
 
@@ -556,27 +738,27 @@ public abstract class Sheet implements Cloneable, Storable {
         if (columns.length <= 1) return;
         int j = 0;
         for (int i = 0; i < columns.length; i++) {
-            if (columns[i].colIndex >= 0) {
-                int n = search(columns, j, columns[i].colIndex);
+            if (columns[i].getTail().colIndex >= 0) {
+                int n = search(columns, j, columns[i].getTail().colIndex);
                 if (n < i) insert(columns, n, i);
                 j++;
             }
         }
         // Finished
         if (j == columns.length) return;
-        int n = columns[0].colIndex;
+        int n = columns[0].getTail().colIndex;
         for (int i = 0; i < columns.length && j < columns.length; ) {
             if (n > i) {
                 for (int k = Math.min(n - i, columns.length - j); k > 0; k--, j++)
                     insert(columns, i++, j);
             } else i++;
-            if (i < columns.length) n = columns[i].colIndex;
+            if (i < columns.length) n = columns[i].getTail().colIndex;
         }
     }
 
     protected int search(org.ttzero.excel.entity.Column[] columns, int n, int k) {
         int i = 0;
-        for (; i < n && columns[i].colIndex <= k; i++) ;
+        for (; i < n && columns[i].getTail().colIndex <= k; i++) ;
         return i;
     }
 
@@ -587,10 +769,28 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Calculate the true col-Index
+     */
+    protected void calculateRealColIndex() {
+        for (int i = 0; i < columns.length; i++) {
+            org.ttzero.excel.entity.Column hc = columns[i].getTail();
+            hc.realColIndex = hc.colIndex;
+            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
+            else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
+            else hc.realColIndex = hc.colIndex + 1;
+
+            if (hc.prev != null) {
+                for (org.ttzero.excel.entity.Column col = hc.prev; col != null; col = col.prev)
+                    col.realColIndex = hc.realColIndex;
+            }
+        }
+    }
+
+    /**
      * Setting the header rows's columns
      *
      * @param columns the header row's columns
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setColumns(final org.ttzero.excel.entity.Column[] columns) {
         this.columns = columns;
@@ -600,7 +800,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns the {@link WaterMark}
      *
-     * @return the {@link WaterMark}
+     * @return the {@link WaterMark} in worksheet
      * @see WaterMark
      */
     public WaterMark getWaterMark() {
@@ -611,7 +811,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the {@link WaterMark}
      *
      * @param waterMark the {@link WaterMark}
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -630,7 +830,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Setting the worksheet status
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet hidden() {
         this.hidden = true;
@@ -640,7 +840,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet forceExport() {
         this.forceExport = 1;
@@ -650,7 +850,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Cancel force export
      *
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet cancelForceExport() {
         this.forceExport = 2;
@@ -711,7 +911,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Add relationship
      *
      * @param rel Relationship
-     * @return worksheet
+     * @return current worksheet
      */
     public Sheet addRel(Relationship rel) {
         relManager.add(rel);
@@ -737,7 +937,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param font   the font
      * @param fill   the fill style
      * @param border the border style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
         return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
@@ -751,7 +951,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param border     the border style
      * @param vertical   the vertical style
      * @param horizontal the horizontal style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         return setHeadStyle(null, font, fill, border, vertical, horizontal);
@@ -766,7 +966,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param border     the border style
      * @param vertical   the vertical style
      * @param horizontal the horizontal style
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
@@ -784,7 +984,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the header cell styles
      *
      * @param style the styles value
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyle(int style) {
         headStyle = style;
@@ -796,7 +996,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting the header cell styles
      *
      * @param styleIndex the styles index
-     * @return the {@link Sheet}
+     * @return current {@link Sheet}
      */
     public Sheet setHeadStyleIndex(int styleIndex) {
         headStyleIndex = styleIndex;
@@ -835,7 +1035,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 , 12, Font.Style.BOLD, Styles.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
-                | styles.addBorder(Border.parse("thin black"))
+                | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER
                 | Horizontals.CENTER;
     }
@@ -885,7 +1085,7 @@ public abstract class Sheet implements Cloneable, Storable {
         // clear first
         rowBlock.clear();
 
-        if (columns.length > 0) {
+        if (columns.length > 0 || forceExport == 1) {
             resetBlockData();
         }
 
@@ -922,7 +1122,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Returns the copy worksheet name
      *
-     * @return the name
+     * @return the name of copy worksheet
      */
     protected String getCopySheetName() {
         int sub = copyCount;
@@ -979,16 +1179,16 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns.length > 0 ? columns[columns.length - 1].colIndex : 0
+        int a = columns.length > 0 ? columns[columns.length - 1].getRealColIndex() : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
-        } else {
+        } else if (nonHeader == -1 && headerReady) {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;
                 for (org.ttzero.excel.entity.Column column : columns) {
-                    if (isEmpty(column.name)) n++;
+                    if (isEmpty(column.name) && isEmpty(column.key)) n++;
                 }
                 noneHeader = n == columns.length;
             }
@@ -996,7 +1196,6 @@ public abstract class Sheet implements Cloneable, Storable {
                 if (rows > 0) rows--;
                 ignoreHeader();
             } else this.nonHeader = 0;
-            this.rowLimit = sheetWriter.getRowLimit() - (this.nonHeader ^ 1);
         }
     }
 
@@ -1092,7 +1291,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Settings nonHeader property
      *
-     * @return the Worksheet
+     * @return current Worksheet
      */
     public Sheet ignoreHeader() {
         this.nonHeader = 1;
@@ -1114,7 +1313,229 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit;
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()));
+    }
+
+    /**
+     * Append extend property
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return current Worksheet
+     */
+    public Sheet putExtProp(String key, Object value) {
+        extProp.put(key, value);
+        return this;
+    }
+
+    /**
+     * If the specified key is not already associated with a value (or is mapped
+     * to {@code null}) associates it with the given value and returns
+     * {@code null}, else returns the current value.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return current Worksheet
+     */
+    public Sheet putExtPropIfAbsent(String key, Object value) {
+        extProp.putIfAbsent(key, value);
+        return this;
+    }
+
+    /**
+     * Copies all of the mappings from the specified map to extend properties
+     *
+     * @param m mappings to be stored in this map
+     * @return current Worksheet
+     */
+    public Sheet putAllExtProp(Map<String, Object> m) {
+        extProp.putAll(m);
+        return this;
+    }
+
+    /**
+     * Returns the value to which the specified key in extend property,
+     * or {@code null} if it contains no mapping for the key.
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the extend property value
+     */
+    public Object getExtPropValue(String key) {
+        return extProp.get(key);
+    }
+
+    /**
+     * Shallow copy all extend properties
+     *
+     * @return all extend properties
+     */
+    public Map<String, Object> getExtPropAsMap() {
+        return new HashMap<>(extProp);
+    }
+
+    /**
+     * Mark ext-properties bit
+     */
+    protected void markExtProp() {
+        // Mark Freeze Panes
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.FREEZE) != null ? 1 : 0;
+        // Mark global style design
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
+        // Mark global merged cells
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS) != null ? 1 << 2 : 0;
+    }
+
+    /**
+     * Reverse and fill Header column
+     */
+    protected void reverseHeadColumn() {
+        if (!headerReady) this.columns = getHeaderColumns();
+        if (columns == null || columns.length == 0) return;
+
+        // Count the number of sub-columns
+        int[] lenArray = new int[columns.length];
+        int maxSubColumnSize = 1;
+        for (int i = 0, a, len = columns.length; i < len; i++) {
+            org.ttzero.excel.entity.Column col = columns[i];
+            a = col.subColumnSize();
+            lenArray[i] = a;
+            if (a > maxSubColumnSize) {
+                maxSubColumnSize = a;
+            }
+        }
+        // Single header column
+        if (maxSubColumnSize == 1) return;
+
+        // Reverse and fill empty column
+        for (int i = 0, len = columns.length; i < len; i++) {
+            org.ttzero.excel.entity.Column col = columns[i];
+            // Reverse header to tail
+            if (col.tail != null) {
+                org.ttzero.excel.entity.Column head = col.tail, tmp = head.prev;
+                head.tail = null; head.prev = null; head.next = null;
+                // Switch prev and next point
+                for (; tmp != null; ) {
+                    org.ttzero.excel.entity.Column ptmp = tmp.prev;
+                    tmp.tail = null; tmp.prev = null; tmp.next = null;
+                    head.addSubColumn(tmp);
+                    tmp = ptmp;
+                }
+                head.prev = null;
+                if (head.tail != null) head.tail.next = null;
+                columns[i] = head;
+                col = head;
+            }
+            // Fill empty column
+            if (lenArray[i] < maxSubColumnSize) {
+                for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
+                    org.ttzero.excel.entity.Column sub = new org.ttzero.excel.entity.Column().setColIndex(col.colIndex);
+                    sub.realColIndex = col.realColIndex;
+                    col.addSubColumn(sub);
+                }
+            }
+        }
+    }
+
+    /**
+     * Merge cells if
+     */
+    protected void mergeHeaderCellsIfEquals() {
+        int x = columns.length, y = x > 0 ? columns[0].subColumnSize() : 0, n = x * y;
+        // Single header column
+        if (y <= 1) return;
+
+        org.ttzero.excel.entity.Column[] array = new org.ttzero.excel.entity.Column[n];
+        for (int i = 0; i < x; i++) {
+            System.arraycopy(columns[i].toArray(), 0, array, y * i, y);
+        }
+
+        // Mark as 1 if visited
+        int[] marks = new int[n];
+
+        // FIXME If you do not write data from the first row, the code logic here
+        //  should start the calculation with the specified row
+        int fc = 0, fr = 0, lc = 0, lr = 0;
+        List<Dimension> mergeCells = new ArrayList<>(), _tmpCells = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            // Skip if marked
+            if (marks[i] == 1) continue;
+
+            org.ttzero.excel.entity.Column col = array[i];
+            marks[i] = 1;
+            if (isEmpty(col.name)) {
+                continue;
+            }
+            int a = 0;
+            if (i + y < n && col.name.equals(array[i + y].name)) {
+                fc = i / y; fr = i % y; lc = fc + 1; lr = fr;
+                a = 1;
+                marks[i + y] = 1;
+                for (int c; (c = i + (y * (a + 1))) < n; a++) {
+                    if (col.name.equals(array[c].name)) {
+                        lc++;
+                        marks[c] = 1;
+                    } else break;
+                }
+            }
+            int tail = i / y * y + y, r;
+            if (i + 1 < tail && (col.name.equals(array[i + 1].name) || isEmpty(array[i + 1].name))) {
+                r = i + 1;
+                marks[r] = 1;
+                fc = i / y; fr = i % y; lc = fc + a; lr = fr;
+                A: for (; r < tail; r++) {
+                    for (int k = 0; k <= a; k++) {
+                        if (!col.name.equals(array[r + k * y].name) && isNotEmpty(array[r + k * y].name))
+                            break A;
+                    }
+                    for (int k = 0; k <= a; k++) {
+                        marks[r + k * y] = 1;
+                    }
+                    lr++;
+                }
+                i = r - 1;
+            }
+            // Add merged cells
+            if (fc < lc || fr < lr) {
+                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].realColIndex, y - fr, (short) array[y - fr - 1 + lc * y].realColIndex));
+                _tmpCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
+                // Reset
+                fc = lc; fr = lr;
+            }
+        }
+
+        // Put merged-cells into ext-properties
+        if (!mergeCells.isEmpty()) {
+            for (Dimension dim : _tmpCells) {
+                org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
+                Comment headerComment = col.headerComment;
+                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column().from(col);
+
+                // Clear name in merged cols range
+                for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
+                    for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
+                        org.ttzero.excel.entity.Column currentCol = array[m * y + o];
+                        currentCol.name = null;
+                        currentCol.key = null;
+                        if (currentCol.headerComment != null) {
+                            if (headerComment == null) {
+                                headerComment = currentCol.headerComment;
+                            }
+                            currentCol.headerComment = null;
+                        }
+                    }
+                }
+
+                // Copy last col's name into first col
+                org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
+                lastCol.from(tmp);
+                lastCol.headerComment = headerComment;
+            }
+
+            @SuppressWarnings("unchecked")
+            List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+            if (existsMergeCells != null && !existsMergeCells.isEmpty()) existsMergeCells.addAll(mergeCells);
+            else putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+        }
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

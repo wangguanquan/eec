@@ -371,6 +371,17 @@ public class Workbook implements Storable {
     }
 
     /**
+     * Specify a custom global {@link Styles}
+     *
+     * @param styles custom Styles
+     * @return the {@link Workbook}
+     */
+    public Workbook setStyles(Styles styles) {
+        this.styles = styles;
+        return this;
+    }
+
+    /**
      * Setting the excel author name.
      * <p>
      * If you do not set the creator it will get the current OS login user name,

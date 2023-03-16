@@ -16,9 +16,12 @@
 
 package org.ttzero.excel.annotation;
 
+import org.ttzero.excel.entity.Sheet;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -32,6 +35,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
+@Repeatable(ExcelColumns.class)
 public @interface ExcelColumn {
     /**
      * Title of column
@@ -96,4 +100,21 @@ public @interface ExcelColumn {
      */
     int colIndex() default -1;
 
+    /**
+     * If {@link Sheet#autoSize()} is {@code true}, The column width take the minimum of `width` and `maxWidth`,
+     * if `autoWidth` is {@code false}, The column width use `maxWidth` directly as the column width
+     *
+     * @return max cell width, less than or equal to 0 means unset
+     */
+    double maxWidth() default 0.0D;
+
+    /**
+     * Hidden current column
+     * <p>
+     * Only set the column to hide, the data will still be written,
+     * you can right-click to "un-hide" to display in file
+     *
+     * @return true: hidden otherwise show
+     */
+    boolean hide() default false;
 }

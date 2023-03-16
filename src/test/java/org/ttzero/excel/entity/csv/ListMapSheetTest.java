@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ListMapSheet;
-import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 
@@ -211,7 +210,7 @@ public class ListMapSheetTest extends WorkbookTest {
         Map<String, Object> data2 = new HashMap<>();
         data2.put("id", 2);
         data2.put("name", "xyz");
-        new Workbook()
+        new Workbook("ListMapSheet array to csv")
             .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Arrays.asList(data1, data2)))
             .saveAsCSV()
@@ -223,7 +222,7 @@ public class ListMapSheetTest extends WorkbookTest {
         data.put("id", 1);
         data.put("name", "abc");
 
-        new Workbook()
+        new Workbook("ListMapSheet single list to csv")
             .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Collections.singletonList(data)))
             .saveAsCSV()

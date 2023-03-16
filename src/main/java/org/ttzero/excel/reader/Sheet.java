@@ -21,9 +21,13 @@ import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -108,8 +112,47 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Specify the header rows endpoint
+     *
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     */
+    default Sheet header(int fromRowNum) {
+        return header(fromRowNum, fromRowNum);
+    }
+
+    /**
+     * Specify the header rows endpoint
+     * <p>
+     * Note: After specifying the header row number, the row-pointer will move to the
+     * next row of the header range. The {@link #bind(Class)}, {@link #bind(Class, int)},
+     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
+     * and {@link #dataIterator()} will all be affected.
+     *
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
+     * @return current {@link Sheet}
+     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     * @throws IllegalArgumentException if {@code toRow} less than {@code fromRow}
+     */
+    Sheet header(int fromRowNum, int toRowNum);
+
+    /**
      * Returns the header of the list.
-     * The first non-empty line defaults to the header information.
+     *
+     * The first non-empty line defaults to the header information. You can also call {@link #header(int, int)}
+     * to specify multiple header rows. If there are multiple rows of headers, ':' will be used for stitching.
+     *
+     * <blockquote><pre>
+     * +-----------------------------+
+     * |       |        COMMON       |
+     * | TITLE +-------+------+------+
+     * |       |  SUB1 | SUB2 | SUB3 |
+     * +------+-------+-------+------+
+     * </pre></blockquote>
+     *
+     * The above table will return "TITLE", "COMMON:SUB1", "COMMON:SUB2", "COMMON:SUB3"
      *
      * @return the {@link HeaderRow}
      */
@@ -122,6 +165,38 @@ public interface Sheet extends Closeable {
      * @return the {@link Sheet}
      */
     Sheet bind(Class<?> clazz);
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRowNum) {
+        return bind(clazz, header(fromRowNum).getHeader());
+    }
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
+     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
+     * @return the {@link Sheet}
+     */
+    default Sheet bind(Class<?> clazz, int fromRowNum, int toRowNum) {
+        return bind(clazz, header(fromRowNum, toRowNum).getHeader());
+    }
+
+    /**
+     * Set the binding type
+     *
+     * @param clazz the binding type
+     * @param row specify a custom header row
+     * @return the {@link Sheet}
+     */
+    Sheet bind(Class<?> clazz, Row row);
 
     /**
      * Load the sheet data
@@ -151,6 +226,13 @@ public interface Sheet extends Closeable {
      * @return picture list or null if not exists.
      */
     List<Drawings.Picture> listPictures();
+
+    /**
+     * Create a {@link Row} to read
+     *
+     * @return subclass
+     */
+    Row createRow();
 
     /**
      * Reset the {@link Sheet}'s row index to begging
@@ -216,10 +298,23 @@ public interface Sheet extends Closeable {
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
      * @param path the output storage path
      * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(Path path) throws IOException {
+        saveAsCSV(path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file.
+     *
+     * @param path the output storage path
+     * @param charset specify a charset, default is UTF-8
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(Path path, Charset charset) throws IOException {
         // Create path if not exists
         if (!exists(path)) {
             FileUtil.mkdir(path);
@@ -228,21 +323,48 @@ public interface Sheet extends Closeable {
             path = path.resolve(getName() + Const.Suffix.CSV);
         }
 
-        saveAsCSV(Files.newOutputStream(path));
+        saveAsCSV(Files.newOutputStream(path), charset);
     }
 
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
      * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
      * @param os the output
      * @throws IOException if I/O error occur.
      */
     default void saveAsCSV(OutputStream os) throws IOException {
-        try (CSVUtil.Writer writer = CSVUtil.newWriter(os)) {
+        saveAsCSV(os, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default separator character is ','.
+     *
+     * @param os the output
+     * @param charset specify a charset
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(OutputStream os, Charset charset) throws IOException {
+        saveAsCSV(new BufferedWriter(new OutputStreamWriter(os, charset)));
+    }
+
+    /**
+     * Save file as Comma-Separated Values. Each worksheet corresponds to
+     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     *
+     * @param bw buffer writer
+     * @throws IOException if I/O error occur.
+     */
+    default void saveAsCSV(BufferedWriter bw) throws IOException {
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
             for (Iterator<Row> iter = iterator(); iter.hasNext(); ) {
                 Row row = iter.next();
-                if (row.isEmpty()) continue;
-                for (int i = row.fc; i < row.lc; i++) {
+                if (row.isEmpty()) {
+                    writer.newLine();
+                    continue;
+                }
+                for (int i = 0; i < row.lc; i++) {
                     Cell c = row.cells[i];
                     switch (c.t) {
                         case SST:
@@ -279,6 +401,13 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Make worksheets parse value only
+     *
+     * @return a empty {@link Sheet}
+     */
+    Sheet asSheet();
+
+    /**
      * Make worksheets parse formulas
      *
      * @return a empty {@link CalcSheet}
@@ -297,6 +426,18 @@ public interface Sheet extends Closeable {
 
 interface CalcSheet extends Sheet { }
 
-interface MergeSheet extends Sheet { }
+interface MergeSheet extends Sheet {
+    /**
+     * Returns CellMerged info
+     */
+    Grid getMergeGrid();
+
+    /**
+     * Returns all merged cells
+     *
+     * @return If no merged cells are returned, Null is returned
+     */
+    List<Dimension> getMergeCells();
+}
 
 //interface FullSheet extends CalcSheet, MergeSheet { }

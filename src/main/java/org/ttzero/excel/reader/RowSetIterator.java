@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 /**
  * @author guanquan.wang at 2019-04-17 19:03
  */
-class RowSetIterator implements Iterator<Row> {
+public class RowSetIterator implements Iterator<Row> {
     private final boolean onlyDataRow;
     private final Supplier<Row> supplier;
     private Row nextRow = null;
@@ -39,8 +39,8 @@ class RowSetIterator implements Iterator<Row> {
             return true;
         } else {
             if (onlyDataRow) {
-                // Skip empty rows
-                for (; (nextRow = supplier.get()) != null && nextRow.isEmpty(); ) ;
+                // Skip blank rows
+                for (; (nextRow = supplier.get()) != null && nextRow.isBlank(); ) ;
             } else {
                 nextRow = supplier.get();
             }

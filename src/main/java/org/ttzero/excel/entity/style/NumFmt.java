@@ -19,8 +19,12 @@ package org.ttzero.excel.entity.style;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * To create a custom number format, you start by selecting one of the built-in number formats as a starting point.
@@ -64,10 +68,10 @@ public class NumFmt implements Comparable<NumFmt> {
      */
     TIME_FORMAT = new NumFmt("hh:mm:ss");
 
-    private String code;
-    private int id = -1;
+    protected String code;
+    protected int id = -1;
 
-    private NumFmt() { }
+    public NumFmt() { }
 
     NumFmt(int id, String code) {
         this.id = id;
@@ -153,28 +157,48 @@ public class NumFmt implements Comparable<NumFmt> {
      * @param base the cell value length
      * @return cell length
      */
-    public int calcNumWidth(int base) {
-        int n = 0;
-        boolean ignore = false, comma = false;
-        char[] cs = new char[1];
-        for (int i = 0; i < code.length(); i++) {
-            char c = code.charAt(i);
-            if (c == '"' || c == '\\') continue;
-            if (ignore) {
-                if (c == ']' || c == ')') {
-                    ignore = false;
+    public double calcNumWidth(double base) {
+        if (StringUtil.isBlank(code)) return 0.0D;
+        // Calculate the segment length separately and return the maximum value
+        String[] codes = code.split(";");
+        double max = 0.0D;
+        for (String code : codes) {
+            double n = base < 0.0D ? 1.0D : 0.0D;
+            boolean ignore = false, comma = false;
+            for (int i = 0; i < code.length(); i++) {
+                char c = code.charAt(i);
+                if (c == '"' || c == '\\') continue;
+                if (ignore) {
+                    if (c == ']' || c == ')') {
+                        ignore = false;
+                    }
+                    continue;
                 }
-                continue;
+                if (c == '[' || c == '(') {
+                    ignore = true;
+                    continue;
+                }
+                if (c == ',') comma = true;
+                n += c > 0x4E00 ? 1.86D : 1.0D;
             }
-            if (c == '[' || c == '(') {
-                ignore = true;
-                continue;
+            // Test date format
+            boolean isDate = Styles.testCodeIsDate(code);
+            int k = 0;
+            if (!isDate) {
+                k = code.lastIndexOf('.');
+                if (k < 0) {
+                    k = code.length();
+                    for (; k > 0; k--) {
+                        char c = code.charAt(k - 1);
+                        if (!(c == '_' || c == ' ' || c == '.')) break;
+                    }
+                }
+                k = k >= 0 ? code.length() - k : 0;
             }
-            if (c == ',') comma = true;
-            cs[0] = c;
-            n += (new String(cs).getBytes(StandardCharsets.UTF_8).length >> 1) + 1;
+            double len = isDate ? n : (comma ? base + base / 3 : base) + k;
+            if (max < len) max = len;
         }
-        return comma ? base + base / 3 + n - 5 : n;
+        return max + 0.86D;
     }
 
     @Override
@@ -201,6 +225,24 @@ public class NumFmt implements Comparable<NumFmt> {
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
             .addAttribute("numFmtId", String.valueOf(id));
+    }
+
+    public static List<NumFmt> domToNumFmt(Element root) {
+        // Number format
+        Element ele = root.element("numFmts");
+        // Break if there don't contains 'numFmts' tag
+        if (ele == null) {
+            return new ArrayList<>();
+        }
+        List<Element> sub = ele.elements();
+        List<NumFmt> numFmts = new ArrayList<>(sub.size());
+        for (Element e : sub) {
+            String id = getAttr(e, "numFmtId"), code = getAttr(e, "formatCode");
+            numFmts.add(new NumFmt(Integer.parseInt(id), code));
+        }
+        // Sort by id
+        numFmts.sort(Comparator.comparingInt(NumFmt::getId));
+        return numFmts;
     }
 
     @Override

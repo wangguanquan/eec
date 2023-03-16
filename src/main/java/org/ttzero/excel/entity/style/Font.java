@@ -16,19 +16,24 @@
 
 package org.ttzero.excel.entity.style;
 
-import org.ttzero.excel.manager.Const;
 import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
  * @author guanquan.wang at 2018-02-02 16:51
  */
 public class Font implements Cloneable {
     private int style;
+    // this value is actually the result of the actual font size*10, eg: font-size:11 save as 110
     private int size;
     private String name;
     private Color color;
@@ -48,7 +53,22 @@ public class Font implements Cloneable {
 
     public Font(String name, int size, int style, Color color) {
         this.style = style;
-        this.size = size;
+        this.size = checkAndCrop(size * 10);
+        this.name = name;
+        this.color = color;
+    }
+
+    public Font(String name, double size) {
+        this(name, size, Style.NORMAL, null);
+    }
+
+    public Font(String name, double size, Color color) {
+        this(name, size, Style.NORMAL, color);
+    }
+
+    public Font(String name, double size, int style, Color color) {
+        this.style = style;
+        this.size = checkAndCrop(round10(size));
         this.name = name;
         this.color = color;
     }
@@ -91,10 +111,10 @@ public class Font implements Cloneable {
         boolean beforeSize = true;
         for (int i = 0; i < values.length; i++) {
             String temp = values[i].trim(), v;
-            Integer size = null;
+            Double size = null;
             if (beforeSize) {
                 try {
-                    size = Integer.valueOf(temp);
+                    size = Double.valueOf(temp);
                 } catch (NumberFormatException e) {
                     //
                 }
@@ -117,7 +137,7 @@ public class Font implements Cloneable {
                         throw new FontParseException("Property " + v + " not support.");
                     }
                 } else if (size > 0) {
-                    font.size = size;
+                    font.size = checkAndCrop(round10(size));
                     if (i + 1 < values.length) {
                         font.name = values[++i].trim().replace('+', ' ');
                     } else {
@@ -145,11 +165,20 @@ public class Font implements Cloneable {
     }
 
     public int getSize() {
-        return size;
+        return size / 10;
+    }
+
+    public double getSize2() {
+        return size / 10.0D;
     }
 
     public Font setSize(int size) {
-        this.size = size;
+        this.size = checkAndCrop(size * 10);
+        return this;
+    }
+
+    public Font setSize(double size) {
+        this.size = checkAndCrop(round10(size));
         return this;
     }
 
@@ -222,6 +251,11 @@ public class Font implements Cloneable {
         return this;
     }
 
+    public Font deleteLine() {
+        style |= Style.DELETE;
+        return this;
+    }
+
     public boolean isItalic() {
         return (style & Style.ITALIC) == Style.ITALIC;
     }
@@ -232,37 +266,54 @@ public class Font implements Cloneable {
         return (style & Style.UNDERLINE) == Style.UNDERLINE;
     }
 
+    public boolean isDeleteLine() {
+        return (style & Style.DELETE) == Style.DELETE;
+    }
+
     public Font delItalic() {
-        style &= (Style.UNDERLINE | Style.BOLD);
+        style &= (Style.UNDERLINE | Style.BOLD | Style.DELETE);
         return this;
     }
 
     public Font delBold() {
-        style &= (Style.UNDERLINE | Style.ITALIC);
+        style &= (Style.UNDERLINE | Style.ITALIC | Style.DELETE);
         return this;
     }
 
     public Font delUnderLine() {
-        style &= (Style.BOLD | Style.ITALIC);
+        style &= (Style.BOLD | Style.ITALIC | Style.DELETE);
         return this;
     }
 
+    public Font delDeleteLine() {
+        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
+        return this;
+    }
+
+    private static final String[] NODE_NAME = {"u", "b", "i", "strike"};
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder("<font>").append(Const.lineSeparator);
+        StringBuilder buf = new StringBuilder("<font>");
+        // Font style
+        for (int n = style, i = 0; n > 0; n >>= 1, i++) {
+            if ((n & 1) == 1) buf.append("<").append(NODE_NAME[i]).append("/>");
+        }
         // size
-        buf.append("    <sz val=\"").append(size).append("\"/>").append(Const.lineSeparator);
+        buf.append("<sz val=\"");
+        if ((size & 1) == 0) buf.append(size / 10);
+        else buf.append(size / 10.0D);
+        buf.append("\"/>");
         // color
         if (color != null) {
             int index;
             if ((index = ColorIndex.indexOf(color.getRGB())) == -1) {
-                buf.append("    <color rgb=\"").append(ColorIndex.toARGB(color.getRGB())).append("\"/>").append(Const.lineSeparator);
+                buf.append("<color rgb=\"").append(ColorIndex.toARGB(color.getRGB())).append("\"/>");
             } else {
-                buf.append("    <color indexed=\"").append(index).append("\"/>").append(Const.lineSeparator);
+                buf.append("<color indexed=\"").append(index).append("\"/>");
             }
         }
         // name
-        buf.append("    <name val=\"").append(name).append("\"/>").append(Const.lineSeparator);
+        buf.append("<name val=\"").append(name).append("\"/>");
         // family
 //        DECORATIVE
 //        MODERN
@@ -270,40 +321,13 @@ public class Font implements Cloneable {
 //        ROMAN
 //        SCRIPT
 //        SWISS
-        switch (style) {
-            case 1:
-                buf.append("    <u/>").append(Const.lineSeparator);
-                break;
-            case 2:
-                buf.append("    <b/>").append(Const.lineSeparator);
-                break;
-            case 4:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                break;
-            case 3:
-                buf.append("    <u/>").append(Const.lineSeparator);
-                buf.append("    <b/>").append(Const.lineSeparator);
-                break;
-            case 5:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                buf.append("    <u/>").append(Const.lineSeparator);
-                break;
-            case 6:
-                buf.append("    <b/>").append(Const.lineSeparator);
-                buf.append("    <i/>").append(Const.lineSeparator);
-                break;
-            case 7:
-                buf.append("    <i/>").append(Const.lineSeparator);
-                buf.append("    <b/>").append(Const.lineSeparator);
-                buf.append("    <u/>").append(Const.lineSeparator);
-                default:
-        }
+
         // charset
         if (charset > 0) {
-            buf.append("    <charset val=\"").append(charset).append("\"/>").append(Const.lineSeparator);
+            buf.append("<charset val=\"").append(charset).append("\"/>");
         }
         if (StringUtil.isNotEmpty(scheme)) {
-            buf.append("    <scheme val=\"").append(scheme).append("\"/>").append(Const.lineSeparator);
+            buf.append("<scheme val=\"").append(scheme).append("\"/>");
         }
 
         return buf.append("</font>").toString();
@@ -315,7 +339,7 @@ public class Font implements Cloneable {
         hash = style << 24;
         hash += size << 16;
         hash += name.hashCode() << 8;
-        hash += color.hashCode();
+        hash += color != null ? color.hashCode() : 0;
         return hash;
     }
 
@@ -335,25 +359,24 @@ public class Font implements Cloneable {
 
     public Element toDom4j(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
-        element.addElement("sz").addAttribute("val", String.valueOf(size));
+        element.addElement("sz").addAttribute("val", ((size & 1) == 0) ? String.valueOf(size / 10) : String.valueOf(size / 10.0D));
         element.addElement("name").addAttribute("val", name);
         if (color != null) {
             int index;
-            if ((index = ColorIndex.indexOf(color)) > -1) {
+            if (color instanceof BuildInColor) {
+                element.addElement("color").addAttribute("indexed", String.valueOf(((BuildInColor) color).getIndexed()));
+            }
+            else if ((index = ColorIndex.indexOf(color)) > -1) {
                 element.addElement("color").addAttribute("indexed", String.valueOf(index));
-            } else {
+            }
+            else {
                 element.addElement("color").addAttribute("rgb", ColorIndex.toARGB(color));
             }
         }
-        if (isBold()) {
-            element.addElement("b");
+        for (int n = style, i = 0; n > 0; n >>= 1, i++) {
+            if ((n & 1) == 1) element.addElement(NODE_NAME[i]);
         }
-        if (isItalic()) {
-            element.addElement("i");
-        }
-        if (isUnderLine()) {
-            element.addElement("u");
-        }
+
         if (family > 0) {
             element.addElement("family").addAttribute("val", String.valueOf(family));
         }
@@ -364,6 +387,37 @@ public class Font implements Cloneable {
             element.addElement("charset").addAttribute("val", String.valueOf(charset));
         }
         return element;
+    }
+
+    public static List<Font> domToFont(Element root) {
+        // Fonts tags
+        Element ele = root.element("fonts");
+        // Break if there don't contains 'fonts' tag
+        if (ele == null) {
+            return new ArrayList<>();
+        }
+        return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
+    }
+
+    static Font parseFontTag(Element tag) {
+        List<Element> sub = tag.elements();
+        Font font = new Font();
+        for (Element e : sub) {
+            switch (e.getName()) {
+                case "sz"     : font.size = round10(Double.parseDouble(getAttr(e, "val"))); break;
+                case "color"  : font.color = Styles.parseColor(e);                          break;
+                case "name"   : font.name = getAttr(e, "val");                              break;
+                case "charset": font.charset = Integer.parseInt(getAttr(e, "val"));         break;
+                case "scheme" : font.scheme = getAttr(e, "val");                            break;
+                case "family" : font.family = Integer.parseInt(getAttr(e, "val"));          break;
+                case "u"      : font.style |= Style.UNDERLINE;                              break;
+                case "b"      : font.style |= Style.BOLD;                                   break;
+                case "i"      : font.style |= Style.ITALIC;                                 break;
+                case "strike" : font.style |= Style.DELETE;                                 break;
+            }
+        }
+
+        return font;
     }
 
     @Override public Font clone() {
@@ -383,13 +437,30 @@ public class Font implements Cloneable {
         return other;
     }
 
+    public static int round10(double v) {
+        int i = (int) v;
+        double l = v - i;
+        if (l < 0.23D) i = i * 10;
+        else if (l < 0.73) i = i * 10 + 5;
+        else i = i * 10 + 10;
+        return i;
+    }
+
+    // Check and crop the font size
+    static int checkAndCrop(int size) {
+        if (size < 10) size = 10;
+        else if (size > 4090) size = 4090;
+        return size;
+    }
+
     // ######################################Static inner class######################################
 
     public static class Style {
-        public static final int NORMAL = 0;
-        public static final int ITALIC = 1 << 2;
-        public static final int BOLD = 1 << 1;
+        public static final int NORMAL    = 0;
         public static final int UNDERLINE = 1;
+        public static final int BOLD      = 1 << 1;
+        public static final int ITALIC    = 1 << 2;
+        public static final int DELETE    = 1 << 3;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name.toUpperCase());

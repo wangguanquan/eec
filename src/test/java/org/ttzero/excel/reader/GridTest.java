@@ -39,7 +39,7 @@ public class GridTest {
         assert grid instanceof Grid.FastGrid;
 
         grid = GridFactory.create(Collections.singletonList(Dimension.of("A1:B16384")));
-        assert grid instanceof Grid.FractureGrid;
+        assert grid instanceof Grid.FastGrid;
 
     }
 
@@ -100,7 +100,7 @@ public class GridTest {
 
         Grid grid = GridFactory.create(list);
 
-        assert grid.toString().equals("FastGrid\n" +
+        assert grid.toString().equals("FastGrid Size: 72B\n" +
             "00011001\n00000001\n00000001\n00000001\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
             "00001101\n00001101\n00001101\n00001101\n" +
@@ -165,8 +165,9 @@ public class GridTest {
     @Test public void testLinkedScanner() {
         Grid.Scanner scanner = new Grid.LinkedScanner();
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("E5:F8"), null));
-        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("D2:F2"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("B16:E17"), null));
+        scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("A13:A20"), null));
 
         // Test iterator
@@ -174,10 +175,10 @@ public class GridTest {
             println(entry.getDim());
         }
 
-        assert "B2:C2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
+        assert "B2:C2->D2:F2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
 
         scanner.get(5, 5);
-        assert "E5:F8->B2:C2->A13:A20->B16:E17".equals(scanner.toString());
+        assert "E5:F8->B2:C2->D2:F2->A13:A20->B16:E17".equals(scanner.toString());
 
         scanner.get(5, 6);
         scanner.get(6, 5);
@@ -187,17 +188,37 @@ public class GridTest {
         scanner.get(8, 5);
         scanner.get(8, 6);
 
-        assert "B2:C2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
+        assert "B2:C2->D2:F2->A13:A20->B16:E17->E5:F8".equals(scanner.toString());
     }
 
     @Test public void testIndexGrid() {
-        Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("B2:E2")));
+        Dimension range = new Dimension(1, (short)1, 2, (short)17);
+        List<Dimension> list = Arrays.asList(Dimension.of("H1:I1"), Dimension.of("J1:K1")
+            , Dimension.of("L1:M1"), Dimension.of("N1:O1"), Dimension.of("P1:Q1"), Dimension.of("R1:S1")
+            , Dimension.of("T1:U1"), Dimension.of("V1:W1"), Dimension.of("X1:Y1"), Dimension.of("Z1:AA1")
+            , Dimension.of("A1:A2"), Dimension.of("B1:B2"), Dimension.of("C1:C2"), Dimension.of("D1:D2")
+            , Dimension.of("E1:E2"), Dimension.of("F1:F2"), Dimension.of("G1:G2")
+        );
 
-        assert !grid.test(1, 1);
-        assert grid.test(2, 2);
-        assert grid.test(2, 5);
-        assert !grid.test(3, 3);
-        assert !grid.test(6, 2);
+        Grid grid = new Grid.IndexGrid(range, 2 * 17);
+        for (Dimension dim : list) grid.mark(dim);
+
+        Cell c = new Cell((short) 1);
+        assert grid.merge(1, c) == 1;
+        assert grid.merge(2, c) == 2;
+        c.i = 7;
+        assert grid.merge(1, c) == 1;
+        assert grid.merge(2, c) == 2;
+
+        c.i = 8;
+        assert grid.merge(1, c) == 1;
+        c.i = 9;
+        assert grid.merge(1, c) == 2;
+
+        c.i = 26;
+        assert grid.merge(1, c) == 1;
+        c.i = 27;
+        assert grid.merge(1, c) == 2;
     }
 
     @Test public void testFractureGrid() {

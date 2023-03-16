@@ -16,24 +16,19 @@
 
 package org.ttzero.excel.reader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
 import static java.lang.Integer.numberOfTrailingZeros;
-import static org.ttzero.excel.reader.Cell.BLANK;
-import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
+import static org.ttzero.excel.util.StringUtil.formatBinarySize;
 
 /**
  * @author guanquan.wang at 2020-01-09 16:54
  */
-interface Grid {
+public interface Grid {
 
     /**
      * Mark `1` at the specified coordinates
@@ -80,8 +75,16 @@ interface Grid {
      *
      * @param r row number (from one)
      * @param cell column number (from one)
+     * @return not a mered cell will returns 0, 1 means current cell is the first merged cells otherwise returns 2
      */
-    void merge(int r, Cell cell);
+    int merge(int r, Cell cell);
+
+    /**
+     * Returns count of merged cells
+     *
+     * @return count of merged cells
+     */
+    int size();
 
 
     /**
@@ -147,18 +150,27 @@ interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!test(r, cell.i)) return;
+        public int merge(int r, Cell cell) {
+            Scanner.Entry e;
+            if (!test(r, cell.i) || (e = scanner.get(r, cell.i)) == null) return 0;
 
-            Scanner.Entry e = scanner.get(r, cell.i);
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            Dimension dim = e.getDim();
+            int i = 2;
+            if (dim.firstRow != r || dim.firstColumn != cell.i) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
-            // Current cell has value
+            // First merged cell
             else {
                 e.getCell().from(cell);
+                i = 1;
             }
+            return i;
+        }
+
+        @Override
+        public int size() {
+            return scanner.size();
         }
 
         boolean range(int r, int c) {
@@ -172,7 +184,7 @@ interface Grid {
         @Override
         public String toString() {
             StringJoiner joiner = new StringJoiner("\n");
-            joiner.add(getClass().getSimpleName());
+            joiner.add(getClass().getSimpleName() + " Size: " + formatBinarySize(g.length << 3));
             int last = lr - fr + 1, j = 0;
             A: for (long l : g) {
                 String s = append(Long.toBinaryString(l));
@@ -205,6 +217,8 @@ interface Grid {
     final class IndexGrid implements Grid {
         private final int fr, fc, lr, lc; // Start index of Row and Column(One base)
         private final Map<Long, Cell> index;
+        private int size;
+        private long[] topCells;
         IndexGrid(Dimension dim, int n) {
             fr = dim.firstRow;
             lr = dim.lastRow;
@@ -212,6 +226,7 @@ interface Grid {
             lc = dim.lastColumn;
 
             index = new HashMap<>(n);
+            topCells = new long[1 << 6];
         }
 
         @Override
@@ -222,6 +237,24 @@ interface Grid {
                     index.put(((long) i) << 16 | j, cell);
                 }
             }
+
+            if (topCells.length <= size) {
+                long[] _cells = new long[size + 64];
+                System.arraycopy(topCells, 0, _cells, 0, size);
+                topCells = _cells;
+            }
+
+            long v = ((long) dim.firstRow) << 16 | dim.firstColumn;
+            int i = Arrays.binarySearch(topCells, 0, size, v);
+            insert(topCells, size, i > 0 ? i : ~i, v);
+
+            size++;
+        }
+
+        // Insert value into array, Ignore bound check
+        static void insert(long[] array, int size, int index, long value) {
+            if (index < size) System.arraycopy(array, index, array, index + 1, size - index);
+            array[index] = value;
         }
 
         @Override
@@ -230,18 +263,27 @@ interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
-            Cell c = index.get(((long) r) << 16 | cell.i);
+        public int merge(int r, Cell cell) {
+            Cell c;
+            long v;
+            if ((c = index.get(v = (((long) r) << 16 | cell.i))) == null) return 0;
 
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            int i = 2;
+            if (Arrays.binarySearch(topCells, 0, size, v) < 0) {
                 // Copy value from the first merged cell
                 cell.from(c);
             }
             // Current cell has value
             else {
                 c.from(cell);
+                i = 1;
             }
+            return i;
+        }
+
+        @Override
+        public int size() {
+            return size;
         }
 
         boolean range(int r, int c) {
@@ -278,19 +320,27 @@ interface Grid {
         }
 
         @Override
-        public void merge(int r, Cell cell) {
-            if (!range(r, cell.i)) return;
-            Scanner.Entry e = scanner.get(r, cell.i);
-            if (e == null) return;
+        public int merge(int r, Cell cell) {
+            Scanner.Entry e;
+            if (!range(r, cell.i) || (e = scanner.get(r, cell.i)) == null) return 0;
 
-            if (cell.t == EMPTY_TAG || cell.t == BLANK) {
+            Dimension dim = e.getDim();
+            int i = 2;
+            if (dim.firstRow != r || dim.firstColumn != cell.i) {
                 // Copy value from the first merged cell
                 cell.from(e.getCell());
             }
-            // Current cell has value
+            // First merged cell
             else {
                 e.getCell().from(cell);
+                i = 1;
             }
+            return i;
+        }
+
+        @Override
+        public int size() {
+            return scanner.size;
         }
 
         boolean range(int r, int c) {
@@ -365,8 +415,9 @@ interface Grid {
 
             if (head != null) {
                 Node f = head, bf = null;
-                for (; f != null; f = f.next) {
-                    if (f.entry.getDim().firstRow > entry.getDim().firstRow) {
+                for (int p; f != null; f = f.next) {
+                    p = f.entry.getDim().firstRow - entry.getDim().firstRow;
+                    if (p > 0 || p == 0 && f.entry.getDim().firstColumn > entry.getDim().firstColumn) {
                         Node newNode = new Node(e, f);
                         if (f == head) head = newNode;
                         else bf.next = newNode;
@@ -400,7 +451,7 @@ interface Grid {
             if (val != null) {
                 int n = --val.entry.n;
                 // Insert entry ahead
-                if (n > 0 && val != head) {
+                if (n > 0 && val != head && val.entry.dim.width > 1) {
                     bf.next = val.next;
                     val.next = head;
                     head = val;
@@ -457,39 +508,5 @@ interface Grid {
 
             return joiner.toString();
         }
-    }
-}
-
-final class GridFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GridFactory.class);
-    private GridFactory() { }
-    static Grid create(List<Dimension> mergeCells) {
-        Dimension dim = mergeCells.get(0);
-        int fr = dim.firstRow, lr = dim.lastRow;
-        short fc = dim.firstColumn, lc = dim.lastColumn;
-        int n = (lr - fr + 1) * (lc - fc + 1);
-        for (int j = 1, len = mergeCells.size(); j < len; j++) {
-            dim = mergeCells.get(j);
-            n += (dim.lastRow - dim.firstRow + 1) * (dim.lastColumn - dim.firstColumn + 1);
-            if (fr > dim.firstRow)    fr = dim.firstRow;
-            if (lr < dim.lastRow)     lr = dim.lastRow;
-            if (fc > dim.firstColumn) fc = dim.firstColumn;
-            if (lc < dim.lastColumn)  lc = dim.lastColumn;
-        }
-
-        Dimension range = new Dimension(fr, fc, lr, lc);
-        int r = lr - fr + 1
-            , c = lc - fc + 1;
-
-        n = r * c;
-
-        Grid grid = c <= 64 && r < 1 << 14 ? new Grid.FastGrid(range)
-            : n > 1 << 10 ? new Grid.FractureGrid(range) : new Grid.IndexGrid(range, n);
-
-        for (Dimension d : mergeCells) {
-            grid.mark(d);
-            LOGGER.debug("merged cells range {}", d);
-        }
-        return grid;
     }
 }

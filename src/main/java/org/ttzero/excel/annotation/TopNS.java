@@ -33,9 +33,24 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface TopNS {
+    /**
+     * Specify the namespace prefix, it will mapping the {@link #uri()} values.
+     *
+     * @return prefix key array
+     */
     String[] prefix();
 
+    /**
+     * Setting the namespace uri
+     *
+     * @return uri array
+     */
     String[] uri() default {};
 
+    /**
+     * Setting the tag name
+     *
+     * @return the tag name
+     */
     String value();
 }

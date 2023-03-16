@@ -38,6 +38,15 @@ public class WorkbookTest {
 
     public static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
     private static char[] cache = new char[32];
+
+    public static String getRandomString(int maxLen) {
+        int n = random.nextInt(maxLen) + 1, size = charArray.length;
+        for (int i = 0; i < n; i++) {
+            cache[i] = charArray[random.nextInt(size)];
+        }
+        return new String(cache, 0, n);
+    }
+
     public static String getRandomString() {
         int n = random.nextInt(cache.length) + 1, size = charArray.length;
         for (int i = 0; i < n; i++) {

@@ -57,7 +57,7 @@ public class ReflectUtil {
     public static Field[] listDeclaredFields(Class<?> beanClass, Class<?> stopClass) {
         Field[] fields = beanClass.getDeclaredFields();
         int i = fields.length, last = 0;
-        for (; (beanClass = beanClass.getSuperclass()) != stopClass; ) {
+        for (; (beanClass = beanClass.getSuperclass()) != stopClass && beanClass != null; ) {
             Field[] subFields = beanClass.getDeclaredFields();
             if (subFields.length > 0) {
                 if (subFields.length > last) {
@@ -140,6 +140,7 @@ public class ReflectUtil {
      */
     public static Method[] listDeclaredMethods(Class<?> beanClass, Class<?> stopClass)
         throws IntrospectionException {
+        if (beanClass == stopClass) return new Method[0];
         MethodDescriptor[] methodDescriptors = Introspector.getBeanInfo(beanClass, stopClass).getMethodDescriptors();
         Method[] allMethods = beanClass.getMethods();
         Method[] methods;
@@ -352,16 +353,17 @@ public class ReflectUtil {
         if (writeMethods == null) {
             for (int i = 1; i < propertyDescriptors.length; i++) {
                 PropertyDescriptor pd = propertyDescriptors[i];
-                tmp.put(pd.getName(), mergedMethods[i]);
+                if (i < mergedMethods.length && mergedMethods[i] != null) {
+                    tmp.put(pd.getName(), mergedMethods[i]);
+                }
             }
         } else {
             int i;
             for (int j = 0; j < mergedMethods.length; j++) {
                 i = mergedMethods[j] != null ? indexOf(writeMethods, mergedMethods[j]) : -1;
-                if (i >= 0) {
-                    writeMethods[i] = null;
-                }
-                tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
+                if (i >= 0) writeMethods[i] = null;
+                if (mergedMethods[j] != null)
+                    tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
             }
 
             i = 0;
