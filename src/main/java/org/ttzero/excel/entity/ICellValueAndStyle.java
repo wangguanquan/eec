@@ -135,7 +135,7 @@ public interface ICellValueAndStyle {
         } else if (isLocalTime(clazz)) {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         } else {
-            cell.setSv(e.toString());
+            unknownType(row, cell, e, hc, clazz);
         }
     }
 
@@ -147,8 +147,8 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      */
     default void setNullValue(int row, Cell cell, Column hc) {
-        boolean hasIntProcessor = hc.processor != null;
-        if (hasIntProcessor) {
+        boolean hasProcessor = hc.processor != null;
+        if (hasProcessor) {
             conversion(row, cell, 0, hc);
         } else
             cell.blank();
@@ -180,5 +180,18 @@ public interface ICellValueAndStyle {
         } else {
             cell.blank();
         }
+    }
+
+    /**
+     * unknown cell type converter
+     *
+     * @param row the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void unknownType(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
+        cell.setSv(e.toString());
     }
 }

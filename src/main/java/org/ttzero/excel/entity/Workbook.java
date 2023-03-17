@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ParamProcessor;
@@ -29,6 +30,7 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import javax.naming.OperationNotSupportedException;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,10 +102,6 @@ public class Workbook implements Storable {
      */
     private boolean autoSize;
     /**
-     * Automatic interlacing fill, default fill color is '#E2EDDA'
-     */
-    private int autoOdd = 0;
-    /**
      * Author
      */
     private String creator;
@@ -113,9 +111,9 @@ public class Workbook implements Storable {
      */
     private String company;
     /**
-     * The fill
+     * The zebra-line fill style
      */
-    private Fill oddFill;
+    private Fill zebraFill;
     /**
      * A windows to debug
      */
@@ -191,9 +189,11 @@ public class Workbook implements Storable {
      * Returns the autoOdd setting
      *
      * @return 1 if odd-fill
+     * @deprecated replace with {@code getZebraFill() != null}
      */
+    @Deprecated
     public int getAutoOdd() {
-        return autoOdd;
+        return hasZebraFill() ? 1 : 0;
     }
 
     /**
@@ -218,9 +218,11 @@ public class Workbook implements Storable {
      * Returns the odd-fill style
      *
      * @return the {@link Fill} style
+     * @deprecated rename to {@link #getZebraFill()}
      */
+    @Deprecated
     public Fill getOddFill() {
-        return oddFill;
+        return getZebraFill();
     }
 
     /**
@@ -416,10 +418,11 @@ public class Workbook implements Storable {
      * Cancel the odd-fill style
      *
      * @return the {@link Workbook}
+     * @deprecated rename to {@link #cancelZebraLine()}
      */
+    @Deprecated
     public Workbook cancelOddFill() {
-        this.autoOdd = 1;
-        return this;
+        return cancelZebraLine();
     }
 
     /**
@@ -427,10 +430,59 @@ public class Workbook implements Storable {
      *
      * @param fill the {@link Fill} style
      * @return the {@link Workbook}
+     * @deprecated rename to {@link #setZebraLine(Fill)}
      */
+    @Deprecated
     public Workbook setOddFill(Fill fill) {
-        this.oddFill = fill;
+        return setZebraLine(fill);
+    }
+
+    /**
+     * Setting the zebra-line fill style
+     *
+     * @param fill the zebra-line {@link Fill} style
+     * @return the {@link Workbook}
+     */
+    public Workbook setZebraLine(Fill fill) {
+        this.zebraFill = fill;
         return this;
+    }
+
+    /**
+     * Cancel the zebra-line style
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook cancelZebraLine() {
+        this.zebraFill = null;
+        return this;
+    }
+
+    /**
+     * Setting zebra-line style, the default fill color is #EFF5EB
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook defaultZebraLine() {
+        return setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
+    }
+
+    /**
+     * Returns the zebra-line fill style
+     *
+     * @return the {@link Fill} style
+     */
+    public Fill getZebraFill() {
+        return zebraFill;
+    }
+
+    /**
+     * Returns current workbook has zebra-line
+     *
+     * @return true if zebra-line is not null
+     */
+    public boolean hasZebraFill() {
+        return zebraFill != null && zebraFill.getPatternType() != PatternType.none;
     }
 
     /**
