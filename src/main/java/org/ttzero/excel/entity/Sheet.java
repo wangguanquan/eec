@@ -826,8 +826,23 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
+    /**
+     * Find relationship by key
+     *
+     * @param key relationship key
+     * @return null if not exists
+     */
     public Relationship findRel(String key) {
         return relManager.likeByTarget(key);
+    }
+
+    /**
+     * Returns current sheet's relationship manager
+     *
+     * @return {@link RelManager}
+     */
+    public RelManager getRelManager() {
+        return relManager;
     }
 
     /**
