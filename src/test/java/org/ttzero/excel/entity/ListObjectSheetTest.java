@@ -1352,7 +1352,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
                 .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
                 .setSheetWriter(new XMLWorksheetWriter() {
-                    protected int startRow(int rows, int columns) throws IOException {
+                    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
                         // Row number
                         int r = rows + startRow;
                         // logging
@@ -1537,7 +1537,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         protected void writeRow(Row row) throws IOException {
             Cell[] cells = row.getCells();
             int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1);
 
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i];
@@ -1564,52 +1564,6 @@ public class ListObjectSheetTest extends WorkbookTest {
                         break;
                     case DECIMAL:
                         writeDecimal(cell.mv, r, col, xf);
-                        break;
-                    case CHARACTER:
-                        writeChar(cell.cv, r, col, xf);
-                        break;
-                    case BLANK:
-                        writeNull(r, col, xf);
-                        break;
-                    default:
-                }
-            }
-            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
-            if (y == tile - 1)
-                bw.write("</row>");
-        }
-
-        @Override
-        protected void writeRowAutoSize(Row row) throws IOException {
-            Cell[] cells = row.getCells();
-            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
-
-            for (int i = 0; i < len; i++) {
-                Cell cell = cells[i];
-                int xf = cell.xf, col = i + c * y;
-                switch (cell.t) {
-                    case INLINESTR:
-                    case SST:
-                        writeStringAutoSize(cell.sv, r, col, xf);
-                        break;
-                    case NUMERIC:
-                        writeNumericAutoSize(cell.nv, r, col, xf);
-                        break;
-                    case LONG:
-                        writeNumericAutoSize(cell.lv, r, col, xf);
-                        break;
-                    case DATE:
-                    case DATETIME:
-                    case DOUBLE:
-                    case TIME:
-                        writeDoubleAutoSize(cell.dv, r, col, xf);
-                        break;
-                    case BOOL:
-                        writeBool(cell.bv, r, col, xf);
-                        break;
-                    case DECIMAL:
-                        writeDecimalAutoSize(cell.mv, r, col, xf);
                         break;
                     case CHARACTER:
                         writeChar(cell.cv, r, col, xf);

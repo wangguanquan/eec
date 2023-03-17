@@ -648,7 +648,7 @@ public class ListSheet<T> extends Sheet {
         // Hidden Column
         if (ec.hide()) column.hide();
         // Cell max width
-        column.width = ec.maxWidth();
+        if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
         return column;
     }
 

@@ -109,7 +109,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20.38D;
+    protected double width = 15.5D;
     /**
      * The row number
      */
@@ -438,7 +438,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting fix column width
      *
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedSize()}
      */
+    @Deprecated
     public Sheet fixSize() {
         this.autoSize = 2;
         return this;
@@ -449,16 +451,11 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param width the column width
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedSize(double)}
      */
+    @Deprecated
     public Sheet fixSize(double width) {
-        this.autoSize = 2;
-        this.width = width;
-        if (headerReady) {
-            for (org.ttzero.excel.entity.Column hc : columns) {
-                hc.setWidth(width);
-            }
-        }
-        return this;
+        return fixedSize(width);
     }
 
     /**
@@ -478,6 +475,42 @@ public abstract class Sheet implements Cloneable, Storable {
     public boolean isAutoSize() {
         return autoSize == 1;
     }
+
+    /**
+     * Setting fixed column width
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet fixedSize() {
+        this.autoSize = 2;
+        return this;
+    }
+
+    /**
+     * Setting fix column width
+     *
+     * @param width the column width
+     * @return current {@link Sheet}
+     */
+    public Sheet fixedSize(double width) {
+        if (width < 0.0D) {
+            LOGGER.warn("Negative number {}", width);
+            width = 0.0D;
+        }
+        else if (width > Const.Limit.COLUMN_WIDTH) {
+            LOGGER.warn("Maximum width is {}, current is {}", Const.Limit.COLUMN_WIDTH, width);
+            width = Const.Limit.COLUMN_WIDTH;
+        }
+        this.autoSize = 2;
+        this.width = width;
+        if (headerReady) {
+            for (org.ttzero.excel.entity.Column hc : columns) {
+                hc.fixedSize(width);
+            }
+        }
+        return this;
+    }
+
 
     /**
      * Cancel the odd row's fill style
@@ -730,6 +763,11 @@ public abstract class Sheet implements Cloneable, Storable {
             if (column.next != null) {
                 for (org.ttzero.excel.entity.Column col = column.next; col != null; col = col.next)
                     col.styles = workbook.getStyles();
+            }
+
+            // Column width
+            if (column.getAutoSize() == 0 && autoSize > 0) {
+                column.option |= autoSize << 1;
             }
         }
     }
