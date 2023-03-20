@@ -629,14 +629,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
 
     @Test public void testBasicType() throws IOException {
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = new ArrayList<>(35);
         for (int i = 0; i < 35; i++) list.add(i);
-        new Workbook().addSheet(new ListSheet<Integer>(list) {
-            @Override
-            public Column[] getHeaderColumns() {
-                return new Column[]{new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)};
-            }
-        }.ignoreHeader().cancelOddStyle()).writeTo(defaultTestPath.resolve("Integer array.xlsx"));
+        new Workbook()
+            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)))
+            .writeTo(defaultTestPath.resolve("Integer array.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
             Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);
@@ -649,12 +646,9 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testEmojiChar() throws IOException {
         List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
-        new Workbook().addSheet(new ListSheet<String>(list) {
-            @Override
-            public Column[] getHeaderColumns() {
-                return new Column[]{ new ListSheet.EntryColumn().setClazz(String.class) };
-            }
-        }.ignoreHeader()).writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
+        new Workbook()
+            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(String.class)))
+            .writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
             List<String> subList = reader.sheet(0).rows().map(row -> row.getString(0)).collect(Collectors.toList());
