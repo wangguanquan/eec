@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Cell.BLANK;
@@ -643,6 +644,29 @@ public class ListObjectSheetTest extends WorkbookTest {
             assert array.length == list.size();
             for (int i = 0; i < array.length; i++) {
                 assert array[i].equals(list.get(i));
+            }
+        }
+    }
+    @Test public void testUnDisplayChar() throws Throwable {
+        List<Character> list = IntStream.range(0, 32).mapToObj(e -> (char)e).collect(Collectors.toList());
+        new Workbook().addSheet(new ListSheet<Character>(list) {
+            @Override
+            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
+                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(Character.class) };
+            }
+        }.ignoreHeader()).writeTo(defaultTestPath.resolve("UnDisplayChar.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("UnDisplayChar.xlsx"))) {
+            List<Character> subList = reader.sheet(0).rows().map(row -> row.getChar(0)).collect(Collectors.toList());
+
+            assert subList.size() == list.size();
+            for (int i = 0; i < subList.size(); i++) {
+                char c = subList.get(i);
+                if(i == 9 || i == 10 || i == 13){
+                    assert list.get(i).equals(c);
+                }else{
+                    assert '�' == c;
+                }
             }
         }
     }

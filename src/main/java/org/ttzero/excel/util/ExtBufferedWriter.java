@@ -105,6 +105,8 @@ public class ExtBufferedWriter extends BufferedWriter {
             char[] entity = ESCAPE_CHARS[c];
             if (entity != null) write(entity);
             else write(c);
+        }else{
+            write(c == 9 || c == 10 || c == 13 ? c : '�');
         }
     }
 
@@ -124,11 +126,12 @@ public class ExtBufferedWriter extends BufferedWriter {
             char c = block[i];
             if (c > 62) continue;
             // UnDisplay char
-//            if (c < 32) {
-//                write(block, last, i - last);
-//                last = i + 1;
-//                continue;
-//            }
+            if (c < 32) {
+                write(block, last, i - last);
+                write(c == 9 || c == 10 || c == 13 ? c : '�');
+                last = i + 1;
+                continue;
+            }
             // html escape char
             char[] entity = ESCAPE_CHARS[c];
 
