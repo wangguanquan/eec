@@ -700,8 +700,22 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns the header row's columns
      * @return current {@link Sheet}
      */
-    public Sheet setColumns(final Column[] columns) {
+    public Sheet setColumns(final Column ... columns) {
         this.columns = columns;
+        return this;
+    }
+
+    /**
+     * Setting the header rows's columns
+     *
+     * @param columns the header row's columns
+     * @return current {@link Sheet}
+     */
+    public Sheet setColumns(List<Column> columns) {
+        if (columns != null && !columns.isEmpty()) {
+            this.columns = new Column[columns.size()];
+            columns.toArray(this.columns);
+        }
         return this;
     }
 
