@@ -555,9 +555,13 @@ public class ListSheet<T> extends Sheet {
                 }
 
                 if (ec.method == null && ec.field == null) {
-                    LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
+                    if (columns.length > 1) {
+                        LOGGER.warn("Column [" + hc.getName() + "(" + hc.key + ")"
                             + "] not declare in class " + clazz);
-                    hc.ignoreValue();
+                        hc.ignoreValue();
+                    }
+                    // Write as Object#toString()
+                    else LOGGER.warn("Column one does not specify method and filed");
                 } else if (hc.getClazz() == null) {
                     hc.setClazz(ec.method != null ? ec.method.getReturnType() : ec.field.getType());
                 }
