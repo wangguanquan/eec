@@ -106,7 +106,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             if (entity != null) write(entity);
             else write(c);
         }else{
-            write(c == 9 || c == 10 || c == 13 ? c : '�');
+            write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
         }
     }
 
@@ -128,7 +128,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             // UnDisplay char
             if (c < 32) {
                 write(block, last, i - last);
-                write(c == 9 || c == 10 || c == 13 ? c : '�');
+                write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
                 last = i + 1;
                 continue;
             }

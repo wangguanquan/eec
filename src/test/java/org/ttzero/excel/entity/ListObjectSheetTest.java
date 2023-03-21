@@ -662,10 +662,10 @@ public class ListObjectSheetTest extends WorkbookTest {
             assert subList.size() == list.size();
             for (int i = 0; i < subList.size(); i++) {
                 char c = subList.get(i);
-                if(i == 9 || i == 10 || i == 13){
+                if (i == 9 || i == 10 || i == 13) {
                     assert list.get(i).equals(c);
-                }else{
-                    assert '�' == c;
+                } else {
+                    assert 0xFFFD == c;
                 }
             }
         }
