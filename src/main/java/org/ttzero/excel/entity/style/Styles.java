@@ -198,9 +198,9 @@ public class Styles implements Storable {
     }
 
     public int modifyWrapText(int style, boolean newWrapText) {
-        if(newWrapText){
-            return style |= 1;
-        }else{
+        if (newWrapText) {
+            return style | 1;
+        } else {
             return Styles.clearWrapText(style);
         }
     }
