@@ -1161,6 +1161,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(r.getId());
             bw.write("\"/>");
         }
+
         // Compatible processing
         else if (comments != null) {
             sheet.addRel(r = new Relationship("../drawings/vmlDrawing" + sheet.getId() + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
@@ -1171,10 +1172,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\"/>");
         }
 
-        // background image
+        // Background image
         if (sheet.getWaterMark() != null) {
-            // relationship
-            r = sheet.findRel("media/image"); // only one background image
+            RelManager relManager = sheet.getRelManager();
+            r = relManager.getByType(Const.Relationship.IMAGE);
             if (r != null) {
                 bw.write("<picture r:id=\"");
                 bw.write(r.getId());
