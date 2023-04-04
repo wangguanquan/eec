@@ -71,6 +71,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param e    the cell value
      * @param hc   the header column
      */
+    @Deprecated
     @Override
     public void reset(int row, Cell cell, Object e, Column hc) {
         setCellValue(row, cell, e, hc, hc.getClazz(), hc.processor != null);
@@ -87,6 +88,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param style the default style
      * @return the style index in xf
      */
+    @Deprecated
     protected int getStyleIndex(int rows, Column hc, Object o, int style) {
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
@@ -101,26 +103,11 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
      * @param o  the cell value
      * @return the style index in xf
      */
+    @Deprecated
     @Override
     public int getStyleIndex(int rows, Column hc, Object o) {
         int style = hc.getCellStyle();
         return getStyleIndex(rows, hc, o, style);
-    }
-
-    /**
-     * Setting all cell style of the specified row
-     *
-     * @param <T> the row's class
-     * @param o the row data
-     * @param cell the cell of row
-     * @param hc the header column
-     * @param styleProcessor a customize {@link StyleProcessor}
-     */
-    @Override
-    public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
-        if (styleProcessor != null && hc.styles != null) {
-            cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles));
-        }
     }
 
     /**

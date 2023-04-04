@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.csv;
 
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
+import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
@@ -138,10 +139,24 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param row the row data
      * @param hc the header column
      * @param o  the cell value
      * @return const zero (general style)
      */
+    @Override
+    public int getStyleIndex(Row row, Column hc, Object o) {
+        return 0;
+    }
+
+    /**
+     * Returns the cell style index
+     *
+     * @param hc the header column
+     * @param o  the cell value
+     * @return const zero (general style)
+     */
+    @Deprecated
     @Override
     public int getStyleIndex(int rows, Column hc, Object o) {
         return 0;

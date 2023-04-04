@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.entity.Column;
+import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
 
@@ -45,18 +46,24 @@ public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param row   the row data
      * @param hc    the header column
      * @param o     the cell value
-     * @param style the default style
      * @return the style index in xf
      */
     @Override
-    protected int getStyleIndex(int rows, Column hc, Object o, int style) {
+    public int getStyleIndex(Row row, Column hc, Object o) {
         if (zebraFillStyle == -1 && zebraFill != null)
             zebraFillStyle = hc.styles.addFill(zebraFill);
+        // Default style
+        int style = hc.getCellStyle();
         // Interlaced discoloration
-        if (isOdd(rows) && !Styles.hasFill(style)) style |= zebraFillStyle;
-        return super.getStyleIndex(rows, hc, o, style);
+        if (isOdd(row.getIndex()) && !Styles.hasFill(style)) style |= zebraFillStyle;
+        // Dynamic style
+        if (hc.styleProcessor != null) {
+            style = hc.styleProcessor.build(o, style, hc.styles);
+        }
+        return hc.styles.of(style);
     }
 
 

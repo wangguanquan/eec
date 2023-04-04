@@ -1621,7 +1621,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, org.ttzero.excel.entity.Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(Row, Cell, Object, org.ttzero.excel.entity.Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();
