@@ -781,7 +781,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
 
             // Reset Row limit
-//            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - startRowIndex + 1
+//            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1
 
             // Mark ext-properties
             markExtProp();
@@ -1413,7 +1413,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - startRowIndex + 1);
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1);
     }
 
     /**
@@ -1631,10 +1631,10 @@ public abstract class Sheet implements Cloneable, Storable {
                 lastCol.headerComment = headerComment;
             }
 
-            if (startRowIndex > 1) {
+            if (getStartRowIndex() > 1) {
                 List<Dimension> tmp = new ArrayList<>();
                 for (Dimension dim : mergeCells) {
-                    tmp.add(new Dimension(dim.firstRow + startRowIndex - 1, dim.firstColumn, dim.lastRow + startRowIndex - 1, dim.lastColumn));
+                    tmp.add(new Dimension(dim.firstRow + getStartRowIndex() - 1, dim.firstColumn, dim.lastRow + getStartRowIndex() - 1, dim.lastColumn));
                 }
                 mergeCells = tmp;
             }
