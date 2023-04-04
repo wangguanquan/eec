@@ -925,6 +925,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
         _writer.totalRows = totalRows;
+        _writer.startRow = startRow;
+        _writer.startHeaderRow = startHeaderRow;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         _writer.bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
         _writer.writeBefore();
