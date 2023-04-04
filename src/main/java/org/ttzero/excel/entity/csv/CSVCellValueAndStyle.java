@@ -55,6 +55,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param e    the cell value
      * @param hc   the header column
      */
+    @Deprecated
     @Override
     public void reset(int row, Cell cell, Object e, Column hc) {
         setCellValue(row, cell, e, hc, hc.getClazz(), hc.processor != null);
