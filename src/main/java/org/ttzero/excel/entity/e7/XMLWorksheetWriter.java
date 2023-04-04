@@ -411,6 +411,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row-block
      *
      * @param rowBlock the row-block
+     * @throws IOException if I/O error occur.
      */
     protected void writeRowBlock(RowBlock rowBlock) throws IOException {
         for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
@@ -420,6 +421,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Write a row-block as auto size
      *
      * @param rowBlock the row-block
+     * @throws IOException if I/O error occur.
      */
     @Deprecated
     private void writeAutoSizeRowBlock(RowBlock rowBlock) throws IOException {

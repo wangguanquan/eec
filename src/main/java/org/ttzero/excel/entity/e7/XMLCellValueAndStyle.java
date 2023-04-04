@@ -19,7 +19,6 @@ package org.ttzero.excel.entity.e7;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
@@ -34,6 +33,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Int value conversion to others
      *
+     * @param row  the row number
      * @param cell the cell
      * @param o    the cell value
      * @param hc   the header column
@@ -67,6 +67,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Setting cell value and cell styles
      *
+     * @param row  the row number
      * @param cell the cell
      * @param e    the cell value
      * @param hc   the header column
@@ -83,13 +84,14 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param row  the row number
      * @param hc    the header column
      * @param o     the cell value
      * @param style the default style
      * @return the style index in xf
      */
     @Deprecated
-    protected int getStyleIndex(int rows, Column hc, Object o, int style) {
+    protected int getStyleIndex(int row, Column hc, Object o, int style) {
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
         }
@@ -99,6 +101,7 @@ public class XMLCellValueAndStyle implements ICellValueAndStyle {
     /**
      * Returns the cell style index
      *
+     * @param rows  the row number
      * @param hc the header column
      * @param o  the cell value
      * @return the style index in xf
