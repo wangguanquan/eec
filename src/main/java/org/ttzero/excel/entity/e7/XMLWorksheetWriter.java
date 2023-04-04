@@ -1051,7 +1051,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             }
         }
         // Move the head row to the top
-        else if (startHeaderRow > 1) {
+        else if (sheet.isScrollToVisibleArea() && startHeaderRow > 1) {
             bw.write(" topLeftCell=\"");
             char[] cols = int2Col(columns[0].realColIndex);
             bw.write(cols);

@@ -682,20 +682,41 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the first row index
      */
     public int getStartRowIndex() {
-        return startRowIndex;
+        return Math.abs(startRowIndex);
+    }
+
+    /**
+     * Returns the auto scroll mark
+     *
+     * @return {@code true} if auto scroll to top-left area
+     */
+    public boolean isScrollToVisibleArea() {
+        return startRowIndex > 0;
     }
 
     /**
      * Specify the first row index, which must be greater than 0
      *
      * @param startRowIndex row index
+     * @return current {@link Sheet}
      */
     public Sheet setStartRowIndex(int startRowIndex) {
+        return setStartRowIndex(startRowIndex, true);
+    }
+
+    /**
+     * Specify the first row index, which must be greater than 0
+     *
+     * @param startRowIndex row index
+     * @param scrollToVisibleArea setting the activeCell to the {@code startRowIndex}
+     * @return current {@link Sheet}
+     */
+    public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
         if (startRowIndex <= 0)
             throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
         if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
             throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
-        this.startRowIndex = startRowIndex;
+        this.startRowIndex = scrollToVisibleArea ? startRowIndex : -startRowIndex;
         return this;
     }
 
