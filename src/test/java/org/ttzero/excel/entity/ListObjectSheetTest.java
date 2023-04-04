@@ -721,6 +721,20 @@ public class ListObjectSheetTest extends WorkbookTest {
             return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
         }
 
+        @Override
+        public int hashCode() {
+            return id ^ (name != null ? name.hashCode() : 0);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Item) {
+                Item other = (Item) obj;
+                return id == other.id && (name != null && name.equals(other.name) || name == null && other.name == null);
+            }
+            return false;
+        }
+
         public static List<Item> randomTestData(int n, Supplier<Item> supplier) {
             List<Item> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
