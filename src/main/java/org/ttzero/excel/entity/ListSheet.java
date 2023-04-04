@@ -319,7 +319,7 @@ public class ListSheet<T> extends Sheet {
                         else e = o;
                     }
 
-                    cellValueAndStyle.reset(rows, cell, e, column);
+                    cellValueAndStyle.reset(row, cell, e, column);
                     if (hasGlobalStyleProcessor) {
                         cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
                     }

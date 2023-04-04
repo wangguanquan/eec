@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -377,14 +378,14 @@ public class ListMapSheetTest extends WorkbookTest {
         list.add(0, null);
         list.add(3, null);
         list.add(null);
-        new Workbook("Null in list map").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+        new Workbook("Null in list map").addSheet(new ListMapSheet(list)).writeTo(defaultTestPath);
     }
 
     @Test public void testLargeColumns() throws IOException {
         int len = 1436;
         List<Map<String, ?>> list = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
-            Map<String, String> map = new HashMap<>();
+            Map<String, String> map = new LinkedHashMap<>();
             for (int j = 0; j < 500; j++) {
                 map.put("key" + j, getRandomString());
             }
