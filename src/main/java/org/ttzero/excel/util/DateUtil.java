@@ -270,10 +270,21 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(String dateStr) {
-        // check format string
-        if (dateStr.indexOf('/') == 4) {
-            dateStr = dateStr.replace('/', '-');
+        String v = dateStr.trim().replace('/', '-');
+        int dividingSpace = v.indexOf(' ');
+        if (dividingSpace < 0) {
+            v += " 00:00:00";
+        } else {
+            int i = 0, idx = dividingSpace;
+            for (; (idx = v.indexOf(':', idx + 1)) > 0;i++);
+            boolean endOfp = v.charAt(v.length() - 1) == ':';
+            switch (i) {
+                case 0: v += ":0:0"; break;
+                case 1: v += !endOfp ? ":0" : "0:0"; break;
+                case 2: if (endOfp) v += '0'; break;
+                default:
+            }
         }
-        return java.sql.Timestamp.valueOf(dateStr);
+        return java.sql.Timestamp.valueOf(v);
     }
 }
