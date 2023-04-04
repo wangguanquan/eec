@@ -1025,7 +1025,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
             // Validity check
             if (freezePanes.row < 0 || freezePanes.col < 0) {
-                throw new IllegalArgumentException("negative row or column number occur.");
+                throw new IllegalArgumentException("Negative number occur in freeze panes settings.");
             }
 
             if ((freezePanes.col | freezePanes.row) == 0) {
