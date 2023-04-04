@@ -98,7 +98,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Column[] columns;
     protected SharedStrings sst;
     protected Comments comments;
-    protected int startRow, totalRows;
+    protected int startRow // The first data-row index
+        , startHeaderRow // The first header row index
+        , totalRows;
     /**
      * If there are any auto-width columns
      */
@@ -215,6 +217,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         if (sst == null) this.sst = sheet.getSst();
 
+        // Check the first row index
+        startHeaderRow = sheet.getStartRowIndex();
+        if (startHeaderRow <= 0)
+            throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startHeaderRow);
+        if (getRowLimit() <= startHeaderRow)
+            throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startHeaderRow + ") >= limit(" + getRowLimit() + ")");
+        startRow = startHeaderRow;
         return sheetPath;
     }
 
@@ -329,7 +338,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected int writeHeaderRow() throws IOException {
         // Write header
-        int row = 0, subColumnSize = columns[0].subColumnSize(), defaultStyleIndex = sheet.defaultHeadStyleIndex();
+        int rowIndex = 0, subColumnSize = columns[0].subColumnSize(), defaultStyleIndex = sheet.defaultHeadStyleIndex();
         Column[][] columnsArray = new Column[columns.length][];
         for (int i = 0; i < columns.length; i++) {
             columnsArray[i] = columns[i].toArray();
@@ -342,20 +351,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
         for (int i = subColumnSize - 1; i >= 0; i--) {
-
-            row++;
-            bw.write("<row r=\"");
-            bw.writeInt(row);
             // Custom row height
             double ht = getHeaderHeight(columnsArray, i);
             if (ht < 0) ht = sheet.getHeaderRowHeight();
-            if (ht >= 0D) {
-                bw.write("\" customHeight=\"1\" ht=\"");
-                bw.write(ht);
-            }
-            bw.write("\" spans=\"1:");
-            bw.writeInt(columns[columns.length - 1].getRealColIndex());
-            bw.write("\">");
+            int row = startRow(rowIndex++, columns.length, ht);
 
             String name;
             for (int j = 0, c = 0; j < columns.length; j++) {
@@ -374,7 +373,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             }
             bw.write("</row>");
         }
-        return row;
+        return subColumnSize;
     }
 
     /**
@@ -475,8 +474,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\" customHeight=\"1\" ht=\"");
             bw.write(rowHeight);
         }
-        bw.write("\" spans=\"1:");
-        bw.writeInt(columns);
+        bw.write("\" spans=\"");
+        bw.writeInt(this.columns[0].realColIndex);
+        bw.write(':');
+        bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
         bw.write("\">");
         return r;
     }
@@ -976,18 +977,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeDimension() throws IOException {
-        bw.append("<dimension ref=\"A1"); // FIXME Setting the column or row's start-index
-        int n = 11; // fill 11 space
-        if (totalRows > 0) {
+        bw.append("<dimension ref=\"");
+        if (columns.length > 0) bw.write(int2Col(columns[0].getRealColIndex()));
+        else bw.write('A');
+        bw.writeInt(startHeaderRow);
+        int n = 11, size = sheet.size(); // fill 11 space
+        if (size > 0 && columns.length > 0) {
             bw.write(':');
             n--;
             Column hc = columns[columns.length - 1];
             char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            int t = totalRows + startRow + hc.subColumnSize();
-            bw.writeInt(t);
-            n -= stringSize(t);
+            bw.writeInt(size + startRow);
+            n -= stringSize(size + startRow);
         }
         bw.write('"');
         for (; n-->0;) bw.write(32); // Fill space
@@ -1043,7 +1046,23 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 }
                 bw.write("</sheetView>");
             }
-        } else {
+        }
+        // Move the head row to the top
+        else if (startHeaderRow > 1) {
+            bw.write(" topLeftCell=\"");
+            char[] cols = int2Col(columns[0].realColIndex);
+            bw.write(cols);
+            bw.writeInt(startHeaderRow);
+            bw.write("\">");
+            bw.write("<selection activeCell=\"");
+            bw.write(cols);
+            bw.writeInt(startHeaderRow);
+            bw.write("\" sqref=\"");
+            bw.write(cols);
+            bw.writeInt(startHeaderRow);
+            bw.write("\"/></sheetView>");
+        }
+        else {
             bw.write("/>"); // Empty tag
         }
         bw.write("</sheetViews>");
@@ -1108,12 +1127,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Start to write sheet data
         bw.write("<sheetData>");
 
-        int headerRow = 1;
+        int headerRow = 0;
         // Write header rows
         if (!nonHeader && columns.length > 0) {
             headerRow = writeHeaderRow();
         }
-        startRow = headerRow + (sheet.getNonHeader() ^ 1);
+        startRow = startHeaderRow + headerRow;
     }
 
     /**

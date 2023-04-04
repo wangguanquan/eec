@@ -201,6 +201,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * Specify custom header row height
      */
     protected double headerRowHeight = 20.5D, rowHeight = -1D;
+    /**
+     * Specify the first row index
+     */
+    protected int startRowIndex = 1;
 
     public int getId() {
         return id;
@@ -765,6 +769,29 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Returns the first row index(default 1)
+     *
+     * @return the first row index
+     */
+    public int getStartRowIndex() {
+        return startRowIndex;
+    }
+
+    /**
+     * Specify the first row index, which must be greater than 0
+     *
+     * @param startRowIndex row index
+     */
+    public Sheet setStartRowIndex(int startRowIndex) {
+        if (startRowIndex <= 0)
+            throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
+        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
+            throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
+        this.startRowIndex = startRowIndex;
+        return this;
+    }
+
+    /**
      * Returns the columns
      *
      * @return array of column
@@ -825,7 +852,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
 
             // Reset Row limit
-            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize());
+//            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - startRowIndex + 1
 
             // Mark ext-properties
             markExtProp();
@@ -1428,7 +1455,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()));
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - startRowIndex + 1);
     }
 
     /**
@@ -1644,6 +1671,14 @@ public abstract class Sheet implements Cloneable, Storable {
                 org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
                 lastCol.from(tmp);
                 lastCol.headerComment = headerComment;
+            }
+
+            if (startRowIndex > 1) {
+                List<Dimension> tmp = new ArrayList<>();
+                for (Dimension dim : mergeCells) {
+                    tmp.add(new Dimension(dim.firstRow + startRowIndex - 1, dim.firstColumn, dim.lastRow + startRowIndex - 1, dim.lastColumn));
+                }
+                mergeCells = tmp;
             }
 
             @SuppressWarnings("unchecked")
