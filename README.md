@@ -144,26 +144,35 @@ new Workbook("Auto Width Test")
 #### 4. 支持多行表头
 
 ```java
-public static class RepeatableEntry {
+ public static class RepeatableEntry {
+    @ExcelColumn("TOP")
+    @ExcelColumn("K")
+    @ExcelColumn
     @ExcelColumn("订单号")
     private String orderNo;
-
+    @ExcelColumn("TOP")
+    @ExcelColumn("K")
+    @ExcelColumn("A")
     @ExcelColumn("收件人")
     private String recipient;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("A")
     @ExcelColumn("省")
     private String province;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("A")
     @ExcelColumn("市")
     private String city;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("B")
     @ExcelColumn("区")
     private String area;
-
-    @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
+    @ExcelColumn("TOP")
+    @ExcelColumn("收件地址")
+    @ExcelColumn("B")
     @ExcelColumn("详细地址")
     private String detail;
 }
