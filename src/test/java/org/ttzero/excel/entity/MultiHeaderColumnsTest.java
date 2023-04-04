@@ -324,6 +324,38 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testRepeatColumnFromStayAtA1() throws IOException {
+        List<RepeatableEntry4> list = RepeatableEntry4.randomTestData();
+        int startRowIndex = 7;
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(list).setStartRowIndex(startRowIndex, false))
+            .writeTo(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"))) {
+            List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
+                .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == mapList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry4 src = list.get(i);
+
+                assert sub.get("订单号").equals(src.orderNo);
+                assert sub.get("收件人").equals(src.recipient);
+                assert sub.get("收件地址:省").equals(src.province);
+                assert sub.get("收件地址:市").equals(src.city);
+                assert sub.get("收件地址:区").equals(src.area);
+                assert sub.get("收件地址:详细地址").equals(src.detail);
+            }
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}

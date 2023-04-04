@@ -18,7 +18,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.manager.Const;
 
@@ -32,14 +31,12 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezeTopRow() throws IOException {
         new Workbook("Freeze Annotation Top Row", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(FreezeTopRow.randomTestData(FreezeTopRow::new)))
                 .writeTo(defaultTestPath);
     }
 
     @Test public void testFreezeFirstColumn() throws IOException {
         new Workbook("Freeze Annotation First Column", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(FreezeFirstColumn.randomTestData(FreezeFirstColumn::new)))
                 .writeTo(defaultTestPath);
     }
@@ -47,7 +44,6 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezePanes11() throws IOException {
         new Workbook("Freeze Annotation Panes Row1 Column1", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(FreezePanesRow1Column1.randomTestData(FreezePanesRow1Column1::new)))
                 .writeTo(defaultTestPath);
     }
@@ -55,7 +51,6 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezePans52() throws IOException {
         new Workbook("Freeze Annotation Panes Row5 Column2", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(FreezePanesRow5Column2.randomTestData(FreezePanesRow5Column2::new)))
                 .writeTo(defaultTestPath);
     }
@@ -78,7 +73,6 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezeByExtPropertyRow2() throws IOException {
         new Workbook("Freeze Top Row2", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
                         .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(2)))
                 .writeTo(defaultTestPath);
@@ -86,7 +80,6 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezeByExtPropertyColumn2() throws IOException {
         new Workbook("Freeze first Column2", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
                         .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.col(2)))
                 .writeTo(defaultTestPath);
@@ -94,9 +87,15 @@ public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezeByExtPropertyRow2Column2() throws IOException {
         new Workbook("Freeze Panes Row2 Column2", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
                         .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(2, 2)))
                 .writeTo(defaultTestPath);
+    }
+
+    @Test public void testFreezeByExtPropertyRow2Column2FromRow4() throws IOException {
+        new Workbook("Freeze Panes Row2 Column2 From Row4")
+            .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData()).setStartRowIndex(4)
+                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(4)))
+            .writeTo(defaultTestPath);
     }
 }
