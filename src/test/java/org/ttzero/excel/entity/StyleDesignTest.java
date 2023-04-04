@@ -178,7 +178,7 @@ public class StyleDesignTest extends WorkbookTest {
     }
 
     public static class LightListSheet<T> extends ListSheet<T> {
-        public LightListSheet(List<T> data, org.ttzero.excel.entity.Column... columns) {
+        public LightListSheet(List<T> data, Column... columns) {
             super(data, columns);
         }
 

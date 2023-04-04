@@ -19,7 +19,6 @@ package org.ttzero.excel.manager;
 import org.dom4j.Document;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
-import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -55,7 +54,7 @@ public class RelManager implements Serializable {
         return relManager;
     }
 
-    public synchronized void add(Relationship rel) {
+    public synchronized Relationship add(Relationship rel) {
         if (relationships == null) {
             relationships = new ArrayList<>();
         }
@@ -67,6 +66,7 @@ public class RelManager implements Serializable {
             rel.setId("rId" + (relationships.size() + 1));
             relationships.add(rel);
         }
+        return rel;
     }
 
     private int indexOf(String target) {

@@ -80,7 +80,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * @param row row number
      * @return true if rows large than limit
      */
-    default boolean outOfSheet(int row) {
+    default boolean isOutOfSheet(int row) {
         return row >= getRowLimit();
     }
 

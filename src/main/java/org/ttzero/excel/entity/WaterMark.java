@@ -42,15 +42,15 @@ public class WaterMark {
     private final Path imagePath;
     private boolean temp;
 
-    public WaterMark(String word) { // 文字水印
+    public WaterMark(String word) {
         imagePath = createWaterMark(word);
     }
 
-    public WaterMark(Path imagePath) {  // 图片水印（路径）
+    public WaterMark(Path imagePath) {
         this.imagePath = imagePath;
     }
 
-    public WaterMark(InputStream inputStream) throws IOException { // 图片水印（流）
+    public WaterMark(InputStream inputStream) throws IOException {
         imagePath = createTemp();
         Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
     }

@@ -16,7 +16,7 @@
 
 package org.ttzero.excel.entity.e7;
 
-import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
@@ -89,6 +89,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 /**
  * @author guanquan.wang at 2019-04-22 16:31
  */
+@TopNS(prefix = {"", "r"}, value = "worksheet"
+    , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // the storage path
@@ -947,8 +949,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void writeRootNode() throws IOException {
-        if (sheet.getClass().isAnnotationPresent(TopNS.class)) {
-            TopNS topNS = sheet.getClass().getAnnotation(TopNS.class);
+        if (getClass().isAnnotationPresent(TopNS.class)) {
+            TopNS topNS = getClass().getAnnotation(TopNS.class);
             bw.write('<');
             bw.write(topNS.value());
             String[] prefixs = topNS.prefix(), urls = topNS.uri();
@@ -1148,6 +1150,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(r.getId());
             bw.write("\"/>");
         }
+
         // Compatible processing
         else if (comments != null) {
             sheet.addRel(r = new Relationship("../drawings/vmlDrawing" + sheet.getId() + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
@@ -1158,10 +1161,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\"/>");
         }
 
-        // background image
+        // Background image
         if (sheet.getWaterMark() != null) {
-            // relationship
-            r = sheet.findRel("media/image"); // only one background image
+            RelManager relManager = sheet.getRelManager();
+            r = relManager.getByType(Const.Relationship.IMAGE);
             if (r != null) {
                 bw.write("<picture r:id=\"");
                 bw.write(r.getId());

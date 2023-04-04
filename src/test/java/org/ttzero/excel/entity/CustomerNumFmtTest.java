@@ -227,7 +227,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
             return randomTestData(WidthTestItem::new);
         }
         public static List<WidthTestItem> randomTestData(Supplier<? extends WidthTestItem> supplier) {
-            int size = random.nextInt(10 + 5);
+            int size = random.nextInt(10) + 5;
             List<WidthTestItem> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
                 WidthTestItem o = supplier.get();

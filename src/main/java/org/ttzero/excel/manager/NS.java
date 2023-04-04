@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.annotation;
+package org.ttzero.excel.manager;
 
 
 import java.lang.annotation.Documented;

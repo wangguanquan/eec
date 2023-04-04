@@ -50,6 +50,6 @@ public class BuildInColor extends Color {
 
     @Override
     public String toString() {
-        return "Color indexed=\"" + indexed + "\"";
+        return "Color indexed=\"" + indexed + "\"" + " [r=" + getRed() + ",g=" + getGreen() + ",b=" + getBlue() + "]";
     }
 }

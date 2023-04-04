@@ -80,7 +80,6 @@ public class GridLinesTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("ResultSetSheet ignore grid lines")
-                .setConnection(con)
                 .addSheet(new ResultSetSheet(rs
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)

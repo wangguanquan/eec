@@ -17,23 +17,12 @@
 
 package org.ttzero.excel.reader;
 
-import org.junit.Test;
-
-import java.io.IOException;
-
-import static org.ttzero.excel.Print.println;
-import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
  * @author guanquan.wang at 2020-03-11 10:23
  */
 public class ExcelReaderSharedTest {
 
-    @Test public void testSharedRead() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("eec shared 100.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(row -> println(row.getRowNum() + "| " + row.toString()));
-        }
-    }
 
 //    public static class LargeSharedData {
 //        private int nv;

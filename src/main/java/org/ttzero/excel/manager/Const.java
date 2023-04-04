@@ -165,42 +165,6 @@ public interface Const {
     }
 
     /**
-     * The cell type
-     * @deprecated replace it with the number format
-     */
-    @Deprecated
-    interface ColumnType {
-        /**
-         * Standard
-         */
-        int NORMAL = 0;
-        /**
-         * Percentage
-         */
-        int PARENTAGE = 1;
-        /**
-         * RMB
-         */
-        int RMB = 2;
-    }
-
-    /**
-     * The worksheet extend properties key
-     * @deprecated Replace with {@link ExtendPropertyKey}
-     */
-    @Deprecated
-    interface WorksheetExtendProperty {
-        /**
-         * Freeze panes key(0-position)
-         */
-        String FREEZE = ExtendPropertyKey.FREEZE;
-        /**
-         * The style design key(1-position)
-         */
-        String STYLE_DESIGN = ExtendPropertyKey.STYLE_DESIGN;
-    }
-
-    /**
      * The extend properties key
      */
     interface ExtendPropertyKey {

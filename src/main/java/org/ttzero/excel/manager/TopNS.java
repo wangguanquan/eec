@@ -14,43 +14,43 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.annotation;
-
+package org.ttzero.excel.manager;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Xml Attribute
+ * Top namespace
  *
  * @author guanquan.wang on 2017/9/21.
  */
-@Target({ElementType.FIELD})
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+@Inherited
 @Documented
-public @interface Attr {
+public @interface TopNS {
     /**
-     * attribute name
+     * Specify the namespace prefix, it will mapping the {@link #uri()} values.
      *
-     * @return the names of attr
+     * @return prefix key array
      */
-    String[] name();
+    String[] prefix();
 
     /**
-     * attribute value
+     * Setting the namespace uri
      *
-     * @return the values of attr
+     * @return uri array
      */
-    String[] value() default {};
+    String[] uri() default {};
 
     /**
-     * namespace
+     * Setting the tag name
      *
-     * @return the xml namespace
-     * '-' if do not have namespace
+     * @return the tag name
      */
-    NS namespace() default @NS("-");
+    String value();
 }

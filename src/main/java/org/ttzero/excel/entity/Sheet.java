@@ -19,7 +19,6 @@ package org.ttzero.excel.entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ttzero.excel.annotation.TopNS;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
@@ -32,7 +31,6 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
-import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
@@ -87,15 +85,13 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *
  * @author guanquan.wang on 2017/9/26.
  */
-@TopNS(prefix = {"", "r"}, value = "worksheet"
-        , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public abstract class Sheet implements Cloneable, Storable {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     protected Workbook workbook;
 
     protected String name;
-    protected org.ttzero.excel.entity.Column[] columns;
+    protected Column[] columns;
     protected WaterMark waterMark;
     protected RelManager relManager;
     protected int id;
@@ -264,7 +260,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param columns the header info
      */
-    public Sheet(final org.ttzero.excel.entity.Column... columns) {
+    public Sheet(final Column... columns) {
         this.columns = columns;
         relManager = new RelManager();
     }
@@ -275,7 +271,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public Sheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public Sheet(String name, final Column... columns) {
         this(name, null, columns);
     }
 
@@ -286,99 +282,11 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public Sheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public Sheet(String name, WaterMark waterMark, final Column... columns) {
         this.name = name;
         this.columns = columns;
         this.waterMark = waterMark;
         relManager = new RelManager();
-    }
-
-    /**
-     * Will be deleted soon
-     *
-     * @deprecated use the new {@link org.ttzero.excel.entity.Column}
-     */
-    @Deprecated
-    public static class Column extends org.ttzero.excel.entity.Column {
-        public Column() {
-        }
-
-        public Column(String name, Class<?> clazz) {
-            super(name, clazz);
-        }
-
-        public Column(String name, String key) {
-            super(name, key);
-        }
-
-        public Column(String name, String key, Class<?> clazz) {
-            super(name, key, clazz);
-        }
-
-        public Column(String name, Class<?> clazz, ConversionProcessor processor) {
-            super(name, clazz, processor);
-        }
-
-        public Column(String name, String key, ConversionProcessor processor) {
-            super(name, key, processor);
-        }
-
-        public Column(String name, Class<?> clazz, boolean share) {
-            super(name, clazz, share);
-        }
-
-        public Column(String name, String key, boolean share) {
-            super(name, key, share);
-        }
-
-        public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
-            super(name, clazz, processor, share);
-        }
-
-        public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
-            super(name, key, clazz, processor);
-        }
-
-        public Column(String name, String key, ConversionProcessor processor, boolean share) {
-            super(name, key, processor, share);
-        }
-
-        public Column(String name, Class<?> clazz, int cellStyle) {
-            super(name, clazz, cellStyle);
-        }
-
-        public Column(String name, String key, int cellStyle) {
-            super(name, key, cellStyle);
-        }
-
-        public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
-            super(name, clazz, cellStyle, share);
-        }
-
-        public Column(String name, String key, int cellStyle, boolean share) {
-            super(name, key, cellStyle, share);
-        }
-
-        /**
-         * Setting the cell type
-         *
-         * @param type the cell type
-         * @return the {@link org.ttzero.excel.entity.Column}
-         * @deprecated replace it with the {@link #setNumFmt(String)}.
-         */
-        @Deprecated
-        public org.ttzero.excel.entity.Column setType(int type) {
-            switch (type) {
-                case Const.ColumnType.PARENTAGE:
-                    setNumFmt("0.00%_);[Red]-0.00% ");
-                    break;
-                case Const.ColumnType.RMB:
-                    setNumFmt("¥0.00_);[Red]-¥0.00 ");
-                    break;
-                default:
-            }
-            return this;
-        }
     }
 
     /**
@@ -796,7 +704,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return array of column
      */
-    public org.ttzero.excel.entity.Column[] getColumns() {
+    public Column[] getColumns() {
         return columns;
     }
 
@@ -809,10 +717,10 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return array of column
      */
-    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected Column[] getHeaderColumns() {
         if (!headerReady) {
             if (columns == null) {
-                columns = new org.ttzero.excel.entity.Column[0];
+                columns = new Column[0];
             }
         }
         return columns;
@@ -823,7 +731,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return header columns
      */
-    public org.ttzero.excel.entity.Column[] getAndSortHeaderColumns() {
+    public Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
             // Create header columns
             this.columns = getHeaderColumns();
@@ -860,12 +768,12 @@ public abstract class Sheet implements Cloneable, Storable {
         return columns;
     }
 
-    protected void resetCommonProperties(org.ttzero.excel.entity.Column[] columns) {
-        for (org.ttzero.excel.entity.Column column : columns) {
+    protected void resetCommonProperties(Column[] columns) {
+        for (Column column : columns) {
             if (column == null) continue;
             if (column.styles == null) column.styles = workbook.getStyles();
             if (column.next != null) {
-                for (org.ttzero.excel.entity.Column col = column.next; col != null; col = col.next)
+                for (Column col = column.next; col != null; col = col.next)
                     col.styles = workbook.getStyles();
             }
 
@@ -876,7 +784,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
     }
 
-    protected void sortColumns(org.ttzero.excel.entity.Column[] columns) {
+    protected void sortColumns(Column[] columns) {
         if (columns.length <= 1) return;
         int j = 0;
         for (int i = 0; i < columns.length; i++) {
@@ -898,14 +806,14 @@ public abstract class Sheet implements Cloneable, Storable {
         }
     }
 
-    protected int search(org.ttzero.excel.entity.Column[] columns, int n, int k) {
+    protected int search(Column[] columns, int n, int k) {
         int i = 0;
         for (; i < n && columns[i].getTail().colIndex <= k; i++) ;
         return i;
     }
 
-    private void insert(org.ttzero.excel.entity.Column[] columns, int n, int k) {
-        org.ttzero.excel.entity.Column t = columns[k];
+    private void insert(Column[] columns, int n, int k) {
+        Column t = columns[k];
         System.arraycopy(columns, n, columns, n + 1, k - n);
         columns[n] = t;
     }
@@ -915,14 +823,14 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected void calculateRealColIndex() {
         for (int i = 0; i < columns.length; i++) {
-            org.ttzero.excel.entity.Column hc = columns[i].getTail();
+            Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
             else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
             else hc.realColIndex = hc.colIndex + 1;
 
             if (hc.prev != null) {
-                for (org.ttzero.excel.entity.Column col = hc.prev; col != null; col = col.prev)
+                for (Column col = hc.prev; col != null; col = col.prev)
                     col.realColIndex = hc.realColIndex;
             }
         }
@@ -934,8 +842,22 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns the header row's columns
      * @return current {@link Sheet}
      */
-    public Sheet setColumns(final org.ttzero.excel.entity.Column[] columns) {
+    public Sheet setColumns(final Column ... columns) {
         this.columns = columns;
+        return this;
+    }
+
+    /**
+     * Setting the header rows's columns
+     *
+     * @param columns the header row's columns
+     * @return current {@link Sheet}
+     */
+    public Sheet setColumns(List<Column> columns) {
+        if (columns != null && !columns.isEmpty()) {
+            this.columns = new Column[columns.size()];
+            columns.toArray(this.columns);
+        }
         return this;
     }
 
@@ -1060,8 +982,23 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
+    /**
+     * Find relationship by key
+     *
+     * @param key relationship key
+     * @return null if not exists
+     */
     public Relationship findRel(String key) {
         return relManager.likeByTarget(key);
+    }
+
+    /**
+     * Returns current sheet's relationship manager
+     *
+     * @return {@link RelManager}
+     */
+    public RelManager getRelManager() {
+        return relManager;
     }
 
     /**
@@ -1329,7 +1266,7 @@ public abstract class Sheet implements Cloneable, Storable {
             boolean noneHeader = columns == null || columns.length == 0;
             if (!noneHeader) {
                 int n = 0;
-                for (org.ttzero.excel.entity.Column column : columns) {
+                for (Column column : columns) {
                     if (isEmpty(column.name) && isEmpty(column.key)) n++;
                 }
                 noneHeader = n == columns.length;
@@ -1416,7 +1353,7 @@ public abstract class Sheet implements Cloneable, Storable {
 //            boolean noneHeader = columns == null || columns.length == 0;
 //            if (!noneHeader) {
 //                int n = 0;
-//                for (org.ttzero.excel.entity.Column column : columns) {
+//                for (Column column : columns) {
 //                    if (isEmpty(column.name)) n++;
 //                }
 //                noneHeader = n == columns.length;
@@ -1538,7 +1475,7 @@ public abstract class Sheet implements Cloneable, Storable {
         int[] lenArray = new int[columns.length];
         int maxSubColumnSize = 1;
         for (int i = 0, a, len = columns.length; i < len; i++) {
-            org.ttzero.excel.entity.Column col = columns[i];
+            Column col = columns[i];
             a = col.subColumnSize();
             lenArray[i] = a;
             if (a > maxSubColumnSize) {
@@ -1550,14 +1487,14 @@ public abstract class Sheet implements Cloneable, Storable {
 
         // Reverse and fill empty column
         for (int i = 0, len = columns.length; i < len; i++) {
-            org.ttzero.excel.entity.Column col = columns[i];
+            Column col = columns[i];
             // Reverse header to tail
             if (col.tail != null) {
-                org.ttzero.excel.entity.Column head = col.tail, tmp = head.prev;
+                Column head = col.tail, tmp = head.prev;
                 head.tail = null; head.prev = null; head.next = null;
                 // Switch prev and next point
                 for (; tmp != null; ) {
-                    org.ttzero.excel.entity.Column ptmp = tmp.prev;
+                    Column ptmp = tmp.prev;
                     tmp.tail = null; tmp.prev = null; tmp.next = null;
                     head.addSubColumn(tmp);
                     tmp = ptmp;
@@ -1570,7 +1507,7 @@ public abstract class Sheet implements Cloneable, Storable {
             // Fill empty column
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
-                    org.ttzero.excel.entity.Column sub = new org.ttzero.excel.entity.Column().setColIndex(col.colIndex);
+                    Column sub = new Column().setColIndex(col.colIndex);
                     sub.realColIndex = col.realColIndex;
                     col.addSubColumn(sub);
                 }
@@ -1586,7 +1523,7 @@ public abstract class Sheet implements Cloneable, Storable {
         // Single header column
         if (y <= 1) return;
 
-        org.ttzero.excel.entity.Column[] array = new org.ttzero.excel.entity.Column[n];
+        Column[] array = new Column[n];
         for (int i = 0; i < x; i++) {
             System.arraycopy(columns[i].toArray(), 0, array, y * i, y);
         }
@@ -1602,7 +1539,7 @@ public abstract class Sheet implements Cloneable, Storable {
             // Skip if marked
             if (marks[i] == 1) continue;
 
-            org.ttzero.excel.entity.Column col = array[i];
+            Column col = array[i];
             marks[i] = 1;
             if (isEmpty(col.name)) {
                 continue;
@@ -1648,14 +1585,14 @@ public abstract class Sheet implements Cloneable, Storable {
         // Put merged-cells into ext-properties
         if (!mergeCells.isEmpty()) {
             for (Dimension dim : _tmpCells) {
-                org.ttzero.excel.entity.Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
+                Column col = array[(dim.firstColumn - 1) * y + (y - dim.lastRow)];
                 Comment headerComment = col.headerComment;
-                org.ttzero.excel.entity.Column tmp = new org.ttzero.excel.entity.Column().from(col);
+                Column tmp = new Column().from(col);
 
                 // Clear name in merged cols range
                 for (int m = dim.firstColumn - 1; m < dim.lastColumn; m++) {
                     for (int o = y - dim.firstRow; o >= y - dim.lastRow; o--) {
-                        org.ttzero.excel.entity.Column currentCol = array[m * y + o];
+                        Column currentCol = array[m * y + o];
                         currentCol.name = null;
                         currentCol.key = null;
                         if (currentCol.headerComment != null) {
@@ -1668,7 +1605,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 }
 
                 // Copy last col's name into first col
-                org.ttzero.excel.entity.Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
+                Column lastCol = array[(dim.firstColumn - 1) * y + (y - dim.firstRow)];
                 lastCol.from(tmp);
                 lastCol.headerComment = headerComment;
             }
@@ -1694,7 +1631,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, org.ttzero.excel.entity.Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();

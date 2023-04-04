@@ -50,18 +50,6 @@ public class XMLRow extends Row {
      * The number of row. (one base)
      *
      * @return int value
-     * @deprecated replace with {@link #getRowNum()}
-     */
-    @Override
-    @Deprecated
-    public int getRowNumber() {
-        return this.getRowNum();
-    }
-
-    /**
-     * The number of row. (one base)
-     *
-     * @return int value
      */
     @Override
     public int getRowNum() {

@@ -22,15 +22,12 @@ import org.dom4j.io.XMLWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,75 +52,15 @@ public class FileUtil {
 
 
     /**
-     * Close the {@link InputStream}
+     * Close the {@link Closeable} stream
      *
-     * @param inputStream the in stream
+     * @param closeable a closeable stream
      */
-    public static void close(InputStream inputStream) {
-        if (inputStream != null) try {
-            inputStream.close();
+    public static void close(Closeable closeable) {
+        if (closeable != null) try {
+            closeable.close();
         } catch (IOException e) {
-            LOGGER.error("close InputStream fail.", e);
-        }
-    }
-
-    /**
-     * Close the {@link OutputStream}
-     *
-     * @param outputStream the out stream
-     */
-    public static void close(OutputStream outputStream) {
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                LOGGER.error("close OutputStream fail.", e);
-            }
-        }
-    }
-
-    /**
-     * Close the {@link Reader}
-     *
-     * @param br the reader
-     */
-    public static void close(Reader br) {
-        if (br != null) {
-            try {
-                br.close();
-            } catch (IOException e) {
-                LOGGER.error("close Reader fail.", e);
-            }
-        }
-    }
-
-    /**
-     * Close the {@link Writer}
-     *
-     * @param bw the writer
-     */
-    public static void close(Writer bw) {
-        if (bw != null) {
-            try {
-                bw.close();
-            } catch (IOException e) {
-                LOGGER.error("close Writer fail.", e);
-            }
-        }
-    }
-
-    /**
-     * Close the {@link Channel}
-     *
-     * @param channel the channel
-     */
-    public static void close(Channel channel) {
-        if (channel != null) {
-            try {
-                channel.close();
-            } catch (IOException e) {
-                LOGGER.error("close Channel fail.", e);
-            }
+            LOGGER.error("Close stream fail.", e);
         }
     }
 
