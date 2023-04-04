@@ -42,7 +42,7 @@ public @interface HeaderStyle {
      *
      * @return color
      */
-    String fontColor() default "white";
+    String fontColor() default "black";
 
     /**
      * Set the foreground color.
@@ -50,5 +50,5 @@ public @interface HeaderStyle {
      * @see Fill#parse(java.lang.String)
      * @return color
      */
-    String fillFgColor() default "#666699";
+    String fillFgColor() default "#E9EAEC";
 }

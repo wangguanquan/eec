@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -1132,7 +1133,7 @@ public abstract class Sheet implements Cloneable, Storable {
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
         Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
+                , 12, Font.Style.BOLD, ColorIndex.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
@@ -1146,7 +1147,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return style value
      */
     public int defaultHeadStyle() {
-        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
+        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("black", "#E9EAEC"));
     }
 
     /**
@@ -1156,7 +1157,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public int defaultHeadStyleIndex() {
         if (headStyleIndex == -1) {
-            setHeadStyle(this.buildHeadStyle("#ffffff", "#666699"));
+            setHeadStyle(this.buildHeadStyle("black", "#E9EAEC"));
         }
         return headStyleIndex;
     }
