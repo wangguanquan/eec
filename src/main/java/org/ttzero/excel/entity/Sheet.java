@@ -472,7 +472,7 @@ public abstract class Sheet implements Cloneable, Storable {
     @Deprecated
     public Sheet setAutoOdd(int autoOdd) {
         if (autoOdd == 1) {
-            if (zebraFill == null) setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
+            if (zebraFill == null) setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
         } else setZebraLine(null);
         return this;
     }
@@ -549,7 +549,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return current {@link Sheet}
      */
     public Sheet defaultZebraLine() {
-        return setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
+        return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
     }
 
     /**

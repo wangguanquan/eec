@@ -473,7 +473,7 @@ public class Workbook implements Storable {
      * @return the {@link Workbook}
      */
     public Workbook defaultZebraLine() {
-        return setZebraLine(new Fill(PatternType.solid, new Color(239, 245, 235)));
+        return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
     }
 
     /**
