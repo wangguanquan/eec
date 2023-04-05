@@ -178,7 +178,7 @@ public class HeaderRow extends Row {
 
         List<ListSheet.EntryColumn> list = new ArrayList<>();
 //        Map<String, ListSheet.EntryColumn> columnMap = new LinkedHashMap<>();
-        ListSheet.EntryColumn column, other;
+        ListSheet.EntryColumn column;
         for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
             f.setAccessible(true);
@@ -193,7 +193,7 @@ public class HeaderRow extends Row {
                     tail.method = method;
                     if (StringUtil.isEmpty(tail.name)) tail.name = method.getName();
                     if (tail.clazz == null) tail.clazz = method.getParameterTypes()[0];
-//                    if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+                    if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
 //                    if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                     list.add(column);
                     continue;
@@ -211,7 +211,7 @@ public class HeaderRow extends Row {
                     tail.field = f;
                     if (tail.clazz == null) tail.clazz = declaredFields[i].getType();
                 }
-//                if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+                if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
 //                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                 list.add(column);
             }
@@ -228,7 +228,7 @@ public class HeaderRow extends Row {
                 if (StringUtil.isEmpty(tail.name)) tail.name = entry.getKey();
                 tail.method = entry.getValue();
                 if (tail.clazz == null) tail.clazz = entry.getValue().getParameterTypes()[0];
-//                if (tail.colIndex < 0) tail.colIndex = getIndex(tail.name);
+                if (tail.colIndex < 0) tail.colIndex = getIndex(tail.name);
 //                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                 list.add(column);
             }
@@ -291,7 +291,10 @@ public class HeaderRow extends Row {
                 columns[i] = c = new ListSheet.EntryColumn(c);
             }
 
-            if (c.colIndex < 0) c.colIndex = getIndex(c.name);
+            if (c.colIndex < 0) {
+                c.colIndex = getIndex(c.name);
+                c.realColIndex = c.colIndex + 1;
+            }
         }
 
         this.columns = Arrays.stream(columns)
