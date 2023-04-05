@@ -16,8 +16,6 @@
 
 package org.ttzero.excel.util;
 
-import org.ttzero.excel.reader.UncheckedTypeException;
-
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -191,9 +189,6 @@ public class DateUtil {
      * @return java.util.Date
      */
     public static java.util.Date toDate(int n) {
-        if (n < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + n + " can't convert to java.util.Date");
-        }
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
@@ -204,9 +199,6 @@ public class DateUtil {
      * @return java.util.Date
      */
     public static java.util.Date toDate(double d) {
-        if (d < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
-        }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
@@ -239,9 +231,6 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(double d) {
-        if (d < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
-        }
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
@@ -253,9 +242,6 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(int n) {
-        if (n < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + n + " can't convert to java.util.Date");
-        }
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
