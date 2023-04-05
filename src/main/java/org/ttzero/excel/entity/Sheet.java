@@ -544,7 +544,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting zebra-line style, the default fill color is #EFF5EB
+     * Setting zebra-line style, the default fill color is #E9EAEC
      *
      * @return current {@link Sheet}
      */

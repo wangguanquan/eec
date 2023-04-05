@@ -267,7 +267,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet cancel odd")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10")
-                    .cancelOddStyle()
+                    .cancelZebraLine()
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());

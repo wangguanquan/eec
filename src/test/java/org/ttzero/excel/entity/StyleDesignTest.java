@@ -119,7 +119,7 @@ public class StyleDesignTest extends WorkbookTest {
             mergeCells.add(new Dimension(nameFrom + 1, (short) 2, row, (short) 2));
             mergeCells.add(new Dimension(nameFrom + 1, (short) 6, row, (short) 6));
         }
-        new Workbook("Merged Cells").cancelOddFill().addSheet(new LightListSheet<>(list
+        new Workbook("Merged Cells").cancelZebraLine().addSheet(new LightListSheet<>(list
             , new Column("姓名", "name")
             , new Column("性别", "sex")
             , new Column("证书").addSubColumn(new Column("编号", "no"))
@@ -166,7 +166,7 @@ public class StyleDesignTest extends WorkbookTest {
         public int build(U u, int style, Styles sst) {
             if (group == null) {
                 group = u.groupBy();
-                s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
+                s = sst.addFill(new Fill(PatternType.solid, new Color(233, 234, 236)));
                 return style;
             }
             if (u.groupBy() != null && !group.equals(u.groupBy())) {

@@ -60,7 +60,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * format (only supported BIFF8 format, ie excel 97~2003).
  * <p>
  * The property contains {@link #setName(String)}, {@link #setCreator(String)},
- * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setOddFill(Fill)}
+ * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setZebraLine(Fill)}
  * You can also call {@link #setWorkbookWriter(IWorkbookWriter)} method to setting
  * a custom WorkbookWriter to achieve special demand.
  * <p>

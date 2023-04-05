@@ -291,7 +291,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10")
                     .setWaterMark(WaterMark.of("TEST"))
-                    .cancelOddStyle()
+                    .cancelZebraLine()
                 )
                 .writeTo(defaultTestPath);
         }

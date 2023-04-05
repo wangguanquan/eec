@@ -618,7 +618,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook("clear style").addSheet(new ListSheet<>(Item.randomTestData()));
 
         Sheet sheet = workbook.getSheetAt(0);
-        sheet.cancelOddStyle();  // Clear odd style
+        sheet.cancelZebraLine();  // Clear odd style
         int headStyle = sheet.defaultHeadStyle();
         sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
         sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
@@ -1358,7 +1358,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         new Workbook("Customer row height").addSheet(
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
-                .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
+                .cancelZebraLine().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
                 .setSheetWriter(new XMLWorksheetWriter() {
                     protected int startRow(int rows, int columns, double rowHeight) throws IOException {
                         // Row number
@@ -1413,7 +1413,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testTileWriter() throws IOException {
         List<TileEntity> data = TileEntity.randomTestData();
-        new Workbook("Dynamic title").cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
+        new Workbook("Dynamic title").cancelZebraLine().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
     }
 
     public static class TileEntity {
