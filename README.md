@@ -265,7 +265,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.5.6</version>
+    <version>0.5.8</version>
 </dependency>
 ```
 
@@ -333,7 +333,7 @@ Version 0.5.4 (2022-08-28)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.7-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.8-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
