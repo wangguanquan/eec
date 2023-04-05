@@ -189,6 +189,38 @@ public class Styles implements Storable {
         return self;
     }
 
+    public int modifyBorder(int style, Border newBorder) {
+        return Styles.clearBorder(style) | addBorder(newBorder);
+    }
+
+    public int modifyNumFmt(int style, NumFmt newNumFmt) {
+        return Styles.clearNumFmt(style) | addNumFmt(newNumFmt);
+    }
+
+    public int modifyWrapText(int style, boolean newWrapText) {
+        if (newWrapText) {
+            return style | 1;
+        } else {
+            return Styles.clearWrapText(style);
+        }
+    }
+
+    public int modifyVertical(int style, int newVertical) {
+        return Styles.clearVertical(style) | newVertical;
+    }
+
+    public int modifyHorizontal(int style, int newHorizontal) {
+        return Styles.clearHorizontal(style) | newHorizontal;
+    }
+
+    public int modifyFill(int style, Fill newFill) {
+        return Styles.clearFill(style) | addFill(newFill);
+    }
+
+    public int modifyFont(int style, Font newFont) {
+        return Styles.clearFont(style) | addFont(newFont);
+    }
+
     /**
      * Create a general style
      *
