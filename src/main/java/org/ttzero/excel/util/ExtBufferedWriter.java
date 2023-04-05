@@ -104,7 +104,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             char[] entity = ESCAPE_CHARS[c];
             if (entity != null) write(entity);
             else write(c);
-        }else{
+        } else {
             write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
         }
     }
