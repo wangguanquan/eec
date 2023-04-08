@@ -91,17 +91,6 @@ public abstract class Row {
      * The number of row. (one base)
      *
      * @return int value
-     * @deprecated replace with {@link #getRowNum()}
-     */
-    @Deprecated
-    public int getRowNumber() {
-        return index;
-    }
-
-    /**
-     * The number of row. (one base)
-     *
-     * @return int value
      */
     public int getRowNum() {
         return index;

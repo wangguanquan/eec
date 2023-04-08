@@ -49,9 +49,9 @@ public class CollectionSheet<T> extends Sheet {
      * Constructor worksheet
      *
      * @param name the worksheet name
-     * @param columns the {@link org.ttzero.excel.entity.Column}
+     * @param columns the {@link Column}
      */
-    public CollectionSheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public CollectionSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -60,9 +60,9 @@ public class CollectionSheet<T> extends Sheet {
      *
      * @param name the worksheet name
      * @param waterMark the {@link WaterMark}
-     * @param columns the {@link org.ttzero.excel.entity.Column}
+     * @param columns the {@link Column}
      */
-    public CollectionSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 

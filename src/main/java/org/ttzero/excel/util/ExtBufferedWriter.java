@@ -27,7 +27,6 @@ import java.io.Writer;
  */
 public class ExtBufferedWriter extends BufferedWriter {
     private static final int defaultCharBufferSize = 8192;
-    private long cn; // Char length
 
     public ExtBufferedWriter(Writer out) {
         this(out, defaultCharBufferSize);
@@ -105,7 +104,7 @@ public class ExtBufferedWriter extends BufferedWriter {
             char[] entity = ESCAPE_CHARS[c];
             if (entity != null) write(entity);
             else write(c);
-        }else{
+        } else {
             write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
         }
     }
@@ -155,33 +154,6 @@ public class ExtBufferedWriter extends BufferedWriter {
      */
     public void write(double d) throws IOException {
         write(Double.toString(d));
-    }
-
-    @Override
-    public void write(int c) throws IOException {
-        super.write(c);
-        cn++;
-    }
-
-    @Override
-    public void write(char[] cbuf, int off, int len) throws IOException {
-        super.write(cbuf, off, len);
-        cn += len;
-    }
-
-    @Override
-    public void write(String s, int off, int len) throws IOException {
-        super.write(s, off, len);
-        cn += len;
-    }
-
-    /**
-     * Returns the number of characters that have been written
-     *
-     * @return number of characters
-     */
-    public long getWrittenChars() {
-        return cn;
     }
 
     public char[] toChars(int i) {

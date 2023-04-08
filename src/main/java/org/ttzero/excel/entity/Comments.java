@@ -17,7 +17,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.ExcelReader;

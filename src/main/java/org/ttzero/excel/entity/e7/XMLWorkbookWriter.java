@@ -21,9 +21,10 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
-import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
@@ -31,8 +32,6 @@ import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
-import org.ttzero.excel.entity.style.Fill;
-import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
@@ -41,7 +40,6 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -136,10 +134,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager.add(rel);
     }
 
-    private void writeXML(Path root) throws IOException {
+    private void writeGlobalAttribute(Path root) throws IOException {
 
         // Content type
-        ContentType contentType = new ContentType();
+        ContentType contentType = workbook.getContentType();
         contentType.add(new ContentType.Default(Const.ContentType.RELATIONSHIP, "rels"));
         contentType.add(new ContentType.Default(Const.ContentType.XML, "xml"));
         contentType.add(new ContentType.Override(Const.ContentType.SHAREDSTRING, "/xl/sharedStrings.xml"));
@@ -147,10 +145,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
 
         // Write app
-        writeApp(root, contentType);
+        writeApp(root);
 
         // Write core
-        writeCore(root, contentType);
+        writeCore(root);
 
         Path themeP = root.resolve("theme");
         if (!exists(themeP)) {
@@ -187,9 +185,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
 
         for (int i = 0; i < size; i++) {
-            Sheet sheet;
+            Sheet sheet = workbook.getSheetAt(i);
             contentType.add(new ContentType.Override(Const.ContentType.SHEET
-                , "/xl/worksheets/sheet" + (sheet = workbook.getSheetAt(i)).getId() + Const.Suffix.XML));
+                , "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
             Comments comments = sheet.getComments();
             if (comments != null) {
                 comments.writeTo(root);
@@ -197,8 +195,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                     , "/xl/comments" + sheet.getId() + Const.Suffix.XML));
                 contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
             }
+            // Marker
+            WaterMark wm = sheet.getWaterMark();
+            if (wm != null) {
+                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
+            }
         } // END
-
 
         // write content type
         contentType.writeTo(root.getParent());
@@ -223,7 +225,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    private void writeApp(Path root, ContentType contentType) throws IOException {
+    private void writeApp(Path root) throws IOException {
 
         // docProps
         App app = new App();
@@ -249,11 +251,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         app.setTitlePards(titleParts);
 
         app.writeTo(root.getParent().resolve("docProps/app.xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"));
-        contentType.addRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
+        workbook.addContentType(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"))
+            .addContentTypeRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
     }
 
-    private void writeCore(Path root, ContentType contentType) throws IOException {
+    private void writeCore(Path root) throws IOException {
         Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
         if (StringUtil.isEmpty(core.getCreator())) {
             if (workbook.getCreator() != null) {
@@ -267,8 +269,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         if (core.getModified() == null) core.setModified(new Date());
 
         core.writeTo(root.getParent().resolve("docProps/core.xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"));
-        contentType.addRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
+        workbook.addContentType(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"))
+            .addContentTypeRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
     }
 
     private void madeMark(Path parent) throws IOException {
@@ -374,16 +376,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 if (workbook.isAutoSize()) {
                     sheet.autoSize();
                 } else {
-                    sheet.fixSize();
+                    sheet.fixedSize();
                 }
             }
-            if (sheet.getAutoOdd() == -1) {
-                sheet.setAutoOdd(workbook.getAutoOdd());
-            }
-            // Interlace changes color as default
-            if (sheet.getAutoOdd() == 0) {
-                sheet.setOddFill(workbook.getOddFill() == null
-                    ? new Fill(PatternType.solid, new Color(239, 245, 235)) : workbook.getOddFill());
+
+            if (workbook.getZebraFill() != null && sheet.getZebraFillStyle() < 0) {
+                sheet.setZebraLine(workbook.getZebraFill());
             }
             sheet.setId(i + 1);
             // default worksheet name
@@ -391,7 +389,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 sheet.setName("Sheet" + (i + 1));
             }
             // Set cell value and style processor
-            sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
+            if (sheet.getCellValueAndStyle() == null) {
+                int zebraFillStyle = sheet.getZebraFillStyle();
+                ICellValueAndStyle cvas = zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
+                sheet.setCellValueAndStyle(cvas);
+            }
 
             // Force export all fields
             if (workbook.getForceExport() > sheet.getForceExport()) {
@@ -419,7 +421,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
 
             // Write SharedString, Styles and workbook.xml
-            writeXML(xl);
+            writeGlobalAttribute(xl);
             if (workbook.getWaterMark() != null)
                 workbook.getWaterMark().delete() ; // Delete template image
             workbook.what("0003");

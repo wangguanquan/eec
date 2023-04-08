@@ -69,6 +69,34 @@ public class AutoSizeTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testAutoWidthAndFixedWidth() throws IOException {
+        new Workbook("auto-width and fixed-width")
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id").fixedSize(16)
+                , new Column("姓名", "name")
+                , new Column("成绩", "score"))
+            ).writeTo(defaultTestPath);
+    }
+
+    @Test public void testSpecifyColumnAutoWidth() throws IOException {
+        new Workbook("specify column auto-width")
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id")
+                , new Column("姓名", "name").autoSize()
+                , new Column("成绩", "score")).fixedSize(10)
+            ).writeTo(defaultTestPath);
+    }
+
+    @Test public void testFixedAndAutoWidth() throws IOException {
+        new Workbook("fixed and fixed-width")
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+                , new Column("学号", "id")
+                , new Column("姓名", "name").autoSize()
+                , new Column("成绩", "score"))
+            ).writeTo(defaultTestPath);
+    }
+
     @FreezePanes(topRow = 1)
     public static class ServerReport {
 

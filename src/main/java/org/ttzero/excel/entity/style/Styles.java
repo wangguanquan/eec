@@ -18,7 +18,7 @@ package org.ttzero.excel.entity.style;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ttzero.excel.annotation.TopNS;
+import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.I18N;
 import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.manager.Const;

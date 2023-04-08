@@ -22,7 +22,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,7 +42,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("result set", author)
                 .watch(Print::println)
-                .setConnection(con)
                 .addSheet(rs
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)

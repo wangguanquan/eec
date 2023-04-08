@@ -19,8 +19,10 @@ package org.ttzero.excel.entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
+import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ParamProcessor;
@@ -29,6 +31,7 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import javax.naming.OperationNotSupportedException;
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +60,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * format (only supported BIFF8 format, ie excel 97~2003).
  * <p>
  * The property contains {@link #setName(String)}, {@link #setCreator(String)},
- * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setOddFill(Fill)}
+ * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setZebraLine(Fill)}
  * You can also call {@link #setWorkbookWriter(IWorkbookWriter)} method to setting
  * a custom WorkbookWriter to achieve special demand.
  * <p>
@@ -94,15 +97,12 @@ public class Workbook implements Storable {
     private Sheet[] sheets;
     private WaterMark waterMark;
     private int size;
+    @Deprecated
     private Connection con;
     /**
      * Auto size flag
      */
     private boolean autoSize;
-    /**
-     * Automatic interlacing fill, default fill color is '#E2EDDA'
-     */
-    private int autoOdd = 0;
     /**
      * Author
      */
@@ -113,9 +113,9 @@ public class Workbook implements Storable {
      */
     private String company;
     /**
-     * The fill
+     * The zebra-line fill style
      */
-    private Fill oddFill;
+    private Fill zebraFill;
     /**
      * A windows to debug
      */
@@ -131,6 +131,10 @@ public class Workbook implements Storable {
      * Force export all attributes
      */
     private int forceExport;
+    /**
+     * A global ContentType attributes
+     */
+    private ContentType contentType;
 
     /**
      * Create a unnamed workbook
@@ -165,6 +169,7 @@ public class Workbook implements Storable {
         this.creator = creator;
         sheets = new Sheet[3]; // Create three worksheet
         i18N = new I18N();
+        contentType = new ContentType();
     }
 
     /**
@@ -191,9 +196,11 @@ public class Workbook implements Storable {
      * Returns the autoOdd setting
      *
      * @return 1 if odd-fill
+     * @deprecated replace with {@code getZebraFill() != null}
      */
+    @Deprecated
     public int getAutoOdd() {
-        return autoOdd;
+        return hasZebraFill() ? 1 : 0;
     }
 
     /**
@@ -218,9 +225,11 @@ public class Workbook implements Storable {
      * Returns the odd-fill style
      *
      * @return the {@link Fill} style
+     * @deprecated rename to {@link #getZebraFill()}
      */
+    @Deprecated
     public Fill getOddFill() {
-        return oddFill;
+        return getZebraFill();
     }
 
     /**
@@ -313,7 +322,9 @@ public class Workbook implements Storable {
      *
      * @param con the database connection
      * @return the {@link Workbook}
+     * @deprecated insecurity
      */
+    @Deprecated
     public Workbook setConnection(Connection con) {
         this.con = con;
         return this;
@@ -416,10 +427,11 @@ public class Workbook implements Storable {
      * Cancel the odd-fill style
      *
      * @return the {@link Workbook}
+     * @deprecated rename to {@link #cancelZebraLine()}
      */
+    @Deprecated
     public Workbook cancelOddFill() {
-        this.autoOdd = 1;
-        return this;
+        return cancelZebraLine();
     }
 
     /**
@@ -427,10 +439,59 @@ public class Workbook implements Storable {
      *
      * @param fill the {@link Fill} style
      * @return the {@link Workbook}
+     * @deprecated rename to {@link #setZebraLine(Fill)}
      */
+    @Deprecated
     public Workbook setOddFill(Fill fill) {
-        this.oddFill = fill;
+        return setZebraLine(fill);
+    }
+
+    /**
+     * Setting the zebra-line fill style
+     *
+     * @param fill the zebra-line {@link Fill} style
+     * @return the {@link Workbook}
+     */
+    public Workbook setZebraLine(Fill fill) {
+        this.zebraFill = fill;
         return this;
+    }
+
+    /**
+     * Cancel the zebra-line style
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook cancelZebraLine() {
+        this.zebraFill = null;
+        return this;
+    }
+
+    /**
+     * Setting zebra-line style, the default fill color is #EFF5EB
+     *
+     * @return the {@link Workbook}
+     */
+    public Workbook defaultZebraLine() {
+        return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
+    }
+
+    /**
+     * Returns the zebra-line fill style
+     *
+     * @return the {@link Fill} style
+     */
+    public Fill getZebraFill() {
+        return zebraFill;
+    }
+
+    /**
+     * Returns current workbook has zebra-line
+     *
+     * @return true if zebra-line is not null
+     */
+    public boolean hasZebraFill() {
+        return zebraFill != null && zebraFill.getPatternType() != PatternType.none;
     }
 
     /**
@@ -548,7 +609,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated Please use {@code addSheet(new StatementSheet(connection, sql, columns)}
      */
+    @Deprecated
     public Workbook addSheet(String sql, Column... columns) throws SQLException {
         return addSheet(null, sql, columns);
     }
@@ -564,7 +627,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated Please use {@code addSheet(new StatementSheet(name, connection, sql, columns)}
      */
+    @Deprecated
     public Workbook addSheet(String name, String sql, Column... columns) throws SQLException {
         PreparedStatement ps = con.prepareStatement(sql
             , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -587,7 +652,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated Please use {@code addSheet(new StatementSheet(connection, sql, paramProcessor, columns)}
      */
+    @Deprecated
     public Workbook addSheet(String sql, ParamProcessor pp, Column... columns) throws SQLException {
         return addSheet(null, sql, pp, columns);
     }
@@ -610,7 +677,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated Please use {@code addSheet(new StatementSheet(name, connection, sql, paramProcessor, columns)}
      */
+    @Deprecated
     public Workbook addSheet(String name, String sql, ParamProcessor pp
         , Column... columns) throws SQLException {
         PreparedStatement ps = con.prepareStatement(sql
@@ -988,5 +1057,36 @@ public class Workbook implements Storable {
             init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
+    }
+
+    /**
+     * Add a content-type
+     *
+     * @param type {@link ContentType.Type}
+     * @return current {@link Workbook}
+     */
+    public Workbook addContentType(ContentType.Type type) {
+        contentType.add(type);
+        return this;
+    }
+
+    /**
+     * Add a content-type refer
+     *
+     * @param rel {@link Relationship}
+     * @return current {@link Workbook}
+     */
+    public Workbook addContentTypeRel(Relationship rel) {
+        contentType.addRel(rel);
+        return this;
+    }
+
+    /**
+     * Returns the global ContentType
+     *
+     * @return {@link ContentType}
+     */
+    public ContentType getContentType() {
+        return contentType;
     }
 }

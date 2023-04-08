@@ -50,18 +50,6 @@ public class XMLRow extends Row {
      * The number of row. (one base)
      *
      * @return int value
-     * @deprecated replace with {@link #getRowNum()}
-     */
-    @Override
-    @Deprecated
-    public int getRowNumber() {
-        return this.getRowNum();
-    }
-
-    /**
-     * The number of row. (one base)
-     *
-     * @return int value
      */
     @Override
     public int getRowNum() {
@@ -200,13 +188,13 @@ public class XMLRow extends Row {
         // find type
         // n=numeric (default), s=string, b=boolean, str=function string
         char t = NUMERIC; // default
-        int xf = 0, i;
+        int xf = 0, i = 0;
         for (; cb[cursor] != '>'; cursor++) {
             // Cell index
             if (cb[cursor] <= ' ' && cb[cursor + 1] == 'r' && cb[cursor + 2] == '=') {
                 int a = cursor += 4;
                 for (; cb[cursor] != '"'; cursor++) ;
-                i = unknownLength ? (lc = toCellIndex(cb, a, cursor)) : toCellIndex(cb, a, cursor);
+                i = toCellIndex(cb, a, cursor);
                 // The `spans` attribute is not be set
                 if (i - 1 >= cells.length) {
                     // Bound check
@@ -245,6 +233,7 @@ public class XMLRow extends Row {
         // The style index
         cell.xf = xf;
         cell.t = t;
+        if (lc < i) lc = i;
 
         return cell;
     }

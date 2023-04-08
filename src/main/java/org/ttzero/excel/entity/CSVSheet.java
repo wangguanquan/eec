@@ -160,14 +160,14 @@ public class CSVSheet extends Sheet {
             Cell[] cells = row.realloc(len);
             String[] csvRow = iterator.next();
             for (int i = 0; i < len; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                Column hc = columns[i];
 
                 // clear cells
                 Cell cell = cells[i];
                 cell.clear();
 
                 cell.setSv(csvRow[i]);
-                cell.xf = cellValueAndStyle.getStyleIndex(rows, hc, csvRow[i]);
+                cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
 //                cellValueAndStyle.reset(rows, cell, csvRow[i], hc);
             }
         }
@@ -181,17 +181,17 @@ public class CSVSheet extends Sheet {
     }
 
     @Override
-    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected Column[] getHeaderColumns() {
         if (headerReady) return columns;
         try {
             // Create CSV iterator
             init();
             if (!iterator.hasNext()) return columns;
             String[] rows = iterator.next();
-            columns = new org.ttzero.excel.entity.Column[rows.length];
+            columns = new Column[rows.length];
             for (int i = 0; i < rows.length; i++) {
                 // FIXME the column type
-                columns[i] = new org.ttzero.excel.entity.Column(hasHeader ? rows[i] : null, String.class);
+                columns[i] = new Column(hasHeader ? rows[i] : null, String.class);
                 columns[i].styles = workbook.getStyles();
             }
         } catch (IOException e) {

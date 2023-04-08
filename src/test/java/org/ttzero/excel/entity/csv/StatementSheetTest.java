@@ -40,12 +40,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("statement")
                 .watch(Print::println)
-                .setConnection(con)
-                .addSheet("select id, name, age from student order by age"
+                .addSheet(new StatementSheet(con, "select id, name, age from student order by age"
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
-                )
+                ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -55,8 +54,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("statement style processor")
                 .watch(Print::println)
-                .setConnection(con)
-                .addSheet("select id, name, age from student"
+                .addSheet(new StatementSheet(con, "select id, name, age from student"
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
@@ -68,7 +66,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                             }
                             return style;
                         })
-                )
+                ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -77,9 +75,8 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testIntConversion() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement")
-                .setConnection(con)
                 .watch(Print::println)
-                .addSheet("select id, name, age from student"
+                .addSheet(new StatementSheet(con, "select id, name, age from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
                     , new Column("年龄", int.class, n -> (int) n > 14 ? "高龄" : n)
@@ -91,7 +88,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                             }
                             return style;
                         })
-                )
+                ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -270,7 +267,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet cancel odd")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10")
-                    .cancelOddStyle()
+                    .cancelZebraLine()
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -295,7 +292,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width")
                 .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixSize(10))
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixedSize(10))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }

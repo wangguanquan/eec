@@ -45,9 +45,9 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 1. 支持**大数据量导出**，行数无上限。如果数据量超过单个sheet上限会自动分页。（xlsx单sheet最大1,048,576行）
 2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写。
-3. 可以为某列设置阀值高亮显示。如导出学生成绩时低于60分的单元格背景标黄显示。
-4. 导出excel默认隔行变色(俗称斑马线)，利于阅读
-5. 设置水印（文字，本地＆网络图片）
+3. 可以为某列设置阀值高亮显示，如导出学生成绩时低于60分的单元格背景标黄显示。
+4. 支持一键设置斑马线，利于阅读
+5. 自适应列宽对中文更精准
 6. 提供Watch窗口查看操作细节也可以做进度条。
 7. ExcelReader采用stream方式读取文件，只有当你操作某行数据的时候才会执行读文件，而不会将整个文件读入到内存。
 8. Reader支持iterator或者stream+lambda操作sheet或行数据，你可以像操作集合类一样读取并操作excel
@@ -117,7 +117,7 @@ new Workbook("2021小五班期未考试成绩")
 
 内容如下图
 
-![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3b8.png)
+![期未成绩](./images/30dbd0b2-528b-4e14-b450-106c09d0f3a8.png)
 
 #### 3. 自适应列宽更精准
 
@@ -144,26 +144,35 @@ new Workbook("Auto Width Test")
 #### 4. 支持多行表头
 
 ```java
-public static class RepeatableEntry {
+ public static class RepeatableEntry {
+    @ExcelColumn("TOP")
+    @ExcelColumn("K")
+    @ExcelColumn
     @ExcelColumn("订单号")
     private String orderNo;
-
+    @ExcelColumn("TOP")
+    @ExcelColumn("K")
+    @ExcelColumn("A")
     @ExcelColumn("收件人")
     private String recipient;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("A")
     @ExcelColumn("省")
     private String province;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("A")
     @ExcelColumn("市")
     private String city;
-
+    @ExcelColumn("TOP")
     @ExcelColumn("收件地址")
+    @ExcelColumn("B")
     @ExcelColumn("区")
     private String area;
-
-    @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
+    @ExcelColumn("TOP")
+    @ExcelColumn("收件地址")
+    @ExcelColumn("B")
     @ExcelColumn("详细地址")
     private String detail;
 }
@@ -256,7 +265,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 <dependency>
     <groupId>org.ttzero</groupId>
     <artifactId>eec-e3-support</artifactId>
-    <version>0.5.6</version>
+    <version>0.5.8</version>
 </dependency>
 ```
 
@@ -287,6 +296,22 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.8 (2023-04-08)
+-------------
+- 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](https://github.com/wangguanquan/eec/wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
+    1. 删除Sheet.Column类
+    2. 删除Row#getRowNumber方法
+    3. 删除IntConversionProcessor类
+- 重命名xxOddFill为xxZebraLine
+- 修复自动分页后打开文件弹出警告
+- 取消默认斑马线，增加XMLZebraLineCellValueAndStyle自定义斑马线
+- 表头背景从666699调整为E9EAEC，斑马线颜色从EFF5EB调整为E9EAEC
+- 单个Column可以指定auto-size属性([#337](https://github.com/wangguanquan/eec/issues/337))
+- 提供入口自定义处理未知的数据类型
+- 导出数据支持指定起始行号([#345](https://github.com/wangguanquan/eec/issues/345))
+- 修复xls解析RK Value丢失精度问题
+- 修复部分已知BUG([#334](https://github.com/wangguanquan/eec/issues/334), [#342](https://github.com/wangguanquan/eec/issues/342), [#346](https://github.com/wangguanquan/eec/issues/346))
+
 Version 0.5.7 (2023-02-17)
 -------------
 - 修复读取font-size时因为浮点数造成异常
@@ -308,23 +333,13 @@ Version 0.5.5 (2022-11-07)
 - 导出结束后删除zip包(#296)
 - 修复部分BUG(#297,#298)
 
-Version 0.5.4 (2022-08-28)
--------------
-- 支持显示/隐藏网络线
-- 支持显示/隐藏指定列
-- 字体增加"删除线"样式
-- Comment增加width和height两属性，用于调整批注大小
-- BIFF8Sheet支持reset重置流用于反复读取
-- 修复部分BUG(#282,#285)
-
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.7-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.8-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

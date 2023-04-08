@@ -491,7 +491,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testLarge() throws IOException {
-        new Workbook("large07").forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
+        new Workbook().forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
             private int i = 0, n;
 
             @Override
@@ -530,7 +530,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
                 return list;
             }
-        }).writeTo(defaultTestPath);
+        }).writeTo(defaultTestPath.resolve("large07.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
             assert Dimension.of("A1:Y50001").equals(reader.sheet(0).getDimension());
@@ -619,7 +619,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook("clear style").addSheet(new ListSheet<>(Item.randomTestData()));
 
         Sheet sheet = workbook.getSheetAt(0);
-        sheet.cancelOddStyle();  // Clear odd style
+        sheet.cancelZebraLine();  // Clear odd style
         int headStyle = sheet.defaultHeadStyle();
         sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
         sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
@@ -630,14 +630,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
 
     @Test public void testBasicType() throws IOException {
-        List<Integer> list = new ArrayList<>();
+        List<Integer> list = new ArrayList<>(35);
         for (int i = 0; i < 35; i++) list.add(i);
-        new Workbook().addSheet(new ListSheet<Integer>(list) {
-            @Override
-            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)};
-            }
-        }.ignoreHeader().cancelOddStyle()).writeTo(defaultTestPath.resolve("Integer array.xlsx"));
+        new Workbook()
+            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)))
+            .writeTo(defaultTestPath.resolve("Integer array.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
             Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);
@@ -673,12 +670,9 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testEmojiChar() throws IOException {
         List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
-        new Workbook().addSheet(new ListSheet<String>(list) {
-            @Override
-            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(String.class) };
-            }
-        }.ignoreHeader()).writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
+        new Workbook()
+            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(String.class)))
+            .writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
             List<String> subList = reader.sheet(0).rows().map(row -> row.getString(0)).collect(Collectors.toList());
@@ -749,6 +743,20 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
         public static List<Item> randomTestData(int n) {
             return randomTestData(n, () -> new Item(random.nextInt(100), getRandomString()));
+        }
+
+        @Override
+        public int hashCode() {
+            return id ^ (name != null ? name.hashCode() : 0);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Item) {
+                Item other = (Item) obj;
+                return id == other.id && (name != null && name.equals(other.name) || name == null && other.name == null);
+            }
+            return false;
         }
 
         public static List<Item> randomTestData(int n, Supplier<Item> supplier) {
@@ -1374,9 +1382,9 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         new Workbook("Customer row height").addSheet(
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
-                .cancelOddStyle().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
+                .cancelZebraLine().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
                 .setSheetWriter(new XMLWorksheetWriter() {
-                    protected int startRow(int rows, int columns) throws IOException {
+                    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
                         // Row number
                         int r = rows + startRow;
                         // logging
@@ -1429,7 +1437,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testTileWriter() throws IOException {
         List<TileEntity> data = TileEntity.randomTestData();
-        new Workbook("Dynamic title").cancelOddFill().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
+        new Workbook("Dynamic title").cancelZebraLine().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
     }
 
     public static class TileEntity {
@@ -1521,9 +1529,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
             // cols
             writeCols(fillSpace, defaultWidth);
-
-            // Write body data
-            beforeSheetData(nonHeader);
         }
 
         protected void tileColumns() {
@@ -1561,7 +1566,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         protected void writeRow(Row row) throws IOException {
             Cell[] cells = row.getCells();
             int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
 
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i];
@@ -1588,52 +1593,6 @@ public class ListObjectSheetTest extends WorkbookTest {
                         break;
                     case DECIMAL:
                         writeDecimal(cell.mv, r, col, xf);
-                        break;
-                    case CHARACTER:
-                        writeChar(cell.cv, r, col, xf);
-                        break;
-                    case BLANK:
-                        writeNull(r, col, xf);
-                        break;
-                    default:
-                }
-            }
-            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
-            if (y == tile - 1)
-                bw.write("</row>");
-        }
-
-        @Override
-        protected void writeRowAutoSize(Row row) throws IOException {
-            Cell[] cells = row.getCells();
-            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex);
-
-            for (int i = 0; i < len; i++) {
-                Cell cell = cells[i];
-                int xf = cell.xf, col = i + c * y;
-                switch (cell.t) {
-                    case INLINESTR:
-                    case SST:
-                        writeStringAutoSize(cell.sv, r, col, xf);
-                        break;
-                    case NUMERIC:
-                        writeNumericAutoSize(cell.nv, r, col, xf);
-                        break;
-                    case LONG:
-                        writeNumericAutoSize(cell.lv, r, col, xf);
-                        break;
-                    case DATE:
-                    case DATETIME:
-                    case DOUBLE:
-                    case TIME:
-                        writeDoubleAutoSize(cell.dv, r, col, xf);
-                        break;
-                    case BOOL:
-                        writeBool(cell.bv, r, col, xf);
-                        break;
-                    case DECIMAL:
-                        writeDecimalAutoSize(cell.mv, r, col, xf);
                         break;
                     case CHARACTER:
                         writeChar(cell.cv, r, col, xf);

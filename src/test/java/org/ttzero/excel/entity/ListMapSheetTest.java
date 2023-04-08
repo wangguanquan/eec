@@ -23,6 +23,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.Row;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -38,9 +39,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author guanquan.wang at 2019-04-28 19:16
@@ -377,14 +380,14 @@ public class ListMapSheetTest extends WorkbookTest {
         list.add(0, null);
         list.add(3, null);
         list.add(null);
-        new Workbook("Null in list map").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+        new Workbook("Null in list map").addSheet(new ListMapSheet(list)).writeTo(defaultTestPath);
     }
 
     @Test public void testLargeColumns() throws IOException {
         int len = 1436;
         List<Map<String, ?>> list = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
-            Map<String, String> map = new HashMap<>();
+            Map<String, String> map = new LinkedHashMap<>();
             for (int j = 0; j < 500; j++) {
                 map.put("key" + j, getRandomString());
             }
@@ -400,6 +403,83 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testSpecifyRowWrite() throws IOException {
+        List<Map<String, ?>> list = createTestData(10);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListMapSheet(list).setStartRowIndex(5))
+            .writeTo(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"))) {
+            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, ?> r = readList.get(i), w = list.get(i);
+                assert r.size() == w.size();
+                assert r.get("id").equals(w.get("id"));
+                assert r.get("name").equals(w.get("name"));
+            }
+        }
+    }
+
+    @Test public void testSpecifyRowStayA1Write() throws IOException {
+        List<Map<String, ?>> list = createTestData(10);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListMapSheet(list).setStartRowIndex(5, false))
+            .writeTo(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"))) {
+            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, ?> r = readList.get(i), w = list.get(i);
+                assert r.size() == w.size();
+                assert r.get("id").equals(w.get("id"));
+                assert r.get("name").equals(w.get("name"));
+            }
+        }
+    }
+
+    @Test public void testSpecifyRowAndColWrite() throws IOException {
+        List<Map<String, ?>> list = createTestData(10);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListMapSheet(list
+                , new Column("id", "id").setColIndex(3)
+                , new Column("name", "name").setColIndex(4))
+                .setStartRowIndex(5))
+            .writeTo(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"))) {
+            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, ?> r = readList.get(i), w = list.get(i);
+                assert r.size() == w.size();
+                assert r.get("id").equals(w.get("id"));
+                assert r.get("name").equals(w.get("name"));
+            }
+        }
+    }
+
+    @Test public void testSpecifyRowAndColStayA1Write() throws IOException {
+        List<Map<String, ?>> list = createTestData(10);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListMapSheet(list
+                , new Column("id", "id").setColIndex(3)
+                , new Column("name", "name").setColIndex(4))
+                .setStartRowIndex(5, false))
+            .writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"))) {
+            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, ?> r = readList.get(i), w = list.get(i);
+                assert r.size() == w.size();
+                assert r.get("id").equals(w.get("id"));
+                assert r.get("name").equals(w.get("name"));
+            }
+        }
+    }
 
     public static List<Map<String, ?>> createTestData() {
         int size = random.nextInt(100) + 1;

@@ -16,8 +16,6 @@
 
 package org.ttzero.excel.util;
 
-import org.ttzero.excel.reader.UncheckedTypeException;
-
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -36,14 +34,13 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
- * A date util ror excel
+ * A date util for excel 07
  *
  * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
     public static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
     public static final double SECOND_OF_DAY = 24 * 60 * 60.0D;
-    public static final double MILLIS_OF_DAY = 24 * 60 * 60 * 1000.0D;
 
     // time-zone
     public static final int tz = TimeZone.getDefault().getRawOffset();
@@ -192,9 +189,6 @@ public class DateUtil {
      * @return java.util.Date
      */
     public static java.util.Date toDate(int n) {
-        if (n < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + n + " can't convert to java.util.Date");
-        }
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
@@ -205,10 +199,7 @@ public class DateUtil {
      * @return java.util.Date
      */
     public static java.util.Date toDate(double d) {
-        if (d < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
-        }
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
@@ -217,7 +208,7 @@ public class DateUtil {
     }
 
     public static java.sql.Time toTime(double d) {
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
@@ -227,7 +218,7 @@ public class DateUtil {
     }
 
     public static LocalTime toLocalTime(double d) {
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalTime.ofSecondOfDay(m);
     }
 
@@ -240,23 +231,17 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(double d) {
-        if (d < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + d + " can't convert to java.util.Date");
-        }
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
 
     public static LocalDateTime toLocalDateTime(double d) {
-        int n = (int) d, m = (int) (((d - n) * MILLIS_OF_DAY + 0.5) / 1000); // Causes data over 0.5s to be carried over to 1s
+        int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalDateTime.ofInstant(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz), ZoneId.systemDefault());
     }
 
     public static java.sql.Timestamp toTimestamp(int n) {
-        if (n < DAYS_1900_TO_1970) {
-            throw new UncheckedTypeException("ConstantNumber " + n + " can't convert to java.util.Date");
-        }
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
@@ -265,10 +250,21 @@ public class DateUtil {
     }
 
     public static java.sql.Timestamp toTimestamp(String dateStr) {
-        // check format string
-        if (dateStr.indexOf('/') == 4) {
-            dateStr = dateStr.replace('/', '-');
+        String v = dateStr.trim().replace('/', '-');
+        int dividingSpace = v.indexOf(' ');
+        if (dividingSpace < 0) {
+            v += " 00:00:00";
+        } else {
+            int i = 0, idx = dividingSpace;
+            for (; (idx = v.indexOf(':', idx + 1)) > 0;i++);
+            boolean endOfp = v.charAt(v.length() - 1) == ':';
+            switch (i) {
+                case 0: v += ":0:0"; break;
+                case 1: v += !endOfp ? ":0" : "0:0"; break;
+                case 2: if (endOfp) v += '0'; break;
+                default:
+            }
         }
-        return java.sql.Timestamp.valueOf(dateStr);
+        return java.sql.Timestamp.valueOf(v);
     }
 }

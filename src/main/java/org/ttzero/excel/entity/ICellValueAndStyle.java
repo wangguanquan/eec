@@ -51,6 +51,41 @@ public interface ICellValueAndStyle {
      * @param e    the cell value
      * @param hc   the header column
      */
+    default void reset(Row row, Cell cell, Object e, Column hc) {
+        setCellValue(row.index, cell, e, hc, hc.getClazz(), hc.processor != null);
+        // Cell style
+        if (hc.processor == null) {
+            cell.xf = getStyleIndex(row, hc, e);
+        }
+        // Reset row height
+    }
+
+    /**
+     * Returns the cell style index
+     *
+     * @param row the row data
+     * @param hc    the header column
+     * @param o     the cell value
+     * @return the style index in xf
+     */
+    default int getStyleIndex(Row row, Column hc, Object o) {
+        int style = hc.getCellStyle();
+        if (hc.styleProcessor != null) {
+            style = hc.styleProcessor.build(o, style, hc.styles);
+        }
+        return hc.styles.of(style);
+    }
+
+    /**
+     * Setting cell value and cell styles
+     *
+     * @param row  the row number
+     * @param cell the cell
+     * @param e    the cell value
+     * @param hc   the header column
+     * @deprecated Replace with {@link #reset(Row, Cell, Object, Column)}
+     */
+    @Deprecated
     void reset(int row, Cell cell, Object e, Column hc);
 
     /**
@@ -67,7 +102,9 @@ public interface ICellValueAndStyle {
      * @param hc the header column
      * @param o  the cell value
      * @return the style index in xf
+     * @deprecated Replace with {@link #getStyleIndex(Row, Column, Object)}
      */
+    @Deprecated
     int getStyleIndex(int rows, Column hc, Object o);
 
     /**
@@ -79,7 +116,11 @@ public interface ICellValueAndStyle {
      * @param hc the header column
      * @param styleProcessor a customize {@link StyleProcessor}
      */
-    <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor);
+    default <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
+        if (styleProcessor != null && hc.styles != null) {
+            cell.xf = hc.styles.of(styleProcessor.build(o, hc.styles.getStyleByIndex(cell.xf), hc.styles));
+        }
+    }
 
     /**
      * Setting cell value
@@ -135,7 +176,7 @@ public interface ICellValueAndStyle {
         } else if (isLocalTime(clazz)) {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         } else {
-            cell.setSv(e.toString());
+            unknownType(row, cell, e, hc, clazz);
         }
     }
 
@@ -147,8 +188,8 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      */
     default void setNullValue(int row, Cell cell, Column hc) {
-        boolean hasIntProcessor = hc.processor != null;
-        if (hasIntProcessor) {
+        boolean hasProcessor = hc.processor != null;
+        if (hasProcessor) {
             conversion(row, cell, 0, hc);
         } else
             cell.blank();
@@ -180,5 +221,18 @@ public interface ICellValueAndStyle {
         } else {
             cell.blank();
         }
+    }
+
+    /**
+     * unknown cell type converter
+     *
+     * @param row the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void unknownType(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
+        cell.setSv(e.toString());
     }
 }

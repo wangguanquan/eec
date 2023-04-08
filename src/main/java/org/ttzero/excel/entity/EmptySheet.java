@@ -43,7 +43,7 @@ public class EmptySheet extends Sheet {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public EmptySheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public EmptySheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -54,7 +54,7 @@ public class EmptySheet extends Sheet {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public EmptySheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public EmptySheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 

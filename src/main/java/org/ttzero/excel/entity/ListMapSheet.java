@@ -61,7 +61,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      *
      * @param columns the header info
      */
-    public ListMapSheet(final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(final Column... columns) {
         super(columns);
     }
 
@@ -71,7 +71,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param name    the worksheet name
      * @param columns the header info
      */
-    public ListMapSheet(String name, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
@@ -82,7 +82,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(String name, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
@@ -113,7 +113,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListMapSheet(List<Map<String, ?>> data, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
         this(null, data, columns);
     }
 
@@ -124,7 +124,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    the worksheet's body data
      * @param columns the header info
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
@@ -135,7 +135,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
@@ -147,7 +147,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark the water mark
      * @param columns   the header info
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final org.ttzero.excel.entity.Column... columns) {
+    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         setData(data);
     }
@@ -169,13 +169,13 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             Cell[] cells = row.realloc(len);
             Map<String, ?> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i];
+                Column hc = columns[i];
                 Object e = rowDate != null ? rowDate.get(hc.key) : null;
                 // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
 
-                cellValueAndStyle.reset(rows, cell, e, hc);
+                cellValueAndStyle.reset(row, cell, e, hc);
                 if (hasGlobalStyleProcessor) {
                     cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
                 }
@@ -190,27 +190,27 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @return array of column
      */
     @Override
-    protected org.ttzero.excel.entity.Column[] getHeaderColumns() {
+    protected Column[] getHeaderColumns() {
         if (headerReady) return columns;
         Map<String, ?> first = getFirst();
         // No data
         if (first == null) {
             if (columns == null) {
-                columns = new org.ttzero.excel.entity.Column[0];
+                columns = new Column[0];
             }
         } else if (!hasHeaderColumns()) {
             int size = first.size(), i = 0;
-            columns = new org.ttzero.excel.entity.Column[size];
+            columns = new Column[size];
             for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, ?> entry = it.next();
-                org.ttzero.excel.entity.Column hc = createColumn(entry);
+                Column hc = createColumn(entry);
                 if (hc != null) columns[i++] = hc;
             }
             if (i < size) columns = Arrays.copyOf(columns, i);
         } else {
             Object o;
             for (int i = 0; i < columns.length; i++) {
-                org.ttzero.excel.entity.Column hc = columns[i].getTail();
+                Column hc = columns[i].getTail();
                 if (isEmpty(hc.key)) {
                     throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
                 }
@@ -231,11 +231,11 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param entry the first entry from ListMap
      * @return the Worksheet's {@link EntryColumn} information
      */
-    protected org.ttzero.excel.entity.Column createColumn(Map.Entry<String, ?> entry) {
+    protected Column createColumn(Map.Entry<String, ?> entry) {
         // Ignore the null key
         if (isEmpty(entry.getKey())) return null;
         Object value = entry.getValue();
-        return new org.ttzero.excel.entity.Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
+        return new Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
     }
 
     /**
@@ -249,9 +249,9 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         if (existsMergeCells != null) {
             Grid grid = GridFactory.create(existsMergeCells);
-            for (org.ttzero.excel.entity.Column col : columns) {
+            for (Column col : columns) {
                 if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
-                    org.ttzero.excel.entity.Column next = col.next;
+                    Column next = col.next;
                     for (; next != null && StringUtil.isEmpty(next.key); next = next.next);
                     if (next != null) col.key = next.key; // Keep the key to get the value
                 }
