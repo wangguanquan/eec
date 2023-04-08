@@ -296,6 +296,22 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.8
+-------------
+- 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](https://github.com/wangguanquan/eec/wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
+    1. 删除Sheet.Column类
+    2. 删除Row#getRowNumber方法
+    3. 删除IntConversionProcessor类
+- 重命名xxOddFill为xxZebraLine
+- 修复自动分页后打开文件弹出警告
+- 取消默认斑马线，增加XMLZebraLineCellValueAndStyle自定义斑马线
+- 表头背景从666699调整为E9EAEC，斑马线颜色从EFF5EB调整为E9EAEC
+- 单个Column可以指定auto-size属性([#337](https://github.com/wangguanquan/eec/issues/337))
+- 提供入口自定义处理未知的数据类型
+- 导出数据支持指定起始行号([#345](https://github.com/wangguanquan/eec/issues/345))
+- 修复xls解析RK Value丢失精度问题
+- 修复部分已知BUG([#334](https://github.com/wangguanquan/eec/issues/334), [#342](https://github.com/wangguanquan/eec/issues/342), [#346](https://github.com/wangguanquan/eec/issues/346))
+
 Version 0.5.7 (2023-02-17)
 -------------
 - 修复读取font-size时因为浮点数造成异常
@@ -316,16 +332,6 @@ Version 0.5.5 (2022-11-07)
 - Row转对象时如果出异常将提示具体的行和列信息(#284)
 - 导出结束后删除zip包(#296)
 - 修复部分BUG(#297,#298)
-
-Version 0.5.4 (2022-08-28)
--------------
-- 支持显示/隐藏网络线
-- 支持显示/隐藏指定列
-- 字体增加"删除线"样式
-- Comment增加width和height两属性，用于调整批注大小
-- BIFF8Sheet支持reset重置流用于反复读取
-- 修复部分BUG(#282,#285)
-
 
 [更多...](./CHANGELOG)
 
