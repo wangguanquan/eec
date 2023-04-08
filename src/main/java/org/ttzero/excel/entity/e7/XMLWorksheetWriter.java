@@ -1133,7 +1133,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void beforeSheetData(boolean nonHeader) throws IOException {
-        if (sheetDataReady >= 0) return;
+        if (sheetDataReady > 0) return;
         // Start to write sheet data
         bw.write("<sheetData>");
 
