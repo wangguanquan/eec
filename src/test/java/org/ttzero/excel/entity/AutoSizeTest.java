@@ -91,7 +91,7 @@ public class AutoSizeTest extends WorkbookTest {
     @Test public void testFixedAndAutoWidth() throws IOException {
         new Workbook("fixed and fixed-width")
             .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
-                , new Column("学号", "id").fixedSize(10)
+                , new Column("学号", "id")
                 , new Column("姓名", "name").autoSize()
                 , new Column("成绩", "score"))
             ).writeTo(defaultTestPath);

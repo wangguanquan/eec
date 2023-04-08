@@ -1529,9 +1529,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
             // cols
             writeCols(fillSpace, defaultWidth);
-
-            // Write body data
-            beforeSheetData(nonHeader);
         }
 
         protected void tileColumns() {
