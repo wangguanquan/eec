@@ -103,7 +103,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Comments comments;
     protected int startRow // The first data-row index
         , startHeaderRow // The first header row index
-        , totalRows;
+        , totalRows
+        , sheetDataReady // Temporary code to increase compatibility with older versions
+        ;
     /**
      * If there are any auto-width columns
      */
@@ -1131,6 +1133,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void beforeSheetData(boolean nonHeader) throws IOException {
+        if (sheetDataReady >= 0) return;
         // Start to write sheet data
         bw.write("<sheetData>");
 
@@ -1140,6 +1143,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             headerRow = writeHeaderRow();
         }
         startRow = startHeaderRow + headerRow;
+        sheetDataReady = 1;
     }
 
     /**
