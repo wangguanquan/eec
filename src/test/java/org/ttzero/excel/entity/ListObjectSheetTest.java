@@ -491,7 +491,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testLarge() throws IOException {
-        new Workbook("large07").forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
+        new Workbook().forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
             private int i = 0, n;
 
             @Override
@@ -530,7 +530,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
                 return list;
             }
-        }).writeTo(defaultTestPath);
+        }).writeTo(defaultTestPath.resolve("large07.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
             assert Dimension.of("A1:Y50001").equals(reader.sheet(0).getDimension());
