@@ -136,7 +136,15 @@ public class Workbook implements Storable {
     /**
      * A global ContentType attributes
      */
-    private ContentType contentType;
+    private final ContentType contentType;
+    /**
+     * Drawing worksheet counter
+     */
+    private int drawingCounter;
+    /**
+     * Count of media in global workbook
+     */
+    private int mediaCounter;
 
     /**
      * Create a unnamed workbook
@@ -1036,5 +1044,41 @@ public class Workbook implements Storable {
      */
     public ContentType getContentType() {
         return contentType;
+    }
+
+    /**
+     * Increment and returns drawing-counter
+     *
+     * @return drawing-counter
+     */
+    public int incrementDrawingCounter() {
+        return ++drawingCounter;
+    }
+
+    /**
+     * Returns count of drawing object
+     *
+     * @return count of drawing object
+     */
+    public int getDrawingCounter() {
+        return drawingCounter;
+    }
+
+    /**
+     * Increment and returns media-counter
+     *
+     * @return media-counter
+     */
+    public int incrementMediaCounter() {
+        return ++mediaCounter;
+    }
+
+    /**
+     * Returns count of media object
+     *
+     * @return count of media object
+     */
+    public int getMediaCounter() {
+        return mediaCounter;
     }
 }

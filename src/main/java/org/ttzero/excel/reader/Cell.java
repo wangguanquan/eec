@@ -16,7 +16,9 @@
 
 package org.ttzero.excel.reader;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 
 /**
  * @author guanquan.wang on 2018-09-22
@@ -40,6 +42,9 @@ public class Cell {
     public static final char TIME        = 't';
     public static final char UNALLOCATED = '\0';
     public static final char EMPTY_TAG   = 'e';
+    public static final char BINARY      = 'y';
+    public static final char FILE        = 'x';
+    public static final char INPUT_STREAM= 'p';
     /**
      * Unallocated cell
      */
@@ -99,6 +104,18 @@ public class Cell {
      * Has formula
      */
     public boolean f;
+    /**
+     * Binary file (picture only)
+     */
+    public byte[] binary;
+    /**
+     * File path (picture file)
+     */
+    public Path path;
+    /**
+     * InputStream value (picture stream)
+     */
+    public InputStream isv;
     /**
      * x-axis of cell in row
      */
@@ -179,6 +196,24 @@ public class Cell {
         return this;
     }
 
+    public Cell setBinary(byte[] bytes) {
+        this.t = BINARY;
+        this.binary = bytes;
+        return this;
+    }
+
+    public Cell setPath(Path path) {
+        this.t = FILE;
+        this.path = path;
+        return this;
+    }
+
+    public Cell setInputStream(InputStream stream) {
+        this.t = INPUT_STREAM;
+        this.isv = stream;
+        return this;
+    }
+
     public Cell clear() {
         this.t  = UNALLOCATED;
         this.sv = null;
@@ -192,6 +227,9 @@ public class Cell {
         this.fv = null;
         this.f  = false;
         this.si = -1;
+        this.binary = null;
+        this.path = null;
+        this.isv = null;
         return this;
     }
 
@@ -208,6 +246,9 @@ public class Cell {
         this.fv = cell.fv;
         this.f  = cell.f;
         this.si = cell.si;
+        this.binary = cell.binary;
+        this.path = cell.path;
+        this.isv = cell.isv;
 
         return this;
     }

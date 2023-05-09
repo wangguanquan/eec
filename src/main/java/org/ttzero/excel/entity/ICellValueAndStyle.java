@@ -20,7 +20,10 @@ import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
 
+import java.io.File;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
@@ -105,6 +108,7 @@ public interface ICellValueAndStyle {
             hc.setClazz(clazz);
         }
         if (isString(clazz)) {
+            // TODO base64 images support
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
@@ -134,7 +138,18 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.sql.Time) e));
         } else if (isLocalTime(clazz)) {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
-        } else {
+        }
+        // TODO check column export type is image
+        else if (clazz == byte[].class) {
+            cell.setBinary((byte[]) e);
+        } else if (clazz == Path.class) {
+            cell.setPath((Path) e);
+        } else if (clazz == File.class) {
+            cell.setPath(((File) e).toPath());
+        } else if (InputStream.class.isAssignableFrom(clazz)) {
+            cell.setInputStream((InputStream) e);
+        }
+        else {
             cell.setSv(e.toString());
         }
     }

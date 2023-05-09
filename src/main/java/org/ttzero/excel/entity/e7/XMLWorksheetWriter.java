@@ -16,6 +16,9 @@
 
 package org.ttzero.excel.entity.e7;
 
+import org.ttzero.excel.entity.IDrawingsWriter;
+import org.ttzero.excel.entity.Picture;
+import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.Comments;
@@ -33,6 +36,7 @@ import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Grid;
 import org.ttzero.excel.reader.GridFactory;
 import org.ttzero.excel.util.ExtBufferedWriter;
+import org.ttzero.excel.util.FileSignatures;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -40,6 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -55,6 +60,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -62,7 +68,9 @@ import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DECIMAL;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.FILE;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
@@ -93,7 +101,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // the storage path
-    protected Path workSheetPath;
+    protected Path workSheetPath, mediaPath;
     protected ExtBufferedWriter bw;
     protected Sheet sheet;
     protected Column[] columns;
@@ -101,6 +109,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Comments comments;
     protected int startRow;
     protected long pStart, pEnd; // The position dimension to sheetData
+    /**
+     * Picture&Chart Support
+     */
+    protected IDrawingsWriter drawingsWriter;
 
     public XMLWorksheetWriter() { }
 
@@ -515,33 +527,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:
-                    writeString(cell.sv, r, i, xf);
-                    break;
-                case NUMERIC:
-                    writeNumeric(cell.nv, r, i, xf);
-                    break;
-                case LONG:
-                    writeNumeric(cell.lv, r, i, xf);
-                    break;
+                case SST:          writeString(cell.sv, r, i, xf);     break;
+                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);    break;
+                case LONG:         writeNumeric(cell.lv, r, i, xf);    break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:
-                    writeDouble(cell.dv, r, i, xf);
-                    break;
-                case BOOL:
-                    writeBool(cell.bv, r, i, xf);
-                    break;
-                case DECIMAL:
-                    writeDecimal(cell.mv, r, i, xf);
-                    break;
-                case CHARACTER:
-                    writeChar(cell.cv, r, i, xf);
-                    break;
-                case BLANK:
-                    writeNull(r, i, xf);
-                    break;
+                case TIME:         writeDouble(cell.dv, r, i, xf);     break;
+                case BOOL:         writeBool(cell.bv, r, i, xf);       break;
+                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);    break;
+                case CHARACTER:    writeChar(cell.cv, r, i, xf);       break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf); break;
+                case FILE:         writeFile(cell.path, r, i, xf);     break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);    break;
+                case BLANK:        writeNull(r, i, xf);                break;
                 default:
             }
         }
@@ -827,6 +826,96 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * Write binary file
+     *
+     * @param bytes  the binary data
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeBinary(byte[] bytes, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
+        if (signature == null) {
+            sheet.what("File types that are not allowed");
+            return;
+        }
+        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Store in disk
+        Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
+        if (drawingsWriter == null) {
+            drawingsWriter = createDrawingsWriter();
+        }
+        // JVM shared
+        Picture picture = new Picture();
+        picture.picName = name;
+        picture.col = column;
+        picture.row = row;
+        picture.size = signature.width << 16 | signature.height;
+        drawingsWriter.add(picture);
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+    }
+
+    /**
+     * Write boolean value
+     *
+     * @param path   the picture file
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeFile(Path path, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+//        writeString(path.getFileName().toString(), row, column, xf);
+        byte[] bytes = Files.readAllBytes(path);
+        // TODO
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
+        if (signature == null) {
+            sheet.what("File types that are not allowed");
+            return;
+        }
+        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Store in disk
+        Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
+        if (drawingsWriter == null) {
+            drawingsWriter = createDrawingsWriter();
+        }
+        // JVM shared
+        Picture picture = new Picture();
+        picture.picName = name;
+        picture.col = column;
+        picture.row = row;
+        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
+        picture.size = signature.width << 16 | signature.height;
+        drawingsWriter.add(picture);
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+    }
+
+    /**
+     * Write boolean value
+     *
+     * @param stream  the picture input-stream
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeStream(InputStream stream, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        // TODO
+    }
+
+    /**
      * Resize column width
      *
      * @param path the sheet temp path
@@ -973,6 +1062,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     @Override
     public void close() {
         FileUtil.close(bw);
+        // Close drawing writer
+        FileUtil.close(drawingsWriter);
     }
 
     /**
@@ -1182,6 +1273,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write("\"/>");
             }
         }
+
+        // Drawings
+        if (drawingsWriter != null) {
+            RelManager relManager = sheet.getRelManager();
+            r = relManager.getByType(Const.Relationship.DRAWINGS);
+            if (r != null) {
+                bw.write("<drawing r:id=\"");
+                bw.write(r.getId());
+                bw.write("\"/>");
+            }
+        }
     }
 
     /**
@@ -1302,5 +1404,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         double h = -1D;
         for (Column[] cols : columnsArray) h = Math.max(cols[row].headerHeight, h);
         return h;
+    }
+
+    /**
+     * Create drawing writer and add relationship
+     *
+     * @return {@link IDrawingsWriter}
+     */
+    public IDrawingsWriter createDrawingsWriter() {
+        int id = sheet.getWorkbook().incrementDrawingCounter();
+        sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
+        sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
+        return new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
     }
 }
