@@ -50,7 +50,7 @@ public class Theme {
     public static Theme load(Path path) {
         Theme self = new Theme();
         // load theme1.xml
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(path));

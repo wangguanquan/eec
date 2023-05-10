@@ -77,7 +77,7 @@ public class XMLDrawings implements Drawings {
         // Empty excel, maybe throw exception here
         if (excelReader.sheets == null) return null;
 
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
 
         List<Picture> pictures = new ArrayList<>();
@@ -121,7 +121,7 @@ public class XMLDrawings implements Drawings {
 
     // Parse drawings.xml
     protected List<Picture> parseDrawings(Path path) {
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(path.getParent().resolve("_rels/" + path.getFileName() + ".rels")));

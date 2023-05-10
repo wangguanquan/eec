@@ -61,7 +61,7 @@ public abstract class AbstractTemplate {
     public boolean check() {
         // Integrity check
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(contentTypePath));
@@ -163,7 +163,7 @@ public abstract class AbstractTemplate {
 
     protected int bindSstData() {
         Path shareStringPath = zipPath.resolve("xl/sharedStrings.xml");
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(shareStringPath));
@@ -206,7 +206,7 @@ public abstract class AbstractTemplate {
     protected int bindSheetData() {
         // Read content
         Path contentTypePath = zipPath.resolve("[Content_Types].xml");
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(contentTypePath));
@@ -230,7 +230,7 @@ public abstract class AbstractTemplate {
     }
 
     int bindSheet(Path sheetPath) {
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(sheetPath));

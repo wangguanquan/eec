@@ -147,7 +147,7 @@ public interface IWorkbookWriter extends Storable {
                     } else {
                         pomPath = targetPath.getParent().resolve("pom.xml");
                         // load workbook.xml
-                        SAXReader reader = new SAXReader();
+                        SAXReader reader = SAXReader.createDefault();
                         Document document;
                         try {
                             document = reader.read(Files.newInputStream(pomPath));
