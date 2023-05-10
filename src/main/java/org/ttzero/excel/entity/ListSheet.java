@@ -319,7 +319,7 @@ public class ListSheet<T> extends Sheet {
                         else e = o;
                     }
 
-                    cellValueAndStyle.reset(rows, cell, e, column);
+                    cellValueAndStyle.reset(row, cell, e, column);
                     if (hasGlobalStyleProcessor) {
                         cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
                     }
@@ -651,7 +651,7 @@ public class ListSheet<T> extends Sheet {
         // Hidden Column
         if (ec.hide()) column.hide();
         // Cell max width
-        column.width = ec.maxWidth();
+        if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
         return column;
     }
 

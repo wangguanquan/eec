@@ -167,7 +167,7 @@ public class CSVSheet extends Sheet {
                 cell.clear();
 
                 cell.setSv(csvRow[i]);
-                cell.xf = cellValueAndStyle.getStyleIndex(rows, hc, csvRow[i]);
+                cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
 //                cellValueAndStyle.reset(rows, cell, csvRow[i], hc);
             }
         }

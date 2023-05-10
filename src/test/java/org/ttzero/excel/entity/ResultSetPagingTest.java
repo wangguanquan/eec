@@ -21,7 +21,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

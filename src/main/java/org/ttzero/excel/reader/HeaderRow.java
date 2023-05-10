@@ -178,7 +178,7 @@ public class HeaderRow extends Row {
 
         List<ListSheet.EntryColumn> list = new ArrayList<>();
 //        Map<String, ListSheet.EntryColumn> columnMap = new LinkedHashMap<>();
-        ListSheet.EntryColumn column, other;
+        ListSheet.EntryColumn column;
         for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
             f.setAccessible(true);
@@ -193,7 +193,7 @@ public class HeaderRow extends Row {
                     tail.method = method;
                     if (StringUtil.isEmpty(tail.name)) tail.name = method.getName();
                     if (tail.clazz == null) tail.clazz = method.getParameterTypes()[0];
-//                    if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+                    if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
 //                    if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                     list.add(column);
                     continue;
@@ -211,7 +211,7 @@ public class HeaderRow extends Row {
                     tail.field = f;
                     if (tail.clazz == null) tail.clazz = declaredFields[i].getType();
                 }
-//                if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
+                if (tail.colIndex < 0) tail.colIndex = check(tail.name, gs);
 //                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                 list.add(column);
             }
@@ -228,7 +228,7 @@ public class HeaderRow extends Row {
                 if (StringUtil.isEmpty(tail.name)) tail.name = entry.getKey();
                 tail.method = entry.getValue();
                 if (tail.clazz == null) tail.clazz = entry.getValue().getParameterTypes()[0];
-//                if (tail.colIndex < 0) tail.colIndex = getIndex(tail.name);
+                if (tail.colIndex < 0) tail.colIndex = getIndex(tail.name);
 //                if ((other = columnMap.get(tail.getName())) == null || other.getMethod() == null) columnMap.put(tail.name, column);
                 list.add(column);
             }
@@ -291,7 +291,10 @@ public class HeaderRow extends Row {
                 columns[i] = c = new ListSheet.EntryColumn(c);
             }
 
-            if (c.colIndex < 0) c.colIndex = getIndex(c.name);
+            if (c.colIndex < 0) {
+                c.colIndex = getIndex(c.name);
+                c.realColIndex = c.colIndex + 1;
+            }
         }
 
         this.columns = Arrays.stream(columns)
@@ -445,7 +448,7 @@ public class HeaderRow extends Row {
         }
         catch (NumberFormatException | DateTimeException ex) {
             ListSheet.EntryColumn c = columns[i];
-            String msg = "The undecorated value of cell '" + new String(int2Col(i)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
+            String msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
             if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);
@@ -454,7 +457,7 @@ public class HeaderRow extends Row {
                 throw ex instanceof DateTimeException ? new DateTimeException(msg, ex) : new NumberFormatException(msg);
         }
         catch (NullPointerException ex) {
-            String msg = "Null value in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + ')';
+            String msg = "Null value in cell '" + new String(int2Col(columns[i].colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + ')';
             if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);
@@ -464,8 +467,8 @@ public class HeaderRow extends Row {
         catch (UncheckedTypeException ex) {
             ListSheet.EntryColumn c = columns[i];
             String msg;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "'(" + row.getCellType(i) + "). " + ex.getMessage();
-            else msg = "The undecorated value of cell '" + new String(int2Col(i)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
+            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + "). " + ex.getMessage();
+            else msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);
                 throw ex;
@@ -473,7 +476,7 @@ public class HeaderRow extends Row {
         }
         catch (Exception ex) {
             ListSheet.EntryColumn c = columns[i];
-            String msg = "Error occur in cell '" + new String(int2Col(i)) + row.getRowNum() + "' value is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + ')';
+            String msg = "Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' value is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + ')';
             if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
             if (detailMessageField != null) {
                 detailMessageField.set(ex, msg);

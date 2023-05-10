@@ -66,10 +66,10 @@ public class Column {
      * The cell type
      */
     public Class<?> clazz;
-    /**
-     * The string value is shared
-     */
-    public boolean share;
+//    /**
+//     * The string value is shared
+//     */
+//    public boolean share;
     /**
      * The int value conversion
      */
@@ -97,7 +97,7 @@ public class Column {
     /**
      * The cell width and height
      */
-    public double width, headerHeight = -1D;
+    public double width = -1D, headerHeight = -1D;
     public double o;
     public Styles styles;
     public Comment headerComment, cellComment;
@@ -105,14 +105,14 @@ public class Column {
      * Specify the cell number format
      */
     public NumFmt numFmt;
-    /**
-     * Only export column name and ignore value
-     */
-    public boolean ignoreValue;
-    /**
-     * Wrap text in a cell
-     */
-    public int wrapText;
+//    /**
+//     * Only export column name and ignore value
+//     */
+//    public boolean ignoreValue;
+//    /**
+//     * Wrap text in a cell
+//     */
+//    public int wrapText;
     /**
      * Specify the column index
      */
@@ -145,13 +145,27 @@ public class Column {
      * The real col-Index used to write
      */
     public int realColIndex;
+//    /**
+//     * Hidden current column
+//     * <p>
+//     * Only set the column to hide, the data will still be written,
+//     * you can right-click to "un-hide" to display in file
+//     */
+//    public boolean hide;
     /**
-     * Hidden current column
-     * <p>
-     * Only set the column to hide, the data will still be written,
-     * you can right-click to "un-hide" to display in file
+     * Simple properties
+     *
+     * <blockquote><pre>
+     *  Bit  | Contents
+     * ------+---------
+     * 31. 1 | Warp Text
+     * 30. 2 | Auto size, 0: default, 1: auto-size 2: fixed-size
+     * 28. 1 | Ignore Value, Only export column name
+     * 27. 1 | Hide column
+     * 26. 1 | Shared String
+     * </pre></blockquote>
      */
-    public boolean hide;
+    public int option;
 
     /**
      * Constructor Column
@@ -231,7 +245,7 @@ public class Column {
     public Column(String name, Class<?> clazz, boolean share) {
         this.name = name;
         this.clazz = clazz;
-        this.share = share;
+        setShare(share);
     }
 
     /**
@@ -244,7 +258,7 @@ public class Column {
     public Column(String name, String key, boolean share) {
         this.name = name;
         this.key = key;
-        this.share = share;
+        setShare(share);
     }
 
     /**
@@ -354,7 +368,7 @@ public class Column {
         this.key = other.key;
         this.name = other.name;
         this.clazz = other.clazz;
-        this.share = other.share;
+//        this.share = other.share;
         this.processor = other.processor;
         this.styleProcessor = other.styleProcessor;
         this.width = other.width;
@@ -364,10 +378,11 @@ public class Column {
         this.headerComment = other.headerComment;
         this.cellComment = other.cellComment;
         this.numFmt = other.numFmt;
-        this.ignoreValue = other.ignoreValue;
-        this.wrapText = other.wrapText;
+//        this.ignoreValue = other.ignoreValue;
+//        this.wrapText = other.wrapText;
         this.colIndex = other.colIndex;
-        this.hide = other.hide;
+//        this.hide = other.hide;
+        this.option = other.option;
         this.realColIndex = other.realColIndex;
         if (other.cellStyle != null) setCellStyle(other.cellStyle);
         if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
@@ -411,7 +426,7 @@ public class Column {
      * @return true:shared false:inline string
      */
     public boolean isShare() {
-        return share;
+        return (option >> 5 & 1) == 1;
     }
 
     /**
@@ -712,7 +727,8 @@ public class Column {
      * @return the {@link Column}
      */
     public Column setShare(boolean share) {
-        this.share = share;
+        if (share) this.option |= 1 << 5;
+        else this.option &= ~(1 << 5);
         return this;
     }
 
@@ -781,7 +797,7 @@ public class Column {
             style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
         }
 
-        return style | wrapText;
+        return style | (option & 1);
     }
 
     /**
@@ -801,7 +817,7 @@ public class Column {
      * @return bool
      */
     public boolean isIgnoreValue() {
-        return ignoreValue;
+        return (option >> 3 & 1) == 1;
     }
 
     /**
@@ -810,7 +826,7 @@ public class Column {
      * @return the {@link Column} self
      */
     public Column ignoreValue() {
-        this.ignoreValue = true;
+        this.option |= 1 << 3;
         return this;
     }
 
@@ -824,7 +840,8 @@ public class Column {
      * @return the {@link Column} self
      */
     public Column setWrapText(boolean wrapText) {
-        this.wrapText = wrapText ? 1 : 0;
+        if (wrapText) this.option |= 1;
+        else this.option = option >>> 1 << 1;
         return this;
     }
 
@@ -933,7 +950,7 @@ public class Column {
      * @return true: hidden otherwise show
      */
     public boolean isHide() {
-        return hide;
+        return (option >> 4 & 1) == 1;
     }
 
     /**
@@ -942,7 +959,7 @@ public class Column {
      * @return current {@link Column}
      */
     public Column hide() {
-        this.hide = true;
+        this.option |= 1 << 4;
         return this;
     }
 
@@ -952,7 +969,7 @@ public class Column {
      * @return current {@link Column}
      */
     public Column show() {
-        this.hide = false;
+        this.option &= ~(1 << 4);
         return this;
     }
 
@@ -963,5 +980,46 @@ public class Column {
      */
     public Column getTail() {
         return tail != null ? tail : this;
+    }
+
+    /**
+     * Setting auto resize cell's width
+     *
+     * @return current {@link Column}
+     */
+    public Column autoSize() {
+        this.option |= 1 << 1;
+        return this;
+    }
+
+    /**
+     * Setting fix column width
+     *
+     * @return current {@link Column}
+     */
+    public Column fixedSize() {
+        this.option |= 1 << 2;
+        return this;
+    }
+
+    /**
+     * Setting fixed column width
+     *
+     * @param width the column width
+     * @return current {@link Column}
+     */
+    public Column fixedSize(double width) {
+        this.option |= 1 << 2;
+        this.width = width;
+        return this;
+    }
+
+    /**
+     * Returns the re-size setting
+     *
+     * @return 0: not setting 1: auto-size 2:fixed-size
+     */
+    public int getAutoSize() {
+        return option >> 1 & 3;
     }
 }

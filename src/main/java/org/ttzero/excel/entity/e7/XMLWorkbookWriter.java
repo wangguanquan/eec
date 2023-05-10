@@ -24,6 +24,7 @@ import org.dom4j.QName;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
@@ -31,8 +32,6 @@ import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
-import org.ttzero.excel.entity.style.Fill;
-import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
@@ -41,7 +40,6 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -378,16 +376,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 if (workbook.isAutoSize()) {
                     sheet.autoSize();
                 } else {
-                    sheet.fixSize();
+                    sheet.fixedSize();
                 }
             }
-            if (sheet.getAutoOdd() == -1) {
-                sheet.setAutoOdd(workbook.getAutoOdd());
-            }
-            // Interlace changes color as default
-            if (sheet.getAutoOdd() == 0) {
-                sheet.setOddFill(workbook.getOddFill() == null
-                    ? new Fill(PatternType.solid, new Color(239, 245, 235)) : workbook.getOddFill());
+
+            if (workbook.getZebraFill() != null && sheet.getZebraFillStyle() < 0) {
+                sheet.setZebraLine(workbook.getZebraFill());
             }
             sheet.setId(i + 1);
             // default worksheet name
@@ -395,7 +389,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 sheet.setName("Sheet" + (i + 1));
             }
             // Set cell value and style processor
-            sheet.setCellValueAndStyle(new XMLCellValueAndStyle(sheet.getAutoOdd(), sheet.getOddFill()));
+            if (sheet.getCellValueAndStyle() == null) {
+                int zebraFillStyle = sheet.getZebraFillStyle();
+                ICellValueAndStyle cvas = zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
+                sheet.setCellValueAndStyle(cvas);
+            }
 
             // Force export all fields
             if (workbook.getForceExport() > sheet.getForceExport()) {

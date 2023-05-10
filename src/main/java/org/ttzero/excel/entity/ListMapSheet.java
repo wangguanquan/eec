@@ -175,7 +175,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
                 Cell cell = cells[i];
                 cell.clear();
 
-                cellValueAndStyle.reset(rows, cell, e, hc);
+                cellValueAndStyle.reset(row, cell, e, hc);
                 if (hasGlobalStyleProcessor) {
                     cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
                 }

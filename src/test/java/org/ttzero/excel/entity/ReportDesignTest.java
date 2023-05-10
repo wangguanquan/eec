@@ -39,7 +39,7 @@ import java.util.List;
 public class ReportDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
-        new Workbook("Group Style Processor").cancelOddFill().setAutoSize(true)
+        new Workbook("Group Style Processor").cancelZebraLine().setAutoSize(true)
             .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
             .writeTo(defaultTestPath);
     }
@@ -107,7 +107,7 @@ public class ReportDesignTest extends WorkbookTest {
         row++;
         mergeCells.add(new Dimension(row, (short) 1, row, (short) 5));
 
-        new Workbook("Report Design").cancelOddFill().setAutoSize(true)
+        new Workbook("Report Design").cancelZebraLine().setAutoSize(true)
             .addSheet(new ListSheet<>(list, createColumns())
                 .setStyleProcessor(new GroupStyleProcessor2<>())
                 .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath);
@@ -205,7 +205,7 @@ public class ReportDesignTest extends WorkbookTest {
         public int build(U u, int style, Styles sst) {
             if (group == null) {
                 group = u.groupBy();
-                s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
+                s = sst.addFill(new Fill(PatternType.solid, new Color(233, 234, 236)));
                 return style;
             } else if (u.groupBy() != null && !group.equals(u.groupBy())) {
                 group = u.groupBy();
@@ -223,7 +223,7 @@ public class ReportDesignTest extends WorkbookTest {
         public int build(U u, int style, Styles sst) {
             if (group == null) {
                 group = u.groupBy();
-                s = sst.addFill(new Fill(PatternType.solid, new Color(239, 245, 235)));
+                s = sst.addFill(new Fill(PatternType.solid, new Color(233, 234, 236)));
                 return style;
             }
             // 小计加粗字体

@@ -267,7 +267,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
             new Workbook("test statement sheet cancel odd")
                 .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age from student limit 10")
-                    .cancelOddStyle()
+                    .cancelZebraLine()
                 )
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
@@ -292,7 +292,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width")
                 .watch(Print::println)
-                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixSize(10))
+                .addSheet(new StatementSheet(con, "select id, name, age from student limit 10").fixedSize(10))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }

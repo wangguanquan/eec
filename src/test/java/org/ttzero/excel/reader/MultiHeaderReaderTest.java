@@ -72,7 +72,7 @@ public class MultiHeaderReaderTest {
         }
     }
 
-    @Test public void testFractureMerged() {
+    @Test public void testFractureMerged() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("fracture merged.xlsx"))) {
             Sheet sheet = reader.sheet(0);
             Row header = sheet.header(1, 2).getHeader();
@@ -104,8 +104,6 @@ public class MultiHeaderReaderTest {
                     assert Objects.isNull(row.getInt("2021-07-10:考试时长"));
                 }
             });
-        } catch (IOException ex) {
-            ex.printStackTrace();
         }
     }
 

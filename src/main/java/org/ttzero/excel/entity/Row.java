@@ -33,7 +33,7 @@ public class Row {
     // Share cell
     Cell[] cells;
     // height
-    public double height;
+    public double height = -1D;
 
     public int getIndex() {
         return index;

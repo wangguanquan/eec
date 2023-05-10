@@ -292,6 +292,70 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             ).writeTo(defaultTestPath);
     }
 
+    @Test public void testRepeatColumnFromN() throws IOException {
+        List<RepeatableEntry4> list = RepeatableEntry4.randomTestData();
+        int startRowIndex = 7;
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(list).setStartRowIndex(startRowIndex))
+            .writeTo(defaultTestPath.resolve("Repeat Columns From 7.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns From 7.xlsx"))) {
+            List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
+                .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == mapList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry4 src = list.get(i);
+
+                assert sub.get("订单号").equals(src.orderNo);
+                assert sub.get("收件人").equals(src.recipient);
+                assert sub.get("收件地址:省").equals(src.province);
+                assert sub.get("收件地址:市").equals(src.city);
+                assert sub.get("收件地址:区").equals(src.area);
+                assert sub.get("收件地址:详细地址").equals(src.detail);
+            }
+        }
+    }
+
+    @Test public void testRepeatColumnFromStayAtA1() throws IOException {
+        List<RepeatableEntry4> list = RepeatableEntry4.randomTestData();
+        int startRowIndex = 7;
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(list).setStartRowIndex(startRowIndex, false))
+            .writeTo(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"))) {
+            List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
+                .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == mapList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry4 src = list.get(i);
+
+                assert sub.get("订单号").equals(src.orderNo);
+                assert sub.get("收件人").equals(src.recipient);
+                assert sub.get("收件地址:省").equals(src.province);
+                assert sub.get("收件地址:市").equals(src.city);
+                assert sub.get("收件地址:区").equals(src.area);
+                assert sub.get("收件地址:详细地址").equals(src.detail);
+            }
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
@@ -489,6 +553,96 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         public boolean equals(Object o) {
             if (o instanceof RepeatableEntry3) {
                 RepeatableEntry3 other = (RepeatableEntry3) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(province, other.province)
+                    && Objects.equals(city, other.city)
+                    && Objects.equals(detail, other.detail);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
+        }
+    }
+
+    public static class RepeatableEntry4 {
+        @ExcelColumn(value = "订单号", colIndex = 3)
+        private String orderNo;
+        @ExcelColumn(value = "收件人", colIndex = 4)
+        private String recipient;
+        @ExcelColumn("收件地址")
+        @ExcelColumn(value = "省", colIndex = 5)
+        private String province;
+        @ExcelColumn("收件地址")
+        @ExcelColumn(value = "市", colIndex = 6)
+        private String city;
+        @ExcelColumn("收件地址")
+        @ExcelColumn(value = "区", colIndex = 7)
+        private String area;
+        @ExcelColumn("收件地址")
+        @ExcelColumn(value = "详细地址", colIndex = 8)
+        private String detail;
+
+        public RepeatableEntry4() {}
+
+        public RepeatableEntry4(String orderNo, String recipient, String province, String city, String area, String detail) {
+            this.orderNo = orderNo;
+            this.recipient = recipient;
+            this.province = province;
+            this.city = city;
+            this.area = area;
+            this.detail = detail;
+        }
+
+        public static List<RepeatableEntry4> randomTestData(int n) {
+            List<RepeatableEntry4> list = new ArrayList<>(n);
+            for (int i = 0, p, c; i < n; i++) {
+                list.add(new RepeatableEntry4(Integer.toString(Math.abs(random.nextInt())), getRandomString(8) + 2, provinces[p = random.nextInt(provinces.length)], cities[p][c = random.nextInt(cities[p].length)], areas[p][c][random.nextInt(areas[p][c].length)], "xx街" + (random.nextInt(10) + 1) + "号"));
+            }
+            return list;
+        }
+
+        public static List<RepeatableEntry4> randomTestData() {
+            int n = random.nextInt(100) + 1;
+            return randomTestData(n);
+        }
+
+        public String getOrderNo() {
+            return orderNo;
+        }
+
+        public String getRecipient() {
+            return recipient;
+        }
+
+        public String getProvince() {
+            return province;
+        }
+
+        public String getCity() {
+            return city;
+        }
+
+        public String getArea() {
+            return area;
+        }
+
+        public String getDetail() {
+            return detail;
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry4) {
+                RepeatableEntry4 other = (RepeatableEntry4) o;
                 return Objects.equals(orderNo, other.orderNo)
                     && Objects.equals(recipient, other.recipient)
                     && Objects.equals(province, other.province)

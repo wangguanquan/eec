@@ -22,10 +22,12 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
@@ -105,7 +107,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * The default cell width
      */
-    protected double width = 20.38D;
+    protected double width = 20D;
     /**
      * The row number
      */
@@ -128,11 +130,21 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * Automatic interlacing color
      */
+    @Deprecated
     protected int autoOdd = -1;
     /**
      * Odd row's background color
      */
+    @Deprecated
     protected int oddFill;
+    /**
+     * The zebra-line fill style value
+     */
+    protected int zebraFillStyle = -1;
+    /**
+     * The zebra-line fill style
+     */
+    protected Fill zebraFill;
     /**
      * A copy worksheet flag
      */
@@ -186,6 +198,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * Specify custom header row height
      */
     protected double headerRowHeight = 20.5D, rowHeight = -1D;
+    /**
+     * Specify the first row index
+     */
+    protected int startRowIndex = 1;
 
     public int getId() {
         return id;
@@ -220,6 +236,10 @@ public abstract class Sheet implements Cloneable, Storable {
     public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
         this.cellValueAndStyle = cellValueAndStyle;
         return this;
+    }
+
+    public ICellValueAndStyle getCellValueAndStyle() {
+        return cellValueAndStyle;
     }
 
     public Sheet() {
@@ -346,7 +366,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * Setting fix column width
      *
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedSize()}
      */
+    @Deprecated
     public Sheet fixSize() {
         this.autoSize = 2;
         return this;
@@ -357,16 +379,11 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param width the column width
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #fixedSize(double)}
      */
+    @Deprecated
     public Sheet fixSize(double width) {
-        this.autoSize = 2;
-        this.width = width;
-        if (headerReady) {
-            for (Column hc : columns) {
-                hc.setWidth(width);
-            }
-        }
-        return this;
+        return fixedSize(width);
     }
 
     /**
@@ -388,22 +405,61 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Cancel the odd row's fill style
+     * Setting fixed column width
      *
      * @return current {@link Sheet}
      */
-    public Sheet cancelOddStyle() {
-        this.autoOdd = 1;
+    public Sheet fixedSize() {
+        this.autoSize = 2;
         return this;
+    }
+
+    /**
+     * Setting fix column width
+     *
+     * @param width the column width
+     * @return current {@link Sheet}
+     */
+    public Sheet fixedSize(double width) {
+        if (width < 0.0D) {
+            LOGGER.warn("Negative number {}", width);
+            width = 0.0D;
+        }
+        else if (width > Const.Limit.COLUMN_WIDTH) {
+            LOGGER.warn("Maximum width is {}, current is {}", Const.Limit.COLUMN_WIDTH, width);
+            width = Const.Limit.COLUMN_WIDTH;
+        }
+        this.autoSize = 2;
+        this.width = width;
+        if (headerReady) {
+            for (org.ttzero.excel.entity.Column hc : columns) {
+                hc.fixedSize(width);
+            }
+        }
+        return this;
+    }
+
+
+    /**
+     * Cancel the odd row's fill style
+     *
+     * @return current {@link Sheet}
+     * @deprecated rename to {@link #cancelZebraLine()}
+     */
+    @Deprecated
+    public Sheet cancelOddStyle() {
+        return cancelZebraLine();
     }
 
     /**
      * Returns auto setting odd background flag
      *
      * @return 1: auto setting, others none
+     * @deprecated replace with {@code getZebraFill() != null}
      */
+    @Deprecated
     public int getAutoOdd() {
-        return autoOdd;
+        return zebraFill != null ? 1 : 0;
     }
 
     /**
@@ -411,9 +467,13 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param autoOdd 1: setting, others none
      * @return current {@link Sheet}
+     * @deprecated will be delete
      */
+    @Deprecated
     public Sheet setAutoOdd(int autoOdd) {
-        this.autoOdd = autoOdd;
+        if (autoOdd == 1) {
+            if (zebraFill == null) setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
+        } else setZebraLine(null);
         return this;
     }
 
@@ -422,19 +482,74 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param fill the fill style
      * @return current {@link Sheet}
+     * @deprecated rename to {@link #setZebraLine(Fill)}
      */
+    @Deprecated
     public Sheet setOddFill(Fill fill) {
-        this.oddFill = workbook.getStyles().addFill(fill);
-        return this;
+        return setZebraLine(fill);
     }
 
     /**
      * Returns the odd columns fill style
      *
      * @return the fill style value
+     * @deprecated replace with {@link #getZebraFillStyle()}
      */
+    @Deprecated
     public int getOddFill() {
-        return oddFill;
+        return getZebraFillStyle();
+    }
+
+    /**
+     * Setting the zebra-line fill style, default fill color is #EFF5EB
+     *
+     * @param fill the zebra-line {@link Fill} style
+     * @return current {@link Workbook}
+     */
+    public Sheet setZebraLine(Fill fill) {
+        this.zebraFill = fill;
+        return this;
+    }
+
+    /**
+     * Cancel the zebra-line style
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet cancelZebraLine() {
+        this.zebraFill = null;
+        this.zebraFillStyle = 0;
+        return this;
+    }
+
+    /**
+     * Returns the zebra-line fill style
+     *
+     * @return the zebra-line {@link Fill} style
+     */
+    public Fill getZebraFill() {
+        return zebraFill;
+    }
+
+    /**
+     * Returns the zebra-line fill style value
+     *
+     * @return the zebra-line {@link Fill} style
+     */
+    public int getZebraFillStyle() {
+        if (zebraFillStyle < 0 && zebraFill != null) {
+            this.zebraFillStyle = workbook.getStyles().addFill(zebraFill);
+        }
+        return zebraFillStyle;
+    }
+
+    /**
+     * Setting zebra-line style, the default fill color is #E9EAEC
+     *
+     * @return current {@link Sheet}
+     */
+    public Sheet defaultZebraLine() {
+        return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
     }
 
     /**
@@ -563,6 +678,50 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * Returns the first row index(default 1)
+     *
+     * @return the first row index
+     */
+    public int getStartRowIndex() {
+        return Math.abs(startRowIndex);
+    }
+
+    /**
+     * Returns the auto scroll mark
+     *
+     * @return {@code true} if auto scroll to top-left area
+     */
+    public boolean isScrollToVisibleArea() {
+        return startRowIndex > 0;
+    }
+
+    /**
+     * Specify the first row index, which must be greater than 0
+     *
+     * @param startRowIndex row index
+     * @return current {@link Sheet}
+     */
+    public Sheet setStartRowIndex(int startRowIndex) {
+        return setStartRowIndex(startRowIndex, true);
+    }
+
+    /**
+     * Specify the first row index, which must be greater than 0
+     *
+     * @param startRowIndex row index
+     * @param scrollToVisibleArea setting the activeCell to the {@code startRowIndex}
+     * @return current {@link Sheet}
+     */
+    public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
+        if (startRowIndex <= 0)
+            throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
+        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
+            throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
+        this.startRowIndex = scrollToVisibleArea ? startRowIndex : -startRowIndex;
+        return this;
+    }
+
+    /**
      * Returns the columns
      *
      * @return array of column
@@ -623,7 +782,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
 
             // Reset Row limit
-            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize());
+//            this.rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1
 
             // Mark ext-properties
             markExtProp();
@@ -638,6 +797,11 @@ public abstract class Sheet implements Cloneable, Storable {
             if (column.next != null) {
                 for (Column col = column.next; col != null; col = col.next)
                     col.styles = workbook.getStyles();
+            }
+
+            // Column width
+            if (column.getAutoSize() == 0 && autoSize > 0) {
+                column.option |= autoSize << 1;
             }
         }
     }
@@ -969,7 +1133,7 @@ public abstract class Sheet implements Cloneable, Storable {
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
         Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
+                , 12, Font.Style.BOLD, ColorIndex.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
@@ -983,7 +1147,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return style value
      */
     public int defaultHeadStyle() {
-        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("#ffffff", "#666699"));
+        return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("black", "#E9EAEC"));
     }
 
     /**
@@ -993,7 +1157,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public int defaultHeadStyleIndex() {
         if (headStyleIndex == -1) {
-            setHeadStyle(this.buildHeadStyle("#ffffff", "#666699"));
+            setHeadStyle(this.buildHeadStyle("black", "#E9EAEC"));
         }
         return headStyleIndex;
     }
@@ -1250,7 +1414,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return the limit
      */
     protected int getRowLimit() {
-        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()));
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1);
     }
 
     /**
@@ -1468,6 +1632,14 @@ public abstract class Sheet implements Cloneable, Storable {
                 lastCol.headerComment = headerComment;
             }
 
+            if (getStartRowIndex() > 1) {
+                List<Dimension> tmp = new ArrayList<>();
+                for (Dimension dim : mergeCells) {
+                    tmp.add(new Dimension(dim.firstRow + getStartRowIndex() - 1, dim.firstColumn, dim.lastRow + getStartRowIndex() - 1, dim.lastColumn));
+                }
+                mergeCells = tmp;
+            }
+
             @SuppressWarnings("unchecked")
             List<Dimension> existsMergeCells = (List<Dimension>) getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
             if (existsMergeCells != null && !existsMergeCells.isEmpty()) existsMergeCells.addAll(mergeCells);
@@ -1481,7 +1653,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Each row-block is multiplexed and will be called to reset
      * the data when a row-block is completely written.
      * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(int, Cell, Object, Column)}
+     * the row-block size, call the {@link ICellValueAndStyle#reset(Row, Cell, Object, org.ttzero.excel.entity.Column)}
      * method to set value and styles.
      */
     protected abstract void resetBlockData();
