@@ -238,7 +238,7 @@ public class Styles implements Storable {
      */
     public static Styles load(Path path) {
         // load workbook.xml
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(path));

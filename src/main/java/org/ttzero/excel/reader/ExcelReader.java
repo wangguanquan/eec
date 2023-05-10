@@ -446,7 +446,7 @@ public class ExcelReader implements Closeable {
     // --- PRIVATE FUNCTIONS
 
     private ContentType checkContentType(Path root) {
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         // Read [Content_Types].xml
         try {
@@ -492,7 +492,7 @@ public class ExcelReader implements Closeable {
         }
 
         // load workbook.xml
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(tmp.resolve("xl/_rels/workbook.xml.rels")));
@@ -701,7 +701,7 @@ public class ExcelReader implements Closeable {
 
     protected AppInfo getGeneralInfo(Path tmp) {
         // load workbook.xml
-        SAXReader reader = new SAXReader();
+        SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
             document = reader.read(Files.newInputStream(tmp.resolve("docProps/app.xml")));
@@ -762,7 +762,7 @@ public class ExcelReader implements Closeable {
         if (!FileUtil.exists(calcPath)) return null;
         Element calcChain;
         try {
-            SAXReader reader = new SAXReader();
+            SAXReader reader = SAXReader.createDefault();
             calcChain = reader.read(Files.newInputStream(calcPath)).getRootElement();
         } catch (DocumentException | IOException e) {
             LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
