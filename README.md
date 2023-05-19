@@ -296,6 +296,10 @@ try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))
 ```
 
 ## CHANGELOG
+Version 0.5.9 (2023-05-10)
+-------------
+- 修复dom4j默认构造器容易造成XXE安全漏洞
+
 Version 0.5.8 (2023-04-08)
 -------------
 - 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](https://github.com/wangguanquan/eec/wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
@@ -327,19 +331,13 @@ Version 0.5.6 (2023-01-07)
 - 读文件时支持获取单元格样式
 - 修复部分BUG(#308, #320, #323)
 
-Version 0.5.5 (2022-11-07)
--------------
-- Row转对象时如果出异常将提示具体的行和列信息(#284)
-- 导出结束后删除zip包(#296)
-- 修复部分BUG(#297,#298)
-
 [更多...](./CHANGELOG)
 
 [travis]: https://travis-ci.org/wangguanquan/eec
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.8-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.9-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
