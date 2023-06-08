@@ -532,7 +532,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void test354() throws IOException {
+    @Test public void test1751() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
             OO[] list = reader.sheet(0).rows()
                     .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
@@ -643,6 +643,17 @@ public class ExcelReaderTest {
             assert "1WRQMx".equals(row9.get("account"));
             assert (Boolean) row9.get("是否满30级");
             assert list.get(93).toString().equals("{渠道ID=3, 游戏=WOW, account=Ae9CNO6eTu, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=B}");
+        }
+    }
+
+    @Test public void test354() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            Map<String, Object> row1 = list.get(0);
+            assert row1.get("通讯地址") != null;
+            assert row1.get("紧急联系人姓名") != null;
+            assert !"名字".equals(row1.get("通讯地址"));
+            assert !"名字".equals(row1.get("紧急联系人姓名"));
         }
     }
 
