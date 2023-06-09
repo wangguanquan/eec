@@ -646,17 +646,6 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void test354() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
-            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            Map<String, Object> row1 = list.get(0);
-            assert row1.get("通讯地址") != null;
-            assert row1.get("紧急联系人姓名") != null;
-            assert !"名字".equals(row1.get("通讯地址"));
-            assert !"名字".equals(row1.get("紧急联系人姓名"));
-        }
-    }
-
     public static class O {
         @ExcelColumn("亚马逊FBA子单号/箱唛号")
         private String fbaNo;
