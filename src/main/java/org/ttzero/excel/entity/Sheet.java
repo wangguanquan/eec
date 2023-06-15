@@ -1553,8 +1553,6 @@ public abstract class Sheet implements Cloneable, Storable {
         // Mark as 1 if visited
         int[] marks = new int[n];
 
-        // FIXME If you do not write data from the first row, the code logic here
-        //  should start the calculation with the specified row
         int fc = 0, fr = 0, lc = 0, lr = 0;
         List<Dimension> mergeCells = new ArrayList<>(), _tmpCells = new ArrayList<>();
         for (int i = 0; i < n; i++) {
