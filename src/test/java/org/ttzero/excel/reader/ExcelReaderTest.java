@@ -428,11 +428,11 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(path, option)) {
             println(reader.getAppInfo());
 
-            reader.sheets()
+            long count = reader.sheets()
                 .peek(sheet -> println("--------" + sheet.getName() + "--------" + sheet.getDimension()))
                 .flatMap(Sheet::rows)
-                .forEach(row -> println(row.getRowNum() + "|: " + row.toString()));
-
+                .count();
+//                .forEach(row -> println(row.getRowNum() + "|: " + row.toString()));
         }
     }
 
