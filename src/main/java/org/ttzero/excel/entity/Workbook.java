@@ -75,7 +75,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *     // Auto size the column width
  *     .setAutoSize(true)
  *     // Add a Worksheet
- *     .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
+ *     .addSheet(new ListSheet&lt;Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
  *     // Add an other Worksheet
  *     .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList&lt;&gt;()))
  *     // Write to absolute path '/tmp/{name}.xlsx'
