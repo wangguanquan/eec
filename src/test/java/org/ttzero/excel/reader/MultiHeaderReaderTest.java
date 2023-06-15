@@ -17,11 +17,11 @@
 package org.ttzero.excel.reader;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.manager.Const;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
@@ -34,13 +34,32 @@ public class MultiHeaderReaderTest {
 
     @Test public void testMergeExcel() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            reader.parseFormula().sheets().flatMap(Sheet::rows).forEach(Print::println);
+            List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
+            assert list.contains(Dimension.of("B2:C2"));
+            assert list.contains(Dimension.of("E5:F8"));
+            assert list.contains(Dimension.of("A13:A20"));
+            assert list.contains(Dimension.of("B16:E17"));
+
+            list.addAll(reader.sheet(1).asMergeSheet().getMergeCells());
+            assert list.contains(Dimension.of("A1:B26"));
+            assert list.contains(Dimension.of("BM2:BQ11"));
+
+            list.addAll(reader.sheet(2).asMergeSheet().getMergeCells());
+            assert list.contains(Dimension.of("A1:K3"));
+            assert list.contains(Dimension.of("A16428:D16437"));
+
+            list.addAll(reader.sheet(3).asMergeSheet().getMergeCells());
+            assert list.contains(Dimension.of("A1:CF1434"));
         }
     }
 
     @Test public void testMergeExcel2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
-            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+            List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
+            assert list.contains(Dimension.of("A2:A31"));
+            assert list.contains(Dimension.of("B8:B13"));
+            assert list.contains(Dimension.of("A48:A54"));
+            assert list.contains(Dimension.of("B52:B54"));
         }
     }
 
