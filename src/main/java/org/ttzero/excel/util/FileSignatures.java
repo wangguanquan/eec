@@ -17,12 +17,16 @@
 
 package org.ttzero.excel.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,29 +37,43 @@ import java.util.Map;
  * @author guanquan.wang at 2023-02-13 16:26
  */
 public class FileSignatures {
+    /**
+     * LOGGER
+     */
+    final static Logger LOGGER = LoggerFactory.getLogger(FileSignatures.class);
+    /**
+     * Configure trusted image types
+     */
     public static Map<String, String> whitelist = new HashMap<String, String>() {{
-        put("png", null);
-        put("jpeg", null);
-        put("gif", null);
-        put("tiff", null);
-        put("bmp", null);
+        put("png", "image/png");
+        put("jpeg", "image/jpeg");
+        put("gif", "image/gif");
+        put("tiff", "image/tiff");
+        put("bmp", "image/bmp");
         put("ico", "image/x-ico");
         put("tif", "image/tiff");
         put("emf", "image/x-emf");
         put("wmf", "image/x-wmf");
-        put("webp", "image/png");
+        put("webp", "image/webp");
     }};
     private FileSignatures() { }
 
     public static Signature test(Path path) {
+        Signature signature = null;
         try (InputStream is = Files.newInputStream(path)) {
             byte[] bytes = new byte[1 << 9];
             int n = is.read(bytes);
-            return test(ByteBuffer.wrap(bytes, 0, n));
-        } catch (IOException ex) {
-
+            signature = test(ByteBuffer.wrap(bytes, 0, n));
+        } catch (Exception ex) {
+            LOGGER.warn("Test file signature occur error.", ex);
         }
-        return null;
+        if (signature == null) {
+            String name = path.getFileName().toString();
+            int i = name.lastIndexOf('.');
+            String uncertainExtensionName = i > 0 && i < name.length() - 1 ? name.substring(i + 1) : "unknown";
+            signature = new Signature(uncertainExtensionName, whitelist.getOrDefault(uncertainExtensionName, "image/unknown"), 0, 0);
+        }
+        return signature;
     }
 
     public static Signature test(ByteBuffer buffer) {
@@ -74,7 +92,7 @@ public class FileSignatures {
                     if (buffer.remaining() >= 5) {
                         buffer.get();
                         height = buffer.getShort() & 0xFFFF;
-                        width = buffer.getShort() & 0xFFFF;
+                        width  = buffer.getShort() & 0xFFFF;
                     }
                     break;
                 }
@@ -87,18 +105,18 @@ public class FileSignatures {
             extension = "bmp";
             buffer.order(ByteOrder.LITTLE_ENDIAN);
             buffer.position(buffer.position() + 16);
-            width = buffer.getInt();
+            width  = buffer.getInt();
             height = buffer.getInt();
         }
 
         if (extension != null) {
-            String contentType = whitelist.get(extension);
-            return new Signature(extension, contentType != null ? contentType : "image/" + extension, width, height);
+            return new Signature(extension, whitelist.getOrDefault(extension, "image/unknown"), width, height);
         }
 
         buffer.position(0);
         t0 = buffer.getInt();
 
+        byte v;
         switch (t0) {
             // Maybe PNG
             case 0x89504E47:
@@ -106,7 +124,7 @@ public class FileSignatures {
                 if (t1 == 0x0D0A1A0A) {
                     extension = "png";
                     buffer.getLong();
-                    width = buffer.getInt();
+                    width  = buffer.getInt();
                     height = buffer.getInt();
                 }
                 break;
@@ -122,12 +140,16 @@ public class FileSignatures {
                 extension = "gif";
                 buffer.getShort();
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                width = buffer.getShort() & 0xFFFF;
+                width  = buffer.getShort() & 0xFFFF;
                 height = buffer.getShort() & 0xFFFF;
                 break;
             // ICO
             case 0x100:
-                extension = "ico"; break; // TODO
+                extension = "ico";
+                buffer.getShort();
+                width  = (v = buffer.get()) != 0 ? v & 0xFF : 0x100;
+                height = (v = buffer.get()) != 0 ? v & 0xFF : 0x100;
+                break;
             // EMF
             case 0x01000000:
                 extension = "emf"; break; // TODO
@@ -137,13 +159,47 @@ public class FileSignatures {
                 extension = "wmf"; break; // TODO
             // WEBP
             case 0x52494646:
-                extension = "webp"; break; // TODO
+                extension = "webp";
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                // Chunk Size
+                int size = buffer.getInt()
+                    , x = 0x50424557; // ascii: webp
+                if (buffer.getInt() == x) {
+                    int chunkType = buffer.getInt(), blockSize = buffer.getInt();
+                    switch (chunkType) {
+                        // VP8
+                        case 0x20385056:
+                            int tmp = buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16;
+//                            key_frame = tmp & 0x1;
+//                            version = (tmp >> 1) & 0x7;
+//                            show_frame = (tmp >> 4) & 0x1;
+//                            first_part_size = (tmp >> 5) & 0x7FFFF;
+                            // show_frame flag (0 when current frame is not for display,1 when current frame is for display).
+//                            if ((tmp & 1) == 1) {
+//                                byte version = (byte) ((tmp >> 1) & 0x7);
+                                // Ignore others...
+                            tmp = buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16;
+                            if (tmp == 0x2a019d) {
+                                width  = buffer.getShort() & 0x3FFF;
+                                height = buffer.getShort() & 0x3FFF;
+                            }
+//                            }
+                            break;
+                        // VP8X
+                        case 0x58385056:
+                            buffer.getInt(); // Ignore
+                            width  = 1 + (buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16);
+                            height = 1 + (buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16);
+                            break;
+                    }
+
+                }
+                break;
             default:
         }
 
         if (extension != null) {
-            String contentType = whitelist.getOrDefault(extension, "image/" + extension);
-            return new Signature(extension, contentType, width, height);
+            return new Signature(extension, whitelist.getOrDefault(extension, "image/unknown"), width, height);
         }
 
         return null;
@@ -173,17 +229,6 @@ public class FileSignatures {
         return new Signature("tiff", "image/tiff", width, height);
     }
 
-    // <Default Extension="png" ContentType="image/png"/>
-    // <Default Extension="svg" ContentType="image/unknown"/>
-    // <Default Extension="emf" ContentType="image/x-emf"/>
-    // <Default Extension="jpeg" ContentType="image/jpeg"/>
-    // <Default Extension="wmf" ContentType="image/x-wmf"/>
-    // <Default Extension="gif" ContentType="image/gif"/>
-    // <Default Extension="psd" ContentType="image/vnd.adobe.photoshop"/>
-    // <Default Extension="tif" ContentType="image/tiff"/>
-    // <Default Extension="tiff" ContentType="image/tiff"/>
-    // <Default Extension="bmp" ContentType="image/bmp"/>
-    // ico 可以换后缀直接保存
     public static class Signature {
         public int width, height;
         public String contentType, extension;
