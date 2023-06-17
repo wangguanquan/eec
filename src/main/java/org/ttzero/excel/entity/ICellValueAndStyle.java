@@ -19,12 +19,14 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.File;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.Base64;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
 import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
@@ -149,7 +151,8 @@ public interface ICellValueAndStyle {
             hc.setClazz(clazz);
         }
         if (isString(clazz)) {
-            // TODO base64 images support
+            // If write as base64 images
+            // base64Image(row, cell, e.toString(), hc, clazz);
             cell.setSv(e.toString());
         } else if (isDate(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
@@ -248,5 +251,23 @@ public interface ICellValueAndStyle {
      */
     default void unknownType(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
         cell.setSv(e.toString());
+    }
+
+    /**
+     * Base64 string convert to binary
+     *
+     * @param row the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void base64Image(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+        int b;
+        if (e.startsWith("data:") && (b = StringUtil.indexOf(e, ',', 6, 64)) > 6
+            && (e.charAt(b - 1) == '4' && e.charAt(b - 2) == '6' && e.charAt(b - 3) == 'e' && e.charAt(b - 4) == 's' && e.charAt(b - 5) == 'a' && e.charAt(b - 6) == 'b')) {
+            byte[] bytes = Base64.getDecoder().decode(e.substring(b + 1));
+            cell.setBinary(bytes);
+        } else cell.setSv(e);
     }
 }
