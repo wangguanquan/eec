@@ -151,9 +151,12 @@ public interface ICellValueAndStyle {
             hc.setClazz(clazz);
         }
         if (isString(clazz)) {
-            // If write as base64 images
-            // base64Image(row, cell, e.toString(), hc, clazz);
-            cell.setSv(e.toString());
+            switch (hc.getColumnType()) {
+//                case 0: cell.setSv(e.toString()); break;
+                // Write as base64 images
+                case 1: base64Image(row, cell, e.toString(), hc, clazz); break;
+                default: cell.setSv(e.toString());
+            }
         } else if (isDate(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
         } else if (isDateTime(clazz)) {
