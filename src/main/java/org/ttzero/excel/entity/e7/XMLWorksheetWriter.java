@@ -1331,6 +1331,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Returns the maximum cell height
      *
+     * @param columnsArray the header column array
+     * @param row actual rows in Excel
      * @return cell height or -1
      */
     public double getHeaderHeight(Column[][] columnsArray, int row) {

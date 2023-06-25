@@ -244,6 +244,7 @@ public class StringUtil {
      * <p>All indices are specified in {@code char} values
      * (Unicode code units).
      *
+     * @param str not null
      * @param   ch          a character (Unicode code point).
      * @param   fromIndex   the index to start the search from.
      * @param   toIndex   the high endpoint (exclusive) of the search end.
