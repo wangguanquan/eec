@@ -75,7 +75,7 @@ public class FileSignatures {
     }
 
     public static Signature test(ByteBuffer buffer) {
-        if (buffer.remaining() < 64) return null;
+        if (buffer.remaining() < 32) return null;
         int t0 = buffer.getShort() & 0xFFFF;
 
         String extension = null;
