@@ -24,6 +24,10 @@ package org.ttzero.excel.entity;
  */
 public class Picture {
     /**
+     * Global media id
+     */
+    public int id;
+    /**
      * Relative location name in drawings, not the original name of the file. eq: image1.png
      */
     public String picName;
@@ -35,6 +39,10 @@ public class Picture {
      * Padding top | right | bottom | left
      */
     public int padding;
+    /**
+     * Record image position, internal parameters, please do not use
+     */
+    public int idx;
 
     // ================Size & Properties================
     /**

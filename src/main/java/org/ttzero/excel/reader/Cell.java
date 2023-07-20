@@ -45,6 +45,7 @@ public class Cell {
     public static final char BINARY      = 'y';
     public static final char FILE        = 'x';
     public static final char INPUT_STREAM= 'p';
+    public static final char REMOTE_URL  = 'u';
     /**
      * Unallocated cell
      */

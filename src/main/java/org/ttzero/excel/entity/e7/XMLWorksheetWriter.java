@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity.e7;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.manager.RelManager;
@@ -50,6 +52,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SeekableByteChannel;
@@ -74,6 +78,7 @@ import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.REMOTE_URL;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
@@ -100,6 +105,10 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 @TopNS(prefix = {"", "r"}, value = "worksheet"
     , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class XMLWorksheetWriter implements IWorksheetWriter {
+    /**
+     * LOGGER
+     */
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     // the storage path
     protected Path workSheetPath, mediaPath;
@@ -525,6 +534,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 case BOOL:         writeBool(cell.bv, r, i, xf);       break;
                 case DECIMAL:      writeDecimal(cell.mv, r, i, xf);    break;
                 case CHARACTER:    writeChar(cell.cv, r, i, xf);       break;
+                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);break;
                 case BINARY:       writeBinary(cell.binary, r, i, xf); break;
                 case FILE:         writeFile(cell.path, r, i, xf);     break;
                 case INPUT_STREAM: writeStream(cell.isv, r, i, xf);    break;
@@ -841,7 +851,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
         if (signature == null) {
-            sheet.what("File types that are not allowed");
+            LOGGER.warn("File types that are not allowed");
             return;
         }
         if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
@@ -854,9 +864,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // JVM shared
         Picture picture = new Picture();
+        picture.id = id;
         picture.picName = name;
         picture.col = column;
         picture.row = row;
+        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
         picture.size = signature.width << 16 | signature.height;
         drawingsWriter.add(picture);
         // Add global contentType
@@ -880,7 +892,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
         if (signature == null) {
-            sheet.what("File types that are not allowed");
+            LOGGER.warn("File types that are not allowed");
             return;
         }
         if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
@@ -893,6 +905,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // JVM shared
         Picture picture = new Picture();
+        picture.id = id;
         picture.picName = name;
         picture.col = column;
         picture.row = row;
@@ -915,6 +928,34 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeStream(InputStream stream, int row, int column, int xf) throws IOException {
         writeNull(row, column, xf);
         // TODO
+    }
+
+    /**
+     * Write binary file
+     *
+     * @param url  remote url
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeRemoteMedia(String url, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+
+        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+        if (drawingsWriter == null) {
+            drawingsWriter = createDrawingsWriter();
+        }
+        Picture picture = new Picture();
+        picture.id = sheet.getWorkbook().incrementMediaCounter();
+        picture.col = column;
+        picture.row = row;
+        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
+
+        drawingsWriter.asyncAdd(picture);
+
+        // Supports asynchronous download
+        downloadRemoteResource(picture, url);
     }
 
     /**
@@ -1351,5 +1392,58 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
         sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
         return new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+    }
+
+    /**
+     * Download remote resources
+     *
+     * By default, only HTTP or HTTPS protocols are supported.
+     * Use {@code HttpURLConnection} to synchronously download remote resources.
+     * For more complex scenarios (asynchronous download, Connection pool, authentication, FTP, etc.), please override this method
+     *
+     * @param picture {@link Picture} info
+     * @param url
+     */
+    public void downloadRemoteResource(Picture picture, String url) {
+        try {
+            // Support http or https
+            if (url.charAt(0) == 'h') {
+                HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+                con.connect();
+                InputStream is = con.getInputStream();
+                if (is != null) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(1 << 18);
+                    int i;
+                    byte[] bytes = new byte[1 << 18];
+                    while ((i = is.read(bytes)) > 0) bos.write(bytes, 0, i);
+                    downloadCompleted(picture, bos.toByteArray());
+                    return;
+                }
+                con.disconnect();
+            }
+            downloadCompleted(picture, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void downloadCompleted(Picture picture, byte[] body) throws IOException {
+        sheet.what("completed Row " + picture.row);
+        if (body == null || body.length == 0) {
+            drawingsWriter.complete(picture);
+            return;
+        }
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(body));
+        if (signature != null) {
+            String name = "image" + picture.id + "." + signature.extension;
+            // Store onto disk
+            Files.write(mediaPath.resolve(name), body, StandardOpenOption.CREATE_NEW);
+            picture.picName = name;
+            picture.size = signature.width << 16 | signature.height;
+            // Add global contentType
+            sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+        } else LOGGER.warn("File types that are not allowed");
+        drawingsWriter.complete(picture);
     }
 }

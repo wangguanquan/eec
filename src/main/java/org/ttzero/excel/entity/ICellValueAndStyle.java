@@ -152,9 +152,10 @@ public interface ICellValueAndStyle {
         }
         if (isString(clazz)) {
             switch (hc.getColumnType()) {
-//                case 0: cell.setSv(e.toString()); break;
-                // Write as base64 images
-                case 1: base64Image(row, cell, e.toString(), hc, clazz); break;
+                // Default
+                case 0: cell.setSv(e.toString()); break;
+                // Write as media (base64 image, remote url)
+                case 1: writeAsMedia(row, cell, e.toString(), hc, clazz); break;
                 default: cell.setSv(e.toString());
             }
         } else if (isDate(clazz)) {
@@ -257,20 +258,46 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Base64 string convert to binary
+     * Convert string to binary
      *
-     * @param row the row number
+     * @param row   the row number
      * @param cell  the cell
      * @param e     the cell value
      * @param hc    the header column
      * @param clazz the cell value type
      */
-    default void base64Image(int row, Cell cell, String e, Column hc, Class<?> clazz) {
-        int b;
-        if (e.startsWith("data:") && (b = StringUtil.indexOf(e, ',', 6, 64)) > 6
+    default void writeAsMedia(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+        int b, len = e.length();
+        // Base64 image
+        if (len > 64 && e.startsWith("data:") && (b = StringUtil.indexOf(e, ',', 6, 64)) > 6
             && (e.charAt(b - 1) == '4' && e.charAt(b - 2) == '6' && e.charAt(b - 3) == 'e' && e.charAt(b - 4) == 's' && e.charAt(b - 5) == 'a' && e.charAt(b - 6) == 'b')) {
             byte[] bytes = Base64.getDecoder().decode(e.substring(b + 1));
             cell.setBinary(bytes);
-        } else cell.setSv(e);
+        }
+        // Remote uri (http:// | https:// | ftp:// | ftps://)
+        else if (len >= 10 && (b = StringUtil.indexOf(e, ':', 3, 6)) >= 3 && e.charAt(b + 1) == '/' && e.charAt(b + 2) == '/') {
+            downloadRemoteResource(row, cell, e, hc, clazz);
+        }
+        // Others
+        else cell.setSv(e);
+    }
+
+    /**
+     * Download resource from remote server
+     *
+     * NOTE：By default, only marking the cell type as {@code REMOTE_URL} does not actually download resources.
+     * Asynchronous download in {@code IWorksheetWriter#writeRemoteMedia} in the future.
+     * Of course, you can also download and then call {@link Cell#setInputStream(InputStream)}
+     * or {@link Cell#setBinary(byte[])} to save the stream or binary results to the cell.
+     *
+     * @param row   the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void downloadRemoteResource(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+        cell.setSv(e);
+        cell.t = Cell.REMOTE_URL;
     }
 }

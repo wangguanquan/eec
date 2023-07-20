@@ -25,11 +25,13 @@ import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -47,8 +49,19 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     protected ExtBufferedWriter bw;
     protected int size;
     protected RelManager relManager;
+    /**
+     * Store async pictures
+     */
+    protected Picture[] pictures;
+    /**
+     * Mark complete status
+     * 0: free or complete
+     * 1: wait
+     */
+    protected long[] bits;
+    protected int countDown;
 
-    public XMLDrawingsWriter() { }
+    private XMLDrawingsWriter() { }
 
     // FIXME 临时代码
     public XMLDrawingsWriter(Path path) {
@@ -67,37 +80,33 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
     @Override
     public void close() throws IOException {
+        if (countDown > 0) {
+            int counter = 30; // Loop 30 times (1 minutes)
+            do {
+                // Check status
+                if (checkComplete() == 0) break;
+
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            } while (--counter >= 0);
+        }
         // End tag
-        if (size > 0) bw.write("</xdr:wsDr>");
+        bw.write("</xdr:wsDr>");
         relManager.write(path.getParent(), path.getFileName().toString());
         FileUtil.close(bw);
     }
 
     @Override
-    public void writeTo(Path root) throws IOException {
-//        DocumentFactory factory = DocumentFactory.getInstance();
-//        TopNS ns = XMLDrawingsWriter.class.getAnnotation(TopNS.class);
-//        Namespace xdr = Namespace.get(ns.prefix()[0], ns.uri()[0])
-//            , a = Namespace.get(ns.prefix()[1], ns.uri()[1])
-//            , r = Namespace.get(ns.prefix()[2], ns.uri()[2]);
-//        Element rootElement = factory.createElement(QName.get(ns.value(), xdr));
-//        rootElement.add(a);
-//        rootElement.add(r);
-//
-//        for (Picture p : pictures) {
-//            Element anchor = rootElement.addElement(QName.get("twoCellAnchor", xdr));
-//            // If Not MOVE_AND_RESIZE
-//            Element from = anchor.addElement(QName.get("from", xdr)), to = anchor.addElement(QName.get("to", xdr));
-//        }
-//
-//        FileUtil.writeToDiskNoFormat(factory.createDocument(rootElement), root);
-    }
+    public void writeTo(Path root) throws IOException { }
 
     static final String[] ANCHOR_PROPERTY = {"twoCell", "oneCell", "absolute"};
 
     @Override
     public void add(Picture picture) throws IOException {
-//        pictures.add(picture);
+        if (StringUtil.isEmpty(picture.picName)) return;
         Relationship picRel = relManager.add(new Relationship("../media/" + picture.picName, Const.Relationship.IMAGE));
         size++;
 
@@ -105,10 +114,6 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write(ANCHOR_PROPERTY[picture.property & 3]);
         // Default editAs="twoCell"
         bw.write("\">");
-
-        // twoCell to 可以from在x和y+1
-        // oneCell to 可以和from的x,y一致，根据size计算colOff和rowOff
-        // absolute 需要通过size计算
 
         // From
         bw.write("<xdr:from><xdr:col>");
@@ -149,4 +154,71 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write("</xdr:pic><xdr:clientData/></xdr:twoCellAnchor>");
     }
 
+    @Override
+    public void asyncAdd(Picture picture) throws IOException {
+        if (pictures == null) {
+            bits = new long[2];
+            pictures = new Picture[bits.length << 6];
+        }
+        int freeIndex = getFreeIndex(bits);
+        // Grow and copy
+        if (freeIndex < 0) {
+            freeIndex = bits.length << 6;
+            bits = Arrays.copyOf(bits, bits.length + 2);
+            pictures = Arrays.copyOf(pictures, bits.length << 6);
+        }
+        // Write file if current location is completed
+        else if (pictures[freeIndex] != null) {
+            add(pictures[freeIndex]);
+            countDown--;
+        }
+
+        picture.idx = freeIndex;
+        pictures[freeIndex] = picture;
+        markIndex(bits, freeIndex);
+        countDown++;
+    }
+
+    @Override
+    public void complete(Picture picture) {
+        if (bits == null) return;
+        freeIndex(bits, picture.idx);
+    }
+
+    protected int checkComplete() throws IOException {
+        while (countDown > 0) {
+            int i = getFreeIndex(bits);
+            // None complete picture
+            if (i < 0) break;
+            Picture p = pictures[i];
+            // Overflow
+            if (p == null) break;
+            // Write picture
+            add(p);
+            // The completed position is marked as 1 to prevent further acquisition
+            markIndex(bits, i);
+            countDown--;
+        }
+        return countDown;
+    }
+
+    public static int getFreeIndex(long[] bits) {
+        int i = 0, idx = 64;
+        for (; i < bits.length && (idx = Long.numberOfTrailingZeros(Long.highestOneBit(~bits[i]))) == 64; i++);
+        return idx < 64 ? (i << 6) + (64 - idx - 1) : -1;
+    }
+
+    /**
+     * Mark the bits at the specified position as 1
+     */
+    public static void markIndex(long[] bits, int idx) {
+        bits[idx >> 6] |= 1L << (63 - (idx - (idx >>> 6 << 6)));
+    }
+
+    /**
+     * Mark the bits at the specified position as 0
+     */
+    public static void freeIndex(long[] bits, int idx) {
+        bits[idx >> 6] &= ~(1L << (63 - (idx - (idx >>> 6 << 6))));
+    }
 }

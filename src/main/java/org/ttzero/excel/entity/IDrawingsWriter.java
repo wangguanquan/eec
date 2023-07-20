@@ -26,6 +26,26 @@ import java.io.IOException;
  * @author wangguanquan3 at 2023-03-07 09:09
  */
 public interface IDrawingsWriter extends Closeable, Storable {
+    /**
+     * Direct write picture
+     *
+     * @param picture {@link Picture} info
+     * @throws IOException if I/O error occur.
+     */
     void add(Picture picture) throws IOException;
 
+    /**
+     * Asynchronous addition of picture
+     *
+     * @param picture {@link Picture} info
+     * @throws IOException if I/O error occur.
+     */
+    void asyncAdd(Picture picture) throws IOException;
+
+    /**
+     * Complete
+     *
+     * @param picture {@link Picture} info
+     */
+    void complete(Picture picture);
 }
