@@ -187,16 +187,22 @@ public interface ICellValueAndStyle {
         } else if (isLocalTime(clazz)) {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
-        // TODO check column export type is image
+        // Write as media if column-type equals {@code 1}
         else if (clazz == byte[].class) {
-            cell.setBinary((byte[]) e);
+            if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
+           else cell.setSv(e.toString());
         } else if (clazz == Path.class) {
-            cell.setPath((Path) e);
+            if (hc.getColumnType() == 1) cell.setPath((Path) e);
+            else cell.setSv(e.toString());
         } else if (clazz == File.class) {
-            cell.setPath(((File) e).toPath());
+            if (hc.getColumnType() == 1) cell.setPath(((File) e).toPath());
+            else cell.setSv(e.toString());
         } else if (InputStream.class.isAssignableFrom(clazz)) {
-            cell.setInputStream((InputStream) e);
-        } else {
+            if (hc.getColumnType() == 1) cell.setInputStream((InputStream) e);
+            else cell.setSv(e.toString());
+        }
+        // Others
+        else {
             unknownType(row, cell, e, hc, clazz);
         }
     }
