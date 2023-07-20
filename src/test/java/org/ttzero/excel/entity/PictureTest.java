@@ -28,12 +28,14 @@ import org.junit.Test;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
@@ -42,20 +44,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class PictureTest extends WorkbookTest {
     @Test public void testExportPicture() throws IOException {
-        Path picturesPath = Paths.get(System.getProperty("user.home"), "Pictures");
-        List<Path> list = Files.list(picturesPath).filter(p -> {
-            String name = p.getFileName().toString();
-            return !Files.isDirectory(p) && (name.endsWith(".png")
-                || name.endsWith(".jpg") || name.endsWith(".webp")
-                || name.endsWith(".wmf") || name.endsWith(".tif")
-                || name.endsWith(".tiff") || name.endsWith(".gif")
-                || name.endsWith(".jpeg") || name.endsWith(".ico")
-                || name.endsWith(".emf") || name.endsWith(".bmp")
-            );
-        }).collect(Collectors.toList());
-
         new Workbook("Picture test")
-            .addSheet(new ListSheet<>(list).setColumns(new Column().setClazz(Path.class).setWidth(20)).setRowHeight(100))
+            .addSheet(new ListSheet<>(getLocalImages()).setColumns(new Column().setClazz(Path.class).setWidth(20)).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
@@ -105,6 +95,20 @@ public class PictureTest extends WorkbookTest {
         })).writeTo(defaultTestPath);
     }
 
+    @Test public void testStream() throws IOException {
+        List<InputStream> list = getLocalImages().stream().map(p -> {
+            try {
+                return Files.newInputStream(p);
+            } catch (IOException e) {
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        new Workbook("input-stream image").addSheet(new ListSheet<>(list)
+            .setColumns(new Column().setClazz(InputStream.class).setWidth(20).writeAsMedia()).setRowHeight(100))
+            .writeTo(defaultTestPath);
+    }
+
     public static class OkHttpClientUtil {
 
         private static class Handler {
@@ -126,6 +130,20 @@ public class PictureTest extends WorkbookTest {
         public static OkHttpClient client() {
             return Handler.okHttpClient;
         }
+    }
+
+    static List<Path> getLocalImages() throws IOException {
+        Path picturesPath = Paths.get(System.getProperty("user.home"), "Pictures");
+        return Files.list(picturesPath).filter(p -> {
+            String name = p.getFileName().toString();
+            return !Files.isDirectory(p) && (name.endsWith(".png")
+                || name.endsWith(".jpg") || name.endsWith(".webp")
+                || name.endsWith(".wmf") || name.endsWith(".tif")
+                || name.endsWith(".tiff") || name.endsWith(".gif")
+                || name.endsWith(".jpeg") || name.endsWith(".ico")
+                || name.endsWith(".emf") || name.endsWith(".bmp")
+            );
+        }).collect(Collectors.toList());
     }
 
     static List<String> getRemoteUrls() {
