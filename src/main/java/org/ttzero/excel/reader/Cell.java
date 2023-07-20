@@ -114,7 +114,7 @@ public class Cell {
      */
     public Path path;
     /**
-     * InputStream value (picture stream)
+     * InputStream value (picture stream), auto-close after writen
      */
     public InputStream isv;
     /**
