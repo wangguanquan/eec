@@ -105,7 +105,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     static final String[] ANCHOR_PROPERTY = {"twoCell", "oneCell", "absolute"};
 
     @Override
-    public void add(Picture picture) throws IOException {
+    public void drawing(Picture picture) throws IOException {
         if (StringUtil.isEmpty(picture.picName)) return;
         Relationship picRel = relManager.add(new Relationship("../media/" + picture.picName, Const.Relationship.IMAGE));
         size++;
@@ -155,7 +155,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     }
 
     @Override
-    public void asyncAdd(Picture picture) throws IOException {
+    public void asyncDrawing(Picture picture) throws IOException {
         if (pictures == null) {
             bits = new long[2];
             pictures = new Picture[bits.length << 6];
@@ -169,7 +169,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         }
         // Write file if current location is completed
         else if (pictures[freeIndex] != null) {
-            add(pictures[freeIndex]);
+            drawing(pictures[freeIndex]);
             countDown--;
         }
 
@@ -194,7 +194,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             // Overflow
             if (p == null) break;
             // Write picture
-            add(p);
+            drawing(p);
             // The completed position is marked as 1 to prevent further acquisition
             markIndex(bits, i);
             countDown--;

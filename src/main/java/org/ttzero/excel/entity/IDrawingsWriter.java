@@ -27,12 +27,12 @@ import java.io.IOException;
  */
 public interface IDrawingsWriter extends Closeable, Storable {
     /**
-     * Direct write picture
+     * Direct drawing picture
      *
      * @param picture {@link Picture} info
      * @throws IOException if I/O error occur.
      */
-    void add(Picture picture) throws IOException;
+    void drawing(Picture picture) throws IOException;
 
     /**
      * Asynchronous addition of picture
@@ -40,7 +40,7 @@ public interface IDrawingsWriter extends Closeable, Storable {
      * @param picture {@link Picture} info
      * @throws IOException if I/O error occur.
      */
-    void asyncAdd(Picture picture) throws IOException;
+    void asyncDrawing(Picture picture) throws IOException;
 
     /**
      * Complete

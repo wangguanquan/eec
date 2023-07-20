@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -60,6 +61,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.function.Supplier;
@@ -859,24 +861,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         String name = "image" + id + "." + signature.extension;
         // Store in disk
         Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
-        if (drawingsWriter == null) {
-            drawingsWriter = createDrawingsWriter();
-        }
-        // JVM shared
-        Picture picture = new Picture();
-        picture.id = id;
-        picture.picName = name;
-        picture.col = column;
-        picture.row = row;
-        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
-        picture.size = signature.width << 16 | signature.height;
-        drawingsWriter.add(picture);
-        // Add global contentType
-        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
     }
 
     /**
-     * Write boolean value
+     * Write file value
      *
      * @param path   the picture file
      * @param row    the row index
@@ -886,38 +877,24 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeFile(Path path, int row, int column, int xf) throws IOException {
         writeNull(row, column, xf);
-//        writeString(path.getFileName().toString(), row, column, xf);
-        byte[] bytes = Files.readAllBytes(path);
-        // TODO
         // Test file signatures
-        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
-        if (signature == null) {
+        FileSignatures.Signature signature = FileSignatures.test(path);
+        if ("unknown".equals(signature.extension)) {
             LOGGER.warn("File types that are not allowed");
             return;
         }
         if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
-        // Store in disk
-        Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
-        if (drawingsWriter == null) {
-            drawingsWriter = createDrawingsWriter();
-        }
-        // JVM shared
-        Picture picture = new Picture();
-        picture.id = id;
-        picture.picName = name;
-        picture.col = column;
-        picture.row = row;
-        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
-        picture.size = signature.width << 16 | signature.height;
-        drawingsWriter.add(picture);
-        // Add global contentType
-        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+        // Store
+        Files.copy(path, mediaPath.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
     }
 
     /**
-     * Write boolean value
+     * Write stream value
      *
      * @param stream  the picture input-stream
      * @param row    the row index
@@ -927,11 +904,49 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeStream(InputStream stream, int row, int column, int xf) throws IOException {
         writeNull(row, column, xf);
-        // TODO
+
+        byte[] bytes = new byte[1 << 13];
+        int n;
+
+        OutputStream os = null;
+        try {
+            n = stream.read(bytes);
+            // Empty stream
+            if (n <= 0) return;
+            FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes, 0, n));
+            if (signature == null) {
+                LOGGER.warn("File types that are not allowed");
+                return;
+            }
+            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+            int id = sheet.getWorkbook().incrementMediaCounter();
+            String name = "image" + id + "." + signature.extension;
+            os = Files.newOutputStream(mediaPath.resolve(name));
+            os.write(bytes, 0, n);
+
+            if (n == bytes.length) {
+                while ((n = stream.read(bytes)) > 0)
+                    os.write(bytes, 0, n);
+            }
+
+            // Write picture
+            writePictureDirect(id, name, column, row, signature);
+        } catch (IOException ex) {
+            LOGGER.warn("Copy stream error.", ex);
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException e) { } // Ignore
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) { } // Ignore
+            }
+        }
     }
 
     /**
-     * Write binary file
+     * Write remote media value
      *
      * @param url  remote url
      * @param row    the row index
@@ -952,7 +967,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.row = row;
         picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
 
-        drawingsWriter.asyncAdd(picture);
+        // Async Drawing
+        drawingsWriter.asyncDrawing(picture);
 
         // Supports asynchronous download
         downloadRemoteResource(picture, url);
@@ -1402,9 +1418,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * For more complex scenarios (asynchronous download, Connection pool, authentication, FTP, etc.), please override this method
      *
      * @param picture {@link Picture} info
-     * @param url
+     * @param url remote url
      */
-    public void downloadRemoteResource(Picture picture, String url) {
+    public void downloadRemoteResource(Picture picture, String url) throws IOException {
         try {
             // Support http or https
             if (url.charAt(0) == 'h') {
@@ -1421,14 +1437,23 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 }
                 con.disconnect();
             }
+            // Ignore others
             downloadCompleted(picture, null);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Download remote resource [{}] error", url, e);
+            throw e;
         }
     }
 
+    /**
+     * Complete downloading, check the file signatures and set the subscript {@code Picture.idx} to idle
+     *
+     * @param picture {@link Picture} info
+     * @param body thr resource data
+     * @throws IOException if I/O error occur.
+     */
     public void downloadCompleted(Picture picture, byte[] body) throws IOException {
-        sheet.what("completed Row " + picture.row);
+        LOGGER.debug("completed Row: {} len: {}", picture.row, body != null ? body.length : 0);
         if (body == null || body.length == 0) {
             drawingsWriter.complete(picture);
             return;
@@ -1444,6 +1469,30 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // Add global contentType
             sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
         } else LOGGER.warn("File types that are not allowed");
+
+        // Setting idle
         drawingsWriter.complete(picture);
+    }
+
+    // Write picture
+    protected void writePictureDirect(int id, String name, int column, int row, FileSignatures.Signature signature) throws IOException {
+        Picture picture = new Picture();
+        picture.id = id;
+        picture.picName = name;
+        picture.col = column;
+        picture.row = row;
+        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
+        picture.size = signature.width << 16 | signature.height;
+
+        // Crete Drawings writer
+        if (drawingsWriter == null) {
+            drawingsWriter = createDrawingsWriter();
+        }
+
+        // Drawing
+        drawingsWriter.drawing(picture);
+
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
     }
 }
