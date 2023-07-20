@@ -247,9 +247,4 @@ public class FileSignatures {
             this.height = height;
         }
     }
-
-    public static boolean isOpenXMLSupportExtension(Signature signature) {
-        return false;
-    }
-
 }
