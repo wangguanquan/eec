@@ -117,4 +117,14 @@ public @interface ExcelColumn {
      * @return true: hidden otherwise show
      */
     boolean hide() default false;
+
+    /**
+     * Specify the Col format type, by default all col only write text
+     *
+     * 0: default
+     * 1: media
+     *
+     * @return col format type
+     */
+    int colType() default 0;
 }

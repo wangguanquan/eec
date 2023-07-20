@@ -652,6 +652,8 @@ public class ListSheet<T> extends Sheet {
         if (ec.hide()) column.hide();
         // Cell max width
         if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
+        // Cell write type
+        if (ec.colType() > 0) column.writeAsMedia();
         return column;
     }
 
