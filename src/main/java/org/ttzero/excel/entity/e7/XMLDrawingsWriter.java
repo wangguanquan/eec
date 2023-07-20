@@ -63,7 +63,6 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
     private XMLDrawingsWriter() { }
 
-    // FIXME 临时代码
     public XMLDrawingsWriter(Path path) {
         this.path = path;
         this.relManager = new RelManager();
