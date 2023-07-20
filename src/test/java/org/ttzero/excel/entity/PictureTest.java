@@ -25,6 +25,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.ConnectionPool;
 import org.junit.Test;
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
@@ -109,6 +110,12 @@ public class PictureTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testExportPictureAnnotation() throws IOException {
+        new Workbook("Picture test annotation")
+            .addSheet(new ListSheet<>(Pic.randomTestData()).setRowHeight(100))
+            .writeTo(defaultTestPath);
+    }
+
     public static class OkHttpClientUtil {
 
         private static class Handler {
@@ -150,5 +157,21 @@ public class PictureTest extends WorkbookTest {
         return Arrays.asList("https://m.360buyimg.com/babel/jfs/t20260628/103372/21/40858/120636/649d00b3Fea336b50/1e97a70d3a3fe1c6.jpg"
             , "https://gw.alicdn.com/bao/uploaded/i3/1081542738/O1CN01ZBcPlR1W63BQXG5yO_!!0-item_pic.jpg_300x300q90.jpg"
             , "https://gw.alicdn.com/bao/uploaded/i3/2200754440203/O1CN01k8sRgC1DN1GGtuNT9_!!0-item_pic.jpg_300x300q90.jpg");
+    }
+
+    public static class Pic {
+        @ExcelColumn("地址")
+        private String addr;
+        @ExcelColumn(value = "现场照片", colType = 1)
+        private String pic;
+
+        public static List<Pic> randomTestData() {
+            return getRemoteUrls().stream().map(u -> {
+                Pic p = new Pic();
+                p.addr = getRandomString();
+                p.pic = u;
+                return p;
+            }).collect(Collectors.toList());
+        }
     }
 }
