@@ -147,8 +147,13 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write("\"/>");
 
         bw.write("<a:stretch><a:fillRect/></a:stretch></xdr:blipFill>");
-        bw.write("<xdr:spPr><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></xdr:spPr>");
-//        bw.write("<xdr:spPr><a:prstGeom prst=\"roundRect\"><a:avLst><a:gd name=\"adj\" fmla=\"val 20594\"/></a:avLst></a:prstGeom></xdr:spPr>");
+        bw.write("<xdr:spPr>");
+        // Revolve
+        if (picture.revolve != 0) {
+            bw.write("<a:xfrm rot=\""); bw.writeInt(60000 * picture.revolve); bw.write("\"/>");
+        }
+        // Geometry
+        bw.write("<a:prstGeom prst=\"rect\"> <a:avLst/></a:prstGeom>");
         // End Picture
         bw.write("</xdr:pic><xdr:clientData/></xdr:twoCellAnchor>");
     }
