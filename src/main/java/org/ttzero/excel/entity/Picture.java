@@ -20,7 +20,7 @@ package org.ttzero.excel.entity;
 /**
  * Picture
  *
- * @author wangguanquan3 at 2023-03-08 09:14:39
+ * @author guanquan.wang at 2023-03-08 09:14:39
  */
 public class Picture {
     /**

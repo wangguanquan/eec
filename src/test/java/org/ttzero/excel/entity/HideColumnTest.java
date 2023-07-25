@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * @author wangguanquan3 at 2022-08-03 08:50
+ * @author guanquan.wang at 2022-08-03 08:50
  */
 public class HideColumnTest extends WorkbookTest {
     @Test public void testColumnHide() throws IOException {
