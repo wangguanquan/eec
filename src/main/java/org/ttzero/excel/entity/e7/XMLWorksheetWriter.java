@@ -961,11 +961,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (drawingsWriter == null) {
             drawingsWriter = createDrawingsWriter();
         }
-        Picture picture = new Picture();
+        Picture picture = createPicture(column, row);
         picture.id = sheet.getWorkbook().incrementMediaCounter();
-        picture.col = column;
-        picture.row = row;
-        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
 
         // Async Drawing
         drawingsWriter.asyncDrawing(picture);
@@ -1476,12 +1473,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // Write picture
     protected void writePictureDirect(int id, String name, int column, int row, FileSignatures.Signature signature) throws IOException {
-        Picture picture = new Picture();
+        Picture picture = createPicture(column, row);
         picture.id = id;
         picture.picName = name;
-        picture.col = column;
-        picture.row = row;
-        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
         picture.size = signature.width << 16 | signature.height;
 
         // Crete Drawings writer
@@ -1494,5 +1488,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Add global contentType
         sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+    }
+
+    /**
+     * Picture constructor
+     * You can use this method to add general effects
+     *
+     * @param column cell column
+     * @param row cell row
+     * @return {@link Picture}
+     */
+    protected Picture createPicture(int column, int row) {
+        Picture picture = new Picture();
+        picture.col = column;
+        picture.row = row;
+        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
+
+        return picture;
     }
 }
