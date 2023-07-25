@@ -23,6 +23,7 @@ import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.annotation.ExcelColumn.ColType;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
@@ -653,7 +654,7 @@ public class ListSheet<T> extends Sheet {
         // Cell max width
         if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
         // Cell write type
-        if (ec.colType() > 0) column.writeAsMedia();
+        if (ec.colType() == ColType.MEDIA) column.writeAsMedia();
         return column;
     }
 

@@ -119,12 +119,20 @@ public @interface ExcelColumn {
     boolean hide() default false;
 
     /**
-     * Specify the Col format type, by default all col only write text
-     *
-     * 0: default
-     * 1: media
+     * Specify the Col format type, by default all col only output as text
      *
      * @return col format type
      */
-    int colType() default 0;
+    ColType colType() default ColType.DEFAULT;
+
+    /**
+     * Definition of standard col type
+     */
+    enum ColType {
+        DEFAULT,
+        /**
+         * {@code URL}, {@code byte[]}, {@code File} and {@code OutputStream} types will be output as images
+         */
+        MEDIA
+    }
 }

@@ -26,6 +26,7 @@ import okhttp3.ResponseBody;
 import okhttp3.ConnectionPool;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.ExcelColumn.ColType;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 
 import java.io.IOException;
@@ -162,7 +163,7 @@ public class PictureTest extends WorkbookTest {
     public static class Pic {
         @ExcelColumn("地址")
         private String addr;
-        @ExcelColumn(value = "现场照片", colType = 1)
+        @ExcelColumn(value = "现场照片", colType = ColType.MEDIA)
         private String pic;
 
         public static List<Pic> randomTestData() {
