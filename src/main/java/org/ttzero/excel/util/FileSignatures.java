@@ -150,11 +150,29 @@ public class FileSignatures {
                 break;
             // EMF
             case 0x01000000:
-                extension = "emf"; break; // TODO
+                extension = "emf";
+                buffer.getInt(); // Ignore
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                int left = buffer.getInt(), top = buffer.getInt(), right = buffer.getInt(), bottom = buffer.getInt();
+                width  = Math.max(0, right - left + 1);
+                height = Math.max(0, bottom - top + 1);
+                break;
             // WMF
             case 0xD7CDC69A:
             case 0x01000900:
-                extension = "wmf"; break; // TODO
+                extension = "wmf";
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+                buffer.getShort(); // Ignore
+                left = buffer.getShort() & 0xFFFF;
+                top = buffer.getShort() & 0xFFFF;
+                right = buffer.getShort() & 0xFFFF;
+                bottom = buffer.getShort() & 0xFFFF;
+                int inch = buffer.getShort() & 0XFFFF;
+
+                double coeff = inch > 0 ? 72.0D / inch : 1.0D;
+                width  = (int) Math.round((right - left) * coeff);
+                height = (int) Math.round((bottom - top) * coeff);
+                break;
             // WEBP
             case 0x52494646:
                 extension = "webp";
