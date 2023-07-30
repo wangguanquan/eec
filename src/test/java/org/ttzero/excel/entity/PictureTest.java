@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author wangguanquan3 at 2023-03-20 21:12
+ * @author guanquan.wang at 2023-03-20 21:12
  */
 public class PictureTest extends WorkbookTest {
     @Test public void testExportPicture() throws IOException {
