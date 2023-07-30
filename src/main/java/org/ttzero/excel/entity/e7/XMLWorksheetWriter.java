@@ -355,6 +355,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // cols
         writeCols(fillSpace, defaultWidth);
 
+        // Initialization DrawingsWriter
+        boolean hasMedia = false;
+        for (Column column : columns) {
+            hasMedia = column.getColumnType() == 1;
+            if (hasMedia) break;
+        }
+        if (hasMedia) {
+            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+            if (drawingsWriter == null) {
+                drawingsWriter = createDrawingsWriter();
+            }
+        }
     }
 
     /**
@@ -856,7 +868,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             LOGGER.warn("File types that are not allowed");
             return;
         }
-        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
         // Store in disk
@@ -883,7 +894,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             LOGGER.warn("File types that are not allowed");
             return;
         }
-        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
         // Store
@@ -918,7 +928,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 LOGGER.warn("File types that are not allowed");
                 return;
             }
-            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
             int id = sheet.getWorkbook().incrementMediaCounter();
             String name = "image" + id + "." + signature.extension;
             os = Files.newOutputStream(mediaPath.resolve(name));
@@ -957,10 +966,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeRemoteMedia(String url, int row, int column, int xf) throws IOException {
         writeNull(row, column, xf);
 
-        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
-        if (drawingsWriter == null) {
-            drawingsWriter = createDrawingsWriter();
-        }
         Picture picture = createPicture(column, row);
         picture.id = sheet.getWorkbook().incrementMediaCounter();
 
@@ -1477,11 +1482,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.id = id;
         picture.picName = name;
         picture.size = signature.width << 16 | signature.height;
-
-        // Crete Drawings writer
-        if (drawingsWriter == null) {
-            drawingsWriter = createDrawingsWriter();
-        }
 
         // Drawing
         drawingsWriter.drawing(picture);
