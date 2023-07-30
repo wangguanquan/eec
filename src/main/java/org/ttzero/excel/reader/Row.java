@@ -125,7 +125,7 @@ public abstract class Row {
     }
 
     /**
-     * Test unused row (not contains any filled or formatted or value)
+     * Test unused row (not contains any filled, formatted, border, value or other styles)
      *
      * @return true if unused
      */
