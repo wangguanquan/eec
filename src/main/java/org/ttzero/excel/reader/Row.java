@@ -134,6 +134,23 @@ public abstract class Row {
     }
 
     /**
+     * Returns {@code true} if any cell in row contains filled, formatted, border, value or other styles
+     * otherwise returns {@code false}.
+     *
+     * @apiNote This method exists to be used as a
+     * {@link java.util.function.Predicate}, {@code filter(Row::nonEmpty)}
+     *
+     * @return {@code true} if any cell in row contains style and value
+     * otherwise {@code false}
+     *
+     * @see java.util.function.Predicate
+     * @see #isEmpty()
+     */
+    public boolean nonEmpty() {
+        return lc > fc;
+    }
+
+    /**
      * Tests the value of all cells is null or whitespace
      *
      * @return true if all cell value is null
@@ -146,6 +163,23 @@ public abstract class Row {
             }
         }
         return true;
+    }
+
+    /**
+     * Returns {@code true} if any cell in row contains values
+     * otherwise returns {@code false}.
+     *
+     * @apiNote This method exists to be used as a
+     * {@link java.util.function.Predicate}, {@code filter(Row::nonBlank)}
+     *
+     * @return {@code true} if any cell in row contains values
+     * otherwise {@code false}
+     *
+     * @see java.util.function.Predicate
+     * @see #isBlank()
+     */
+    public boolean nonBlank() {
+        return !isBlank();
     }
 
     /**

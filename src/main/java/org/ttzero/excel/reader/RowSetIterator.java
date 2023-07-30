@@ -24,13 +24,11 @@ import java.util.function.Supplier;
  * @author guanquan.wang at 2019-04-17 19:03
  */
 public class RowSetIterator implements Iterator<Row> {
-    private final boolean onlyDataRow;
-    private final Supplier<Row> supplier;
-    private Row nextRow = null;
+    protected final Supplier<Row> supplier;
+    protected Row nextRow = null;
 
-    public RowSetIterator(Supplier<Row> supplier, boolean onlyDataRow) {
+    public RowSetIterator(Supplier<Row> supplier) {
         this.supplier = supplier;
-        this.onlyDataRow = onlyDataRow;
     }
 
     @Override
@@ -38,12 +36,7 @@ public class RowSetIterator implements Iterator<Row> {
         if (nextRow != null) {
             return true;
         } else {
-            if (onlyDataRow) {
-                // Skip blank rows
-                for (; (nextRow = supplier.get()) != null && nextRow.isBlank(); ) ;
-            } else {
-                nextRow = supplier.get();
-            }
+            nextRow = supplier.get();
             return (nextRow != null);
         }
     }
@@ -56,6 +49,24 @@ public class RowSetIterator implements Iterator<Row> {
             return next;
         } else {
             throw new NoSuchElementException();
+        }
+    }
+
+    public static class NonBlankIterator extends RowSetIterator {
+
+        public NonBlankIterator(Supplier<Row> supplier) {
+            super(supplier);
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (nextRow != null) {
+                return true;
+            } else {
+                // Skip blank rows
+                for (; (nextRow = supplier.get()) != null && nextRow.isBlank(); ) ;
+                return (nextRow != null);
+            }
         }
     }
 }
