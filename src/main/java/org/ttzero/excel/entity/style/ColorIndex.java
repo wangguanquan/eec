@@ -109,6 +109,36 @@ public class ColorIndex {
         return new String(chars);
     }
 
+    /**
+     * to rgb string
+     *
+     * @param color color
+     * @return rgb string
+     */
+    public static String toRGB(Color color) {
+        return toRGB(color.getRGB());
+    }
+
+    public static String toRGB(int rgb) {
+        int n;
+        char[] chars = new char[6];
+        for (int i = 0; i < 3; i++) {
+            n = (rgb >> 8 * (2 - i)) & 0xff;
+            if (n <= 0xf) {
+                chars[i << 1] = '0';
+                chars[(i << 1) + 1] = (char) (n < 0xa ? '0' + n : 'a' + n - 0xa);
+            } else {
+                Integer.toHexString(n).getChars(0, 2, chars, i << 1);
+            }
+        }
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] >= 'a' && chars[i] <= 'z') {
+                chars[i] -= ' ';
+            }
+        }
+        return new String(chars);
+    }
+
     public static Color toColor(String rgb) {
         // Remove the alpha option of the color
         if (rgb.length() == 8 && rgb.startsWith("FF")) {
