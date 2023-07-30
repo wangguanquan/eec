@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * Drawings writer
  *
- * @author wangguanquan3 at 2023-03-07 09:09
+ * @author guanquan.wang at 2023-03-07 09:09
  */
 public interface IDrawingsWriter extends Closeable, Storable {
     /**
