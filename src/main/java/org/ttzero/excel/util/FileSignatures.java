@@ -44,7 +44,7 @@ public class FileSignatures {
      */
     public static Map<String, String> whitelist = new HashMap<String, String>() {{
         put("png", "image/png");
-        put("jpeg", "image/jpeg");
+        put("jpg", "image/jpg");
         put("gif", "image/gif");
         put("tiff", "image/tiff");
         put("bmp", "image/bmp");
