@@ -356,17 +356,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeCols(fillSpace, defaultWidth);
 
         // Initialization DrawingsWriter
-        boolean hasMedia = false;
-        for (Column column : columns) {
-            hasMedia = column.getColumnType() == 1;
-            if (hasMedia) break;
-        }
-        if (hasMedia) {
-            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
-            if (drawingsWriter == null) {
-                drawingsWriter = createDrawingsWriter();
-            }
-        }
+        initDrawingsWriter();
     }
 
     /**
@@ -1398,6 +1388,34 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         double h = -1D;
         for (Column[] cols : columnsArray) h = Math.max(cols[row].headerHeight, h);
         return h;
+    }
+
+    /**
+     * Check if images are output
+     *
+     * @return true if any column type equals 1
+     */
+    protected boolean hasMedia() {
+        boolean hasMedia = false;
+        for (Column column : columns) {
+            hasMedia = column.getColumnType() == 1;
+            if (hasMedia) break;
+        }
+        return hasMedia;
+    }
+
+    /**
+     * Initialization DrawingsWriter
+     *
+     * @throws IOException if I/O error occur
+     */
+    protected void initDrawingsWriter() throws IOException {
+        if (hasMedia()) {
+            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+            if (drawingsWriter == null) {
+                drawingsWriter = createDrawingsWriter();
+            }
+        }
     }
 
     /**
