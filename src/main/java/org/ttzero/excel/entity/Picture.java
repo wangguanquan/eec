@@ -17,6 +17,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.drawing.PictureEffect;
+
 /**
  * Picture
  *
@@ -56,8 +58,63 @@ public class Picture {
      */
     public int property;
     /**
-     * -360 ~ 360
+     * Revolve -360 ~ 360
      */
     public int revolve;
 
+    // ================ Picture Effects ================
+
+    public PictureEffect effect;
+
+
+    /**
+     * Padding
+     *
+     * @param padding int (0 - 255)
+     */
+    public Picture setPadding(int padding) {
+        padding = padding & 0xFF;
+        this.padding = padding << 24 | padding << 16 | padding << 8 | padding;
+        return this;
+    }
+
+    /**
+     * Padding Top
+     *
+     * @param paddingTop int (0 - 255)
+     */
+    public Picture setPaddingTop(int paddingTop) {
+        this.padding = (paddingTop & 0xFF) << 24;
+        return this;
+    }
+
+    /**
+     * Padding Right
+     *
+     * @param paddingRight int (0 - 255)
+     */
+    public Picture setPaddingRight(int paddingRight) {
+        this.padding = (paddingRight & 0xFF) << 16;
+        return this;
+    }
+
+    /**
+     * Padding Bottom
+     *
+     * @param paddingBottom int (0 - 255)
+     */
+    public Picture setPaddingBottom(int paddingBottom) {
+        this.padding = (paddingBottom & 0xFF) << 8;
+        return this;
+    }
+
+    /**
+     * Padding Left
+     *
+     * @param paddingLeft int (0 - 255)
+     */
+    public Picture setPaddingLeft(int paddingLeft) {
+        this.padding = paddingLeft & 0xFF;
+        return this;
+    }
 }
