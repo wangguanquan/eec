@@ -22,7 +22,7 @@ import org.ttzero.excel.entity.e7.XMLZebraLineCellValueAndStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.IOException;
 
 /**

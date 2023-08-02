@@ -1520,7 +1520,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Picture picture = new Picture();
         picture.col = column;
         picture.row = row;
-        picture.padding = 1 << 24 | 1 << 16 | 1 << 8 | 1;
+        picture.setPadding(1);
 
         return picture;
     }
