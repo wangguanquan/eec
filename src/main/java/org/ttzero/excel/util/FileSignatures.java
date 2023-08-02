@@ -81,9 +81,9 @@ public class FileSignatures {
         String extension = null;
         int width = 0, height = 0;
 
-        // Maybe jpeg
+        // Maybe jpg
         if (t0 == 0xFFD8) {
-            extension = "jpeg";
+            extension = "jpg";
             for (; buffer.remaining() >= 4; ) {
                 int t1 = buffer.getShort() & 0xFFFF, n = buffer.getShort() & 0xFFFF;
                 if (t1 == 0xFFC0) {
