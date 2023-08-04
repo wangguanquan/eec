@@ -70,6 +70,7 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
@@ -528,21 +529,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:          writeString(cell.sv, r, i, xf);     break;
-                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);    break;
-                case LONG:         writeNumeric(cell.lv, r, i, xf);    break;
+                case SST:          writeString(cell.sv, r, i, xf);         break;
+                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);        break;
+                case LONG:         writeNumeric(cell.lv, r, i, xf);        break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:         writeDouble(cell.dv, r, i, xf);     break;
-                case BOOL:         writeBool(cell.bv, r, i, xf);       break;
-                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);    break;
-                case CHARACTER:    writeChar(cell.cv, r, i, xf);       break;
-                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);break;
-                case BINARY:       writeBinary(cell.binary, r, i, xf); break;
-                case FILE:         writeFile(cell.path, r, i, xf);     break;
-                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);    break;
-                case BLANK:        writeNull(r, i, xf);                break;
+                case TIME:         writeDouble(cell.dv, r, i, xf);         break;
+                case BOOL:         writeBool(cell.bv, r, i, xf);           break;
+                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);        break;
+                case CHARACTER:    writeChar(cell.cv, r, i, xf);           break;
+                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);    break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf);     break;
+                case FILE:         writeFile(cell.path, r, i, xf);         break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);        break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf); break;
+                case BLANK:        writeNull(r, i, xf);                    break;
                 default:
             }
         }
@@ -566,17 +568,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:       writeStringAutoSize(cell.sv, r, i, xf);  break;
-                case NUMERIC:   writeNumericAutoSize(cell.nv, r, i, xf); break;
-                case LONG:      writeNumericAutoSize(cell.lv, r, i, xf); break;
+                case SST:          writeStringAutoSize(cell.sv, r, i, xf);    break;
+                case NUMERIC:      writeNumericAutoSize(cell.nv, r, i, xf);   break;
+                case LONG:         writeNumericAutoSize(cell.lv, r, i, xf);   break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:      writeDoubleAutoSize(cell.dv, r, i, xf);  break;
-                case BOOL:      writeBool(cell.bv, r, i, xf);            break;
-                case DECIMAL:   writeDecimalAutoSize(cell.mv, r, i, xf); break;
-                case CHARACTER: writeChar(cell.cv, r, i, xf);            break;
-                case BLANK:     writeNull(r, i, xf);                     break;
+                case TIME:         writeDoubleAutoSize(cell.dv, r, i, xf);    break;
+                case BOOL:         writeBool(cell.bv, r, i, xf);              break;
+                case DECIMAL:      writeDecimalAutoSize(cell.mv, r, i, xf);   break;
+                case CHARACTER:    writeChar(cell.cv, r, i, xf);              break;
+                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);       break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf);        break;
+                case FILE:         writeFile(cell.path, r, i, xf);            break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);           break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);    break;
+                case BLANK:        writeNull(r, i, xf);                       break;
                 default:
             }
         }
@@ -862,6 +869,37 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         String name = "image" + id + "." + signature.extension;
         // Store in disk
         Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
+    }
+
+    /**
+     * Write binary file
+     *
+     * @param byteBuffer  the binary data
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeBinary(ByteBuffer byteBuffer, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        int position = byteBuffer.position();
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(byteBuffer);
+        if (signature == null) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Reset buffer position
+        byteBuffer.position(position);
+        // Store in disk
+        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE);
+        channel.write(byteBuffer);
+        channel.close();
 
         // Write picture
         writePictureDirect(id, name, column, row, signature);

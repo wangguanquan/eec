@@ -24,6 +24,7 @@ import org.ttzero.excel.util.StringUtil;
 import java.io.File;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Base64;
@@ -188,10 +189,7 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
-        else if (clazz == byte[].class) {
-            if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
-           else cell.setSv(e.toString());
-        } else if (clazz == Path.class) {
+        else if (clazz == Path.class) {
             if (hc.getColumnType() == 1) cell.setPath((Path) e);
             else cell.setSv(e.toString());
         } else if (clazz == File.class) {
@@ -199,6 +197,12 @@ public interface ICellValueAndStyle {
             else cell.setSv(e.toString());
         } else if (InputStream.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setInputStream((InputStream) e);
+            else cell.setSv(e.toString());
+        } else if (clazz == byte[].class) {
+            if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
+            else cell.setSv(e.toString());
+        } else if (clazz == ByteBuffer.class) {
+            if (hc.getColumnType() == 1) cell.setByteBuffer((ByteBuffer) e);
             else cell.setSv(e.toString());
         }
         // Others
