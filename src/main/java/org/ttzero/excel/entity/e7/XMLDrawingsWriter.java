@@ -93,6 +93,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
     @Override
     public void close() throws IOException {
+        if (bw == null) return;
         if (countDown > 0) {
             int counter = 30; // Loop 30 times (1 minutes)
             do {
@@ -110,6 +111,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write("</xdr:wsDr>");
         relManager.write(path.getParent(), path.getFileName().toString());
         FileUtil.close(bw);
+        bw = null;
     }
 
     @Override
