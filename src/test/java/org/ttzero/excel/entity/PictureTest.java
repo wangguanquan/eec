@@ -125,9 +125,16 @@ public class PictureTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testExportPictureAutoSize() throws IOException {
+        new Workbook("test Picture auto-size")
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(Pic.randomTestData()).setRowHeight(100))
+            .writeTo(defaultTestPath);
+    }
+
     @Test public void testPresetPictureEffects() throws IOException {
         new Workbook("Preset Picture Effects")
-            .addSheet(new ListSheet<>(Pic2.randomTestData()).setRowHeight(217.5).setSheetWriter(new XMLWorksheetWriter() {
+            .addSheet(new ListSheet<>(Pic2.randomTestData()).setRowHeight(217.5).autoSize().setSheetWriter(new XMLWorksheetWriter() {
                private final Map<String, String> picCache = new HashMap<>();
 
                 @Override
@@ -167,24 +174,6 @@ public class PictureTest extends WorkbookTest {
                     // Write picture
                     writePictureDirect(id, picName, column, row, signature);
                     picCache.put(path.toString(), picName);
-                }
-
-                final String[] name_cn_ZH = {"简单框架，白色","棱台亚光，白色","金属框架","矩形投影"
-                    ,"映像圆角矩形","柔化边缘矩形","双框架，黑色","厚重亚光，黑色","简单框架，黑色","棱台形椭圆，黑色"
-                    ,"复杂框架，黑色","中等复杂框架，黑色","居中矩形阴影","圆形对角，白色","剪去对角，白色"
-                    ,"中等复杂框架，白色","旋转，白色","透视阴影，白色","松散透视，白色","柔化边缘椭圆","棱台矩形"
-                    ,"棱台透视","映像右透视","棱台左透视，白色","映像棱台，黑色","映像棱台，白色","金属圆角矩形","金属椭圆",""};
-                @Override
-                protected void writeString(String s, int row, int column, int xf) throws IOException {
-                    String ss;
-                    try {
-                        PresetPictureEffect effect = PresetPictureEffect.valueOf(s);
-                        ss = name_cn_ZH[effect.ordinal()];
-                    } catch (IllegalArgumentException ex) {
-                        if ("None".equalsIgnoreCase(s)) ss = "无";
-                        else ss = s;
-                    }
-                    super.writeString(ss, row, column, xf);
                 }
             }))
             .writeTo(defaultTestPath);
