@@ -994,7 +994,7 @@ public class Column {
      * @return current {@link Column}
      */
     public Column writeAsDefault() {
-        this.option &= ~(3 << 5);
+        this.option &= ~(3 << 6);
         return this;
     }
 
@@ -1004,7 +1004,7 @@ public class Column {
      * @return current {@link Column}
      */
     public Column writeAsMedia() {
-        this.option = this.option & ~(3 << 5) | (1 << 5);
+        this.option = this.option & ~(3 << 6) | (1 << 6);
         return this;
     }
 
@@ -1014,6 +1014,6 @@ public class Column {
      * @return 0: default 1: picture
      */
     public int getColumnType() {
-        return (this.option >> 5) & 3;
+        return (this.option >> 6) & 3;
     }
 }
