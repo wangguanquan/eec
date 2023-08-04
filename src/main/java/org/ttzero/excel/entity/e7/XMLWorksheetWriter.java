@@ -981,8 +981,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
             int k = hc.getAutoSize();
-            // If fixed width
-            if (k == 2) {
+            // If fixed width or media cell
+            if (k == 2 || hc.getColumnType() == 1) {
                 double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
 //                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
                 hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
@@ -1046,7 +1046,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
-        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
+        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
+            @Override protected boolean hasMedia() {
+                return false;
+            }
+        };
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
