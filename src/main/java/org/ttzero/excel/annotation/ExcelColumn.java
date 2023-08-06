@@ -117,22 +117,4 @@ public @interface ExcelColumn {
      * @return true: hidden otherwise show
      */
     boolean hide() default false;
-
-    /**
-     * Specify the Col format type, by default all col only output as text
-     *
-     * @return col format type
-     */
-    ColType colType() default ColType.DEFAULT;
-
-    /**
-     * Definition of standard col type
-     */
-    enum ColType {
-        DEFAULT,
-        /**
-         * {@code URL}, {@code byte[]}, {@code File} and {@code OutputStream} types will be output as images
-         */
-        MEDIA
-    }
 }

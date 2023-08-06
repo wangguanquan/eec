@@ -17,8 +17,6 @@
 
 package org.ttzero.excel.drawing;
 
-import org.ttzero.excel.entity.Picture;
-
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,12 +27,18 @@ import java.util.Collections;
  *
  * @author guanquan.wang at 2023-07-25 09:59
  */
-public enum PresetPictureEffect {
+public enum PresetPictureEffect implements PictureEffectProducer {
+    // 0
+    None {
+        @Override public PictureEffect getEffect() {
+            return effect;
+        }
+    },
     // 1
     SimpleFrame_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -78,13 +82,14 @@ public enum PresetPictureEffect {
             bevel.width = 2;
             bevel.height = 1.5;
             shape.contourColor = Color.WHITE;
+            return effect;
         }
     },
     // 2
     BeveledMatte_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -125,13 +130,15 @@ public enum PresetPictureEffect {
             bevel.height = 1.3;
             shape.contourColor = new Color(192, 192, 192);
             shape.contourWidth = 0.5;
+            return effect;
         }
     },
     // 3
     MetalFrame {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 15;
@@ -171,13 +178,15 @@ public enum PresetPictureEffect {
             bevel.prst = Bevel.BevelPresetType.hardEdge;
             shape.extrusionColor = Color.BLACK;
             shape.extrusionHeight = 2;
+            return effect;
         }
     },
     // 4
     DropShadowRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = new Color(51, 51, 51);
             shadow.alpha = 35;
@@ -188,13 +197,14 @@ public enum PresetPictureEffect {
             effect.shadow = shadow;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 5
     ReflectedRoundedRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -210,22 +220,26 @@ public enum PresetPictureEffect {
 
             effect.geometry = ShapeType.roundRect;
             effect.geometryAdjustValueList = Collections.singletonList(new Guide("adj", "val 8594"));
+            return effect;
         }
     },
     // 6
     SoftEdgeRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             effect.softEdges = 8.86D;
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 7
     DoubleFrame_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 18;
@@ -242,13 +256,14 @@ public enum PresetPictureEffect {
             shadow.blur = 6;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 8
     ThickMatte_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.BLACK;
@@ -274,13 +289,15 @@ public enum PresetPictureEffect {
             shadow.sy = 90;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 9
     SimpleFrame_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 3;
@@ -300,13 +317,15 @@ public enum PresetPictureEffect {
             shadow.angle = Angle.TOP_LEFT;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 10
     BeveledOval_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 5;
@@ -344,13 +363,15 @@ public enum PresetPictureEffect {
             bevel.height = 2.5;
             shape.contourColor = new Color(51, 51, 51);
             shape.contourWidth = 0.6;
+            return effect;
         }
     },
     // 11
     CompoundFrame_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 7;
@@ -367,13 +388,15 @@ public enum PresetPictureEffect {
             shadow.blur = 6;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 12
     ModerateFrame_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 10;
@@ -392,13 +415,15 @@ public enum PresetPictureEffect {
             shadow.angle = Angle.TOP_LEFT;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 13
     CenterShadowRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 30;
@@ -407,13 +432,15 @@ public enum PresetPictureEffect {
             effect.shadow = shadow;
 
             effect.geometry = ShapeType.rect;
+            return effect;
         }
     },
     // 14
     RoundedDiagonalCorner_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 57;
@@ -431,13 +458,14 @@ public enum PresetPictureEffect {
             ln.cap = Outline.Cap.SQUARE;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
+            return effect;
         }
     },
     // 15
     SnipDiagonalCorner_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -479,13 +507,14 @@ public enum PresetPictureEffect {
             bevel.width = 2;
             bevel.height = 1.5;
             shape.contourColor = Color.WHITE;
+            return effect;
         }
     },
     // 16
     ModerateFrame_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -529,13 +558,14 @@ public enum PresetPictureEffect {
             bevel.width = 2;
             bevel.height = 1.5;
             shape.contourColor = Color.WHITE;
+            return effect;
         }
     },
     // 17
     Rotated_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -583,13 +613,15 @@ public enum PresetPictureEffect {
             bevel.height = 1.5;
             shape.contourColor = new Color(150, 150, 150);
             shape.contourWidth = 1;
+            return effect;
         }
     },
     // 18
     PerspectiveShadow_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 80;
@@ -629,13 +661,14 @@ public enum PresetPictureEffect {
             bevel.height = 1.3;
             shape.contourColor = new Color(192, 192, 192);
             shape.contourWidth = 0.5;
+            return effect;
         }
     },
     // 19
     RelaxedPerspective_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -684,22 +717,26 @@ public enum PresetPictureEffect {
             bevel.width = 1.8;
             bevel.height = 1;
             shape.contourColor = Color.WHITE;
+            return effect;
         }
     },
     // 20
     SoftEdgeOval_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             effect.geometry = ShapeType.ellipse;
             effect.softEdges = 8.86;
+            return effect;
         }
     },
     // 21
     BevelRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 60;
@@ -732,13 +769,15 @@ public enum PresetPictureEffect {
             bevel.height = 9;
             bevel.prst = Bevel.BevelPresetType.relaxedInset;
             shape.contourColor = new Color(150, 150, 150);
+            return effect;
         }
     },
     // 22
     BevelPerspective {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 70;
@@ -776,13 +815,15 @@ public enum PresetPictureEffect {
             bevel.height = 8;
             shape.contourColor = new Color(150, 150, 150);
             shape.contourWidth = 0.5;
+            return effect;
         }
     },
     // 23
-    ReflectedperpsectiveRight {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+    ReflectedPerspectiveRight {
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Reflection reflection = new Reflection();
             reflection.blur = 1;
             reflection.alpha = 70;
@@ -812,13 +853,14 @@ public enum PresetPictureEffect {
             shape.bevelTop = bevel;
             bevel.width = 5;
             bevel.height = 4;
+            return effect;
         }
     },
     // 24
     BevelPerspectiveLeft_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -863,13 +905,14 @@ public enum PresetPictureEffect {
             bevel.height = 4;
             shape.contourColor = new Color(192, 192, 192);
             shape.contourWidth = 1;
+            return effect;
         }
     },
     // 25
     ReflectedBevel_Black {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -910,13 +953,14 @@ public enum PresetPictureEffect {
             shape.bevelTop = bevel;
             bevel.height = 3;
             shape.contourColor = new Color(192, 192, 192);
+            return effect;
         }
     },
     // 26
     ReflectedBevel_White {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -959,13 +1003,15 @@ public enum PresetPictureEffect {
             bevel.width = 6;
             shape.contourColor = new Color(192, 192, 192);
             shape.contourWidth = 0.5;
+            return effect;
         }
     },
     // 27
     MetalRoundedRectangle {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.alpha = 55;
@@ -1006,13 +1052,15 @@ public enum PresetPictureEffect {
             bevel.prst = Bevel.BevelPresetType.hardEdge;
             shape.extrusionColor = Color.WHITE;
             shape.extrusionHeight = 2;
+            return effect;
         }
     },
     // 28
     MetalOval {
-        @Override public void preset(Picture pict) {
-            PictureEffect effect = new PictureEffect();
-            pict.effect = effect;
+        @Override public PictureEffect getEffect() {
+            if (effect != null) return effect;
+            effect = new PictureEffect();
+
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
             shadow.blur = 10;
@@ -1049,14 +1097,10 @@ public enum PresetPictureEffect {
             bevel.prst = Bevel.BevelPresetType.hardEdge;
             shape.extrusionColor = Color.BLACK;
             shape.extrusionHeight = 2;
+            return effect;
         }
     }
     ;
 
-    /**
-     * Attach preset styles to images
-     *
-     * @param pict {@link Picture}
-     */
-    public abstract void preset(Picture pict);
+    protected PictureEffect effect;
 }

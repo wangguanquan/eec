@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author guanquan.wang at 2023-07-25 09:24
  */
-public class PictureEffect {
+public class PictureEffect implements Effect {
 
     // Shadow
     public Shadow shadow, innerShadow;

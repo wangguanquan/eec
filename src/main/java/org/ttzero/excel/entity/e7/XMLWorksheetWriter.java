@@ -1564,6 +1564,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.col = column;
         picture.row = row;
         picture.setPadding(1);
+        picture.effect = columns[column].pictureEffect;
 
         return picture;
     }
