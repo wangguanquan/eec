@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * OpenXML build in color
  *
- * @author wangguanquan3 at 2023-01-18 16:51
+ * @author guanquan.wang at 2023-01-18 16:51
  */
 public class BuildInColor extends Color {
     // OpenXML color index

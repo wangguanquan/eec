@@ -22,7 +22,9 @@ import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.drawing.PresetPictureEffect;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
@@ -599,11 +601,11 @@ public class ListSheet<T> extends Sheet {
         // Style Design
         StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
 
+        EntryColumn root = null;
         // Support multi header columns
         ExcelColumns cs = ao.getAnnotation(ExcelColumns.class);
         if (cs != null) {
             ExcelColumn[] ecs = cs.value();
-            EntryColumn root = null;
             for (ExcelColumn ec : ecs) {
                 EntryColumn column = createColumnByAnnotation(ec);
                 if (sp != null) {
@@ -615,18 +617,28 @@ public class ListSheet<T> extends Sheet {
                     root.addSubColumn(column);
                 }
             }
-            return root;
         }
         // Single header column
-        ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
-        if (ec != null) {
-            EntryColumn column = createColumnByAnnotation(ec);
-            if (sp != null) {
-                column.styleProcessor = sp;
+        else {
+            ExcelColumn ec = ao.getAnnotation(ExcelColumn.class);
+            if (ec != null) {
+                root = createColumnByAnnotation(ec);
+                if (sp != null) {
+                    root.styleProcessor = sp;
+                }
             }
-            return column;
         }
-        return null;
+
+        MediaColumn mediaColumn = ao.getAnnotation(MediaColumn.class);
+        if (mediaColumn != null) {
+            if (root == null) root = new EntryColumn(" ", EMPTY, false);
+            Column tail = root.getTail();
+            tail.writeAsMedia();
+            if (mediaColumn.presetEffect() != PresetPictureEffect.None) {
+                tail.setPictureEffect(mediaColumn.presetEffect().getEffect());
+            }
+        }
+        return root;
     }
 
     /**
@@ -652,6 +664,8 @@ public class ListSheet<T> extends Sheet {
         if (ec.hide()) column.hide();
         // Cell max width
         if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
+//        // Cell write type
+//        if (ec.colType() == ColType.MEDIA) column.writeAsMedia();
         return column;
     }
 

@@ -19,9 +19,15 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
+import org.ttzero.excel.util.StringUtil;
 
+import java.io.File;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.Base64;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
 import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
@@ -146,7 +152,13 @@ public interface ICellValueAndStyle {
             hc.setClazz(clazz);
         }
         if (isString(clazz)) {
-            cell.setSv(e.toString());
+            switch (hc.getColumnType()) {
+                // Default
+                case 0: cell.setSv(e.toString()); break;
+                // Write as media (base64 image, remote url)
+                case 1: writeAsMedia(row, cell, e.toString(), hc, clazz); break;
+                default: cell.setSv(e.toString());
+            }
         } else if (isDate(clazz)) {
             cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
         } else if (isDateTime(clazz)) {
@@ -175,7 +187,26 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.sql.Time) e));
         } else if (isLocalTime(clazz)) {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
-        } else {
+        }
+        // Write as media if column-type equals {@code 1}
+        else if (clazz == Path.class) {
+            if (hc.getColumnType() == 1) cell.setPath((Path) e);
+            else cell.setSv(e.toString());
+        } else if (clazz == File.class) {
+            if (hc.getColumnType() == 1) cell.setPath(((File) e).toPath());
+            else cell.setSv(e.toString());
+        } else if (InputStream.class.isAssignableFrom(clazz)) {
+            if (hc.getColumnType() == 1) cell.setInputStream((InputStream) e);
+            else cell.setSv(e.toString());
+        } else if (clazz == byte[].class) {
+            if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
+            else cell.setSv(e.toString());
+        } else if (clazz == ByteBuffer.class) {
+            if (hc.getColumnType() == 1) cell.setByteBuffer((ByteBuffer) e);
+            else cell.setSv(e.toString());
+        }
+        // Others
+        else {
             unknownType(row, cell, e, hc, clazz);
         }
     }
@@ -234,5 +265,49 @@ public interface ICellValueAndStyle {
      */
     default void unknownType(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
         cell.setSv(e.toString());
+    }
+
+    /**
+     * Convert string to binary
+     *
+     * @param row   the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void writeAsMedia(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+        int b, len = e.length();
+        // Base64 image
+        if (len > 64 && e.startsWith("data:") && (b = StringUtil.indexOf(e, ',', 6, 64)) > 6
+            && (e.charAt(b - 1) == '4' && e.charAt(b - 2) == '6' && e.charAt(b - 3) == 'e' && e.charAt(b - 4) == 's' && e.charAt(b - 5) == 'a' && e.charAt(b - 6) == 'b')) {
+            byte[] bytes = Base64.getDecoder().decode(e.substring(b + 1));
+            cell.setBinary(bytes);
+        }
+        // Remote uri (http:// | https:// | ftp:// | ftps://)
+        else if (len >= 10 && (b = StringUtil.indexOf(e, ':', 3, 6)) >= 3 && e.charAt(b + 1) == '/' && e.charAt(b + 2) == '/') {
+            downloadRemoteResource(row, cell, e, hc, clazz);
+        }
+        // Others
+        else cell.setSv(e);
+    }
+
+    /**
+     * Download resource from remote server
+     *
+     * NOTE：By default, only marking the cell type as {@code REMOTE_URL} does not actually download resources.
+     * Asynchronous download in {@code IWorksheetWriter#writeRemoteMedia} in the future.
+     * Of course, you can also download and then call {@link Cell#setInputStream(InputStream)}
+     * or {@link Cell#setBinary(byte[])} to save the stream or binary results to the cell.
+     *
+     * @param row   the row number
+     * @param cell  the cell
+     * @param e     the cell value
+     * @param hc    the header column
+     * @param clazz the cell value type
+     */
+    default void downloadRemoteResource(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+        cell.setSv(e);
+        cell.t = Cell.REMOTE_URL;
     }
 }

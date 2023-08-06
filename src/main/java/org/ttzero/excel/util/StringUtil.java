@@ -211,4 +211,86 @@ public class StringUtil {
             + (m > 0 ? (h > 0 ? ":" : "") + m + "m" : "")
             + ((h + m > 0 ? ":" : "") + s + "s");
     }
+
+    /**
+     * Returns the index within this string of the first occurrence of the
+     * specified character, starting the search at the specified range.
+     * <p>
+     * If a character with value {@code ch} occurs in the
+     * character sequence represented by this {@code String}
+     * object at an index no smaller than {@code fromIndex}, then
+     * the index of the first such occurrence is returned. For values
+     * of {@code ch} in the range from 0 to 0xFFFF (inclusive),
+     * this is the smallest value <i>k</i> such that:
+     * <blockquote><pre>
+     * (this.charAt(<i>k</i>) == ch) {@code &&} (<i>k</i> &gt;= fromIndex)
+     * </pre></blockquote>
+     * is true. For other values of {@code ch}, it is the
+     * smallest value <i>k</i> such that:
+     * <blockquote><pre>
+     * (this.codePointAt(<i>k</i>) == ch) {@code &&} (<i>k</i> &gt;= fromIndex)
+     * </pre></blockquote>
+     * is true. In either case, if no such character occurs in this
+     * string at or after position {@code fromIndex}, then
+     * {@code -1} is returned.
+     *
+     * <p>
+     * There is no restriction on the value of {@code fromIndex}. If it
+     * is negative, it has the same effect as if it were zero: this entire
+     * string may be searched. If it is greater than the length of this
+     * string, it has the same effect as if it were equal to the length of
+     * this string: {@code -1} is returned.
+     *
+     * <p>All indices are specified in {@code char} values
+     * (Unicode code units).
+     *
+     * @param str not null
+     * @param   ch          a character (Unicode code point).
+     * @param   fromIndex   the index to start the search from.
+     * @param   toIndex   the high endpoint (exclusive) of the search end.
+     * @return  the index of the first occurrence of the character in the
+     *          character sequence represented by this object that is greater
+     *          than or equal to {@code fromIndex}, or {@code -1}
+     *          if the character does not occur.
+     */
+    public static int indexOf(String str, int ch, int fromIndex, int toIndex) {
+        final int max = Math.min(str.length(), toIndex);
+        if (fromIndex < 0) {
+            fromIndex = 0;
+        } else if (fromIndex >= max) {
+            // Note: fromIndex might be near -1>>>1.
+            return -1;
+        }
+
+        final char[] value = str.toCharArray();
+        if (ch < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+            // handle most cases here (ch is a BMP code point or a
+            // negative value (invalid code point))
+            for (int i = fromIndex; i < max; i++) {
+                if (value[i] == ch) {
+                    return i;
+                }
+            }
+            return -1;
+        } else {
+            return indexOfSupplementary(value, ch, fromIndex, max);
+        }
+    }
+
+    /**
+     * Handles (rare) calls of indexOf with a supplementary character.
+     */
+    private static int indexOfSupplementary(char[] value, int ch, int fromIndex, int toIndex) {
+        if (Character.isValidCodePoint(ch)) {
+            final char hi = Character.highSurrogate(ch);
+            final char lo = Character.lowSurrogate(ch);
+            final int max = toIndex - 1;
+            for (int i = fromIndex; i < max; i++) {
+                if (value[i] == hi && value[i + 1] == lo) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
 }

@@ -154,6 +154,11 @@ public class Dimension {
     }
 
     @Override
+    public int hashCode() {
+        return ((firstColumn << 24) | lastColumn) ^ ((firstRow << 24) | lastRow);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o instanceof Dimension) {
             Dimension other = (Dimension) o;

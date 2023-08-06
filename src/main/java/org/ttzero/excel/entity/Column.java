@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.drawing.PictureEffect;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -66,10 +67,6 @@ public class Column {
      * The cell type
      */
     public Class<?> clazz;
-//    /**
-//     * The string value is shared
-//     */
-//    public boolean share;
     /**
      * The int value conversion
      */
@@ -105,14 +102,6 @@ public class Column {
      * Specify the cell number format
      */
     public NumFmt numFmt;
-//    /**
-//     * Only export column name and ignore value
-//     */
-//    public boolean ignoreValue;
-//    /**
-//     * Wrap text in a cell
-//     */
-//    public int wrapText;
     /**
      * Specify the column index
      */
@@ -145,13 +134,6 @@ public class Column {
      * The real col-Index used to write
      */
     public int realColIndex;
-//    /**
-//     * Hidden current column
-//     * <p>
-//     * Only set the column to hide, the data will still be written,
-//     * you can right-click to "un-hide" to display in file
-//     */
-//    public boolean hide;
     /**
      * Simple properties
      *
@@ -163,10 +145,14 @@ public class Column {
      * 28. 1 | Ignore Value, Only export column name
      * 27. 1 | Hide column
      * 26. 1 | Shared String
+     * 25. 2 | Column type, 0: default 1: picture
      * </pre></blockquote>
      */
     public int option;
-
+    /**
+     * Picture Effect
+     */
+    public PictureEffect pictureEffect;
     /**
      * Constructor Column
      */
@@ -378,10 +364,7 @@ public class Column {
         this.headerComment = other.headerComment;
         this.cellComment = other.cellComment;
         this.numFmt = other.numFmt;
-//        this.ignoreValue = other.ignoreValue;
-//        this.wrapText = other.wrapText;
         this.colIndex = other.colIndex;
-//        this.hide = other.hide;
         this.option = other.option;
         this.realColIndex = other.realColIndex;
         if (other.cellStyle != null) setCellStyle(other.cellStyle);
@@ -389,6 +372,7 @@ public class Column {
         int i;
         if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
         if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
+        this.pictureEffect = other.pictureEffect;
 
         return this;
     }
@@ -930,20 +914,6 @@ public class Column {
         return realColIndex;
     }
 
-//    /**
-//     * Trim tail nodes after write
-//     * NOTE: Cannot delete the tail columns, otherwise automatic paging loses headers.
-//     * @return current
-//     */
-//    public Column trimTail() {
-//        if (next != null) {
-//            next.prev = null;
-//            next = null;
-//            tail = null;
-//        }
-//        return this;
-//    }
-
     /**
      * Returns hide flag
      *
@@ -1021,5 +991,54 @@ public class Column {
      */
     public int getAutoSize() {
         return option >> 1 & 3;
+    }
+
+    /**
+     * Write cell value as default
+     *
+     * @return current {@link Column}
+     */
+    public Column writeAsDefault() {
+        this.option &= ~(3 << 6);
+        return this;
+    }
+
+    /**
+     * Specify the cell type as media (drawing,chart eq.)
+     *
+     * @return current {@link Column}
+     */
+    public Column writeAsMedia() {
+        this.option = this.option & ~(3 << 6) | (1 << 6);
+        return this;
+    }
+
+    /**
+     * Returns the column type
+     *
+     * @return 0: default 1: picture
+     */
+    public int getColumnType() {
+        return (this.option >> 6) & 3;
+    }
+
+    /**
+     * Specify the image effect, which only takes effect when the column write as Media
+     *
+     * @param pictureEffect {@link PictureEffect}
+     * @return current {@link Column}
+     */
+    public Column setPictureEffect(PictureEffect pictureEffect) {
+        this.pictureEffect = pictureEffect;
+        return this;
+    }
+
+    /**
+     * Returns {@code PictureEffect}
+     *
+     * @return {@link PictureEffect}
+     */
+    public PictureEffect getPictureEffect() {
+        return pictureEffect;
     }
 }

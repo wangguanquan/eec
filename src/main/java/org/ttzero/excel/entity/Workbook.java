@@ -75,7 +75,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *     // Auto size the column width
  *     .setAutoSize(true)
  *     // Add a Worksheet
- *     .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
+ *     .addSheet(new ListSheet&lt;Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
  *     // Add an other Worksheet
  *     .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList&lt;&gt;()))
  *     // Write to absolute path '/tmp/{name}.xlsx'
@@ -134,7 +134,15 @@ public class Workbook implements Storable {
     /**
      * A global ContentType attributes
      */
-    private ContentType contentType;
+    private final ContentType contentType;
+    /**
+     * Drawing worksheet counter
+     */
+    private int drawingCounter;
+    /**
+     * Count of media in global workbook
+     */
+    private int mediaCounter;
 
     /**
      * Create a unnamed workbook
@@ -1088,5 +1096,41 @@ public class Workbook implements Storable {
      */
     public ContentType getContentType() {
         return contentType;
+    }
+
+    /**
+     * Increment and returns drawing-counter
+     *
+     * @return drawing-counter
+     */
+    public int incrementDrawingCounter() {
+        return ++drawingCounter;
+    }
+
+    /**
+     * Returns count of drawing object
+     *
+     * @return count of drawing object
+     */
+    public int getDrawingCounter() {
+        return drawingCounter;
+    }
+
+    /**
+     * Increment and returns media-counter
+     *
+     * @return media-counter
+     */
+    public int incrementMediaCounter() {
+        return ++mediaCounter;
+    }
+
+    /**
+     * Returns count of media object
+     *
+     * @return count of media object
+     */
+    public int getMediaCounter() {
+        return mediaCounter;
     }
 }

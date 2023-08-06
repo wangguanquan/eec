@@ -609,7 +609,7 @@ public class XMLSheet implements Sheet {
     public Iterator<Row> iterator() {
         // If the header row number is specified, the header will be parsed first
         if (hrf > 0) getHeader();
-        return new RowSetIterator(this::nextRow, false);
+        return new RowSetIterator(this::nextRow);
     }
 
     /**
@@ -622,7 +622,7 @@ public class XMLSheet implements Sheet {
         // If the header row number is specified, the header will be parsed first
         if (hrf > 0) getHeader();
         // iterator data rows
-        Iterator<Row> nIter = new RowSetIterator(this::nextRow, true);
+        Iterator<Row> nIter = new RowSetIterator.NonBlankIterator(this::nextRow);
         /*
         If the header is not specified, the first row will be automatically
          used as the header, if there is a header, the row will not be skipped

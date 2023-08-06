@@ -76,7 +76,5 @@ public class EmptySheetTest extends WorkbookTest {
             long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count();
             assert count == 0L;
         }
-
-        ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx")).sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).forEach(System.out::println);
     }
 }

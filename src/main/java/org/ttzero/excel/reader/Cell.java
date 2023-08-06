@@ -16,7 +16,10 @@
 
 package org.ttzero.excel.reader;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
 
 /**
  * @author guanquan.wang on 2018-09-22
@@ -25,21 +28,26 @@ public class Cell {
     public Cell() { }
     public Cell(short i) { this.i = i; }
     public Cell(int i) { this.i = (short) (i & 0x7FFF); }
-    public static final char SST         = 's';
-    public static final char BOOL        = 'b';
-    public static final char FUNCTION    = 'f';
-    public static final char INLINESTR   = 'r';
-    public static final char LONG        = 'l';
-    public static final char DOUBLE      = 'd';
-    public static final char NUMERIC     = 'n';
-    public static final char BLANK       = 'k';
-    public static final char CHARACTER   = 'c';
-    public static final char DECIMAL     = 'm';
-    public static final char DATETIME    = 'i';
-    public static final char DATE        = 'a';
-    public static final char TIME        = 't';
-    public static final char UNALLOCATED = '\0';
-    public static final char EMPTY_TAG   = 'e';
+    public static final char SST          = 's';
+    public static final char BOOL         = 'b';
+    public static final char FUNCTION     = 'f';
+    public static final char INLINESTR    = 'r';
+    public static final char LONG         = 'l';
+    public static final char DOUBLE       = 'd';
+    public static final char NUMERIC      = 'n';
+    public static final char BLANK        = 'k';
+    public static final char CHARACTER    = 'c';
+    public static final char DECIMAL      = 'm';
+    public static final char DATETIME     = 'i';
+    public static final char DATE         = 'a';
+    public static final char TIME         = 't';
+    public static final char UNALLOCATED  = '\0';
+    public static final char EMPTY_TAG    = 'e';
+    public static final char BINARY       = 'y';
+    public static final char FILE         = 'x';
+    public static final char INPUT_STREAM = 'p';
+    public static final char REMOTE_URL   = 'u';
+    public static final char BYTE_BUFFER  = 'o';
     /**
      * Unallocated cell
      */
@@ -99,6 +107,22 @@ public class Cell {
      * Has formula
      */
     public boolean f;
+    /**
+     * Binary file (picture only)
+     */
+    public byte[] binary;
+    /**
+     * Binary file (picture only)
+     */
+    public ByteBuffer byteBuffer;
+    /**
+     * File path (picture file)
+     */
+    public Path path;
+    /**
+     * InputStream value (picture stream), auto-close after writen
+     */
+    public InputStream isv;
     /**
      * x-axis of cell in row
      */
@@ -179,6 +203,30 @@ public class Cell {
         return this;
     }
 
+    public Cell setBinary(byte[] bytes) {
+        this.t = BINARY;
+        this.binary = bytes;
+        return this;
+    }
+
+    public Cell setPath(Path path) {
+        this.t = FILE;
+        this.path = path;
+        return this;
+    }
+
+    public Cell setInputStream(InputStream stream) {
+        this.t = INPUT_STREAM;
+        this.isv = stream;
+        return this;
+    }
+
+    public Cell setByteBuffer(ByteBuffer byteBuffer) {
+        this.t = BYTE_BUFFER;
+        this.byteBuffer = byteBuffer;
+        return this;
+    }
+
     public Cell clear() {
         this.t  = UNALLOCATED;
         this.sv = null;
@@ -192,6 +240,10 @@ public class Cell {
         this.fv = null;
         this.f  = false;
         this.si = -1;
+        this.binary = null;
+        this.path = null;
+        this.isv = null;
+        this.byteBuffer = null;
         return this;
     }
 
@@ -208,6 +260,10 @@ public class Cell {
         this.fv = cell.fv;
         this.f  = cell.f;
         this.si = cell.si;
+        this.binary = cell.binary;
+        this.path = cell.path;
+        this.isv = cell.isv;
+        this.byteBuffer = cell.byteBuffer;
 
         return this;
     }

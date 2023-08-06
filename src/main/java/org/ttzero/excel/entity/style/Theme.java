@@ -36,7 +36,7 @@ import static org.ttzero.excel.util.ExtBufferedWriter.digits_uppercase;
  * Theme style
  * NOTE: Only read the theme color current
  *
- * @author wangguanquan3 at 2023-01-18 10:29
+ * @author guanquan.wang at 2023-01-18 10:29
  */
 @TopNS(prefix = "", uri = "http://schemas.openxmlformats.org/drawingml/2006/main", value = "a")
 public class Theme {

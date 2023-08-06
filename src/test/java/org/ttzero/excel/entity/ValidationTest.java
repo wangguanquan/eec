@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author wangguanquan3 at 2022-08-17 ‏‎20:05:42
+ * @author guanquan.wang at 2022-08-17 ‏‎20:05:42
  */
 public class ValidationTest extends WorkbookTest {
     @Test public void test() throws IOException {

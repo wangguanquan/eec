@@ -16,6 +16,10 @@
 
 package org.ttzero.excel.entity.e7;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.IDrawingsWriter;
+import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Column;
@@ -34,6 +38,7 @@ import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Grid;
 import org.ttzero.excel.reader.GridFactory;
 import org.ttzero.excel.util.ExtBufferedWriter;
+import org.ttzero.excel.util.FileSignatures;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -41,32 +46,42 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DECIMAL;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.FILE;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.REMOTE_URL;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
@@ -93,9 +108,13 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 @TopNS(prefix = {"", "r"}, value = "worksheet"
     , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class XMLWorksheetWriter implements IWorksheetWriter {
+    /**
+     * LOGGER
+     */
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     // the storage path
-    protected Path workSheetPath;
+    protected Path workSheetPath, mediaPath;
     protected ExtBufferedWriter bw;
     protected Sheet sheet;
     protected Column[] columns;
@@ -110,6 +129,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * If there are any auto-width columns
      */
     protected boolean includeAutoWidth;
+    /**
+     * Picture and Chart Support
+     */
+    protected IDrawingsWriter drawingsWriter;
 
     public XMLWorksheetWriter() { }
 
@@ -333,6 +356,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // cols
         writeCols(fillSpace, defaultWidth);
 
+        // Initialization DrawingsWriter
+        initDrawingsWriter();
     }
 
     /**
@@ -504,33 +529,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:
-                    writeString(cell.sv, r, i, xf);
-                    break;
-                case NUMERIC:
-                    writeNumeric(cell.nv, r, i, xf);
-                    break;
-                case LONG:
-                    writeNumeric(cell.lv, r, i, xf);
-                    break;
+                case SST:          writeString(cell.sv, r, i, xf);         break;
+                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);        break;
+                case LONG:         writeNumeric(cell.lv, r, i, xf);        break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:
-                    writeDouble(cell.dv, r, i, xf);
-                    break;
-                case BOOL:
-                    writeBool(cell.bv, r, i, xf);
-                    break;
-                case DECIMAL:
-                    writeDecimal(cell.mv, r, i, xf);
-                    break;
-                case CHARACTER:
-                    writeChar(cell.cv, r, i, xf);
-                    break;
-                case BLANK:
-                    writeNull(r, i, xf);
-                    break;
+                case TIME:         writeDouble(cell.dv, r, i, xf);         break;
+                case BOOL:         writeBool(cell.bv, r, i, xf);           break;
+                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);        break;
+                case CHARACTER:    writeChar(cell.cv, r, i, xf);           break;
+                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);    break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf);     break;
+                case FILE:         writeFile(cell.path, r, i, xf);         break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);        break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf); break;
+                case BLANK:        writeNull(r, i, xf);                    break;
                 default:
             }
         }
@@ -554,33 +568,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:
-                    writeStringAutoSize(cell.sv, r, i, xf);
-                    break;
-                case NUMERIC:
-                    writeNumericAutoSize(cell.nv, r, i, xf);
-                    break;
-                case LONG:
-                    writeNumericAutoSize(cell.lv, r, i, xf);
-                    break;
+                case SST:          writeStringAutoSize(cell.sv, r, i, xf);    break;
+                case NUMERIC:      writeNumericAutoSize(cell.nv, r, i, xf);   break;
+                case LONG:         writeNumericAutoSize(cell.lv, r, i, xf);   break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:
-                    writeDoubleAutoSize(cell.dv, r, i, xf);
-                    break;
-                case BOOL:
-                    writeBool(cell.bv, r, i, xf);
-                    break;
-                case DECIMAL:
-                    writeDecimalAutoSize(cell.mv, r, i, xf);
-                    break;
-                case CHARACTER:
-                    writeChar(cell.cv, r, i, xf);
-                    break;
-                case BLANK:
-                    writeNull(r, i, xf);
-                    break;
+                case TIME:         writeDoubleAutoSize(cell.dv, r, i, xf);    break;
+                case BOOL:         writeBool(cell.bv, r, i, xf);              break;
+                case DECIMAL:      writeDecimalAutoSize(cell.mv, r, i, xf);   break;
+                case CHARACTER:    writeChar(cell.cv, r, i, xf);              break;
+                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);       break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf);        break;
+                case FILE:         writeFile(cell.path, r, i, xf);            break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);           break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);    break;
+                case BLANK:        writeNull(r, i, xf);                       break;
                 default:
             }
         }
@@ -846,6 +849,162 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * Write binary file
+     *
+     * @param bytes  the binary data
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeBinary(byte[] bytes, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
+        if (signature == null) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Store in disk
+        Files.write(mediaPath.resolve(name), bytes, StandardOpenOption.CREATE_NEW);
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
+    }
+
+    /**
+     * Write binary file
+     *
+     * @param byteBuffer  the binary data
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeBinary(ByteBuffer byteBuffer, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        int position = byteBuffer.position();
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(byteBuffer);
+        if (signature == null) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Reset buffer position
+        byteBuffer.position(position);
+        // Store in disk
+        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE);
+        channel.write(byteBuffer);
+        channel.close();
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
+    }
+
+    /**
+     * Write file value
+     *
+     * @param path   the picture file
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeFile(Path path, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(path);
+        if ("unknown".equals(signature.extension)) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        String name = "image" + id + "." + signature.extension;
+        // Store
+        Files.copy(path, mediaPath.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+
+        // Write picture
+        writePictureDirect(id, name, column, row, signature);
+    }
+
+    /**
+     * Write stream value
+     *
+     * @param stream  the picture input-stream
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeStream(InputStream stream, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+
+        byte[] bytes = new byte[1 << 13];
+        int n;
+
+        OutputStream os = null;
+        try {
+            n = stream.read(bytes);
+            // Empty stream
+            if (n <= 0) return;
+            FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes, 0, n));
+            if (signature == null) {
+                LOGGER.warn("File types that are not allowed");
+                return;
+            }
+            int id = sheet.getWorkbook().incrementMediaCounter();
+            String name = "image" + id + "." + signature.extension;
+            os = Files.newOutputStream(mediaPath.resolve(name));
+            os.write(bytes, 0, n);
+
+            if (n == bytes.length) {
+                while ((n = stream.read(bytes)) > 0)
+                    os.write(bytes, 0, n);
+            }
+
+            // Write picture
+            writePictureDirect(id, name, column, row, signature);
+        } catch (IOException ex) {
+            LOGGER.warn("Copy stream error.", ex);
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException e) { } // Ignore
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) { } // Ignore
+            }
+        }
+    }
+
+    /**
+     * Write remote media value
+     *
+     * @param url  remote url
+     * @param row    the row index
+     * @param column the column index
+     * @param xf     the style index
+     * @throws IOException if I/O error occur
+     */
+    protected void writeRemoteMedia(String url, int row, int column, int xf) throws IOException {
+        writeNull(row, column, xf);
+
+        Picture picture = createPicture(column, row);
+        picture.id = sheet.getWorkbook().incrementMediaCounter();
+
+        // Async Drawing
+        drawingsWriter.asyncDrawing(picture);
+
+        // Supports asynchronous download
+        downloadRemoteResource(picture, url);
+    }
+
+    /**
      * Resize column width
      *
      * @param path the sheet temp path
@@ -860,8 +1019,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
             int k = hc.getAutoSize();
-            // If fixed width
-            if (k == 2) {
+            // If fixed width or media cell
+            if (k == 2 || hc.getColumnType() == 1) {
                 double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
 //                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
                 hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
@@ -925,7 +1084,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
-        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
+        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
+            @Override protected boolean hasMedia() {
+                return false;
+            }
+        };
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
@@ -948,6 +1111,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     @Override
     public void close() {
         FileUtil.close(bw);
+        // Close drawing writer
+        FileUtil.close(drawingsWriter);
     }
 
     /**
@@ -1180,6 +1345,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write("\"/>");
             }
         }
+
+        // Drawings
+        if (drawingsWriter != null) {
+            RelManager relManager = sheet.getRelManager();
+            r = relManager.getByType(Const.Relationship.DRAWINGS);
+            if (r != null) {
+                bw.write("<drawing r:id=\"");
+                bw.write(r.getId());
+                bw.write("\"/>");
+            }
+        }
     }
 
     /**
@@ -1246,11 +1422,150 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Returns the maximum cell height
      *
+     * @param columnsArray the header column array
+     * @param row actual rows in Excel
      * @return cell height or -1
      */
     public double getHeaderHeight(Column[][] columnsArray, int row) {
         double h = -1D;
         for (Column[] cols : columnsArray) h = Math.max(cols[row].headerHeight, h);
         return h;
+    }
+
+    /**
+     * Check if images are output
+     *
+     * @return true if any column type equals 1
+     */
+    protected boolean hasMedia() {
+        boolean hasMedia = false;
+        for (Column column : columns) {
+            hasMedia = column.getColumnType() == 1;
+            if (hasMedia) break;
+        }
+        return hasMedia;
+    }
+
+    /**
+     * Initialization DrawingsWriter
+     *
+     * @throws IOException if I/O error occur
+     */
+    protected void initDrawingsWriter() throws IOException {
+        if (hasMedia()) {
+            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+            if (drawingsWriter == null) {
+                drawingsWriter = createDrawingsWriter();
+            }
+        }
+    }
+
+    /**
+     * Create drawing writer and add relationship
+     *
+     * @return {@link IDrawingsWriter}
+     */
+    public IDrawingsWriter createDrawingsWriter() {
+        int id = sheet.getWorkbook().incrementDrawingCounter();
+        sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
+        sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
+        return new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+    }
+
+    /**
+     * Download remote resources
+     *
+     * By default, only HTTP or HTTPS protocols are supported.
+     * Use {@code HttpURLConnection} to synchronously download remote resources.
+     * For more complex scenarios (asynchronous download, Connection pool, authentication, FTP, etc.), please override this method
+     *
+     * @param picture {@link Picture} info
+     * @param url remote url
+     * @throws IOException if I/O error occur.
+     */
+    public void downloadRemoteResource(Picture picture, String url) throws IOException {
+        try {
+            // Support http or https
+            if (url.charAt(0) == 'h') {
+                HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+                con.connect();
+                InputStream is = con.getInputStream();
+                if (is != null) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream(1 << 18);
+                    int i;
+                    byte[] bytes = new byte[1 << 18];
+                    while ((i = is.read(bytes)) > 0) bos.write(bytes, 0, i);
+                    downloadCompleted(picture, bos.toByteArray());
+                    return;
+                }
+                con.disconnect();
+            }
+            // Ignore others
+            downloadCompleted(picture, null);
+        } catch (IOException e) {
+            LOGGER.error("Download remote resource [{}] error", url, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Complete downloading, check the file signatures and set the subscript {@code Picture.idx} to idle
+     *
+     * @param picture {@link Picture} info
+     * @param body thr resource data
+     * @throws IOException if I/O error occur.
+     */
+    public void downloadCompleted(Picture picture, byte[] body) throws IOException {
+        LOGGER.debug("completed Row: {} len: {}", picture.row, body != null ? body.length : 0);
+        if (body == null || body.length == 0) {
+            drawingsWriter.complete(picture);
+            return;
+        }
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(body));
+        if (signature != null) {
+            String name = "image" + picture.id + "." + signature.extension;
+            // Store onto disk
+            Files.write(mediaPath.resolve(name), body, StandardOpenOption.CREATE_NEW);
+            picture.picName = name;
+            picture.size = signature.width << 16 | signature.height;
+            // Add global contentType
+            sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+        } else LOGGER.warn("File types that are not allowed");
+
+        // Setting idle
+        drawingsWriter.complete(picture);
+    }
+
+    // Write picture
+    protected void writePictureDirect(int id, String name, int column, int row, FileSignatures.Signature signature) throws IOException {
+        Picture picture = createPicture(column, row);
+        picture.id = id;
+        picture.picName = name;
+        picture.size = signature.width << 16 | signature.height;
+
+        // Drawing
+        drawingsWriter.drawing(picture);
+
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+    }
+
+    /**
+     * Picture constructor
+     * You can use this method to add general effects
+     *
+     * @param column cell column
+     * @param row cell row
+     * @return {@link Picture}
+     */
+    protected Picture createPicture(int column, int row) {
+        Picture picture = new Picture();
+        picture.col = column;
+        picture.row = row;
+        picture.setPadding(1);
+        picture.effect = columns[column].pictureEffect;
+
+        return picture;
     }
 }
