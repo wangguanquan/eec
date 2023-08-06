@@ -137,7 +137,7 @@ public abstract class Row {
      * Returns {@code true} if any cell in row contains filled, formatted, border, value or other styles
      * otherwise returns {@code false}.
      *
-     * @apiNote This method exists to be used as a
+     * This method exists to be used as a
      * {@link java.util.function.Predicate}, {@code filter(Row::nonEmpty)}
      *
      * @return {@code true} if any cell in row contains style and value
@@ -169,7 +169,7 @@ public abstract class Row {
      * Returns {@code true} if any cell in row contains values
      * otherwise returns {@code false}.
      *
-     * @apiNote This method exists to be used as a
+     * This method exists to be used as a
      * {@link java.util.function.Predicate}, {@code filter(Row::nonBlank)}
      *
      * @return {@code true} if any cell in row contains values

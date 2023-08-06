@@ -71,6 +71,7 @@ public class Picture {
      * Padding
      *
      * @param padding int (0 - 255)
+     * @return current {@code Picture}
      */
     public Picture setPadding(int padding) {
         padding = padding & 0xFF;
@@ -82,6 +83,7 @@ public class Picture {
      * Padding Top
      *
      * @param paddingTop int (0 - 255)
+     * @return current {@code Picture}
      */
     public Picture setPaddingTop(int paddingTop) {
         this.padding = (paddingTop & 0xFF) << 24;
@@ -92,6 +94,7 @@ public class Picture {
      * Padding Right
      *
      * @param paddingRight int (0 - 255)
+     * @return current {@code Picture}
      */
     public Picture setPaddingRight(int paddingRight) {
         this.padding = (paddingRight & 0xFF) << 16;
@@ -102,6 +105,7 @@ public class Picture {
      * Padding Bottom
      *
      * @param paddingBottom int (0 - 255)
+     * @return current {@code Picture}
      */
     public Picture setPaddingBottom(int paddingBottom) {
         this.padding = (paddingBottom & 0xFF) << 8;
@@ -112,6 +116,7 @@ public class Picture {
      * Padding Left
      *
      * @param paddingLeft int (0 - 255)
+     * @return current {@code Picture}
      */
     public Picture setPaddingLeft(int paddingLeft) {
         this.padding = paddingLeft & 0xFF;

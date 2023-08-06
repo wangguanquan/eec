@@ -241,6 +241,9 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
     /**
      * Mark the bits at the specified position as 1
+     *
+     * @param bits bit array
+     * @param idx index
      */
     public static synchronized void markIndex(long[] bits, int idx) {
         bits[idx >> 6] |= 1L << (63 - (idx - (idx >>> 6 << 6)));
@@ -248,6 +251,9 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
     /**
      * Mark the bits at the specified position as 0
+     *
+     * @param bits bit array
+     * @param idx index
      */
     public static synchronized void freeIndex(long[] bits, int idx) {
         bits[idx >> 6] &= ~(1L << (63 - (idx - (idx >>> 6 << 6))));

@@ -130,7 +130,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected boolean includeAutoWidth;
     /**
-     * Picture&Chart Support
+     * Picture and Chart Support
      */
     protected IDrawingsWriter drawingsWriter;
 
@@ -1481,6 +1481,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @param picture {@link Picture} info
      * @param url remote url
+     * @throws IOException if I/O error occur.
      */
     public void downloadRemoteResource(Picture picture, String url) throws IOException {
         try {
