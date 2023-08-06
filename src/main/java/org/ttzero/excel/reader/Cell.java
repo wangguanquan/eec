@@ -243,7 +243,7 @@ public class Cell {
         this.binary = null;
         this.path = null;
         this.isv = null;
-        this.byteBuffer.clear();
+        this.byteBuffer = null;
         return this;
     }
 
