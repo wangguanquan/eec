@@ -26,7 +26,7 @@ import okhttp3.ResponseBody;
 import okhttp3.ConnectionPool;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
-import org.ttzero.excel.annotation.ExcelColumn.ColType;
+import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.drawing.PresetPictureEffect;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.util.FileSignatures;
@@ -141,10 +141,8 @@ public class PictureTest extends WorkbookTest {
                 protected Picture createPicture(int column, int row) {
                     Picture picture = super.createPicture(column, row);
                     picture.padding = 15 << 24 | 15 << 16 | 35 << 8 | 15;
-                    if (row > 2) {
-                        PresetPictureEffect[] effects = PresetPictureEffect.values();
-                        effects[row - 3].preset(picture);
-                    }
+                    PresetPictureEffect[] effects = PresetPictureEffect.values();
+                    picture.effect = effects[row - 2].getEffect();
                     return picture;
                 }
 
@@ -225,7 +223,7 @@ public class PictureTest extends WorkbookTest {
     public static class Pic {
         @ExcelColumn("地址")
         private String addr;
-        @ExcelColumn(value = "现场照片", colType = ColType.MEDIA)
+        @MediaColumn(presetEffect = PresetPictureEffect.Rotated_White)
         private String pic;
 
         public static List<Pic> randomTestData() {
@@ -241,19 +239,16 @@ public class PictureTest extends WorkbookTest {
     public static class Pic2 {
         @ExcelColumn("Effect")
         private String effect;
-        @ExcelColumn(value = "效果展示", colType = ColType.MEDIA, maxWidth = 53.75)
+        @MediaColumn
+        @ExcelColumn(value = "效果展示", maxWidth = 53.75)
         private Path pic;
 
         public static List<Pic2> randomTestData() {
             Path path = testResourceRoot().resolve("elven-eyes.jpg");
             PresetPictureEffect[] effects = PresetPictureEffect.values();
-            List<Pic2> list = new ArrayList<>(effects.length + 1);
-            Pic2 pic = new Pic2();
-            pic.effect = "None";
-            pic.pic = path;
-            list.add(pic);
+            List<Pic2> list = new ArrayList<>(effects.length);
             for (int i = 0; i < effects.length; i++) {
-                pic = new Pic2();
+                Pic2 pic = new Pic2();
                 pic.effect = effects[i].name();
                 pic.pic = path;
                 list.add(pic);
