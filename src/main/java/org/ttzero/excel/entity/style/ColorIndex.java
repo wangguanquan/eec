@@ -50,23 +50,6 @@ public class ColorIndex {
             new Color(  0,   0, 255), new Color(128,   0, 128)
     };
 
-    /**
-     * {@link BuildInColor}
-     */
-    @Deprecated
-    public static int get(int index) {
-        if (index < 0 || index >= colors.length) return 8;
-        return colors[index];
-    }
-
-    /**
-     * {@link BuildInColor}
-     */
-    @Deprecated
-    public static Color getColor(int index) {
-        return new Color(index < 0 || index >= colors.length ? colors[8] : colors[index]);
-    }
-
     public static int indexOf(Color color) {
         return indexOf(color.getRGB());
     }
