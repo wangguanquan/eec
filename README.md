@@ -299,6 +299,11 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.10 (2023-08-x)
+-------------
+- 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
+- 支持导出图片
+
 Version 0.5.9 (2023-05-10)
 -------------
 - 修复dom4j默认构造器容易造成XXE安全漏洞
@@ -340,7 +345,7 @@ Version 0.5.6 (2023-01-07)
 [travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.9-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.10-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
