@@ -464,6 +464,7 @@ public class SharedStrings implements Closeable {
             // If cell value(character value) length greater than buffer size
             if (nChar == 0) {
                 cb = Arrays.copyOf(cb, cb.length << 1);
+                offset = length;
             } else if (nChar < length) {
                 System.arraycopy(cb, nChar, cb, 0, offset = length - nChar);
             }

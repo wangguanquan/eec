@@ -20,6 +20,9 @@ package org.ttzero.excel.reader;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
@@ -43,4 +46,16 @@ public class ExcelReaderTest2 {
             });
         }
     }
+
+    @Test public void test354() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            Map<String, Object> row1 = list.get(0);
+            assert row1.get("通讯地址") != null;
+            assert row1.get("紧急联系人姓名") != null;
+            assert !"名字".equals(row1.get("通讯地址"));
+            assert !"名字".equals(row1.get("紧急联系人姓名"));
+        }
+    }
+
 }

@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
@@ -43,6 +45,8 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -78,6 +82,29 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  * @author guanquan.wang at 2019-04-28 19:17
  */
 public class ListObjectSheetTest extends WorkbookTest {
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        // 删除之前的测试文件，防止重复执行不正确
+        List<String> randomExcelNameList = new ArrayList<String>();
+        randomExcelNameList.add("testForceExportOnWorkbook.xlsx");
+        randomExcelNameList.add("testForceExportOnWorkbook2.xlsx");
+        randomExcelNameList.add("testForceExportOnWorkSheet.xlsx");
+        for (String fileName : randomExcelNameList) {
+            Path resolve = defaultTestPath.resolve(fileName);
+            boolean deleted = false;
+            try {
+                deleted = Files.deleteIfExists(resolve);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (deleted) {
+                System.out.println(fileName + "File deleted successfully.");
+            } else {
+                System.out.println(fileName + "File deletion failed.");
+            }
+        }
+    }
 
     @Test
     public void testWrite() throws IOException {

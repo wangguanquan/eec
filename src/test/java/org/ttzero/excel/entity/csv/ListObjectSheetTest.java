@@ -16,6 +16,7 @@
 
 package org.ttzero.excel.entity.csv;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
@@ -42,8 +43,12 @@ import org.ttzero.excel.util.CSVUtil;
 import java.awt.Color;
 import java.io.IOException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 
 import static org.ttzero.excel.entity.ListObjectSheetTest.sp;
@@ -53,6 +58,29 @@ import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
  * @author guanquan.wang at 2019-04-28 19:17
  */
 public class ListObjectSheetTest extends WorkbookTest{
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        // 删除之前的测试文件，防止重复执行不正确
+        List<String> randomExcelNameList = new ArrayList<String>();
+        randomExcelNameList.add("testForceExportOnWorkSheet.csv");
+        randomExcelNameList.add("testForceExportOnWorkbook.csv");
+        randomExcelNameList.add("testForceExportOnWorkbook2Cancel1.xlsx");
+        for (String fileName : randomExcelNameList) {
+            Path resolve = defaultTestPath.resolve(fileName);
+            boolean deleted = false;
+            try {
+                deleted = Files.deleteIfExists(resolve);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (deleted) {
+                System.out.println(fileName + "File deleted successfully.");
+            } else {
+                System.out.println(fileName + "File deletion failed.");
+            }
+        }
+    }
 
     @Test
     public void testWrite() throws IOException {

@@ -532,7 +532,7 @@ public class ExcelReaderTest {
         }
     }
 
-    @Test public void test354() throws IOException {
+    @Test public void test1751() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
             OO[] list = reader.sheet(0).rows()
                     .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
