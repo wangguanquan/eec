@@ -189,10 +189,10 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
-        else if (clazz == Path.class) {
+        else if (Path.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setPath((Path) e);
             else cell.setSv(e.toString());
-        } else if (clazz == File.class) {
+        } else if (File.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setPath(((File) e).toPath());
             else cell.setSv(e.toString());
         } else if (InputStream.class.isAssignableFrom(clazz)) {
@@ -201,7 +201,7 @@ public interface ICellValueAndStyle {
         } else if (clazz == byte[].class) {
             if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
             else cell.setSv(e.toString());
-        } else if (clazz == ByteBuffer.class) {
+        } else if (ByteBuffer.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setByteBuffer((ByteBuffer) e);
             else cell.setSv(e.toString());
         }
