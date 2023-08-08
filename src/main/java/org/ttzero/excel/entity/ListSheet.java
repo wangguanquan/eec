@@ -509,12 +509,17 @@ public class ListSheet<T> extends Sheet {
 
             // No column to write
             if (list.isEmpty()) {
-                headerReady = eof = shouldClose = true;
-                this.end = 0;
-                if (java.util.Map.class.isAssignableFrom(clazz))
-                    LOGGER.warn("List<Map> has detected, please use ListMapSheet for export.");
-                else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
-                return 0;
+                // Simple type
+                if (cellValueAndStyle.isAllowDirectOutput(clazz)) {
+                    list.add(new EntryColumn().setClazz(clazz));
+                } else {
+                    headerReady = eof = shouldClose = true;
+                    this.end = 0;
+                    if (java.util.Map.class.isAssignableFrom(clazz))
+                        LOGGER.warn("List<Map> has detected, please use ListMapSheet for export.");
+                    else LOGGER.warn("Class [{}] do not contains properties to export.", clazz);
+                    return 0;
+                }
             }
             columns = new Column[list.size()];
             list.toArray(columns);

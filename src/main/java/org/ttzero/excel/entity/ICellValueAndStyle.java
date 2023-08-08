@@ -310,4 +310,18 @@ public interface ICellValueAndStyle {
         cell.setSv(e);
         cell.t = Cell.REMOTE_URL;
     }
+
+    /**
+     * Mark whitelist types that can be easily exported
+     *
+     * @param clazz cell value class
+     * @return true if can be easily exported
+     */
+    default boolean isAllowDirectOutput(Class<?> clazz) {
+        return clazz == null || isString(clazz) || isDate(clazz) || isDateTime(clazz) || isChar(clazz) || isShort(clazz)
+            || isInt(clazz) || isLong(clazz) || isFloat(clazz) || isDouble(clazz) || isBool(clazz) || isBigDecimal(clazz)
+            || isLocalDate(clazz) || isLocalDateTime(clazz) || isTime(clazz) || isLocalTime(clazz) || Path.class.isAssignableFrom(clazz)
+            || File.class.isAssignableFrom(clazz) || InputStream.class.isAssignableFrom(clazz) || clazz == byte[].class
+            || ByteBuffer.class.isAssignableFrom(clazz);
+    }
 }
