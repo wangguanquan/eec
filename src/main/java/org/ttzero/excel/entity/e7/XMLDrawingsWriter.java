@@ -54,7 +54,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 /**
  * Drawings writer(For Picture only)
  *
- * @author guanquan.wng at 2023-03-07 09:09
+ * @author guanquan.wang at 2023-03-07 09:09
  */
 @TopNS(prefix = {"xdr", "a", "r"}, value = "wsDr"
     , uri = {"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
