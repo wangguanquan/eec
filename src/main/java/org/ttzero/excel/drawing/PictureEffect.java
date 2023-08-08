@@ -137,4 +137,20 @@ public class PictureEffect implements Effect {
     public void setShape3D(Shape3D shape3D) {
         this.shape3D = shape3D;
     }
+
+    public Glow getGlow() {
+        return glow;
+    }
+
+    public void setGlow(Glow glow) {
+        this.glow = glow;
+    }
+
+    public Fill getFill() {
+        return fill;
+    }
+
+    public void setFill(Fill fill) {
+        this.fill = fill;
+    }
 }

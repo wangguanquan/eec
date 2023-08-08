@@ -37,7 +37,31 @@ public class Fill {
          */
         public int alpha;
 
-        public int shade; // TODO unknown property
+        public int shade;
+
+        public Color getColor() {
+            return color;
+        }
+
+        public void setColor(Color color) {
+            this.color = color;
+        }
+
+        public int getAlpha() {
+            return alpha;
+        }
+
+        public void setAlpha(int alpha) {
+            this.alpha = alpha;
+        }
+
+        public int getShade() {
+            return shade;
+        }
+
+        public void setShade(int shade) {
+            this.shade = shade;
+        }
     }
 
     /**
