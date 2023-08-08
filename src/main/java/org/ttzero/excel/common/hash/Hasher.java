@@ -14,19 +14,18 @@
 
 package org.ttzero.excel.common.hash;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
  * A {@link PrimitiveSink} that can compute a hash code after reading the input. Each hasher should
- * translate all multibyte values ({@link #putInt(int)}, {@link #putLong(long)}, etc) to bytes in
+ * translate all multibyte values ({@link #putInt(int)} etc) to bytes in
  * little-endian order.
  *
  * <p><b>Warning:</b> The result of calling any methods after calling {@link #hash} is undefined.
  *
  * <p><b>Warning:</b> Using a specific character encoding when hashing a {@link CharSequence} with
  * {@link #putString(CharSequence, Charset)} is generally only useful for cross-language
- * compatibility (otherwise prefer {@link #putUnencodedChars}). However, the character encodings
+ * compatibility (otherwise prefer {@code #putUnencodedChars}). However, the character encodings
  * must be identical across languages. Also beware that {@link Charset} definitions may occasionally
  * change between Java releases.
  *
@@ -61,53 +60,13 @@ public interface Hasher extends PrimitiveSink {
   Hasher putBytes(byte[] bytes, int off, int len);
 
   @Override
-  Hasher putBytes(ByteBuffer bytes);
-
-  @Override
-  Hasher putShort(short s);
-
-  @Override
   Hasher putInt(int i);
-
-  @Override
-  Hasher putLong(long l);
-
-  /** Equivalent to {@code putInt(Float.floatToRawIntBits(f))}. */
-  @Override
-  Hasher putFloat(float f);
-
-  /** Equivalent to {@code putLong(Double.doubleToRawLongBits(d))}. */
-  @Override
-  Hasher putDouble(double d);
-
-  /** Equivalent to {@code putByte(b ? (byte) 1 : (byte) 0)}. */
-  @Override
-  Hasher putBoolean(boolean b);
-
-  @Override
-  Hasher putChar(char c);
-
-  /**
-   * Equivalent to processing each {@code char} value in the {@code CharSequence}, in order. In
-   * other words, no character encoding is performed; the low byte and high byte of each {@code
-   * char} are hashed directly (in that order). The input must not be updated while this method is
-   * in progress.
-   *
-   * <p><b>Warning:</b> This method will produce different output than most other languages do when
-   * running the same hash function on the equivalent input. For cross-language compatibility, use
-   * {@link #putString}, usually with a charset of UTF-8. For other use cases, use {@code
-   * putUnencodedChars}.
-   *
-   * @since 15.0 (since 11.0 as putString(CharSequence)).
-   */
-  @Override
-  Hasher putUnencodedChars(CharSequence charSequence);
 
   /**
    * Equivalent to {@code putBytes(charSequence.toString().getBytes(charset))}.
    *
    * <p><b>Warning:</b> This method, which reencodes the input before hashing it, is useful only for
-   * cross-language compatibility. For other use cases, prefer {@link #putUnencodedChars}, which is
+   * cross-language compatibility. For other use cases, prefer {@code #putUnencodedChars}, which is
    * faster, produces the same output across Java releases, and hashes every {@code char} in the
    * input, even if some are invalid.
    */
@@ -123,13 +82,4 @@ public interface Hasher extends PrimitiveSink {
    */
   HashCode hash();
 
-  /**
-   * {@inheritDoc}
-   *
-   * @deprecated This returns {@link Object#hashCode()}; you almost certainly mean to call {@code
-   *     hash().asInt()}.
-   */
-  @Override
-  @Deprecated
-  int hashCode();
 }

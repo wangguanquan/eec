@@ -41,18 +41,6 @@ abstract class AbstractByteHasher extends AbstractHasher {
     }
   }
 
-  /** Updates this hasher with bytes from the given buffer. */
-  protected void update(ByteBuffer b) {
-    if (b.hasArray()) {
-      update(b.array(), b.arrayOffset() + b.position(), b.remaining());
-      b.position(b.limit());
-    } else {
-      for (int remaining = b.remaining(); remaining > 0; remaining--) {
-        update(b.get());
-      }
-    }
-  }
-
   /** Updates the sink with the given number of bytes from the buffer. */
   private Hasher update(int bytes) {
     try {
@@ -82,32 +70,9 @@ abstract class AbstractByteHasher extends AbstractHasher {
   }
 
   @Override
-  public Hasher putBytes(ByteBuffer bytes) {
-    update(bytes);
-    return this;
-  }
-
-  @Override
-  public Hasher putShort(short s) {
-    scratch.putShort(s);
-    return update(Short.SIZE / Byte.SIZE);
-  }
-
-  @Override
   public Hasher putInt(int i) {
     scratch.putInt(i);
     return update(Integer.SIZE / Byte.SIZE);
   }
 
-  @Override
-  public Hasher putLong(long l) {
-    scratch.putLong(l);
-    return update(Long.SIZE / Byte.SIZE);
-  }
-
-  @Override
-  public Hasher putChar(char c) {
-    scratch.putChar(c);
-    return update(Character.SIZE / Byte.SIZE);
-  }
 }

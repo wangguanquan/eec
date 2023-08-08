@@ -15,8 +15,6 @@
 package org.ttzero.excel.common.hash;
 
 
-import org.ttzero.excel.common.primitives.UnsignedInts;
-
 import java.io.Serializable;
 
 
@@ -42,47 +40,12 @@ public abstract class HashCode {
   public abstract int asInt();
 
   /**
-   * Returns the first eight bytes of {@linkplain #asBytes() this hashcode's bytes}, converted to a
-   * {@code long} value in little-endian order.
-   *
-   * @throws IllegalStateException if {@code bits() < 64}
-   */
-  public abstract long asLong();
-
-  /**
-   * If this hashcode has enough bits, returns {@code asLong()}, otherwise returns a {@code long}
-   * value with {@code asBytes()} as the least-significant bytes and {@code 0x00} as the remaining
-   * most-significant bytes.
-   *
-   * @since 14.0 (since 11.0 as {@code Hashing.padToLong(HashCode)})
-   */
-  public abstract long padToLong();
-
-  /**
    * Returns the value of this hash code as a byte array. The caller may modify the byte array;
    * changes to it will <i>not</i> be reflected in this {@code HashCode} object or any other arrays
    * returned by this method.
    */
   // TODO(user): consider ByteString here, when that is available
   public abstract byte[] asBytes();
-
-  /**
-   * Copies bytes from this hash code into {@code dest}.
-   *
-   * @param dest the byte array into which the hash code will be written
-   * @param offset the start offset in the data
-   * @param maxLength the maximum number of bytes to write
-   * @return the number of bytes written to {@code dest}
-   * @throws IndexOutOfBoundsException if there is not enough room in {@code dest}
-   */
-  public int writeBytesTo(byte[] dest, int offset, int maxLength) {
-    maxLength = Integer.min(maxLength, bits() / 8);
-//    Preconditions.checkPositionIndexes(offset, offset + maxLength, dest.length);
-    writeBytesToImpl(dest, offset, maxLength);
-    return maxLength;
-  }
-
-  abstract void writeBytesToImpl(byte[] dest, int offset, int maxLength);
 
   /**
    * Returns a mutable view of the underlying bytes for the given {@code HashCode} if it is a
@@ -132,105 +95,11 @@ public abstract class HashCode {
     }
 
     @Override
-    public long asLong() {
-      throw new IllegalStateException("this HashCode only has 32 bits; cannot create a long");
-    }
-
-    @Override
-    public long padToLong() {
-      return UnsignedInts.toLong(hash);
-    }
-
-    @Override
-    void writeBytesToImpl(byte[] dest, int offset, int maxLength) {
-      for (int i = 0; i < maxLength; i++) {
-        dest[offset + i] = (byte) (hash >> (i * 8));
-      }
-    }
-
-    @Override
     boolean equalsSameBits(HashCode that) {
       return hash == that.asInt();
     }
 
     private static final long serialVersionUID = 0;
-  }
-
-  /**
-   * Creates a 64-bit {@code HashCode} representation of the given long value. The underlying bytes
-   * are interpreted in little endian order.
-   *
-   * @since 15.0 (since 12.0 in HashCodes)
-   */
-  public static HashCode fromLong(long hash) {
-    return new LongHashCode(hash);
-  }
-
-  private static final class LongHashCode extends HashCode implements Serializable {
-    final long hash;
-
-    LongHashCode(long hash) {
-      this.hash = hash;
-    }
-
-    @Override
-    public int bits() {
-      return 64;
-    }
-
-    @Override
-    public byte[] asBytes() {
-      return new byte[] {
-        (byte) hash,
-        (byte) (hash >> 8),
-        (byte) (hash >> 16),
-        (byte) (hash >> 24),
-        (byte) (hash >> 32),
-        (byte) (hash >> 40),
-        (byte) (hash >> 48),
-        (byte) (hash >> 56)
-      };
-    }
-
-    @Override
-    public int asInt() {
-      return (int) hash;
-    }
-
-    @Override
-    public long asLong() {
-      return hash;
-    }
-
-    @Override
-    public long padToLong() {
-      return hash;
-    }
-
-    @Override
-    void writeBytesToImpl(byte[] dest, int offset, int maxLength) {
-      for (int i = 0; i < maxLength; i++) {
-        dest[offset + i] = (byte) (hash >> (i * 8));
-      }
-    }
-
-    @Override
-    boolean equalsSameBits(HashCode that) {
-      return hash == that.asLong();
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /**
-   * Creates a {@code HashCode} from a byte array. The array is defensively copied to preserve the
-   * immutability contract of {@code HashCode}. The array cannot be empty.
-   *
-   * @since 15.0 (since 12.0 in HashCodes)
-   */
-  public static HashCode fromBytes(byte[] bytes) {
-//    checkArgument(bytes.length >= 1, "A HashCode must contain at least 1 byte.");
-    return fromBytesNoCopy(bytes.clone());
   }
 
   /**
@@ -260,37 +129,10 @@ public abstract class HashCode {
 
     @Override
     public int asInt() {
-//      checkState(
-//          bytes.length >= 4,
-//          "HashCode#asInt() requires >= 4 bytes (it only has %s bytes).",
-//          bytes.length);
       return (bytes[0] & 0xFF)
           | ((bytes[1] & 0xFF) << 8)
           | ((bytes[2] & 0xFF) << 16)
           | ((bytes[3] & 0xFF) << 24);
-    }
-
-    @Override
-    public long asLong() {
-//      checkState(
-//          bytes.length >= 8,
-//          "HashCode#asLong() requires >= 8 bytes (it only has %s bytes).",
-//          bytes.length);
-      return padToLong();
-    }
-
-    @Override
-    public long padToLong() {
-      long retVal = (bytes[0] & 0xFF);
-      for (int i = 1; i < Math.min(bytes.length, 8); i++) {
-        retVal |= (bytes[i] & 0xFFL) << (i * 8);
-      }
-      return retVal;
-    }
-
-    @Override
-    void writeBytesToImpl(byte[] dest, int offset, int maxLength) {
-      System.arraycopy(bytes, 0, dest, offset, maxLength);
     }
 
     @Override
@@ -314,43 +156,6 @@ public abstract class HashCode {
     }
 
     private static final long serialVersionUID = 0;
-  }
-
-  /**
-   * Creates a {@code HashCode} from a hexadecimal ({@code base 16}) encoded string. The string must
-   * be at least 2 characters long, and contain only valid, lower-cased hexadecimal characters.
-   *
-   * <p>This method accepts the exact format generated by {@link #toString}. If you require more
-   * lenient {@code base 16} decoding, please use {@link com.google.common}
-   * (and pass the result to {@link #fromBytes}).
-   *
-   * @since 15.0
-   */
-  public static HashCode fromString(String string) {
-//    checkArgument(
-//        string.length() >= 2, "input string (%s) must have at least 2 characters", string);
-//    checkArgument(
-//        string.length() % 2 == 0,
-//        "input string (%s) must have an even number of characters",
-//        string);
-
-    byte[] bytes = new byte[string.length() / 2];
-    for (int i = 0; i < string.length(); i += 2) {
-      int ch1 = decode(string.charAt(i)) << 4;
-      int ch2 = decode(string.charAt(i + 1));
-      bytes[i / 2] = (byte) (ch1 + ch2);
-    }
-    return fromBytesNoCopy(bytes);
-  }
-
-  private static int decode(char ch) {
-    if (ch >= '0' && ch <= '9') {
-      return ch - '0';
-    }
-    if (ch >= 'a' && ch <= 'f') {
-      return ch - 'a' + 10;
-    }
-    throw new IllegalArgumentException("Illegal hexadecimal character: " + ch);
   }
 
   /**
@@ -399,7 +204,7 @@ public abstract class HashCode {
    * everything else in the hashing API uniformly treats multibyte values as little-endian. But this
    * format conveniently matches that of utilities such as the UNIX {@code md5sum} command.
    *
-   * <p>To create a {@code HashCode} from its string representation, see {@link #fromString}.
+   * <p>To create a {@code HashCode} from its string representation, see {@code #fromString}.
    */
   @Override
   public final String toString() {

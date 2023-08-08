@@ -36,53 +36,6 @@ import static org.ttzero.excel.common.hash.LittleEndianByteArray.fromBytes;
  */
 public enum BloomFilterStrategies implements BloomFilter.Strategy {
   /**
-   * See "Less Hashing, Same Performance: Building a Better Bloom Filter" by Adam Kirsch and Michael
-   * Mitzenmacher. The paper argues that this trick doesn't significantly deteriorate the
-   * performance of a Bloom filter (yet only needs two 32bit hash functions).
-   */
-  MURMUR128_MITZ_32() {
-    @Override
-    public <T> boolean put(
-        T object, Funnel<? super T> funnel, int numHashFunctions, LockFreeBitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 >>> 32);
-
-      boolean bitsChanged = false;
-      for (int i = 1; i <= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash < 0) {
-          combinedHash = ~combinedHash;
-        }
-        bitsChanged |= bits.set(combinedHash % bitSize);
-      }
-      return bitsChanged;
-    }
-
-    @Override
-    public <T> boolean mightContain(
-        T object, Funnel<? super T> funnel, int numHashFunctions, LockFreeBitArray bits) {
-      long bitSize = bits.bitSize();
-      long hash64 = Hashing.murmur3_128().hashObject(object, funnel).asLong();
-      int hash1 = (int) hash64;
-      int hash2 = (int) (hash64 >>> 32);
-
-      for (int i = 1; i <= numHashFunctions; i++) {
-        int combinedHash = hash1 + (i * hash2);
-        // Flip all the bits if it's negative (guaranteed positive number)
-        if (combinedHash < 0) {
-          combinedHash = ~combinedHash;
-        }
-        if (!bits.get(combinedHash % bitSize)) {
-          return false;
-        }
-      }
-      return true;
-    }
-  },
-  /**
    * This strategy uses all 128 bits of {@link Hashing#murmur3_128} when hashing. It looks different
    * than the implementation in MURMUR128_MITZ_32 because we're avoiding the multiplication in the
    * loop and doing a (much simpler) += hash2. We're also changing the index to a positive number by
@@ -207,18 +160,6 @@ public enum BloomFilterStrategies implements BloomFilter.Strategy {
     /** Number of bits */
     long bitSize() {
       return (long) data.length() * Long.SIZE;
-    }
-
-    /**
-     * Number of set bits (1s).
-     *
-     * <p>Note that because of concurrent set calls and uses of atomics, this bitCount is a (very)
-     * close *estimate* of the actual number of bits set. It's not possible to do better than an
-     * estimate without locking. Note that the number, if not exactly accurate, is *always*
-     * underestimating, never overestimating.
-     */
-    long bitCount() {
-      return bitCount.sum();
     }
 
     LockFreeBitArray copy() {

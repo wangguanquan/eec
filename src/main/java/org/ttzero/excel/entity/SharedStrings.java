@@ -105,7 +105,7 @@ public class SharedStrings implements Storable, Closeable {
     /**
      * The number of expected insertions to the constructed bloom
      */
-    private final int expectedInsertions = 1 << 17;
+    private final long expectedInsertions = 1L << 17;
 
     SharedStrings() {
         hot = FixSizeLRUCache.create();
