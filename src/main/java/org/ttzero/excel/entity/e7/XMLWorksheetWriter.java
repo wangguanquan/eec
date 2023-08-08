@@ -897,7 +897,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Reset buffer position
         byteBuffer.position(position);
         // Store in disk
-        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE);
+        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
         channel.write(byteBuffer);
         channel.close();
 
