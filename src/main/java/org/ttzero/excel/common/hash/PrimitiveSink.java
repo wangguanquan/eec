@@ -53,10 +53,6 @@ public interface PrimitiveSink {
    */
   PrimitiveSink putBytes(byte[] bytes, int off, int len);
 
-
-  /** Puts an int into this sink. */
-  PrimitiveSink putInt(int i);
-
   /**
    * Puts a string into this sink using the given charset.
    *

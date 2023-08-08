@@ -133,13 +133,6 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
   }
 
   @Override
-  public final Hasher putInt(int i) {
-    buffer.putInt(i);
-    munchIfFull();
-    return this;
-  }
-
-  @Override
   public final HashCode hash() {
     munch();
     buffer.flip();

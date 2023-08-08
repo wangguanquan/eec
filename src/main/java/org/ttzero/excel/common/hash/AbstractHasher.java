@@ -43,15 +43,6 @@ abstract class AbstractHasher implements Hasher {
   }
 
   @Override
-  public Hasher putInt(int i) {
-    putByte((byte) i);
-    putByte((byte) (i >>> 8));
-    putByte((byte) (i >>> 16));
-    putByte((byte) (i >>> 24));
-    return this;
-  }
-
-  @Override
   public <T> Hasher putObject(T instance, Funnel<? super T> funnel) {
     funnel.funnel(instance, this);
     return this;

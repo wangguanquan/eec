@@ -18,7 +18,7 @@ import java.nio.charset.Charset;
 
 /**
  * A {@link PrimitiveSink} that can compute a hash code after reading the input. Each hasher should
- * translate all multibyte values ({@link #putInt(int)} etc) to bytes in
+ * translate all multibyte values ({@code #putInt(int)} etc) to bytes in
  * little-endian order.
  *
  * <p><b>Warning:</b> The result of calling any methods after calling {@link #hash} is undefined.
@@ -58,9 +58,6 @@ public interface Hasher extends PrimitiveSink {
 
   @Override
   Hasher putBytes(byte[] bytes, int off, int len);
-
-  @Override
-  Hasher putInt(int i);
 
   /**
    * Equivalent to {@code putBytes(charSequence.toString().getBytes(charset))}.

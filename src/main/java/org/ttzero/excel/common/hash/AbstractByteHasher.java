@@ -14,8 +14,6 @@
 
 package org.ttzero.excel.common.hash;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 /**
  * Abstract {@link Hasher} that handles converting primitives to bytes using a scratch {@code
@@ -24,7 +22,6 @@ import java.nio.ByteOrder;
  * @author Colin Decker
  */
 abstract class AbstractByteHasher extends AbstractHasher {
-  private final ByteBuffer scratch = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
 
   /** Updates this hasher with the given byte. */
   protected abstract void update(byte b);
@@ -39,16 +36,6 @@ abstract class AbstractByteHasher extends AbstractHasher {
     for (int i = off; i < off + len; i++) {
       update(b[i]);
     }
-  }
-
-  /** Updates the sink with the given number of bytes from the buffer. */
-  private Hasher update(int bytes) {
-    try {
-      update(scratch.array(), 0, bytes);
-    } finally {
-      scratch.clear();
-    }
-    return this;
   }
 
   @Override
@@ -67,12 +54,6 @@ abstract class AbstractByteHasher extends AbstractHasher {
   public Hasher putBytes(byte[] bytes, int off, int len) {
     update(bytes, off, len);
     return this;
-  }
-
-  @Override
-  public Hasher putInt(int i) {
-    scratch.putInt(i);
-    return update(Integer.SIZE / Byte.SIZE);
   }
 
 }

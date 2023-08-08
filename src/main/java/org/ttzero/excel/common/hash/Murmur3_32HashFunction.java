@@ -123,12 +123,10 @@ final class Murmur3_32HashFunction extends AbstractHashFunction implements Seria
     private long buffer;
     private int shift;
     private int length;
-    private boolean isDone;
 
     Murmur3_32Hasher(int seed) {
       this.h1 = seed;
       this.length = 0;
-      isDone = false;
     }
 
     private void update(int nBytes, long update) {
@@ -160,12 +158,6 @@ final class Murmur3_32HashFunction extends AbstractHashFunction implements Seria
       for (; i < len; i++) {
         putByte(bytes[off + i]);
       }
-      return this;
-    }
-
-    @Override
-    public Hasher putInt(int i) {
-      update(4, i);
       return this;
     }
 
@@ -218,7 +210,6 @@ final class Murmur3_32HashFunction extends AbstractHashFunction implements Seria
     @Override
     public HashCode hash() {
 //      checkState(!isDone);
-      isDone = true;
       h1 ^= mixK1((int) buffer);
       return fmix(h1, length);
     }
