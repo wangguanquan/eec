@@ -581,11 +581,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkbook2Cancel1() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2Cancel1")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel1.xlsx"));
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel1.xlsx"))) {
             assert reader.sheets().count() == 2L;
             assert reader.sheet(0).dataRows().count() == 0L;
@@ -595,11 +595,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkbook2Cancel2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2Cancel2")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel2.xlsx"));
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel2.xlsx"))) {
             assert reader.sheets().count() == 2L;
             assert reader.sheet(0).dataRows().count() == 0L;
@@ -609,10 +609,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testWrapText() throws IOException {
         new Workbook("WRAP TEXT")
-                .addSheet(new ListSheet<>()
-                        .setData(Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
-                                , new Item(2, "fdsafdsafdsafdsafdsafdsafdsafdsfadsafdsafdsafdsafdsafdsafds"))))
-                .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>()
+                .setData(Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
+                    , new Item(2, "fdsafdsafdsafdsafdsafdsafdsafdsfadsafdsafdsafdsafdsafdsafds"))))
+            .writeTo(defaultTestPath);
     }
 
     @Test public void testClearHeadStyle() throws IOException {
@@ -627,13 +627,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         workbook.writeTo(defaultTestPath);
     }
 
-
-
     @Test public void testBasicType() throws IOException {
         List<Integer> list = new ArrayList<>(35);
         for (int i = 0; i < 35; i++) list.add(i);
         new Workbook()
-            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(Integer.class).setCellStyle(0)))
+            .addSheet(new ListSheet<>(list))
             .writeTo(defaultTestPath.resolve("Integer array.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
@@ -644,14 +642,10 @@ public class ListObjectSheetTest extends WorkbookTest {
             }
         }
     }
+
     @Test public void testUnDisplayChar() throws Throwable {
         List<Character> list = IntStream.range(0, 32).mapToObj(e -> (char)e).collect(Collectors.toList());
-        new Workbook().addSheet(new ListSheet<Character>(list) {
-            @Override
-            public org.ttzero.excel.entity.Column[] getHeaderColumns() {
-                return new org.ttzero.excel.entity.Column[]{ new ListSheet.EntryColumn().setClazz(Character.class) };
-            }
-        }.ignoreHeader()).writeTo(defaultTestPath.resolve("UnDisplayChar.xlsx"));
+        new Workbook().addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve("UnDisplayChar.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("UnDisplayChar.xlsx"))) {
             List<Character> subList = reader.sheet(0).rows().map(row -> row.getChar(0)).collect(Collectors.toList());
@@ -671,7 +665,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testEmojiChar() throws IOException {
         List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
         new Workbook()
-            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn().setClazz(String.class)))
+            .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn()))
             .writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
@@ -1323,6 +1317,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         public static List<NoColumnAnnotation> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        public String toString() {
+            return id + " " + name;
         }
     }
 

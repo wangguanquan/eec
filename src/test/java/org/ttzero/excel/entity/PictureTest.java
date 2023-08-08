@@ -32,7 +32,6 @@ import org.ttzero.excel.drawing.PresetPictureEffect;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.util.FileSignatures;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -60,13 +59,13 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 public class PictureTest extends WorkbookTest {
     @Test public void testExportPicture() throws IOException {
         new Workbook("Picture test (Path)")
-            .addSheet(new ListSheet<>(getLocalImages()).setColumns(new Column().setClazz(Path.class).writeAsMedia().setWidth(20)).setRowHeight(100))
+            .addSheet(new ListSheet<>(getLocalImages()).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testExportPictureUseFile() throws IOException {
         new Workbook("Picture test (File)")
-            .addSheet(new ListSheet<>(getLocalImages().stream().map(Path::toFile).collect(Collectors.toList())).setColumns(new Column().setClazz(File.class).writeAsMedia().setWidth(20)).setRowHeight(100))
+            .addSheet(new ListSheet<>(getLocalImages().stream().map(Path::toFile).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
@@ -79,7 +78,7 @@ public class PictureTest extends WorkbookTest {
                     ex.printStackTrace();
                 }
                 return null;
-            }).collect(Collectors.toList())).setColumns(new Column().setClazz(byte[].class).writeAsMedia().setWidth(20)).setRowHeight(100))
+            }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
@@ -94,7 +93,7 @@ public class PictureTest extends WorkbookTest {
                 } catch (IOException ex) {
                     return null;
                 }
-            }).collect(Collectors.toList())).setColumns(new Column().setClazz(ByteBuffer.class).writeAsMedia().setWidth(20)).setRowHeight(100))
+            }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
@@ -108,25 +107,25 @@ public class PictureTest extends WorkbookTest {
         }).filter(Objects::nonNull).collect(Collectors.toList());
 
         new Workbook("Picture test (InputStream)").addSheet(new ListSheet<>(list)
-            .setColumns(new Column().setClazz(InputStream.class).setWidth(20).writeAsMedia()).setRowHeight(100))
+            .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testBase64Image() throws IOException {
         new Workbook("Base64 image").addSheet(new ListSheet<>(Collections.singletonList("data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="))
-            .setColumns(new Column().setClazz(String.class).setWidth(20).writeAsMedia()).setRowHeight(100))
+            .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testSyncRemoteImage() throws IOException {
         new Workbook("Sync download remote image").addSheet(new ListSheet<>(getRemoteUrls())
-            .setColumns(new Column().setClazz(String.class).setWidth(20).writeAsMedia()).setRowHeight(100))
+            .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testSyncRemoteImageUseOkHTTP() throws IOException {
         new Workbook("sync download remote image use OkHttp").addSheet(new ListSheet<>(getRemoteUrls())
-            .setColumns(new Column().setClazz(String.class).setWidth(20).writeAsMedia()).setRowHeight(100)
+            .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
             .setSheetWriter(new XMLWorksheetWriter() {
                 @Override public void downloadRemoteResource(Picture picture, String uri) throws IOException {
                     if (uri.startsWith("http")) {
@@ -148,7 +147,7 @@ public class PictureTest extends WorkbookTest {
 
     @Test public void testAsyncRemoteImage() throws IOException {
         new Workbook("Async download remote image").addSheet(new ListSheet<>(getRemoteUrls())
-            .setColumns(new Column().setClazz(String.class).setWidth(20).writeAsMedia()).setRowHeight(100)
+            .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
             .setSheetWriter(new XMLWorksheetWriter() {
             @Override
             public void downloadRemoteResource(Picture picture, String uri) {
