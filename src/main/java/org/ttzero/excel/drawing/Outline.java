@@ -49,9 +49,9 @@ public class Outline {
     public double miterLimit;
 
     public enum Cap {
-        SQUARE("sq"),
-        ROUND("rnd"),
-        FLAT("flat")
+        square("sq"),
+        round("rnd"),
+        flat("flat")
         ;
         public final String shotName;
 
@@ -65,11 +65,11 @@ public class Outline {
     }
 
     public enum CompoundType {
-        double_lines("dbl"),
-        single_line("sng"),
+        doubleLines("dbl"),
+        singleLine("sng"),
         thickThin("thickThin"),
         thinThick("thinThick"),
-        three_lines("tri")
+        threeLines("tri")
         ;
         public final String shotName;
 

@@ -25,7 +25,7 @@ import org.ttzero.excel.drawing.Glow;
 import org.ttzero.excel.drawing.Guide;
 import org.ttzero.excel.drawing.LightRig;
 import org.ttzero.excel.drawing.Outline;
-import org.ttzero.excel.drawing.PictureEffect;
+import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.drawing.Reflection;
 import org.ttzero.excel.drawing.Scene3D;
 import org.ttzero.excel.drawing.Shadow;
@@ -260,7 +260,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     }
 
     protected void writeEffects(Picture pict) throws IOException {
-        PictureEffect effect = pict.effect;
+        Effect effect = pict.effect;
         // Geometry
         bw.write("<a:prstGeom prst=\"");
         bw.write(effect.geometry != null ? effect.geometry.name() : ShapeType.rect.name());
@@ -446,7 +446,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write("<a:ln w=\"");
         bw.writeInt((int) (ln.width * 12700));
         bw.write("\" cap=\"");
-        bw.write(ln.cap != null ? ln.cap.shotName : Outline.Cap.SQUARE.shotName);
+        bw.write(ln.cap != null ? ln.cap.shotName : Outline.Cap.square.shotName);
         if (ln.cmpd != null) {
             bw.write("\" cmpd=\"");
             bw.write(ln.cmpd.shotName);

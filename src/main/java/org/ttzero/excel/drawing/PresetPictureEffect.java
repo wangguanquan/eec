@@ -27,18 +27,18 @@ import java.util.Collections;
  *
  * @author guanquan.wang at 2023-07-25 09:59
  */
-public enum PresetPictureEffect implements PictureEffectProducer {
+public enum PresetPictureEffect implements EffectProducer {
     // 0
     None {
-        @Override public PictureEffect getEffect() {
-            return effect;
+        @Override public Effect getEffect() {
+            return null;
         }
     },
     // 1
     SimpleFrame_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -49,7 +49,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 7;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -87,9 +87,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 2
     BeveledMatte_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -100,7 +100,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
 
             Shadow shadow = new Shadow();
             effect.shadow = shadow;
@@ -135,15 +135,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 3
     MetalFrame {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 15;
             ln.color = new Color(200, 198, 189);
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.dash = Outline.DashPattern.solid;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
@@ -183,9 +183,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 4
     DropShadowRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = new Color(51, 51, 51);
@@ -202,9 +202,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 5
     ReflectedRoundedRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -225,9 +225,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 6
     SoftEdgeRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             effect.softEdges = 8.86D;
             effect.geometry = ShapeType.rect;
@@ -236,15 +236,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 7
     DoubleFrame_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 18;
             ln.color = Color.BLACK;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.cmpd = Outline.CompoundType.thickThin;
             ln.dash = Outline.DashPattern.solid;
             ln.joinType = Outline.JoinType.miter;
@@ -261,9 +261,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 8
     ThickMatte_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.BLACK;
@@ -274,7 +274,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 35;
             ln.color = Color.BLACK;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -294,15 +294,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 9
     SimpleFrame_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 3;
             ln.color = Color.BLACK;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.dash = Outline.DashPattern.solid;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
@@ -322,15 +322,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 10
     BeveledOval_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 5;
             ln.color = new Color(51, 51, 51);
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
 
             Shadow shadow = new Shadow();
             effect.shadow = shadow;
@@ -368,15 +368,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 11
     CompoundFrame_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 7;
             ln.color = Color.BLACK;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.dash = Outline.DashPattern.solid;
             ln.cmpd = Outline.CompoundType.thickThin;
             ln.joinType = Outline.JoinType.miter;
@@ -393,15 +393,15 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 12
     ModerateFrame_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Outline ln = new Outline();
             effect.outline = ln;
             ln.width = 10;
             ln.color = Color.BLACK;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -420,9 +420,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 13
     CenterShadowRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -437,9 +437,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 14
     RoundedDiagonalCorner_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -455,7 +455,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 7;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
             return effect;
@@ -463,9 +463,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 15
     SnipDiagonalCorner_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -485,7 +485,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 7;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -512,9 +512,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 16
     ModerateFrame_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -536,7 +536,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -563,9 +563,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 17
     Rotated_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -589,7 +589,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -618,9 +618,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 18
     PerspectiveShadow_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -640,7 +640,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 10;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
 
             Scene3D scene = new Scene3D();
             effect.scene3D = scene;
@@ -666,9 +666,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 19
     RelaxedPerspective_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -693,7 +693,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 8;
             ln.color = new Color(253, 253, 253);
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -722,9 +722,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 20
     SoftEdgeOval_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             effect.geometry = ShapeType.ellipse;
             effect.softEdges = 8.86;
@@ -733,9 +733,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 21
     BevelRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -774,9 +774,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 22
     BevelPerspective {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -820,9 +820,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 23
     ReflectedPerspectiveRight {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Reflection reflection = new Reflection();
             reflection.blur = 1;
@@ -858,9 +858,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 24
     BevelPerspectiveLeft_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -882,7 +882,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = Color.WHITE;
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
 
             Scene3D scene = new Scene3D();
             effect.scene3D = scene;
@@ -910,9 +910,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 25
     ReflectedBevel_Black {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -932,7 +932,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 6;
             ln.color = new Color(41, 41, 41);
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -958,9 +958,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 26
     ReflectedBevel_White {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Fill.SolidFill fill = new Fill.SolidFill();
             fill.color = Color.WHITE;
@@ -980,7 +980,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 6;
             ln.color = new Color(234, 234, 234);
-            ln.cap = Outline.Cap.SQUARE;
+            ln.cap = Outline.Cap.square;
             ln.joinType = Outline.JoinType.miter;
             ln.miterLimit = 800;
 
@@ -1008,9 +1008,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 27
     MetalRoundedRectangle {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -1028,7 +1028,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = new Color(200, 198, 189);
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
             ln.dash = Outline.DashPattern.solid;
 
             Scene3D scene = new Scene3D();
@@ -1057,9 +1057,9 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     },
     // 28
     MetalOval {
-        @Override public PictureEffect getEffect() {
+        @Override public Effect getEffect() {
             if (effect != null) return effect;
-            effect = new PictureEffect();
+            effect = new Effect();
 
             Shadow shadow = new Shadow();
             shadow.color = Color.BLACK;
@@ -1073,7 +1073,7 @@ public enum PresetPictureEffect implements PictureEffectProducer {
             effect.outline = ln;
             ln.width = 15;
             ln.color = new Color(200, 198, 189);
-            ln.cap = Outline.Cap.ROUND;
+            ln.cap = Outline.Cap.round;
             ln.dash = Outline.DashPattern.solid;
 
             Scene3D scene = new Scene3D();
@@ -1102,5 +1102,5 @@ public enum PresetPictureEffect implements PictureEffectProducer {
     }
     ;
 
-    protected PictureEffect effect;
+    protected Effect effect;
 }

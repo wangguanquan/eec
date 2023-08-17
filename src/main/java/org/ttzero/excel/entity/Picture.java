@@ -17,7 +17,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.drawing.PictureEffect;
+import org.ttzero.excel.drawing.Effect;
 
 /**
  * Picture
@@ -64,7 +64,7 @@ public class Picture {
 
     // ================ Picture Effects ================
 
-    public PictureEffect effect;
+    public Effect effect;
 
 
     /**

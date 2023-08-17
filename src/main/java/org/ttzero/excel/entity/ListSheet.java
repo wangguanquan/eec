@@ -640,7 +640,7 @@ public class ListSheet<T> extends Sheet {
             Column tail = root.getTail();
             tail.writeAsMedia();
             if (mediaColumn.presetEffect() != PresetPictureEffect.None) {
-                tail.setPictureEffect(mediaColumn.presetEffect().getEffect());
+                tail.setEffect(mediaColumn.presetEffect().getEffect());
             }
         }
         return root;
