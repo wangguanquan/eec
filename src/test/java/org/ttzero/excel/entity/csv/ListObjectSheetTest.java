@@ -24,7 +24,9 @@ import org.ttzero.excel.entity.CustomColIndexTest;
 import org.ttzero.excel.entity.CustomizeDataSourceSheet;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
+import org.ttzero.excel.entity.MultiHeaderColumnsTest;
 import org.ttzero.excel.entity.TooManyColumnsException;
+import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -44,6 +46,7 @@ import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 
 import static org.ttzero.excel.entity.ListObjectSheetTest.sp;
@@ -351,5 +354,13 @@ public class ListObjectSheetTest extends WorkbookTest{
         } catch (TooManyColumnsException e) {
             assert true;
         }
+    }
+
+    @Test public void testRepeatAnnotations() throws IOException {
+        List<MultiHeaderColumnsTest.RepeatableEntry> list = MultiHeaderColumnsTest.RepeatableEntry.randomTestData();
+        new Workbook("Repeat Columns Annotation")
+            .addSheet(new ListSheet<>(list))
+            .saveAsCSV()
+            .writeTo(defaultTestPath);
     }
 }
