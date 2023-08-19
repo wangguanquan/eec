@@ -104,7 +104,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
             )
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -135,7 +135,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int) o < 60) {
                             style = Styles.clearFill(style)
@@ -184,7 +184,7 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", "guanquan.wang")
+        new Workbook("object style processor1", author)
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Column("学号", "id")
                     , new Column("姓名", "name")

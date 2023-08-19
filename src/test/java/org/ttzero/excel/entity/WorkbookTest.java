@@ -33,11 +33,11 @@ public class WorkbookTest {
      * The default output path
      */
     public static Path defaultTestPath = Paths.get("target/excel/");
-    public static String author = "guanquan.wang";
+    public static String author = System.getProperty("user.name");
     public static Random random = new Random();
 
     public static char[] charArray = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
-    private static char[] cache = new char[32];
+    private static final char[] cache = new char[32];
 
     public static String getRandomString(int maxLen) {
         int n = random.nextInt(maxLen) + 1, size = charArray.length;

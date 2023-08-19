@@ -35,7 +35,7 @@ public class TemplateTest extends WorkbookTest {
         try (InputStream fis = Files.newInputStream(testResourceRoot().resolve("template.xlsx"))) {
             // Map data
             Map<String, Object> map = new HashMap<>();
-            map.put("name", "guanquan.wang");
+            map.put("name", author);
             map.put("score", 90);
             map.put("date", "2019-05-05");
             map.put("desc", "暑假");

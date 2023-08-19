@@ -147,7 +147,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
             )
             .writeTo(defaultTestPath);
     }
@@ -176,7 +176,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
                             style = Styles.clearFill(style)
@@ -341,7 +341,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         return style;
     };
 
-    // 定义一个int值转换lambda表达式，成绩低于60分显示"不及格"，其余显示正常分数
+    // 定义一个int值转换lambda表达式，成绩低于60分显示"不合格"，其余显示正常分数
     public static ConversionProcessor conversion = n -> (int) n < 60 ? "不合格" : n;
 
     @Test
@@ -369,7 +369,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         for (PropertyDescriptor pd : array) {
             println(pd);
         }
-        ExtItem item = new ExtItem(1, "guanquan.wang");
+        ExtItem item = new ExtItem(1, author);
         item.nice = "colvin";
 
         Field[] fields = item.getClass().getDeclaredFields();
