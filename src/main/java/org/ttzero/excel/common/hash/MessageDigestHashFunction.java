@@ -15,7 +15,6 @@
 package org.ttzero.excel.common.hash;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -118,7 +117,6 @@ final class MessageDigestHashFunction extends AbstractHashFunction implements Se
   private static final class MessageDigestHasher extends AbstractByteHasher {
     private final MessageDigest digest;
     private final int bytes;
-    private boolean done;
 
     private MessageDigestHasher(MessageDigest digest, int bytes) {
       this.digest = digest;
@@ -137,12 +135,6 @@ final class MessageDigestHashFunction extends AbstractHashFunction implements Se
       digest.update(b, off, len);
     }
 
-    @Override
-    protected void update(ByteBuffer bytes) {
-      checkNotDone();
-      digest.update(bytes);
-    }
-
     private void checkNotDone() {
 //      checkState(!done, "Cannot re-use a Hasher after calling hash() on it");
     }
@@ -150,7 +142,6 @@ final class MessageDigestHashFunction extends AbstractHashFunction implements Se
     @Override
     public HashCode hash() {
       checkNotDone();
-      done = true;
       return (bytes == digest.getDigestLength())
           ? HashCode.fromBytesNoCopy(digest.digest())
           : HashCode.fromBytesNoCopy(Arrays.copyOf(digest.digest(), bytes));

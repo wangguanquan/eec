@@ -372,9 +372,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Column[][] columnsArray = new Column[columns.length][];
         for (int i = 0; i < columns.length; i++) {
             columnsArray[i] = columns[i].toArray();
-
-            // Free memory after write
-//            columns[i].trimTail();
         }
         // Merge cells if exists
         @SuppressWarnings("unchecked")
@@ -897,7 +894,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Reset buffer position
         byteBuffer.position(position);
         // Store in disk
-        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE);
+        SeekableByteChannel channel = Files.newByteChannel(mediaPath.resolve(name), StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
         channel.write(byteBuffer);
         channel.close();
 
@@ -1564,7 +1561,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.col = column;
         picture.row = row;
         picture.setPadding(1);
-        picture.effect = columns[column].pictureEffect;
+        picture.effect = columns[column].effect;
 
         return picture;
     }

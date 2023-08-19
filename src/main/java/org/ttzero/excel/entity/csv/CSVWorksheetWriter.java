@@ -153,10 +153,19 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         boolean noneHeader = columns == null || columns.length == 0;
 
         if (!noneHeader) {
-            for (Column hc : columns) {
-                writer.write(isNotEmpty(hc.getName()) ? hc.getName() : hc.key);
+            // Write header
+            int subColumnSize = columns[0].subColumnSize();
+            Column[][] columnsArray = new Column[columns.length][];
+            for (int i = 0; i < columns.length; i++) {
+                columnsArray[i] = columns[i].toArray();
             }
-            writer.newLine();
+            for (int i = subColumnSize - 1; i >= 0; i--) {
+                for (int j = 0; j < columns.length; j++) {
+                    Column hc = columnsArray[j][i];
+                    writer.write(isNotEmpty(hc.getName()) ? hc.getName() : hc.key);
+                }
+                writer.newLine();
+            }
         }
     }
 

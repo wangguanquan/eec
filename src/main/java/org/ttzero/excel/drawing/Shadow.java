@@ -19,6 +19,8 @@ package org.ttzero.excel.drawing;
 
 import java.awt.Color;
 
+import static org.ttzero.excel.drawing.Enums.Angle;
+
 /**
  * Adds shading at various possible angles to create an effect of depth.
  *

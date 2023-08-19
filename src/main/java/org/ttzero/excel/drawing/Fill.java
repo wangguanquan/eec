@@ -37,240 +37,49 @@ public class Fill {
          */
         public int alpha;
 
-        public int shade; // TODO unknown property
+        public int shade;
+
+        public Color getColor() {
+            return color;
+        }
+
+        public SolidFill setColor(Color color) {
+            this.color = color;
+            return this;
+        }
+
+        public int getAlpha() {
+            return alpha;
+        }
+
+        public SolidFill setAlpha(int alpha) {
+            this.alpha = alpha;
+            return this;
+        }
+
+        public int getShade() {
+            return shade;
+        }
+
+        public SolidFill setShade(int shade) {
+            this.shade = shade;
+            return this;
+        }
     }
 
-    /**
-     * Pattern Fill
-     */
-    public static class PatternFill extends Fill {
-        public Color bgColor, fgColor;
-        public PatternValues pattern;
-    }
+//    /**
+//     * Pattern Fill
+//     */
+//    public static class PatternFill extends Fill {
+//        public Color bgColor, fgColor;
+//        public PatternValues pattern;
+//    }
+//
+//    /**
+//     * Gradient Fill
+//     */
+//    public static class GradientFill extends Fill {
+//
+//    }
 
-    /**
-     * Gradient Fill
-     */
-    public static class GradientFill extends Fill {
-
-    }
-
-    public enum PatternValues {
-        /**
-         * Cross
-         */
-        cross,
-        /**
-         * DarkDownwardDiagonal
-         */
-        dkDnDiag,
-        /**
-         * DarkHorizontal
-         */
-        dkHorz,
-        /**
-         * DarkUpwardDiagonal
-         */
-        dkUpDiag,
-        /**
-         * DarkVertical
-         */
-        dkVert,
-        /**
-         * DashedDownwardDiagonal
-         */
-        dashDnDiag,
-        /**
-         * DashedHorizontal
-         */
-        dashHorz,
-        /**
-         * DashedUpwardDiagonal
-         */
-        dashUpDiag,
-        /**
-         * DashedVertical
-         */
-        dashVert,
-        /**
-         * DiagonalBrick
-         */
-        diagBrick,
-        /**
-         * DiagonalCross
-         */
-        diagCross,
-        /**
-         * Divot
-         */
-        divot,
-        /**
-         * DotGrid
-         */
-        dotGrid,
-        /**
-         * DottedDiamond
-         */
-        dotDmnd,
-        /**
-         * DownwardDiagonal
-         */
-        dnDiag,
-        /**
-         * Horizontal
-         */
-        horz,
-        /**
-         * HorizontalBrick
-         */
-        horzBrick,
-        /**
-         * LargeCheck
-         */
-        lgCheck,
-        /**
-         * LargeConfetti
-         */
-        lgConfetti,
-        /**
-         * LargeGrid
-         */
-        lgGrid,
-        /**
-         * LightDownwardDiagonal
-         */
-        ltDnDiag,
-        /**
-         * LightHorizontal
-         */
-        ltHorz,
-        /**
-         * LightUpwardDiagonal
-         */
-        ltUpDiag,
-        /**
-         * LightVertical
-         */
-        ltVert,
-        /**
-         * NarrowHorizontal
-         */
-        narHorz,
-        /**
-         * NarrowVertical
-         */
-        narVert,
-        /**
-         * OpenDiamond
-         */
-        openDmnd,
-        /**
-         * Percent10
-         */
-        pct10,
-        /**
-         * Percent20
-         */
-        pct20,
-        /**
-         * Percent25
-         */
-        pct25,
-        /**
-         * Percent30
-         */
-        pct30,
-        /**
-         * Percent40
-         */
-        pct40,
-        /**
-         * Percent5
-         */
-        pct5,
-        /**
-         * Percent50
-         */
-        pct50,
-        /**
-         * Percent60
-         */
-        pct60,
-        /**
-         * Percent70
-         */
-        pct70,
-        /**
-         * Percent75
-         */
-        pct75,
-        /**
-         * Percent80
-         */
-        pct80,
-        /**
-         * Percent90
-         */
-        pct90,
-        /**
-         * Plaid
-         */
-        plaid,
-        /**
-         * Shingle
-         */
-        shingle,
-        /**
-         * SmallCheck
-         */
-        smCheck,
-        /**
-         * SmallConfetti
-         */
-        smConfetti,
-        /**
-         * SmallGrid
-         */
-        smGrid,
-        /**
-         * SolidDiamond
-         */
-        solidDmnd,
-        /**
-         * Sphere
-         */
-        sphere,
-        /**
-         * Trellis
-         */
-        trellis,
-        /**
-         * UpwardDiagonal
-         */
-        upDiag,
-        /**
-         * Vertical
-         */
-        vert,
-        /**
-         * Wave
-         */
-        wave,
-        /**
-         * Weave
-         */
-        weave,
-        /**
-         * WideDownwardDiagonal
-         */
-        wdDnDiag,
-        /**
-         * WideUpwardDiagonal
-         */
-        wdUpDiag,
-        /**
-         * ZigZag
-         */
-        zigZag
-    }
 }

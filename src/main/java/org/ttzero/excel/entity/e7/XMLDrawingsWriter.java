@@ -17,20 +17,22 @@
 
 package org.ttzero.excel.entity.e7;
 
-import org.ttzero.excel.drawing.Angle;
 import org.ttzero.excel.drawing.Bevel;
 import org.ttzero.excel.drawing.Camera;
+import org.ttzero.excel.drawing.Enums.Angle;
+import org.ttzero.excel.drawing.Enums.Cap;
+import org.ttzero.excel.drawing.Enums.JoinType;
+import org.ttzero.excel.drawing.Enums.PresetCamera;
+import org.ttzero.excel.drawing.Enums.ShapeType;
 import org.ttzero.excel.drawing.Fill;
 import org.ttzero.excel.drawing.Glow;
-import org.ttzero.excel.drawing.Guide;
 import org.ttzero.excel.drawing.LightRig;
 import org.ttzero.excel.drawing.Outline;
-import org.ttzero.excel.drawing.PictureEffect;
+import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.drawing.Reflection;
 import org.ttzero.excel.drawing.Scene3D;
 import org.ttzero.excel.drawing.Shadow;
 import org.ttzero.excel.drawing.Shape3D;
-import org.ttzero.excel.drawing.ShapeType;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.entity.Relationship;
@@ -38,6 +40,7 @@ import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
+import org.ttzero.excel.manager.docProps.Tuple2;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -54,7 +57,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 /**
  * Drawings writer(For Picture only)
  *
- * @author guanquan.wng at 2023-03-07 09:09
+ * @author guanquan.wang at 2023-03-07 09:09
  */
 @TopNS(prefix = {"xdr", "a", "r"}, value = "wsDr"
     , uri = {"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"
@@ -260,17 +263,17 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     }
 
     protected void writeEffects(Picture pict) throws IOException {
-        PictureEffect effect = pict.effect;
+        Effect effect = pict.effect;
         // Geometry
         bw.write("<a:prstGeom prst=\"");
         bw.write(effect.geometry != null ? effect.geometry.name() : ShapeType.rect.name());
         if (effect.geometryAdjustValueList != null && !effect.geometryAdjustValueList.isEmpty()) {
             bw.write("\"><a:avLst>");
-            for (Guide guide : effect.geometryAdjustValueList) {
+            for (Tuple2<String, String> guide : effect.geometryAdjustValueList) {
                 bw.write("<a:gd name=\"");
-                bw.write(guide.name);
+                bw.write(guide.v1);
                 bw.write("\" fmla=\"");
-                bw.write(guide.fmla);
+                bw.write(guide.v2);
                 bw.write("\"/>");
             }
             bw.write("</a:avLst></a:prstGeom>");
@@ -381,7 +384,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             bw.writeInt((int) (reflection.dist % 101 * 12700));
         }
         bw.write("\" endPos=\"");
-        bw.writeInt(reflection.size % 101 * 1000);
+        bw.writeInt((int) (reflection.size % 101 * 1000 + 0.5D));
         bw.write("\" dir=\"");
         bw.writeInt(reflection.direction % 361 * 60000);
         bw.write("\" sy=\"-100000\" algn=\"bl\" rotWithShape=\"0\"/>");
@@ -432,21 +435,19 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             }
             bw.write("</a:srgbClr></a:solidFill>");
         }
-        // Pattern fill
-        else if (fill instanceof Fill.PatternFill) {
-            // TODO
-        }
-        // Gradient fill
-        else if (fill instanceof Fill.GradientFill) {
-            // TODO
-        }
+//        // TODO Pattern fill
+//        else if (fill instanceof Fill.PatternFill) {
+//        }
+//        // TODO Gradient fill
+//        else if (fill instanceof Fill.GradientFill) {
+//        }
     }
 
     protected void attachOutline(Outline ln) throws IOException {
         bw.write("<a:ln w=\"");
         bw.writeInt((int) (ln.width * 12700));
         bw.write("\" cap=\"");
-        bw.write(ln.cap != null ? ln.cap.shotName : Outline.Cap.SQUARE.shotName);
+        bw.write(ln.cap != null ? ln.cap.shotName : Cap.square.shotName);
         if (ln.cmpd != null) {
             bw.write("\" cmpd=\"");
             bw.write(ln.cmpd.shotName);
@@ -461,7 +462,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         }
         if (ln.joinType != null) {
             bw.write("<a:"); bw.write(ln.joinType.name());
-            if (ln.joinType == Outline.JoinType.miter) {
+            if (ln.joinType == JoinType.miter) {
                 bw.write(" lim=\"");
                 bw.writeInt(ln.miterLimit > 0 ? ((int) (ln.miterLimit * 1000)) : 800000);
                 bw.write("\"/>");
@@ -474,7 +475,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.write("<a:scene3d>");
         Camera camera = scene.camera;
         bw.write("<a:camera prst=\"");
-        bw.write(camera.presetCamera != null ? camera.presetCamera.name() : Camera.PresetCamera.orthographicFront.name());
+        bw.write(camera.presetCamera != null ? camera.presetCamera.name() : PresetCamera.orthographicFront.name());
         if (camera.fov > 0.) {
             bw.write("\" fov=\"");
             bw.writeInt((int) (camera.fov % 181 * 60000));

@@ -17,7 +17,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.drawing.PictureEffect;
+import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -152,7 +152,7 @@ public class Column {
     /**
      * Picture Effect
      */
-    public PictureEffect pictureEffect;
+    public Effect effect;
     /**
      * Constructor Column
      */
@@ -372,7 +372,7 @@ public class Column {
         int i;
         if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
         if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
-        this.pictureEffect = other.pictureEffect;
+        this.effect = other.effect;
 
         return this;
     }
@@ -1025,20 +1025,20 @@ public class Column {
     /**
      * Specify the image effect, which only takes effect when the column write as Media
      *
-     * @param pictureEffect {@link PictureEffect}
+     * @param effect {@link Effect}
      * @return current {@link Column}
      */
-    public Column setPictureEffect(PictureEffect pictureEffect) {
-        this.pictureEffect = pictureEffect;
+    public Column setEffect(Effect effect) {
+        this.effect = effect;
         return this;
     }
 
     /**
-     * Returns {@code PictureEffect}
+     * Returns {@code Effect}
      *
-     * @return {@link PictureEffect}
+     * @return {@link Effect}
      */
-    public PictureEffect getPictureEffect() {
-        return pictureEffect;
+    public Effect getEffect() {
+        return effect;
     }
 }

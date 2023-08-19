@@ -79,32 +79,18 @@ public class IndexSharedStringTableTest {
     @Test public void test3() throws IOException {
         try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
             long start = System.currentTimeMillis();
-            for (int i = 0; i < 10_000_000; i++) {
+            for (int i = 0; i < 1_000_000; i++) {
                 sst.push(getRandomString());
             }
-            println(System.currentTimeMillis() - start);
+            println("Write SST cost: " + (System.currentTimeMillis() - start));
 
             start = System.currentTimeMillis();
 
-            for (int i = 0; i < 10_000_000; i++) {
+            for (int i = 0; i < 1_000_000; i++) {
                 sst.get(i);
             }
-            println(System.currentTimeMillis() - start);
+            println("Read SST cost: " + (System.currentTimeMillis() - start));
         }
     }
-//
-//    @Test public void test4() throws IOException {
-//        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+579019283137212671.sst.idx");
-//        IndexSharedStringTable sst = new IndexSharedStringTable(path);
-//        long start = System.currentTimeMillis();
-//        int length = 512, n = 0;
-//        String[] array = new String[length];
-//        for (int i = 0; i < 10_000_000; ) {
-//            int size = sst.batch(i, array);
-//            i += size;
-//            n += size;
-//        }
-//        System.out.println(n);
-//        System.out.println(System.currentTimeMillis() - start);
-//    }
+
 }

@@ -15,7 +15,6 @@
 package org.ttzero.excel.common.hash;
 
 
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
@@ -55,53 +54,10 @@ public interface PrimitiveSink {
   PrimitiveSink putBytes(byte[] bytes, int off, int len);
 
   /**
-   * Puts the remaining bytes of a byte buffer into this sink. {@code bytes.position()} is the first
-   * byte written, {@code bytes.limit() - 1} is the last. The position of the buffer will be equal
-   * to the limit when this method returns.
-   *
-   * @param bytes a byte buffer
-   * @return this instance
-   * @since 23.0
-   */
-  PrimitiveSink putBytes(ByteBuffer bytes);
-
-  /** Puts a short into this sink. */
-  PrimitiveSink putShort(short s);
-
-  /** Puts an int into this sink. */
-  PrimitiveSink putInt(int i);
-
-  /** Puts a long into this sink. */
-  PrimitiveSink putLong(long l);
-
-  /** Puts a float into this sink. */
-  PrimitiveSink putFloat(float f);
-
-  /** Puts a double into this sink. */
-  PrimitiveSink putDouble(double d);
-
-  /** Puts a boolean into this sink. */
-  PrimitiveSink putBoolean(boolean b);
-
-  /** Puts a character into this sink. */
-  PrimitiveSink putChar(char c);
-
-  /**
-   * Puts each 16-bit code unit from the {@link CharSequence} into this sink.
-   *
-   * <p><b>Warning:</b> This method will produce different output than most other languages do when
-   * running on the equivalent input. For cross-language compatibility, use {@link #putString},
-   * usually with a charset of UTF-8. For other use cases, use {@code putUnencodedChars}.
-   *
-   * @since 15.0 (since 11.0 as putString(CharSequence))
-   */
-  PrimitiveSink putUnencodedChars(CharSequence charSequence);
-
-  /**
    * Puts a string into this sink using the given charset.
    *
    * <p><b>Warning:</b> This method, which reencodes the input before processing it, is useful only
-   * for cross-language compatibility. For other use cases, prefer {@link #putUnencodedChars}, which
+   * for cross-language compatibility. For other use cases, prefer {@code #putUnencodedChars}, which
    * is faster, produces the same output across Java releases, and processes every {@code char} in
    * the input, even if some are invalid.
    */

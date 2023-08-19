@@ -189,10 +189,10 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
-        else if (clazz == Path.class) {
+        else if (Path.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setPath((Path) e);
             else cell.setSv(e.toString());
-        } else if (clazz == File.class) {
+        } else if (File.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setPath(((File) e).toPath());
             else cell.setSv(e.toString());
         } else if (InputStream.class.isAssignableFrom(clazz)) {
@@ -201,7 +201,7 @@ public interface ICellValueAndStyle {
         } else if (clazz == byte[].class) {
             if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
             else cell.setSv(e.toString());
-        } else if (clazz == ByteBuffer.class) {
+        } else if (ByteBuffer.class.isAssignableFrom(clazz)) {
             if (hc.getColumnType() == 1) cell.setByteBuffer((ByteBuffer) e);
             else cell.setSv(e.toString());
         }
@@ -309,5 +309,19 @@ public interface ICellValueAndStyle {
     default void downloadRemoteResource(int row, Cell cell, String e, Column hc, Class<?> clazz) {
         cell.setSv(e);
         cell.t = Cell.REMOTE_URL;
+    }
+
+    /**
+     * Mark whitelist types that can be easily exported
+     *
+     * @param clazz cell value class
+     * @return true if can be easily exported
+     */
+    default boolean isAllowDirectOutput(Class<?> clazz) {
+        return clazz == null || isString(clazz) || isDate(clazz) || isDateTime(clazz) || isChar(clazz) || isShort(clazz)
+            || isInt(clazz) || isLong(clazz) || isFloat(clazz) || isDouble(clazz) || isBool(clazz) || isBigDecimal(clazz)
+            || isLocalDate(clazz) || isLocalDateTime(clazz) || isTime(clazz) || isLocalTime(clazz) || Path.class.isAssignableFrom(clazz)
+            || File.class.isAssignableFrom(clazz) || InputStream.class.isAssignableFrom(clazz) || clazz == byte[].class
+            || ByteBuffer.class.isAssignableFrom(clazz);
     }
 }

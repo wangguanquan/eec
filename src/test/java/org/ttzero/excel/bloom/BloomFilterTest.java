@@ -32,13 +32,12 @@ public class BloomFilterTest {
         for (int index = 0; index < 50000; index++) {
             filter.put("abc_test_" + index);
         }
-        System.out.println("write all...");
         int n = 0;
-        for (int i = 3; i < 1000; i++) {
+        for (int i = 0; i < 1000; i++) {
             if (filter.mightContain("abc_test_" + i)) {
                 n++;
             }
         }
-        System.out.println(n);
+        assert n >= 995;
     }
 }

@@ -17,6 +17,9 @@
 
 package org.ttzero.excel.drawing;
 
+import static org.ttzero.excel.drawing.Enums.Angle;
+import static org.ttzero.excel.drawing.Enums.Rig;
+
 /**
  * @author guanquan.wang at 2023-07-26 15:21
  */
@@ -36,75 +39,49 @@ public class LightRig {
      */
     public double latitude, longitude, revolution;
 
-    public enum Rig {
-        balanced,
-        brightRoom,
-        chilly,
-        contrasting,
-        flat,
-        flood,
-        freezing,
-        glow,
-        harsh,
-        legacyFlat1,
-        legacyFlat2,
-        legacyFlat3,
-        legacyFlat4,
-        legacyHarsh1,
-        legacyHarsh2,
-        legacyHarsh3,
-        legacyHarsh4,
-        legacyNormal1,
-        legacyNormal2,
-        legacyNormal3,
-        legacyNormal4,
-        morning,
-        soft,
-        sunrise,
-        sunset,
-        threePt,
-        twoPt
-    }
-
-
     public Rig getRig() {
         return rig;
     }
 
-    public void setRig(Rig rig) {
+    public LightRig setRig(Rig rig) {
         this.rig = rig;
+        return this;
     }
 
     public Angle getAngle() {
         return angle;
     }
 
-    public void setAngle(Angle angle) {
+    public LightRig setAngle(Angle angle) {
         this.angle = angle;
+        return this;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public LightRig setLatitude(double latitude) {
         this.latitude = latitude;
+        return this;
     }
 
     public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public LightRig setLongitude(double longitude) {
         this.longitude = longitude;
+        return this;
     }
 
     public double getRevolution() {
         return revolution;
     }
 
-    public void setRevolution(double revolution) {
+    public LightRig setRevolution(double revolution) {
         this.revolution = revolution;
+        return this;
     }
 
 }

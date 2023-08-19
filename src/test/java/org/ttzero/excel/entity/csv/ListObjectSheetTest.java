@@ -25,7 +25,9 @@ import org.ttzero.excel.entity.CustomColIndexTest;
 import org.ttzero.excel.entity.CustomizeDataSourceSheet;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
+import org.ttzero.excel.entity.MultiHeaderColumnsTest;
 import org.ttzero.excel.entity.TooManyColumnsException;
+import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -129,7 +131,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
             )
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -160,7 +162,7 @@ public class ListObjectSheetTest extends WorkbookTest{
             .addSheet(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
-                , new Column("成绩", "score", n -> (int) n < 60 ? "不及格" : n)
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int) o < 60) {
                             style = Styles.clearFill(style)
@@ -209,7 +211,7 @@ public class ListObjectSheetTest extends WorkbookTest{
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", "guanquan.wang")
+        new Workbook("object style processor1", author)
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Column("学号", "id")
                     , new Column("姓名", "name")
@@ -379,5 +381,13 @@ public class ListObjectSheetTest extends WorkbookTest{
         } catch (TooManyColumnsException e) {
             assert true;
         }
+    }
+
+    @Test public void testRepeatAnnotations() throws IOException {
+        List<MultiHeaderColumnsTest.RepeatableEntry> list = MultiHeaderColumnsTest.RepeatableEntry.randomTestData();
+        new Workbook("Repeat Columns Annotation")
+            .addSheet(new ListSheet<>(list))
+            .saveAsCSV()
+            .writeTo(defaultTestPath);
     }
 }

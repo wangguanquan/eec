@@ -14,8 +14,6 @@
 
 package org.ttzero.excel.common.hash;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 /**
  * A hash function is a collision-averse pure function that maps an arbitrary block of data to a
@@ -92,7 +90,7 @@ import java.nio.charset.Charset;
  * <p><b>Compatibility note:</b> Throughout this API, multibyte values are always interpreted in
  * <i>little-endian</i> order. That is, hashing the byte array {@code {0x01, 0x02, 0x03, 0x04}} is
  * equivalent to hashing the {@code int} value {@code 0x04030201}. If this isn't what you need,
- * methods such as {@link Integer#reverseBytes} and {@link Ints#toByteArray} will help.
+ * methods such as {@link Integer#reverseBytes} and {@code Ints#toByteArray} will help.
  *
  * <h3>Relationship to {@link Object#hashCode}</h3>
  *
@@ -126,79 +124,6 @@ public interface HashFunction {
    * }</pre>
    */
   Hasher newHasher();
-
-  /**
-   * Begins a new hash code computation as {@link #newHasher()}, but provides a hint of the expected
-   * size of the input (in bytes). This is only important for non-streaming hash functions (hash
-   * functions that need to buffer their whole input before processing any of it).
-   */
-  Hasher newHasher(int expectedInputSize);
-
-  /**
-   * Shortcut for {@code newHasher().putInt(input).hash()}; returns the hash code for the given
-   * {@code int} value, interpreted in little-endian byte order. The implementation <i>might</i>
-   * perform better than its longhand equivalent, but should not perform worse.
-   *
-   * @since 12.0
-   */
-  HashCode hashInt(int input);
-
-  /**
-   * Shortcut for {@code newHasher().putLong(input).hash()}; returns the hash code for the given
-   * {@code long} value, interpreted in little-endian byte order. The implementation <i>might</i>
-   * perform better than its longhand equivalent, but should not perform worse.
-   */
-  HashCode hashLong(long input);
-
-  /**
-   * Shortcut for {@code newHasher().putBytes(input).hash()}. The implementation <i>might</i>
-   * perform better than its longhand equivalent, but should not perform worse.
-   */
-  HashCode hashBytes(byte[] input);
-
-  /**
-   * Shortcut for {@code newHasher().putBytes(input, off, len).hash()}. The implementation
-   * <i>might</i> perform better than its longhand equivalent, but should not perform worse.
-   *
-   * @throws IndexOutOfBoundsException if {@code off < 0} or {@code off + len > bytes.length} or
-   *     {@code len < 0}
-   */
-  HashCode hashBytes(byte[] input, int off, int len);
-
-  /**
-   * Shortcut for {@code newHasher().putBytes(input).hash()}. The implementation <i>might</i>
-   * perform better than its longhand equivalent, but should not perform worse.
-   *
-   * @since 23.0
-   */
-  HashCode hashBytes(ByteBuffer input);
-
-  /**
-   * Shortcut for {@code newHasher().putUnencodedChars(input).hash()}. The implementation
-   * <i>might</i> perform better than its longhand equivalent, but should not perform worse. Note
-   * that no character encoding is performed; the low byte and high byte of each {@code char} are
-   * hashed directly (in that order).
-   *
-   * <p><b>Warning:</b> This method will produce different output than most other languages do when
-   * running the same hash function on the equivalent input. For cross-language compatibility, use
-   * {@link #hashString}, usually with a charset of UTF-8. For other use cases, use {@code
-   * hashUnencodedChars}.
-   *
-   * @since 15.0 (since 11.0 as hashString(CharSequence)).
-   */
-  HashCode hashUnencodedChars(CharSequence input);
-
-  /**
-   * Shortcut for {@code newHasher().putString(input, charset).hash()}. Characters are encoded using
-   * the given {@link Charset}. The implementation <i>might</i> perform better than its longhand
-   * equivalent, but should not perform worse.
-   *
-   * <p><b>Warning:</b> This method, which reencodes the input before hashing it, is useful only for
-   * cross-language compatibility. For other use cases, prefer {@link #hashUnencodedChars}, which is
-   * faster, produces the same output across Java releases, and hashes every {@code char} in the
-   * input, even if some are invalid.
-   */
-  HashCode hashString(CharSequence input, Charset charset);
 
   /**
    * Shortcut for {@code newHasher().putObject(instance, funnel).hash()}. The implementation

@@ -1114,7 +1114,8 @@ public class CSVUtil {
          * @throws IOException If an I/O error occurs
          */
         public void write(String text) throws IOException {
-            write(text.toCharArray());
+            if (text != null && !text.isEmpty()) write(text.toCharArray());
+            else writeEmpty();
         }
 
         /**
