@@ -40,23 +40,26 @@ public class Glow {
         return color;
     }
 
-    public void setColor(Color color) {
+    public Glow setColor(Color color) {
         this.color = color;
+        return this;
     }
 
     public int getAlpha() {
         return alpha;
     }
 
-    public void setAlpha(int alpha) {
+    public Glow setAlpha(int alpha) {
         this.alpha = alpha;
+        return this;
     }
 
     public double getDist() {
         return dist;
     }
 
-    public void setDist(double dist) {
+    public Glow setDist(double dist) {
         this.dist = dist;
+        return this;
     }
 }

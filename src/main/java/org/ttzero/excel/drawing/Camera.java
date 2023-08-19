@@ -17,6 +17,8 @@
 
 package org.ttzero.excel.drawing;
 
+import static org.ttzero.excel.drawing.Enums.PresetCamera;
+
 /**
  * @author guanquan.wang at 2023-07-26 15:21
  */
@@ -42,97 +44,57 @@ public class Camera {
      */
     public double latitude, longitude, revolution;
 
-    public enum PresetCamera {
-        isometricBottomDown,
-        isometricBottomUp,
-        isometricLeftDown,
-        isometricLeftUp,
-        isometricOffAxis1Left,
-        isometricOffAxis1Right,
-        isometricOffAxis1Top,
-        isometricOffAxis2Left,
-        isometricOffAxis2Right,
-        isometricOffAxis2Top,
-        isometricOffAxis3Bottom,
-        isometricOffAxis3Left,
-        isometricOffAxis3Right,
-        isometricOffAxis4Bottom,
-        isometricOffAxis4Left,
-        isometricOffAxis4Right,
-        isometricRightDown,
-        isometricRightUp,
-        isometricTopDown,
-        isometricTopUp,
-        obliqueBottom,
-        obliqueBottomLeft,
-        obliqueBottomRight,
-        obliqueLeft,
-        obliqueRight,
-        obliqueTop,
-        obliqueTopLeft,
-        obliqueTopRight,
-        orthographicFront,
-        perspectiveAbove,
-        perspectiveAboveLeftFacing,
-        perspectiveAboveRightFacing,
-        perspectiveBelow,
-        perspectiveContrastingLeftFacing,
-        perspectiveContrastingRightFacing,
-        perspectiveFront,
-        perspectiveHeroicExtremeLeftFacing,
-        perspectiveHeroicExtremeRightFacing,
-        perspectiveHeroicRightFacing,
-        perspectiveLeft,
-        perspectiveRelaxed,
-        perspectiveRelaxedModerately,
-        perspectiveRight,
-    }
-
     public PresetCamera getPresetCamera() {
         return presetCamera;
     }
 
-    public void setPresetCamera(PresetCamera presetCamera) {
+    public Camera setPresetCamera(PresetCamera presetCamera) {
         this.presetCamera = presetCamera;
+        return this;
     }
 
     public int getZoom() {
         return zoom;
     }
 
-    public void setZoom(int zoom) {
+    public Camera setZoom(int zoom) {
         this.zoom = zoom;
+        return this;
     }
 
     public double getFov() {
         return fov;
     }
 
-    public void setFov(double fov) {
+    public Camera setFov(double fov) {
         this.fov = fov;
+        return this;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public Camera setLatitude(double latitude) {
         this.latitude = latitude;
+        return this;
     }
 
     public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public Camera setLongitude(double longitude) {
         this.longitude = longitude;
+        return this;
     }
 
     public double getRevolution() {
         return revolution;
     }
 
-    public void setRevolution(double revolution) {
+    public Camera setRevolution(double revolution) {
         this.revolution = revolution;
+        return this;
     }
 }

@@ -19,6 +19,8 @@ package org.ttzero.excel.drawing;
 
 import java.awt.Color;
 
+import static org.ttzero.excel.drawing.Enums.Material;
+
 /**
  * @author guanquan.wang at 2023-07-26 15:21
  */
@@ -44,77 +46,66 @@ public class Shape3D {
     public Color extrusionColor;
     public double extrusionHeight;
 
-    public enum Material {
-        clear,
-        dkEdge,
-        flat,
-        legacyMatte,
-        legacyMetal,
-        legacyPlastic,
-        legacyWireframe,
-        matte,
-        metal,
-        plastic,
-        powder,
-        softEdge,
-        softMetal,
-        translucentPowder,
-        warmMatte,
-    }
-
     public Bevel getBevelTop() {
         return bevelTop;
     }
 
-    public void setBevelTop(Bevel bevelTop) {
+    public Shape3D setBevelTop(Bevel bevelTop) {
         this.bevelTop = bevelTop;
+        return this;
     }
 
     public Bevel getBevelBottom() {
         return bevelBottom;
     }
 
-    public void setBevelBottom(Bevel bevelBottom) {
+    public Shape3D setBevelBottom(Bevel bevelBottom) {
         this.bevelBottom = bevelBottom;
+        return this;
     }
 
     public Material getMaterial() {
         return material;
     }
 
-    public void setMaterial(Material material) {
+    public Shape3D setMaterial(Material material) {
         this.material = material;
+        return this;
     }
 
     public Color getContourColor() {
         return contourColor;
     }
 
-    public void setContourColor(Color contourColor) {
+    public Shape3D setContourColor(Color contourColor) {
         this.contourColor = contourColor;
+        return this;
     }
 
     public double getContourWidth() {
         return contourWidth;
     }
 
-    public void setContourWidth(double contourWidth) {
+    public Shape3D setContourWidth(double contourWidth) {
         this.contourWidth = contourWidth;
+        return this;
     }
 
     public Color getExtrusionColor() {
         return extrusionColor;
     }
 
-    public void setExtrusionColor(Color extrusionColor) {
+    public Shape3D setExtrusionColor(Color extrusionColor) {
         this.extrusionColor = extrusionColor;
+        return this;
     }
 
     public double getExtrusionHeight() {
         return extrusionHeight;
     }
 
-    public void setExtrusionHeight(double extrusionHeight) {
+    public Shape3D setExtrusionHeight(double extrusionHeight) {
         this.extrusionHeight = extrusionHeight;
+        return this;
     }
 }

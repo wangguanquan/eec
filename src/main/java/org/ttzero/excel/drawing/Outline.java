@@ -19,6 +19,11 @@ package org.ttzero.excel.drawing;
 
 import java.awt.Color;
 
+import static org.ttzero.excel.drawing.Enums.Cap;
+import static org.ttzero.excel.drawing.Enums.CompoundType;
+import static org.ttzero.excel.drawing.Enums.DashPattern;
+import static org.ttzero.excel.drawing.Enums.JoinType;
+
 /**
  * The style of the shape's outline is specified with the &lt;a:ln&gt; element.
  * The properties that are determined by this element include such things
@@ -48,133 +53,76 @@ public class Outline {
      */
     public double miterLimit;
 
-    public enum Cap {
-        square("sq"),
-        round("rnd"),
-        flat("flat")
-        ;
-        public final String shotName;
-
-        Cap(String shotName) {
-            this.shotName = shotName;
-        }
-
-        public String getShotName() {
-            return shotName;
-        }
-    }
-
-    public enum CompoundType {
-        doubleLines("dbl"),
-        singleLine("sng"),
-        thickThin("thickThin"),
-        thinThick("thinThick"),
-        threeLines("tri")
-        ;
-        public final String shotName;
-
-        CompoundType(String shotName) {
-            this.shotName = shotName;
-        }
-
-        public String getShotName() {
-            return shotName;
-        }
-    }
-
-    public enum DashPattern {
-        dash,
-        dashDot,
-        dot,
-        lgDash, // large dash
-        lgDashDot,
-        lgDashDotDot,
-        solid,
-        sysDash, // system dash
-        sysDashDot,
-        sysDashDotDot,
-        sysDot
-    }
-
-    public enum JoinType {
-        /**
-         * Specifies that a corner where two lines intersect is cut off at a 45 degree angle.
-         */
-        bevel,
-        /**
-         * Specifies that a corner where two lines intersect is sharp or clipped,
-         * depending on the ShapeOutline.MiterLimit value.
-         */
-        miter,
-        /**
-         * Specifies that a corner where two lines intersect is rounded.
-         */
-        round
-    }
-
-
     public Color getColor() {
         return color;
     }
 
-    public void setColor(Color color) {
+    public Outline setColor(Color color) {
         this.color = color;
+        return this;
     }
 
     public int getAlpha() {
         return alpha;
     }
 
-    public void setAlpha(int alpha) {
+    public Outline setAlpha(int alpha) {
         this.alpha = alpha;
+        return this;
     }
 
     public double getWidth() {
         return width;
     }
 
-    public void setWidth(double width) {
+    public Outline setWidth(double width) {
         this.width = width;
+        return this;
     }
 
     public Cap getCap() {
         return cap;
     }
 
-    public void setCap(Cap cap) {
+    public Outline setCap(Cap cap) {
         this.cap = cap;
+        return this;
     }
 
     public CompoundType getCmpd() {
         return cmpd;
     }
 
-    public void setCmpd(CompoundType cmpd) {
+    public Outline setCmpd(CompoundType cmpd) {
         this.cmpd = cmpd;
+        return this;
     }
 
     public DashPattern getDash() {
         return dash;
     }
 
-    public void setDash(DashPattern dash) {
+    public Outline setDash(DashPattern dash) {
         this.dash = dash;
+        return this;
     }
 
     public JoinType getJoinType() {
         return joinType;
     }
 
-    public void setJoinType(JoinType joinType) {
+    public Outline setJoinType(JoinType joinType) {
         this.joinType = joinType;
+        return this;
     }
 
     public double getMiterLimit() {
         return miterLimit;
     }
 
-    public void setMiterLimit(double miterLimit) {
+    public Outline setMiterLimit(double miterLimit) {
         this.miterLimit = miterLimit;
+        return this;
     }
 
 }

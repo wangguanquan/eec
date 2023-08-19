@@ -31,7 +31,7 @@ public class Reflection {
     /**
      * Specifies shadow size (0-100)
      */
-    public int size;
+    public double size;
     /**
      * Specifies the radius of the blur (0-100)
      */
@@ -54,11 +54,11 @@ public class Reflection {
         return this;
     }
 
-    public int getSize() {
+    public double getSize() {
         return size;
     }
 
-    public Reflection setSize(int size) {
+    public Reflection setSize(double size) {
         this.size = size;
         return this;
     }

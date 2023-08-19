@@ -38,15 +38,17 @@ public class Scene3D {
         return camera;
     }
 
-    public void setCamera(Camera camera) {
+    public Scene3D setCamera(Camera camera) {
         this.camera = camera;
+        return this;
     }
 
     public LightRig getLightRig() {
         return lightRig;
     }
 
-    public void setLightRig(LightRig lightRig) {
+    public Scene3D setLightRig(LightRig lightRig) {
         this.lightRig = lightRig;
+        return this;
     }
 }

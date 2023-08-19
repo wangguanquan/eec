@@ -17,6 +17,8 @@
 
 package org.ttzero.excel.drawing;
 
+import static org.ttzero.excel.drawing.Enums.PresetBevel;
+
 /**
  * @author guanquan.wang at 2023-07-25 09:24
  */
@@ -28,44 +30,32 @@ public class Bevel {
     /**
      * Preset Bevel
      */
-    public BevelPresetType prst;
-
-    public enum BevelPresetType {
-        angle,
-        artDeco,
-        circle,
-        convex,
-        coolSlant,
-        cross,
-        divot,
-        hardEdge,
-        relaxedInset,
-        riblet,
-        slope,
-        softRound,
-    }
+    public PresetBevel prst;
 
     public double getWidth() {
         return width;
     }
 
-    public void setWidth(double width) {
+    public Bevel setWidth(double width) {
         this.width = width;
+        return this;
     }
 
     public double getHeight() {
         return height;
     }
 
-    public void setHeight(double height) {
+    public Bevel setHeight(double height) {
         this.height = height;
+        return this;
     }
 
-    public BevelPresetType getPrst() {
+    public PresetBevel getPrst() {
         return prst;
     }
 
-    public void setPrst(BevelPresetType prst) {
+    public Bevel setPrst(PresetBevel prst) {
         this.prst = prst;
+        return this;
     }
 }
