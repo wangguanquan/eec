@@ -48,7 +48,7 @@ public class Panes {
     }
 
     public static Panes col(final int col) {
-        return new Panes(0, 2);
+        return new Panes(0, col);
     }
 
     public int getRow() {
