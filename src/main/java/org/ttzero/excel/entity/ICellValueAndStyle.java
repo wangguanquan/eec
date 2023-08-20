@@ -189,21 +189,18 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
-        else if (Path.class.isAssignableFrom(clazz)) {
-            if (hc.getColumnType() == 1) cell.setPath((Path) e);
-            else cell.setSv(e.toString());
-        } else if (File.class.isAssignableFrom(clazz)) {
-            if (hc.getColumnType() == 1) cell.setPath(((File) e).toPath());
-            else cell.setSv(e.toString());
-        } else if (InputStream.class.isAssignableFrom(clazz)) {
-            if (hc.getColumnType() == 1) cell.setInputStream((InputStream) e);
-            else cell.setSv(e.toString());
-        } else if (clazz == byte[].class) {
-            if (hc.getColumnType() == 1) cell.setBinary((byte[]) e);
-            else cell.setSv(e.toString());
-        } else if (ByteBuffer.class.isAssignableFrom(clazz)) {
-            if (hc.getColumnType() == 1) cell.setByteBuffer((ByteBuffer) e);
-            else cell.setSv(e.toString());
+        if (hc.getColumnType() == 1) {
+            if (Path.class.isAssignableFrom(clazz)) {
+                cell.setPath((Path) e);
+            } else if (File.class.isAssignableFrom(clazz)) {
+                 cell.setPath(((File) e).toPath());
+            } else if (InputStream.class.isAssignableFrom(clazz)) {
+                cell.setInputStream((InputStream) e);
+            } else if (clazz == byte[].class) {
+                cell.setBinary((byte[]) e);
+            } else if (ByteBuffer.class.isAssignableFrom(clazz)) {
+                cell.setByteBuffer((ByteBuffer) e);
+            }
         }
         // Others
         else {
