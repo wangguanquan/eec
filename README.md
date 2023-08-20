@@ -305,7 +305,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
-Version 0.5.10 (2023-08-x)
+Version 0.5.10 (2023-08-10)
 -------------
 - 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
 - 支持导出图片
@@ -336,14 +336,6 @@ Version 0.5.7 (2023-02-17)
 - 修复auto-size重置列宽时抛Buffer异常
 - 新增 #setRowHeight, #setHeaderRowHeight 方法设置行高
 
-Version 0.5.6 (2023-01-07)
--------------
-- 读取文件时支持指定表头，对于多行表头尤为有效
-- 提供Row#toMap方法将行数据转为LinkedHashMap(#294)
-- 提供Row#isBlank方法用于判断所有单元格的值是否为空(#314)
-- 读取文件转时支持自定义HeaderRow
-- 读文件时支持获取单元格样式
-- 修复部分BUG(#308, #320, #323)
 
 [更多...](./CHANGELOG)
 
