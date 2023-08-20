@@ -38,7 +38,7 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 ## WIKI
 
-阅读[WIKI](./wiki) 了解更多用法
+阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法
 
 
 ## 主要功能
@@ -180,7 +180,7 @@ new Workbook("Auto Width Test")
 
 #### 5. 报表轻松制作
 
-现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](./wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
+现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
 记帐类
 
@@ -188,13 +188,13 @@ new Workbook("Auto Width Test")
 
 统计类
 
-![报表2](./images/report3.png)
+![报表2](images/report3.png)
 
 #### 6. 支持28种预设图片样式
 
-关于图片样式请参考[导出图片](./wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
+关于图片样式请参考[](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
-![effect](./images/simplewrite/preset%20effect.jpg)
+![effect](./images/preset_effect.jpg)
 
 ### 读取示例
 
@@ -258,7 +258,7 @@ reader.sheet(0)
     .forEach(System.out::println)
 ```
 
-更多关于多表头使用方法可以参考 [WIKI](./wiki/%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4#%E8%AF%BB%E5%8F%96%E5%B8%A6%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%96%87%E4%BB%B6)
+更多关于多表头使用方法可以参考 [WIKI](https://github.com/wangguanquan/eec/wiki/%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4#%E8%AF%BB%E5%8F%96%E5%B8%A6%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%96%87%E4%BB%B6)
 
 ### xls格式支持
 
@@ -274,7 +274,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 
 读取xls格式的方法与读取xlsx格式完全一样，读取文件时不需要判断是xls格式还是xlsx格式，EEC为其提供了完全一样的接口，内部会根据文件头去判断具体类型， 这种方式比判断文件后缀准确得多。
 
-你可以在 [search.maven.org](https://search.maven.org/artifact/org.ttzero/eec-e3-support) 查询eec-e3-support版本，两个工具的兼容性 [参考此表](./wiki/EEC%E4%B8%8EE3-support%E5%85%BC%E5%AE%B9%E6%80%A7%E5%AF%B9%E7%85%A7%E8%A1%A8)
+你可以在 [search.maven.org](https://search.maven.org/artifact/org.ttzero/eec-e3-support) 查询eec-e3-support版本，两个工具的兼容性 [参考此表](https://github.com/wangguanquan/eec/wiki/EEC%E4%B8%8EE3-support%E5%85%BC%E5%AE%B9%E6%80%A7%E5%AF%B9%E7%85%A7%E8%A1%A8)
 
 ### CSV与Excel格式互转
 
@@ -307,7 +307,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ## CHANGELOG
 Version 0.5.10 (2023-08-x)
 -------------
-- 修复单元格长度过长导致内容错位的异常([#354](./issues/354))
+- 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
 - 支持导出图片
 
 Version 0.5.9 (2023-05-10)
@@ -316,7 +316,7 @@ Version 0.5.9 (2023-05-10)
 
 Version 0.5.8 (2023-04-08)
 -------------
-- 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](./wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
+- 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](https://github.com/wangguanquan/eec/wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
     1. 删除Sheet.Column类
     2. 删除Row#getRowNumber方法
     3. 删除IntConversionProcessor类
@@ -324,11 +324,11 @@ Version 0.5.8 (2023-04-08)
 - 修复自动分页后打开文件弹出警告
 - 取消默认斑马线，增加XMLZebraLineCellValueAndStyle自定义斑马线
 - 表头背景从666699调整为E9EAEC，斑马线颜色从EFF5EB调整为E9EAEC
-- 单个Column可以指定auto-size属性([#337](./issues/337))
+- 单个Column可以指定auto-size属性([#337](https://github.com/wangguanquan/eec/issues/337))
 - 提供入口自定义处理未知的数据类型
-- 导出数据支持指定起始行号([#345](./issues/345))
+- 导出数据支持指定起始行号([#345](https://github.com/wangguanquan/eec/issues/345))
 - 修复xls解析RK Value丢失精度问题
-- 修复部分已知BUG([#334](./issues/334), [#342](./issues/342), [#346](./issues/346))
+- 修复部分已知BUG([#334](https://github.com/wangguanquan/eec/issues/334), [#342](https://github.com/wangguanquan/eec/issues/342), [#346](https://github.com/wangguanquan/eec/issues/346))
 
 Version 0.5.7 (2023-02-17)
 -------------
