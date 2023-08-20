@@ -189,7 +189,7 @@ public interface ICellValueAndStyle {
             cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
-        if (hc.getColumnType() == 1) {
+        else if (hc.getColumnType() == 1) {
             if (Path.class.isAssignableFrom(clazz)) {
                 cell.setPath((Path) e);
             } else if (File.class.isAssignableFrom(clazz)) {
