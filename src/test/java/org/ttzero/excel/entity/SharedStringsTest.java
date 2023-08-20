@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.ttzero.excel.entity.WorkbookTest.author;
+
 
 /**
  * @author guanquan.wang at 2019-05-07 17:41
@@ -30,16 +32,16 @@ public class SharedStringsTest {
             int index = sst.get("abc");
             assert index == 0;
 
-            index = sst.get("guanquan.wang");
+            index = sst.get(author);
             assert index == 1;
 
             index = sst.get("abc");
             assert index == 0;
 
-            index = sst.get("guanquan.wang");
+            index = sst.get(author);
             assert index == 1;
 
-            index = sst.get("guanquan.wang");
+            index = sst.get(author);
             assert index == 1;
 
             index = sst.get("test");
@@ -65,17 +67,5 @@ public class SharedStringsTest {
             e.printStackTrace();
             assert false;
         }
-    }
-
-    @Test public void testIterator() throws IOException {
-//        Path path = Paths.get("/var/folders/rh/334bb3pn78s95dsn_tgvgyyw0000gn/T/+8037161714290441202.sst");
-//        SharedStringTable sst = new SharedStringTable(path);
-//
-//        int i = 0;
-//        for (String s : sst) {
-//            print(i++);
-//            print(' ');
-//            println(s);
-//        }
     }
 }

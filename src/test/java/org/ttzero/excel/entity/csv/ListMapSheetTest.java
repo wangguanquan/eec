@@ -48,8 +48,8 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testWrite() throws IOException {
         new Workbook("test map")
             .watch(Print::println)
-            .addSheet(createTestData())
-            .addSheet(createTestData())
+            .addSheet(new ListMapSheet(createTestData()))
+            .addSheet(new ListMapSheet(createTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -57,7 +57,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testAllType() throws IOException {
         new Workbook("test all type map")
             .watch(Print::println)
-            .addSheet(createAllTypeData())
+            .addSheet(new ListMapSheet(createAllTypeData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -65,7 +65,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testHeaderColumn() throws IOException {
         new Workbook("test header column map")
             .watch(Print::println)
-            .addSheet(createAllTypeData()
+            .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -81,7 +81,7 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("LocalDate", "ldv", LocalDate.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Column("LocalTime", "ltv", LocalTime.class)
-            )
+            ))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -89,14 +89,14 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testHeaderColumnBox() throws IOException {
         new Workbook("test header column box type map")
             .watch(Print::println)
-            .addSheet(createAllTypeData()
+            .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
                 , new Column("Integer", "nv", Integer.class)
                 , new Column("Long", "lv", Long.class)
                 , new Column("Float", "fv", Float.class)
                 , new Column("Double", "dv", Double.class)
-            )
+            ))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -232,7 +232,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testNullValue() throws IOException {
         new Workbook("test map null value")
             .watch(Print::println)
-            .addSheet(createNullTestData(10))
+            .addSheet(new ListMapSheet(createNullTestData(10)))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }

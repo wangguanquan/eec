@@ -180,9 +180,21 @@ public class ResultSetSheet extends Sheet {
      *
      * @param rs the ResultSet
      * @return {@code ResultSetSheet}
+     * @deprecated rename to {@link #setResultSet(ResultSet)}
      */
+    @Deprecated
     public ResultSetSheet setRs(ResultSet rs) {
-        this.rs = rs;
+        return setResultSet(rs);
+    }
+
+    /**
+     * Setting ResultSet
+     *
+     * @param resultSet the ResultSet
+     * @return {@code ResultSetSheet}
+     */
+    public ResultSetSheet setResultSet(ResultSet resultSet) {
+        this.rs = resultSet;
         return this;
     }
 

@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 /**
  * @author guanquan.wang at 2019-05-01 19:34
@@ -40,9 +41,9 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .watch(Print::println)
                 .setAutoSize(true)
                 // The first worksheet
-                .addSheet("E", ListMapSheetTest.createTestData())
+                .addSheet(new ListSheet<>("E", ListMapSheetTest.createTestData()))
                 // The other worksheet
-                .addSheet("All type", ListMapSheetTest.createAllTypeData())
+                .addSheet(new ListSheet<>("All type", ListMapSheetTest.createAllTypeData()))
                 .writeTo(defaultTestPath);
     }
 
@@ -78,11 +79,11 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 // Empty
                 .addSheet(new EmptySheet("Empty"))
                 // ResultSet
-                .addSheet("ResultSet", rs
+                .addSheet(new ResultSetSheet("ResultSet", rs
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
                     , new Column("年龄", int.class)
-                )
+                ))
                 // Customize
                 .addSheet(new CustomizeDataSourceSheet("Customize"))
                 .writeTo(defaultTestPath);

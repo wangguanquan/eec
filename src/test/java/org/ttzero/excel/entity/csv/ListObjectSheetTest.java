@@ -27,7 +27,6 @@ import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.MultiHeaderColumnsTest;
 import org.ttzero.excel.entity.TooManyColumnsException;
-import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -59,12 +58,12 @@ import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
 /**
  * @author guanquan.wang at 2019-04-28 19:17
  */
-public class ListObjectSheetTest extends WorkbookTest{
+public class ListObjectSheetTest extends WorkbookTest {
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         // 删除之前的测试文件，防止重复执行不正确
-        List<String> randomExcelNameList = new ArrayList<String>();
+        List<String> randomExcelNameList = new ArrayList<>();
         randomExcelNameList.add("testForceExportOnWorkSheet.csv");
         randomExcelNameList.add("testForceExportOnWorkbook.csv");
         randomExcelNameList.add("testForceExportOnWorkbook2Cancel1.xlsx");
@@ -88,7 +87,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     public void testWrite() throws IOException {
         new Workbook("test object")
             .watch(Print::println)
-            .addSheet(Item.randomTestData())
+            .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -96,7 +95,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testAllTypeWrite() throws IOException {
         new Workbook("all type object")
             .watch(Print::println)
-            .addSheet(AllType.randomTestData())
+            .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -104,7 +103,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testAnnotation() throws IOException {
         new Workbook("annotation object")
             .watch(Print::println)
-            .addSheet(Student.randomTestData())
+            .addSheet(new ListSheet<>(Student.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -120,7 +119,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testAutoSize() throws IOException {
         new Workbook("all type auto size")
             .watch(Print::println)
-            .addSheet(AllType.randomTestData())
+            .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -128,11 +127,11 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testIntConversion() throws IOException {
         new Workbook("test int conversion")
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
-            )
+            ))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -140,7 +139,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testStyleConversion() throws IOException {
         new Workbook("object style processor")
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
@@ -151,7 +150,7 @@ public class ListObjectSheetTest extends WorkbookTest{
                         }
                         return style;
                     })
-            )
+            ))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -159,7 +158,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testConvertAndStyleConversion() throws IOException {
         new Workbook("object style and style processor")
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
@@ -170,7 +169,7 @@ public class ListObjectSheetTest extends WorkbookTest{
                         }
                         return style;
                     })
-            )
+            ))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }
@@ -186,7 +185,7 @@ public class ListObjectSheetTest extends WorkbookTest{
     @Test public void testBoxAllTypeWrite() throws IOException {
         new Workbook("box all type object")
             .watch(Print::println)
-            .addSheet(BoxAllType.randomTestData())
+            .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
     }

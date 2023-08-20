@@ -14,66 +14,65 @@
  * limitations under the License.
  */
 
-package org.ttzero.excel.entity;
-
-import java.lang.reflect.Field;
-import java.util.Collection;
-
-/**
- * FIXME unfinished
- * @author guanquan.wang at 2019-04-30 20:45
- */
-public class CollectionSheet<T> extends Sheet {
-    @SuppressWarnings("unused")
-	private Collection<T> data;
-    @SuppressWarnings("unused")
-    private Field[] fields;
-
-    /**
-     * Constructor worksheet
-     */
-    public CollectionSheet() {
-        super();
-    }
-
-    /**
-     * Constructor worksheet
-     *
-     * @param name the worksheet name
-     */
-    public CollectionSheet(String name) {
-        super(name);
-    }
-
-    /**
-     * Constructor worksheet
-     *
-     * @param name the worksheet name
-     * @param columns the {@link Column}
-     */
-    public CollectionSheet(String name, final Column... columns) {
-        super(name, columns);
-    }
-
-    /**
-     * Constructor worksheet
-     *
-     * @param name the worksheet name
-     * @param waterMark the {@link WaterMark}
-     * @param columns the {@link Column}
-     */
-    public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
-    }
-
-    public CollectionSheet<T> setData(final Collection<T> data) {
-        this.data = data;
-        return this;
-    }
-
-    @Override
-    protected void resetBlockData() {
-
-    }
-
-}
+//package org.ttzero.excel.entity;
+//
+//import java.lang.reflect.Field;
+//import java.util.Collection;
+//
+///**
+// * @author guanquan.wang at 2019-04-30 20:45
+// */
+//public class CollectionSheet<T> extends Sheet {
+//    @SuppressWarnings("unused")
+//	private Collection<T> data;
+//    @SuppressWarnings("unused")
+//    private Field[] fields;
+//
+//    /**
+//     * Constructor worksheet
+//     */
+//    public CollectionSheet() {
+//        super();
+//    }
+//
+//    /**
+//     * Constructor worksheet
+//     *
+//     * @param name the worksheet name
+//     */
+//    public CollectionSheet(String name) {
+//        super(name);
+//    }
+//
+//    /**
+//     * Constructor worksheet
+//     *
+//     * @param name the worksheet name
+//     * @param columns the {@link Column}
+//     */
+//    public CollectionSheet(String name, final Column... columns) {
+//        super(name, columns);
+//    }
+//
+//    /**
+//     * Constructor worksheet
+//     *
+//     * @param name the worksheet name
+//     * @param waterMark the {@link WaterMark}
+//     * @param columns the {@link Column}
+//     */
+//    public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
+//        super(name, waterMark, columns);
+//    }
+//
+//    public CollectionSheet<T> setData(final Collection<T> data) {
+//        this.data = data;
+//        return this;
+//    }
+//
+//    @Override
+//    protected void resetBlockData() {
+//
+//    }
+//
+//}

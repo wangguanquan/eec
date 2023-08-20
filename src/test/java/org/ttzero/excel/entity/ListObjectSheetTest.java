@@ -110,21 +110,21 @@ public class ListObjectSheetTest extends WorkbookTest {
     public void testWrite() throws IOException {
         new Workbook("test object", author)
             .watch(Print::println)
-            .addSheet(Item.randomTestData())
+            .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAllTypeWrite() throws IOException {
         new Workbook("all type object", author)
             .watch(Print::println)
-            .addSheet(AllType.randomTestData())
+            .addSheet(new ListSheet<>(AllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAnnotation() throws IOException {
         new Workbook("annotation object", author)
             .watch(Print::println)
-            .addSheet(Student.randomTestData())
+            .addSheet(new ListSheet<>(Student.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -140,7 +140,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("object string water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of("SECRET"))
-            .addSheet(Item.randomTestData())
+            .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -148,7 +148,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("object local pic water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
-            .addSheet(Item.randomTestData())
+            .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -156,7 +156,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("object input stream water mark", author)
             .watch(Print::println)
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
-            .addSheet(Item.randomTestData())
+            .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -164,25 +164,25 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("all type auto size", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(AllType.randomTestData())
+            .addSheet(new ListSheet<>(AllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testIntConversion() throws IOException {
         new Workbook("test int conversion", author)
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
-            )
+            ))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testStyleConversion() throws IOException {
         new Workbook("object style processor", author)
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
@@ -193,14 +193,14 @@ public class ListObjectSheetTest extends WorkbookTest {
                         }
                         return style;
                     })
-            )
+            ))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testConvertAndStyleConversion() throws IOException {
         new Workbook("object style and style processor", author)
             .watch(Print::println)
-            .addSheet(Student.randomTestData()
+            .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
@@ -211,7 +211,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                         }
                         return style;
                     })
-            )
+            ))
             .writeTo(defaultTestPath);
     }
 
@@ -225,7 +225,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testBoxAllTypeWrite() throws IOException {
         new Workbook("box all type object", author)
             .watch(Print::println)
-            .addSheet(BoxAllType.randomTestData())
+            .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -235,7 +235,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook("auto-size box all type object", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(BoxAllType.randomTestData())
+            .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -570,7 +570,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
     
     @Test public void testNoForceExport() throws IOException {
-        new Workbook("testNoForceExport").addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath);
+        new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath.resolve("testNoForceExport.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testNoForceExport.xlsx"))) {
             assert Dimension.of("A1").equals(reader.sheet(0).getDimension());
@@ -579,7 +579,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     
     @Test public void testForceExportOnWorkbook() throws IOException {
         int lines = random.nextInt(100) + 3;
-        new Workbook("testForceExportOnWorkbook").forceExport().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines))).writeTo(defaultTestPath);
+        new Workbook().forceExport().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines))).writeTo(defaultTestPath.resolve("testForceExportOnWorkbook.xlsx"));
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook.xlsx"))) {
             assert reader.sheet(0).dataRows().count() == lines;
         }
@@ -587,7 +587,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkSheet() throws IOException {
         int lines = random.nextInt(100) + 3;
-        new Workbook("testForceExportOnWorkSheet").addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport()).writeTo(defaultTestPath);
+        new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport()).writeTo(defaultTestPath.resolve("testForceExportOnWorkSheet.xlsx"));
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkSheet.xlsx"))) {
             assert reader.sheet(0).dataRows().count() == lines;
         }
@@ -595,11 +595,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkbook2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2.xlsx"));
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2.xlsx"))) {
             assert reader.sheet(0).dataRows().count() == lines;
             assert reader.sheet(1).dataRows().count() == lines2;

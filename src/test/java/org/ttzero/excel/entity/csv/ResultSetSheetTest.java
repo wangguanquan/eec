@@ -42,11 +42,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("result set")
                 .watch(Print::println)
-                .addSheet(rs
+                .addSheet(new ResultSetSheet(rs
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
-                )
+                ))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }

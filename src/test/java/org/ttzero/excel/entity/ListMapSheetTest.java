@@ -53,7 +53,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testWrite() throws IOException {
         new Workbook("test map", author)
             .watch(Print::println)
-            .addSheet(createTestData())
+            .addSheet(new ListMapSheet(createTestData()))
             .writeTo(defaultTestPath);
     }
 
@@ -61,7 +61,7 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook("test all type map", author)
             .watch(Print::println)
             .setAutoSize(true)
-            .addSheet(createAllTypeData())
+            .addSheet(new ListMapSheet(createAllTypeData()))
             .writeTo(defaultTestPath);
     }
 
@@ -97,7 +97,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testHeaderColumn() throws IOException {
         new Workbook("test header column map", author)
             .watch(Print::println)
-            .addSheet(createAllTypeData()
+            .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -113,21 +113,21 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("LocalDate", "ldv", LocalDate.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Column("LocalTime", "ltv", LocalTime.class)
-            )
+            ))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testHeaderColumnBox() throws IOException {
         new Workbook("test header column box type map", author)
             .watch(Print::println)
-            .addSheet(createAllTypeData()
+            .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
                 , new Column("Integer", "nv", Integer.class)
                 , new Column("Long", "lv", Long.class)
                 , new Column("Float", "fv", Float.class)
                 , new Column("Double", "dv", Double.class)
-            )
+            ))
             .writeTo(defaultTestPath);
     }
 
@@ -287,7 +287,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testNullValue() throws IOException {
         new Workbook("test map null value", author)
             .watch(Print::println)
-            .addSheet(createNullTestData(10))
+            .addSheet(new ListMapSheet(createNullTestData(10)))
             .writeTo(defaultTestPath);
     }
 
@@ -335,10 +335,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrapText() throws IOException {
         new Workbook("MAP WRAP TEXT", author)
-                .addSheet(createTestData(10)
+                .addSheet(new ListMapSheet(createTestData(10)
                     , new Column("ID", "id", int.class)
                     , new Column("NAME", "name", String.class).setWrapText(true)
-                )
+                ))
                 .writeTo(defaultTestPath);
     }
 

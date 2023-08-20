@@ -39,13 +39,13 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery();
             new Workbook("result set paging", author)
                 .watch(Print::println)
-                .addSheet(rs
-                    , new Column("学号", int.class)
+                .addSheet(new ResultSetSheet(
+                    new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class)
-                )
+                ).setResultSet(rs))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
             ps.close();
@@ -59,7 +59,7 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery();
             new Workbook("test global style design for ResultSet Paging", author)
                 .watch(Print::println)
-                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst)->{
+                .addSheet(new ResultSetSheet().setResultSet(rs).setStyleProcessor((rst, style, sst)->{
                     try {
                         if (rst.getInt("age") > 14) {
                             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));

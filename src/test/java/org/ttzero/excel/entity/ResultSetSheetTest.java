@@ -42,13 +42,12 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("result set", author)
                 .watch(Print::println)
-                .addSheet(rs
-                    , new Column("学号", int.class)
+                .addSheet(new ResultSetSheet(new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", Integer.class)
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新", Timestamp.class)
-                )
+                ).setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
     }
@@ -60,11 +59,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test global style design for ResultSet", author)
-                .addSheet(new ResultSetSheet().setRs(rs).setStyleProcessor((rst, style, sst)->{
+                .addSheet(new ResultSetSheet().setResultSet(rs).setStyleProcessor((rst, style, sst) -> {
                     try {
-                        if (rst.getInt("age") > 14) {
+                        if (rst.getInt("age") > 14)
                             style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));
-                        }
                     } catch (SQLException ex) {
                         // Ignore
                     }
@@ -93,7 +91,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("test ResultSet sheet Constructor2", author)
                 .watch(Print::println)
-                .addSheet(new ResultSetSheet().setRs(rs))
+                .addSheet(new ResultSetSheet().setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
     }
@@ -106,7 +104,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook("test ResultSet sheet Constructor3", author)
                 .watch(Print::println)
-                .addSheet(new ResultSetSheet("Student").setRs(rs))
+                .addSheet(new ResultSetSheet("Student").setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
     }
@@ -125,7 +123,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Column("AGE", int.class)
                     , new Column("CREATE_DATE", Timestamp.class)
                     , new Column("UPDATE_DATE", Timestamp.class)
-                ).setRs(rs))
+                ).setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
     }
@@ -144,7 +142,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Column("AGE", int.class)
                     , new Column("CREATE_DATE", Timestamp.class)
                     , new Column("UPDATE_DATE", Timestamp.class)
-                ).setRs(rs))
+                ).setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
     }

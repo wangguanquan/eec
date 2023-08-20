@@ -534,7 +534,9 @@ public class Workbook implements Storable {
      * @param data    List&lt;?&gt; data
      * @param columns the header columns
      * @return the {@link Workbook}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(List<?> data, Column... columns) {
         return addSheet(null, data, columns);
     }
@@ -549,7 +551,9 @@ public class Workbook implements Storable {
      * @param data    List&lt;?&gt; data
      * @param columns the header columns
      * @return the {@link Workbook}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Workbook addSheet(String name, List<?> data, Column... columns) {
         Object o;
@@ -586,7 +590,9 @@ public class Workbook implements Storable {
      * @param rs      the {@link ResultSet}
      * @param columns the header columns
      * @return the {@link Workbook}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(ResultSet rs, Column... columns) {
         return addSheet(null, rs, columns);
     }
@@ -600,7 +606,9 @@ public class Workbook implements Storable {
      * @param rs      the {@link ResultSet}
      * @param columns the header columns
      * @return the {@link Workbook}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(String name, ResultSet rs, Column... columns) {
         ResultSetSheet sheet = new ResultSetSheet(name, columns);
         sheet.setRs(rs);
@@ -617,7 +625,7 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
-     * @deprecated Please use {@code addSheet(new StatementSheet(connection, sql, columns)}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
     @Deprecated
     public Workbook addSheet(String sql, Column... columns) throws SQLException {
@@ -635,7 +643,7 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
-     * @deprecated Please use {@code addSheet(new StatementSheet(name, connection, sql, columns)}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
     @Deprecated
     public Workbook addSheet(String name, String sql, Column... columns) throws SQLException {
@@ -660,7 +668,7 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
-     * @deprecated Please use {@code addSheet(new StatementSheet(connection, sql, paramProcessor, columns)}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
     @Deprecated
     public Workbook addSheet(String sql, ParamProcessor pp, Column... columns) throws SQLException {
@@ -685,7 +693,7 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
-     * @deprecated Please use {@code addSheet(new StatementSheet(name, connection, sql, paramProcessor, columns)}
+     * @deprecated use {@link #addSheet(Sheet)}
      */
     @Deprecated
     public Workbook addSheet(String name, String sql, ParamProcessor pp
@@ -704,7 +712,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(PreparedStatement ps, Column... columns) throws SQLException {
         return addSheet(null, ps, columns);
     }
@@ -720,7 +730,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(String name, PreparedStatement ps, Column... columns) throws SQLException {
         return addSheet(name, ps, null, columns);
     }
@@ -733,7 +745,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
         return addSheet(null, ps, pp, columns);
     }
@@ -751,7 +765,9 @@ public class Workbook implements Storable {
      * @param columns the header columns
      * @return the {@link Workbook}
      * @throws SQLException if a database access error occurs
+     * @deprecated use {@link #addSheet(Sheet)}
      */
+    @Deprecated
     public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
         StatementSheet sheet = new StatementSheet(name, columns);
         try {

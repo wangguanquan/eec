@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 
 import java.io.IOException;
 
@@ -29,8 +28,7 @@ public class ListMapPagingTest extends WorkbookTest {
     @Test
     public void testPaging() throws IOException {
         new Workbook("test map paging", author)
-            .watch(Print::println)
-            .addSheet(ListMapSheetTest.createTestData(301))
+            .addSheet(new ListSheet<>(ListMapSheetTest.createTestData(301)))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }
@@ -38,8 +36,7 @@ public class ListMapPagingTest extends WorkbookTest {
     @Test
     public void testLessPaging() throws IOException {
         new Workbook("test map less paging", author)
-            .watch(Print::println)
-            .addSheet(ListMapSheetTest.createTestData(29))
+            .addSheet(new ListSheet<>(ListMapSheetTest.createTestData(29)))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
     }

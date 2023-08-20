@@ -18,7 +18,6 @@ package org.ttzero.excel.entity;
 
 import org.junit.FixMethodOrder;
 import org.junit.runners.MethodSorters;
-import org.ttzero.excel.Print;
 import org.junit.Test;
 import org.ttzero.excel.reader.ExcelReader;
 
@@ -32,14 +31,12 @@ public class EmptySheetTest extends WorkbookTest {
     @Test
     public void testEmpty() throws IOException {
         new Workbook("test empty", author)
-            .watch(Print::println)
             .addSheet(new EmptySheet())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testEmptyWithHeader() throws IOException {
         new Workbook("test empty header", author)
-            .watch(Print::println)
             .addSheet(new EmptySheet("Empty"
                 , new Column("ID", Integer.class)
                 , new Column("NAME", String.class)
