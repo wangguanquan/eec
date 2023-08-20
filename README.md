@@ -1,6 +1,6 @@
 # EEC介绍
 
-[![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
+[![Release][release-image]][releases] [![License][license-image]][license]
 
 EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取/写入以及xls格式的读取(xls支持BIFF8也就是excel 97~2003格式)。
 EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
@@ -340,9 +340,6 @@ Version 0.5.6 (2023-01-07)
 - 修复部分BUG(#308, #320, #323)
 
 [更多...](./CHANGELOG)
-
-[travis]: https://travis-ci.org/wangguanquan/eec
-[travis-image]: https://travis-ci.org/wangguanquan/eec.png?branch=master
 
 [releases]: https://github.com/wangguanquan/eec/releases
 [release-image]: http://img.shields.io/badge/release-0.5.10-blue.svg?style=flat
