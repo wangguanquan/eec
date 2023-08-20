@@ -192,7 +192,7 @@ new Workbook("Auto Width Test")
 
 #### 6. 支持28种预设图片样式
 
-关于图片样式请参考[](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
+关于图片样式请参考[导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
 ![effect](./images/preset_effect.jpg)
 
