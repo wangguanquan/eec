@@ -281,8 +281,39 @@ public class XMLRow extends Row {
 
     /* Found specify target  */
     protected int get(char c) {
-        // Ignore all attributes
-        return get(null, c, null);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
+            || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
+        if (cursor == e) return cursor;
+
+        int a;
+        if (cb[cursor + 2] == '>') {
+            a = cursor += 3;
+        }
+        // Some other attributes
+        else if (cb[cursor + 2] == ' ') {
+            int i = cursor + 3;
+            for (; cursor < e && cb[cursor] != '>'; cursor++) ;
+
+            cursor++;
+            if (cb[cursor - 2] == '/' || cursor == e) {
+                return cursor;
+            }
+            a = cursor;
+        }
+        // Empty tag
+        else if (cb[cursor + 2] == '/') {
+            cursor += 3;
+            return cursor;
+        }
+        else {
+            a = cursor += 3;
+        }
+
+        // Found end tag
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != c || cb[cursor + 3] != '>'); cursor++) ;
+
+        return a;
     }
 
     /**

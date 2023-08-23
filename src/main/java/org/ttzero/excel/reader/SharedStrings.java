@@ -20,15 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static java.lang.Integer.numberOfTrailingZeros;
-import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
@@ -50,7 +50,6 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
  */
 public class SharedStrings implements Closeable {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    private Path sstPath;
 
     /**
      * The maximum capacity, used if a higher value is implicitly specified
@@ -92,12 +91,12 @@ public class SharedStrings implements Closeable {
      * Constructs a SharedString with the xml path, please call
      * {@link SharedStrings#load()} after instance
      *
-     * @param sstPath   the xml file path
+     * @param is   the xml file path
      * @param cacheSize the number of word per load
      * @param hotSize   the number of high frequency word
      */
-    public SharedStrings(Path sstPath, int cacheSize, int hotSize) {
-        this.sstPath = sstPath;
+    public SharedStrings(InputStream is, int cacheSize, int hotSize) {
+        this.reader = new InputStreamReader(is, StandardCharsets.UTF_8);
         if (cacheSize > 0) {
             this.page = tableSizeFor(cacheSize);
         }
@@ -139,7 +138,7 @@ public class SharedStrings implements Closeable {
     /**
      * The word total
      */
-    private int max = -1, vt = 0, offsetM = 0;
+    private int max = -1, offsetM = 0;
     /**
      * The forward offset
      */
@@ -171,7 +170,7 @@ public class SharedStrings implements Closeable {
     /**
      * Main reader
      */
-    private BufferedReader reader;
+    private Reader reader;
     /**
      * Buffered
      */
@@ -230,11 +229,6 @@ public class SharedStrings implements Closeable {
      * @throws IOException if io error occur
      */
     public SharedStrings load() throws IOException {
-        if (!exists(sstPath)) {
-            max = 0;
-            return this;
-        }
-
         // Get unique count
         max = uniqueCount();
         LOGGER.debug("Size of SharedString: {}", max);
@@ -281,25 +275,19 @@ public class SharedStrings implements Closeable {
      */
     private int uniqueCount() throws IOException {
         int off = -1;
-        reader = Files.newBufferedReader(sstPath);
         cb = new char[1 << 12];
-        offset = 0;
         offset = reader.read(cb);
 
-//        int i = 0, len = offset - 4;
-//        for (; i < len && (cb[i] != '<' || cb[i + 1] != 's' || cb[i + 2] != 'i' || cb[i + 3] != '>'); i++) ;
-//        if (i == len) return 0; // Empty
-
-        String line = new String(cb, 0, cb.length);
+        String line = new String(cb, 0, Math.min(cb.length, offset));
         // Microsoft Excel
         String uniqueCount = " uniqueCount=";
         int index = line.indexOf(uniqueCount)
-            , end = index > 0 ? line.indexOf('"'
-            , index += (uniqueCount.length() + 1)) : -1;
+            , end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
         if (end > 0) {
             off = Integer.parseInt(line.substring(index, end));
-            // WPS
-        } else {
+        }
+        // WPS
+        else {
             String count = " count=";
             index = line.indexOf(count);
             end = index > 0 ? line.indexOf('"', index += (count.length() + 1)) : -1;
@@ -307,9 +295,6 @@ public class SharedStrings implements Closeable {
                 off = Integer.parseInt(line.substring(index, end));
             }
         }
-
-        vt = ++end;
-        System.arraycopy(cb, vt, cb, 0, offset -= vt);
 
         return off;
     }
@@ -327,8 +312,6 @@ public class SharedStrings implements Closeable {
         // Load first
         if (offset_forward == -1) {
             offset_forward = index / page * page;
-
-            if (vt < 0) vt = 0;
 
             readMore();
         }
@@ -451,7 +434,7 @@ public class SharedStrings implements Closeable {
         // Read forward area data
         int n = 0, length, nChar;
         for (; (length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0; ) {
-            length += offset;
+            length = length > 0 ? length + offset : offset;
             nChar = offset &= 0;
             int len0 = length - 3, len1 = len0 - 1;
             int[] t = findT(cb, nChar, length, len0, len1, n);
@@ -607,22 +590,18 @@ public class SharedStrings implements Closeable {
      */
     static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
         if (from == to) return EMPTY;
-        int idx_38 = indexOf(cb, '&', from)
-            , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
+        int idx_38 = indexOf(cb, '&', from, to)
+            , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1, Math.min(idx_38 + 9, to)) : -1;
 
         if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {
             return new String(cb, from, to - from);
         }
-        escapeBuf.delete(0, escapeBuf.length());
+        if (escapeBuf.length() > 0) escapeBuf.delete(0, escapeBuf.length());
         do {
             escapeBuf.append(cb, from, idx_38 - from);
             // ASCII
             if (cb[idx_38 + 1] == '#') {
                 int n = toInt(cb, idx_38 + 2, idx_59);
-                // byte range
-//                if (n < 0 || n > 127) {
-//                    LOGGER.warn("Unknown escape [{}]", new String(cb, idx_38, idx_59 - idx_38 + 1));
-//                }
                 // Unicode char
                 escapeBuf.append((char) n);
             }
@@ -630,28 +609,17 @@ public class SharedStrings implements Closeable {
             else {
                 String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
                 switch (name) {
-                    case "lt":
-                        escapeBuf.append('<');
-                        break;
-                    case "gt":
-                        escapeBuf.append('>');
-                        break;
-                    case "amp":
-                        escapeBuf.append('&');
-                        break;
-                    case "quot":
-                        escapeBuf.append('"');
-                        break;
-                    case "nbsp":
-                        escapeBuf.append(' ');
-                        break;
+                    case "lt"  : escapeBuf.append('<'); break;
+                    case "gt"  : escapeBuf.append('>'); break;
+                    case "amp" : escapeBuf.append('&'); break;
+                    case "quot": escapeBuf.append('"'); break;
+                    case "nbsp": escapeBuf.append(' '); break;
                     default: // Unknown escape
-//                        LOGGER.warn("Unknown escape [&{}]", name);
                         escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
                 }
             }
             from = ++idx_59;
-            idx_59 = (idx_38 = indexOf(cb, '&', idx_59)) > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1) : -1;
+            idx_59 = (idx_38 = indexOf(cb, '&', idx_59, to)) > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1, Math.min(idx_38 + 9, to)) : -1;
         } while (idx_38 > -1 && idx_59 > idx_38 && idx_59 <= to);
 
         if (from < to) {
@@ -660,11 +628,9 @@ public class SharedStrings implements Closeable {
         return escapeBuf.toString();
     }
 
-    private static int indexOf(char[] cb, char c, int from) {
-        for (; from < cb.length; from++) {
-            if (cb[from] == c) return from;
-        }
-        return -1;
+    private static int indexOf(char[] cb, char c, int from, int to) {
+        for (; from < to && cb[from] != c; from++);
+        return from < to ? from : -1;
     }
 
     static int toInt(char[] cb, int a, int b) {

@@ -32,8 +32,8 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -238,16 +238,16 @@ public class Styles implements Storable {
     /**
      * Load the style file from disk
      *
-     * @param path the style file path
+     * @param is the style {@code InputStream}
      * @return the {@link Styles} Object
      */
-    public static Styles load(Path path) {
+    public static Styles load(InputStream is) {
         // load styles.xml
         SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(path));
-        } catch (DocumentException | IOException e) {
+            document = reader.read(is);
+        } catch (DocumentException e) {
             LOGGER.warn("Read the style failed and ignore the style to continue.", e);
             Styles self = forReader();
             // Add a default font
@@ -256,8 +256,6 @@ public class Styles implements Storable {
         }
 
         Styles self = new Styles();
-        Path themePath = path.getParent().resolve("theme/theme1.xml");
-        if (Files.exists(themePath) && !Files.isDirectory(themePath)) Theme.load(themePath);
         Element root = document.getRootElement();
 
         // Parse Number format

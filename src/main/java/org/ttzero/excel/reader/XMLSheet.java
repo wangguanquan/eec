@@ -20,14 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.style.Styles;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -35,6 +33,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * The open-xml format Worksheet
@@ -69,12 +69,14 @@ public class XMLSheet implements Sheet {
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
     }
 
     protected String name;
     protected int index; // per sheet index of workbook
 //        , size = -1; // size of rows per sheet
-    protected Path path;
+    protected String path;
     protected int id;
     /**
      * The Shared String Table
@@ -94,7 +96,8 @@ public class XMLSheet implements Sheet {
     protected Drawings drawings;
     // Header row
     protected int hrf, hrl;
-
+    protected ZipFile zipFile;
+    protected ZipEntry entry;
 
     /**
      * Setting the worksheet name
@@ -110,8 +113,26 @@ public class XMLSheet implements Sheet {
      *
      * @param path the temp path
      */
-    protected void setPath(Path path) {
+    protected void setPath(String path) {
         this.path = path;
+    }
+
+    /**
+     * Setting the source zip file
+     *
+     * @param zipFile source data
+     */
+    protected void setZipFile(ZipFile zipFile) {
+        this.zipFile = zipFile;
+    }
+
+    /**
+     * Setting the worksheet zip entry
+     *
+     * @param entry source data
+     */
+    protected void setZipEntry(ZipEntry entry) {
+        this.entry = entry;
     }
 
     /**
@@ -378,7 +399,7 @@ public class XMLSheet implements Sheet {
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
-    protected BufferedReader reader;
+    protected Reader reader;
     protected char[] cb; // buffer
     protected int nChar, length;
     protected boolean eof = false, heof = false; // OPTIONS = false
@@ -401,8 +422,8 @@ public class XMLSheet implements Sheet {
             reset();
             return this;
         }
-        LOGGER.debug("Load {}", path.toString());
-        reader = Files.newBufferedReader(path);
+        LOGGER.debug("Load {}", path);
+        reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
         cb = new char[8192];
         nChar = 0;
         int left = 0;
@@ -534,7 +555,7 @@ public class XMLSheet implements Sheet {
         char[] cb = new char[8192];
         int nChar = 0, length;
         // reload file
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (Reader reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8)) {
             if (mark > 0) {
                 reader.skip(mark);
                 length = reader.read(cb);
@@ -666,7 +687,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet reset() {
-        LOGGER.debug("Reset {}", path.toString());
+        LOGGER.debug("Reset {}", path);
         try {
             hrf = 0;
             hrl = 0;
@@ -681,7 +702,7 @@ public class XMLSheet implements Sheet {
                 return this.load();
             }
             // Reload
-            reader = Files.newBufferedReader(path);
+            reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
             reader.skip(mark);
             length = reader.read(cb);
             nChar = 0;
@@ -704,75 +725,75 @@ public class XMLSheet implements Sheet {
     to confirm the scope of the entire worksheet.
      */
     void parseDimension() {
-        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long position = Files.size(path);
-            final int block = (int) Math.min(1 << 11, position), c = 7;
-            ByteBuffer buffer = ByteBuffer.allocate(block);
-            byte[] left = null;
-            int left_size = 0, i;
-
-            boolean eof, getit = false;
-            for (; ;) {
-                position -= (block - left_size);
-                channel.position(Math.max(0, position));
-                channel.read(buffer);
-                if (left_size > 0) {
-                    buffer.limit(block);
-                    buffer.put(left, 0, left_size);
-                }
-                buffer.flip();
-                eof = buffer.limit() < block;
-
-                int limit = buffer.limit();
-                i = limit - 1;
-
-                // <row r="
-                for (; i >= c && (buffer.get(i) != '"' || buffer.get(i - 1) != '='
-                    || buffer.get(i - 2) != 'r' || buffer.get(i - 3) > ' '
-                    || buffer.get(i - 4) != 'w' || buffer.get(i - 5) != 'o'
-                    || buffer.get(i - 6) != 'r' || buffer.get(i - 7) != '<'); i--)
-                    ;
-
-                // Not Found
-                if (i < c) {
-                    if (eof || (eof = position <= 0)) break;
-                    for (; i < limit && buffer.get(i) != '>'; i++) ;
-                    i++;
-                    if (i < limit - 1) {
-                        buffer.position(i);
-                        left_size = i;
-                        if (left == null || left_size > left.length) {
-                            left = new byte[left_size];
-                        }
-                        buffer.position(0);
-                        buffer.get(left, 0, left_size);
-                    } else left_size = 0;
-                }
-                // Found the last row or empty worksheet
-                else {
-                    getit = true;
-                    buffer.position(i);
-                    // Align channel and buffer position
-                    if (left_size > 0) channel.position(channel.position() + left_size);
-                    lastRowMark = channel.position() - buffer.remaining();
-                    break;
-                }
-                buffer.position(0);
-                buffer.limit(buffer.capacity() - left_size);
-            }
-
-            // Empty worksheet
-            if (!getit) {
-                dimension = Dimension.of("A1");
-                return;
-            }
-
-            // Dimension
-            parseDim(channel, buffer);
-        } catch (IOException e) {
-            // Ignore error
-            LOGGER.debug("", e);
-        }
+//        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+//            long position = Files.size(path);
+//            final int block = (int) Math.min(1 << 11, position), c = 7;
+//            ByteBuffer buffer = ByteBuffer.allocate(block);
+//            byte[] left = null;
+//            int left_size = 0, i;
+//
+//            boolean eof, getit = false;
+//            for (; ;) {
+//                position -= (block - left_size);
+//                channel.position(Math.max(0, position));
+//                channel.read(buffer);
+//                if (left_size > 0) {
+//                    buffer.limit(block);
+//                    buffer.put(left, 0, left_size);
+//                }
+//                buffer.flip();
+//                eof = buffer.limit() < block;
+//
+//                int limit = buffer.limit();
+//                i = limit - 1;
+//
+//                // <row r="
+//                for (; i >= c && (buffer.get(i) != '"' || buffer.get(i - 1) != '='
+//                    || buffer.get(i - 2) != 'r' || buffer.get(i - 3) > ' '
+//                    || buffer.get(i - 4) != 'w' || buffer.get(i - 5) != 'o'
+//                    || buffer.get(i - 6) != 'r' || buffer.get(i - 7) != '<'); i--)
+//                    ;
+//
+//                // Not Found
+//                if (i < c) {
+//                    if (eof || (eof = position <= 0)) break;
+//                    for (; i < limit && buffer.get(i) != '>'; i++) ;
+//                    i++;
+//                    if (i < limit - 1) {
+//                        buffer.position(i);
+//                        left_size = i;
+//                        if (left == null || left_size > left.length) {
+//                            left = new byte[left_size];
+//                        }
+//                        buffer.position(0);
+//                        buffer.get(left, 0, left_size);
+//                    } else left_size = 0;
+//                }
+//                // Found the last row or empty worksheet
+//                else {
+//                    getit = true;
+//                    buffer.position(i);
+//                    // Align channel and buffer position
+//                    if (left_size > 0) channel.position(channel.position() + left_size);
+//                    lastRowMark = channel.position() - buffer.remaining();
+//                    break;
+//                }
+//                buffer.position(0);
+//                buffer.limit(buffer.capacity() - left_size);
+//            }
+//
+//            // Empty worksheet
+//            if (!getit) {
+//                dimension = Dimension.of("A1");
+//                return;
+//            }
+//
+//            // Dimension
+//            parseDim(channel, buffer);
+//        } catch (IOException e) {
+//            // Ignore error
+//            LOGGER.debug("", e);
+//        }
     }
 
     private int[] innerParse(ByteBuffer buffer, int i) {
@@ -900,6 +921,8 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
 
         if (this.path != null) {
 
@@ -926,7 +949,13 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         if (ready) return;
 
         // Parse calc.xml
-        long[][] calcArray = ExcelReader.parseCalcChain(path.getParent());
+        ZipEntry entry = zipFile.getEntry("xl/calcChain.xml");
+        long[][] calcArray = new long[0][];
+        try {
+            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
 
         if (!eof && !(sRow instanceof XMLCalcRow)) {
@@ -1005,6 +1034,8 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
 
         if (path != null) {
             if (reader != null && !ready) this.load0();
@@ -1048,71 +1079,71 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     Parse `mergeCells` tag
      */
     List<Dimension> parseMerge() {
-        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long position = Files.size(path);
-            final int block = (int) Math.min(1 << 11, position), c = 12;
-            ByteBuffer buffer = ByteBuffer.allocate(block);
-            byte[] left;
-            int left_size = 0, i, limit;
-            boolean eof, getit = false;
-            // Skip if marked
-            if (lastRowMark > 0L) {
-                channel.position(lastRowMark);
-                channel.read(buffer);
-                buffer.flip();
-                getit = true;
-            } else {
-                left = new byte[12];
-                for (; ; ) {
-                    channel.position(Math.max(0, position -= block - left_size));
-                    channel.read(buffer);
-                    if (left_size > 0) {
-                        buffer.limit(block);
-                        buffer.put(left, 0, left_size);
-                    }
-                    buffer.flip();
-                    eof = buffer.limit() < block;
-
-                    limit = buffer.limit();
-                    i = limit - 1;
-
-                    // </sheetData>
-                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
-                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
-                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
-                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
-                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
-                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
-                        ;
-
-                    // Not Found
-                    if (i < c) {
-                        if (eof) break;
-                        buffer.position(0);
-                        left_size = 12;
-                        buffer.get(left, 0, left_size);
-                        buffer.clear();
-                        buffer.limit(block - left_size);
-                    }
-                    // Found the last row or empty worksheet
-                    else {
-                        buffer.position(i + 1);
-                        getit = true;
-                        // Align channel and buffer position
-                        channel.position(channel.position() + left_size);
-                        break;
-                    }
-                }
-            }
-
-            if (getit) {
-                // Find mergeCells tag
-                return parseMerge(channel, buffer, block);
-            }
-        } catch (IOException e) {
-            // Ignore error
-            LOGGER.warn("", e);
-        }
+//        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
+//            long position = Files.size(path);
+//            final int block = (int) Math.min(1 << 11, position), c = 12;
+//            ByteBuffer buffer = ByteBuffer.allocate(block);
+//            byte[] left;
+//            int left_size = 0, i, limit;
+//            boolean eof, getit = false;
+//            // Skip if marked
+//            if (lastRowMark > 0L) {
+//                channel.position(lastRowMark);
+//                channel.read(buffer);
+//                buffer.flip();
+//                getit = true;
+//            } else {
+//                left = new byte[12];
+//                for (; ; ) {
+//                    channel.position(Math.max(0, position -= block - left_size));
+//                    channel.read(buffer);
+//                    if (left_size > 0) {
+//                        buffer.limit(block);
+//                        buffer.put(left, 0, left_size);
+//                    }
+//                    buffer.flip();
+//                    eof = buffer.limit() < block;
+//
+//                    limit = buffer.limit();
+//                    i = limit - 1;
+//
+//                    // </sheetData>
+//                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
+//                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
+//                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
+//                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
+//                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
+//                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
+//                        ;
+//
+//                    // Not Found
+//                    if (i < c) {
+//                        if (eof) break;
+//                        buffer.position(0);
+//                        left_size = 12;
+//                        buffer.get(left, 0, left_size);
+//                        buffer.clear();
+//                        buffer.limit(block - left_size);
+//                    }
+//                    // Found the last row or empty worksheet
+//                    else {
+//                        buffer.position(i + 1);
+//                        getit = true;
+//                        // Align channel and buffer position
+//                        channel.position(channel.position() + left_size);
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            if (getit) {
+//                // Find mergeCells tag
+//                return parseMerge(channel, buffer, block);
+//            }
+//        } catch (IOException e) {
+//            // Ignore error
+//            LOGGER.warn("", e);
+//        }
         return null;
     }
 

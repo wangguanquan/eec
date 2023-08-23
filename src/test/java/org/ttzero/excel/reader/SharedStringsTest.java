@@ -50,7 +50,7 @@ public class SharedStringsTest {
     @Test public void testGeneral() throws IOException {
         List<String> list = Arrays.asList("abc", "中文");
         writeTestData(list);
-        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+        try (SharedStrings sst = new SharedStrings(Files.newInputStream(path), 0, 0).load()) {
             checkTrue(sst, list);
         }
     }
@@ -58,7 +58,7 @@ public class SharedStringsTest {
     @Test public void testEscape() throws IOException {
         List<String> list = Arrays.asList("<row>", "\"abc\"", "&nbsp;");
         writeTestData(list);
-        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+        try (SharedStrings sst = new SharedStrings(Files.newInputStream(path), 0, 0).load()) {
             checkTrue(sst, list);
         }
     }

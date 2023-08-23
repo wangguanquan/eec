@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.reader;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
@@ -24,7 +23,6 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
-import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -103,7 +101,7 @@ public class ExcelReaderTest {
                 Row row = it.next();
                 println(row.getRowNum()
                     + " | " + row.getFirstColumnIndex()
-                    + " | " + row.getLastColumnIndex()
+                    + " - " + row.getLastColumnIndex()
                     + " => " + row);
             }
         }
@@ -353,14 +351,6 @@ public class ExcelReaderTest {
 //                return s.rows();
 //            }).forEach(Print::println);
             reader.copyOnMergeCells().sheets().flatMap(Sheet::rows).forEach(Print::println);
-        }
-    }
-
-    @Ignore
-    @Test public void testReaderLarge() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(WorkbookTest.getOutputTestPath().resolve("large07.xlsx"))) {
-            long n = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(LargeData.class)).count();
-            assert n == 500000;
         }
     }
 
