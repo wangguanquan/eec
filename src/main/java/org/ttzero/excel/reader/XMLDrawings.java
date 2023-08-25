@@ -26,14 +26,18 @@ import org.dom4j.io.SAXReader;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
+import org.ttzero.excel.util.FileUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.ExcelReader.getEntry;
+import static org.ttzero.excel.reader.ExcelReader.toZipPath;
 
 /**
  * Drawings resources
@@ -98,22 +102,44 @@ public class XMLDrawings implements Drawings {
                 throw new ExcelReadException("The file format is incorrect or corrupted. [" + entry.getName() + ".rels]");
             }
 
+            if (excelReader.tempDir == null) {
+                try {
+                    excelReader.tempDir = FileUtil.mktmp("eec+");
+                } catch (IOException e) {
+                    throw new ExcelReadException("Create temp directory failed.", e);
+                }
+            }
+            Path imagesPath = excelReader.tempDir.resolve("media");
+            if (!Files.exists(imagesPath)) {
+                // Create media path
+                try {
+                    Files.createDirectory(imagesPath);
+                } catch (IOException e) {
+                    throw new ExcelReadException("Create temp directory failed.", e);
+                }
+            }
             List<Element> list = document.getRootElement().elements();
             for (Element e : list) {
                 String target = e.attributeValue("Target"), type = e.attributeValue("Type");
-                entry = getEntry(zipFile, "xl" + toZipPath(target));
+                entry = getEntry(zipFile, "xl/" + toZipPath(target));
                 // Background
                 if (Const.Relationship.IMAGE.equals(type)) {
                     Picture picture = new Picture();
                     pictures.add(picture);
                     picture.sheet = sheet;
                     picture.background = true;
-                    // TODO Copy image to tmp
-//                    picture.localPath = xmlSheet.path.getParent().resolve(target);
+                    // Copy image to tmp file
+                    try {
+                        Path targetPath = imagesPath.resolve(target);
+                        Files.copy(zipFile.getInputStream(entry), targetPath);
+                        picture.localPath = targetPath;
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+
                     // Drawings
                 } else if (Const.Relationship.DRAWINGS.equals(type)) {
-//                    Path drawingsPath = xmlSheet.path.getParent().resolve(target);
-                    List<Picture> subPictures = parseDrawings(zipFile, entry);
+                    List<Picture> subPictures = parseDrawings(zipFile, entry, imagesPath);
                     if (subPictures != null) {
                         for (Picture picture : subPictures) {
                             picture.sheet = sheet;
@@ -128,7 +154,7 @@ public class XMLDrawings implements Drawings {
     }
 
     // Parse drawings.xml
-    protected List<Picture> parseDrawings(ZipFile zipFile, ZipEntry entry) {
+    protected List<Picture> parseDrawings(ZipFile zipFile, ZipEntry entry, Path imagesPath) {
         int i = entry.getName().lastIndexOf('/');
         String relsKey;
         if (i > 0)
@@ -182,8 +208,17 @@ public class XMLDrawings implements Drawings {
             if (r != null && Const.Relationship.IMAGE.equals(rel.getType())) {
                 Picture picture = new Picture();
                 pictures.add(picture);
-                // TODO Copy image to tmp path
-//                picture.localPath = path.getParent().resolve(rel.getTarget());
+                // Copy image to tmp path
+                entry = getEntry(zipFile, "xl/" + toZipPath(rel.getTarget()));
+                if (entry != null) {
+                    try {
+                        Path targetPath = imagesPath.resolve(rel.getTarget());
+                        Files.copy(zipFile.getInputStream(entry), targetPath);
+                        picture.localPath = targetPath;
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
                 picture.dimension = dimension(e, xdr);
 
                 Element extLst = blip.element(QName.get("extLst", a));
@@ -204,7 +239,7 @@ public class XMLDrawings implements Drawings {
         return !pictures.isEmpty() ? pictures : null;
     }
 
-    protected Dimension dimension(Element e, Namespace xdr) {
+    protected static Dimension dimension(Element e, Namespace xdr) {
         Element fromEle = e.element(QName.get("from", xdr));
         int[] f = dimEle(fromEle, xdr);
         Element toEle = e.element(QName.get("to", xdr));
@@ -213,7 +248,7 @@ public class XMLDrawings implements Drawings {
         return new Dimension(f[0] + 1, (short) (f[1] + 1), t[0] + 1, (short) (t[1] + 1));
     }
 
-    protected int[] dimEle(Element e, Namespace xdr) {
+    protected static int[] dimEle(Element e, Namespace xdr) {
         int c = 0, r = 0;
         if (e != null) {
             String col = e.element(QName.get("col", xdr)).getText(), row = e.element(QName.get("row", xdr)).getText();
@@ -221,13 +256,6 @@ public class XMLDrawings implements Drawings {
             r = Integer.parseInt(row);
         }
         return new int[] { r, c };
-    }
-
-    static String toZipPath(String path) {
-        if (path.startsWith("../") || path.startsWith("..\\")) path = path.substring(2);
-        else if (path.startsWith("./") || path.startsWith(".\\")) path = path.substring(1);
-        else if (path.charAt(0) != '/' && path.charAt(0) != '\\') path = "/" + path;
-        return path;
     }
 
     public List<Picture> getPictures() {
