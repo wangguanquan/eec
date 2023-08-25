@@ -36,6 +36,7 @@ import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -54,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -112,7 +114,10 @@ public class ExcelReader implements Closeable {
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
-
+    /**
+     * Store temporary files (Copy images to temp directory)
+     */
+    protected Path tempDir;
     /**
      * The Shared String Table
      */
@@ -342,9 +347,7 @@ public class ExcelReader implements Closeable {
     public void close() throws IOException {
         // Close all opened sheet
         if (sheets != null) {
-            for (Sheet st : sheets) {
-                st.close();
-            }
+            for (Sheet st : sheets) st.close();
         }
 
         // Close Shared String Table
@@ -353,8 +356,11 @@ public class ExcelReader implements Closeable {
         // Remove temp file
         if (temp != null) FileUtil.rm(temp);
 
+        // Remove temp dir
+        if (tempDir != null) FileUtil.rm_rf(tempDir);
+
         // Close src file
-        zipFile.close();
+        if (zipFile != null) zipFile.close();
     }
 
     /**
@@ -750,65 +756,72 @@ public class ExcelReader implements Closeable {
     }
 
     protected AppInfo getGeneralInfo() {
-        ZipEntry entry = getEntry(zipFile, "docProps/app.xml");
-        if (entry == null)
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/app.xml]");
-        // load workbook.xml
+        // load app.xml
         SAXReader reader = SAXReader.createDefault();
-        Document document;
-        try {
-            document = reader.read(zipFile.getInputStream(entry));
-        } catch (DocumentException | IOException e) {
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/app.xml]");
-        }
-        Element root = document.getRootElement();
-        App app = new App();
-        app.setCompany(root.elementText("Company"));
-        app.setApplication(root.elementText("Application"));
-        String v = root.elementText("AppVersion");
-        if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
+        App app = null;
+        Core core = null;
+        ZipEntry entry = getEntry(zipFile, "docProps/app.xml");
+        if (entry != null) {
+            Document document = null;
+            try {
+                document = reader.read(zipFile.getInputStream(entry));
+            } catch (DocumentException | IOException e) {
+                LOGGER.warn("The file format is incorrect or corrupted. [docProps/app.xml]");
+            }
+            if (document != null) {
+                Element root = document.getRootElement();
+                app = new App();
+                app.setCompany(root.elementText("Company"));
+                app.setApplication(root.elementText("Application"));
+                String v = root.elementText("AppVersion");
+                if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
+            }
+        } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/app.xml]");
 
         entry = getEntry(zipFile, "docProps/core.xml");
-        if (entry == null)
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/core.xml]");
-        try {
-            document = reader.read(zipFile.getInputStream(entry));
-        } catch (DocumentException | IOException e) {
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/core.xml]");
-        }
-        root = document.getRootElement();
-        Core core = new Core();
-        Class<Core> clazz = Core.class;
-        TopNS topNS = clazz.getAnnotation(TopNS.class);
-        String[] prefixs = topNS.prefix(), urls = topNS.uri();
-        Field[] fields = clazz.getDeclaredFields();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-        for (Field f : fields) {
-            NS ns = f.getAnnotation(NS.class);
-            if (ns == null) continue;
+        if (entry != null) {
+            Document document = null;
+            try {
+                document = reader.read(zipFile.getInputStream(entry));
+            } catch (DocumentException | IOException e) {
+                LOGGER.warn("The file format is incorrect or corrupted. [docProps/core.xml]");
+            }
+            if (document != null) {
+                Element root = document.getRootElement();
+                core = new Core();
+                Class<Core> clazz = Core.class;
+                TopNS topNS = clazz.getAnnotation(TopNS.class);
+                String[] prefixs = topNS.prefix(), urls = topNS.uri();
+                Field[] fields = clazz.getDeclaredFields();
+                SimpleDateFormat format = DateUtil.utcDateTimeFormat.get();
+                for (Field f : fields) {
+                    NS ns = f.getAnnotation(NS.class);
+                    if (ns == null) continue;
 
-            f.setAccessible(true);
-            int nsIndex = StringUtil.indexOf(prefixs, ns.value());
-            if (nsIndex < 0) continue;
+                    f.setAccessible(true);
+                    int nsIndex = StringUtil.indexOf(prefixs, ns.value());
+                    if (nsIndex < 0) continue;
 
-            Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
-            Class<?> type = f.getType();
-            v = root.elementText(new QName(f.getName(), namespace));
-            if (isEmpty(v)) continue;
-            if (type == String.class) {
-                try {
-                    f.set(core, v);
-                } catch (IllegalAccessException e) {
-                    LOGGER.warn("Set field ({}) error.", f);
-                }
-            } else if (type == Date.class) {
-                try {
-                    f.set(core, format.parse(v));
-                } catch (ParseException | IllegalAccessException e) {
-                    LOGGER.warn("Set field ({}) error.", f);
+                    Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+                    Class<?> type = f.getType();
+                    String v = root.elementText(new QName(f.getName(), namespace));
+                    if (isEmpty(v)) continue;
+                    if (type == String.class) {
+                        try {
+                            f.set(core, v);
+                        } catch (IllegalAccessException e) {
+                            LOGGER.warn("Set field ({}) error.", f);
+                        }
+                    } else if (type == Date.class) {
+                        try {
+                            f.set(core, format.parse(v));
+                        } catch (ParseException | IllegalAccessException e) {
+                            LOGGER.warn("Set field ({}) error.", f);
+                        }
+                    }
                 }
             }
-        }
+        } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/core.xml]");
 
         return new AppInfo(app, core);
     }
@@ -926,10 +939,37 @@ public class ExcelReader implements Closeable {
      * @param name entry name
      * @return {@code ZipEntry} if exist, otherwise null
      */
-    static ZipEntry getEntry(ZipFile zipFile, String name) {
+    public static ZipEntry getEntry(ZipFile zipFile, String name) {
         char c0 = name.charAt(0);
         if (c0 == '/' || c0 == '\\') name = name.substring(1);
         ZipEntry entry = zipFile.getEntry(name);
-        return entry != null ? entry : zipFile.getEntry(name.replace('/', '\\'));
+        if (entry == null) entry = zipFile.getEntry(name.replace('/', '\\'));
+        if (entry == null) {
+            // Iterator entries
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry e = entries.nextElement();
+                String k = e.getName().replace('\\', '/');
+                if (k.equalsIgnoreCase(name)) {
+                    entry = e;
+                    break;
+                }
+            }
+        }
+        return entry;
+    }
+
+    /**
+     * Simple convert to zip path
+     *
+     * @param path file path
+     * @return zip path
+     */
+    static String toZipPath(String path) {
+        int i = 0;
+        if (path.startsWith("../") || path.startsWith("..\\")) i = 3;
+        else if (path.startsWith("./") || path.startsWith(".\\")) i = 2;
+        else if (path.charAt(0) == '/' || path.charAt(0) == '\\') i = 1;
+        return i > 0 ? path.substring(i) : path;
     }
 }
