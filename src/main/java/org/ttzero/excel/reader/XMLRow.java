@@ -27,7 +27,7 @@ import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
-import static org.ttzero.excel.reader.SharedStrings.unescape;
+import static org.ttzero.excel.reader.SharedStrings.escape;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -44,7 +44,6 @@ import static org.ttzero.excel.util.StringUtil.swap;
  */
 public class XMLRow extends Row {
     protected int startRow;
-    protected StringBuilder buf;
 
     /**
      * The number of row. (one base)
@@ -62,11 +61,9 @@ public class XMLRow extends Row {
     @SuppressWarnings("unused")
     public XMLRow() {
         this.startRow = 1;
-        buf = new StringBuilder();
     }
 
     public XMLRow(SharedStrings sst, Styles styles, int startRow) {
-        buf = new StringBuilder();
         init(sst, styles, startRow);
     }
 
@@ -399,7 +396,7 @@ public class XMLRow extends Row {
             case INLINESTR: // inner string
                 a = getT();
                 if (a < cursor) {
-                    cell.setSv(unescape(buf, cb, a, cursor));
+                    cell.setSv(escape(cb, a, cursor));
                 } else { // null value
                     cell.blank(); // Reset type to BLANK if null value
                 }
@@ -418,7 +415,7 @@ public class XMLRow extends Row {
             case FUNCTION: // function string
                 a = getV();
                 if (a < cursor) {
-                    cell.setSv(unescape(buf, cb, a, cursor));
+                    cell.setSv(escape(cb, a, cursor));
                 } else { // null value
                     cell.blank(); // Reset type to BLANK if null value
                 }
@@ -484,7 +481,6 @@ class XMLCalcRow extends XMLRow {
         this.sst = sst;
         this.styles = styles;
         this.startRow = startRow;
-        this.buf = new StringBuilder();
         this.calcFun = calcFun;
         this.hasCalcFunc = calcFun != null;
     }
@@ -493,7 +489,6 @@ class XMLCalcRow extends XMLRow {
         this.sst = row.sst;
         this.styles = row.styles;
         this.startRow = row.startRow;
-        this.buf = row.buf;
     }
 
     XMLCalcRow setCalcFun(MergeCalcFunc calcFun) {
@@ -557,7 +552,7 @@ class XMLCalcRow extends XMLRow {
         }
         // Inner text
         if (a < cursor) {
-            cell.fv = unescape(buf, cb, a, cursor);
+            cell.fv = escape(cb, a, cursor);
             if (cell.si > -1) setCalc(cell.si, cell.fv);
         }
         // Function string is shared
@@ -652,7 +647,6 @@ class XMLMergeRow extends XMLRow {
         this.sst = row.sst;
         this.styles = row.styles;
         this.startRow = row.startRow;
-        this.buf = row.buf;
     }
 
     XMLMergeRow setCopyValueFunc(Grid mergeCells, MergeValueFunc func) {

@@ -28,7 +28,12 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import static java.lang.Character.highSurrogate;
+import static java.lang.Character.isBmpCodePoint;
+import static java.lang.Character.isValidCodePoint;
+import static java.lang.Character.lowSurrogate;
 import static java.lang.Integer.numberOfTrailingZeros;
+import static org.ttzero.excel.manager.Const.Limit.MAX_CHARACTERS_PER_CELL;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
@@ -180,10 +185,6 @@ public class SharedStrings implements Closeable {
      */
     private int offset;
     /**
-     * escape buffer
-     */
-    private StringBuilder escapeBuf;
-    /**
      * Shared string table
      */
     private IndexSharedStringTable sst;
@@ -234,7 +235,6 @@ public class SharedStrings implements Closeable {
         LOGGER.debug("Size of SharedString: {}", max);
         //
         init();
-        escapeBuf = new StringBuilder();
         return this;
     }
 
@@ -492,7 +492,7 @@ public class SharedStrings implements Closeable {
             if (a == -1) break;
             nChar = subT[1];
 
-            String tmp = unescape(escapeBuf, cb, a, nChar);
+            String tmp = escape(cb, a, nChar);
 
              // Skip the end tag of 't'
             nChar += 4;
@@ -524,7 +524,7 @@ public class SharedStrings implements Closeable {
                     if (a == -1) break;
                     nChar = subT[1];
 
-                    buf.append(unescape(escapeBuf, cb, a, nChar));
+                    buf.append(escape(cb, a, nChar));
                     nChar += 4;
                 }
                 forward[n++] = buf.toString();
@@ -585,37 +585,49 @@ public class SharedStrings implements Closeable {
         return new int[] { a, nChar };
     }
 
+    // Buffer cache (Maximum 65K)
+    private static char[] charBuffer = {};
+
     /**
-     * unescape
+     * escape
      */
-    static String unescape(StringBuilder escapeBuf, char[] cb, int from, int to) {
-        if (from == to) return EMPTY;
+    public static String escape(char[] cb, int from, int to) {
+        int n = to - from;
+        if (n == 0) return EMPTY;
         int idx_38 = indexOf(cb, '&', from, to)
             , idx_59 = idx_38 > -1 && idx_38 < to ? indexOf(cb, ';', idx_38 + 1, Math.min(idx_38 + 9, to)) : -1;
 
-        if (idx_38 <= 0 || idx_38 >= idx_59 || idx_59 > to) {
-            return new String(cb, from, to - from);
-        }
-        if (escapeBuf.length() > 0) escapeBuf.delete(0, escapeBuf.length());
+        if (idx_38 < from || idx_38 >= idx_59 || idx_59 > to) return new String(cb, from, to - from);
+
+        char[] buf;
+        if (n <= charBuffer.length) buf = charBuffer;
+        else if (n <= MAX_CHARACTERS_PER_CELL) charBuffer = buf = new char[Math.min(n + 100, MAX_CHARACTERS_PER_CELL)];
+        else buf = new char[n];
+
+        int offset = 0;
         do {
-            escapeBuf.append(cb, from, idx_38 - from);
+            System.arraycopy(cb, from, buf, offset, n = idx_38 - from);
+            offset += n;
             // ASCII
             if (cb[idx_38 + 1] == '#') {
-                int n = toInt(cb, idx_38 + 2, idx_59);
-                // Unicode char
-                escapeBuf.append((char) n);
+                char c;
+                if ((c = cb[idx_38 + 2]) >= '0' && c <= '9') n = toInt(cb, idx_38 + 2, idx_59);
+                else if (c == 'x' || c == 'X') n = toIntH(cb, idx_38 + 3, idx_59);
+                else n = 0xFFFD;
+                offset += toChars(n, buf, offset);
             }
             // desc
             else {
                 String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
                 switch (name) {
-                    case "lt"  : escapeBuf.append('<'); break;
-                    case "gt"  : escapeBuf.append('>'); break;
-                    case "amp" : escapeBuf.append('&'); break;
-                    case "quot": escapeBuf.append('"'); break;
-                    case "nbsp": escapeBuf.append(' '); break;
+                    case "lt"  : buf[offset++] = '<'; break;
+                    case "gt"  : buf[offset++] = '>'; break;
+                    case "amp" : buf[offset++] = '&'; break;
+                    case "quot": buf[offset++] = '"'; break;
+                    case "nbsp": buf[offset++] = ' '; break;
                     default: // Unknown escape
-                        escapeBuf.append(cb, idx_38, idx_59 - idx_38 + 1);
+                        System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
+                        offset += n;
                 }
             }
             from = ++idx_59;
@@ -623,9 +635,11 @@ public class SharedStrings implements Closeable {
         } while (idx_38 > -1 && idx_59 > idx_38 && idx_59 <= to);
 
         if (from < to) {
-            escapeBuf.append(cb, from, to - from);
+            System.arraycopy(cb, from, buf, offset, n = to - from);
+            offset += n;
         }
-        return escapeBuf.toString();
+
+        return new String(buf, 0, offset);
     }
 
     private static int indexOf(char[] cb, char c, int from, int to) {
@@ -634,13 +648,33 @@ public class SharedStrings implements Closeable {
     }
 
     static int toInt(char[] cb, int a, int b) {
-        boolean _n;
-        if (_n = cb[a] == '-') a++;
-        int n = cb[a++] - '0';
-        for (; b > a; ) {
-            n = n * 10 + cb[a++] - '0';
+        int n = 0;
+        boolean negative = cb[a] == '-';
+        for (int i = negative ? a + 1 : a; b > i; n = n * 10 + cb[i++] - '0');
+        return negative ? -n : n;
+    }
+
+    // Hex value
+    static int toIntH(char[] cb, int a, int b) {
+        int c, n = (c = cb[a++]) <= '9' ? c - '0' : (c >= 'a' ? c - 32 : c) - '7';
+        for (; b > a; n = n * 16 + ((c = cb[a++]) <= '9' ? c - '0' : (c >= 'a' ? c - 32 : c) - '7'));
+        return n;
+    }
+
+    static int toChars(int codePoint, char[] dst, int i) {
+        int n;
+        if (isBmpCodePoint(codePoint)) {
+            dst[i] = (char) codePoint;
+            n = 1;
+        } else if (isValidCodePoint(codePoint)) {
+            dst[i + 1] = lowSurrogate(codePoint);
+            dst[i] = highSurrogate(codePoint);
+            n = 2;
+        } else {
+           dst[i] = 0xFFFD; // Illegal value �
+           n = 1;
         }
-        return _n ? -n : n;
+        return n;
     }
 
     /**
@@ -663,7 +697,6 @@ public class SharedStrings implements Closeable {
         if (tester != null) {
             tester = null;
         }
-        escapeBuf = null;
         if (sst != null) {
             sst.close();
         }
