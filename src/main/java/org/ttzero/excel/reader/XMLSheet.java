@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.style.Styles;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.ByteBuffer;
@@ -28,6 +29,7 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,6 +37,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import static org.ttzero.excel.reader.ExcelReader.getEntry;
 
 /**
  * The open-xml format Worksheet
@@ -96,6 +100,7 @@ public class XMLSheet implements Sheet {
     protected Drawings drawings;
     // Header row
     protected int hrf, hrl;
+    // Data Source
     protected ZipFile zipFile;
     protected ZipEntry entry;
 
@@ -481,10 +486,10 @@ public class XMLSheet implements Sheet {
             sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
 
-        // Deep read if dimension information not write in header
-        if (!eof && dimension == null) {
-            parseDimension();
-        }
+//        // Deep read if dimension information not write in header
+//        if (!eof && dimension == null) {
+//            parseDimension();
+//        }
         // Create a empty worksheet dimension
         if (dimension == null) {
             dimension = new Dimension(1, (short) 1);
@@ -948,13 +953,13 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
     void load0() {
         if (ready) return;
 
-        // Parse calc.xml
-        ZipEntry entry = zipFile.getEntry("xl/calcChain.xml");
-        long[][] calcArray = new long[0][];
+        // Parse calcChain.xml
+        ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+        long[][] calcArray = null;
         try {
             calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.warn("Parse calcChain failed, formula will be ignored");
         }
         if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
 
@@ -1012,6 +1017,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     // A merge cells grid
     private Grid mergeCells;
     boolean ready;
+    List<Dimension> dimensions;
 
     XMLMergeSheet(XMLSheet sheet) {
         this.name = sheet.name;
@@ -1065,8 +1071,9 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
             if (mergeCells != null && !mergeCells.isEmpty()) {
                 this.mergeCells = GridFactory.create(mergeCells);
-                LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells.getClass());
-            }
+                LOGGER.debug("Grid: {} ===> Size: {}", this.mergeCells.getClass(), this.mergeCells.size());
+                this.dimensions = mergeCells;
+            } else this.dimensions = Collections.emptyList();
         }
 
         if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
@@ -1079,128 +1086,84 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     Parse `mergeCells` tag
      */
     List<Dimension> parseMerge() {
-//        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-//            long position = Files.size(path);
-//            final int block = (int) Math.min(1 << 11, position), c = 12;
-//            ByteBuffer buffer = ByteBuffer.allocate(block);
-//            byte[] left;
-//            int left_size = 0, i, limit;
-//            boolean eof, getit = false;
-//            // Skip if marked
-//            if (lastRowMark > 0L) {
-//                channel.position(lastRowMark);
-//                channel.read(buffer);
-//                buffer.flip();
-//                getit = true;
-//            } else {
-//                left = new byte[12];
-//                for (; ; ) {
-//                    channel.position(Math.max(0, position -= block - left_size));
-//                    channel.read(buffer);
-//                    if (left_size > 0) {
-//                        buffer.limit(block);
-//                        buffer.put(left, 0, left_size);
-//                    }
-//                    buffer.flip();
-//                    eof = buffer.limit() < block;
-//
-//                    limit = buffer.limit();
-//                    i = limit - 1;
-//
-//                    // </sheetData>
-//                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
-//                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
-//                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
-//                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
-//                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
-//                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
-//                        ;
-//
-//                    // Not Found
-//                    if (i < c) {
-//                        if (eof) break;
-//                        buffer.position(0);
-//                        left_size = 12;
-//                        buffer.get(left, 0, left_size);
-//                        buffer.clear();
-//                        buffer.limit(block - left_size);
-//                    }
-//                    // Found the last row or empty worksheet
-//                    else {
-//                        buffer.position(i + 1);
-//                        getit = true;
-//                        // Align channel and buffer position
-//                        channel.position(channel.position() + left_size);
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if (getit) {
-//                // Find mergeCells tag
-//                return parseMerge(channel, buffer, block);
-//            }
-//        } catch (IOException e) {
-//            // Ignore error
-//            LOGGER.warn("", e);
-//        }
-        return null;
-    }
+        List<Dimension> list = null;
+        try (InputStream is = zipFile.getInputStream(entry)) {
+            int n, offset = 0, limit = 1 << 14;
+            byte[] buf = new byte[limit];
+            while ((n = is.read(buf, offset, limit - offset)) > 10) {
+                int i = 0, len = n + offset - 1;
+                for (; i < len && (buf[i++] != '<' || buf[i] != 'm'); ) ;
+                // Get it
+                if (i < len) {
+                    if (n - i < 11) {
+                        System.arraycopy(buf, ++i, buf, 0, offset = n - i);
+                        if ((n = is.read(buf, offset, limit - offset)) <= 0) return null;
+                        len = n + offset;
+                    }
+                    if (len < 11 || buf[i] != 'm' || buf[i + 1] != 'e' || buf[i + 2] != 'r'
+                        || buf[i + 3] != 'g' || buf[i + 4] != 'e' || buf[i + 5] != 'C' || buf[i + 6] != 'e'
+                        || buf[i + 7] != 'l' || buf[i + 8] != 'l' || buf[i + 9] != 's' || buf[i + 10] > ' ')
+                        return null;
+                    i += 11;
+                    list = new ArrayList<>();
+                    int f, t;
+                    do {
+                        for (; ;) {
+                            for (; i < n - 11 && (buf[i] != '<' || buf[i + 1] != 'm'
+                                || buf[i + 2] != 'e' || buf[i + 3] != 'r'
+                                || buf[i + 4] != 'g' || buf[i + 5] != 'e'
+                                || buf[i + 6] != 'C' || buf[i + 7] != 'e'
+                                || buf[i + 8] != 'l' || buf[i + 9] != 'l'
+                                || buf[i + 10] > ' '); i++)
+                                ;
 
-    // Find mergeCell tags
-    List<Dimension> parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
-        List<Dimension> mergeCells = new ArrayList<>();
-        boolean eof = false;
-        int limit = buffer.limit(), i = buffer.position(), f, n;
-        byte[] bytes = new byte[32];
-        for (; ;) {
-            for (; i < limit - 11 && (buffer.get(i) != '<' || buffer.get(i + 1) != 'm'
-                || buffer.get(i + 2) != 'e' || buffer.get(i + 3) != 'r'
-                || buffer.get(i + 4) != 'g' || buffer.get(i + 5) != 'e'
-                || buffer.get(i + 6) != 'C' || buffer.get(i + 7) != 'e'
-                || buffer.get(i + 8) != 'l' || buffer.get(i + 9) != 'l'
-                || buffer.get(i + 10) > ' '); i++) ;
+                            if (i >= n - 11) {
+                                System.arraycopy(buf, i, buf, 0, offset = n - i);
+                                break;
+                            }
 
-            if (i >= limit - 22) {
-                if (eof) break;
-                buffer.position(limit - 22);
-                for (; i < buffer.limit() && buffer.get() != '<'; i++) ;
-                if (buffer.get(buffer.position() - 1) == '<') buffer.position(buffer.position() - 1);
-                buffer.compact();
-                channel.read(buffer);
-                buffer.flip();
-                if ((limit = buffer.limit()) <= 0) break;
-                i = 0;
-                eof = limit < block;
-            } else {
-                i += 11;
-                for (; i < limit - 5 && (buffer.get(i) != 'r' || buffer.get(i + 1) != 'e'
-                    || buffer.get(i + 2) != 'f' || buffer.get(i + 3) != '='
-                    || buffer.get(i + 4) != '"'); i++) ;
-                f = i += 5;
-                for (; i < limit && buffer.get(i) != '"'; i++) ;
-                if (i >= limit) {
-                    buffer.compact();
-                    channel.read(buffer);
-                    buffer.flip();
-                    if ((limit = buffer.limit()) <= 0) break;
+                            t = i;
+                            i += 11;
 
-                    i = 0;
-                    eof = limit < block;
-                    continue;
+                            for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
+                                || buf[i + 3] != '=' || buf[i + 4] != '"'); i++)
+                                ;
+
+                            if (i >= n - 5) {
+                                System.arraycopy(buf, t, buf, 0, offset = n - t);
+                                break;
+                            }
+
+                            f = i += 5;
+                            for (; i < n && buf[i] != '"'; i++) ;
+
+                            if (i >= n) {
+                                System.arraycopy(buf, t, buf, 0, offset = n - t);
+                                break;
+                            }
+
+                            list.add(Dimension.of(new String(buf, f, i - f, StandardCharsets.US_ASCII)));
+                        }
+                        i = 0;
+                    } while ((n = is.read(buf, offset, limit - offset)) > 0 && (n += offset) > 0);
                 }
-                n = i - f;
-                if (n > bytes.length) bytes = new byte[n];
-
-                buffer.position(f);
-                buffer.get(bytes, 0, n);
-
-                mergeCells.add(Dimension.of(new String(bytes, 0, n, StandardCharsets.US_ASCII)));
-                buffer.get(); // Skip '"'
+                // Compact
+                else {
+                    if (buf[i] == '<') {
+                        buf[0] = '<';
+                        offset = 1;
+                    } else if (buf[i - 1] == '<' && buf[i] == 'm') {
+                        buf[0] = '<';
+                        buf[1] = 'm';
+                        offset = 2;
+                    } else offset = 0;
+                }
             }
+        } catch (IOException e) {
+            // Ignore error
+            LOGGER.warn("", e);
         }
-
-        return mergeCells;
+        return list;
     }
 
     private void mergeCell(int row, Cell cell) {
@@ -1214,6 +1177,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
     @Override
     public List<Dimension> getMergeCells() {
-        return parseMerge();
+        return dimensions != null ? dimensions : (dimensions = parseMerge());
     }
 }
