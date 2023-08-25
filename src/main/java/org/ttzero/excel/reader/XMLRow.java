@@ -158,12 +158,7 @@ public class XMLRow extends Row {
         unknownLength = lc < 0;
 
         // Parse cell value
-//        if (unknownLength) {
         for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
-//        } else {
-//            int index = 0;
-//            for (Cell cell; index++ < lc && (cell = nextCell()) != null; parseCellValue(cell)) ;
-//        }
     }
 
     /**
@@ -235,7 +230,7 @@ public class XMLRow extends Row {
         return cell;
     }
 
-    protected long toLong(int a, int b) {
+    protected static long toLong(char[] cb, int a, int b) {
         boolean _n;
         if (_n = cb[a] == '-') a++;
         long n = cb[a++] - '0';
@@ -245,15 +240,15 @@ public class XMLRow extends Row {
         return _n ? -n : n;
     }
 
-    protected String toString(int a, int b) {
+    protected static String toString(char[] cb, int a, int b) {
         return new String(cb, a, b - a);
     }
 
-    protected double toDouble(int a, int b) {
-        return Double.parseDouble(toString(a, b));
+    protected static double toDouble(char[] cb, int a, int b) {
+        return Double.parseDouble(toString(cb, a, b));
     }
 
-    protected boolean isNumber(int a, int b) {
+    protected static boolean isNumber(char[] cb, int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
         for (; a < b; ) {
@@ -263,7 +258,7 @@ public class XMLRow extends Row {
         return a == b;
     }
 
-    protected boolean isDouble(int a, int b) {
+    protected static boolean isDouble(char[] cb, int a, int b) {
         if (a == b) return false;
         if (cb[a] == '-') a++;
         for (char i = 0, e = 0; a < b; ) {
@@ -283,75 +278,21 @@ public class XMLRow extends Row {
         if (cursor == e) return cursor;
 
         int a;
-        if (cb[cursor + 2] == '>') {
-            a = cursor += 3;
-        }
+        if (cb[cursor + 2] == '>') a = cursor += 3;
+
         // Some other attributes
         else if (cb[cursor + 2] == ' ') {
-            int i = cursor + 3;
             for (; cursor < e && cb[cursor] != '>'; cursor++) ;
 
             cursor++;
-            if (cb[cursor - 2] == '/' || cursor == e) {
-                return cursor;
-            }
+            if (cb[cursor - 2] == '/' || cursor == e) return cursor;
             a = cursor;
         }
         // Empty tag
         else if (cb[cursor + 2] == '/') {
             cursor += 3;
             return cursor;
-        }
-        else {
-            a = cursor += 3;
-        }
-
-        // Found end tag
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
-            || cb[cursor + 2] != c || cb[cursor + 3] != '>'); cursor++) ;
-
-        return a;
-    }
-
-    /**
-     * Parses the value and attributes of the specified tag
-     *
-     * @param cell current cell
-     * @param c the specified tag
-     * @param attrConsumer an attribute consumer
-     * @return the start index of value
-     */
-    protected int get(Cell cell, char c, Attribute attrConsumer) {
-        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != c
-            || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
-        if (cursor == e) return cursor;
-
-        int a;
-        if (cb[cursor + 2] == '>') {
-            a = cursor += 3;
-        }
-        // Some other attributes
-        else if (cb[cursor + 2] == ' ') {
-            int i = cursor + 3;
-            for (; cursor < e && cb[cursor] != '>'; cursor++) ;
-            // If parse attributes
-            if (attrConsumer != null)
-                attrConsumer.accept(cell, cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
-
-            cursor++;
-            if (cb[cursor - 2] == '/' || cursor == e) {
-                return cursor;
-            }
-            a = cursor;
-        }
-        // Empty tag
-        else if (cb[cursor + 2] == '/') {
-            cursor += 3;
-            return cursor;
-        }
-        else {
-            a = cursor += 3;
-        }
+        } else a = cursor += 3;
 
         // Found end tag
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
@@ -424,17 +365,17 @@ public class XMLRow extends Row {
             default:
                 a = getV();
                 if (a < cursor) {
-                    if (isNumber(a, cursor)) {
-                        long l = toLong(a, cursor);
+                    if (isNumber(cb, a, cursor)) {
+                        long l = toLong(cb, a, cursor);
                         if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
                             cell.setNv((int) l);
                         } else {
                             cell.setLv(l);
                         }
-                    } else if (isDouble(a, cursor)) {
-                        cell.setDv(toDouble(a, cursor));
+                    } else if (isDouble(cb, a, cursor)) {
+                        cell.setDv(toDouble(cb, a, cursor));
                     } else {
-                        cell.setSv(toString(a, cursor));
+                        cell.setSv(toString(cb, a, cursor));
                     }
                 }
                 // Maybe the cell should be merged
@@ -453,21 +394,6 @@ public class XMLRow extends Row {
         return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
     }
 
-    /**
-     * Attribute consumer
-     */
-    @FunctionalInterface
-    interface Attribute {
-        /**
-         * Performs this operation on the given argument.
-         *
-         * @param cell current cell
-         * @param cb characters for the entire attribute
-         * @param a start index
-         * @param b end index
-         */
-        void accept(Cell cell, char[] cb, int a, int b);
-    }
 }
 
 /**
@@ -512,11 +438,7 @@ class XMLCalcRow extends XMLRow {
         }
 
         // Parse cell value
-//        if (unknownLength) {
         for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
-//        } else {
-//            for(Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
-//        }
     }
 
     /**
@@ -571,7 +493,35 @@ class XMLCalcRow extends XMLRow {
      * @return the end index of function value
      */
     private int getF(Cell cell) {
-        return get(cell, 'f', this::parseFunAttr);
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'f'
+            || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
+        if (cursor == e) return cursor;
+
+        int a;
+        if (cb[cursor + 2] == '>') a = cursor += 3;
+
+        // Some other attributes
+        else if (cb[cursor + 2] == ' ') {
+            int i = cursor + 3;
+            for (; cursor < e && cb[cursor] != '>'; cursor++) ;
+            // If parse attributes
+            parseFunAttr(cell, cb, i, cb[cursor - 1] != '/' ? cursor : cursor - 1);
+
+            cursor++;
+            if (cb[cursor - 2] == '/' || cursor == e) return cursor;
+            a = cursor;
+        }
+        // Empty tag
+        else if (cb[cursor + 2] == '/') {
+            cursor += 3;
+            return cursor;
+        } else a = cursor += 3;
+
+        // Found end tag
+        for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != '/'
+            || cb[cursor + 2] != 'f' || cb[cursor + 3] != '>'); cursor++) ;
+
+        return a;
     }
 
     /* Parse function tag's attribute */
