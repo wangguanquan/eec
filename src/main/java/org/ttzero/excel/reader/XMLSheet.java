@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -221,7 +220,8 @@ public class XMLSheet implements Sheet {
     @Deprecated
     @Override
     public int getSize() {
-        return dimension != null ? dimension.lastRow - dimension.firstRow + 1 : -1;
+        Dimension d = getDimension();
+        return d != null ? d.lastRow - d.firstRow + 1 : -1;
     }
 
     /**
@@ -234,7 +234,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Dimension getDimension() {
-        return dimension;
+        return dimension != null ? dimension : (dimension = parseDimension());
     }
 
     /**
@@ -485,16 +485,7 @@ public class XMLSheet implements Sheet {
             mark += nChar;
             sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
-
-//        // Deep read if dimension information not write in header
-//        if (!eof && dimension == null) {
-//            parseDimension();
-//        }
-        // Create a empty worksheet dimension
-        if (dimension == null) {
-            dimension = new Dimension(1, (short) 1);
-        }
-        LOGGER.debug("Dimension-Range: {}", dimension);
+        if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
 
         return this;
     }
@@ -729,135 +720,58 @@ public class XMLSheet implements Sheet {
     Read from tail and look at the line number of the last line
     to confirm the scope of the entire worksheet.
      */
-    void parseDimension() {
-//        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-//            long position = Files.size(path);
-//            final int block = (int) Math.min(1 << 11, position), c = 7;
-//            ByteBuffer buffer = ByteBuffer.allocate(block);
-//            byte[] left = null;
-//            int left_size = 0, i;
-//
-//            boolean eof, getit = false;
-//            for (; ;) {
-//                position -= (block - left_size);
-//                channel.position(Math.max(0, position));
-//                channel.read(buffer);
-//                if (left_size > 0) {
-//                    buffer.limit(block);
-//                    buffer.put(left, 0, left_size);
-//                }
-//                buffer.flip();
-//                eof = buffer.limit() < block;
-//
-//                int limit = buffer.limit();
-//                i = limit - 1;
-//
-//                // <row r="
-//                for (; i >= c && (buffer.get(i) != '"' || buffer.get(i - 1) != '='
-//                    || buffer.get(i - 2) != 'r' || buffer.get(i - 3) > ' '
-//                    || buffer.get(i - 4) != 'w' || buffer.get(i - 5) != 'o'
-//                    || buffer.get(i - 6) != 'r' || buffer.get(i - 7) != '<'); i--)
-//                    ;
-//
-//                // Not Found
-//                if (i < c) {
-//                    if (eof || (eof = position <= 0)) break;
-//                    for (; i < limit && buffer.get(i) != '>'; i++) ;
-//                    i++;
-//                    if (i < limit - 1) {
-//                        buffer.position(i);
-//                        left_size = i;
-//                        if (left == null || left_size > left.length) {
-//                            left = new byte[left_size];
-//                        }
-//                        buffer.position(0);
-//                        buffer.get(left, 0, left_size);
-//                    } else left_size = 0;
-//                }
-//                // Found the last row or empty worksheet
-//                else {
-//                    getit = true;
-//                    buffer.position(i);
-//                    // Align channel and buffer position
-//                    if (left_size > 0) channel.position(channel.position() + left_size);
-//                    lastRowMark = channel.position() - buffer.remaining();
-//                    break;
-//                }
-//                buffer.position(0);
-//                buffer.limit(buffer.capacity() - left_size);
-//            }
-//
-//            // Empty worksheet
-//            if (!getit) {
-//                dimension = Dimension.of("A1");
-//                return;
-//            }
-//
-//            // Dimension
-//            parseDim(channel, buffer);
-//        } catch (IOException e) {
-//            // Ignore error
-//            LOGGER.debug("", e);
-//        }
-    }
+    Dimension parseDimension() {
+        try (InputStream is = zipFile.getInputStream(entry)) {
+            // Skips specified number of bytes of uncompressed data.
+            if (lastRowMark > 0L) is.skip(lastRowMark);
 
-    private int[] innerParse(ByteBuffer buffer, int i) {
-        int row = 0;
-        for (; buffer.get(i) != '"'; i++)
-            row = row * 10 + (buffer.get(i) - '0');
-        // spans="
-        i++;
-        for (; buffer.limit() - i >= 7 && (buffer.get(i) != 's' || buffer.get(i + 1) != 'p'
-            || buffer.get(i + 2) != 'a' || buffer.get(i + 3) != 'n'
-            || buffer.get(i + 4) != 's' || buffer.get(i + 5) != '='
-            || buffer.get(i + 6) != '"'); i++) ;
-        i += 7;
-        int cs = 0, ls = 0;
-        if (buffer.limit() <= i) {
-            eof = true; // EOF
-            return new int[] { row, 1, 1 };
+            // Mark
+            long mark = 0L, mark0 = 0L;
+            int n, offset = 0, limit = 1 << 14, i, len, f, size = 0;
+            byte[] buf = new byte[limit], bytes = new byte[10];
+            while ((n = is.read(buf, offset, limit - offset)) > 0) {
+                mark += n;
+                if ((len = n + offset) < 11) {
+                    offset = len;
+                    continue;
+                }
+                i = len - 1;
+                // Look up from tail
+                for (; i > 1 && (buf[i--] != ' ' || buf[i--] != 'c' || buf[i] != '<'); ) ;
+                if (i == 1) {
+                    offset = buf[0] == '<' && buf[1] == 'c' ? 2 : 0;
+                    continue;
+                }
+                else if (i <= len - 9) {
+                    n = i;
+                    i += 3;
+                    for (; i < len && buf[i] != 'r' && buf[i + 1] != '=' && buf[i + 2] != '"'; i++);
+                    if (i < len - 3) {
+                        f = i += 3;
+                        for (; i < len && buf[i] != '"'; i++);
+                        if (i < len) {
+                            System.arraycopy(buf, f, bytes, 0, size = i - f);
+                            if (buf[len - 1] == '<') {
+                                buf[0] = '<';
+                                offset = 1;
+                            } else offset = 0;
+                            mark0 = mark - (len - n);
+                            continue;
+                        }
+                    }
+                    i = n;
+                }
+                if (i < len) System.arraycopy(buf, i, buf, 0, offset = len - i);
+            }
+            if (lastRowMark < mark0) lastRowMark = mark0;
+            long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
+            return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
+        } catch (IOException e) {
+            // Ignore error
+            LOGGER.warn("", e);
         }
-        for (; buffer.get(i) != ':'; i++)
-            cs = cs * 10 + (buffer.get(i) - '0');
-        i++;
-        for (; buffer.get(i) != '"'; i++)
-            ls = ls * 10 + (buffer.get(i) - '0');
-        return new int[] { row, cs, ls };
-    }
 
-    private void parseDim(SeekableByteChannel channel, ByteBuffer buffer) throws IOException {
-        long rr = 0L;
-        int rc, i = buffer.position();
-
-        int[] info = innerParse(buffer, ++i);
-        rc = (info[2] << 16) | (info[1] & 0x7FFF);
-        rr |= ((long) info[0]) << 32;
-
-        // Skip if the first row is known
-        if (mark > 0) {
-            channel.position(mark);
-            buffer.clear();
-            channel.read(buffer);
-            buffer.flip();
-
-            i = 0;
-            for (; buffer.get(i) != '<' || buffer.get(i + 1) != 'r'
-                || buffer.get(i + 2) != 'o' || buffer.get(i + 3) != 'w'
-                || buffer.get(i + 4) > ' ' || buffer.get(i + 5) != 'r'
-                || buffer.get(i + 6) != '=' || buffer.get(i + 7) != '"'; i++) ;
-            i += 8;
-
-            info = innerParse(buffer, i);
-            rr |= info[0];
-            if (info[1] > (rc & 0x7FFF)) {
-                rc |= info[1] & 0x7FFF;
-            }
-            if (info[2] < (rc >>> 16)) {
-                rc |= info[2] << 16;
-            }
-        } else rr |= 1;
-
-        dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
+        return Dimension.of("A1");
     }
 
     Row createHeader(char[] cb, int start, int n) {
@@ -1088,6 +1002,9 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     List<Dimension> parseMerge() {
         List<Dimension> list = null;
         try (InputStream is = zipFile.getInputStream(entry)) {
+            // Skips specified number of bytes of uncompressed data.
+            if (lastRowMark > 0L) is.skip(lastRowMark);
+
             int n, offset = 0, limit = 1 << 14, i, len;
             byte[] buf = new byte[limit];
             while ((n = is.read(buf, offset, limit - offset)) > 0) {
