@@ -590,6 +590,11 @@ public class SharedStrings implements Closeable {
 
     /**
      * escape
+     *
+     * @param cb source char buffer
+     * @param from starting position in the source array.
+     * @param to ending position in the source array.
+     * @return Escape xml string
      */
     public static String escape(char[] cb, int from, int to) {
         int n = to - from;
