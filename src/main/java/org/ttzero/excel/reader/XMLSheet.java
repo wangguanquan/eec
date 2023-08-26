@@ -1088,67 +1088,17 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     List<Dimension> parseMerge() {
         List<Dimension> list = null;
         try (InputStream is = zipFile.getInputStream(entry)) {
-            int n, offset = 0, limit = 1 << 14;
+            int n, offset = 0, limit = 1 << 14, i, len;
             byte[] buf = new byte[limit];
-            while ((n = is.read(buf, offset, limit - offset)) > 10) {
-                int i = 0, len = n + offset - 1;
-                for (; i < len && (buf[i++] != '<' || buf[i] != 'm'); ) ;
-                // Get it
-                if (i < len) {
-                    if (n - i < 11) {
-                        System.arraycopy(buf, ++i, buf, 0, offset = n - i);
-                        if ((n = is.read(buf, offset, limit - offset)) <= 0) return null;
-                        len = n + offset;
-                    }
-                    if (len < 11 || buf[i] != 'm' || buf[i + 1] != 'e' || buf[i + 2] != 'r'
-                        || buf[i + 3] != 'g' || buf[i + 4] != 'e' || buf[i + 5] != 'C' || buf[i + 6] != 'e'
-                        || buf[i + 7] != 'l' || buf[i + 8] != 'l' || buf[i + 9] != 's' || buf[i + 10] > ' ')
-                        return null;
-                    i += 11;
-                    list = new ArrayList<>();
-                    int f, t;
-                    do {
-                        for (; ;) {
-                            for (; i < n - 11 && (buf[i] != '<' || buf[i + 1] != 'm'
-                                || buf[i + 2] != 'e' || buf[i + 3] != 'r'
-                                || buf[i + 4] != 'g' || buf[i + 5] != 'e'
-                                || buf[i + 6] != 'C' || buf[i + 7] != 'e'
-                                || buf[i + 8] != 'l' || buf[i + 9] != 'l'
-                                || buf[i + 10] > ' '); i++)
-                                ;
-
-                            if (i >= n - 11) {
-                                System.arraycopy(buf, i, buf, 0, offset = n - i);
-                                break;
-                            }
-
-                            t = i;
-                            i += 11;
-
-                            for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
-                                || buf[i + 3] != '=' || buf[i + 4] != '"'); i++)
-                                ;
-
-                            if (i >= n - 5) {
-                                System.arraycopy(buf, t, buf, 0, offset = n - t);
-                                break;
-                            }
-
-                            f = i += 5;
-                            for (; i < n && buf[i] != '"'; i++) ;
-
-                            if (i >= n) {
-                                System.arraycopy(buf, t, buf, 0, offset = n - t);
-                                break;
-                            }
-
-                            list.add(Dimension.of(new String(buf, f, i - f, StandardCharsets.US_ASCII)));
-                        }
-                        i = 0;
-                    } while ((n = is.read(buf, offset, limit - offset)) > 0 && (n += offset) > 0);
+            while ((n = is.read(buf, offset, limit - offset)) > 0) {
+                if ((len = n + offset) < 11) {
+                    offset = len;
+                    continue;
                 }
+                i = 0; len--;
+                for (; i < len && (buf[i++] != '<' || buf[i] != 'm'); ) ;
                 // Compact
-                else {
+                if (i >= len) {
                     if (buf[i] == '<') {
                         buf[0] = '<';
                         offset = 1;
@@ -1157,7 +1107,74 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                         buf[1] = 'm';
                         offset = 2;
                     } else offset = 0;
+                    continue;
                 }
+                // Get it
+                len++;
+                if (len - i < 11) {
+                    System.arraycopy(buf, i, buf, 0, offset = len - i);
+                    if ((n = is.read(buf, offset, limit - offset)) <= 0)
+                        return null;
+                    len = n + offset;
+                    if (len < 11) {
+                        while (((n = is.read(buf, offset, limit - offset)) > 0)) {
+                            if ((len = n + offset) < 11) offset = len;
+                            else break;
+                        }
+                    }
+                    i = 0;
+                }
+                if (len < 11 || buf[i] != 'm' || buf[i + 1] != 'e' || buf[i + 2] != 'r'
+                    || buf[i + 3] != 'g' || buf[i + 4] != 'e' || buf[i + 5] != 'C' || buf[i + 6] != 'e'
+                    || buf[i + 7] != 'l' || buf[i + 8] != 'l' || buf[i + 9] != 's' || buf[i + 10] > ' ')
+                    return null;
+                i += 11;
+                n = len;
+                list = new ArrayList<>();
+                int f, t;
+                do {
+                    if (n < 11) {
+                        offset += n;
+                        continue;
+                    }
+                    for (; ;) {
+                        for (; i < n - 11 && (buf[i] != '<' || buf[i + 1] != 'm'
+                            || buf[i + 2] != 'e' || buf[i + 3] != 'r'
+                            || buf[i + 4] != 'g' || buf[i + 5] != 'e'
+                            || buf[i + 6] != 'C' || buf[i + 7] != 'e'
+                            || buf[i + 8] != 'l' || buf[i + 9] != 'l'
+                            || buf[i + 10] > ' '); i++)
+                            ;
+
+                        if (i >= n - 11) {
+                            System.arraycopy(buf, i, buf, 0, offset = n - i);
+                            break;
+                        }
+
+                        t = i;
+                        i += 11;
+
+                        for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
+                            || buf[i + 3] != '=' || buf[i + 4] != '"'); i++)
+                            ;
+
+                        if (i >= n - 5) {
+                            System.arraycopy(buf, t, buf, 0, offset = n - t);
+                            break;
+                        }
+
+                        f = i += 5;
+                        for (; i < n && buf[i] != '"'; i++) ;
+
+                        if (i >= n) {
+                            System.arraycopy(buf, t, buf, 0, offset = n - t);
+                            break;
+                        }
+
+                        list.add(Dimension.of(new String(buf, f, i - f, StandardCharsets.US_ASCII)));
+                    }
+                    i = 0;
+                } while ((n = is.read(buf, offset, limit - offset)) > 0 && (n += offset) > 0);
             }
         } catch (IOException e) {
             // Ignore error
