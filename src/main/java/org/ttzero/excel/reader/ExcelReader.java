@@ -902,11 +902,11 @@ public class ExcelReader implements Closeable {
             if (value >= 'A' && value <= 'Z') {
                 v = v * 26 + value - 'A' + 1;
             }
-            else if (value >= 'a' && value <= 'z') {
-                v = v * 26 + value - 'a' + 1;
-            }
             else if (value >= '0' && value <= '9') {
                 n = n * 10 + value - '0';
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
             }
             else
                 throw new ExcelReadException("Column mark out of range: " + r);
