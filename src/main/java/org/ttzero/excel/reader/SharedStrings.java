@@ -661,8 +661,8 @@ public class SharedStrings implements Closeable {
 
     // Hex value
     static int toIntH(char[] cb, int a, int b) {
-        int c, n = (c = cb[a++]) <= '9' ? c - '0' : (c >= 'a' ? c - 32 : c) - '7';
-        for (; b > a; n = n * 16 + ((c = cb[a++]) <= '9' ? c - '0' : (c >= 'a' ? c - 32 : c) - '7'));
+        int n = 0;
+        for (int c; b > a; n = n * 16 + ((c = cb[a++]) <= '9' ? c - '0' : (c >= 'a' ? c - 32 : c) - '7'));
         return n;
     }
 
