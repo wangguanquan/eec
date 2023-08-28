@@ -458,7 +458,7 @@ public class XMLSheet implements Sheet {
                 }
             }
             // find index of <sheetData>
-            for (; nChar < length - 12; nChar++) {
+            for (int len = length - 12; nChar < len; nChar++) {
                 if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
                     && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
                     && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
@@ -556,8 +556,7 @@ public class XMLSheet implements Sheet {
                 reader.skip(mark);
                 length = reader.read(cb);
             } else {
-                loopA:
-                for (; ; ) {
+                loopA: for (; ; ) {
                     length = reader.read(cb);
                     // find index of <sheetData>
                     for (; nChar < length - 12; nChar++) {
@@ -738,11 +737,11 @@ public class XMLSheet implements Sheet {
                 i = len - 1;
                 // Look up from tail
                 for (; i > 1 && (buf[i--] != ' ' || buf[i--] != 'c' || buf[i] != '<'); ) ;
-                if (i == 1) {
-                    offset = buf[0] == '<' && buf[1] == 'c' ? 2 : 0;
+                if (i <= 1 && (buf[i] != '<' || buf[i + 1] != 'c')) {
+                    offset = 0;
                     continue;
                 }
-                else if (i <= len - 9) {
+                if (i <= len - 9) {
                     n = i;
                     i += 3;
                     for (; i < len && buf[i] != 'r' && buf[i + 1] != '=' && buf[i + 2] != '"'; i++);
@@ -764,8 +763,10 @@ public class XMLSheet implements Sheet {
                 if (i < len) System.arraycopy(buf, i, buf, 0, offset = len - i);
             }
             if (lastRowMark < mark0) lastRowMark = mark0;
-            long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
-            return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
+            if (size > 0) {
+                long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
+                return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
+            }
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
@@ -1060,8 +1061,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                             || buf[i + 4] != 'g' || buf[i + 5] != 'e'
                             || buf[i + 6] != 'C' || buf[i + 7] != 'e'
                             || buf[i + 8] != 'l' || buf[i + 9] != 'l'
-                            || buf[i + 10] > ' '); i++)
-                            ;
+                            || buf[i + 10] > ' '); i++) ;
 
                         if (i >= n - 11) {
                             System.arraycopy(buf, i, buf, 0, offset = n - i);
@@ -1072,8 +1072,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                         i += 11;
 
                         for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
-                            || buf[i + 3] != '=' || buf[i + 4] != '"'); i++)
-                            ;
+                            || buf[i + 3] != '=' || buf[i + 4] != '"'); i++) ;
 
                         if (i >= n - 5) {
                             System.arraycopy(buf, t, buf, 0, offset = n - t);
