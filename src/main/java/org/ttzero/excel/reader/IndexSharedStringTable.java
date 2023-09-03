@@ -30,7 +30,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * @author guanquan.wang at 2019-05-10 20:06
@@ -106,9 +105,6 @@ public class IndexSharedStringTable extends SharedStringTable {
      */
     IndexSharedStringTable(Path path) throws IOException {
         super(Paths.get(path.toString().substring(0, path.toString().length() - 4)));
-        if (!exists(path)) {
-            throw new IOException("The index path [" + path + "] not exists.");
-        }
         temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);
         channel.position(channel.size());
