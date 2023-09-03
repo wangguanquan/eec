@@ -139,7 +139,7 @@ public class SharedStrings implements Closeable {
     /**
      * Number of word per load
      */
-    private int page = 512;
+    private int page = 16;
     /**
      * The word total
      */
@@ -399,7 +399,10 @@ public class SharedStrings implements Closeable {
     }
 
     private void copyToBackward() {
-        System.arraycopy(forward, 0, backward, 0, limit_forward);
+        String[] tmp = backward;
+        backward = forward;
+        forward = tmp;
+//        System.arraycopy(forward, 0, backward, 0, limit_forward);
         offset_backward = offset_forward;
         limit_backward = limit_forward;
     }
