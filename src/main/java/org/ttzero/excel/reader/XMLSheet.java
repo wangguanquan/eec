@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -806,14 +805,6 @@ public class XMLSheet implements Sheet {
         Row accept(char[] cb, int start, int n);
     }
 
-    // For debug
-    static void watch(ByteBuffer buffer) {
-        int p = buffer.position();
-        byte[] bytes = new byte[Math.min(1 << 7, buffer.remaining())];
-        buffer.get(bytes, 0, bytes.length);
-        System.out.println(new String(bytes, 0, bytes.length, StandardCharsets.US_ASCII));
-        buffer.position(p);
-    }
 }
 
 /**
