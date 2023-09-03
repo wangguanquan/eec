@@ -248,7 +248,7 @@ public class SharedStrings implements Closeable {
             backward = new String[page];
 
             // Cache 8KB binary, it will store 1^16 strings.
-            tester = new Tester.FixBinaryTester(Math.min(max, 1 << 16));
+            tester = new Tester.BinaryTester(max > 0 ? Math.min(max, 1 << 16) : 1 << 16);
 
             if (hotSize > 0) hot = FixSizeLRUCache.create(hotSize);
             else hot = FixSizeLRUCache.create();
@@ -615,24 +615,25 @@ public class SharedStrings implements Closeable {
             offset += n;
             // ASCII
             if (cb[idx_38 + 1] == '#') {
-                char c;
-                if ((c = cb[idx_38 + 2]) >= '0' && c <= '9') n = toInt(cb, idx_38 + 2, idx_59);
-                else if (c == 'x' || c == 'X') n = toIntH(cb, idx_38 + 3, idx_59);
-                else n = 0xFFFD;
-                offset += toChars(n, buf, offset);
+                char c = cb[idx_38 + 2];
+                if (c == 'x') offset += toChars(toIntH(cb, idx_38 + 3, idx_59), buf, offset);
+                else if (c >= '0' && c <= '9') offset += toChars(toInt(cb, idx_38 + 2, idx_59), buf, offset);
+                else {
+                    System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
+                    offset += n;
+                }
             }
             // desc
             else {
-                String name = new String(cb, idx_38 + 1, idx_59 - idx_38 - 1);
-                switch (name) {
-                    case "lt"  : buf[offset++] = '<'; break;
-                    case "gt"  : buf[offset++] = '>'; break;
-                    case "amp" : buf[offset++] = '&'; break;
-                    case "quot": buf[offset++] = '"'; break;
-                    case "nbsp": buf[offset++] = ' '; break;
-                    default: // Unknown escape
-                        System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
-                        offset += n;
+                n = idx_59 - idx_38 - 1;
+                if (n == 2 && cb[idx_38 + 1] == 'l' && cb[idx_38 + 2] == 't') buf[offset++] = '<';
+                else if (n == 2 && cb[idx_38 + 1] == 'g' && cb[idx_38 + 2] == 't') buf[offset++] = '>';
+                else if (n == 3 && cb[idx_38 + 1] == 'a' && cb[idx_38 + 2] == 'm' && cb[idx_38 + 3] == 'p') buf[offset++] = '&';
+                else if (n == 4 && cb[idx_38 + 1] == 'n' && cb[idx_38 + 2] == 'b' && cb[idx_38 + 3] == 's' && cb[idx_38 + 4] == 'p') buf[offset++] = ' ';
+                else if (n == 4 && cb[idx_38 + 1] == 'q' && cb[idx_38 + 2] == 'u' && cb[idx_38 + 3] == 'o' && cb[idx_38 + 4] == 't') buf[offset++] = '"';
+                else {
+                    System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
+                    offset += n;
                 }
             }
             from = ++idx_59;
@@ -689,8 +690,8 @@ public class SharedStrings implements Closeable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}", total, max
-                , (total > 0 ? (total - max) * 100.0/ total : 0) + "%");
+            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max
+                , (total > 0 ? (total - max) * 100.0/ total : 0));
             LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
@@ -740,16 +741,16 @@ interface Tester {
 
     int analysis();
 
-    class FixBinaryTester implements Tester {
+    class BinaryTester implements Tester {
         private int start;
         private int limit;
         private final int initial_size;
-        private long[] marks;
+        private final long[] marks;
 //        private static final int LIMIT = (1 << 25) - 1;
 
         private int total_resize; // For debug
 
-        FixBinaryTester(int expectedInsertions) {
+        BinaryTester(int expectedInsertions) {
             marks = new long[initial_size = ((expectedInsertions - 1) >> 6) + 1];
             limit = (initial_size << 6) - 1;
         }
@@ -758,7 +759,7 @@ interface Tester {
         public boolean test(int i) {
             if (i < start) return true;
             // Check bound of bit-set
-            if (i > limit) resize(i);
+            if (i > limit && !resize(i)) return false;
             i = i - start;
             int n = i >> 6, m = i - (n << 6);
             boolean a = ((marks[n] >> (63 - m)) & 1) == 1;
@@ -781,31 +782,25 @@ interface Tester {
             return total_resize;
         }
 
-        private void resize(int i) {
+        private boolean resize(int i) {
             total_resize++;
             int ii = 0, n = marks.length, l = ((i - start) >> 6) + 1;
 
             for (; ii < n && marks[ii] == -1; ii++) ;
+            if (l - ii > initial_size)
+                for (; ii < n && (Long.bitCount(marks[ii]) > 48 || marks[ii] == 0); ii++) ;
 
             if (l - ii <= initial_size) {
                 // Clean old mark
-                if (ii > 0) {
-                    int j = 0;
-                    for (int m = ii; m < n; marks[j++] = marks[m++]) ;
-                    for (; j < n; marks[j++] &= 0) ;
-                    start += (ii << 6);
-                }
-//                else {
-//                    marks = Arrays.copyOf(marks, l + (l >> 1));
-//                }
-            } else {
-                // TODO Limit Tester length to prevent infinite expansion
-                long[] newMarks = new long[(l - ii) + ((l - ii) >> 1)];
-                System.arraycopy(marks, ii, newMarks, 0, marks.length - ii);
-                marks = newMarks;
+                int j = n - ii;
+                if (j > 0) System.arraycopy(marks, ii, marks, 0, j);
+
+                for (; j < n; marks[j++] = 0L) ;
                 start += (ii << 6);
+                limit = (marks.length << 6) + start - 1;
+                return true;
             }
-            limit = (marks.length << 6) + start - 1;
+            return false;
         }
     }
 }
