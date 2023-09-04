@@ -588,7 +588,7 @@ public class SharedStrings implements Closeable {
         return new int[] { a, nChar };
     }
 
-    // Buffer cache (Maximum 65K)
+    // Buffer cache (Maximum 64K)
     private static char[] charBuffer = {};
 
     /**
