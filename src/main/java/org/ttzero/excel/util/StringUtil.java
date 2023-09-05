@@ -119,16 +119,17 @@ public class StringUtil {
      * @param name a string to processor
      * @return a camel case string
      */
-    public static String toPascalCase(String name) {
+    public static String toCamelCase(String name) {
         if (name.indexOf('_') < 0) return name;
         char[] oldValues = name.toLowerCase().toCharArray();
         final int len = oldValues.length;
         int i = 1, idx = i;
         for (int n = len - 1; i < n; i++) {
             char c = oldValues[i], cc = oldValues[i + 1];
-            if (c == '_' && cc >= 'a' && cc <= 'z') {
-                oldValues[idx++] = (char) (cc - 32);
+            if (c == '_') {
                 i++;
+                if (cc == '_') continue;
+                oldValues[idx++] = cc >= 'a' && cc <= 'z' ? (char) (cc - 32) : cc;
             }
             else {
                 oldValues[idx++] = c;
