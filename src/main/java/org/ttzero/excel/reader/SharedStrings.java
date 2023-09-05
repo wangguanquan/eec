@@ -18,7 +18,6 @@ package org.ttzero.excel.reader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ttzero.excel.entity.ExcelWriteException;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -39,17 +38,8 @@ import static org.ttzero.excel.util.StringUtil.EMPTY;
 /**
  * Read sharedString data
  * <p>
- * For large files, it is impossible to load all data into the
- * memory and get it by index. The current practice is to partition
- * and divide the data into three areas: forward, backward, and hot.
- * The newly read data is placed in the forward area, if not found
- * in forward area, go to the backward area to find, finally go to
- * the hot area to find it. If not found in the three areas, press
- * the ward will be re-load in to the forward area. The original
- * forwarding area data is copied to the backward area. The blocks
- * loaded twice will be marked, the marked blocks will be placed in
- * the hot area when they are repeatedly read, and the hot area will
- * be eliminated by the LRU page replacement algorithm.
+ * This record contains a list of all strings used anywhere in the workbook.
+ * Each string occurs only once. The workbook uses indexes into the list to reference the strings
  *
  * @author guanquan.wang at 2018-09-27 14:28
  */
@@ -73,14 +63,12 @@ public class SharedStrings implements Closeable {
         max = data.length;
         offset_forward = 0;
         status = 1;
-        if (max <= page) {
+        if (max <= 512) {
             forward = new String[max];
             System.arraycopy(data, offset_forward, forward, 0, max);
             limit_forward = max;
         } else {
-            if (max > page << 1) {
-                page = max >> 1;
-            }
+            page = (max + 1) >> 1;
             status <<= 1;
             forward = new String[page];
             limit_forward = page;
@@ -139,7 +127,7 @@ public class SharedStrings implements Closeable {
     /**
      * Number of word per load
      */
-    private int page = 16;
+    private int page;
     /**
      * The word total
      */
@@ -181,9 +169,9 @@ public class SharedStrings implements Closeable {
      */
     private char[] cb;
     /**
-     * offset of cb[]
+     * length of cb[]
      */
-    private int offset;
+    private int nChar, length;
     /**
      * Shared string table
      */
@@ -195,6 +183,10 @@ public class SharedStrings implements Closeable {
      * 4: large model/unknown size
      */
     private int status;
+    /**
+     * Buffer
+     */
+    StringBuilder buf = null;
 
     // For debug
     private int total, total_forward, total_backward, total_hot, total_sst;
@@ -241,8 +233,9 @@ public class SharedStrings implements Closeable {
     /* */
     private void init() throws IOException {
         status = 1;
-        // Unknown size or greater than {@code page * 2}
-        if (max < 0 || max > page << 1) {
+        // Unknown size or greater than {@code 8192}
+        if (max < 0 || max > 1 << 14) {
+            if (page <= 0) page = 16;
             status <<= 2;
             forward = new String[page];
             backward = new String[page];
@@ -258,12 +251,14 @@ public class SharedStrings implements Closeable {
                 sst.setShortSectorSize(numberOfTrailingZeros(page));
             }
         }
-        else if (max > page) {
+        else if (max > 512) {
             status <<= 1;
+            page = (max + 1) >> 1;
             forward = new String[page];
             backward = new String[page];
-        } else {
-            forward = new String[page];
+        }
+        else {
+            forward = new String[page = Math.max(16, max)];
         }
     }
 
@@ -276,9 +271,12 @@ public class SharedStrings implements Closeable {
     private int uniqueCount() throws IOException {
         int off = -1;
         cb = new char[1 << 12];
-        offset = reader.read(cb);
+        length = reader.read(cb);
 
-        String line = new String(cb, 0, Math.min(cb.length, offset));
+        // Empty Shared String Table
+        if (length <= 0) return status = 0;
+
+        String line = new String(cb, 0, Math.min(256, length));
         // Microsoft Excel
         String uniqueCount = " uniqueCount=";
         int index = line.indexOf(uniqueCount)
@@ -296,6 +294,8 @@ public class SharedStrings implements Closeable {
             }
         }
 
+        if (end > 0) nChar = end + 1;
+
         return off;
     }
 
@@ -306,7 +306,7 @@ public class SharedStrings implements Closeable {
      * @return string
      */
     public String get(int index) {
-        checkBound(index);
+//        checkBound(index);
         total++;
 
         // Load first
@@ -355,7 +355,7 @@ public class SharedStrings implements Closeable {
                     // Load from SharedStringTable
                     limit_forward = sst.get(offset_forward, forward);
                 } catch (IOException e) {
-                    throw new ExcelWriteException(e);
+                    throw new ExcelReadException(e);
                 }
                 total_sst++;
             } else {
@@ -386,12 +386,12 @@ public class SharedStrings implements Closeable {
             && offset_backward + limit_backward > index;
     }
 
-    // Check the current index if out of bound
-    private void checkBound(int index) {
-        if (index < 0 || max > -1 && max <= index) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
-        }
-    }
+//    // Check the current index if out of bound
+//    private void checkBound(int index) {
+//        if (index < 0 || max > -1 && max <= index) {
+//            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
+//        }
+//    }
 
     // Check the current index has been loaded twice
     private boolean test(int index) {
@@ -402,7 +402,6 @@ public class SharedStrings implements Closeable {
         String[] tmp = backward;
         backward = forward;
         forward = tmp;
-//        System.arraycopy(forward, 0, backward, 0, limit_forward);
         offset_backward = offset_forward;
         limit_backward = limit_forward;
     }
@@ -435,38 +434,34 @@ public class SharedStrings implements Closeable {
      */
     protected int readData() throws IOException {
         // Read forward area data
-        int n = 0, length, nChar;
-        for (; (length = reader.read(cb, offset, cb.length - offset)) > 0 || offset > 0; ) {
-            length = length > 0 ? length + offset : offset;
-            nChar = offset &= 0;
-            int len0 = length - 3, len1 = len0 - 1;
-            int[] t = findT(cb, nChar, length, len0, len1, n);
+        int n = 0, len = length, offset;
+        for (; ;) {
+            int len0 = len - 3, len1 = len0 - 1;
+            int[] t = findT(cb, nChar, len, len0, len1, n);
 
             nChar = t[0];
-            n = t[1];
+            limit_forward = n = t[1];
 
-            limit_forward = n;
+            // A page Or EOF
+            if (n == page || len < cb.length && nChar == len - 6) {
+                ++offsetM; // out of index range
+                break;
+            }
 
             // If cell value(character value) length greater than buffer size
             if (nChar == 0) {
                 cb = Arrays.copyOf(cb, cb.length << 1);
-                offset = length;
-            } else if (nChar < length) {
-                System.arraycopy(cb, nChar, cb, 0, offset = length - nChar);
+                offset = len;
             }
+            else if (nChar < len) System.arraycopy(cb, nChar, cb, 0, offset = len - nChar);
+            else offset = 0;
 
-            // A page
-            if (n == page) {
-                ++offsetM;
-                break;
-            } else if (length < cb.length && nChar == length - 6) { // EOF '</sst>'
-//                if (max == -1) { // Reset totals when unknown size
-//                    max = offsetM * page + n;
-//                }
-                ++offsetM; // out of index range
-                break;
-            }
+            // Read more
+            if ((len = reader.read(cb, offset, cb.length - offset)) <= 0) break;
+            len += offset;
+            nChar = 0;
         }
+
         // Reset totals when unknown size
         if (max < n) {
             max = offsetM * page + n;
@@ -474,6 +469,8 @@ public class SharedStrings implements Closeable {
         return n; // Returns the word count
     }
 
+    // [0]: nChar
+    // [1]: number of string
     private int[] findT(char[] cb, int nChar, int length, int len0, int len1, int n) throws IOException {
         int cursor;
         for (; nChar < length && n < page; ) {
@@ -501,7 +498,7 @@ public class SharedStrings implements Closeable {
             nChar += 4;
 
             // Test the next tag
-            for (; nChar < len1 && (cb[nChar] != '<'); ++nChar);
+            if (cb[nChar] != '<') for (; nChar < len1 && (cb[nChar] != '<'); ++nChar);
 
             // End of <si>
             if (nChar < len1 && cb[nChar + 1] == '/' && cb[nChar + 2] == 's' && cb[nChar + 3] == 'i' && cb[nChar + 4] == '>') {
@@ -509,7 +506,6 @@ public class SharedStrings implements Closeable {
                 if (status == 4) sst.push(forward[n - 1]);
                 nChar += 5;
             } else {
-                StringBuilder buf = new StringBuilder(tmp);
                 int t = nChar;
                 // Find the end tag of 'si'
                 for (; nChar < len1 && (cb[nChar] != '<' || cb[nChar + 1] != '/'
@@ -520,6 +516,7 @@ public class SharedStrings implements Closeable {
                 }
                 int end = nChar;
                 nChar = t;
+                boolean shouldClear = true;
                 // Loop and join
                 for (; ; ) {
                     subT = subT(cb, nChar, end, end - 1);
@@ -527,10 +524,18 @@ public class SharedStrings implements Closeable {
                     if (a == -1) break;
                     nChar = subT[1];
 
+                    if (buf == null) {
+                        shouldClear = false;
+                        buf = new StringBuilder(tmp);
+                    }
+                    else if (shouldClear) {
+                        shouldClear = false;
+                        buf.delete(0, buf.length());
+                    }
                     buf.append(escape(cb, a, nChar));
                     nChar += 4;
                 }
-                forward[n++] = buf.toString();
+                forward[n++] = shouldClear ? tmp : buf.toString();
                 if (status == 4) sst.push(forward[n - 1]);
                 nChar = end + 5;
             }
