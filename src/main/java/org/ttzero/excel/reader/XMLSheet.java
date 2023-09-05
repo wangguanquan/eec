@@ -69,6 +69,7 @@ public class XMLSheet implements Sheet {
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
+        this.option = sheet.option;
     }
 
     protected String name;
@@ -94,7 +95,9 @@ public class XMLSheet implements Sheet {
     protected Drawings drawings;
     // Header row
     protected int hrf, hrl;
-
+    // Simple properties
+    // The low 16 bits are allocated to the header, while the high 16 bits are occupied by the sheet
+    protected int option;
 
     /**
      * Setting the worksheet name
@@ -272,6 +275,7 @@ public class XMLSheet implements Sheet {
             Row row = hrf == 0 ? findRow0(this::createHeader) : getHeader(hrf, hrl);
             if (row != null) {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
+                header.setOptions(option << 16 >>> 16);
                 sRow.setHr(header);
             }
         } else if (hrl > 0 && hrl > sRow.index) {
@@ -321,13 +325,13 @@ public class XMLSheet implements Sheet {
                 mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
             }
 
-            return new HeaderRow().with(mergeCells, rows);
+            return new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
         }
         // Single row
         else {
             Row row = nextRow();
             for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-            return new HeaderRow().with(row);
+            return new HeaderRow().with(row).setOptions(option << 16 >>> 16);
         }
     }
 
@@ -362,6 +366,7 @@ public class XMLSheet implements Sheet {
         if (row == null) throw new IllegalArgumentException("Specify the bind row must not be null.");
         if (!row.equals(header)) {
             header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
+            header.setOptions(option << 16 >>> 16);
             sRow.setHr(header);
         }
         try {
@@ -629,7 +634,7 @@ public class XMLSheet implements Sheet {
          */
         if (hrf == 0 && nIter.hasNext()) {
             Row row = nIter.next();
-            if (header == null) header = row.asHeader();
+            if (header == null) header = row.asHeader().setOptions(option << 16 >>> 16);
             row.setHr(header);
         }
         return nIter;
@@ -658,6 +663,30 @@ public class XMLSheet implements Sheet {
         }
     }
 
+    /**
+     * Setting header columns preprocessing properties
+     *
+     * @return this {@link Sheet}
+     */
+    @Override
+    public Sheet setHeaderColumnReadOption(int option) {
+        if (option >= 1 << 17)
+            LOGGER.warn("Unrecognized options will be discarded");
+        int o = option & ((1 << 17) - 1);
+        this.option = this.option >>> 16 << 16 | o;
+        if (header != null) header.setOptions(o);
+        return this;
+    }
+
+    /**
+     * Returns Header column options
+     *
+     * @return this {@link Sheet}
+     */
+    @Override
+    public int getHeaderColumnReadOption() {
+        return header != null ? header.option : option << 16 >>> 16;
+    }
 
     /**
      * Reset the {@link XMLSheet}'s row index to begging
@@ -900,6 +929,9 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.hrf = sheet.hrf;
+        this.hrl = sheet.hrl;
+        this.option = sheet.option;
 
         if (this.path != null) {
 
@@ -1005,6 +1037,9 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.hrf = sheet.hrf;
+        this.hrl = sheet.hrl;
+        this.option = sheet.option;
 
         if (path != null) {
             if (reader != null && !ready) this.load0();

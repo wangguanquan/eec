@@ -59,11 +59,26 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
+import static org.ttzero.excel.util.StringUtil.lowFirstKey;
+import static org.ttzero.excel.util.StringUtil.toCamelCase;
 
 /**
  * @author guanquan.wang at 2019-04-17 11:55
  */
 public class HeaderRow extends Row {
+    /**
+     * Force Import (Match with field name if without {@code ExcelColumn} annotation)
+     */
+    public static final int FORCE_IMPORT = 1;
+    /**
+     * Ignore Case (Ignore case matching column names)
+     */
+    public static final int  IGNORE_CASE = 1 << 1;
+    /**
+     * Camel Case (CAMEL_CASE to camelCase)
+     */
+    public static final int  CAMEL_CASE = 1 << 2;
+
     protected String[] names;
     protected Class<?> clazz;
     protected Object t;
@@ -76,6 +91,18 @@ public class HeaderRow extends Row {
     protected static final Field detailMessageField;
     // Specify total rows of header
     protected int headRows;
+    /**
+     * Simple properties
+     *
+     * <blockquote><pre>
+     *  Bit  | Contents
+     * ------+---------
+     * 31. 1 | Force Import
+     * 30. 1 | Ignore Case (Ignore case matching column names)
+     * 29. 1 | Camel Case
+     * </pre></blockquote>
+     */
+    protected int option;
 
     static {
         Field field = null;
@@ -117,7 +144,7 @@ public class HeaderRow extends Row {
         if (headRows == 1) {
             for (int i = row.fc; i < row.lc; i++) {
                 this.names[i] = row.getString(i);
-                this.mapping.put(this.names[i], i);
+                this.mapping.put(makeKey(this.names[i]), i);
 
                 Cell cell = new Cell();
                 cell.setSv(this.names[i]);
@@ -138,7 +165,7 @@ public class HeaderRow extends Row {
                 }
                 if (buf.length() > 1) buf.deleteCharAt(buf.length() - 1);
                 this.names[i] = buf.toString();
-                this.mapping.put(this.names[i], i);
+                this.mapping.put(makeKey(this.names[i]), i);
 
                 Cell cell = new Cell();
                 cell.setSv(this.names[i]);
@@ -381,8 +408,12 @@ public class HeaderRow extends Row {
      * @return the position if found otherwise -1
      */
     public int getIndex(String columnName) {
-        Integer index = mapping != null ? mapping.get(columnName) : null;
-        return index != null ? index : -1;
+        if (mapping != null) {
+            if ((option & 2) == 2) columnName = columnName.toLowerCase();
+            Integer index = mapping.get(columnName);
+            return index != null ? index : -1;
+        }
+        return -1;
     }
 
     @Override
@@ -682,14 +713,14 @@ public class HeaderRow extends Row {
     protected Map<String, Method> attachOtherColumn(Class<?> clazz) {
         Method[] writeMethods;
         try {
-            writeMethods = listDeclaredMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null
-                    || method.getAnnotation(RowNum.class) != null);
+            writeMethods = (option & 1) == 1 ? listDeclaredMethods(clazz)
+                : listDeclaredMethods(clazz, method -> method.getAnnotation(ExcelColumn.class) != null || method.getAnnotation(RowNum.class) != null);
         } catch (IntrospectionException e) {
             LOGGER.warn("Get [" + clazz + "] read declared failed.", e);
             return Collections.emptyMap();
         }
 
-        return Arrays.stream(writeMethods).filter(m -> m.getParameterCount() == 1).collect(Collectors.toMap(Method::getName, a -> a, (a, b) -> b));
+        return Arrays.stream(writeMethods).filter(m -> m.getParameterCount() == 1).collect(Collectors.toMap(a -> { String k = a.getName(); return k.startsWith("set") ? lowFirstKey(k.substring(3)) : k; }, a -> a, (a, b) -> b));
     }
 
     /**
@@ -726,7 +757,25 @@ public class HeaderRow extends Row {
         // Row Num
         RowNum rowNum = ao.getAnnotation(RowNum.class);
         if (rowNum != null) return createColumnByAnnotation(rowNum);
-        return null;
+
+        ListSheet.EntryColumn column = null;
+        // Direct match method or field name
+        if ((option & 1) == 1) {
+            if (Field.class.isAssignableFrom(ao.getClass())) {
+                Field f = (Field) ao;
+                column = new ListSheet.EntryColumn(f.getName());
+                column.field = f;
+                column.clazz = f.getType();
+            }
+            else if (Method.class.isAssignableFrom(ao.getClass())) {
+                Method m = (Method) ao;
+                String k = m.getName();
+                column = new ListSheet.EntryColumn(k.startsWith("set") ? lowFirstKey(k.substring(3)) : k);
+                column.method = m;
+                if (m.getParameterCount() == 1) column.clazz = m.getParameterTypes()[0];
+            }
+        }
+        return column;
     }
 
     /**
@@ -776,5 +825,23 @@ public class HeaderRow extends Row {
                 } else i++;
             }
         }
+    }
+
+    public HeaderRow setOptions(int option) {
+        this.option = option;
+        if (mapping != null && (option & 6) > 0) {
+            Map<String, Integer> m = new HashMap<>(mapping.size());
+            for (Map.Entry<String, Integer> entry : mapping.entrySet()) {
+                m.put(makeKey(entry.getKey()), entry.getValue());
+            }
+            this.mapping = m;
+        }
+        return this;
+    }
+
+    protected String makeKey(String key) {
+        if ((option & 4) == 4) key = toCamelCase(key);
+        if ((option & 2) == 2) key = key.toLowerCase();
+        return key;
     }
 }

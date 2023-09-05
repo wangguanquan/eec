@@ -401,6 +401,69 @@ public interface Sheet extends Closeable {
     }
 
     /**
+     * Use field name matching without {@link org.ttzero.excel.annotation.ExcelColumn} annotation
+     *
+     * <p>When converting row data to Java objects, only fields with {@code ExcelColumn} annotations
+     * are matched by default. {@code forceImport} will skip this restriction,
+     * and fields without {@code ExcelColumn} annotations will be matched with field name
+     *
+     * @return this {@link Sheet}
+     */
+    default Sheet forceImport() {
+        return addHeaderColumnReadOption(HeaderRow.FORCE_IMPORT);
+    }
+
+    /**
+     * Settings ignore case matching column names
+     *
+     * @return this {@link Sheet}
+     */
+    default Sheet headerColumnIgnoreCase() {
+        return addHeaderColumnReadOption(HeaderRow.IGNORE_CASE);
+    }
+
+    /**
+     * Convert column name to camel case
+     *
+     * @return this {@link Sheet}
+     */
+    default Sheet headerColumnToCamelCase() {
+        return addHeaderColumnReadOption(HeaderRow.CAMEL_CASE);
+    }
+
+    /**
+     * Add header columns preprocessing properties
+     *
+     * @return this {@link Sheet}
+     */
+    default Sheet addHeaderColumnReadOption(int option) {
+        return setHeaderColumnReadOption(getHeaderColumnReadOption() | option);
+    }
+
+    /**
+     * Setting header columns preprocessing properties
+     *
+     * <ul>
+     *     <li>HeaderRow.FORCE_IMPORT: Match with field name if without ExcelColumn annotation</li>
+     *     <li>HeaderRow.IGNORE_CASE: Ignore case matching column names</li>
+     *     <li>HeaderRow.CAMEL_CASE: CAMEL_CASE to camelCase</li>
+     * </ul>
+     * <blockquote><pre>
+     *     reader.sheet(0).setHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)
+     * </pre></blockquote>
+     *
+     * @return this {@link Sheet}
+     */
+    Sheet setHeaderColumnReadOption(int option);
+
+    /**
+     * Returns Header column options
+     *
+     * @return this {@link Sheet}
+     */
+    int getHeaderColumnReadOption();
+
+    /**
      * Make worksheets parse value only
      *
      * @return a empty {@link Sheet}
