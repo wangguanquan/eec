@@ -70,8 +70,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * A typical example as follow:
  * <blockquote><pre>
  * new Workbook("{name}", "{author}")
- *     // Print debug logs
- *     .watch(System.out::println)
  *     // Auto size the column width
  *     .setAutoSize(true)
  *     // Add a Worksheet
