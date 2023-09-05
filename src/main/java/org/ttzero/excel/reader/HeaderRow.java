@@ -82,7 +82,7 @@ public class HeaderRow extends Row {
         try {
             field = Throwable.class.getDeclaredField("detailMessage");
             field.setAccessible(true);
-        } catch (NoSuchFieldException e) {
+        } catch (Exception e) {
             // Ignore
         }
         detailMessageField = field;
