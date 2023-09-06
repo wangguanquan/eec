@@ -237,6 +237,21 @@ public class PictureTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
+    @Test public void testExportPictureAutoSizePaging() throws IOException {
+        List<Path> list = new ArrayList<>(256);
+        for (int i = 0; i < 5; i++)
+            list.addAll(getLocalImages());
+        new Workbook("test Picture auto-size paging")
+            .addSheet(new ListSheet<>(list).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100)
+                .setSheetWriter(new XMLWorksheetWriter() {
+                    @Override
+                    public int getRowLimit() {
+                        return 16;
+                    }
+                }))
+            .writeTo(defaultTestPath);
+    }
+
     public static class OkHttpClientUtil {
 
         private static class Handler {

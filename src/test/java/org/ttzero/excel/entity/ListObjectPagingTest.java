@@ -18,7 +18,10 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
 
+import java.awt.Color;
 import java.io.IOException;
 
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
@@ -28,8 +31,7 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class ListObjectPagingTest extends WorkbookTest {
 
-    @Test
-    public void testPaging() throws IOException {
+    @Test public void testPaging() throws IOException {
         new Workbook("test paging", author)
             .watch(Print::println)
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(1024)))
@@ -37,8 +39,7 @@ public class ListObjectPagingTest extends WorkbookTest {
             .writeTo(defaultTestPath);
     }
 
-    @Test
-    public void testLessPaging() throws IOException {
+    @Test public void testLessPaging() throws IOException {
         new Workbook("test less paging", author)
             .watch(Print::println)
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(23)))
@@ -96,5 +97,16 @@ public class ListObjectPagingTest extends WorkbookTest {
                 .addSheet(new ListSheet<>(CustomColIndexTest.LargeOrderEntry.randomTestData(1024)))
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);
+    }
+
+    @Test public void testAutoSizePaging() throws IOException {
+        new Workbook("test auto-size paging").setAutoSize(true)
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(1024)).setStyleProcessor((a, b, c) -> {
+                if (a.getId() > 95)
+                    b |= c.addFill(new Fill(PatternType.solid, Color.orange));
+                return b;
+            }))
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
+            .writeTo(defaultTestPath);
     }
 }
