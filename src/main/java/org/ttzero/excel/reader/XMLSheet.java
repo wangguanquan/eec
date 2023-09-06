@@ -485,8 +485,7 @@ public class XMLSheet implements Sheet {
         if (cb[nChar] == '>') {
             mark += length;
             eof = true;
-            if (dimension == null)
-                dimension = new Dimension(1, (short) 1, Math.max(sRow.to > sRow.from ? sRow.getRowNum() : 1, 1), (short) Math.max(sRow.lc, 1));
+            if (dimension == null) dimension = new Dimension(1, (short) 1);
         } else {
             eof = false;
             mark += nChar;
@@ -541,7 +540,7 @@ public class XMLSheet implements Sheet {
                     reader = null; // wait GC
                     LOGGER.debug("end of file.");
                     if (dimension == null)
-                        dimension = new Dimension(1, (short) Math.max(sRow.fc, 1), sRow.getRowNum(), (short) Math.max(sRow.lc, 1));
+                        dimension = new Dimension(1, (short) Math.max(sRow.fc, 1), Math.max(sRow.index, 1), (short) Math.max(sRow.lc, 1));
                     return null;
                 }
             } catch (IOException e) {
