@@ -294,6 +294,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 FileUtil.close(ois);
             }
         }
+        XMLWorksheetWriter e = (XMLWorksheetWriter) copy;
+        e.sheetDataReady = 0;
+        e.totalRows = 0;
+        e.drawingsWriter = null;
+        e.comments = null;
         return copy;
     }
 
