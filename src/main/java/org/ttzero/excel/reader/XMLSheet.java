@@ -399,7 +399,7 @@ public class XMLSheet implements Sheet {
 
     @Override
     public String toString() {
-        return "Sheet id: " + getId() + ", name: " + getName() + ", dimension: " + getDimension();
+        return "Sheet id: " + getId() + ", name: " + getName();// + ", dimension: " + getDimension();
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
@@ -534,6 +534,8 @@ public class XMLSheet implements Sheet {
                     reader.close(); // close reader
                     reader = null; // wait GC
                     LOGGER.debug("end of file.");
+                    if (dimension == null)
+                        dimension = new Dimension(1, (short) Math.max(sRow.fc, 1), sRow.getRowNum(), (short) Math.max(sRow.lc, 1));
                     return null;
                 }
             } catch (IOException e) {
