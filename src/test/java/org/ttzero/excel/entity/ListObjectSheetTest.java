@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ttzero.excel.Print;
@@ -32,6 +31,7 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
+import org.ttzero.excel.reader.AppInfo;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
@@ -58,6 +58,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -84,9 +85,9 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 public class ListObjectSheetTest extends WorkbookTest {
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         // 删除之前的测试文件，防止重复执行不正确
-        List<String> randomExcelNameList = new ArrayList<String>();
+        List<String> randomExcelNameList = new ArrayList<>();
         randomExcelNameList.add("testForceExportOnWorkbook.xlsx");
         randomExcelNameList.add("testForceExportOnWorkbook2.xlsx");
         randomExcelNameList.add("testForceExportOnWorkSheet.xlsx");
@@ -511,10 +512,21 @@ public class ListObjectSheetTest extends WorkbookTest {
         core.setVersion("1.0");
 //        core.setRevision("1.2");
         core.setLastModifiedBy("TTT");
-        new Workbook("Specify Core")
-            .setCore(core)
+        new Workbook().setCore(core)
             .addSheet(new ListSheet<>(Collections.singletonList(new NotSharedObject(getRandomString()))))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("Specify Core.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Specify Core.xlsx"))) {
+            AppInfo info = reader.getAppInfo();
+            assert core.getCreator().equals(info.getCreator());
+            assert core.getTitle().equals(info.getTitle());
+            assert core.getSubject().equals(info.getSubject());
+            assert core.getCategory().equals(info.getCategory());
+            assert core.getDescription().equals(info.getDescription());
+            assert core.getKeywords().equals(info.getKeywords());
+            assert core.getVersion().equals(info.getVersion());
+            assert core.getLastModifiedBy().equals(info.getLastModifiedBy());
+        }
     }
 
     @Test public void testLarge() throws IOException {
@@ -560,7 +572,14 @@ public class ListObjectSheetTest extends WorkbookTest {
         }).writeTo(defaultTestPath.resolve("large07.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
-            assert Dimension.of("A1:Y50001").equals(reader.sheet(0).getDimension());
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert Dimension.of("A1:Y50001").equals(sheet.getDimension());
+            int i = 0;
+            for (Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator(); iter.hasNext(); i++) {
+                Map<String, Object> map = iter.next().toMap();
+                assert map.get("str1").equals("str1-" + i);
+                assert map.get("str25").equals("str25-" + i);
+            }
         }
     }
 

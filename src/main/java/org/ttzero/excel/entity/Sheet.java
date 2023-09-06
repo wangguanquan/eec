@@ -1327,11 +1327,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return column string
      */
     public static char[] int2Col(int n) {
-        char[][] cache_col = cache.get();
         char[] c;
         char A = 'A';
         if (n <= 26) {
-            c = cache_col[0];
+            c = cache[0];
             c[0] = (char) (n - 1 + A);
         } else if (n <= 702) {
             int t = n / 26, w = n % 26;
@@ -1339,7 +1338,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 t--;
                 w = 26;
             }
-            c = cache_col[1];
+            c = cache[1];
             c[0] = (char) (t - 1 + A);
             c[1] = (char) (w - 1 + A);
         } else {
@@ -1352,7 +1351,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 t--;
                 m += 26;
             }
-            c = cache_col[2];
+            c = cache[2];
             c[0] = (char) (t - 1 + A);
             c[1] = (char) (m - 1 + A);
             c[2] = (char) (w - 1 + A);
@@ -1360,8 +1359,7 @@ public abstract class Sheet implements Cloneable, Storable {
         return c;
     }
 
-    private static final ThreadLocal<char[][]> cache
-        = ThreadLocal.withInitial(() -> new char[][]{ {65}, {65, 65}, {65, 65, 65} });
+    private static final char[][] cache = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
 
 //    /**
 //     * Check empty header row

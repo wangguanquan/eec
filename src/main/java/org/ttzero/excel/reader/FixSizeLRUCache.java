@@ -84,7 +84,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * Create a fix size cache witch size is {@code 1 &lt;&lt; 9}
+     * Create a fix size cache witch size is {@code 512}
      */
     private FixSizeLRUCache() {
         this(1 << 9);
@@ -93,7 +93,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     private FixSizeLRUCache(int limit) {
         this.limit = limit;
         // Create double limit size
-        table = new HashMap<>(Math.round(limit * 1.25f));
+        table = new HashMap<>(limit);
     }
 
     /**

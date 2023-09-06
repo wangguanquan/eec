@@ -22,6 +22,7 @@ import org.ttzero.excel.entity.I18N;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
@@ -120,7 +121,7 @@ public class StylesTest {
         Path storagePath = getOutputTestPath().resolve("styles.xml");
         styles.writeTo(storagePath);
 
-        Styles styles = Styles.load(storagePath);
+        Styles styles = Styles.load(Files.newInputStream(storagePath));
         for (int i = 0, size = styles.size(); i < size; i++) {
            boolean isDate = styles.fastTestDateFmt(i);
            if (i == 0 || i == 5 || i >= 7 && i <= 9) assert !isDate;

@@ -50,17 +50,25 @@ public class SharedStringsTest {
     @Test public void testGeneral() throws IOException {
         List<String> list = Arrays.asList("abc", "中文");
         writeTestData(list);
-        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+        try (SharedStrings sst = new SharedStrings(Files.newInputStream(path), 0, 0).load()) {
             checkTrue(sst, list);
         }
     }
 
     @Test public void testEscape() throws IOException {
-        List<String> list = Arrays.asList("<row>", "\"abc\"", "&nbsp;");
+        List<String> list = Arrays.asList("<row>", "\"abc\"", "&nbsp;", "<tag>",
+            "random&more", "one'one", "with\"signs\"", "random&more",
+            "<this will be escaped \ud83d\ude01>", "nothing+!()happens", "An 😀awesome 😃string with a few 😉emojis!");
         writeTestData(list);
-        try (SharedStrings sst = new SharedStrings(path, 0, 0).load()) {
+        try (SharedStrings sst = new SharedStrings(Files.newInputStream(path), 0, 0).load()) {
             checkTrue(sst, list);
         }
+    }
+
+    @Test public void testEscape2() {
+        char[] chars = "&lt;tag&gt;,random&amp;more,with&quot;signs&quot;,random&amp;more,&abcd;352,&lt;this will be escaped &#x1f601;&gt;,An &#128512;awesome &#128515;string with a few &#x1f609;emojis!".toCharArray();
+        String desc = SharedStrings.escape(chars, 0, chars.length);
+        assert desc.equals("<tag>,random&more,with\"signs\",random&more,&abcd;352,<this will be escaped \uD83D\uDE01>,An 😀awesome 😃string with a few 😉emojis!");
     }
 
     private void checkTrue(SharedStrings sst, List<String> list) {

@@ -25,8 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
 
 import java.awt.Color;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.List;
 
 import static org.ttzero.excel.entity.style.Styles.getAttr;
@@ -47,13 +46,13 @@ public class Theme {
     // theme colors
     private ClrScheme[] clrs;
 
-    public static Theme load(Path path) {
+    public static Theme load(InputStream is) {
         Theme self = new Theme();
         // load theme1.xml
         SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
-            document = reader.read(Files.newInputStream(path));
+            document = reader.read(is);
             Element root = document.getRootElement();
             Element clrScheme = root.element("themeElements").element("clrScheme");
             List<Element> clrSchemes;

@@ -20,21 +20,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.style.Styles;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import static org.ttzero.excel.reader.ExcelReader.getEntry;
 
 /**
  * The open-xml format Worksheet
@@ -69,13 +71,15 @@ public class XMLSheet implements Sheet {
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
         this.option = sheet.option;
     }
 
     protected String name;
     protected int index; // per sheet index of workbook
 //        , size = -1; // size of rows per sheet
-    protected Path path;
+    protected String path;
     protected int id;
     /**
      * The Shared String Table
@@ -95,6 +99,9 @@ public class XMLSheet implements Sheet {
     protected Drawings drawings;
     // Header row
     protected int hrf, hrl;
+    // Data Source
+    protected ZipFile zipFile;
+    protected ZipEntry entry;
     // Simple properties
     // The low 16 bits are allocated to the header, while the high 16 bits are occupied by the sheet
     protected int option;
@@ -113,8 +120,26 @@ public class XMLSheet implements Sheet {
      *
      * @param path the temp path
      */
-    protected void setPath(Path path) {
+    protected void setPath(String path) {
         this.path = path;
+    }
+
+    /**
+     * Setting the source zip file
+     *
+     * @param zipFile source data
+     */
+    protected void setZipFile(ZipFile zipFile) {
+        this.zipFile = zipFile;
+    }
+
+    /**
+     * Setting the worksheet zip entry
+     *
+     * @param entry source data
+     */
+    protected void setZipEntry(ZipEntry entry) {
+        this.entry = entry;
     }
 
     /**
@@ -198,7 +223,8 @@ public class XMLSheet implements Sheet {
     @Deprecated
     @Override
     public int getSize() {
-        return dimension != null ? dimension.lastRow - dimension.firstRow + 1 : -1;
+        Dimension d = getDimension();
+        return d != null ? d.lastRow - d.firstRow + 1 : -1;
     }
 
     /**
@@ -211,7 +237,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public Dimension getDimension() {
-        return dimension;
+        return dimension != null ? dimension : (dimension = parseDimension());
     }
 
     /**
@@ -383,7 +409,7 @@ public class XMLSheet implements Sheet {
     }
 
     /////////////////////////////////Read sheet file/////////////////////////////////
-    protected BufferedReader reader;
+    protected Reader reader;
     protected char[] cb; // buffer
     protected int nChar, length;
     protected boolean eof = false, heof = false; // OPTIONS = false
@@ -406,8 +432,8 @@ public class XMLSheet implements Sheet {
             reset();
             return this;
         }
-        LOGGER.debug("Load {}", path.toString());
-        reader = Files.newBufferedReader(path);
+        LOGGER.debug("Load {}", path);
+        reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
         cb = new char[8192];
         nChar = 0;
         int left = 0;
@@ -437,7 +463,7 @@ public class XMLSheet implements Sheet {
                 }
             }
             // find index of <sheetData>
-            for (; nChar < length - 12; nChar++) {
+            for (int len = length - 12; nChar < len; nChar++) {
                 if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
                     && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
                     && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
@@ -464,16 +490,7 @@ public class XMLSheet implements Sheet {
             mark += nChar;
             sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
         }
-
-        // Deep read if dimension information not write in header
-        if (!eof && dimension == null) {
-            parseDimension();
-        }
-        // Create a empty worksheet dimension
-        if (dimension == null) {
-            dimension = new Dimension(1, (short) 1);
-        }
-        LOGGER.debug("Dimension-Range: {}", dimension);
+        if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
 
         return this;
     }
@@ -521,6 +538,9 @@ public class XMLSheet implements Sheet {
                     reader.close(); // close reader
                     reader = null; // wait GC
                     LOGGER.debug("end of file.");
+                    if (dimension == null) {
+                        dimension = new Dimension(1, (short) 1, Math.max(sRow.to > sRow.from ? sRow.getRowNum() : 1, 1), (short) Math.max(sRow.lc, 1));
+                    }
                     return null;
                 }
             } catch (IOException e) {
@@ -539,13 +559,12 @@ public class XMLSheet implements Sheet {
         char[] cb = new char[8192];
         int nChar = 0, length;
         // reload file
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (Reader reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8)) {
             if (mark > 0) {
                 reader.skip(mark);
                 length = reader.read(cb);
             } else {
-                loopA:
-                for (; ; ) {
+                loopA: for (; ; ) {
                     length = reader.read(cb);
                     // find index of <sheetData>
                     for (; nChar < length - 12; nChar++) {
@@ -695,7 +714,7 @@ public class XMLSheet implements Sheet {
      */
     @Override
     public XMLSheet reset() {
-        LOGGER.debug("Reset {}", path.toString());
+        LOGGER.debug("Reset {}", path);
         try {
             hrf = 0;
             hrl = 0;
@@ -710,7 +729,7 @@ public class XMLSheet implements Sheet {
                 return this.load();
             }
             // Reload
-            reader = Files.newBufferedReader(path);
+            reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
             reader.skip(mark);
             length = reader.read(cb);
             nChar = 0;
@@ -732,135 +751,60 @@ public class XMLSheet implements Sheet {
     Read from tail and look at the line number of the last line
     to confirm the scope of the entire worksheet.
      */
-    void parseDimension() {
-        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long position = Files.size(path);
-            final int block = (int) Math.min(1 << 11, position), c = 7;
-            ByteBuffer buffer = ByteBuffer.allocate(block);
-            byte[] left = null;
-            int left_size = 0, i;
+    Dimension parseDimension() {
+        try (InputStream is = zipFile.getInputStream(entry)) {
+            // Skips specified number of bytes of uncompressed data.
+            if (lastRowMark > 0L) is.skip(lastRowMark);
 
-            boolean eof, getit = false;
-            for (; ;) {
-                position -= (block - left_size);
-                channel.position(Math.max(0, position));
-                channel.read(buffer);
-                if (left_size > 0) {
-                    buffer.limit(block);
-                    buffer.put(left, 0, left_size);
+            // Mark
+            long mark = 0L, mark0 = 0L;
+            int n, offset = 0, limit = 1 << 14, i, len, f, size = 0;
+            byte[] buf = new byte[limit], bytes = new byte[10];
+            while ((n = is.read(buf, offset, limit - offset)) > 0) {
+                mark += n;
+                if ((len = n + offset) < 11) {
+                    offset = len;
+                    continue;
                 }
-                buffer.flip();
-                eof = buffer.limit() < block;
-
-                int limit = buffer.limit();
-                i = limit - 1;
-
-                // <row r="
-                for (; i >= c && (buffer.get(i) != '"' || buffer.get(i - 1) != '='
-                    || buffer.get(i - 2) != 'r' || buffer.get(i - 3) > ' '
-                    || buffer.get(i - 4) != 'w' || buffer.get(i - 5) != 'o'
-                    || buffer.get(i - 6) != 'r' || buffer.get(i - 7) != '<'); i--)
-                    ;
-
-                // Not Found
-                if (i < c) {
-                    if (eof || (eof = position <= 0)) break;
-                    for (; i < limit && buffer.get(i) != '>'; i++) ;
-                    i++;
-                    if (i < limit - 1) {
-                        buffer.position(i);
-                        left_size = i;
-                        if (left == null || left_size > left.length) {
-                            left = new byte[left_size];
+                i = len - 1;
+                // Look up from tail
+                for (; i > 1 && (buf[i--] != ' ' || buf[i--] != 'c' || buf[i] != '<'); ) ;
+                if (i <= 1 && (buf[i] != '<' || buf[i + 1] != 'c')) {
+                    offset = 0;
+                    continue;
+                }
+                if (i <= len - 9) {
+                    n = i;
+                    i += 3;
+                    for (; i < len && buf[i] != 'r' && buf[i + 1] != '=' && buf[i + 2] != '"'; i++);
+                    if (i < len - 3) {
+                        f = i += 3;
+                        for (; i < len && buf[i] != '"'; i++);
+                        if (i < len) {
+                            System.arraycopy(buf, f, bytes, 0, size = i - f);
+                            if (buf[len - 1] == '<') {
+                                buf[0] = '<';
+                                offset = 1;
+                            } else offset = 0;
+                            mark0 = mark - (len - n);
+                            continue;
                         }
-                        buffer.position(0);
-                        buffer.get(left, 0, left_size);
-                    } else left_size = 0;
+                    }
+                    i = n;
                 }
-                // Found the last row or empty worksheet
-                else {
-                    getit = true;
-                    buffer.position(i);
-                    // Align channel and buffer position
-                    if (left_size > 0) channel.position(channel.position() + left_size);
-                    lastRowMark = channel.position() - buffer.remaining();
-                    break;
-                }
-                buffer.position(0);
-                buffer.limit(buffer.capacity() - left_size);
+                if (i < len) System.arraycopy(buf, i, buf, 0, offset = len - i);
             }
-
-            // Empty worksheet
-            if (!getit) {
-                dimension = Dimension.of("A1");
-                return;
+            if (lastRowMark < mark0) lastRowMark = mark0;
+            if (size > 0) {
+                long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
+                return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
             }
-
-            // Dimension
-            parseDim(channel, buffer);
         } catch (IOException e) {
             // Ignore error
-            LOGGER.debug("", e);
+            LOGGER.warn("", e);
         }
-    }
 
-    private int[] innerParse(ByteBuffer buffer, int i) {
-        int row = 0;
-        for (; buffer.get(i) != '"'; i++)
-            row = row * 10 + (buffer.get(i) - '0');
-        // spans="
-        i++;
-        for (; buffer.limit() - i >= 7 && (buffer.get(i) != 's' || buffer.get(i + 1) != 'p'
-            || buffer.get(i + 2) != 'a' || buffer.get(i + 3) != 'n'
-            || buffer.get(i + 4) != 's' || buffer.get(i + 5) != '='
-            || buffer.get(i + 6) != '"'); i++) ;
-        i += 7;
-        int cs = 0, ls = 0;
-        if (buffer.limit() <= i) {
-            eof = true; // EOF
-            return new int[] { row, 1, 1 };
-        }
-        for (; buffer.get(i) != ':'; i++)
-            cs = cs * 10 + (buffer.get(i) - '0');
-        i++;
-        for (; buffer.get(i) != '"'; i++)
-            ls = ls * 10 + (buffer.get(i) - '0');
-        return new int[] { row, cs, ls };
-    }
-
-    private void parseDim(SeekableByteChannel channel, ByteBuffer buffer) throws IOException {
-        long rr = 0L;
-        int rc, i = buffer.position();
-
-        int[] info = innerParse(buffer, ++i);
-        rc = (info[2] << 16) | (info[1] & 0x7FFF);
-        rr |= ((long) info[0]) << 32;
-
-        // Skip if the first row is known
-        if (mark > 0) {
-            channel.position(mark);
-            buffer.clear();
-            channel.read(buffer);
-            buffer.flip();
-
-            i = 0;
-            for (; buffer.get(i) != '<' || buffer.get(i + 1) != 'r'
-                || buffer.get(i + 2) != 'o' || buffer.get(i + 3) != 'w'
-                || buffer.get(i + 4) > ' ' || buffer.get(i + 5) != 'r'
-                || buffer.get(i + 6) != '=' || buffer.get(i + 7) != '"'; i++) ;
-            i += 8;
-
-            info = innerParse(buffer, i);
-            rr |= info[0];
-            if (info[1] > (rc & 0x7FFF)) {
-                rc |= info[1] & 0x7FFF;
-            }
-            if (info[2] < (rc >>> 16)) {
-                rc |= info[2] << 16;
-            }
-        } else rr |= 1;
-
-        dimension = new Dimension((int) rr, (short) rc, (int) (rr >>> 32), (short) (rc >>> 16));
+        return Dimension.of("A1");
     }
 
     Row createHeader(char[] cb, int start, int n) {
@@ -891,14 +835,6 @@ public class XMLSheet implements Sheet {
         Row accept(char[] cb, int start, int n);
     }
 
-    // For debug
-    static void watch(ByteBuffer buffer) {
-        int p = buffer.position();
-        byte[] bytes = new byte[Math.min(1 << 7, buffer.remaining())];
-        buffer.get(bytes, 0, bytes.length);
-        System.out.println(new String(bytes, 0, bytes.length, StandardCharsets.US_ASCII));
-        buffer.position(p);
-    }
 }
 
 /**
@@ -929,6 +865,8 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
         this.option = sheet.option;
@@ -957,8 +895,14 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
     void load0() {
         if (ready) return;
 
-        // Parse calc.xml
-        long[][] calcArray = ExcelReader.parseCalcChain(path.getParent());
+        // Parse calcChain.xml
+        ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+        long[][] calcArray = null;
+        try {
+            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+        } catch (IOException e) {
+            LOGGER.warn("Parse calcChain failed, formula will be ignored");
+        }
         if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
 
         if (!eof && !(sRow instanceof XMLCalcRow)) {
@@ -1015,6 +959,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     // A merge cells grid
     private Grid mergeCells;
     boolean ready;
+    List<Dimension> dimensions;
 
     XMLMergeSheet(XMLSheet sheet) {
         this.name = sheet.name;
@@ -1037,6 +982,8 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         this.mark = sheet.mark;
         this.sRow = sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
+        this.zipFile = sheet.zipFile;
+        this.entry = sheet.entry;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
         this.option = sheet.option;
@@ -1069,8 +1016,9 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
             if (mergeCells != null && !mergeCells.isEmpty()) {
                 this.mergeCells = GridFactory.create(mergeCells);
-                LOGGER.debug("Grid: Size: {} ==> {}", this.mergeCells.size(), this.mergeCells.getClass());
-            }
+                LOGGER.debug("Grid: {} ===> Size: {}", this.mergeCells.getClass(), this.mergeCells.size());
+                this.dimensions = mergeCells;
+            } else this.dimensions = Collections.emptyList();
         }
 
         if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
@@ -1083,128 +1031,102 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
     Parse `mergeCells` tag
      */
     List<Dimension> parseMerge() {
-        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            long position = Files.size(path);
-            final int block = (int) Math.min(1 << 11, position), c = 12;
-            ByteBuffer buffer = ByteBuffer.allocate(block);
-            byte[] left;
-            int left_size = 0, i, limit;
-            boolean eof, getit = false;
-            // Skip if marked
-            if (lastRowMark > 0L) {
-                channel.position(lastRowMark);
-                channel.read(buffer);
-                buffer.flip();
-                getit = true;
-            } else {
-                left = new byte[12];
-                for (; ; ) {
-                    channel.position(Math.max(0, position -= block - left_size));
-                    channel.read(buffer);
-                    if (left_size > 0) {
-                        buffer.limit(block);
-                        buffer.put(left, 0, left_size);
-                    }
-                    buffer.flip();
-                    eof = buffer.limit() < block;
+        List<Dimension> list = null;
+        try (InputStream is = zipFile.getInputStream(entry)) {
+            // Skips specified number of bytes of uncompressed data.
+            if (lastRowMark > 0L) is.skip(lastRowMark);
 
-                    limit = buffer.limit();
-                    i = limit - 1;
-
-                    // </sheetData>
-                    for (; i >= c && (buffer.get(i) != '>' || buffer.get(i - 1) != 'a'
-                        || buffer.get(i - 2) != 't' || buffer.get(i - 3) != 'a'
-                        || buffer.get(i - 4) != 'D' || buffer.get(i - 5) != 't'
-                        || buffer.get(i - 6) != 'e' || buffer.get(i - 7) != 'e'
-                        || buffer.get(i - 8) != 'h' || buffer.get(i - 9) != 's'
-                        || buffer.get(i - 10) != '/' || buffer.get(i - 11) != '<'); i--)
-                        ;
-
-                    // Not Found
-                    if (i < c) {
-                        if (eof) break;
-                        buffer.position(0);
-                        left_size = 12;
-                        buffer.get(left, 0, left_size);
-                        buffer.clear();
-                        buffer.limit(block - left_size);
-                    }
-                    // Found the last row or empty worksheet
-                    else {
-                        buffer.position(i + 1);
-                        getit = true;
-                        // Align channel and buffer position
-                        channel.position(channel.position() + left_size);
-                        break;
-                    }
+            int n, offset = 0, limit = 1 << 14, i, len;
+            byte[] buf = new byte[limit];
+            while ((n = is.read(buf, offset, limit - offset)) > 0) {
+                if ((len = n + offset) < 11) {
+                    offset = len;
+                    continue;
                 }
-            }
+                i = 0; len--;
+                for (; i < len && (buf[i++] != '<' || buf[i] != 'm'); ) ;
+                // Compact
+                if (i >= len) {
+                    if (buf[i] == '<') {
+                        buf[0] = '<';
+                        offset = 1;
+                    } else if (buf[i - 1] == '<' && buf[i] == 'm') {
+                        buf[0] = '<';
+                        buf[1] = 'm';
+                        offset = 2;
+                    } else offset = 0;
+                    continue;
+                }
+                // Get it
+                len++;
+                if (len - i < 11) {
+                    System.arraycopy(buf, i, buf, 0, offset = len - i);
+                    if ((n = is.read(buf, offset, limit - offset)) <= 0)
+                        return null;
+                    len = n + offset;
+                    if (len < 11) {
+                        while (((n = is.read(buf, offset, limit - offset)) > 0)) {
+                            if ((len = n + offset) < 11) offset = len;
+                            else break;
+                        }
+                    }
+                    i = 0;
+                }
+                if (len < 11 || buf[i] != 'm' || buf[i + 1] != 'e' || buf[i + 2] != 'r'
+                    || buf[i + 3] != 'g' || buf[i + 4] != 'e' || buf[i + 5] != 'C' || buf[i + 6] != 'e'
+                    || buf[i + 7] != 'l' || buf[i + 8] != 'l' || buf[i + 9] != 's' || buf[i + 10] > ' ')
+                    return null;
+                i += 11;
+                n = len;
+                list = new ArrayList<>();
+                int f, t;
+                do {
+                    if (n < 11) {
+                        offset += n;
+                        continue;
+                    }
+                    for (; ;) {
+                        for (; i < n - 11 && (buf[i] != '<' || buf[i + 1] != 'm'
+                            || buf[i + 2] != 'e' || buf[i + 3] != 'r'
+                            || buf[i + 4] != 'g' || buf[i + 5] != 'e'
+                            || buf[i + 6] != 'C' || buf[i + 7] != 'e'
+                            || buf[i + 8] != 'l' || buf[i + 9] != 'l'
+                            || buf[i + 10] > ' '); i++) ;
 
-            if (getit) {
-                // Find mergeCells tag
-                return parseMerge(channel, buffer, block);
+                        if (i >= n - 11) {
+                            System.arraycopy(buf, i, buf, 0, offset = n - i);
+                            break;
+                        }
+
+                        t = i;
+                        i += 11;
+
+                        for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
+                            || buf[i + 3] != '=' || buf[i + 4] != '"'); i++) ;
+
+                        if (i >= n - 5) {
+                            System.arraycopy(buf, t, buf, 0, offset = n - t);
+                            break;
+                        }
+
+                        f = i += 5;
+                        for (; i < n && buf[i] != '"'; i++) ;
+
+                        if (i >= n) {
+                            System.arraycopy(buf, t, buf, 0, offset = n - t);
+                            break;
+                        }
+
+                        list.add(Dimension.of(new String(buf, f, i - f, StandardCharsets.US_ASCII)));
+                    }
+                    i = 0;
+                } while ((n = is.read(buf, offset, limit - offset)) > 0 && (n += offset) > 0);
             }
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
         }
-        return null;
-    }
-
-    // Find mergeCell tags
-    List<Dimension> parseMerge(SeekableByteChannel channel, ByteBuffer buffer, int block) throws IOException {
-        List<Dimension> mergeCells = new ArrayList<>();
-        boolean eof = false;
-        int limit = buffer.limit(), i = buffer.position(), f, n;
-        byte[] bytes = new byte[32];
-        for (; ;) {
-            for (; i < limit - 11 && (buffer.get(i) != '<' || buffer.get(i + 1) != 'm'
-                || buffer.get(i + 2) != 'e' || buffer.get(i + 3) != 'r'
-                || buffer.get(i + 4) != 'g' || buffer.get(i + 5) != 'e'
-                || buffer.get(i + 6) != 'C' || buffer.get(i + 7) != 'e'
-                || buffer.get(i + 8) != 'l' || buffer.get(i + 9) != 'l'
-                || buffer.get(i + 10) > ' '); i++) ;
-
-            if (i >= limit - 22) {
-                if (eof) break;
-                buffer.position(limit - 22);
-                for (; i < buffer.limit() && buffer.get() != '<'; i++) ;
-                if (buffer.get(buffer.position() - 1) == '<') buffer.position(buffer.position() - 1);
-                buffer.compact();
-                channel.read(buffer);
-                buffer.flip();
-                if ((limit = buffer.limit()) <= 0) break;
-                i = 0;
-                eof = limit < block;
-            } else {
-                i += 11;
-                for (; i < limit - 5 && (buffer.get(i) != 'r' || buffer.get(i + 1) != 'e'
-                    || buffer.get(i + 2) != 'f' || buffer.get(i + 3) != '='
-                    || buffer.get(i + 4) != '"'); i++) ;
-                f = i += 5;
-                for (; i < limit && buffer.get(i) != '"'; i++) ;
-                if (i >= limit) {
-                    buffer.compact();
-                    channel.read(buffer);
-                    buffer.flip();
-                    if ((limit = buffer.limit()) <= 0) break;
-
-                    i = 0;
-                    eof = limit < block;
-                    continue;
-                }
-                n = i - f;
-                if (n > bytes.length) bytes = new byte[n];
-
-                buffer.position(f);
-                buffer.get(bytes, 0, n);
-
-                mergeCells.add(Dimension.of(new String(bytes, 0, n, StandardCharsets.US_ASCII)));
-                buffer.get(); // Skip '"'
-            }
-        }
-
-        return mergeCells;
+        return list;
     }
 
     private void mergeCell(int row, Cell cell) {
@@ -1218,6 +1140,6 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
 
     @Override
     public List<Dimension> getMergeCells() {
-        return parseMerge();
+        return dimensions != null ? dimensions : (dimensions = parseMerge());
     }
 }

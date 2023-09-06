@@ -24,6 +24,7 @@ import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.style.Theme;
 import org.ttzero.excel.manager.NS;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.IWorkbookWriter;
@@ -35,9 +36,9 @@ import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
-import org.ttzero.excel.util.ZipUtil;
 
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -54,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +65,8 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -106,12 +110,14 @@ public class ExcelReader implements Closeable {
 
     protected ExcelReader() { }
 
-    protected Path self;
     protected Sheet[] sheets;
     private Path temp;
     private ExcelType type;
     private AppInfo appInfo;
-
+    /**
+     * Store temporary files (Copy images to temp directory)
+     */
+    protected Path tempDir;
     /**
      * The Shared String Table
      */
@@ -143,6 +149,10 @@ public class ExcelReader implements Closeable {
      * A global styles
      */
     protected Styles styles;
+    /**
+     * Xlsx src file
+     */
+    protected ZipFile zipFile;
 
     /**
      * Constructor Excel Reader
@@ -221,21 +231,6 @@ public class ExcelReader implements Closeable {
     /**
      * Constructor Excel Reader
      *
-     * @param path       the excel path
-     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
-     *                   This parameter affects the number of read times.
-     * @param cacheSize  the {@link Cache} size, default is 512
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
-     */
-    public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
-        return read(path, bufferSize, cacheSize, false, option);
-    }
-
-    /**
-     * Constructor Excel Reader
-     *
      * @param stream     the {@link InputStream} of excel
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
@@ -250,7 +245,9 @@ public class ExcelReader implements Closeable {
             throw new IOException("Create temp directory error. Please check your permission");
         }
         FileUtil.cp(stream, temp);
-        return read(temp, bufferSize, cacheSize, true, option);
+        ExcelReader reader = read(temp, bufferSize, cacheSize, option);
+        reader.temp = temp;
+        return reader;
     }
 
     /**
@@ -349,21 +346,21 @@ public class ExcelReader implements Closeable {
     @Override
     public void close() throws IOException {
         // Close all opened sheet
-        for (Sheet st : sheets) {
-            st.close();
+        if (sheets != null) {
+            for (Sheet st : sheets) st.close();
         }
 
         // Close Shared String Table
-        if (sst != null)
-            sst.close();
+        if (sst != null) sst.close();
 
-        // Delete temp files
-        if (self != null) {
-            FileUtil.rm_rf(self.toFile(), true);
-        }
-        if (temp != null) {
-            FileUtil.rm(temp);
-        }
+        // Remove temp file
+        if (temp != null) FileUtil.rm(temp);
+
+        // Remove temp dir
+        if (tempDir != null) FileUtil.rm_rf(tempDir);
+
+        // Close src file
+        if (zipFile != null) zipFile.close();
     }
 
     /**
@@ -372,7 +369,7 @@ public class ExcelReader implements Closeable {
      * @return the information
      */
     public AppInfo getAppInfo() {
-        return appInfo != null ? appInfo : (appInfo = getGeneralInfo(self));
+        return appInfo != null ? appInfo : (appInfo = getGeneralInfo());
     }
 
     /**
@@ -397,8 +394,15 @@ public class ExcelReader implements Closeable {
      */
     public ExcelReader parseFormula() {
         if (hasFormula) {
-            // Formula string if exists
-            long[][] calcArray = parseCalcChain(self);
+            ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+            if (entry == null) return this;
+            long[][] calcArray = null;
+            try (InputStream is = zipFile.getInputStream(entry)) {
+                // Formula string if exists
+                calcArray = parseCalcChain(is);
+            } catch (IOException ex) {
+                LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.", ex);
+            }
 
             if (calcArray == null) return this;
             int i = 0;
@@ -453,14 +457,19 @@ public class ExcelReader implements Closeable {
     public static final Set<String> MUST_CHECK_PART = new HashSet<>(Arrays.asList(Const.ContentType.WORKBOOK
             , Const.ContentType.SHAREDSTRING, Const.ContentType.SHEET, Const.ContentType.STYLE));
 
-    protected ContentType checkContentType(Path root) {
+    protected ContentType checkContentType() {
+        // Read [Content_Types].xml
+        ZipEntry entry = getEntry(zipFile, "[Content_Types].xml");
+        if (entry == null) {
+            if (temp != null) FileUtil.rm(temp);
+            throw new ExcelReadException("The file format is incorrect or corrupted. [[Content_Types].xml]");
+        }
         SAXReader reader = SAXReader.createDefault();
         Document document;
-        // Read [Content_Types].xml
         try {
-            document = reader.read(Files.newInputStream(root.resolve("[Content_Types].xml")));
+            document = reader.read(zipFile.getInputStream(entry));
         } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(root.toFile(), true);
+            if (temp != null) FileUtil.rm(temp);
             throw new ExcelReadException("The file format is incorrect or corrupted. [[Content_Types].xml]");
         }
         ContentType contentType = new ContentType();
@@ -468,9 +477,10 @@ public class ExcelReader implements Closeable {
         for (Element e : list) {
             if ("Override".equals(e.getName())) {
                 ContentType.Override override = new ContentType.Override(e.attributeValue("ContentType"), e.attributeValue("PartName"));
-                if (!Files.exists(root.resolve(override.getPartName().substring(1)))) {
+                entry = getEntry(zipFile, override.getPartName());
+                if (entry == null) {
                     if (MUST_CHECK_PART.contains(override.getContentType())) {
-                        FileUtil.rm_rf(root.toFile(), true);
+                        if (temp != null) FileUtil.rm(temp);
                         throw new ExcelReadException("The file format is incorrect or corrupted. [" + override.getPartName() + "]");
                     } else {
                         LOGGER.warn("{} is configured in [Content_Types].xml, but the corresponding file is missing.", override.getKey());
@@ -513,35 +523,58 @@ public class ExcelReader implements Closeable {
     }
 
     protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
-        // Store template stream as zip file
-        Path tmp = FileUtil.mktmp(Const.EEC_PREFIX);
-        LOGGER.debug("Unzip file to：{}", tmp);
-        ZipUtil.unzip(Files.newInputStream(path), tmp);
-        LOGGER.debug("Finished decompress. start to check the file integrity.");
+        this.zipFile = new ZipFile(path.toFile());
+        LOGGER.debug("Check file integrity.");
 
         // Check content-type
-        ContentType contentType = checkContentType(tmp);
+        ContentType contentType = checkContentType();
         if (contentType.hasDrawings()) {
             this.drawings = new XMLDrawings(this);
         }
 
-        // Check the file format and parse general information
-        try {
-            appInfo = getGeneralInfo(tmp);
-        } catch (Exception e) {
-            FileUtil.rm_rf(tmp.toFile(), true);
-            throw e;
-        }
+//        // Check the file format and parse general information
+//        appInfo = getGeneralInfo();
 
         // load workbook.xml
         SAXReader reader = SAXReader.createDefault();
         Document document;
+
+        // Load SharedString
+        ZipEntry entry = getEntry(zipFile, "xl/sharedStrings.xml");
+        if (entry != null) {
+            sst = new SharedStrings(zipFile.getInputStream(entry), bufferSize, cacheSize).load();
+        }
+
+        // Load Styles
+        entry = getEntry(zipFile, "xl/styles.xml");
+        if (entry != null) {
+            try {
+                styles = Styles.load(zipFile.getInputStream(entry));
+                // Load Theme style
+                ZipEntry themeEntry = getEntry(zipFile, "theme/theme1.xml");
+                if (themeEntry != null) Theme.load(zipFile.getInputStream(themeEntry));
+            } catch (Exception ex) {
+                LOGGER.warn("Parse style failed.", ex);
+            }
+        }
+        // Construct a empty Styles
+        if (styles == null) {
+            styles = Styles.forReader();
+        }
+
+        this.option = option;
+        hasFormula = getEntry(zipFile, "xl/calcChain.xml") != null;
+
+        entry = getEntry(zipFile, "xl/_rels/workbook.xml.rels");
+        if (entry == null)
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
+
         try {
-            document = reader.read(Files.newInputStream(tmp.resolve("xl/_rels/workbook.xml.rels")));
+            document = reader.read(zipFile.getInputStream(entry));
         } catch (DocumentException | IOException e) {
-            FileUtil.rm_rf(tmp.toFile(), true);
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
         }
+
         List<Element> list = document.getRootElement().elements();
         Relationship[] rels = new Relationship[list.size()];
         int i = 0;
@@ -550,46 +583,16 @@ public class ExcelReader implements Closeable {
         }
         RelManager relManager = RelManager.of(rels);
 
+        entry = getEntry(zipFile, "xl/workbook.xml");
+        if (entry == null)
+            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/workbook.xml]");
         try {
-            document = reader.read(Files.newInputStream(tmp.resolve("xl/workbook.xml")));
+            document = reader.read(zipFile.getInputStream(entry));
         } catch (DocumentException | IOException e) {
-            // read style file fail.
-            FileUtil.rm_rf(tmp.toFile(), true);
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/workbook.xml]");
         }
         Element root = document.getRootElement();
         Namespace ns = root.getNamespaceForPrefix("r");
-
-        // Load SharedString
-        Path ss = tmp.resolve("xl/sharedStrings.xml");
-        if (exists(ss)) {
-            sst = new SharedStrings(ss, bufferSize, cacheSize).load();
-        }
-
-        // Load Styles
-        Path s = tmp.resolve("xl/styles.xml");
-
-        if (exists(s)) {
-            try {
-                styles = Styles.load(s);
-            } catch (Exception ex) {
-                LOGGER.warn("Parse style failed.", ex);
-            }
-        }
-//        else {
-//            FileUtil.rm_rf(tmp.toFile(), true);
-//            throw new ExcelReadException("The file format is incorrect or corrupted. [xl/styles.xml]");
-//        }
-        // Construct a empty Styles
-        if (styles == null) {
-            styles = Styles.forReader();
-        }
-
-        // TODO Parse theme
-
-        this.option = option;
-        hasFormula = exists(tmp.resolve("xl/calcChain.xml"));
-
         List<Sheet> sheets = new ArrayList<>();
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
         int index = 0;
@@ -602,11 +605,17 @@ public class ExcelReader implements Closeable {
             sheet.setHidden("hidden".equals(state));
             Relationship r = relManager.getById(e.attributeValue(QName.get("id", ns)));
             if (r == null) {
-                FileUtil.rm_rf(tmp.toFile(), true);
                 sheet.close();
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
-            sheet.setPath(tmp.resolve("xl").resolve(r.getTarget()));
+            sheet.setPath("xl/" + r.getTarget());
+            entry = getEntry(zipFile, "xl/" + r.getTarget());
+            if (entry == null) {
+                sheet.close();
+                throw new ExcelReadException("The file format is incorrect or corrupted.");
+            }
+            sheet.setZipFile(zipFile);
+            sheet.setZipEntry(entry);
             // put shared string
             sheet.setSst(sst);
             // Setting styles
@@ -617,19 +626,13 @@ public class ExcelReader implements Closeable {
             sheets.add(sheet);
         }
 
-        if (sheets.isEmpty()) {
-            FileUtil.rm_rf(tmp.toFile(), true);
+        if (sheets.isEmpty())
             throw new ExcelReadException("The file format is incorrect or corrupted. [There has no worksheet]");
-        }
-
-        // sort by sheet index
-//        sheets.sort(Comparator.comparingInt(Sheet::getIndex));
 
         Sheet[] sheets1 = new Sheet[sheets.size()];
         sheets.toArray(sheets1);
 
         this.sheets = sheets1;
-        self = tmp;
 
         if ((option >> 1 & 1) == 1) {
             parseFormula();
@@ -644,13 +647,12 @@ public class ExcelReader implements Closeable {
      * @param bufferSize the {@link SharedStrings} buffer size. default is 512
      *                   This parameter affects the number of read times.
      * @param cacheSize  the {@link Cache} size, default is 512
-     * @param rmSource   remove the source files
      * @param option the reader option.
      * @return the {@link ExcelReader}
      * @throws FileNotFoundException if the path not exists or no permission to read
      * @throws IOException if I/O error occur
      */
-    private static ExcelReader read(Path path, int bufferSize, int cacheSize, boolean rmSource, int option) throws IOException {
+    public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         if (!exists(path)) {
             throw new FileNotFoundException(path.toString());
         }
@@ -685,11 +687,6 @@ public class ExcelReader implements Closeable {
                 throw new ExcelReadException("Unknown file type.");
         }
         er.type = type;
-
-        // storage source path
-        if (rmSource) {
-            er.temp = path;
-        }
 
         return er;
     }
@@ -758,73 +755,84 @@ public class ExcelReader implements Closeable {
         return excelType;
     }
 
-    protected AppInfo getGeneralInfo(Path tmp) {
-        // load workbook.xml
+    protected AppInfo getGeneralInfo() {
+        // load app.xml
         SAXReader reader = SAXReader.createDefault();
-        Document document;
-        try {
-            document = reader.read(Files.newInputStream(tmp.resolve("docProps/app.xml")));
-        } catch (DocumentException | IOException e) {
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/app.xml]");
-        }
-        Element root = document.getRootElement();
-        App app = new App();
-        app.setCompany(root.elementText("Company"));
-        app.setApplication(root.elementText("Application"));
-        String v = root.elementText("AppVersion");
-        if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
+        App app = null;
+        Core core = null;
+        ZipEntry entry = getEntry(zipFile, "docProps/app.xml");
+        if (entry != null) {
+            Document document = null;
+            try {
+                document = reader.read(zipFile.getInputStream(entry));
+            } catch (DocumentException | IOException e) {
+                LOGGER.warn("The file format is incorrect or corrupted. [docProps/app.xml]");
+            }
+            if (document != null) {
+                Element root = document.getRootElement();
+                app = new App();
+                app.setCompany(root.elementText("Company"));
+                app.setApplication(root.elementText("Application"));
+                String v = root.elementText("AppVersion");
+                if (StringUtil.isNotEmpty(v)) app.setAppVersion(v);
+            }
+        } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/app.xml]");
 
-        try {
-            document = reader.read(Files.newInputStream(tmp.resolve("docProps/core.xml")));
-        } catch (DocumentException | IOException e) {
-            throw new ExcelReadException("The file format is incorrect or corrupted. [docProps/core.xml]");
-        }
-        root = document.getRootElement();
-        Core core = new Core();
-        Class<Core> clazz = Core.class;
-        TopNS topNS = clazz.getAnnotation(TopNS.class);
-        String[] prefixs = topNS.prefix(), urls = topNS.uri();
-        Field[] fields = clazz.getDeclaredFields();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
-        for (Field f : fields) {
-            NS ns = f.getAnnotation(NS.class);
-            if (ns == null) continue;
+        entry = getEntry(zipFile, "docProps/core.xml");
+        if (entry != null) {
+            Document document = null;
+            try {
+                document = reader.read(zipFile.getInputStream(entry));
+            } catch (DocumentException | IOException e) {
+                LOGGER.warn("The file format is incorrect or corrupted. [docProps/core.xml]");
+            }
+            if (document != null) {
+                Element root = document.getRootElement();
+                core = new Core();
+                Class<Core> clazz = Core.class;
+                TopNS topNS = clazz.getAnnotation(TopNS.class);
+                String[] prefixs = topNS.prefix(), urls = topNS.uri();
+                Field[] fields = clazz.getDeclaredFields();
+                SimpleDateFormat format = DateUtil.utcDateTimeFormat.get();
+                for (Field f : fields) {
+                    NS ns = f.getAnnotation(NS.class);
+                    if (ns == null) continue;
 
-            f.setAccessible(true);
-            int nsIndex = StringUtil.indexOf(prefixs, ns.value());
-            if (nsIndex < 0) continue;
+                    f.setAccessible(true);
+                    int nsIndex = StringUtil.indexOf(prefixs, ns.value());
+                    if (nsIndex < 0) continue;
 
-            Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
-            Class<?> type = f.getType();
-            v = root.elementText(new QName(f.getName(), namespace));
-            if (isEmpty(v)) continue;
-            if (type == String.class) {
-                try {
-                    f.set(core, v);
-                } catch (IllegalAccessException e) {
-                    LOGGER.warn("Set field ({}) error.", f);
-                }
-            } else if (type == Date.class) {
-                try {
-                    f.set(core, format.parse(v));
-                } catch (ParseException | IllegalAccessException e) {
-                    LOGGER.warn("Set field ({}) error.", f);
+                    Namespace namespace = new Namespace(ns.value(), urls[nsIndex]);
+                    Class<?> type = f.getType();
+                    String v = root.elementText(new QName(f.getName(), namespace));
+                    if (isEmpty(v)) continue;
+                    if (type == String.class) {
+                        try {
+                            f.set(core, v);
+                        } catch (IllegalAccessException e) {
+                            LOGGER.warn("Set field ({}) error.", f);
+                        }
+                    } else if (type == Date.class) {
+                        try {
+                            f.set(core, format.parse(v));
+                        } catch (ParseException | IllegalAccessException e) {
+                            LOGGER.warn("Set field ({}) error.", f);
+                        }
+                    }
                 }
             }
-        }
+        } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/core.xml]");
 
         return new AppInfo(app, core);
     }
 
     /* Parse `calcChain` */
-    static long[][] parseCalcChain(Path root) {
-        Path calcPath = root.resolve("xl/calcChain.xml");
-        if (!FileUtil.exists(calcPath)) return null;
+    static long[][] parseCalcChain(InputStream is) {
+        SAXReader reader = SAXReader.createDefault();
         Element calcChain;
         try {
-            SAXReader reader = SAXReader.createDefault();
-            calcChain = reader.read(Files.newInputStream(calcPath)).getRootElement();
-        } catch (DocumentException | IOException e) {
+            calcChain = reader.read(is).getRootElement();
+        } catch (DocumentException e) {
             LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
             return null;
         }
@@ -894,11 +902,11 @@ public class ExcelReader implements Closeable {
             if (value >= 'A' && value <= 'Z') {
                 v = v * 26 + value - 'A' + 1;
             }
-            else if (value >= 'a' && value <= 'z') {
-                v = v * 26 + value - 'a' + 1;
-            }
             else if (value >= '0' && value <= '9') {
                 n = n * 10 + value - '0';
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
             }
             else
                 throw new ExcelReadException("Column mark out of range: " + r);
@@ -922,5 +930,46 @@ public class ExcelReader implements Closeable {
      */
     public Styles getStyles() {
         return styles;
+    }
+
+    /**
+     * Find {@code ZipEntry} by name
+     *
+     * @param zipFile src zip file
+     * @param name entry name
+     * @return {@code ZipEntry} if exist, otherwise null
+     */
+    public static ZipEntry getEntry(ZipFile zipFile, String name) {
+        char c0 = name.charAt(0);
+        if (c0 == '/' || c0 == '\\') name = name.substring(1);
+        ZipEntry entry = zipFile.getEntry(name);
+        if (entry == null) entry = zipFile.getEntry(name.replace('/', '\\'));
+        if (entry == null) {
+            // Iterator entries
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry e = entries.nextElement();
+                String k = e.getName().replace('\\', '/');
+                if (k.equalsIgnoreCase(name)) {
+                    entry = e;
+                    break;
+                }
+            }
+        }
+        return entry;
+    }
+
+    /**
+     * Simple convert to zip path
+     *
+     * @param path file path
+     * @return zip path
+     */
+    static String toZipPath(String path) {
+        int i = 0;
+        if (path.startsWith("../") || path.startsWith("..\\")) i = 3;
+        else if (path.startsWith("./") || path.startsWith(".\\")) i = 2;
+        else if (path.charAt(0) == '/' || path.charAt(0) == '\\') i = 1;
+        return i > 0 ? path.substring(i) : path;
     }
 }
