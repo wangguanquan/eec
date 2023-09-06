@@ -434,6 +434,7 @@ public interface Sheet extends Closeable {
     /**
      * Add header columns preprocessing properties
      *
+     * @param option header column options
      * @return this {@link Sheet}
      */
     default Sheet addHeaderColumnReadOption(int option) {
@@ -452,6 +453,7 @@ public interface Sheet extends Closeable {
      *     reader.sheet(0).setHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)
      * </pre></blockquote>
      *
+     * @param option header column options
      * @return this {@link Sheet}
      */
     Sheet setHeaderColumnReadOption(int option);
