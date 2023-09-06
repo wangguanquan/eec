@@ -1,6 +1,8 @@
-Version 0.5.10 ()
+Version 0.5.11
 -------------
 - 优化ExcelReader性能，性能有2倍以上提升
+- 修复读取16进制转义字符时出现乱码问题
+- 增加`setHeaderColumnReadOption`方法提高可用性
 
 Version 0.5.10 (2023-08-20)
 -------------
