@@ -363,7 +363,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .writeTo(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"))) {
-            List<RepeatableEntry5> readList = reader.sheet(0).header(1, 2).bind(RepeatableEntry5.class).rows().map(row -> (RepeatableEntry5) row.get()).collect(Collectors.toList());
+            List<RepeatableEntry5> readList = reader.sheet(0).header(1, 2).rows().map(row -> row.to(RepeatableEntry5.class)).collect(Collectors.toList());
 
             assert list.size() == readList.size();
             for (int i = 0, len = list.size(); i < len; i++)
@@ -376,7 +376,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 Map<String, Object> sub = mapList.get(i);
                 RepeatableEntry5 src = list.get(i);
 
-                assert sub.get("订单号").equals(src.orderNo);
+                assert sub.get("运单号").equals(src.orderNo);
                 assert sub.get("收件地址:省").equals(src.rProvince);
                 assert sub.get("收件地址:市").equals(src.rCity);
                 assert sub.get("收件地址:详细地址").equals(src.rDetail);
