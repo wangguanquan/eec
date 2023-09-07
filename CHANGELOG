@@ -1,7 +1,7 @@
 Version 0.5.11
 -------------
-- 优化ExcelReader性能，性能有2倍以上提升
-- 增加`setHeaderColumnReadOption`方法提高可用性
+- 优化ExcelReader性能，性能提升100%~300%
+- 增加`setHeaderColumnReadOption`方法提高ExcelReader丰富性
 - 修复读取16进制转义字符时出现乱码问题
 - 修复自动分页导致打开文件失败的问题
 - 屏蔽JDK17以上版本使用ExcelReader抛异常的问题

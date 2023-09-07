@@ -2,16 +2,18 @@
 
 [![Release][release-image]][releases] [![License][license-image]][license]
 
-EEC（Excel Export Core）是一个Excel读取和写入工具，目前支持xlsx格式的读取/写入以及xls格式的读取(xls支持BIFF8也就是excel 97~2003格式)。
-EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病，EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依懒`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口，加上EEC本体共计约900+kb
+EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，目前支持xlsx格式的`读/写`以及xls格式的`读`，
+EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病。EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
-EEC最大特点是`高性能`和`低内存`，如果在项目中做数据导入导出功能，选用EEC将为你带来极大的便利，同时它的`可扩展`能力也不弱。
+EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源少三个方面，高效指运行效率高
 
-使用`inlineStr`模式的情况下EEC的读写内存可以控制在*10MB*以下，`SharedString`模式也可以控制在*16MB*以下。[这里](https://www.ttzero.org/excel/2020/03/05/eec-vs-easyexcel-2.html) 有关于EEC的压力测试，最低可以在*6MB*的情况下完成100w行x29列数据的读写。
+- 包体小：EEC加上必要依赖包共约900K
+- 接入代码量少：无论读写均可以一行代码实现
+- 消耗资源少：单线程设计，极限运行内存小于10M
 
-EEC采用单线程、高IO设计，所以多核心高内存并不能显著提高速度，高主频和一块好SSD提升更明显。
+下载 [eec-benchmark](https://github.com/wangguanquan/eec-benchmark) 项目进行本地测试
 
-EEC在JVM参数`-Xmx6m -Xms1m`下读写100w行x29列内存使用截图
+EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
 
 写文件
 
@@ -32,9 +34,9 @@ EEC在JVM参数`-Xmx6m -Xms1m`下读写100w行x29列内存使用截图
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
 
-也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或者其它RPC
+也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或RPC接口等
 
-EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能用它来完全替代Apache POI，它最擅长的操作是表格处理。比如将数据库表导出为Excel或者读取Excel表格内容到Stream或数据库。
+EEC并不是一个功能全面的Excel工具类，它支持大多数日常应用场景，最擅长的是表格处理，比如转对象数组、转Map数组、内容检查等导入/导出常见功能。
 
 ## WIKI
 
@@ -43,13 +45,14 @@ EEC并不是一个功能全面的Excel操作工具类，它功能有限并不能
 
 ## 主要功能
 
-1. 支持**大数据量导出**，行数无上限。如果数据量超过单个sheet上限会自动分页。
-2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写。
-3. 可以为某列设置阀值高亮显示，如导出学生成绩时低于60分的单元格背景标黄显示。
+1. 支持**大数据量导出**，行数无上限，超过单个Sheet上限会自动分页
+2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写
+3. 支持动态样式，如导出库存时将低于预警阈值的行背景标黄显示
 4. 支持一键设置斑马线，利于阅读
 5. **自适应列宽对中文更精准**
-6. 采用流式方式读取文件，操作某行数据才会实际加载，而不会将整个文件读入到内存。
-7. 支持iterator或者stream+lambda，你可以像操作集合类一样操作excel
+6. 采用Stream流读文件，按需加载不会将整个文件读入到内存
+7. 读文件支持iterator和stream+lambda，你可以像操作集合类一样操作Excel
+8. 支持csv与Excel格式相互转换
 
 ## 使用方法
 
@@ -67,30 +70,25 @@ pom.xml添加
 
 ### 导出示例，更多使用方法请参考test/各测试类
 
-所有测试生成的excel文件均放在target/excel目录下，可以使用`mvn clean`清空。测试命令使用`mvn clean test`
-清空先前文件避免找不到测试结果文件
+测试时生成的excel文件均放在target/excel目录下，可以使用`mvn clean`清空。测试命令使用`mvn clean test`
+清空已有文件
 
 #### 1. 简单导出
-对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息，未添加ExcelColumn注解标记的属性将不会被导出。
+对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息，为了信息安全未添加ExcelColumn注解的属性将不会被导出。
 
 ```java
-private int id; // not export
-
 @ExcelColumn("渠道ID")
 private int channelId;
 
 @ExcelColumn
 private String account;
-
-@ExcelColumn("注册时间")
-private Timestamp registered;
 ```
 
 默认情况下导出的列顺序与字段在对象中的定义顺序一致，可以设置`colIndex`或者在`addSheet`时重置列头顺序。
 
 ```java
-// 创建一个名为"test object"的excel文件，指定作者，不指定时默认取系统登陆名
-new Workbook("test object", "guanquan.wang")
+// 创建一个名为"test object"的excel文件
+new Workbook("test object")
 
     // 添加一个worksheet，可以通过addSheet添加多个worksheet
     .addSheet(new ListSheet<>("学生信息", students))
@@ -99,9 +97,9 @@ new Workbook("test object", "guanquan.wang")
     .writeTo(Paths.get("f:/excel"));
 ```
 
-#### 2. 高亮和数据转换
+#### 2. 动态样式
 
-高亮和数据转换是通过`@FunctionalInterface`实现，Java Bean也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
+动态样式和数据转换通过`@FunctionalInterface`实现，也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
 
 ```java
 new Workbook("2021小五班期未考试成绩")
@@ -142,45 +140,41 @@ new Workbook("Auto Width Test")
 
 #### 4. 支持多行表头
 
+EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列将自动合并
+
 ```java
  public static class RepeatableEntry {
-    @ExcelColumn("TOP")
-    @ExcelColumn("K")
-    @ExcelColumn
-    @ExcelColumn("订单号")
+    @ExcelColumn("运单号")
     private String orderNo;
-    @ExcelColumn("TOP")
-    @ExcelColumn("K")
-    @ExcelColumn("A")
+    @ExcelColumn("收件地址")
+    @ExcelColumn("省")
+    private String rProvince;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("市")
+    private String rCity;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("详细地址")
+    private String rDetail;
     @ExcelColumn("收件人")
     private String recipient;
-    @ExcelColumn("TOP")
-    @ExcelColumn("收件地址")
-    @ExcelColumn("A")
+    @ExcelColumn("寄件地址")
     @ExcelColumn("省")
-    private String province;
-    @ExcelColumn("TOP")
-    @ExcelColumn("收件地址")
-    @ExcelColumn("A")
+    private String sProvince;
+    @ExcelColumn("寄件地址")
     @ExcelColumn("市")
-    private String city;
-    @ExcelColumn("TOP")
-    @ExcelColumn("收件地址")
-    @ExcelColumn("B")
-    @ExcelColumn("区")
-    private String area;
-    @ExcelColumn("TOP")
-    @ExcelColumn("收件地址")
-    @ExcelColumn("B")
+    private String sCity;
+    @ExcelColumn("寄件地址")
     @ExcelColumn("详细地址")
-    private String detail;
+    private String sDetail;
+    @ExcelColumn("寄件人")
+    private String sender;
 }
 ```
-![多行表头](./images/multi-header.png)
+![多行表头](./images/multi-headers.png)
 
 #### 5. 报表轻松制作
 
-现在使用普通的ListSheet就可以导出漂亮的报表，省掉建模板的烦恼。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
+现在使用普通的ListSheet就可以导出漂亮的报表。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
 记帐类
 
@@ -200,14 +194,14 @@ new Workbook("Auto Width Test")
 
 EEC使用`ExcelReader#read`静态方法读文件，其内部采用流式操作，当使用某一行数据时才会真正读入内存，所以即使是GB级别的Excel文件也只占用少量内存。
 
-默认的ExcelReader仅读取单元格的值而忽略公式，可以使用`ExcelReader#parseFormula`方法使Reader解析单元格的公式。
+默认的ExcelReader仅读取单元格的值而忽略公式，可以使用`Sheet#asCalcSheet`将普通Sheet转换为CalcSheet解析单元格的公式。
 
 下面展示一些常规的读取方法
 
 #### 1. 使用stream操作
 
 ```java
-try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
+try (ExcelReader reader = ExcelReader.read(Paths.get("./用户注册.xlsx"))) {
     // 读取所有worksheet并输出
     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
 } catch (IOException e) {
@@ -218,24 +212,25 @@ try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xls
 #### 2. 将excel读入到数组或List中
 
 ```java
-try (ExcelReader reader = ExcelReader.read(defaultPath.resolve("用户注册.xlsx"))) {
-    // 读取所有worksheet并转为Register对象
-    Register[] array = reader.sheets()
-
+try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
+    // 读取第1个Sheet页
+    List<User> users = reader.sheet(0)
+        // 指定第6为表头，前5行为概要信息
+        .header(6)
         // 读取数据行
-        .flatMap(Sheet::dataRows)
-
-        // 将每行数据转换为Register象
-        .map(row -> row.to(Register.class))
-
-        // 转数组或者List
-        .toArray(Register[]::new);
+        .rows()
+        // 将每行数据转换为User象
+        .map(row -> row.to(User.class))
+        // 收集为List或数组进行后续处理
+        .collect(Collectors.toList());
 } catch (IOException e) {
     e.printStackTrace();
 }
 ```
 
-#### 3. 既然是Stream那就可以使用流的全部功能，比如加一些过滤和聚合等。
+#### 3. 过滤和聚合
+
+既然是Stream那就可以使用流的全部功能，以下代码展示过滤平台为"iOS"的注册用户
 
 ```java
 reader.sheet(0)
@@ -245,11 +240,9 @@ reader.sheet(0)
     .collect(Collectors.toList());
 ```
 
-以上代码相当于SQL `select * from '用户注册' where platform = 'iOS'`
-
 #### 4. 多表头读取
 
-如果要读取多行表头转对象或者Map时可以通过`Sheet#header(fromRowNum, toRowNum)`来指定表头所在的行号，如上方“记帐类报表”则可以使用如下代码读取
+读取多行表头转对象或者Map可以通过`Sheet#header(fromRowNum, toRowNum)`来指定表头所在的行号，如上方“记帐类报表”可以使用如下代码读取
 
 ```java
 reader.sheet(0)
@@ -262,7 +255,7 @@ reader.sheet(0)
 
 ### xls格式支持
 
-pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码只需要传入xls即可读取，
+pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码依然可用只需要传入xls即可。
 
 ```xml
 <dependency>
@@ -274,12 +267,12 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 
 读取xls格式的方法与读取xlsx格式完全一样，读取文件时不需要判断是xls格式还是xlsx格式，EEC为其提供了完全一样的接口，内部会根据文件头去判断具体类型， 这种方式比判断文件后缀准确得多。
 
-你可以在 [search.maven.org](https://search.maven.org/artifact/org.ttzero/eec-e3-support) 查询eec-e3-support版本，两个工具的兼容性 [参考此表](https://github.com/wangguanquan/eec/wiki/EEC%E4%B8%8EE3-support%E5%85%BC%E5%AE%B9%E6%80%A7%E5%AF%B9%E7%85%A7%E8%A1%A8)
+两个工具的兼容性 [参考此表](https://github.com/wangguanquan/eec/wiki/EEC%E4%B8%8EE3-support%E5%85%BC%E5%AE%B9%E6%80%A7%E5%AF%B9%E7%85%A7%E8%A1%A8)
 
 ### CSV与Excel格式互转
 
-- CSV => Excel 向Workbook中添加一个`CSVSheet`即可
-- Excel => CSV 读Excel后通过Worksheet调用`saveAsCSV`
+- CSV => Excel：向Workbook中添加一个`CSVSheet`
+- Excel => CSV：读Excel时调用`saveAsCSV`
 
 代码示例
 
@@ -287,7 +280,7 @@ pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不�
 // 直接保存为csv生成测试文件，对于数据量较多的场合也可以使用#more方法分批获取数据
 new Workbook()
     .addSheet(createTestData())
-    .saveAsCSV()
+    .saveAsCSV() // 指定输出格式为csv
     .writeTo(Paths.get("d:\\abc.csv"));
 
 // CSV转Excel
@@ -297,8 +290,8 @@ new Workbook()
     
 // Excel转CSV
 try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
-    // 读取Excel并保存为CSV格式
-    reader.sheet(0).saveAsCSV(Paths.get("./")); // 以sheet名csv文件名保存到当前目录
+    // 读取Excel使用saveAsCSV保存为CSV格式
+    reader.sheet(0).saveAsCSV(Paths.get("./"));
 } catch (IOException e) {
     e.printStackTrace();
 }
@@ -340,7 +333,7 @@ Version 0.5.7 (2023-02-17)
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.10-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.11-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

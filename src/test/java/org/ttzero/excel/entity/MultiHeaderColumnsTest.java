@@ -356,6 +356,39 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testRepeat2AddressHeaders() throws IOException {
+        List<RepeatableEntry5> list = RepeatableEntry5.randomTestData(20);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(list))
+            .writeTo(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"))) {
+            List<RepeatableEntry5> readList = reader.sheet(0).header(1, 2).bind(RepeatableEntry5.class).rows().map(row -> (RepeatableEntry5) row.get()).collect(Collectors.toList());
+
+            assert list.size() == readList.size();
+            for (int i = 0, len = list.size(); i < len; i++)
+                assert list.get(i).equals(readList.get(i));
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == mapList.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry5 src = list.get(i);
+
+                assert sub.get("订单号").equals(src.orderNo);
+                assert sub.get("收件地址:省").equals(src.rProvince);
+                assert sub.get("收件地址:市").equals(src.rCity);
+                assert sub.get("收件地址:详细地址").equals(src.rDetail);
+                assert sub.get("收件人").equals(src.recipient);
+                assert sub.get("寄件地址:省").equals(src.sProvince);
+                assert sub.get("寄件地址:市").equals(src.sCity);
+                assert sub.get("寄件地址:详细地址").equals(src.sDetail);
+                assert sub.get("寄件人").equals(src.sender);
+            }
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}
@@ -657,4 +690,76 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             return orderNo + " | " + recipient + " | " + province + " | " + city + " | " + area + " | " + detail;
         }
     }
+
+    public static class RepeatableEntry5 {
+    @ExcelColumn("运单号")
+    private String orderNo;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("省")
+    private String rProvince;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("市")
+    private String rCity;
+    @ExcelColumn("收件地址")
+    @ExcelColumn("详细地址")
+    private String rDetail;
+    @ExcelColumn("收件人")
+    private String recipient;
+    @ExcelColumn("寄件地址")
+    @ExcelColumn("省")
+    private String sProvince;
+    @ExcelColumn("寄件地址")
+    @ExcelColumn("市")
+    private String sCity;
+    @ExcelColumn("寄件地址")
+    @ExcelColumn("详细地址")
+    private String sDetail;
+    @ExcelColumn("寄件人")
+    private String sender;
+
+        public RepeatableEntry5() { }
+
+        public RepeatableEntry5(String orderNo, String rProvince, String rCity, String rDetail, String recipient, String sProvince, String sCity, String sDetail, String sender) {
+            this.orderNo = orderNo;
+            this.rProvince = rProvince;
+            this.rCity = rCity;
+            this.rDetail = rDetail;
+            this.recipient = recipient;
+            this.sProvince = sProvince;
+            this.sCity = sCity;
+            this.sDetail = sDetail;
+            this.sender = sender;
+        }
+
+        public static List<RepeatableEntry5> randomTestData(int n) {
+            List<RepeatableEntry5> list = new ArrayList<>(n);
+            for (int i = 0, p; i < n; i++) {
+                list.add(new RepeatableEntry5(Integer.toString(Math.abs(random.nextInt())), provinces[p = random.nextInt(provinces.length)], cities[p][random.nextInt(cities[p].length)], "xx街" + (random.nextInt(10) + 1) + "号", "王**", provinces[p = random.nextInt(provinces.length)], cities[p][random.nextInt(cities[p].length)], "xx街" + (random.nextInt(10) + 1) + "号", "周**"));
+            }
+            return list;
+        }
+
+        @Override
+        public int hashCode() {
+            return orderNo.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof RepeatableEntry5) {
+                RepeatableEntry5 other = (RepeatableEntry5) o;
+                return Objects.equals(orderNo, other.orderNo)
+                    && Objects.equals(rProvince, other.rProvince)
+                    && Objects.equals(rCity, other.rCity)
+                    && Objects.equals(rDetail, other.rDetail)
+                    && Objects.equals(recipient, other.recipient)
+                    && Objects.equals(sProvince, other.sProvince)
+                    && Objects.equals(sCity, other.sCity)
+                    && Objects.equals(sDetail, other.sDetail)
+                    && Objects.equals(sender, other.sender);
+            }
+            return false;
+        }
+    }
+
 }
