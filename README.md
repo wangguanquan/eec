@@ -3,7 +3,7 @@
 [![Release][release-image]][releases] [![License][license-image]][license]
 
 EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，目前支持xlsx格式的`读/写`以及xls格式的`读`，
-EEC的设计初衷是为了解决Apache POI速度慢，高内存且API臃肿的诟病。EEC的底层并没有使用Apache POI包，所有的底层读写代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
+EEC的设计初衷是为了解决Apache POI速度慢、内存高且API臃肿的诟病。EEC的底层并不依赖POI包，所有的底层读写代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
 EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源少三个方面，高效指运行效率高
 
@@ -15,17 +15,11 @@ EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源�
 
 EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
 
-写文件
-
-![eec write 100w](./images/eec_write_100w.png)
-
-读文件
-
-![eec read 100w](./images/eec_read_100w.png)
+![write_read 100w](./images/write_read_100w.png)
 
 ## 现状
 
-目前已实现worksheet类型有
+目前已实现worksheet类型有六种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
 
 - [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
@@ -33,8 +27,6 @@ EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
-
-也可以继承已知[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源，比如微服务，mybatis或RPC接口等
 
 EEC并不是一个功能全面的Excel工具类，它支持大多数日常应用场景，最擅长的是表格处理，比如转对象数组、转Map数组、内容检查等导入/导出常见功能。
 
@@ -51,7 +43,7 @@ EEC并不是一个功能全面的Excel工具类，它支持大多数日常应用
 4. 支持一键设置斑马线，利于阅读
 5. **自适应列宽对中文更精准**
 6. 采用Stream流读文件，按需加载不会将整个文件读入到内存
-7. 读文件支持iterator和stream+lambda，你可以像操作集合类一样操作Excel
+7. 支持iterator和stream+lambda读文件，你可以像操作集合类一样操作Excel
 8. 支持csv与Excel格式相互转换
 
 ## 使用方法
@@ -67,11 +59,6 @@ pom.xml添加
 ```
 
 ## 示例
-
-### 导出示例，更多使用方法请参考test/各测试类
-
-测试时生成的excel文件均放在target/excel目录下，可以使用`mvn clean`清空。测试命令使用`mvn clean test`
-清空已有文件
 
 #### 1. 简单导出
 对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息，为了信息安全未添加ExcelColumn注解的属性将不会被导出。
@@ -99,7 +86,7 @@ new Workbook("test object")
 
 #### 2. 动态样式
 
-动态样式和数据转换通过`@FunctionalInterface`实现，也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
+动态样式和数据转换是使用`@FunctionalInterface`实现，也可以使用`StyleDesign`注解，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
 
 ```java
 new Workbook("2021小五班期未考试成绩")
@@ -198,7 +185,7 @@ EEC使用`ExcelReader#read`静态方法读文件，其内部采用流式操作�
 
 下面展示一些常规的读取方法
 
-#### 1. 使用stream操作
+#### 1. 使用stream
 
 ```java
 try (ExcelReader reader = ExcelReader.read(Paths.get("./用户注册.xlsx"))) {
@@ -209,7 +196,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("./用户注册.xlsx"))) {
 }
 ```
 
-#### 2. 将excel读入到数组或List中
+#### 2. 读入到数组或List中
 
 ```java
 try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
@@ -235,8 +222,8 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
 ```java
 reader.sheet(0)
     .dataRows()
+    .filter(row -> "iOS".equals(row.getString("platform"))) // 过滤平台为"iOS"的行
     .map(row -> row.to(Regist.class))
-    .filter(e -> "iOS".equals(e.platform()))
     .collect(Collectors.toList());
 ```
 
@@ -255,7 +242,7 @@ reader.sheet(0)
 
 ### xls格式支持
 
-pom.xml添加如下代码，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码依然可用只需要传入xls即可。
+pom.xml添加如下依赖，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码依然可用只需要传入xls即可。
 
 ```xml
 <dependency>
