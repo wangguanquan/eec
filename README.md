@@ -2,16 +2,9 @@
 
 [![Release][release-image]][releases] [![License][license-image]][license]
 
-EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，目前支持xlsx格式的`读/写`以及xls格式的`读`，
+EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，目前支持xlsx格式的`读/写`以及xls格式的`读`，EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源少三个方面，下载 [eec-benchmark](https://github.com/wangguanquan/eec-benchmark) 项目进行性能测试
+
 EEC的设计初衷是为了解决Apache POI速度慢、内存高且API臃肿的诟病。EEC的底层并不依赖POI包，所有的底层读写代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
-
-EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源少三个方面，高效指运行效率高
-
-- 包体小：EEC加上必要依赖包共约900K
-- 接入代码量少：无论读写均可以一行代码实现
-- 消耗资源少：单线程设计，极限运行内存小于10M
-
-下载 [eec-benchmark](https://github.com/wangguanquan/eec-benchmark) 项目进行本地测试
 
 EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
 
@@ -44,7 +37,7 @@ EEC并不是一个功能全面的Excel工具类，它支持大多数日常应用
 5. **自适应列宽对中文更精准**
 6. 采用Stream流读文件，按需加载不会将整个文件读入到内存
 7. 支持iterator和stream+lambda读文件，你可以像操作集合类一样操作Excel
-8. 支持csv与Excel格式相互转换
+8. 支持csv与excel格式相互转换
 
 ## 使用方法
 
@@ -61,7 +54,7 @@ pom.xml添加
 ## 示例
 
 #### 1. 简单导出
-对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息，为了信息安全未添加ExcelColumn注解的属性将不会被导出。
+对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息
 
 ```java
 @ExcelColumn("渠道ID")
@@ -179,11 +172,7 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 
 ### 读取示例
 
-EEC使用`ExcelReader#read`静态方法读文件，其内部采用流式操作，当使用某一行数据时才会真正读入内存，所以即使是GB级别的Excel文件也只占用少量内存。
-
-默认的ExcelReader仅读取单元格的值而忽略公式，可以使用`Sheet#asCalcSheet`将普通Sheet转换为CalcSheet解析单元格的公式。
-
-下面展示一些常规的读取方法
+EEC使用`ExcelReader#read`静态方法读文件，下面展示一些常规的读取方法
 
 #### 1. 使用stream
 
@@ -217,19 +206,19 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
 
 #### 3. 过滤和聚合
 
-既然是Stream那就可以使用流的全部功能，以下代码展示过滤平台为"iOS"的注册用户
+EEC支持Stream的大部分功能，以下代码展示过滤平台为"iOS"的注册用户
 
 ```java
 reader.sheet(0)
     .dataRows()
-    .filter(row -> "iOS".equals(row.getString("platform"))) // 过滤平台为"iOS"的行
+    .filter(row -> "iOS".equals(row.getString("platform"))) // 过滤平台为"iOS"的数据
     .map(row -> row.to(Regist.class))
     .collect(Collectors.toList());
 ```
 
 #### 4. 多表头读取
 
-读取多行表头转对象或者Map可以通过`Sheet#header(fromRowNum, toRowNum)`来指定表头所在的行号，如上方“记帐类报表”可以使用如下代码读取
+多级表头读取时可以使用`header`方法来指定表头所在的行号
 
 ```java
 reader.sheet(0)
@@ -242,7 +231,7 @@ reader.sheet(0)
 
 ### xls格式支持
 
-pom.xml添加如下依赖，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码，原有的读取文件代码依然可用只需要传入xls即可。
+pom.xml添加如下依赖，添加好后即完成了xls的兼容，是的你不需要为xls写任何一行代码。
 
 ```xml
 <dependency>
