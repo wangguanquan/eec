@@ -21,147 +21,93 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import static org.ttzero.excel.Print.println;
-import static org.ttzero.excel.util.FileUtil.exists;
-import static org.ttzero.excel.util.FileUtil.isWindows;
+import static org.ttzero.excel.entity.WorkbookTest.charArray;
+import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
+import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
+import static org.ttzero.excel.entity.WorkbookTest.random;
 
 /**
  * @author guanquan.wang at 2019-02-14 17:02
  */
 public class CSVUtilTest {
-    private Path path;
-    private Random random;
-    private final char[] base = "abcdefghijklmnopqrstuvwxyz,ABCDEFGHIJKLMNOPQRSTUVWXYZ\t0123456789\"".toCharArray();
-    private final char[][] cache_char_array = new char[25][];
 
-
-    @Before public void before() {
-        for (int i = 0; i < cache_char_array.length; i++) {
-            cache_char_array[i] = new char[i + 1];
-        }
-        random = new Random();
-        URL url = CSVUtilTest.class.getClassLoader().getResource(".");
-        if (url == null) {
-            throw new RuntimeException("Load test resources error.");
-        }
-        path = isWindows() ? Paths.get(url.getFile().substring(1)) : Paths.get(url.getFile());
-        path = path.resolve("1.csv");
-
+    Path path = defaultTestPath.resolve("1.csv");
+    @Before public void before() throws IOException {
         // Create a test file
-        if (!exists(path)) {
-            testWriter();
-        }
+        testWriter();
     }
 
-    @Test public void testReader() {
-        try {
-            List<String[]> rows = CSVUtil.read(path);
-            rows.forEach(t -> println(Arrays.toString(t)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+    @Test public void testReader() throws IOException {
+        List<String[]> rows = CSVUtil.read(path);
+        rows.forEach(t -> println(Arrays.toString(t)));
     }
 
-    @Test public void testStream() {
+    @Test public void testStream() throws IOException {
         try (CSVUtil.Reader reader = CSVUtil.newReader(path)) {
-            reader.stream()
-                .forEach(t -> println(Arrays.toString(t)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
+            reader.stream().forEach(t -> println(Arrays.toString(t)));
         }
     }
 
-    @Test public void testStreamShare() {
+    @Test public void testStreamShare() throws IOException {
         try (CSVUtil.Reader reader = CSVUtil.newReader(path)) {
-            reader.sharedStream()
-                .forEach(t -> println(Arrays.toString(t)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
+            reader.sharedStream().forEach(t -> println(Arrays.toString(t)));
         }
     }
 
-    @Test public void testIterator() {
+    @Test public void testIterator() throws IOException {
         try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).iterator()) {
             for (; iterator.hasNext(); ) {
                 String[] rows = iterator.next();
                 println(Arrays.toString(rows));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
     }
 
-    @Test public void testSharedIterator() {
+    @Test public void testSharedIterator() throws IOException {
         try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).sharedIterator()) {
             for (; iterator.hasNext(); ) {
                 String[] rows = iterator.next();
                 println(Arrays.toString(rows));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
     }
 
-    @Test public void testWriteBoolean() {
+    @Test public void testWriteBoolean() throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             writer.write(true);
             writer.write(false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == 2;
-            assert String.valueOf(true).toUpperCase().equals(strings.get(0)[0]);
-            assert String.valueOf(false).toUpperCase().equals(strings.get(0)[1]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == 2;
+        assert String.valueOf(true).toUpperCase().equals(strings.get(0)[0]);
+        assert String.valueOf(false).toUpperCase().equals(strings.get(0)[1]);
     }
 
-    @Ignore
-    @Test public void testWriteChar() {
-        char c = base[random.nextInt(base.length)];
+    @Ignore @Test public void testWriteChar() throws IOException {
+        char c = charArray[random.nextInt(charArray.length)];
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             writer.writeChar(c);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
-        try {
-            List<String[]> strings = CSVUtil.read(path, ',');
-            assert strings.size() == 1;
-            assert strings.get(0).length == 1;
-            // will be trim
-            if (c == '\n' || c == '\t') {
-                assert strings.get(0)[0].isEmpty();
-            } else {
-                assert String.valueOf(c).equals(strings.get(0)[0]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
+        List<String[]> strings = CSVUtil.read(path, ',');
+        assert strings.size() == 1;
+        assert strings.get(0).length == 1;
+        // will be trim
+        if (c == '\n' || c == '\t') {
+            assert strings.get(0)[0].isEmpty();
+        } else {
+            assert String.valueOf(c).equals(strings.get(0)[0]);
         }
     }
 
-    @Test public void testWriteInt() {
+    @Test public void testWriteInt() throws IOException {
         int n1 = random.nextInt();
         int n2 = random.nextInt(1024);
         int zero = 0;
@@ -177,28 +123,22 @@ public class CSVUtilTest {
             writer.write(max);
             writer.write(min1);
             writer.write(max1);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == 7;
-            assert String.valueOf(n1).equals(strings.get(0)[0]);
-            assert String.valueOf(n2).equals(strings.get(0)[1]);
-            assert String.valueOf(zero).equals(strings.get(0)[2]);
-            assert String.valueOf(min).equals(strings.get(0)[3]);
-            assert String.valueOf(max).equals(strings.get(0)[4]);
-            assert String.valueOf(min1).equals(strings.get(0)[5]);
-            assert String.valueOf(max1).equals(strings.get(0)[6]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == 7;
+        String[] ss = strings.get(0);
+        assert String.valueOf(n1).equals(ss[0]);
+        assert String.valueOf(n2).equals(ss[1]);
+        assert String.valueOf(zero).equals(ss[2]);
+        assert String.valueOf(min).equals(ss[3]);
+        assert String.valueOf(max).equals(ss[4]);
+        assert String.valueOf(min1).equals(ss[5]);
+        assert String.valueOf(max1).equals(ss[6]);
     }
 
-    @Test public void testWriteLong() {
+    @Test public void testWriteLong() throws IOException {
         long l1 = random.nextLong();
         long l2 = random.nextLong();
         long l3 = random.nextLong();
@@ -219,33 +159,25 @@ public class CSVUtilTest {
             writer.newLine(); // new line
             writer.write(min1);
             writer.write(max1);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 4;
-            assert strings.get(0).length == 2;
-            assert strings.get(1).length == 2;
-            assert strings.get(2).length == 2;
-            assert strings.get(3).length == 2;
-            assert String.valueOf(l1).equals(strings.get(0)[0]);
-            assert String.valueOf(l2).equals(strings.get(0)[1]);
-            assert String.valueOf(l3).equals(strings.get(1)[0]);
-            assert String.valueOf(l4).equals(strings.get(1)[1]);
-            assert String.valueOf(min).equals(strings.get(2)[0]);
-            assert String.valueOf(max).equals(strings.get(2)[1]);
-            assert String.valueOf(min1).equals(strings.get(3)[0]);
-            assert String.valueOf(max1).equals(strings.get(3)[1]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 4;
+        assert strings.get(0).length == 2;
+        assert strings.get(1).length == 2;
+        assert strings.get(2).length == 2;
+        assert strings.get(3).length == 2;
+        assert String.valueOf(l1).equals(strings.get(0)[0]);
+        assert String.valueOf(l2).equals(strings.get(0)[1]);
+        assert String.valueOf(l3).equals(strings.get(1)[0]);
+        assert String.valueOf(l4).equals(strings.get(1)[1]);
+        assert String.valueOf(min).equals(strings.get(2)[0]);
+        assert String.valueOf(max).equals(strings.get(2)[1]);
+        assert String.valueOf(min1).equals(strings.get(3)[0]);
+        assert String.valueOf(max1).equals(strings.get(3)[1]);
     }
 
-    @Test public void testWriteFloat() {
+    @Test public void testWriteFloat() throws IOException {
         float f1 = random.nextFloat();
         float f2 = random.nextFloat();
         float f3 = random.nextFloat();
@@ -255,26 +187,19 @@ public class CSVUtilTest {
             writer.write(f2);
             writer.newLine(); // new line
             writer.write(f3);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 3;
-            assert strings.get(0).length == 1;
-            assert strings.get(1).length == 1;
-            assert strings.get(2).length == 1;
-            assert String.valueOf(f1).equals(strings.get(0)[0]);
-            assert String.valueOf(f2).equals(strings.get(1)[0]);
-            assert String.valueOf(f3).equals(strings.get(2)[0]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 3;
+        assert strings.get(0).length == 1;
+        assert strings.get(1).length == 1;
+        assert strings.get(2).length == 1;
+        assert String.valueOf(f1).equals(strings.get(0)[0]);
+        assert String.valueOf(f2).equals(strings.get(1)[0]);
+        assert String.valueOf(f3).equals(strings.get(2)[0]);
     }
 
-    @Test public void testWriteDouble() {
+    @Test public void testWriteDouble() throws IOException{
         double d1 = random.nextDouble();
         double d2 = random.nextDouble();
         double d3 = random.nextDouble();
@@ -282,81 +207,59 @@ public class CSVUtilTest {
             writer.write(d1);
             writer.write(d2);
             writer.write(d3);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == 3;
-            assert String.valueOf(d1).equals(strings.get(0)[0]);
-            assert String.valueOf(d2).equals(strings.get(0)[1]);
-            assert String.valueOf(d3).equals(strings.get(0)[2]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == 3;
+        assert String.valueOf(d1).equals(strings.get(0)[0]);
+        assert String.valueOf(d2).equals(strings.get(0)[1]);
+        assert String.valueOf(d3).equals(strings.get(0)[2]);
     }
 
-    @Test public void testWriteString() {
+    @Test public void testWriteString() throws IOException {
         int n = random.nextInt(10) + 1;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
-            src[i] = randomString();
+            src[i] = getRandomString();
         }
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             for (String s : src) {
                 writer.write(s);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == n;
 
-            assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == n;
+
+        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
     }
 
-    @Test public void testEndWithLF() {
+    @Test public void testEndWithLF() throws IOException {
         int n = random.nextInt(10) + 1;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
-            src[i] = randomString();
+            src[i] = getRandomString();
         }
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             for (String s : src) {
                 writer.write(s);
             }
             writer.newLine(); // end with LF
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == n;
-            assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == n;
+        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
     }
 
-    @Test public void testLineEndWithComma() {
+    @Test public void testLineEndWithComma() throws IOException {
         int n = random.nextInt(10) + 1;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
-            src[i] = randomString();
+            src[i] = getRandomString();
         }
         char comma = ',';
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path, comma)) {
@@ -365,26 +268,18 @@ public class CSVUtilTest {
                 writer.writeEmpty(); // comma is the last character
                 writer.newLine(); // new line
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == n;
-            for (int i = 0; i < n; i++) {
-                assert strings.get(i).length == 2;
-                assert src[i].equals(strings.get(i)[0]);
-                assert "".equals(strings.get(i)[1]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == n;
+        for (int i = 0; i < n; i++) {
+            assert strings.get(i).length == 2;
+            assert src[i].equals(strings.get(i)[0]);
+            assert "".equals(strings.get(i)[1]);
         }
     }
 
-    @Test public void testLF() {
+    @Test public void testLF() throws IOException {
         String s1 = "abc,12\njiuh"; // LF
         String s2 = "42\r\n843432545\"fjid";  // CR LF
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
@@ -395,24 +290,16 @@ public class CSVUtilTest {
             writer.write(true);
             writer.write("fjdskfhinsfainwepcfjskldafdnjsh fdslaf jdsk djsk djska hdsuiafgsdkafhdsuiafhsuiafusfhdsa");
             writer.write("fsa");
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            assert strings.get(0).length == 7;
-            assert s1.equals(strings.get(0)[2]);
-            assert s2.equals(strings.get(0)[3]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        assert strings.get(0).length == 7;
+        assert s1.equals(strings.get(0)[2]);
+        assert s2.equals(strings.get(0)[3]);
     }
 
-    @Test public void testGBKCharset() {
+    @Test public void testGBKCharset() throws IOException {
         String s1 = "双引号或单引号中间的一切都是字符串";
         String s2 = "中文测试使用GBK";
 
@@ -421,9 +308,6 @@ public class CSVUtilTest {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path, GBK)) {
             writer.write(s1);
             writer.write(s2);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
         // Use UTF-8
@@ -434,68 +318,47 @@ public class CSVUtilTest {
         }
 
         // Use GBK
-        try {
-            List<String[]> strings = CSVUtil.read(path, GBK);
-            assert strings.size() == 1;
-            assert strings.get(0).length == 2;
-            assert s1.equals(strings.get(0)[0]);
-            assert s2.equals(strings.get(0)[1]);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path, GBK);
+        assert strings.size() == 1;
+        assert strings.get(0).length == 2;
+        assert s1.equals(strings.get(0)[0]);
+        assert s2.equals(strings.get(0)[1]);
 
 
         // Reset charset
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path)) {
             writer.write(s1);
             writer.write(s2);
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
     }
 
-    @Test public void testEuropeanComma() {
+    @Test public void testEuropeanComma() throws IOException {
         // A comma and the value separator is a semicolon
         char comma = ';';
         int n = random.nextInt(10) + 10;
         String[] src = new String[n];
         for (int i = 0; i < n; i++) {
-            src[i] = randomString();
+            src[i] = getRandomString();
         }
         println(Arrays.toString(src));
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path, comma)) {
             for (String s : src) {
                 writer.write(s);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
 
-        try {
-            List<String[]> strings = CSVUtil.read(path, comma);
-            assert strings.size() == 1;
-            println(Arrays.toString(strings.get(0)));
-            assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        List<String[]> strings = CSVUtil.read(path, comma);
+        assert strings.size() == 1;
+        println(Arrays.toString(strings.get(0)));
+        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
 
-        try {
-            List<String[]> strings = CSVUtil.read(path);
-            assert strings.size() == 1;
-            println(Arrays.toString(strings.get(0)));
-            assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
-        }
+        strings = CSVUtil.read(path);
+        assert strings.size() == 1;
+        println(Arrays.toString(strings.get(0)));
+        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
     }
 
-    @Test public void testWriter() {
+    public void testWriter() throws IOException {
         int column = random.nextInt(10) + 1, row = random.nextInt(100) + 1;
 
         // storage column type
@@ -514,10 +377,10 @@ public class CSVUtilTest {
                 for (int c = 0; c < column; c++) {
                     switch (types[c]) {
                         case 0:
-                            writer.write(randomString());
+                            writer.write(getRandomString());
                             break;
                         case 1:
-                            writer.write(base[random.nextInt(base.length)]);
+                            writer.write(charArray[random.nextInt(charArray.length)]);
                             break;
                         case 2:
                             writer.write(random.nextInt());
@@ -533,19 +396,6 @@ public class CSVUtilTest {
                 // break row
                 writer.newLine();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
-    }
-
-    private String randomString() {
-        int len = random.nextInt(cache_char_array.length - 1);
-        if (len < 5) len = 5;
-        char[] cache = cache_char_array[len - 1];
-        for (int j = 0; j < len; j++) {
-            cache[j] = base[random.nextInt(base.length)];
-        }
-        return new String(cache);
     }
 }
