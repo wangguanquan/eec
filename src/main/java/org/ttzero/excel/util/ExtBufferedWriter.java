@@ -20,6 +20,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 
+import static java.lang.Character.isHighSurrogate;
+import static java.lang.Character.isLowSurrogate;
+import static java.lang.Character.isSurrogate;
+
 /**
  * Single-threaded operation stream, internal multiplexing buffer
  *
@@ -35,20 +39,21 @@ public class ExtBufferedWriter extends BufferedWriter {
     public ExtBufferedWriter(Writer out, int sz) {
         super(out, sz);
 
-        for (int i = 0; i < cache_char_array.length; i++) {
-            cache_char_array[i] = new char[i + 1];
+        for (int i = 0; i < CACHE_CHAR_ARRAY.length; i++) {
+            CACHE_CHAR_ARRAY[i] = new char[i + 1];
         }
     }
 
-    private final char[][] cache_char_array = new char[25][];
+    private final char[][] CACHE_CHAR_ARRAY = new char[25][];
     static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
     static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];
+    /**
+     * Replace malformed characters
+     */
+    public static char MALFORMED_CHAR = 0xFFFD;
 
     static {
-//        for (int i = 1; i < 32; i++) {
-//            ESCAPE_CHARS[i] = ("&#" + i + ";").toCharArray();
-//        }
         // Fix#72 delete space escape
 //        ESCAPE_CHARS[' '] = "&nbsp;".toCharArray();
         ESCAPE_CHARS['<'] = "&lt;".toCharArray();
@@ -97,15 +102,15 @@ public class ExtBufferedWriter extends BufferedWriter {
      */
     public void escapeWrite(char c) throws IOException {
         if (c > 62) {
-            write(c);
+            write(isSurrogate(c) ? MALFORMED_CHAR : c);
         }
         // Display char
         else if (c >= 32) {
-            char[] entity = ESCAPE_CHARS[c];
-            if (entity != null) write(entity);
+            char[] ec = ESCAPE_CHARS[c];
+            if (ec != null) write(ec);
             else write(c);
         } else {
-            write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
+            write(c == 9 || c == 10 || c == 13 ? c : MALFORMED_CHAR);
         }
     }
 
@@ -116,34 +121,27 @@ public class ExtBufferedWriter extends BufferedWriter {
      * @throws IOException if I/O error occur
      */
     public void escapeWrite(String text) throws IOException {
-        char[] block = text.toCharArray();
-        int i;
-        int last = 0;
-        int size = text.length();
+        char[] block = text.toCharArray(), ec;
+        int i, last = 0, size = text.length();
 
         for (i = 0; i < size; i++) {
             char c = block[i];
             if (c > 62) continue;
             // UnDisplay char
             if (c < 32) {
-                write(block, last, i - last);
-                write(c == 9 || c == 10 || c == 13 ? c : 0xFFFD);
+                if (i > last) utf8Write(block, last, i - last);
+                write(c == 9 || c == 10 || c == 13 ? c : MALFORMED_CHAR);
                 last = i + 1;
-                continue;
             }
             // html escape char
-            char[] entity = ESCAPE_CHARS[c];
-
-            if (entity != null) {
-                write(block, last, i - last);
-                write(entity);
+            else if ((ec = ESCAPE_CHARS[c]) != null) {
+                if (i > last) utf8Write(block, last, i - last);
+                write(ec);
                 last = i + 1;
             }
         }
 
-        if (last < size) {
-            write(block, last, i - last);
-        }
+        if (last < size) utf8Write(block, last, i - last);
     }
 
     /**
@@ -156,12 +154,30 @@ public class ExtBufferedWriter extends BufferedWriter {
         write(Double.toString(d));
     }
 
+    /**
+     * Write utf-8 string
+     *
+     * @param  cb    A character array
+     * @param  off   Offset from which to start reading characters
+     * @param  len   Number of characters to write
+     * @throws IOException if I/O error occur
+     */
+    public void utf8Write(char[] cb, int off, int len) throws IOException {
+        if (len <= 0) return;
+        int end = off + len, i = lookupMalformedUTF8Char(cb, off, end);
+        if (i >= 0) {
+            cb[i++] = MALFORMED_CHAR;
+            for (; (i = lookupMalformedUTF8Char(cb, i, end)) >= 0; cb[i++] = MALFORMED_CHAR);
+        }
+        super.write(cb, off, len);
+    }
+
     public char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = stringSize(i);
-        getChars(i, size, cache_char_array[size - 1]);
-        return cache_char_array[size - 1];
+        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
+        return CACHE_CHAR_ARRAY[size - 1];
     }
 
 
@@ -182,45 +198,22 @@ public class ExtBufferedWriter extends BufferedWriter {
     }
 
     static void getChars(int i, int index, char[] buf) {
-        int q, r;
-        int charPos = index;
-        char sign = 0;
-
-        if (i < 0) {
-            sign = '-';
-            i = -i;
+        if (i == 0) {
+            buf[index - 1] = '0';
+            return;
         }
-
-        // Generate two digits per iteration
-        while (i >= 65536) {
-            q = i / 100;
-            // really: r = i - (q * 100);
-            r = i - ((q << 6) + (q << 5) + (q << 2));
-            i = q;
-            buf[--charPos] = digitOnes[r];
-            buf[--charPos] = digitTens[r];
-        }
-
-        // Fall thur to fast mode for smaller numbers
-        // assert(i <= 65536, i);
-        for (; ; ) {
-            q = (i * 52429) >>> (16 + 3);
-            r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...
-            buf[--charPos] = digits[r];
-            i = q;
-            if (i == 0) break;
-        }
-        if (sign != 0) {
-            buf[--charPos] = sign;
-        }
+        boolean negative = i < 0;
+        if (negative) i = -i;
+        for (; i > 0; buf[--index] = (char) ((i % 10) + '0'), i /= 10);
+        if (negative) buf[--index] = '-';
     }
 
     public char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = stringSize(i);
-        getChars(i, size, cache_char_array[size - 1]);
-        return cache_char_array[size - 1];
+        getChars(i, size, CACHE_CHAR_ARRAY[size - 1]);
+        return CACHE_CHAR_ARRAY[size - 1];
     }
 
     // Requires positive x
@@ -240,104 +233,28 @@ public class ExtBufferedWriter extends BufferedWriter {
         return negative ? l + 1 : l;
     }
 
-    /**
-     * Places characters representing the integer i into the
-     * character array buf. The characters are placed into
-     * the buffer backwards starting with the least significant
-     * digit at the specified index (exclusive), and working
-     * backwards from there.
-     * <p>
-     * Will fail if i == Long.MIN_VALUE
-     */
     static void getChars(long i, int index, char[] buf) {
-        long q;
-        int r;
-        int charPos = index;
-        char sign = 0;
-
-        if (i < 0) {
-            sign = '-';
-            i = -i;
+        if (i == 0) {
+            buf[index - 1] = '0';
+            return;
         }
-
-        // Get 2 digits/iteration using longs until quotient fits into an int
-        while (i > Integer.MAX_VALUE) {
-            q = i / 100;
-            // really: r = i - (q * 100);
-            r = (int) (i - ((q << 6) + (q << 5) + (q << 2)));
-            i = q;
-            buf[--charPos] = digitOnes[r];
-            buf[--charPos] = digitTens[r];
-        }
-
-        // Get 2 digits/iteration using ints
-        int q2;
-        int i2 = (int) i;
-        while (i2 >= 65536) {
-            q2 = i2 / 100;
-            // really: r = i2 - (q * 100);
-            r = i2 - ((q2 << 6) + (q2 << 5) + (q2 << 2));
-            i2 = q2;
-            buf[--charPos] = digitOnes[r];
-            buf[--charPos] = digitTens[r];
-        }
-
-        // Fall thur to fast mode for smaller numbers
-        // assert(i2 <= 65536, i2);
-        for (; ; ) {
-            q2 = (i2 * 52429) >>> (16 + 3);
-            r = i2 - ((q2 << 3) + (q2 << 1));  // r = i2-(q2*10) ...
-            buf[--charPos] = digits[r];
-            i2 = q2;
-            if (i2 == 0) break;
-        }
-        if (sign != 0) {
-            buf[--charPos] = sign;
-        }
+        boolean negative = i < 0;
+        if (negative) i = -i;
+        for (; i > 0; buf[--index] = (char) ((i % 10) + '0'), i /= 10);
+        if (negative) buf[--index] = '-';
     }
 
-    public final static char[] digitTens = {
-        '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
-        '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
-        '2', '2', '2', '2', '2', '2', '2', '2', '2', '2',
-        '3', '3', '3', '3', '3', '3', '3', '3', '3', '3',
-        '4', '4', '4', '4', '4', '4', '4', '4', '4', '4',
-        '5', '5', '5', '5', '5', '5', '5', '5', '5', '5',
-        '6', '6', '6', '6', '6', '6', '6', '6', '6', '6',
-        '7', '7', '7', '7', '7', '7', '7', '7', '7', '7',
-        '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
-        '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
-    };
-
-    public final static char[] digitOnes = {
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    };
-
-    public final static char[] digits = {
-        '0', '1', '2', '3', '4', '5',
-        '6', '7', '8', '9', 'a', 'b',
-        'c', 'd', 'e', 'f', 'g', 'h',
-        'i', 'j', 'k', 'l', 'm', 'n',
-        'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z'
-    };
-
-    public final static char[] digits_uppercase = {
-        '0', '1', '2', '3', '4', '5',
-        '6', '7', '8', '9', 'A', 'B',
-        'C', 'D', 'E', 'F', 'G', 'H',
-        'I', 'J', 'K', 'L', 'M', 'N',
-        'O', 'P', 'Q', 'R', 'S', 'T',
-        'U', 'V', 'W', 'X', 'Y', 'Z'
-    };
-
+    // Find malformed characters and return to their location, -1 means OK
+    static int lookupMalformedUTF8Char(char[] cb, int from, int to) {
+        for (char c; from < to; from++) {
+            c = cb[from];
+            if (!isSurrogate(c)) continue;
+            if (isHighSurrogate(c)) {
+                if (to - from < 2 || !isLowSurrogate(cb[from + 1])) return from;
+                from++;
+            }
+            else if (isLowSurrogate(c)) return from;
+        }
+        return -1;
+    }
 }
