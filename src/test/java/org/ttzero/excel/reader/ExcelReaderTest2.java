@@ -18,6 +18,7 @@
 package org.ttzero.excel.reader;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.EmptySheet;
 import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.Workbook;
 
@@ -190,6 +191,22 @@ public class ExcelReaderTest2 {
             assert list.size() == 2;
             assert "1: abc".equals(list.get(0).toString());
             assert "2: xyz".equals(list.get(1).toString());
+        }
+    }
+
+    @Test public void testEmptyBindObj() throws IOException {
+        new Workbook().addSheet(new EmptySheet()).writeTo(defaultTestPath.resolve("empty.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("empty.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            List<U> list = sheet.header(1, 2).bind(U.class).rows().map(row -> (U) row.get()).collect(Collectors.toList());
+            assert list.isEmpty();
+
+            list = sheet.reset().header(1).rows().map(row -> row.to(U.class)).collect(Collectors.toList());
+            assert list.isEmpty();
+
+            list = sheet.reset().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
+            assert list.isEmpty();
         }
     }
 
