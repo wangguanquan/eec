@@ -311,7 +311,7 @@ public class XMLSheet implements Sheet {
     }
 
     protected Row getHeader(int fromRowNum, int toRowNum) {
-        if (header != null) return header;
+        if (header != null || eof) return header;
         rangeCheck(fromRowNum, toRowNum);
         if (sRow.index > -1 && fromRowNum < sRow.index)
             throw new IndexOutOfBoundsException("Current row num " + sRow.index + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
