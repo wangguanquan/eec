@@ -130,6 +130,7 @@ public class HeaderRow extends Row {
     public HeaderRow with(List<Dimension> mergeCells, int headRows, Row ... rows) {
         this.headRows = headRows;
         Row row = rows[rows.length - 1];
+        if (row == null) return new HeaderRow();
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
         // Extends from row

@@ -343,21 +343,23 @@ public class XMLSheet implements Sheet {
                 }
             }
 
-            // Parse merged cells
-            XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
-            tmp.reader = null; // Prevent streams from being consumed by mistake
-            List<Dimension> mergeCells = tmp.parseMerge();
-            if (mergeCells != null) {
-                mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
-            }
+            if (i > 0) {
+                // Parse merged cells
+                XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
+                tmp.reader = null; // Prevent streams from being consumed by mistake
+                List<Dimension> mergeCells = tmp.parseMerge();
+                if (mergeCells != null) {
+                    mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
+                }
 
-            return new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
+                return new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
+            } else return new HeaderRow();
         }
         // Single row
         else {
             Row row = nextRow();
             for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-            return new HeaderRow().with(row).setOptions(option << 16 >>> 16);
+            return row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow();
         }
     }
 
