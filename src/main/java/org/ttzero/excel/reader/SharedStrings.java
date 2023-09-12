@@ -531,6 +531,7 @@ public class SharedStrings implements Closeable {
                     else if (shouldClear) {
                         shouldClear = false;
                         buf.delete(0, buf.length());
+                        buf.append(tmp);
                     }
                     buf.append(escape(cb, a, nChar));
                     nChar += 4;
