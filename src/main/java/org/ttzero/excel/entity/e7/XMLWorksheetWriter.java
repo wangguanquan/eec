@@ -179,8 +179,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Resize if include auto-width column
         if (includeAutoWidth) {
-            // close writer before resize
-            close();
             resizeColumnWidth(sheetPath.toFile(), totalRows);
         }
     }
@@ -225,8 +223,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // Resize if include auto-width column
         if (includeAutoWidth) {
-            // Close writer before resize
-            close();
             resizeColumnWidth(sheetPath.toFile(), totalRows);
         }
     }
@@ -1084,6 +1080,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             }
 //            widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
             hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+        }
+
+        if (bw != null) {
+            try {
+                bw.close();
+            } catch (IOException ex) {
+                // Ignore
+            }
         }
 
         XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
