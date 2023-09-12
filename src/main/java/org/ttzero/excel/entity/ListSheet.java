@@ -539,6 +539,10 @@ public class ListSheet<T> extends Sheet {
                 if (hc.tail != null) {
                     hc = hc.tail;
                 }
+
+                // If key miss
+                if (StringUtil.isEmpty(hc.key)) hc.key = hc.name;
+
                 EntryColumn ec = (EntryColumn) hc;
                 if (ec.method == null) {
                     Method method = tmp.get(hc.key);
