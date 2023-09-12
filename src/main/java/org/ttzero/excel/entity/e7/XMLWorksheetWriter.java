@@ -1161,7 +1161,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (columns.length > 0) bw.write(int2Col(columns[0].getRealColIndex()));
         else bw.write('A');
         bw.writeInt(startHeaderRow);
-        int n = 11, size = sheet.size(); // fill 11 space
+        int n = 11, size = totalRows > 0 ? totalRows : sheet.size(); // fill 11 space
         if (size > 0 && columns.length > 0) {
             bw.write(':');
             n--;
@@ -1169,8 +1169,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            bw.writeInt(size + startRow);
-            n -= stringSize(size + startRow);
+            size = (size + startRow - 1) % getRowLimit();
+            bw.writeInt(size);
+            n -= stringSize(size);
         }
         bw.write('"');
         for (; n-->0;) bw.write(32); // Fill space
