@@ -43,6 +43,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.Sheet.int2Col;
@@ -51,6 +54,7 @@ import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
 import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
@@ -416,7 +420,7 @@ public class ExcelReaderTest {
     private void testReader(Path path, int option) throws IOException {
         println("----------" + path.getFileName() + "----------");
         try (ExcelReader reader = ExcelReader.read(path, option)) {
-            println(reader.getAppInfo());
+            assert reader.getAppInfo() != null;
 
             long count = reader.sheets()
                 .peek(sheet -> println("--------" + sheet.getName() + "--------" + sheet.getDimension()))
@@ -458,22 +462,44 @@ public class ExcelReaderTest {
 
     @Test public void testReadEmptyCell() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#169.xlsx"))) {
-            reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
-            reader.sheets().peek(sheet -> {
+            long count = reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).count();
+            assert count == 1L;
+            count = reader.sheets().peek(sheet -> {
                 sheet.reset();
                 println(sheet.getName() + ": " + sheet.getDimension());
-            }).flatMap(Sheet::rows).forEach(Print::println);
+            }).flatMap(Sheet::rows).count();
+            assert count == 1L;
         }
     }
 
     @Test public void testReadDrawings() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("drawing.xlsx"))) {
-            reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).forEach(Print::println);
+            List<Map<String, Object>> list = reader.sheet(0).header(75).rows().map(Row::toMap).collect(Collectors.toList());
+            assert list.size() == 4;
+            Map<String, Object> r = list.get(0);
+            assert "A".equals(r.get("列1"));
+            assert "1".equals(r.get("HEAD1").toString());
+            assert "2".equals(r.get("HEAD2").toString());
+            assert "3".equals(r.get("HEAD3").toString());
+            r = list.get(1);
+            assert "B".equals(r.get("列1"));
+            assert "5".equals(r.get("HEAD1").toString());
+            assert "3".equals(r.get("HEAD2").toString());
+            assert "1".equals(r.get("HEAD3").toString());
+            r = list.get(2);
+            assert "C".equals(r.get("列1"));
+            assert "3".equals(r.get("HEAD1").toString());
+            assert "2".equals(r.get("HEAD2").toString());
+            assert "2".equals(r.get("HEAD3").toString());
+            r = list.get(3);
+            assert "D".equals(r.get("列1"));
+            assert "1".equals(r.get("HEAD1").toString());
+            assert "1".equals(r.get("HEAD2").toString());
+            assert "9".equals(r.get("HEAD3").toString());
 
             // From workbook`
             List<Drawings.Picture> pictures = reader.listPictures();
             assert pictures.size() == 5;
-            pictures.forEach(Print::println);
 
             // Copy images
             for (Drawings.Picture pic : pictures) {
@@ -489,28 +515,34 @@ public class ExcelReaderTest {
                 if (sheet.getName().equals("Sheet1")) {
                     assert pictures1.size() == 4;
                 } else assert !sheet.getName().equals("Sheet2") || pictures1.size() == 1;
-                pictures1.forEach(Print::println);
             });
         }
     }
 
     @Test public void test175() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
-            reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).forEach(row -> println(row.getDouble(4)));
-            reader.sheet(0).reset();
-            println("-------------DECIMAL-------------");
-            reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).forEach(row -> println(row.getDecimal(4)));
-            reader.sheet(0).reset();
-            reader.sheet(0).rows()
+            double[] v = reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).mapToDouble(row -> row.getDouble(4)).toArray();
+            assert v.length == 2;
+            assert v[0] == 0.07D;
+            assert v[1] == 0.07D;
+
+            BigDecimal[] d = reader.sheet(0).reset().rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).map(row -> row.getDecimal(4)).toArray(BigDecimal[]::new);
+            assert d.length == 2;
+            assert new BigDecimal("0.070000000000000007").equals(d[0]);
+            assert new BigDecimal("0.070000000000000007").equals(d[1]);
+
+            List<O> expectList = Arrays.asList(new O("FBA15DRV4JP4U000001", "2Z91JHMR", new BigDecimal("0.08"), new BigDecimal("0.070000000000000007"))
+                , new O("FBA15DRV4JP4U000002", "2Z91JHMR", new BigDecimal("0.08"), new BigDecimal("0.070000000000000007")));
+
+            List<O> list = reader.sheet(0).reset().rows()
                     .filter(row -> row.getRowNum() > 6 && !row.isEmpty())
                     .map(row -> row.to(O.class))
                     .filter(Objects::nonNull)
-                    .forEach(Print::println);
+                    .collect(Collectors.toList());
+            assertTrue(listEquals(list, expectList));
 
-            List<O> list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(O.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert list.get(0).fbaNo.equals("FBA15DRV4JP4U000001");
-            assert list.get(1).fbaNo.equals("FBA15DRV4JP4U000002");
+            list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(O.class)).collect(Collectors.toList());
+            assertTrue(listEquals(list, expectList));
         }
     }
 
@@ -549,22 +581,22 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
             Sheet sheet = reader.sheet(0);
             // Read two rows as value only
-            Iterator<Row> ite = sheet.iterator();
             for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
-                for (int i = row.fc; i < row.lc; i++) {
-                    print(int2Col(i + 1));
-                    print(row.getRowNum());
-                    print(": v=");
-                    print(row.getString(i));
-                    print(" | ");
-
-                    assert !row.hasFormula(i);
+                if (row.getRowNum() == 1) {
+                    assertNull(row.getFormula(1));
+                    assert 4 == row.getInt(1);
+                    assert "D".equals(row.getString(3));
+                    assertNull(row.getFormula(5));
+                    assert 4 == row.getInt(5);
                 }
-                if (row.getRowNum() == 1) assert "D".equals(row.getString(3));
-                if (row.getRowNum() == 2) assert StringUtil.isEmpty(row.getString(3));
+                else if (row.getRowNum() == 2) {
+                    assertNull(row.getFormula(1));
+                    assert 6 == row.getInt(1);
+                    assertNull(row.getFormula(2));
+                    assert StringUtil.isEmpty(row.getString(3));
+                }
 
-                println();
                 if (row.getRowNum() == 2) break;
             }
 
@@ -572,41 +604,31 @@ public class ExcelReaderTest {
             sheet = sheet.asCalcSheet();
             for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
-                for (int i = row.fc; i < row.lc; i++) {
-                    print(int2Col(i + 1));
-                    print(row.getRowNum());
-                    print(": v=");
-                    print(row.getString(i));
-                    if (row.hasFormula(i)) {
-                        print(", f=");
-                        print(row.getFormula(i));
-                    }
-                    print(" | ");
+                if (row.getRowNum() == 3) {
+//                    assert "(A3+A4)+1".equals(row.getFormula(1));
+                    assert 8 == row.getInt(1);
+                    assert "SUM(A1:A10)".equals(row.getFormula(2));
+                    assert 55 == row.getInt(2);
                 }
-                if (row.getRowNum() == 3) assert "SUM(A1:A10)".equals(row.getFormula(2));
                 if (row.getRowNum() == 11) assert "G11+1".equals(row.getFormula(7));
                 if (row.getRowNum() == 66) assert "A66+1".equals(row.getFormula(1));
                 if (row.getRowNum() == 11) assert row.getInt(4) == 15;
                 if (row.getRowNum() == 16) assert StringUtil.isEmpty(row.getString(4));
-
-                println();
                 if (row.getRowNum() == 50) break;
             }
 
             // Read last rows as merged sheet
-            sheet = sheet.asMergeSheet();
-            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+            MergeSheet mergeSheet = sheet.asMergeSheet();
+            List<Dimension> mergeCells = mergeSheet.getMergeCells();
+            assertEquals(6, mergeCells.size());
+            assert mergeCells.contains(Dimension.of("D1:D2"));
+            assert mergeCells.contains(Dimension.of("E1:E2"));
+            assert mergeCells.contains(Dimension.of("F1:F2"));
+            assert mergeCells.contains(Dimension.of("E11:E18"));
+            assert mergeCells.contains(Dimension.of("B56:D56"));
+            assert mergeCells.contains(Dimension.of("A59:A64"));
+            for (Iterator<Row> it = mergeSheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
-                for (int i = row.fc; i < row.lc; i++) {
-                    print(int2Col(i + 1));
-                    print(row.getRowNum());
-                    print(": v=");
-                    print(row.getString(i));
-                    print(" | ");
-
-                    assert !row.hasFormula(i);
-                }
-                println();
 
                 // Copy on merged
                 if (row.getRowNum() == 56) {
@@ -652,6 +674,31 @@ public class ExcelReaderTest {
         @Override
         public String toString() {
             return "fbaNo: " + fbaNo + ", refId: " + refId + ", price: " + price + ", weight: " + weight;
+        }
+
+        public O() { }
+
+        public O(String fbaNo, String refId, BigDecimal price, BigDecimal weight) {
+            this.fbaNo = fbaNo;
+            this.refId = refId;
+            this.price = price;
+            this.weight = weight;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            O oo = (O) o;
+            return Objects.equals(fbaNo, oo.fbaNo) &&
+                Objects.equals(refId, oo.refId) &&
+                Objects.equals(price, oo.price) &&
+                Objects.equals(weight, oo.weight);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(fbaNo, refId, price, weight);
         }
     }
 

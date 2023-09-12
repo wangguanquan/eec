@@ -17,19 +17,29 @@
 
 package org.ttzero.excel.reader;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.EmptySheet;
 import org.ttzero.excel.entity.ListMapSheet;
+import org.ttzero.excel.entity.ListObjectSheetTest;
+import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Workbook;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
+import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
+import static org.ttzero.excel.entity.WorkbookTest.random;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -210,6 +220,44 @@ public class ExcelReaderTest2 {
         }
     }
 
+    @Ignore
+    @Test public void testFullSheet() throws IOException {
+        final int loop = 2000;
+        new Workbook("200w").addSheet(new ListSheet<E>() {
+            int n = 0; // 页码
+            @Override
+            public List<E> more() {
+                return n++ < loop ? E.data() : null;
+            }
+        }).writeTo(defaultTestPath);
+    }
+
+    @Test public void testEntryMissKey() throws IOException {
+        List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData(10);
+        new Workbook().addSheet(new ListSheet<ListObjectSheetTest.Item>(
+                new Column("id"), new Column("name"))
+                .setData(expectList))
+            .writeTo(defaultTestPath.resolve("test entry miss key.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test entry miss key.xlsx"))) {
+            List<ListObjectSheetTest.Item> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assertTrue(listEquals(list, expectList));
+        }
+    }
+
+    public static <T> boolean listEquals(List<T> list, List<T> expectList) {
+        if (list == expectList) return true;
+        if (list == null || expectList == null) return false;
+
+        int length = list.size(), i = 0;
+        if (expectList.size() != length)
+            return false;
+
+        for (; i < length && Objects.equals(list.get(i), expectList.get(i)); i++);
+
+        return i == length;
+    }
+
     public static class U {
         int id;
         String name;
@@ -232,5 +280,24 @@ public class ExcelReaderTest2 {
         public String toString() {
             return userId + ": " + userName;
         }
+    }
+
+    public static class E {
+        @ExcelColumn
+        private int nv;
+        @ExcelColumn
+        private String str;
+
+        public static List<E> data() {
+            List<E> list = new ArrayList<>(1000);
+            for (int i = 0; i < 1000; i++) {
+                E e = new E();
+                list.add(e);
+                e.nv = random.nextInt();
+                e.str = getRandomString();
+            }
+            return list;
+        }
+
     }
 }
