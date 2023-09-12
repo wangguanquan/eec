@@ -18,7 +18,6 @@ package org.ttzero.excel.entity.csv;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.CustomColIndexTest;
@@ -86,7 +85,6 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test
     public void testWrite() throws IOException {
         new Workbook("test object")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -94,7 +92,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testAllTypeWrite() throws IOException {
         new Workbook("all type object")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -102,7 +99,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testAnnotation() throws IOException {
         new Workbook("annotation object")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -110,7 +106,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testAnnotationAutoSize() throws IOException {
         new Workbook("annotation object auto-size")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -118,7 +113,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testAutoSize() throws IOException {
         new Workbook("all type auto size")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -126,7 +120,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testIntConversion() throws IOException {
         new Workbook("test int conversion")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -138,7 +131,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStyleConversion() throws IOException {
         new Workbook("object style processor")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -157,7 +149,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConvertAndStyleConversion() throws IOException {
         new Workbook("object style and style processor")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -176,7 +167,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testCustomizeDataSource() throws IOException {
         new Workbook("customize datasource")
-            .watch(Print::println)
             .addSheet(new CustomizeDataSourceSheet())
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -184,7 +174,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testBoxAllTypeWrite() throws IOException {
         new Workbook("box all type object")
-            .watch(Print::println)
             .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .saveAsCSV()
             .writeTo(getOutputTestPath());
@@ -192,7 +181,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testArray() throws IOException {
         new Workbook("ListObjectSheet array to csv")
-            .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
             .saveAsCSV()
@@ -201,7 +189,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testSingleList() throws IOException {
         new Workbook("ListObject single list to csv")
-            .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
             .saveAsCSV()
@@ -224,7 +211,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testNullValue() throws IOException {
         new Workbook("test null value")
-            .watch(Print::println)
             .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
             .saveAsCSV()
             .writeTo(getOutputTestPath());

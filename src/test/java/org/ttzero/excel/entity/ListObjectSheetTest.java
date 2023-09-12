@@ -18,7 +18,6 @@ package org.ttzero.excel.entity;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
@@ -107,31 +106,26 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test
-    public void testWrite() throws IOException {
+    @Test public void testWrite() throws IOException {
         new Workbook("test object", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAllTypeWrite() throws IOException {
         new Workbook("all type object", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAnnotation() throws IOException {
         new Workbook("annotation object", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAnnotationAutoSize() throws IOException {
         new Workbook("annotation object auto-size", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .writeTo(defaultTestPath);
@@ -139,7 +133,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStringWaterMark() throws IOException {
         new Workbook("object string water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of("SECRET"))
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
@@ -147,7 +140,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testLocalPicWaterMark() throws IOException {
         new Workbook("object local pic water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
@@ -155,7 +147,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStreamWaterMark() throws IOException {
         new Workbook("object input stream water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .writeTo(defaultTestPath);
@@ -163,7 +154,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testAutoSize() throws IOException {
         new Workbook("all type auto size", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .writeTo(defaultTestPath);
@@ -171,7 +161,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testIntConversion() throws IOException {
         new Workbook("test int conversion", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -182,7 +171,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testStyleConversion() throws IOException {
         new Workbook("object style processor", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -200,7 +188,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConvertAndStyleConversion() throws IOException {
         new Workbook("object style and style processor", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -218,14 +205,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testCustomizeDataSource() throws IOException {
         new Workbook("customize datasource", author)
-            .watch(Print::println)
             .addSheet(new CustomizeDataSourceSheet())
             .writeTo(defaultTestPath);
     }
 
     @Test public void testBoxAllTypeWrite() throws IOException {
         new Workbook("box all type object", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .writeTo(defaultTestPath);
     }
@@ -234,7 +219,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testBoxAllTypeAutoSizeWrite() throws IOException {
         new Workbook("auto-size box all type object", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .writeTo(defaultTestPath);
@@ -242,7 +226,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testCustomizeDataSourceAutoSize() throws IOException {
         new Workbook("auto-size customize datasource", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new CustomizeDataSourceSheet())
             .writeTo(defaultTestPath);
@@ -250,7 +233,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor1() throws IOException {
         new Workbook("test list sheet Constructor1", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>())
             .writeTo(defaultTestPath);
@@ -258,7 +240,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor2() throws IOException {
         new Workbook("test list sheet Constructor2", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item").setData(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
@@ -266,7 +247,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor3() throws IOException {
         new Workbook("test list sheet Constructor3", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item"
                 , new Column("ID", "id")
@@ -277,7 +257,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor4() throws IOException {
         new Workbook("test list sheet Constructor4", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
                 , new Column("ID", "id")
@@ -288,7 +267,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor5() throws IOException {
         new Workbook("test list sheet Constructor5", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)))
             .writeTo(defaultTestPath);
@@ -296,7 +274,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor6() throws IOException {
         new Workbook("test list sheet Constructor6", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)))
             .writeTo(defaultTestPath);
@@ -304,7 +281,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor7() throws IOException {
         new Workbook("test list sheet Constructor7", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
                 , new Column("ID", "id")
@@ -314,7 +290,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor8() throws IOException {
         new Workbook("test list sheet Constructor8", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)
                 , new Column("ID", "id")
@@ -324,7 +299,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor9() throws IOException {
         new Workbook("test list sheet Constructor9", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>(Item.randomTestData(10)
                 , WaterMark.of(author)
@@ -335,7 +309,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testConstructor10() throws IOException {
         new Workbook("test list sheet Constructor10", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM"
                 , Item.randomTestData(10)
@@ -347,7 +320,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testArray() throws IOException {
         new Workbook("ListSheet Array as List")
-            .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
             .writeTo(defaultTestPath);
@@ -355,7 +327,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testSingleList() throws IOException {
         new Workbook("ListSheet Single List")
-            .watch(Print::println)
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
             .writeTo(defaultTestPath);
@@ -386,7 +357,6 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testNullValue() throws IOException {
         new Workbook("test null value", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
             .writeTo(defaultTestPath);

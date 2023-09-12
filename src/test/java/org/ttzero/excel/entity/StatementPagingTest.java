@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -30,7 +29,6 @@ public class StatementPagingTest extends SQLWorkbookTest {
     @Test public void testPaging() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("statement paging", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student"))
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);

@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
@@ -100,7 +99,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test int conversion statement", author)
                 .setAutoSize(autoSize)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student"
                     , new Column("学号", int.class)
                     , new Column("姓名", String.class)
@@ -123,7 +121,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor1() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor1", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"))
                 .writeTo(defaultTestPath);
         }
@@ -132,7 +129,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor2() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor2", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age, create_date, update_date from student limit 10"))
                 .writeTo(defaultTestPath);
         }
@@ -141,7 +137,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor3() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor3", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student where id between ? and ?", ps -> {
                     ps.setInt(1, 10);
                     ps.setInt(2, 20);
@@ -153,7 +148,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor4() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor4", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age, create_date, update_date from student where id between ? and ?", ps -> {
                     ps.setInt(1, 10);
                     ps.setInt(2, 20);
@@ -165,7 +159,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor5() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor5", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -180,7 +173,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor6() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor6", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age, create_date, update_date from student limit 10"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -195,7 +187,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor7() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor7", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student where id between ? and ?"
                     , ps -> {
                         ps.setInt(1, 10);
@@ -214,7 +205,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor8() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor8", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", con, "select id, name, age, create_date, update_date from student where id between ? and ?"
                     , ps -> {
                         ps.setInt(1, 10);
@@ -233,7 +223,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor9() throws IOException {
         try {
             new Workbook("test statement sheet Constructor9", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet())
                 .writeTo(defaultTestPath);
         } catch (ExcelWriteException e) {
@@ -244,7 +233,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor10() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor10", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet()
                     .setPs(con.prepareStatement("select id, name, age, create_date, update_date from student limit 10")))
                 .writeTo(defaultTestPath);
@@ -254,7 +242,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor11() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor11", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student")
                     .setPs(con.prepareStatement("select id, name, age, create_date, update_date from student limit 10")))
                 .writeTo(defaultTestPath);
@@ -264,7 +251,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor12() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor12", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", WaterMark.of(author))
                     .setPs(con.prepareStatement("select id, name, age, create_date, update_date from student limit 10")))
                 .writeTo(defaultTestPath);
@@ -274,7 +260,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor13() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor13", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet("Student", WaterMark.of(author)
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -288,7 +273,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testCancelOddStyle() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet cancel odd", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10")
                     .setWaterMark(WaterMark.of("TEST"))
                     .cancelZebraLine()
@@ -300,7 +284,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testDiffTypeFromMetadata() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test Statement different type from metadata", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
                     , new Column("ID", String.class)  // Integer in database
                     , new Column("NAME", String.class)
@@ -315,7 +298,6 @@ public class StatementSheetTest extends SQLWorkbookTest {
     @Test public void testFixWidth() throws SQLException, IOException {
         try (Connection con = getConnection()) {
             new Workbook("test statement fix width", author)
-                .watch(Print::println)
                 .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10").fixedSize(10))
                 .writeTo(defaultTestPath);
         }

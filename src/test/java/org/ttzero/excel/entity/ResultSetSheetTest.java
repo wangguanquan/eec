@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
@@ -41,7 +40,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("result set", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet(new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", Integer.class)
@@ -75,7 +73,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     @Test public void testConstructor1() throws IOException {
         try {
             new Workbook("test ResultSet sheet Constructor1", author)
-                    .watch(Print::println)
                     .addSheet(new ResultSetSheet())
                     .writeTo(defaultTestPath);
         } catch (ExcelWriteException e) {
@@ -90,7 +87,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor2", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet().setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
@@ -103,7 +99,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor3", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student").setResultSet(rs))
                 .writeTo(defaultTestPath);
         }
@@ -116,7 +111,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor4", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -135,7 +129,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor5", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", WaterMark.of(author)
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -154,7 +147,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor6", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs))
                 .writeTo(defaultTestPath);
         }
@@ -167,7 +159,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor7", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs))
                 .writeTo(defaultTestPath);
         }
@@ -180,7 +171,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor8", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -199,7 +189,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor9", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -218,7 +207,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor10", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet(rs, WaterMark.of(author)
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -237,7 +225,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet sheet Constructor11", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
@@ -256,7 +243,6 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet different type from metadata", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
                     , new Column("ID", String.class)  // Integer in database
                     , new Column("NAME", String.class)

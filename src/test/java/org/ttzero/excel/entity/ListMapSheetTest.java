@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
@@ -52,14 +51,12 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrite() throws IOException {
         new Workbook("test map", author)
-            .watch(Print::println)
             .addSheet(new ListMapSheet(createTestData()))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testAllType() throws IOException {
         new Workbook("test all type map", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData()))
             .writeTo(defaultTestPath);
@@ -96,7 +93,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testHeaderColumn() throws IOException {
         new Workbook("test header column map", author)
-            .watch(Print::println)
             .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
@@ -119,7 +115,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testHeaderColumnBox() throws IOException {
         new Workbook("test header column box type map", author)
-            .watch(Print::println)
             .addSheet(new ListMapSheet(createAllTypeData()
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
@@ -133,7 +128,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor1() throws IOException {
         new Workbook("test list map sheet Constructor1", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet())
             .writeTo(defaultTestPath);
@@ -141,7 +135,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor2() throws IOException {
         new Workbook("test list map sheet Constructor2", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map").setData(createTestData(10)))
             .writeTo(defaultTestPath);
@@ -149,7 +142,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor3() throws IOException {
         new Workbook("test list map sheet Constructor3", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map"
                 , new Column("boolean", "bv", boolean.class)
@@ -174,7 +166,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor4() throws IOException {
         new Workbook("test list map sheet Constructor4", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map", WaterMark.of(author)
                 , new Column("boolean", "bv", boolean.class)
@@ -198,7 +189,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor5() throws IOException {
         new Workbook("test list map sheet Constructor5", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData(10)))
             .writeTo(defaultTestPath);
@@ -206,7 +196,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor6() throws IOException {
         new Workbook("test list map sheet Constructor6", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("Map", createAllTypeData(10)))
             .writeTo(defaultTestPath);
@@ -214,7 +203,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor7() throws IOException {
         new Workbook("test list map sheet Constructor7", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createAllTypeData(10)
                 , new Column("Character", "cv", Character.class)
@@ -228,7 +216,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor8() throws IOException {
         new Workbook("test list map sheet Constructor8", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("MAP", createTestData(10)
                 , new Column("ID", "id", int.class)
@@ -238,7 +225,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor9() throws IOException {
         new Workbook("test list map sheet Constructor9", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet(createTestData(10)
                 , WaterMark.of(author)
@@ -249,7 +235,6 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor10() throws IOException {
         new Workbook("test list map sheet Constructor10", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new ListMapSheet("MAP"
                 , createTestData(10)
@@ -268,7 +253,6 @@ public class ListMapSheetTest extends WorkbookTest {
         data2.put("id", 2);
         data2.put("name", "xyz");
         new Workbook("ListMapSheet Array Map")
-            .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Arrays.asList(data1, data2)))
             .writeTo(defaultTestPath);
     }
@@ -279,14 +263,12 @@ public class ListMapSheetTest extends WorkbookTest {
         data.put("name", "abc");
 
         new Workbook("ListMapSheet Single List Map")
-            .watch(Print::println)
             .addSheet(new ListMapSheet().setData(Collections.singletonList(data)))
             .writeTo(defaultTestPath);
     }
 
     @Test public void testNullValue() throws IOException {
         new Workbook("test map null value", author)
-            .watch(Print::println)
             .addSheet(new ListMapSheet(createNullTestData(10)))
             .writeTo(defaultTestPath);
     }
@@ -345,7 +327,6 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testOverLargeOrderColumn() throws IOException {
         try {
             new Workbook("test list map sheet Constructor8", author)
-                    .watch(Print::println)
                     .setAutoSize(true)
                     .addSheet(new ListMapSheet("MAP", createTestData(10)
                             , new Column("ID", "id", int.class).setColIndex(9999999)

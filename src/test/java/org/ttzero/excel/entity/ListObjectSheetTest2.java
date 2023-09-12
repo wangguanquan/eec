@@ -120,7 +120,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             .writeTo(defaultTestPath.resolve("test specify row 4 stay A1 ignore header ListSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 4 stay A1 ignore header ListSheet.xlsx"))) {
-            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 3).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assert list.size() == readList.size();
             for (int i = 0, len = list.size(); i < len; i++)
                 assert list.get(i).equals(readList.get(i));
@@ -139,7 +139,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             ).writeTo(defaultTestPath.resolve("test specify row and cel ignore header ListSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel ignore header ListSheet.xlsx"))) {
-            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 3).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assert list.size() == readList.size();
             for (int i = 0, len = list.size(); i < len; i++)
                 assert list.get(i).equals(readList.get(i));
@@ -158,7 +158,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             ).writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ignore header ListSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ignore header ListSheet.xlsx"))) {
-            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 3).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assert list.size() == readList.size();
             for (int i = 0, len = list.size(); i < len; i++)
                 assert list.get(i).equals(readList.get(i));

@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
@@ -28,7 +27,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 /**
  * @author guanquan.wang at 2019-05-01 19:34
@@ -38,7 +36,6 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
     @Test
     public void testMultiWorksheet() throws IOException {
         new Workbook("test multi worksheet", author)
-                .watch(Print::println)
                 .setAutoSize(true)
                 // The first worksheet
                 .addSheet(new ListSheet<>("E", ListMapSheetTest.createTestData()))
@@ -56,7 +53,6 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
         ) {
 
             new Workbook("test multi dataSource worksheet", author)
-                .watch(Print::println)
                 .setAutoSize(true)
                 // List<Map>
                 .addSheet(new ListMapSheet("ListMap", ListMapSheetTest.createAllTypeData()))

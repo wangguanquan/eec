@@ -17,7 +17,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 
@@ -33,7 +32,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testPaging() throws IOException {
         new Workbook("test paging", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(1024)))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
@@ -41,7 +39,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testLessPaging() throws IOException {
         new Workbook("test less paging", author)
-            .watch(Print::println)
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(23)))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
             .writeTo(defaultTestPath);
@@ -49,7 +46,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testStringWaterMark() throws IOException {
         new Workbook("paging string water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of("SECRET"))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
@@ -58,7 +54,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testLocalPicWaterMark() throws IOException {
         new Workbook("paging local pic water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
@@ -67,7 +62,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testStreamWaterMark() throws IOException {
         new Workbook("paging input stream water mark", author)
-            .watch(Print::println)
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
@@ -76,7 +70,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testPagingCustomizeDataSource() throws IOException {
         new Workbook("paging customize datasource", author)
-            .watch(Print::println)
             .setAutoSize(true)
             .addSheet(new CustomizeDataSourceSheet())
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
@@ -85,7 +78,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testOrderPaging() throws IOException {
         new Workbook("test fracture order paging", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(CustomColIndexTest.FractureOrderEntry.randomTestData(1024)))
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);
@@ -93,7 +85,6 @@ public class ListObjectPagingTest extends WorkbookTest {
 
     @Test public void testLargeOrderPaging() throws IOException {
         new Workbook("test large order paging", author)
-                .watch(Print::println)
                 .addSheet(new ListSheet<>(CustomColIndexTest.LargeOrderEntry.randomTestData(1024)))
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter())
                 .writeTo(defaultTestPath);

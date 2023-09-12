@@ -16,7 +16,6 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
@@ -38,7 +37,6 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student");
             ResultSet rs = ps.executeQuery();
             new Workbook("result set paging", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet(
                     new Column("学号", int.class)
                     , new Column("性名", String.class)
@@ -58,7 +56,6 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age, create_date, update_date from student");
             ResultSet rs = ps.executeQuery();
             new Workbook("test global style design for ResultSet Paging", author)
-                .watch(Print::println)
                 .addSheet(new ResultSetSheet().setResultSet(rs).setStyleProcessor((rst, style, sst)->{
                     try {
                         if (rst.getInt("age") > 14) {

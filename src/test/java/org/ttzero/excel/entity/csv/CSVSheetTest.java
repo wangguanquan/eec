@@ -18,7 +18,6 @@ package org.ttzero.excel.entity.csv;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.ttzero.excel.Print;
 import org.ttzero.excel.entity.CSVSheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
@@ -102,7 +101,6 @@ public class CSVSheetTest extends WorkbookTest {
 
     @Test public void testFromInputStream() throws IOException {
         new Workbook("csv inputstream test", author)
-            .watch(Print::println)
             .addSheet(new CSVSheet(Files.newInputStream(path)))
             .writeTo(getOutputTestPath());
     }
