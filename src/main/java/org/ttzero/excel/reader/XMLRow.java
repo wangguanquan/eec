@@ -104,6 +104,7 @@ public class XMLRow extends Row {
     }
 
     private void searchRowNum() {
+        if (from >= to || cb == null) return;
         int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {

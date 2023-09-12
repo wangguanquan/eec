@@ -304,8 +304,11 @@ public class XMLSheet implements Sheet {
                 header.setOptions(option << 16 >>> 16);
                 sRow.setHr(header);
             }
-        } else if (hrl > 0 && hrl > sRow.index) {
-            for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
+        } else if (hrl > 0 && hrl > sRow.getRowNum()) {
+            Row row0 = findRow0(this::createHeader);
+            if (row0 != null && row0.getRowNum() < hrl) {
+                for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
+            }
         }
         return header;
     }
@@ -313,8 +316,8 @@ public class XMLSheet implements Sheet {
     protected Row getHeader(int fromRowNum, int toRowNum) {
         if (header != null || eof) return header;
         rangeCheck(fromRowNum, toRowNum);
-        if (sRow.index > -1 && fromRowNum < sRow.index)
-            throw new IndexOutOfBoundsException("Current row num " + sRow.index + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
+        if (sRow.getRowNum() > -1 && fromRowNum < sRow.getRowNum())
+            throw new IndexOutOfBoundsException("Current row num " + sRow.getRowNum() + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
         // Mutable header rows
         if (toRowNum - fromRowNum > 0) {
             Row[] rows = new Row[toRowNum - fromRowNum + 1];
@@ -329,7 +332,7 @@ public class XMLSheet implements Sheet {
                     Row r = new Row() { };
                     r.fc = row.fc;
                     r.lc = row.lc;
-                    r.index = row.index;
+                    r.index = row.getRowNum();
                     r.sst = row.sst;
                     r.cells = row.copyCells();
                     rows[i++] = r;
@@ -353,13 +356,13 @@ public class XMLSheet implements Sheet {
                 }
 
                 return new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
-            } else return new HeaderRow();
+            } else return new HeaderRow().setOptions(option << 16 >>> 16);
         }
         // Single row
         else {
             Row row = nextRow();
             for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-            return row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow();
+            return row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
         }
     }
 
@@ -542,7 +545,7 @@ public class XMLSheet implements Sheet {
                     reader = null; // wait GC
                     LOGGER.debug("end of file.");
                     if (dimension == null)
-                        dimension = new Dimension(1, (short) Math.max(sRow.fc, 1), Math.max(sRow.index, 1), (short) Math.max(sRow.lc, 1));
+                        dimension = new Dimension(1, (short) Math.max(sRow.fc, 1), Math.max(sRow.getRowNum(), 1), (short) Math.max(sRow.lc, 1));
                     return null;
                 }
             } catch (IOException e) {
@@ -618,7 +621,7 @@ public class XMLSheet implements Sheet {
                 length += n;
             }
 
-            return func.accept(cb, start, nChar - start);
+            return func != null ? func.accept(cb, start, nChar - start) : createHeader(cb, start, nChar - start);
         } catch (IOException e) {
             LOGGER.error("Read header row error.");
             return null;
@@ -723,6 +726,7 @@ public class XMLSheet implements Sheet {
             header = null;
             sRow.fc = 0;
             sRow.index = sRow.lc = -1;
+            sRow.from = sRow.to;
             // Close the opening reader
             if (reader != null) {
                 reader.close();
