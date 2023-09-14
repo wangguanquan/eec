@@ -17,10 +17,12 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,19 +38,34 @@ public class TemplateTest extends WorkbookTest {
             // Map data
             Map<String, Object> map = new HashMap<>();
             map.put("name", author);
-            map.put("score", 90);
-            map.put("date", "2019-05-05");
+            map.put("score", random.nextInt(90) + 10);
+            map.put("date", LocalDate.now().toString());
             map.put("desc", "暑假");
 
-            // java bean
-//            BindEntity entity = new BindEntity();
-//            entity.score = 67;
-//            entity.name = "张三";
-//            entity.date = new Date(System.currentTimeMillis());
-
-            new Workbook("模板导出", author)
+            new Workbook()
                 .withTemplate(fis, map)
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("模板导出.xlsx"));
+
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("模板导出.xlsx"))) {
+                reader.sheet(0).rows().forEach(row -> {
+                    switch (row.getRowNum()) {
+                        case 1:
+                            assert "通知书".equals(row.getString(0).trim());
+                            break;
+                        case 3:
+                            assert (map.get("name") + " 同学，在本次期末考试的成绩是 " + map.get("score")+ "，希望").equals(row.getString(1).trim());
+                            break;
+                        case 4:
+                            assert ("下学期继续努力，祝你有一个愉快的" + map.get("desc") + "。").equals(row.getString(0).trim());
+                            break;
+                        case 23:
+                            assert map.get("date").equals(row.getString(0).trim());
+                            break;
+                        default:
+                            assert row.isBlank();
+                    }
+                });
+            }
         }
     }
 }

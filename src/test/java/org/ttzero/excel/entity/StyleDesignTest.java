@@ -30,6 +30,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -38,49 +39,132 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author guanquan.wang at 2022-07-15 23:31
  */
 public class StyleDesignTest extends WorkbookTest {
 
-    @Test
-    public void testStyleDesign() throws IOException {
-        new Workbook("标识行样式", author)
+    @Test public void testStyleDesign() throws IOException {
+        new Workbook()
             .addSheet(new ListSheet<>("期末成绩", DesignStudent.randomTestData()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("标识行样式.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式.xlsx"))) {
+            reader.sheet(0).header(1).bind(DesignStudent.class).rows().forEach(row -> {
+                Styles styles = row.getStyles();
+                DesignStudent o = row.get();
+                int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1), c2 = row.getCellStyle(2);
+                Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1), f2 = styles.getFill(c2);
+                if (o.getScore() < 60) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.orange);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.orange);
+                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.orange);
+                } else if (o.getScore() < 70) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
+                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green);
+                } else if (o.getScore() > 90) {
+                    Font ft0 = styles.getFont(c0), ft1 = styles.getFont(c1), ft2 = styles.getFont(c2);
+                    assert ft0.isUnderLine() && ft0.isBold();
+                    assert ft1.isUnderLine() && ft0.isBold();
+                    assert ft2.isUnderLine() && ft0.isBold();
+                } else {
+                    assert f0 == null || f0.getPatternType() == PatternType.none;
+                    assert f1 == null || f1.getPatternType() == PatternType.none;
+                    assert f2 == null || f2.getPatternType() == PatternType.none;
+                }
+
+                if (VIP_SET.contains(o.getName())) {
+                    Font font = styles.getFont(c0);
+                    assert font.isBold();
+                }
+            });
+        }
     }
 
-    @Test
-    public void testStyleDesign1() throws IOException {
+    @Test public void testStyleDesign1() throws IOException {
         ListSheet<ListObjectSheetTest.Item> itemListSheet = new ListSheet<>("序列数", ListObjectSheetTest.Item.randomTestData());
         itemListSheet.setStyleProcessor(rainbowStyle);
-        new Workbook("标识行样式1", author)
-            .addSheet(itemListSheet)
-            .writeTo(defaultTestPath);
+        new Workbook().addSheet(itemListSheet).writeTo(defaultTestPath.resolve("标识行样式1.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式1.xlsx"))) {
+            reader.sheet(0).header(1).bind(ListObjectSheetTest.Item.class).rows().forEach(row -> {
+                Styles styles = row.getStyles();
+                ListObjectSheetTest.Item item = row.get();
+                int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1);
+                Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1);
+                if (item.getId() % 3 == 0) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
+                } else if (item.getId() % 3 == 1) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.blue);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.blue);
+                } else if (item.getId() % 3 == 2) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.pink);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.pink);
+                } else {
+                    assert f0 == null || f0.getPatternType() == PatternType.none;
+                    assert f1 == null || f1.getPatternType() == PatternType.none;
+                }
+            });
+        }
     }
 
-    @Test
-    public void testStyleDesign2() throws IOException {
-        new Workbook("标识行样式2", author)
+    @Test public void testStyleDesign2() throws IOException {
+        new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst) -> {
                 if (item != null && item.getId() < 10) {
                     style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
                 }
                 return style;
             }))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("标识行样式2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式2.xlsx"))) {
+            reader.sheet(0).header(1).bind(DesignStudent.class).rows().forEach(row -> {
+                Styles styles = row.getStyles();
+                DesignStudent item = row.get();
+                int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1), c2 = row.getCellStyle(2);
+                Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1), f2 = styles.getFill(c2);
+                if (item.getId() < 10) {
+                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
+                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
+                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green);
+                } else {
+                    assert f0 == null || f0.getPatternType() == PatternType.none;
+                    assert f1 == null || f1.getPatternType() == PatternType.none;
+                    assert f2 == null || f2.getPatternType() == PatternType.none;
+                }
+
+                if (VIP_SET.contains(item.getName())) {
+                    Font font = styles.getFont(c0);
+                    assert font.isBold();
+                }
+            });
+        }
     }
 
-    @Test
-    public void testStyleDesignSpecifyColumns() throws IOException {
-        new Workbook("标识行样式3", author)
+    @Test public void testStyleDesignSpecifyColumns() throws IOException {
+        new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()
                 , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> Styles.clearHorizontal(s) | Horizontals.CENTER)
                 , new Column("数学成绩", "score").setWidth(12D)
                 , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
-            )).writeTo(defaultTestPath);
+            )).writeTo(defaultTestPath.resolve("标识行样式3.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式3.xlsx"))) {
+            reader.sheet(0).header(1).rows().forEach(row -> {
+                Styles styles = row.getStyles();
+                int c0 = row.getCellStyle(0), c2 = row.getCellStyle(2);
+                assert styles.getWrapText(c0) == 1;
+                assert styles.getHorizontal(c0) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getWrapText(c2) == 1;
+            });
+        }
     }
 
     @Test public void testMergedCells() throws IOException {
@@ -119,7 +203,7 @@ public class StyleDesignTest extends WorkbookTest {
             mergeCells.add(new Dimension(nameFrom + 1, (short) 2, row, (short) 2));
             mergeCells.add(new Dimension(nameFrom + 1, (short) 6, row, (short) 6));
         }
-        new Workbook("Merged Cells").cancelZebraLine().addSheet(new LightListSheet<>(list
+        new Workbook().cancelZebraLine().addSheet(new LightListSheet<>(list
             , new Column("姓名", "name")
             , new Column("性别", "sex")
             , new Column("证书").addSubColumn(new Column("编号", "no"))
@@ -130,7 +214,43 @@ public class StyleDesignTest extends WorkbookTest {
             , new Column("教育").addSubColumn(new Column("教育2", "jy2")))
             .setStyleProcessor(new GroupStyleProcessor<>())
             .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Merged Cells.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Merged Cells.xlsx"))) {
+            // Normal reader
+            List<Map<String, Object>> readList = reader.sheet(0).header(1, 2).rows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
+            List<String> expected = Arrays.asList("{姓名=暗月月, 性别=男, 证书:编号=1, 证书:类型=数学, 证书:等级=3, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育b}",
+                "{姓名=, 性别=, 证书:编号=2, 证书:类型=语文, 证书:等级=1, 年龄=, 教育:教育1=教育a, 教育:教育2=教育c}",
+                "{姓名=, 性别=, 证书:编号=3, 证书:类型=历史, 证书:等级=1, 年龄=, 教育:教育1=教育b, 教育:教育2=教育c}",
+                "{姓名=张三, 性别=女, 证书:编号=1, 证书:类型=英语, 证书:等级=1, 年龄=20, 教育:教育1=教育d, 教育:教育2=教育d}",
+                "{姓名=, 性别=, 证书:编号=5, 证书:类型=物理, 证书:等级=7, 年龄=, 教育:教育1=教育x, 教育:教育2=教育x}",
+                "{姓名=李四, 性别=男, 证书:编号=2, 证书:类型=语文, 证书:等级=1, 年龄=24, 教育:教育1=教育c, 教育:教育2=教育a}",
+                "{姓名=, 性别=, 证书:编号=3, 证书:类型=历史, 证书:等级=1, 年龄=, 教育:教育1=教育b, 教育:教育2=教育c}",
+                "{姓名=王五, 性别=男, 证书:编号=1, 证书:类型=高数, 证书:等级=2, 年龄=28, 教育:教育1=教育c, 教育:教育2=教育a}",
+                "{姓名=, 性别=, 证书:编号=2, 证书:类型=JAvA, 证书:等级=3, 年龄=, 教育:教育1=教育b, 教育:教育2=教育c}");
+
+            assert readList.size() == expected.size();
+            for (int i = 0; i < expected.size(); i++) {
+                assert expected.get(i).equals(readList.get(i).toString());
+            }
+
+            // Copy on merged reader
+            List<Map<String, Object>> readList2 = reader.sheet(0).asMergeSheet().header(1, 2).rows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
+            List<String> expected2 = Arrays.asList("{姓名=暗月月, 性别=男, 证书:编号=1, 证书:类型=数学, 证书:等级=3, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育b}",
+                "{姓名=暗月月, 性别=男, 证书:编号=2, 证书:类型=语文, 证书:等级=1, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育c}",
+                "{姓名=暗月月, 性别=男, 证书:编号=3, 证书:类型=历史, 证书:等级=1, 年龄=30, 教育:教育1=教育b, 教育:教育2=教育c}",
+                "{姓名=张三, 性别=女, 证书:编号=1, 证书:类型=英语, 证书:等级=1, 年龄=20, 教育:教育1=教育d, 教育:教育2=教育d}",
+                "{姓名=张三, 性别=女, 证书:编号=5, 证书:类型=物理, 证书:等级=7, 年龄=20, 教育:教育1=教育x, 教育:教育2=教育x}",
+                "{姓名=李四, 性别=男, 证书:编号=2, 证书:类型=语文, 证书:等级=1, 年龄=24, 教育:教育1=教育c, 教育:教育2=教育a}",
+                "{姓名=李四, 性别=男, 证书:编号=3, 证书:类型=历史, 证书:等级=1, 年龄=24, 教育:教育1=教育b, 教育:教育2=教育c}",
+                "{姓名=王五, 性别=男, 证书:编号=1, 证书:类型=高数, 证书:等级=2, 年龄=28, 教育:教育1=教育c, 教育:教育2=教育a}",
+                "{姓名=王五, 性别=男, 证书:编号=2, 证书:类型=JAvA, 证书:等级=3, 年龄=28, 教育:教育1=教育b, 教育:教育2=教育c}");
+
+            assert readList2.size() == expected2.size();
+            for (int i = 0; i < expected2.size(); i++) {
+                assert expected2.get(i).equals(readList2.get(i).toString());
+            }
+        }
     }
 
     public static class E implements Group {
@@ -217,11 +337,9 @@ public class StyleDesignTest extends WorkbookTest {
             // 低于60分时背景色标黄
             if (o.getScore() < 60) {
                 style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
-                // 低于30分时加下划线
             } else if (o.getScore() < 70) {
                 style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
             } else if (o.getScore() > 90) {
-                // 获取原有字体+下划线（这样做可以保留原字体和大小）
                 Font newFont = sst.getFont(style).clone();
                 style = Styles.clearFont(style) | sst.addFont(newFont.underLine().bold());
             }
@@ -266,6 +384,18 @@ public class StyleDesignTest extends WorkbookTest {
         public String getName() {
             return super.getName();
         }
+
+        @ExcelColumn
+        public int getCid() {
+            return super.getId();
+        }
+
+        @ExcelColumn
+        public void setCid(int id) {
+            super.setId(id);
+        }
+
+        public DesignStudent() { }
 
         public DesignStudent(int id, String name, int score) {
             super(id, name, score);

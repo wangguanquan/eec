@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Grid.FastGrid.isPowerOfTwo;
 
 /**
@@ -46,8 +45,6 @@ public class GridTest {
     @Test public void testGrid1() {
         Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 1, 7, (short) 1)));
 
-        println(grid);
-
         assert !grid.test(2, 1);
         assert grid.test(3, 1);
         assert grid.test(7, 1);
@@ -56,8 +53,6 @@ public class GridTest {
 
     @Test public void testGrid4() {
         Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 1, 7, (short) 3)));
-
-        println(grid);
 
         assert !grid.test(2, 2);
         assert grid.test(3, 2);
@@ -70,7 +65,14 @@ public class GridTest {
     @Test public void testGrid8() {
         Grid grid = GridFactory.create(Collections.singletonList(new Dimension(3, (short) 4, 7, (short) 4)));
 
-        println(grid);
+        assert grid.test(3, 4);
+        assert grid.test(4, 4);
+        assert grid.test(5, 4);
+        assert !grid.test(5, 3);
+        assert grid.test(6, 4);
+        assert grid.test(7, 4);
+        assert !grid.test(7, 5);
+        assert !grid.test(8, 4);
     }
 
     @Test public void testGrid8_2() {
@@ -124,7 +126,12 @@ public class GridTest {
     @Test public void testGrid16() {
         Grid grid = GridFactory.create(Collections.singletonList(new Dimension(4, (short) 5, 9, (short) 7)));
 
-        println(grid);
+        assert grid.test(4, 5);
+        assert grid.test(4, 7);
+        assert !grid.test(7, 8);
+        assert grid.test(8, 7);
+        assert grid.test(9, 5);
+        assert !grid.test(9, 10);
     }
 
     @Test public void testGrid162() {
@@ -132,9 +139,6 @@ public class GridTest {
             , new Dimension(3, (short) 7, 5, (short) 9)
             , new Dimension(7, (short) 10, 10, (short) 10));
         Grid grid = GridFactory.create(list);
-
-
-        println(grid);
 
         assert grid.test(7,10);
         assert !grid.test(6, 10);
@@ -145,13 +149,14 @@ public class GridTest {
     @Test public void testGrid32() {
         Grid grid = GridFactory.create(Collections.singletonList(Dimension.of("G3:AA9")));
 
-        println(grid);
-    }
-
-    @Test public void testGrid64() {
-        Grid grid = GridFactory.create(Collections.singletonList(new Dimension(2, (short) 2, 4, (short) 6)));
-
-        println(grid);
+        assert ("FastGrid Size: 32B\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111\n" +
+            "00000000000111111111111111111111").equals(grid.toString());
     }
 
     @Test public void testPowerOfTwo() {
@@ -169,11 +174,6 @@ public class GridTest {
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("B16:E17"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("B2:C2"), null));
         scanner.put(new Grid.LinkedScanner.E(Dimension.of("A13:A20"), null));
-
-        // Test iterator
-        for (Grid.Scanner.Entry entry : scanner) {
-            println(entry.getDim());
-        }
 
         assert "B2:C2->D2:F2->E5:F8->A13:A20->B16:E17".equals(scanner.toString());
 

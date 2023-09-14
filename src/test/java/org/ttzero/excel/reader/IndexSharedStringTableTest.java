@@ -20,7 +20,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
 /**
@@ -35,18 +34,16 @@ public class IndexSharedStringTableTest {
 
             String value;
             value = sst.get(0);
-            println(value);
             assert value.equals("a");
 
             value = sst.get(1);
-            println(value);
             assert value.equals("b");
 
             String[] array = new String[2];
             int n = sst.get(0, array);
-            for (int i = 0; i < n; i++) {
-                println(array[i]);
-            }
+            assert n == 2;
+            assert "a".equals(array[0]);
+            assert "b".equals(array[1]);
         }
     }
 
@@ -73,23 +70,6 @@ public class IndexSharedStringTableTest {
             for (int i = 0; i < size; i++) {
                 assert _buf[i].equals(buf[fromIndex + i]);
             }
-        }
-    }
-
-    @Test public void test3() throws IOException {
-        try (IndexSharedStringTable sst = new IndexSharedStringTable()) {
-            long start = System.currentTimeMillis();
-            for (int i = 0; i < 1_000_000; i++) {
-                sst.push(getRandomString());
-            }
-            println("Write SST cost: " + (System.currentTimeMillis() - start));
-
-            start = System.currentTimeMillis();
-
-            for (int i = 0; i < 1_000_000; i++) {
-                sst.get(i);
-            }
-            println("Read SST cost: " + (System.currentTimeMillis() - start));
         }
     }
 

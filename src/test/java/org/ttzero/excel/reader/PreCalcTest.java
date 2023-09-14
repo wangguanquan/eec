@@ -18,8 +18,6 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
-import static org.ttzero.excel.Print.println;
-
 /**
  * @author guanquan.wang at 2020-01-05 20:35
  */
@@ -37,7 +35,6 @@ public class PreCalcTest {
         row.addRef(0, "B2:B8");
         row.setCalc(0, "(A2+A3)+1");
         String calc = row.getCalc(0, 4 << 14 | 2);
-        println(calc);
         assert "(A4+A5)+1".equals(calc);
     }
 
@@ -46,7 +43,6 @@ public class PreCalcTest {
         row.addRef(0, "B2:D8");
         row.setCalc(0, "(A2+B3)+1");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        println(calc);
         assert "(B4+C5)+1".equals(calc);
     }
 
@@ -55,7 +51,6 @@ public class PreCalcTest {
         row.addRef(0, "B2:D8");
         row.setCalc(0, "\"AB12\".substring(3)");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        println(calc);
         assert "\"AB12\".substring(3)".equals(calc);
     }
 
@@ -64,7 +59,6 @@ public class PreCalcTest {
         row.addRef(0, "B2:D8");
         row.setCalc(0, "\"AB12.substring(3)");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        println(calc);
         assert "\"AB12.substring(3)".equals(calc);
     }
 
@@ -73,7 +67,6 @@ public class PreCalcTest {
         row.addRef(1, "B9:B65");
         row.setCalc(1, "A9+1");
         String calc = row.getCalc(1, 10 << 14 | 2);
-        println(calc);
         assert "A10+1".equals(calc);
     }
 

@@ -20,12 +20,16 @@ import org.junit.Test;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Iterator;
 
 /**
  * @author guanquan.wang at 2019-04-28 22:47
@@ -59,16 +63,35 @@ public class StatementSheetTest extends SQLWorkbookTest {
 
     private void testWrite(boolean autoSize) throws SQLException, IOException {
         try (Connection con = getConnection()) {
-            new Workbook("statement", author)
+            String fileName = ("statement" + (autoSize ? " auto-size" : "")) + ".xlsx"
+                , sql = "select id, name, age, create_date, update_date from student order by age";
+            new Workbook()
                 .setAutoSize(autoSize)
-                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student order by age"
+                .addSheet(new StatementSheet(con, sql
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
                     , new Column("创建时间", Timestamp.class).setColIndex(0)
                     , new Column("更新", Timestamp.class)
                 ))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve(fileName));
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataIterator();
+                while (rs.next()) {
+                    assert iter.hasNext();
+                    org.ttzero.excel.reader.Row row = iter.next();
+
+                    // FIXME Timestamp lost millisecond value
+                    assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(0).getTime() / 1000 : row.getTimestamp(0) == null;
+                    assert rs.getInt(1) == row.getInt(1);
+                    assert rs.getString(2).equals(row.getString(2));
+                    assert rs.getInt(3) == row.getInt(3);
+                    assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                }
+            }
         }
     }
 

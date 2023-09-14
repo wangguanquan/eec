@@ -22,78 +22,125 @@ import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLZebraLineCellValueAndStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.awt.Color;
 import java.io.IOException;
+
+import static org.ttzero.excel.entity.ZebraLineTest.assertNonZebraLine;
+import static org.ttzero.excel.entity.ZebraLineTest.assertZebraLineEquals;
 
 /**
  * @author guanquan.wang at 2023-02-24 17:26
  */
 public class XMLCellValueAndStyleTest extends WorkbookTest {
     @Test public void testDefaultZebraLineWrite() throws IOException {
-        new Workbook("test default zebra-line")
+        new Workbook()
             .defaultZebraLine()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test default zebra-line.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test default zebra-line.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, new Color(233, 234, 236));
+            assertZebraLineEquals(reader.sheet(1).header(1).rows(), PatternType.solid, new Color(233, 234, 236));
+        }
     }
 
     @Test public void testCustomZebraLineWrite() throws IOException {
-        new Workbook("test orange zebra-line")
+        new Workbook()
             .setZebraLine(new Fill(PatternType.solid, Color.orange))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test orange zebra-line.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test orange zebra-line.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, Color.orange);
+            assertZebraLineEquals(reader.sheet(1).header(1).rows(), PatternType.solid, Color.orange);
+        }
     }
 
     @Test public void testCustomZebraLineCancelPartWrite() throws IOException {
-        new Workbook("test none origin zebra-line cancel part")
+        new Workbook()
             .setZebraLine(new Fill(PatternType.solid, Color.orange))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).cancelZebraLine())
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test none origin zebra-line cancel part.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test none origin zebra-line cancel part.xlsx"))) {
+            assertNonZebraLine(reader.sheet(0).header(1).rows());
+            assertZebraLineEquals(reader.sheet(1).header(1).rows(), PatternType.solid, Color.orange);
+        }
     }
 
     @Test public void testCustomZebraLineCancelAllWrite() throws IOException {
-        new Workbook("test none zebra-line cancel all")
+        new Workbook()
             .setZebraLine(new Fill(PatternType.solid, Color.orange))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).cancelZebraLine())
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).cancelZebraLine())
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test none zebra-line cancel all.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test none zebra-line cancel all.xlsx"))) {
+            assertNonZebraLine(reader.sheet(0).header(1).rows());
+            assertNonZebraLine(reader.sheet(1).header(1).rows());
+        }
     }
 
     @Test public void testCustom2ZebraLineWrite() throws IOException {
-        new Workbook("test origin none zebra-line")
+        new Workbook()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).setZebraLine(new Fill(PatternType.solid, Color.orange)))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test origin none zebra-line.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test origin none zebra-line.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, Color.orange);
+            assertNonZebraLine(reader.sheet(1).header(1).rows());
+        }
     }
 
     @Test public void testCustom3ZebraLineWrite() throws IOException {
-        new Workbook("test orange default zebra-line")
+        new Workbook()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).setZebraLine(new Fill(PatternType.solid, Color.orange)))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).defaultZebraLine())
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test orange default zebra-line.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test orange default zebra-line.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, Color.orange);
+            assertZebraLineEquals(reader.sheet(1).header(1).rows(), PatternType.solid, new Color(233, 234, 236));
+        }
     }
 
     @Test public void testCustom4ZebraLineWrite() throws IOException {
-        new Workbook("test cancel origin default zebra-line")
+        new Workbook()
             .cancelZebraLine()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).setZebraLine(new Fill(PatternType.solid, Color.orange)))
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).defaultZebraLine())
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test cancel origin default zebra-line.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test cancel origin default zebra-line.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, Color.orange);
+            assertZebraLineEquals(reader.sheet(1).header(1).rows(), PatternType.solid, new Color(233, 234, 236));
+        }
     }
 
     @Test public void testCustomCellValueAndStyleWrite() throws IOException {
-        new Workbook("test orange ZebraLineCellValueAndStyle")
+        new Workbook()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())
                 .setCellValueAndStyle(new XMLZebraLineCellValueAndStyle(new Fill(PatternType.solid, Color.orange))))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test orange ZebraLineCellValueAndStyle.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test orange ZebraLineCellValueAndStyle.xlsx"))) {
+            assertZebraLineEquals(reader.sheet(0).header(1).rows(), PatternType.solid, Color.orange);
+        }
     }
 
     @Test public void testCustomCellValueAndStyle2Write() throws IOException {
-        new Workbook("test custom CellValueAndStyle")
+        new Workbook()
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData()).setCellValueAndStyle(new XMLCellValueAndStyle()))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test custom CellValueAndStyle.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test custom CellValueAndStyle.xlsx"))) {
+            assertNonZebraLine(reader.sheet(0).header(1).rows());
+        }
     }
 }
