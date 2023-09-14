@@ -347,10 +347,14 @@ public class XMLSheet implements Sheet {
             }
 
             if (i > 0) {
-                // Parse merged cells
-                XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
-                tmp.reader = null; // Prevent streams from being consumed by mistake
-                List<Dimension> mergeCells = tmp.parseMerge();
+                List<Dimension> mergeCells;
+                if (!(this instanceof MergeSheet)) {
+                    // Parse merged cells
+                    XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
+                    tmp.reader = null; // Prevent streams from being consumed by mistake
+                    mergeCells = tmp.parseMerge();
+                } else mergeCells = ((MergeSheet) this).getMergeCells();
+
                 if (mergeCells != null) {
                     mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
                 }
