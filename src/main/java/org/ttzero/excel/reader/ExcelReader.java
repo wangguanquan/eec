@@ -487,6 +487,8 @@ public class ExcelReader implements Closeable {
                     }
                 }
                 contentType.add(override);
+            } else if ("Default".equals(e.getName())) {
+                contentType.add(new ContentType.Default(e.attributeValue("ContentType"), e.attributeValue("Extension")));
             }
         }
         return contentType;

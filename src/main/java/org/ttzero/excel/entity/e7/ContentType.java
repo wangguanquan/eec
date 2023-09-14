@@ -137,7 +137,7 @@ public class ContentType implements Storable {
     }
 
     public boolean hasDrawings() {
-        return set.stream().anyMatch(t -> Const.ContentType.DRAWINGS.equals(((Type) t).contentType));
+        return set.stream().anyMatch(t -> Const.ContentType.DRAWINGS.equals(((Type) t).contentType) || ((Type) t).contentType.startsWith("image/"));
     }
 
     @java.lang.Override
