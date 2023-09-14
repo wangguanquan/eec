@@ -45,10 +45,14 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         public V getValue() {
             return v;
         }
+        @Override
+        public String toString() {
+            return k + ":" + v;
+        }
     }
 
     private static class Node<V> {
-        private V data;
+        private final V data;
         private Node<V> prev, next;
 
         private Node(V data, Node<V> prev, Node<V> next) {
@@ -68,10 +72,6 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     private final int limit;
 
-    /**
-     * Size of elements
-     */
-    private int size;
 
     private final Map<K, Node<E<K, V>>> table;
 
@@ -106,26 +106,8 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public V get(K k) {
-        final Node<E<K, V>> o;
-        // Not found
-        if (size == 0 || (o = table.get(k)) == null) return null;
-
-        // Move node to head
-        if (o != first) {
-            if (o.next != null) {
-                o.prev.next = o.next;
-                o.next.prev = o.prev;
-            } else {
-                o.prev.next = null;
-            }
-
-            first.prev = o;
-            o.next = first;
-            o.prev = null;
-            first = o;
-        }
-
-        return o.data.v;
+        final Node<E<K, V>> o = getNode(k);
+        return o != null ? o.data.v : null;
     }
 
     /**
@@ -139,9 +121,9 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public void put(K k, V v) {
-        final Node<E<K, V>> o;
+        final Node<E<K, V>> o = getNode(k);
         // Insert at header if not found
-        if (size == 0 || (o = table.get(k)) == null) {
+        if (o == null) {
             final Node<E<K, V>> f = first;
             final Node<E<K, V>> newNode = new Node<>(new E<>(k, v), null, f);
             first = newNode;
@@ -150,10 +132,10 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
 
             table.put(k, newNode);
 
-            if (size < limit) size++;
-            else remove();
-            // Replace the old value
-        } else {
+            if (table.size() > limit) remove();
+        }
+        // Replace the old value
+        else {
             o.data.v = v;
         }
     }
@@ -170,15 +152,21 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public V remove(K k) {
-        final Node<E<K, V>> o;
+        final Node<E<K, V>> o = table.get(k);
         // Not found
-        if (size == 0 || (o = table.get(k)) == null) return null;
+        if (o == null) return null;
 
         // Remove the keyword from the hash table to make them unsearchable
         table.remove(k);
 
+        if (table.size() == 0) {
+            clear();
+            return o.data.v;
+        }
+
         final Node<E<K, V>> prev = o.prev, next = o.next;
 
+        // The first node
         if (prev == null) {
             first = next;
         } else {
@@ -186,6 +174,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
             o.prev = null;
         }
 
+        // The last node
         if (next == null) {
             last = prev;
         } else {
@@ -193,14 +182,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
             o.next = null;
         }
 
-        if (--size == 0) {
-            first = null;
-        }
-
-        V v = o.data.v;
-        o.data = null;
-
-        return v;
+        return o.data.v;
     }
 
     /**
@@ -221,9 +203,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         }
 
         table.remove(data.k);
-        if (--size == 0) {
-            first = null;
-        }
+        if (last == null) first = null;
         return data;
     }
 
@@ -236,7 +216,6 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         first = null;
         last = null;
         table.clear();
-        size = 0;
     }
 
     /**
@@ -246,7 +225,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
      */
     @Override
     public int size() {
-        return size;
+        return table.size();
     }
 
     /**
@@ -307,4 +286,47 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         }
     }
 
+    /**
+     * Find and move to head
+     *
+     * @param k key
+     * @return null if not found
+     */
+    Node<E<K,V>> getNode(K k) {
+        final Node<E<K, V>> o = table.get(k);
+        // Not found
+        if (o == null) return null;
+
+        // Move node to head
+        if (o != first) {
+            if (o.next != null) {
+                o.prev.next = o.next;
+                o.next.prev = o.prev;
+            } else {
+                o.prev.next = null;
+                last = o.prev;
+            }
+
+            first.prev = o;
+            o.next = first;
+            o.prev = null;
+            first = o;
+        }
+
+        return o;
+    }
+
+    @Override
+    public String toString() {
+        Node<E<K, V>> f = first;
+        if (f != null) {
+            StringBuilder buf = new StringBuilder();
+            buf.append(f.data.k).append(':').append(f.data.v);
+            f = f.next;
+            for (int i = 1, n = 1000; i < n && f != null; f = f.next, i++) {
+                buf.append("=>").append(f.data.k).append(':').append(f.data.v);
+            }
+            return buf.toString();
+        } else return "";
+    }
 }
