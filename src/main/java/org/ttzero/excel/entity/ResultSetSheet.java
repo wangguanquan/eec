@@ -335,13 +335,12 @@ public class ResultSetSheet extends Sheet {
                         LOGGER.warn("Column [{}] cannot be mapped.", columns[i].getName());
                         continue;
                     }
-                    // FIXME maybe do not reset the types
+
                     column.sqlType = metaData.getColumnType(i + 1);
                     Class<?> metaClazz = columnTypeToClass(column.sqlType);
                     if (column.clazz != metaClazz) {
-                        what("The specified type " + column.clazz + " is different" +
-                            " from metadata column type " + metaClazz);
-                        column.clazz = metaClazz;
+                        LOGGER.warn("The specified type {} is different from metadata column type {}", column.clazz, metaClazz);
+//                        column.clazz = metaClazz;
                     }
                 }
                 columns = newColumns;
@@ -355,7 +354,7 @@ public class ResultSetSheet extends Sheet {
                 }
             }
         } catch (SQLException e) {
-            what("un-support get result set meta data.");
+            LOGGER.warn("Get meta data occur error.", e);
         }
 
         if (hasHeaderColumns()) {
