@@ -19,8 +19,11 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.ttzero.excel.entity.WorkbookTest.author;
+import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
 
 /**
@@ -66,6 +69,23 @@ public class SharedStringsTest {
         } catch (IOException e) {
             e.printStackTrace();
             assert false;
+        }
+    }
+
+    @Test public void testFind() throws IOException {
+        try (SharedStrings sst = new SharedStrings()) {
+            int size = 10_000;
+            Map<String, Integer> indexMap = new HashMap<>(size);
+            String v;
+            for (int i = 0; i < size; i++) {
+                v = getRandomString();
+
+                indexMap.put(v, sst.get(v));
+            }
+
+            for (Map.Entry<String, Integer> entry : indexMap.entrySet()) {
+                assert entry.getValue().equals(sst.get(entry.getKey()));
+            }
         }
     }
 }

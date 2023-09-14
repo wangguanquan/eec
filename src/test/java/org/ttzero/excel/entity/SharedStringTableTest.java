@@ -16,140 +16,100 @@
 
 package org.ttzero.excel.entity;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
 /**
  * @author guanquan.wang at 2019-05-08 17:04
  */
 public class SharedStringTableTest {
-    private SharedStringTable sst;
-
-    @Before public void before() throws IOException {
-        sst = new SharedStringTable();
-    }
-
-    @After public void after() throws IOException {
-        sst.close();
-    }
 
     @Test public void testPutChar() throws IOException {
-        int n = sst.push('a');
+        try (SharedStringTable sst = new SharedStringTable()) {
+            int n = sst.push('a');
 
-        assert n == 0;
-        assert sst.size() == 1;
+            assert n == 0;
+            assert sst.size() == 1;
 
-        int index = sst.find('a');
-        assert index == 0;
+            int index = sst.find('a');
+            assert index == 0;
 
-        index = sst.find('z');
-        assert index == -1;
+            index = sst.find('z');
+            assert index == -1;
+        }
     }
 
     @Test public void testPutString() throws IOException {
-        int n = sst.push("abc");
-        assert n == 0;
-        assert sst.size() == 1;
+        try (SharedStringTable sst = new SharedStringTable()) {
+            int n = sst.push("abc");
+            assert n == 0;
+            assert sst.size() == 1;
 
-        sst.push("ab");
+            sst.push("ab");
 
-        int index = sst.find("ab");
-        assert index == 1;
+            int index = sst.find("ab");
+            assert index == 1;
 
-        index = sst.find("abc");
-        assert index == 0;
+            index = sst.find("abc");
+            assert index == 0;
 
-        index = sst.find("acc");
-        assert index == -1;
+            index = sst.find("acc");
+            assert index == -1;
 
-        index = sst.find("abd");
-        assert index == -1;
+            index = sst.find("abd");
+            assert index == -1;
 
-        index = sst.find("123");
-        assert index == -1;
+            index = sst.find("123");
+            assert index == -1;
 
-        index = sst.push('a');
-        assert index == 2;
+            index = sst.push('a');
+            assert index == 2;
 
-        index = sst.push('z');
-        assert index == 3;
+            index = sst.push('z');
+            assert index == 3;
 
-        index = sst.push('阿');
-        assert index == 4;
+            index = sst.push('阿');
+            assert index == 4;
 
-        assert sst.find('z') == 3;
+            assert sst.find('z') == 3;
 
-        assert sst.find('阿') == 4;
-
-        for (String s : sst)
-            println(s);
-    }
-
-    @Test public void testPush() throws IOException {
-        int size = 10_000;
-        for (int i = 0; i < size; i++) {
-            sst.push(getRandomString());
+            assert sst.find('阿') == 4;
         }
-
-//        sst.forEach(Print::println);
-
-//        int i = 0;
-//        for (String aSst : sst) {
-//            print(i++);
-//            print(' ');
-//            println(aSst);
-//        }
-        assert sst.size() == size;
     }
 
     @Test public void testFind() throws IOException {
-        int size = 1_000_000;
-        for (int i = 0; i < size; i++) {
-            sst.push(getRandomString());
+        try (SharedStringTable sst = new SharedStringTable()) {
+            int size = 10_000;
+            Map<String, Integer> indexMap = new HashMap<>(size);
+            String v;
+            for (int i = 0; i < size; i++) {
+                v = getRandomString();
+                for (; indexMap.containsKey(v); v = getRandomString()) ;
+                indexMap.put(v, sst.push(v));
+            }
+
+            assert indexMap.size() == sst.size();
+
+            for (Map.Entry<String, Integer> entry : indexMap.entrySet()) {
+                assert entry.getValue().equals(sst.find(entry.getKey()));
+            }
         }
-        sst.push("abcdefghijklmn");
-
-        int index;
-
-        long start = System.currentTimeMillis();
-//        index = sst.find('a');
-//        println(index);
-//        assert index == -1;
-
-//        index = sst.find(getRandomString());
-//        println(index);
-
-        index = sst.find("abcdefghijklmn");
-        println(index);
-        assert index == size;
-
-        println(System.currentTimeMillis() - start);
     }
 
     @Test public void testNull() throws IOException {
-        int n;
-        sst.push("a");
-        n = sst.push(null);
+        try (SharedStringTable sst = new SharedStringTable()) {
+            int n;
+            sst.push("a");
+            n = sst.push(null);
 
-        assert n == 1;
-        assert sst.find(null) == n;
+            assert n == 1;
+            assert sst.find(null) == n;
+        }
     }
 
-//    @Test public void testX() throws IOException {
-//        Path path = Paths.get("C:\\Users\\wangguanquan\\AppData\\Local\\Temp\\+2698958064069533007.sst");
-//        try (SharedStringTable sst = new SharedStringTable(path)) {
-//
-//            println(sst.size());
-//
-//            for (String v : sst) {
-//                println(v);
-//            }
-//        }
-//    }
 }
