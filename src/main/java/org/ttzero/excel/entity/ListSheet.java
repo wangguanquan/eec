@@ -43,6 +43,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -439,7 +440,7 @@ public class ListSheet<T> extends Sheet {
         if (!hasHeaderColumns()) {
             // Get ExcelColumn annotation method
             List<Column> list = new ArrayList<>(declaredFields.length);
-
+            Map<String, Method> existsMethod = new HashMap<>(declaredFields.length);
             for (int i = 0; i < declaredFields.length; i++) {
                 Field field = declaredFields[i];
                 field.setAccessible(true);
@@ -448,6 +449,7 @@ public class ListSheet<T> extends Sheet {
                 // Ignore annotation on read method
                 Method method = tmp.get(gs);
                 if (method != null) {
+                    existsMethod.put(gs, method);
                     // Filter all ignore column
                     if (ignoreColumn(method)) {
                         declaredFields[i] = null;
@@ -504,7 +506,7 @@ public class ListSheet<T> extends Sheet {
             }
 
             // Attach some custom column
-            List<Column> attachList = attachOtherColumn(tmp, clazz);
+            List<Column> attachList = attachOtherColumn(existsMethod, clazz);
             if (attachList != null) list.addAll(attachList);
 
             // No column to write
@@ -524,7 +526,7 @@ public class ListSheet<T> extends Sheet {
             columns = new Column[list.size()];
             list.toArray(columns);
         } else {
-            Method[] others = filterOthersMethodsCanExport(tmp, clazz);
+            Method[] others = filterOthersMethodsCanExport(Collections.emptyMap(), clazz);
             Map<String, Method> otherMap = new HashMap<>();
             for (Method m : others) {
                 ExcelColumn ec = m.getAnnotation(ExcelColumn.class);
@@ -806,6 +808,8 @@ public class ListSheet<T> extends Sheet {
                     tail.key = method.getName();
                     if (isEmpty(tail.name)) {
                         tail.name = method.getName();
+                        if (tail.name.startsWith("get")) tail.name = StringUtil.lowFirstKey(tail.name.substring(3));
+                        else if (tail.name.startsWith("is")) tail.name = StringUtil.lowFirstKey(tail.name.substring(2));
                     }
 
                     // Attach header style
