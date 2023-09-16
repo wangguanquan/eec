@@ -806,23 +806,35 @@ public class HeaderRow extends Row {
      * @param rows the header rows
      */
     protected void mergeCellsIfNull(List<Dimension> mergeCells, Row[] rows) {
-        if (mergeCells == null) return;
-        mergeCells = mergeCells.stream().filter(d -> d.getWidth() > 1).collect(Collectors.toList());
-        if (mergeCells.isEmpty()) return;
+        if (mergeCells == null || mergeCells.isEmpty()) return;
+        final int fr = rows[0].getRowNum(), lr = rows[rows.length - 1].getRowNum();
 
-        Map<Long, Dimension> map = mergeCells.stream().collect(Collectors.toMap(a -> ((long) a.firstRow) << 16 | a.firstColumn, a -> a, (a, b) -> a));
+        Map<Long, Dimension> map = mergeCells.stream().filter(m -> m.getLastRow() >= fr && m.getFirstRow() <= lr)
+            .collect(Collectors.toMap(a -> ((long) a.firstRow) << 16 | a.firstColumn, a -> a, (a, b) -> a));
+        if (map.isEmpty()) return;
 
-        for (Row row : rows) {
+        for (int r = 0; r < rows.length; r++) {
+            Row row = rows[r];
             for (int i = row.fc; i < row.lc; ) {
                 Cell cell = row.cells[i];
+                // Copy data to the last merged row and clear others
                 Dimension d = map.get(((long) row.getRowNum()) << 16 | cell.i);
                 if (d != null) {
-                    String v = row.getString(cell);
+                    Cell copyCell = new Cell();
+                    copyCell.from(cell);
                     if (d.lastColumn > row.lc) {
                         row.cells = row.copyCells(d.lastColumn);
                         row.lc = d.lastColumn;
                     }
-                    for (int j = d.firstColumn + 1; j <= d.lastColumn; j++) row.cells[++i].setSv(v);
+                    int b = d.lastRow - row.getRowNum(), c = Math.min(r + b, rows.length);
+                    if (b > 0) {
+                        for (int a = r; a < c; a++) {
+                            Row t = rows[a];
+                            for (int j = d.firstColumn - 1; j < d.lastColumn; t.cells[j++].setSv(null));
+                        }
+                    }
+                    Row lastRow = rows[c];
+                    for (int j = d.firstColumn - 1; j < d.lastColumn; j++) lastRow.cells[i++].from(copyCell);
                 } else i++;
             }
         }
