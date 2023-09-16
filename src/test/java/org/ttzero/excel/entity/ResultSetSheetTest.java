@@ -615,7 +615,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
                     , new Column("CREATE_DATE", String.class)
                     , new Column("UPDATE_DATE", String.class)
                 ))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement(sql);
             ResultSet rs1 = ps1.executeQuery();

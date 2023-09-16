@@ -26,12 +26,18 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.MergeSheet;
+import org.ttzero.excel.reader.Row;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author guanquan.wang at 2022-07-30 22:31
@@ -39,9 +45,78 @@ import java.util.List;
 public class ReportDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
-        new Workbook("Group Style Processor").cancelZebraLine().setAutoSize(true)
-            .addSheet(new ListSheet<>(testData(), createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
-            .writeTo(defaultTestPath);
+        List<E> list = testData();
+        new Workbook().cancelZebraLine().setAutoSize(true)
+            .addSheet(new ListSheet<>(list, createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
+            .writeTo(defaultTestPath.resolve("Group Style Processor.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Group Style Processor.xlsx"))) {
+            List<Map<String, Object>> expectList = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, Object> m = expectList.get(i);
+                E e = list.get(i);
+                assert m.get("日期").equals(e.date);
+                assert m.get("客户名称").equals(e.customer);
+                assert m.get("商品名称").equals(e.productName);
+                assert m.get("品牌").equals(e.brand);
+                assert m.get("单位").equals(e.unit);
+                assert m.get("数量").equals(e.num);
+                assert new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assert new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assert m.get("出库数量").equals(e.outNum);
+                assert m.get("关联订单").equals(e.orderNo);
+            }
+
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assert iter.hasNext();
+            org.ttzero.excel.reader.Row header = iter.next();
+            assert "日期".equals(header.getString(0));
+            assert "客户名称".equals(header.getString(1));
+            assert "商品名称".equals(header.getString(2));
+            assert "品牌".equals(header.getString(3));
+            assert "单位".equals(header.getString(4));
+            assert "数量".equals(header.getString(5));
+            assert "含税单价".equals(header.getString(6));
+            assert "含税总额".equals(header.getString(7));
+            assert "出库数量".equals(header.getString(8));
+            assert "关联订单".equals(header.getString(9));
+
+            int r = 0;
+            String orderNo = null;
+            while (iter.hasNext()) {
+                org.ttzero.excel.reader.Row row = iter.next();
+
+                if (!row.getString("关联订单").equals(orderNo)) {
+                    r++;
+                    orderNo = row.getString("关联订单");
+                }
+
+                Styles styles = row.getStyles();
+
+                assert styles.getHorizontal(row.getCellStyle(0)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(1)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
+                assert styles.getHorizontal(row.getCellStyle(2)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
+                assert styles.getHorizontal(row.getCellStyle(3)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(4)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(5)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(6)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(7)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(8)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(9)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+
+
+                int style = row.getCellStyle(0);
+                Fill fill = styles.getFill(style);
+
+                if ((r & 1) == 1) {
+                    assert fill == null || fill.getPatternType() == PatternType.none;
+                } else {
+                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(233, 234, 236));
+                }
+            }
+        }
     }
 
     @Test public void testMergedCells1() throws IOException {
