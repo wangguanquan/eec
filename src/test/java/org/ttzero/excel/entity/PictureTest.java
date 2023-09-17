@@ -30,6 +30,8 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.drawing.PresetPictureEffect;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.reader.Drawings;
+import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.util.FileSignatures;
 
 import java.io.IOException;
@@ -43,8 +45,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,20 +62,49 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class PictureTest extends WorkbookTest {
     @Test public void testExportPicture() throws IOException {
-        new Workbook("Picture test (Path)")
-            .addSheet(new ListSheet<>(getLocalImages()).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath);
+        List<Path> expectList = getLocalImages();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
+            .writeTo(defaultTestPath.resolve("Picture test (Path).xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Path).xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i);
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testExportPictureUseFile() throws IOException {
-        new Workbook("Picture test (File)")
-            .addSheet(new ListSheet<>(getLocalImages().stream().map(Path::toFile).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath);
+        List<Path> expectList = getLocalImages();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList.stream().map(Path::toFile).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
+            .writeTo(defaultTestPath.resolve("Picture test (File).xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (File).xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i);
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testExportPictureUseByteArray() throws IOException {
-        new Workbook("Picture test (Byte array)")
-            .addSheet(new ListSheet<>(getLocalImages().stream().map(e -> {
+        List<Path> expectList = getLocalImages();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList.stream().map(e -> {
                 try {
                     return Files.readAllBytes(e);
                 } catch (IOException ex) {
@@ -79,12 +112,26 @@ public class PictureTest extends WorkbookTest {
                 }
                 return null;
             }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Picture test (Byte array).xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Byte array).xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i);
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testExportPictureUseBuffer() throws IOException {
-        new Workbook("Picture test (Buffer)")
-            .addSheet(new ListSheet<>(getLocalImages().stream().map(e -> {
+        List<Path> expectList = getLocalImages();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList.stream().map(e -> {
                 try (SeekableByteChannel channel = Files.newByteChannel(e, StandardOpenOption.READ)) {
                     ByteBuffer buffer = ByteBuffer.allocate((int) channel.size());
                     channel.read(buffer);
@@ -94,11 +141,25 @@ public class PictureTest extends WorkbookTest {
                     return null;
                 }
             }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Picture test (Buffer).xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Buffer).xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i);
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testExportPictureUseStream() throws IOException {
-        List<InputStream> list = getLocalImages().stream().map(p -> {
+        List<Path> expectList = getLocalImages();
+        List<InputStream> inputStreams = expectList.stream().map(p -> {
             try {
                 return Files.newInputStream(p);
             } catch (IOException e) {
@@ -106,25 +167,62 @@ public class PictureTest extends WorkbookTest {
             }
         }).filter(Objects::nonNull).collect(Collectors.toList());
 
-        new Workbook("Picture test (InputStream)").addSheet(new ListSheet<>(list)
+        new Workbook().addSheet(new ListSheet<>(inputStreams)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Picture test (InputStream).xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (InputStream).xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i);
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testBase64Image() throws IOException {
-        new Workbook("Base64 image").addSheet(new ListSheet<>(Collections.singletonList("data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="))
+        String base64Image = "R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
+        new Workbook().addSheet(new ListSheet<>(Collections.singletonList("data:image/gif;base64," + base64Image))
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Base64 image.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Base64 image.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert list.size() == 1;
+            Drawings.Picture pic = list.get(0);
+            // Check CRC32
+            assert crc32(Base64.getDecoder().decode(base64Image)) == crc32(pic.getLocalPath());
+        }
     }
 
     @Test public void testSyncRemoteImage() throws IOException {
-        new Workbook("Sync download remote image").addSheet(new ListSheet<>(getRemoteUrls())
+        List<String> expectList = getRemoteUrls();
+        new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Sync download remote image.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Sync download remote image.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Drawings.Picture pic = list.get(i);
+                byte[] expectBytes = getRemoteData(expectList.get(i));
+                // Check file size
+                assert expectBytes.length == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectBytes) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testSyncRemoteImageUseOkHTTP() throws IOException {
-        new Workbook("sync download remote image use OkHttp").addSheet(new ListSheet<>(getRemoteUrls())
+        List<String> expectList = getRemoteUrls();
+        new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
             .setSheetWriter(new XMLWorksheetWriter() {
                 @Override public void downloadRemoteResource(Picture picture, String uri) throws IOException {
@@ -142,11 +240,25 @@ public class PictureTest extends WorkbookTest {
                         Print.println("down load from ftp server");
                     }
                 }
-            })).writeTo(defaultTestPath);
+            })).writeTo(defaultTestPath.resolve("sync download remote image use OkHttp.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("sync download remote image use OkHttp.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Drawings.Picture pic = list.get(i);
+                byte[] expectBytes = getRemoteData(expectList.get(i));
+                // Check file size
+                assert expectBytes.length == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectBytes) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testAsyncRemoteImage() throws IOException {
-        new Workbook("Async download remote image").addSheet(new ListSheet<>(getRemoteUrls())
+        List<String> expectList = getRemoteUrls();
+        new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
             .setSheetWriter(new XMLWorksheetWriter() {
             @Override
@@ -176,25 +288,81 @@ public class PictureTest extends WorkbookTest {
                     }
                 });
             }
-        })).writeTo(defaultTestPath);
+        })).writeTo(defaultTestPath.resolve("Async download remote image.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Async download remote image.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Drawings.Picture pic = list.get(i);
+                byte[] expectBytes = getRemoteData(expectList.get(i));
+                // Check file size
+                assert expectBytes.length == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectBytes) == crc32(pic.getLocalPath());
+            }
+        }
     }
 
     @Test public void testExportPictureAnnotation() throws IOException {
-        new Workbook("test Picture annotation")
-            .addSheet(new ListSheet<>(Pic.randomTestData()).setRowHeight(100))
-            .writeTo(defaultTestPath);
+        List<Pic> expectList = Pic.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList).setRowHeight(100))
+            .writeTo(defaultTestPath.resolve("test Picture annotation.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture annotation.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Drawings.Picture pic = list.get(i);
+                byte[] expectBytes = getRemoteData(expectList.get(i).pic);
+                // Check file size
+                assert expectBytes.length == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectBytes) == crc32(pic.getLocalPath());
+            }
+
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataRows().iterator();
+            for (Pic p : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert p.addr.equals(row.getString(0));
+            }
+        }
     }
 
     @Test public void testExportPictureAutoSize() throws IOException {
-        new Workbook("test Picture auto-size")
+        List<Pic> expectList = Pic.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Pic.randomTestData()).setRowHeight(100))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList).setRowHeight(100))
+            .writeTo(defaultTestPath.resolve("test Picture auto-size.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Drawings.Picture pic = list.get(i);
+                byte[] expectBytes = getRemoteData(expectList.get(i).pic);
+                // Check file size
+                assert expectBytes.length == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectBytes) == crc32(pic.getLocalPath());
+            }
+
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataRows().iterator();
+            for (Pic p : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert p.addr.equals(row.getString(0));
+            }
+        }
     }
 
     @Test public void testPresetPictureEffects() throws IOException {
-        new Workbook("Preset Picture Effects")
-            .addSheet(new ListSheet<>(Pic2.randomTestData()).setRowHeight(217.5).autoSize().setSheetWriter(new XMLWorksheetWriter() {
+        List<Pic2> expectList = Pic2.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList).setRowHeight(217.5).autoSize().setSheetWriter(new XMLWorksheetWriter() {
                private final Map<String, String> picCache = new HashMap<>();
 
                 @Override
@@ -234,22 +402,65 @@ public class PictureTest extends WorkbookTest {
                     picCache.put(path.toString(), picName);
                 }
             }))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Preset Picture Effects.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Preset Picture Effects.xlsx"))) {
+            List<Drawings.Picture> list = reader.sheet(0).listPictures();
+            assert expectList.size() == list.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                Path expectPath = expectList.get(i).pic;
+                Drawings.Picture pic = list.get(i);
+                // Check file size
+                assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                // Check CRC32
+                assert crc32(expectPath) == crc32(pic.getLocalPath());
+            }
+
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataRows().iterator();
+            PresetPictureEffect[] effects = PresetPictureEffect.values();
+
+            for (PresetPictureEffect p : effects) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert p.name().equals(row.getString(0));
+            }
+        }
     }
 
     @Test public void testExportPictureAutoSizePaging() throws IOException {
-        List<Path> list = new ArrayList<>(256);
+        List<Path> expectList = new ArrayList<>(256);
         for (int i = 0; i < 5; i++)
-            list.addAll(getLocalImages());
-        new Workbook("test Picture auto-size paging")
-            .addSheet(new ListSheet<>(list).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100)
-                .setSheetWriter(new XMLWorksheetWriter() {
+            expectList.addAll(getLocalImages());
+
+        XMLWorksheetWriter worksheetWriter;
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100)
+                .setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {
                     @Override
                     public int getRowLimit() {
                         return 16;
                     }
                 }))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("test Picture auto-size paging.xlsx"));
+
+        int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size paging.xlsx"))) {
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / (rowLimit - 1)); // Include header row
+
+            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+                List<Drawings.Picture> list = reader.sheet(i).listPictures();
+                if (i < len - 1) assert list.size() == rowLimit;
+                else assert expectList.size() - rowLimit * (len - 1) == list.size();
+                for (int j = 0; j < list.size(); j++) {
+                    Path expectPath = expectList.get(a++);
+                    Drawings.Picture pic = list.get(j);
+                    // Check file size
+                    assert Files.size(expectPath) == Files.size(pic.getLocalPath());
+                    // Check CRC32
+                    assert crc32(expectPath) == crc32(pic.getLocalPath());
+                }
+            }
+        }
     }
 
     public static class OkHttpClientUtil {
@@ -273,6 +484,16 @@ public class PictureTest extends WorkbookTest {
         public static OkHttpClient client() {
             return Handler.okHttpClient;
         }
+    }
+
+    public static byte[] getRemoteData(String url) {
+        try (Response response = OkHttpClientUtil.client().newCall(new Request.Builder().url(url).get().build()).execute()) {
+            ResponseBody body;
+            if (response.isSuccessful() && (body = response.body()) != null) {
+                return body.bytes();
+            }
+        } catch (IOException ex) { }
+        return new byte[] { };
     }
 
     static List<Path> getLocalImages() throws IOException {

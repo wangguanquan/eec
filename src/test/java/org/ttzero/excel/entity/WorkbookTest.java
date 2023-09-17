@@ -19,9 +19,11 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.util.FileUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
+import java.util.zip.CRC32;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -62,4 +64,20 @@ public class WorkbookTest {
         return defaultTestPath;
     }
 
+    public static long crc32(Path path) {
+        if (!Files.exists(path)) return 0L;
+        CRC32 crc32 = new CRC32();
+        try {
+            crc32.update(Files.readAllBytes(path));
+        } catch (IOException e) {
+            return 0L;
+        }
+        return crc32.getValue();
+    }
+
+    public static long crc32(byte[] bytes) {
+        CRC32 crc32 = new CRC32();
+        crc32.update(bytes);
+        return crc32.getValue();
+    }
 }
