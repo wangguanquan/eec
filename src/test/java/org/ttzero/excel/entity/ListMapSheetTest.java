@@ -470,7 +470,7 @@ public class ListMapSheetTest extends WorkbookTest {
     public static List<Map<String, ?>> createTestData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", random.nextInt());
             map.put("name", getRandomString());
             list.add(map);
@@ -486,7 +486,7 @@ public class ListMapSheetTest extends WorkbookTest {
     public static List<Map<String, ?>> createAllTypeData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("bv", random.nextInt(10) == 6);
             map.put("cv", charArray[random.nextInt(charArray.length)]);
             map.put("sv", (short) (random.nextInt() & 0xFFFF));
@@ -510,7 +510,7 @@ public class ListMapSheetTest extends WorkbookTest {
     public static List<Map<String, ?>> createNullTestData(int size) {
         List<Map<String, ?>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", random.nextInt());
             map.put("name", null);
             list.add(map);

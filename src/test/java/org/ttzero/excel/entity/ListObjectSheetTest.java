@@ -1035,6 +1035,20 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
 
         @Override
+        public int hashCode() {
+            return (id << 16 | score) ^ name.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Student) {
+                Student other = (Student) obj;
+                return id == other.id && score == other.score && name.equals(other.name);
+            }
+            return false;
+        }
+
+        @Override
         @ExcelColumn
         public String toString() {
             return "id: " + id + ", name: " + name + ", score: " + score;
