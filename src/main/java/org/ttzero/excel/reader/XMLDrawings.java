@@ -31,6 +31,7 @@ import org.ttzero.excel.util.FileUtil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -131,7 +132,7 @@ public class XMLDrawings implements Drawings {
                     // Copy image to tmp file
                     try {
                         Path targetPath = imagesPath.resolve(target);
-                        Files.copy(zipFile.getInputStream(entry), targetPath);
+                        Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
                         picture.localPath = targetPath;
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
@@ -213,7 +214,7 @@ public class XMLDrawings implements Drawings {
                 if (entry != null) {
                     try {
                         Path targetPath = imagesPath.resolve(rel.getTarget());
-                        Files.copy(zipFile.getInputStream(entry), targetPath);
+                        Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
                         picture.localPath = targetPath;
                     } catch (IOException ioException) {
                         ioException.printStackTrace();
