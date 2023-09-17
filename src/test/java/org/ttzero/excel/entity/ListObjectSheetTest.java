@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
@@ -33,19 +32,16 @@ import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.AppInfo;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
+import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -58,12 +54,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -83,95 +79,206 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class ListObjectSheetTest extends WorkbookTest {
 
-    @BeforeClass
-    public static void setUp() {
-        // 删除之前的测试文件，防止重复执行不正确
-        List<String> randomExcelNameList = new ArrayList<>();
-        randomExcelNameList.add("testForceExportOnWorkbook.xlsx");
-        randomExcelNameList.add("testForceExportOnWorkbook2.xlsx");
-        randomExcelNameList.add("testForceExportOnWorkSheet.xlsx");
-        for (String fileName : randomExcelNameList) {
-            Path resolve = defaultTestPath.resolve(fileName);
-            boolean deleted = false;
-            try {
-                deleted = Files.deleteIfExists(resolve);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (deleted) {
-                System.out.println(fileName + "File deleted successfully.");
-            } else {
-                System.out.println(fileName + "File deletion failed.");
+    @Test public void testWrite() throws IOException {
+        String fileName = "test object.xlsx";
+        List<Item> expectList = Item.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
             }
         }
     }
 
-    @Test public void testWrite() throws IOException {
-        new Workbook("test object", author)
-            .addSheet(new ListSheet<>(Item.randomTestData()))
-            .writeTo(defaultTestPath);
-    }
-
     @Test public void testAllTypeWrite() throws IOException {
-        new Workbook("all type object", author)
-            .addSheet(new ListSheet<>(AllType.randomTestData()))
-            .writeTo(defaultTestPath);
+        String fileName = "all type object.xlsx";
+        List<AllType> expectList = AllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<AllType> list =  reader.sheet(0).dataRows().map(row -> row.to(AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testAnnotation() throws IOException {
-        new Workbook("annotation object", author)
-            .addSheet(new ListSheet<>(Student.randomTestData()))
-            .writeTo(defaultTestPath);
+        List<Student> expectList = Student.randomTestData();
+        String fileName = "annotation object.xlsx";
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                expect.id = 0; // ID not exported
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testAnnotationAutoSize() throws IOException {
-        new Workbook("annotation object auto-size", author)
+        List<Student> expectList = Student.randomTestData();
+        String fileName = "annotation object auto-size.xlsx";
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Student.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                expect.id = 0; // ID not exported
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testStringWaterMark() throws IOException {
-        new Workbook("object string water mark", author)
+        String fileName = "object string water mark.xlsx";
+        List<Item> expectList = Item.randomTestData();
+        new Workbook()
             .setWaterMark(WaterMark.of("SECRET"))
-            .addSheet(new ListSheet<>(Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+
+            List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
+            assert pictures.size() == 1;
+            assert pictures.get(0).isBackground();
+        }
     }
 
     @Test public void testLocalPicWaterMark() throws IOException {
-        new Workbook("object local pic water mark", author)
+        String fileName = "object local pic water mark.xlsx";
+        List<Item> expectList = Item.randomTestData();
+        new Workbook()
             .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
-            .addSheet(new ListSheet<>(Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+
+            List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
+            assert pictures.size() == 1;
+            Drawings.Picture pic = pictures.get(0);
+            assert pic.isBackground();
+            assert Files.size(pic.getLocalPath()) == Files.size(testResourceRoot().resolve("mark.png"));
+            assert crc32(pic.getLocalPath()) == crc32(testResourceRoot().resolve("mark.png"));
+        }
     }
 
     @Test public void testStreamWaterMark() throws IOException {
-        new Workbook("object input stream water mark", author)
+        String fileName = "object input stream water mark.xlsx";
+        List<Item> expectList = Item.randomTestData();
+        new Workbook()
             .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
-            .addSheet(new ListSheet<>(Item.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+
+            List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
+            assert pictures.size() == 1;
+            Drawings.Picture pic = pictures.get(0);
+            assert pic.isBackground();
+            assert Files.size(pic.getLocalPath()) == Files.size(testResourceRoot().resolve("mark.png"));
+            assert crc32(pic.getLocalPath()) == crc32(testResourceRoot().resolve("mark.png"));
+        }
     }
 
     @Test public void testAutoSize() throws IOException {
-        new Workbook("all type auto size", author)
+        String fileName = "all type auto size.xlsx";
+        List<AllType> expectList = AllType.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(AllType.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<AllType> list =  reader.sheet(0).dataRows().map(row -> row.to(AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testIntConversion() throws IOException {
-        new Workbook("test int conversion", author)
-            .addSheet(new ListSheet<>(Student.randomTestData()
+        String fileName = "test int conversion.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
             ))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "学号".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "成绩".equals(header.get(2));
+
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (Student expect : expectList) {
+                assert iter.hasNext();
+                Map<String, Object> e = iter.next().toMap();
+                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
+                assert expect.getName().equals(e.get("姓名").toString());
+                if (expect.getScore() < 60) {
+                    assert "不合格".equals(e.get("成绩"));
+                } else {
+                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
+                }
+            }
+        }
     }
 
     @Test public void testStyleConversion() throws IOException {
-        new Workbook("object style processor", author)
-            .addSheet(new ListSheet<>(Student.randomTestData()
+        String fileName = "object style processor.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
@@ -183,12 +290,40 @@ public class ListObjectSheetTest extends WorkbookTest {
                         return style;
                     })
             ))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1).bind(Student.class);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "学号".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "成绩".equals(header.get(2));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                Student e = row.to(Student.class);
+                expect.id = 0; // ID not exported
+                assert expect.equals(e);
+
+                Styles styles = row.getStyles();
+                int style = row.getCellStyle(2);
+                Fill fill = styles.getFill(style);
+                if (expect.getScore() < 60) {
+                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.orange);
+                } else {
+                    assert fill == null || fill.getPatternType() == PatternType.none;
+                }
+            }
+        }
     }
 
     @Test public void testConvertAndStyleConversion() throws IOException {
-        new Workbook("object style and style processor", author)
-            .addSheet(new ListSheet<>(Student.randomTestData()
+        String fileName = "object style and style processor.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
@@ -200,136 +335,381 @@ public class ListObjectSheetTest extends WorkbookTest {
                         return style;
                     })
             ))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "学号".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "成绩".equals(header.get(2));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                Map<String, Object> e = row.toMap();
+                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
+                assert expect.getName().equals(e.get("姓名").toString());
+                if (expect.getScore() < 60) {
+                    assert "不合格".equals(e.get("成绩"));
+                } else {
+                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
+                }
+
+                Styles styles = row.getStyles();
+                int style = row.getCellStyle(2);
+                Fill fill = styles.getFill(style);
+                if (expect.getScore() < 60) {
+                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(246, 209, 139));
+                } else {
+                    assert fill == null || fill.getPatternType() == PatternType.none;
+                }
+            }
+        }
     }
 
     @Test public void testCustomizeDataSource() throws IOException {
-        new Workbook("customize datasource", author)
-            .addSheet(new CustomizeDataSourceSheet())
-            .writeTo(defaultTestPath);
+        String fileName = "customize datasource.xlsx";
+        List<Student> expectList = new ArrayList<>();
+        new Workbook()
+            .addSheet(new CustomizeDataSourceSheet() {
+                @Override
+                public List<Student> more() {
+                    List<Student> list = super.more();
+                    if (list != null) expectList.addAll(list);
+                    return list;
+                }
+            })
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testBoxAllTypeWrite() throws IOException {
-        new Workbook("box all type object", author)
-            .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
-            .writeTo(defaultTestPath);
+        String fileName = "box all type object.xlsx";
+        List<BoxAllType> expectList = BoxAllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<BoxAllType> list =  reader.sheet(0).dataRows().map(row -> row.to(BoxAllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                BoxAllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     // -----AUTO SIZE
 
     @Test public void testBoxAllTypeAutoSizeWrite() throws IOException {
-        new Workbook("auto-size box all type object", author)
+        String fileName = "auto-size box all type object.xlsx";
+        List<BoxAllType> expectList = BoxAllType.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<BoxAllType> list =  reader.sheet(0).dataRows().map(row -> row.to(BoxAllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                BoxAllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testCustomizeDataSourceAutoSize() throws IOException {
-        new Workbook("auto-size customize datasource", author)
+        String fileName = "auto-size customize datasource.xlsx";
+        List<Student> expectList = new ArrayList<>();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new CustomizeDataSourceSheet())
-            .writeTo(defaultTestPath);
+            .addSheet(new CustomizeDataSourceSheet() {
+                @Override
+                public List<Student> more() {
+                    List<Student> list = super.more();
+                    if (list != null) expectList.addAll(list);
+                    return list;
+                }
+            })
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor1() throws IOException {
-        new Workbook("test list sheet Constructor1", author)
+        String fileName = "test list sheet Constructor1.xlsx";
+        List<Item> expectList = Item.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<Item>())
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor2() throws IOException {
-        new Workbook("test list sheet Constructor2", author)
+        String fileName = "test list sheet Constructor2.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<Item>("Item").setData(Item.randomTestData(10)))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<Item>("Item").setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assert "Item".equals(reader.sheet(0).getName());
+            List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor3() throws IOException {
-        new Workbook("test list sheet Constructor3", author)
+        String fileName = "test list sheet Constructor3.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item"
                 , new Column("ID", "id")
                 , new Column("NAME", "name"))
-                .setData(Item.randomTestData(10)))
-            .writeTo(defaultTestPath);
+                .setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assert "Item".equals(reader.sheet(0).getName());
+            List<Item> list =  reader.sheet(0).headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor4() throws IOException {
-        new Workbook("test list sheet Constructor4", author)
+        String fileName = "test list sheet Constructor4.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
             .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
                 , new Column("ID", "id")
                 , new Column("NAME", "name"))
-                .setData(Item.randomTestData(10)))
-            .writeTo(defaultTestPath);
+                .setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "Item".equals(sheet.getName());
+            List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+
+            List<Drawings.Picture> pictures = sheet.listPictures();
+            assert pictures.size() == 1;
+            Drawings.Picture pic = pictures.get(0);
+            assert pic.isBackground();
+        }
     }
 
     @Test public void testConstructor5() throws IOException {
-        new Workbook("test list sheet Constructor5", author)
+        String fileName = "test list sheet Constructor5.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Item.randomTestData(10)))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor6() throws IOException {
-        new Workbook("test list sheet Constructor6", author)
+        String fileName = "test list sheet Constructor6.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>("ITEM", expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "ITEM".equals(sheet.getName());
+            List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor7() throws IOException {
-        new Workbook("test list sheet Constructor7", author)
+        String fileName = "test list sheet Constructor7.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Item.randomTestData(10)
+            .addSheet(new ListSheet<>(expectList
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor8() throws IOException {
-        new Workbook("test list sheet Constructor8", author)
+        String fileName = "test list sheet Constructor8.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("ITEM", Item.randomTestData(10)
+            .addSheet(new ListSheet<>("ITEM", expectList
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "ITEM".equals(sheet.getName());
+            List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor9() throws IOException {
-        new Workbook("test list sheet Constructor9", author)
+        String fileName = "test list sheet Constructor9.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Item.randomTestData(10)
+            .addSheet(new ListSheet<>(expectList
                 , WaterMark.of(author)
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testConstructor10() throws IOException {
-        new Workbook("test list sheet Constructor10", author)
+        String fileName = "test list sheet Constructor10.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM"
-                , Item.randomTestData(10)
+                , expectList
                 , WaterMark.of(author)
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "ITEM".equals(sheet.getName());
+            List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+            List<Drawings.Picture> pictures = sheet.listPictures();
+            assert pictures.size() == 1;
+            Drawings.Picture pic = pictures.get(0);
+            assert pic.isBackground();
+        }
     }
 
     @Test public void testArray() throws IOException {
-        new Workbook("ListSheet Array as List")
-            .addSheet(new ListSheet<>()
-                .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
-            .writeTo(defaultTestPath);
+        String fileName = "ListSheet Array as List.xlsx";
+        List<Item> expectList = Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"));
+        new Workbook()
+            .addSheet(new ListSheet<Item>()
+                .setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testSingleList() throws IOException {
-        new Workbook("ListSheet Single List")
-            .addSheet(new ListSheet<>()
-                .setData(Collections.singletonList(new Item(1, "a b c"))))
-            .writeTo(defaultTestPath);
+        String fileName = "ListSheet Single List.xlsx";
+        List<Item> expectList = Collections.singletonList(new Item(1, "a b c"));
+        new Workbook()
+            .addSheet(new ListSheet<Item>()
+                .setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     public static StyleProcessor sp = (o, style, sst) -> {
@@ -343,66 +723,139 @@ public class ListObjectSheetTest extends WorkbookTest {
     // 定义一个int值转换lambda表达式，成绩低于60分显示"不合格"，其余显示正常分数
     public static ConversionProcessor conversion = n -> (int) n < 60 ? "不合格" : n;
 
-    @Test
-    public void testStyleConversion1() throws IOException {
-        new Workbook("2021小五班期未考试成绩")
-            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+    @Test public void testStyleConversion1() throws IOException {
+        String fileName = "2021小五班期未考试成绩.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>("期末成绩", expectList
                     , new Column("学号", "id", int.class)
                     , new Column("姓名", "name", String.class)
                     , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
                 ).setStyleProcessor((o, style, sst) ->
                     o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
-            ).writeTo(defaultTestPath);
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            assert "期末成绩".equals(sheet.getName());
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "学号".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "成绩".equals(header.get(2));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.getId() == row.getInt("学号");
+                assert expect.getName().equals(row.getString("姓名"));
+
+                Styles styles = row.getStyles();
+                if (expect.getScore() < 60) {
+                    assert "不合格".equals(row.getString("成绩"));
+
+                    int style0 = row.getCellStyle(0);
+                    Fill fill0 = styles.getFill(style0);
+                    assert fill0.getPatternType() == PatternType.solid && fill0.getFgColor().equals(Color.orange);
+                    int style1 = row.getCellStyle(1);
+                    Fill fill1 = styles.getFill(style1);
+                    assert fill1.getPatternType() == PatternType.solid && fill1.getFgColor().equals(Color.orange);
+                    int style2 = row.getCellStyle(2);
+                    Fill fill2 = styles.getFill(style2);
+                    assert fill2.getPatternType() == PatternType.solid && fill2.getFgColor().equals(Color.orange);
+                } else {
+                    assert expect.getScore() == row.getInt("成绩");
+
+                    int style0 = row.getCellStyle(0);
+                    Fill fill0 = styles.getFill(style0);
+                    assert fill0 == null || fill0.getPatternType() == PatternType.none;
+                    int style1 = row.getCellStyle(1);
+                    Fill fill1 = styles.getFill(style1);
+                    assert fill1 == null || fill1.getPatternType() == PatternType.none;
+                    int style2 = row.getCellStyle(2);
+                    Fill fill2 = styles.getFill(style2);
+                    assert fill2 == null || fill2.getPatternType() == PatternType.none;
+                }
+            }
+        }
     }
 
     @Test public void testNullValue() throws IOException {
-        new Workbook("test null value", author)
+        String fileName = "test null value.xlsx";
+        List<Item> expectList = ExtItem.randomTestData(10);
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
-            .writeTo(defaultTestPath);
-    }
+            .addSheet(new ListSheet<>("EXT-ITEM", expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-    @Test public void testReflect() throws IntrospectionException, IllegalAccessException {
-        PropertyDescriptor[] array = Introspector.getBeanInfo(ExtItem.class).getPropertyDescriptors();
-        for (PropertyDescriptor pd : array) {
-            println(pd);
-        }
-        ExtItem item = new ExtItem(1, author);
-        item.nice = "colvin";
-
-        Field[] fields = item.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            println(field + ": " + field.get(item));
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "EXT-ITEM".equals(sheet.getName());
+            List<ExtItem> list =  sheet.dataRows().map(row -> row.to(ExtItem.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ExtItem expect = (ExtItem) expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
         }
     }
 
     @Test public void testFieldUnDeclare() throws IOException {
-        new Workbook("field un-declare", author)
-            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+        String fileName = "field un-declare.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>("期末成绩", expectList
                     , new Column("学号", "id")
                     , new Column("姓名", "name")
-                    , new Column("成绩", "score") // un-declare field
+                    , new Column("成绩", "score0") // un-declare field
                 )
             )
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "期末成绩".equals(sheet.getName());
+            List<Map<String, Object>> list =  sheet.dataRows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i);
+                Map<String, Object> e = list.get(i);
+                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
+                assert expect.getName().equals(e.get("姓名"));
+                assert e.get("成绩") == null || e.get("成绩").equals("");
+            }
+        }
     }
 
     @Test public void testResetMethod() throws IOException {
-        new Workbook("重写期末成绩", author)
-            .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
+        String fileName = "重写期末成绩.xlsx";
+
+        new Workbook()
+            .addSheet(new ListSheet<>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
                     @Override
                     public int getScore() {
                         return 100;
                     }
                 }))
             )
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            assert "重写期末成绩".equals(sheet.getName());
+            List<Student> list =  sheet.dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert list.size() == 1;
+            Student e = list.get(0);
+            assert e.getId() == 0; // Ignore column
+            assert author.equals(e.getName());
+            assert 100 == e.getScore();
+        }
     }
 
     @Test public void testMethodAnnotation() throws IOException {
+        String fileName = "重写方法注解.xlsx";
         new Workbook("重写方法注解", author)
-            .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0) {
+            .addSheet(new ListSheet<>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0) {
                 @Override
                 @ExcelColumn("ID")
                 public int getId() {
@@ -416,9 +869,9 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
             }))
             )
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("重写方法注解.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
                 .map(row -> row.too(ExtStudent.class)).findAny();
             assert opt.isPresent();
@@ -444,19 +897,35 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     // Issue #93
-    @Test public void testListSheet_93() throws IOException {
-        new Workbook("Issue#93 List Object").addSheet(new ListSheet<Student>() {
+    @Test public void testListSheet93() throws IOException {
+        String fileName = "Issue#93 List Object.xlsx";
+        List<Student> expectList = new ArrayList<>();
+        new Workbook().addSheet(new ListSheet<Student>() {
             private int i;
             @Override
             protected List<Student> more() {
-                return i++ < 10 ? Student.randomTestData(100) : null;
+                List<Student> list = i++ < 10 ? Student.randomTestData(100) : null;
+                if (list != null) expectList.addAll(list);
+                return list;
             }
-        }).writeTo(defaultTestPath);
+        }).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                expect.id = 0; // ID not exported
+                assert expect.equals(e);
+            }
+        }
     }
 
     // Issue #95
-    @Test public void testIssue_95() throws IOException {
-        new Workbook("Issue #95").addSheet(new ListSheet<NotSharedObject>() {
+    @Test public void testIssue95() throws IOException {
+        String fileName = "Issue #95.xlsx";
+        List<NotSharedObject> expectList = new ArrayList<>();
+        new Workbook().addSheet(new ListSheet<NotSharedObject>() {
             private boolean c = true;
             @Override
             protected List<NotSharedObject> more() {
@@ -466,9 +935,19 @@ public class ListObjectSheetTest extends WorkbookTest {
                 for (int i = 0; i < 10; i++) {
                     list.add(new NotSharedObject(getRandomString()));
                 }
+                expectList.addAll(list);
                 return list;
             }
-        }).writeTo(defaultTestPath);
+        }).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<NotSharedObject> list = reader.sheet(0).dataRows().map(row -> row.to(NotSharedObject.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                NotSharedObject expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testSpecifyCore() throws IOException {
@@ -548,6 +1027,29 @@ public class ListObjectSheetTest extends WorkbookTest {
             for (Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator(); iter.hasNext(); i++) {
                 Map<String, Object> map = iter.next().toMap();
                 assert map.get("str1").equals("str1-" + i);
+                assert map.get("str2").equals("str2-" + i);
+                assert map.get("str3").equals("str3-" + i);
+                assert map.get("str4").equals("str4-" + i);
+                assert map.get("str5").equals("str5-" + i);
+                assert map.get("str6").equals("str6-" + i);
+                assert map.get("str7").equals("str7-" + i);
+                assert map.get("str8").equals("str8-" + i);
+                assert map.get("str9").equals("str9-" + i);
+                assert map.get("str10").equals("str10-" + i);
+                assert map.get("str11").equals("str11-" + i);
+                assert map.get("str12").equals("str12-" + i);
+                assert map.get("str13").equals("str13-" + i);
+                assert map.get("str14").equals("str14-" + i);
+                assert map.get("str15").equals("str15-" + i);
+                assert map.get("str16").equals("str16-" + i);
+                assert map.get("str17").equals("str17-" + i);
+                assert map.get("str18").equals("str18-" + i);
+                assert map.get("str19").equals("str19-" + i);
+                assert map.get("str20").equals("str20-" + i);
+                assert map.get("str21").equals("str21-" + i);
+                assert map.get("str22").equals("str22-" + i);
+                assert map.get("str23").equals("str23-" + i);
+                assert map.get("str24").equals("str24-" + i);
                 assert map.get("str25").equals("str25-" + i);
             }
         }
@@ -555,84 +1057,143 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     // #132
     @Test public void testEmptyList() throws IOException {
-        new Workbook("ListObject empty list").addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath);
+        String fileName = "ListObject empty list.xlsx";
+        new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assert reader.sheet(0).rows().count() == 0L;
+        }
     }
     
     @Test public void testNoForceExport() throws IOException {
-        new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath.resolve("testNoForceExport.xlsx"));
+        String fileName = "testNoForceExport.xlsx";
+        new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testNoForceExport.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assert Dimension.of("A1").equals(reader.sheet(0).getDimension());
+            assert reader.sheet(0).rows().count() == 0L;
         }
     }
     
     @Test public void testForceExportOnWorkbook() throws IOException {
+        String fileName = "testForceExportOnWorkbook.xlsx";
         int lines = random.nextInt(100) + 3;
-        new Workbook().forceExport().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines))).writeTo(defaultTestPath.resolve("testForceExportOnWorkbook.xlsx"));
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook.xlsx"))) {
-            assert reader.sheet(0).dataRows().count() == lines;
+        List<NoColumnAnnotation> expectList = NoColumnAnnotation.randomTestData(lines);
+        new Workbook().forceExport().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
+            assert list.size() == lines;
+            for (int i = 0; i < lines; i++) {
+                NoColumnAnnotation expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
         }
     }
 
     @Test public void testForceExportOnWorkSheet() throws IOException {
+        String fileName = "testForceExportOnWorkSheet.xlsx";
         int lines = random.nextInt(100) + 3;
-        new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport()).writeTo(defaultTestPath.resolve("testForceExportOnWorkSheet.xlsx"));
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkSheet.xlsx"))) {
-            assert reader.sheet(0).dataRows().count() == lines;
+        List<NoColumnAnnotation> expectList = NoColumnAnnotation.randomTestData(lines);
+        new Workbook().addSheet(new ListSheet<>(expectList).forceExport()).writeTo(defaultTestPath.resolve(fileName));
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
+            assert list.size() == lines;
+            for (int i = 0; i < lines; i++) {
+                NoColumnAnnotation expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
         }
     }
 
     @Test public void testForceExportOnWorkbook2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        String fileName = "testForceExportOnWorkbook2.xlsx";
+        List<NoColumnAnnotation> expectList1 = NoColumnAnnotation.randomTestData(lines);
+        List<NoColumnAnnotation2> expectList2 = NoColumnAnnotation2.randomTestData(lines2);
         new Workbook()
                 .forceExport()
-                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
-                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
-                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2.xlsx"));
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2.xlsx"))) {
-            assert reader.sheet(0).dataRows().count() == lines;
-            assert reader.sheet(1).dataRows().count() == lines2;
+                .addSheet(new ListSheet<>(expectList1))
+                .addSheet(new ListSheet<>(expectList2))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<NoColumnAnnotation> list1 = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
+            assert list1.size() == lines;
+            for (int i = 0; i < lines; i++) {
+                NoColumnAnnotation expect = expectList1.get(i), e = list1.get(i);
+                assert expect.equals(e);
+            }
+
+            List<NoColumnAnnotation2> list2 = reader.sheet(1).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation2.class)).collect(Collectors.toList());
+            assert list2.size() == lines2;
+            for (int i = 0; i < lines2; i++) {
+                NoColumnAnnotation2 expect = expectList2.get(i), e = list2.get(i);
+                assert expect.equals(e);
+            }
         }
     }
 
     @Test public void testForceExportOnWorkbook2Cancel1() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        String fileName = "testForceExportOnWorkbook2Cancel1.xlsx";
+        List<NoColumnAnnotation> expectList1 = NoColumnAnnotation.randomTestData(lines);
+        List<NoColumnAnnotation2> expectList2 = NoColumnAnnotation2.randomTestData(lines2);
         new Workbook()
                 .forceExport()
-                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
-                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
-                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel1.xlsx"));
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel1.xlsx"))) {
-            assert reader.sheets().count() == 2L;
+                .addSheet(new ListSheet<>(expectList1).cancelForceExport())
+                .addSheet(new ListSheet<>(expectList2))
+                .writeTo(defaultTestPath.resolve(fileName));
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assert reader.sheet(0).dataRows().count() == 0L;
-            assert reader.sheet(1).dataRows().count() == lines2;
+
+            List<NoColumnAnnotation2> list2 = reader.sheet(1).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation2.class)).collect(Collectors.toList());
+            assert list2.size() == lines2;
+            for (int i = 0; i < lines2; i++) {
+                NoColumnAnnotation2 expect = expectList2.get(i), e = list2.get(i);
+                assert expect.equals(e);
+            }
         }
     }
 
     @Test public void testForceExportOnWorkbook2Cancel2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
+        String fileName = "testForceExportOnWorkbook2Cancel2.xlsx";
+        List<NoColumnAnnotation> expectList1 = NoColumnAnnotation.randomTestData(lines);
+        List<NoColumnAnnotation2> expectList2 = NoColumnAnnotation2.randomTestData(lines2);
         new Workbook()
                 .forceExport()
-                .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
-                .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
-                .writeTo(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel2.xlsx"));
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testForceExportOnWorkbook2Cancel2.xlsx"))) {
-            assert reader.sheets().count() == 2L;
+                .addSheet(new ListSheet<>(expectList1).cancelForceExport())
+                .addSheet(new ListSheet<>(expectList2).cancelForceExport())
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assert reader.sheet(0).dataRows().count() == 0L;
             assert reader.sheet(1).dataRows().count() == 0L;
         }
     }
 
     @Test public void testWrapText() throws IOException {
-        new Workbook("WRAP TEXT")
-            .addSheet(new ListSheet<>()
-                .setData(Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
+        String fileName = "WRAP TEXT.xlsx";
+        List<Item> expectList;
+        new Workbook()
+            .addSheet(new ListSheet<Item>()
+                .setData(expectList = Arrays.asList(new Item(1, "a b c\r\n1 2 3\r\n中文\t测试\r\nAAAAAA")
                     , new Item(2, "fdsafdsafdsafdsafdsafdsafdsafdsfadsafdsafdsafdsafdsafdsafds"))))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list = reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testClearHeadStyle() throws IOException {
-        Workbook workbook = new Workbook("clear style").addSheet(new ListSheet<>(Item.randomTestData()));
+        String fileName = "clear style.xlsx";
+        Workbook workbook = new Workbook(fileName).addSheet(new ListSheet<>(Item.randomTestData()));
 
         Sheet sheet = workbook.getSheetAt(0);
         sheet.cancelZebraLine();  // Clear odd style
@@ -640,7 +1201,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
         sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
 
-        workbook.writeTo(defaultTestPath);
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+
+        }
     }
 
     @Test public void testBasicType() throws IOException {
@@ -696,41 +1261,46 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void test264() throws IOException {
+        String fileName = "Issue 264.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
         Column[] columns = {new Column("ID", "id"), new Column("NAME", "name")};
-        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath.resolve("Issue 264.xlsx"));
+        new Workbook().addSheet(new ListSheet<>(expectList, columns))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath.resolve("Issue 264-1.xlsx"));
-
-        new Workbook().addSheet(new ListSheet<>(Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath.resolve("Issue 264-2.xlsx"));
-
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-1.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
-            if (iter.hasNext()) {
-                org.ttzero.excel.reader.Row row = iter.next();
-                assert "ID".equals(row.getString(0));
-                assert "NAME".equals(row.getString(1));
-            }
-        }
+            assert iter.hasNext();
+            org.ttzero.excel.reader.Row row = iter.next();
+            assert "ID".equals(row.getString(0));
+            assert "NAME".equals(row.getString(1));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Issue 264-2.xlsx"))) {
-            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
-            if (iter.hasNext()) {
-                org.ttzero.excel.reader.Row row = iter.next();
-                assert "ID".equals(row.getString(0));
-                assert "NAME".equals(row.getString(1));
+            List<Item> list = reader.sheet(0).headerColumnIgnoreCase().dataRows().map(r -> r.to(Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
             }
         }
     }
 
     @Test public void testNullInList() throws IOException {
-        List<Item> list = Item.randomTestData(10);
-        list.add(0, null);
-        list.add(3, null);
-        list.add(null);
-        new Workbook("Null in list").addSheet(new ListSheet<>(list)).writeTo(defaultTestPath);
+        String fileName = "Null in list.xlsx";
+        List<Item> expectList = Item.randomTestData(10);
+        expectList.add(0, null);
+        expectList.add(3, null);
+        expectList.add(null);
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Item> list = reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assert list.size() == expectList.size() - 3;
+            for (int i = 0, j = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i);
+                if (expect == null) continue;
+                Item e = list.get(j++);
+                assert expect.equals(e);
+            }
+        }
     }
 
     public static class Item {
@@ -969,6 +1539,33 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AllType allType = (AllType) o;
+            return bv == allType.bv &&
+                cv == allType.cv &&
+                sv == allType.sv &&
+                nv == allType.nv &&
+                lv == allType.lv &&
+                Float.compare(allType.fv, fv) == 0 &&
+                Double.compare(allType.dv, dv) == 0 &&
+                Objects.equals(s, allType.s) &&
+                Objects.equals(mv, allType.mv) &&
+                Objects.equals(av, allType.av) &&
+                Objects.equals(iv, allType.iv) &&
+                Objects.equals(tv, allType.tv) &&
+                Objects.equals(ldv, allType.ldv) &&
+                Objects.equals(ldtv, allType.ldtv) &&
+                Objects.equals(ltv, allType.ltv);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av, iv, tv, ldv, ldtv, ltv);
+        }
+
+        @Override
         public String toString() {
             return "" + bv + '|' + cv + '|' + sv + '|' + nv + '|' + lv
                 + '|' + fv + '|' + dv + '|' + s + '|' + mv + '|' + av
@@ -1036,14 +1633,14 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         @Override
         public int hashCode() {
-            return (id << 16 | score) ^ name.hashCode();
+            return (getId() << 16 | getScore()) ^ getName().hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Student) {
                 Student other = (Student) obj;
-                return id == other.id && score == other.score && name.equals(other.name);
+                return getId() == other.getId() && getScore() == other.getScore() && getName().equals(other.getName());
             }
             return false;
         }
@@ -1051,7 +1648,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         @Override
         @ExcelColumn
         public String toString() {
-            return "id: " + id + ", name: " + name + ", score: " + score;
+            return "id: " + getId() + ", name: " + getName() + ", score: " + getScore();
         }
     }
 
@@ -1087,10 +1684,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         @ExcelColumn
         private LocalTime ltv;
 
-        public static List<AllType> randomTestData(int size) {
-            List<AllType> list = new ArrayList<>(size);
+        public static List<BoxAllType> randomTestData(int size) {
+            List<BoxAllType> list = new ArrayList<>(size);
             for (int i = 0; i < size; i++) {
-                AllType o = new AllType();
+                BoxAllType o = new BoxAllType();
                 o.bv = random.nextInt(10) == 5;
                 o.cv = charArray[random.nextInt(charArray.length)];
                 o.sv = (short) (random.nextInt() & 0xFFFF);
@@ -1111,7 +1708,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             return list;
         }
 
-        public static List<AllType> randomTestData() {
+        public static List<BoxAllType> randomTestData() {
             int size = random.nextInt(100) + 1;
             return randomTestData(size);
         }
@@ -1237,6 +1834,33 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            BoxAllType that = (BoxAllType) o;
+            return Objects.equals(bv, that.bv) &&
+                Objects.equals(cv, that.cv) &&
+                Objects.equals(sv, that.sv) &&
+                Objects.equals(nv, that.nv) &&
+                Objects.equals(lv, that.lv) &&
+                Objects.equals(fv, that.fv) &&
+                Objects.equals(dv, that.dv) &&
+                Objects.equals(s, that.s) &&
+                Objects.equals(mv, that.mv) &&
+                Objects.equals(av, that.av) &&
+                Objects.equals(iv, that.iv) &&
+                Objects.equals(tv, that.tv) &&
+                Objects.equals(ldv, that.ldv) &&
+                Objects.equals(ldtv, that.ldtv) &&
+                Objects.equals(ltv, that.ltv);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av, iv, tv, ldv, ldtv, ltv);
+        }
+
+        @Override
         public String toString() {
             return "" + bv + '|' + cv + '|' + sv + '|' + nv + '|' + lv
                 + '|' + fv + '|' + dv + '|' + s + '|' + mv + '|' + av
@@ -1248,6 +1872,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         @ExcelColumn
         private String nice;
 
+        public ExtItem() { }
         public ExtItem(int id, String name) {
             super(id, name);
         }
@@ -1267,12 +1892,27 @@ public class ListObjectSheetTest extends WorkbookTest {
             }
             return list;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            ExtItem extItem = (ExtItem) o;
+            return Objects.equals(nice, extItem.nice);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), nice);
+        }
     }
 
     public static class NotSharedObject {
         @ExcelColumn(share = false)
         private String name;
 
+        public NotSharedObject() { }
         public NotSharedObject(String name) {
             this.name = name;
         }
@@ -1283,6 +1923,19 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NotSharedObject that = (NotSharedObject) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
         }
     }
 
@@ -1331,6 +1984,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             return name;
         }
 
+        public NoColumnAnnotation() { }
         public NoColumnAnnotation(int id, String name) {
             this.id = id;
             this.name = name;
@@ -1347,6 +2001,20 @@ public class ListObjectSheetTest extends WorkbookTest {
         public static List<NoColumnAnnotation> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NoColumnAnnotation that = (NoColumnAnnotation) o;
+            return id == that.id &&
+                Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, name);
         }
 
         @Override
@@ -1367,6 +2035,7 @@ public class ListObjectSheetTest extends WorkbookTest {
             return abc;
         }
 
+        public NoColumnAnnotation2() { }
         public NoColumnAnnotation2(int age, String abc) {
             this.age = age;
             this.abc = abc;
@@ -1383,6 +2052,20 @@ public class ListObjectSheetTest extends WorkbookTest {
         public static List<NoColumnAnnotation2> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NoColumnAnnotation2 that = (NoColumnAnnotation2) o;
+            return age == that.age &&
+                Objects.equals(abc, that.abc);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(age, abc);
         }
     }
 
