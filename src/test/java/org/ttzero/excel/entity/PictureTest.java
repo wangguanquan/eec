@@ -432,7 +432,7 @@ public class PictureTest extends WorkbookTest {
         for (int i = 0; i < 5; i++)
             expectList.addAll(getLocalImages());
 
-        XMLWorksheetWriter worksheetWriter;
+        IWorksheetWriter worksheetWriter;
         new Workbook()
             .addSheet(new ListSheet<>(expectList).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100)
                 .setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {

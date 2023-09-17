@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.entity.style.Font;
@@ -28,16 +29,21 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Row;
 import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.reader.Sheet;
 
 import java.awt.Color;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,18 +88,36 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
-        new Workbook("Repeat Paging Columns Annotation").setAutoSize(true)
-            .addSheet(new ListSheet<>(RepeatableEntry.randomTestData(10000)).setSheetWriter(new XMLWorksheetWriter() {
+        List<RepeatableEntry> expectList = RepeatableEntry.randomTestData(10000);
+        IWorksheetWriter worksheetWriter;
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(expectList).setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {
                 @Override
                 public int getRowLimit() {
                     return 500;
                 }
-            })).writeTo(defaultTestPath);
+            })).writeTo(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"));
+
+        int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"))) {
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / (rowLimit - 1)); // Include header row
+
+            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+                List<RepeatableEntry> list = reader.sheet(i).header(1, 4).bind(RepeatableEntry.class).rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+                if (i < len - 1) assert list.size() == rowLimit;
+                else assert expectList.size() - rowLimit * (len - 1) == list.size();
+                for (int j = 0; j < list.size(); j++) {
+                    RepeatableEntry expect = expectList.get(a++), o = list.get(j);
+                    assert expect.equals(o);
+                }
+            }
+        }
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Multi specify columns 2").setAutoSize(true)
-            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column("共用表头").addSubColumn(new Column("学号", "id"))
                 , new Column("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score") {
@@ -106,43 +130,146 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     return new Font("宋体", 12, Color.RED).bold();
                 }
             }
-            )).writeTo(defaultTestPath);
+            )).writeTo(defaultTestPath.resolve("Multi specify columns 2.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 2.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            assert "期末成绩".equals(sheet.getName());
+            List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i);
+                Map<String, Object> o = list.get(i);
+                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
+                assert expect.getName().equals(o.get("共用表头:姓名").toString());
+                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+            }
+
+            Iterator<Row> iterator =  sheet.reset().iterator();
+            Row firstRow = iterator.next();
+            Styles styles = firstRow.getStyles();
+            int style = firstRow.getCellStyle(2);
+            Font font = styles.getFont(style);
+
+            assert font.isBold();
+            assert "宋体".equals(font.getName());
+            assert Color.RED.equals(font.getColor());
+            assert 12 == font.getSize();
+        }
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
-        new Workbook("Multi specify columns 3").setAutoSize(true)
-            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score")
-            )).writeTo(defaultTestPath);
+            )).writeTo(defaultTestPath.resolve("Multi specify columns 3.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 3.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            assert "期末成绩".equals(sheet.getName());
+            List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i);
+                Map<String, Object> o = list.get(i);
+                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
+                assert expect.getName().equals(o.get("共用表头:姓名").toString());
+                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+            }
+        }
     }
 
     @Test public void testResultSet() throws SQLException, IOException {
+        String fileName = "Multi ResultSet columns 2.xlsx",
+            sql = "select id, name, age, create_date, update_date from student order by age";
+
         try (Connection con = getConnection()) {
-            new Workbook("Multi ResultSet columns 2", author).setAutoSize(true)
-                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student order by age"
+            new Workbook().setAutoSize(true)
+                .addSheet(new StatementSheet(con, sql
                     , new Column("通用").setHeaderStyle(532550).addSubColumn(new Column("学号", int.class))
-                    , new Column("通用").addSubColumn(new Column("性名", String.class))
+                    , new Column("通用").addSubColumn(new Column("姓名", String.class))
                     , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(532550))
                     , new Column("创建时间", Timestamp.class)
-                    , new Column("更新", Timestamp.class).setColIndex(1)
+                    , new Column("更新时间", Timestamp.class).setColIndex(1) // col 1
                 ))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve(fileName));
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+
+                // Header row
+                String[] headerNames = ((HeaderRow) sheet.header(1, 2).getHeader()).getNames();
+                assert "通用:学号".equals(headerNames[0]);
+                assert "更新时间".equals(headerNames[1]);
+                assert "通用:姓名".equals(headerNames[2]);
+                assert "通用:年龄".equals(headerNames[3]);
+                assert "创建时间".equals(headerNames[4]);
+
+                Iterator<org.ttzero.excel.reader.Row> iter = sheet.rows().iterator();
+                // Body rows
+                while (rs.next()) {
+                    assert iter.hasNext();
+                    org.ttzero.excel.reader.Row row = iter.next();
+
+                    assert rs.getInt(1) == row.getInt(0);
+                    assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(1).getTime() / 1000 : row.getTimestamp(1) == null;
+                    assert rs.getString(2).equals(row.getString(2));
+                    assert rs.getInt(3) == row.getInt(3);
+                    assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                }
+            }
+            rs.close();
+            ps.close();
         }
     }
 
     @Test public void testMultiHeaderAndSpecifyColIndex() throws SQLException, IOException {
+        String fileName = "Multi Header And Specify Col-index.xlsx",
+            sql = "select id, name, age, create_date, update_date from student limit 10";
         try (Connection con = getConnection()) {
-            new Workbook("Multi Header And Specify Col-index", author).setAutoSize(true)
-                .addSheet(new StatementSheet(con, "select id, name, age, create_date, update_date from student limit 10"
+            new Workbook().setAutoSize(true)
+                .addSheet(new StatementSheet(con, sql
                     , new Column("通用").addSubColumn(new Column("学号", int.class))
-                    , new Column("通用").addSubColumn(new Column("性名", String.class).setColIndex(13))
+                    , new Column("通用").addSubColumn(new Column("姓名", String.class).setColIndex(13))
                     , new Column("通用").addSubColumn(new Column("年龄", int.class).setColIndex(14))
                     , new Column("创建时间", Timestamp.class).setColIndex(15)
-                    , new Column("更新", Timestamp.class).setColIndex(16)
+                    , new Column("更新时间", Timestamp.class).setColIndex(16)
                 ))
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve(fileName));
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+
+                // Header row
+                String[] headerNames = ((HeaderRow) sheet.header(1, 2).getHeader()).getNames();
+                assert "通用:学号".equals(headerNames[0]);
+                assert "通用:姓名".equals(headerNames[13]);
+                assert "通用:年龄".equals(headerNames[14]);
+                assert "创建时间".equals(headerNames[15]);
+                assert "更新时间".equals(headerNames[16]);
+
+                Iterator<org.ttzero.excel.reader.Row> iter = sheet.rows().iterator();
+                // Body rows
+                while (rs.next()) {
+                    assert iter.hasNext();
+                    org.ttzero.excel.reader.Row row = iter.next();
+
+                    assert rs.getInt(1) == row.getInt(0);
+                    assert rs.getString(2).equals(row.getString(13));
+                    assert rs.getInt(3) == row.getInt(14);
+                    assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(15).getTime() / 1000 : row.getTimestamp(15) == null;
+                    assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(16).getTime() / 1000 : row.getTimestamp(16) == null;
+                }
+            }
+            rs.close();
+            ps.close();
         }
     }
 
@@ -238,30 +365,66 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideCol() throws IOException {
-        new Workbook("Auto Size And Hide Column").setAutoSize(true)
-            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name").setColIndex(1000).hide())
                 , new Column("成绩", "score")
-            )).writeTo(defaultTestPath);
+            )).writeTo(defaultTestPath.resolve("Auto Size And Hide Column.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            assert "期末成绩".equals(sheet.getName());
+            List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i);
+                Map<String, Object> o = list.get(i);
+                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
+                assert expect.getName().equals(o.get("共用表头:姓名").toString());
+                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+            }
+        }
     }
 
     @Test public void testAutoSizeAndHideColPaging() throws IOException {
-        new Workbook("Auto Size And Hide Column Paging").setAutoSize(true)
-            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        IWorksheetWriter worksheetWriter;
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score").hide()
-            ).setSheetWriter(new XMLWorksheetWriter() {
+            ).setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {
                 @Override
                 public int getRowLimit() {
                     return 10;
                 }
-            })).writeTo(defaultTestPath);
+            })).writeTo(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"));
+
+        int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"))) {
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / (rowLimit - 1)); // Include header row
+
+            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+                List<Map<String, Object>> list = reader.sheet(i).header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
+                if (i < len - 1) assert list.size() == rowLimit;
+                else assert expectList.size() - rowLimit * (len - 1) == list.size();
+                for (int j = 0; j < list.size(); j++) {
+                    ListObjectSheetTest.Student expect = expectList.get(a++);
+                    Map<String, Object> o = list.get(j);
+                    assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
+                    assert expect.getName().equals(o.get("共用表头:姓名").toString());
+                    assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+                }
+            }
+        }
     }
 
     @Test public void testMapRepeatHeader() throws IOException {
-        new Workbook("Map Repeat Header")
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        new Workbook()
             .addSheet(new ListMapSheet("Map"
                   , new Column("aaa").addSubColumn(new Column("boolean", "bv"))
                   , new Column("aaa").addSubColumn(new Column("char", "cv"))
@@ -276,7 +439,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                   protected List<Map<String, ?>> more() {
                       List<Map<String, Object>> a = new ArrayList<>();
                       for (; i > 0; i--) {
-                          Map<String, Object> data = new HashMap<>();
+                          Map<String, Object> data = new LinkedHashMap<>();
                           data.put("bv", random.nextInt(10) < 3);
                           data.put("cv", random.nextInt(26) + 'A');
                           data.put("sv", random.nextInt());
@@ -286,10 +449,32 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                           data.put("ltv", LocalTime.now());
                           a.add(data);
                       }
+                      expectList.addAll(a);
                       return new ArrayList<>(a);
                   }
               }
-            ).writeTo(defaultTestPath);
+            ).writeTo(defaultTestPath.resolve("Map Repeat Header.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Map Repeat Header.xlsx"))) {
+            Sheet sheet = reader.sheet(0);
+            assert "Map".equals(sheet.getName());
+            List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, Object> expect = expectList.get(i), o = list.get(i);
+                assert expect.get("bv").equals(o.get("aaa:boolean"));
+                assert expect.get("cv").equals(o.get("aaa:char"));
+                assert expect.get("sv").equals(o.get("short"));
+                assert expect.get("nv").equals(o.get("int"));
+                assert expect.get("lv").equals(o.get("long"));
+                assert Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000 == ((Timestamp) o.get("LocalDateTime")).getTime() / 1000;
+                LocalTime t0 = (LocalTime) expect.get("ltv");
+                Time t1 = (Time) o.get("LocalTime");
+                assert t0.getHour() == t1.getHours();
+                assert t0.getMinute() == t1.getMinutes();
+                assert t0.getSecond() == t1.getSeconds();
+            }
+        }
     }
 
     @Test public void testRepeatColumnFromN() throws IOException {
