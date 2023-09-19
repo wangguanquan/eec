@@ -139,15 +139,17 @@ public class HeaderRow extends Row {
         this.index = row.index;
         this.cells = new Cell[this.names.length];
         for (int i = 0; i < row.fc; i++) {
-            this.cells[i] = new Cell();
+            this.cells[i] = new Cell(i);
         }
 
         if (headRows == 1) {
             for (int i = row.fc; i < row.lc; i++) {
-                this.names[i] = row.getString(i);
+                Cell hCell = row.getCell(i);
+                this.names[i] = row.getString(hCell);
                 this.mapping.put(makeKey(this.names[i]), i);
 
-                Cell cell = new Cell();
+                Cell cell = new Cell(hCell.i);
+                cell.xf = hCell.xf;
                 cell.setSv(this.names[i]);
                 this.cells[i] = cell;
             }
@@ -168,7 +170,9 @@ public class HeaderRow extends Row {
                 this.names[i] = buf.toString();
                 this.mapping.put(makeKey(this.names[i]), i);
 
-                Cell cell = new Cell();
+                Cell hCell = rows[rows.length - 1].getCell(i);
+                Cell cell = new Cell(hCell != null ? hCell.i : i);
+                cell.xf = hCell != null ? hCell.xf : 0;
                 cell.setSv(this.names[i]);
                 this.cells[i] = cell;
             }

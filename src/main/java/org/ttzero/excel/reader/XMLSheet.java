@@ -318,6 +318,7 @@ public class XMLSheet implements Sheet {
         rangeCheck(fromRowNum, toRowNum);
         if (sRow.getRowNum() > -1 && fromRowNum < sRow.getRowNum())
             throw new IndexOutOfBoundsException("Current row num " + sRow.getRowNum() + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
+        HeaderRow headerRow;
         // Mutable header rows
         if (toRowNum - fromRowNum > 0) {
             Row[] rows = new Row[toRowNum - fromRowNum + 1];
@@ -359,15 +360,19 @@ public class XMLSheet implements Sheet {
                     mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
                 }
 
-                return new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
-            } else return new HeaderRow().setOptions(option << 16 >>> 16);
+                headerRow = new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
+            } else headerRow = new HeaderRow().setOptions(option << 16 >>> 16);
         }
         // Single row
         else {
             Row row = nextRow();
             for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-            return row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
+            headerRow = row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
         }
+        // Reset metas
+        headerRow.styles = styles;
+        headerRow.sst = sst;
+        return headerRow;
     }
 
     // Range check
