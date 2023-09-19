@@ -371,7 +371,6 @@ public class XMLSheet implements Sheet {
         }
         // Reset metas
         headerRow.styles = styles;
-        headerRow.sst = sst;
         return headerRow;
     }
 
