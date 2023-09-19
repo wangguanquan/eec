@@ -419,7 +419,7 @@ public class ListSheet<T> extends Sheet {
      */
     protected int init() {
         Class<?> clazz = getTClass();
-        if (clazz == null) return 0;
+        if (clazz == null) return columns != null ? columns.length : 0;
 
         Map<String, Method> tmp = new HashMap<>();
         try {
