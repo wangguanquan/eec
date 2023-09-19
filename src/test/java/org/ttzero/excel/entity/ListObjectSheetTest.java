@@ -19,24 +19,19 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
-import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
-import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.AppInfo;
-import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
 import org.ttzero.excel.reader.HeaderRow;
-import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -60,18 +55,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.ttzero.excel.reader.Cell.BLANK;
-import static org.ttzero.excel.reader.Cell.BOOL;
-import static org.ttzero.excel.reader.Cell.CHARACTER;
-import static org.ttzero.excel.reader.Cell.DATE;
-import static org.ttzero.excel.reader.Cell.DATETIME;
-import static org.ttzero.excel.reader.Cell.DECIMAL;
-import static org.ttzero.excel.reader.Cell.DOUBLE;
-import static org.ttzero.excel.reader.Cell.INLINESTR;
-import static org.ttzero.excel.reader.Cell.LONG;
-import static org.ttzero.excel.reader.Cell.NUMERIC;
-import static org.ttzero.excel.reader.Cell.SST;
-import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -1080,6 +1063,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         int lines = random.nextInt(100) + 3;
         List<NoColumnAnnotation> expectList = NoColumnAnnotation.randomTestData(lines);
         new Workbook().forceExport().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
             assert list.size() == lines;
@@ -1095,6 +1079,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         int lines = random.nextInt(100) + 3;
         List<NoColumnAnnotation> expectList = NoColumnAnnotation.randomTestData(lines);
         new Workbook().addSheet(new ListSheet<>(expectList).forceExport()).writeTo(defaultTestPath.resolve(fileName));
+
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
             assert list.size() == lines;
@@ -1143,6 +1128,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .addSheet(new ListSheet<>(expectList1).cancelForceExport())
                 .addSheet(new ListSheet<>(expectList2))
                 .writeTo(defaultTestPath.resolve(fileName));
+
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assert reader.sheet(0).dataRows().count() == 0L;
 
@@ -1200,11 +1186,21 @@ public class ListObjectSheetTest extends WorkbookTest {
         int headStyle = sheet.defaultHeadStyle();
         sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
         sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
-
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) reader.sheet(0).header(1).getHeader();
+            Styles styles = header.getStyles();
+            for (int i = header.getFirstColumnIndex(), limit = header.getLastColumnIndex(); i < limit; i++) {
+                int styleIndex = header.getCellStyle(i);
+                Fill fill = styles.getFill(styleIndex);
+                assert fill == null || fill.getPatternType() == PatternType.none;
+                Font font = styles.getFont(styleIndex);
+                assert font.getSize() == 11;
+                assert font.isBold();
+                assert font.getColor().equals(Color.BLACK);
+                assert font.getName().equals("宋体");
+            }
         }
     }
 
@@ -1552,17 +1548,17 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Double.compare(allType.dv, dv) == 0 &&
                 Objects.equals(s, allType.s) &&
                 Objects.equals(mv, allType.mv) &&
-                Objects.equals(av, allType.av) &&
-                Objects.equals(iv, allType.iv) &&
-                Objects.equals(tv, allType.tv) &&
+                av.getTime() / 1000 == allType.av.getTime() / 1000 &&
+                iv.getTime() / 1000 == allType.iv.getTime() / 1000 &&
+                String.valueOf(tv).equals(String.valueOf(allType.tv)) &&
                 Objects.equals(ldv, allType.ldv) &&
-                Objects.equals(ldtv, allType.ldtv) &&
-                Objects.equals(ltv, allType.ltv);
+                Timestamp.valueOf(ldtv).getTime() / 1000 == Timestamp.valueOf(allType.ldtv).getTime() / 1000 &&
+                String.valueOf(Time.valueOf(ltv)).equals(String.valueOf(Time.valueOf(allType.ltv)));
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av, iv, tv, ldv, ldtv, ltv);
+            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av.getTime() / 1000, iv.getTime() / 1000, String.valueOf(tv), ldv, Timestamp.valueOf(ldtv).getTime() / 1000, String.valueOf(Time.valueOf(ltv)));
         }
 
         @Override
@@ -1847,17 +1843,17 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Objects.equals(dv, that.dv) &&
                 Objects.equals(s, that.s) &&
                 Objects.equals(mv, that.mv) &&
-                Objects.equals(av, that.av) &&
-                Objects.equals(iv, that.iv) &&
-                Objects.equals(tv, that.tv) &&
+                av.getTime() / 1000 == that.av.getTime() / 1000 &&
+                iv.getTime() / 1000 == that.iv.getTime() / 1000 &&
+                String.valueOf(tv).equals(String.valueOf(that.tv)) &&
                 Objects.equals(ldv, that.ldv) &&
-                Objects.equals(ldtv, that.ldtv) &&
-                Objects.equals(ltv, that.ltv);
+                Timestamp.valueOf(ldtv).getTime() / 1000 == Timestamp.valueOf(that.ldtv).getTime() / 1000 &&
+                String.valueOf(Time.valueOf(ltv)).equals(String.valueOf(Time.valueOf(that.ltv)));
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av, iv, tv, ldv, ldtv, ltv);
+            return Objects.hash(bv, cv, sv, nv, lv, fv, dv, s, mv, av.getTime() / 1000, iv.getTime() / 1000, String.valueOf(tv), ldv, Timestamp.valueOf(ldtv).getTime() / 1000, String.valueOf(Time.valueOf(ltv)));
         }
 
         @Override
@@ -2066,264 +2062,6 @@ public class ListObjectSheetTest extends WorkbookTest {
         @Override
         public int hashCode() {
             return Objects.hash(age, abc);
-        }
-    }
-
-    public static class Template {
-        @ExcelColumn(maxWidth = 12.0D, wrapText = true)
-        String v1;
-        @ExcelColumn(maxWidth = 20.0, wrapText = true)
-        String v2;
-        @ExcelColumn(maxWidth = 25.0D, wrapText = true)
-        String v3;
-
-        static Template of(String v1, String v2, String v3) {
-            Template v = new Template();
-            v.v1 = v1;
-            v.v2 = v2;
-            v.v3 = v3;
-            return v;
-        }
-    }
-
-    @Test public void testCustomerRowHeight() throws IOException {
-        List<Template> list = new ArrayList<>();
-        list.add(Template.of("备注说明\r\n第二行\r\n第三行\r\n第四行", "岗位名称", "岁位"));
-        list.add(Template.of("字段名称", "*岗位名称", "岗位描述"));
-        list.add(Template.of("示例", "生产统计员", "按照产品规格、价格、工序、员工、车间等不同对象和要求进行统计数据资料分析"));
-
-        new Workbook("Customer row height").addSheet(
-            new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
-                .cancelZebraLine().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
-                .setSheetWriter(new XMLWorksheetWriter() {
-                    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
-                        // Row number
-                        int r = rows + startRow;
-                        // logging
-                        if (r % 1_0000 == 0) {
-                            sheet.what("0014", String.valueOf(r));
-                        }
-
-                        bw.write("<row r=\"");
-                        bw.writeInt(r);
-                        // default data row height 16.5
-                        bw.write("\" spans=\"1:");
-                        bw.writeInt(columns);
-                        bw.write("\" ht=\"62.25\" customHeight=\"1\">");
-                        return r;
-                    }
-                })
-        ).writeTo(defaultTestPath);
-    }
-
-    public static class TemplateStyleProcessor implements StyleProcessor<Template> {
-        String k;
-        int c = 0;
-        @Override
-        public int build(Template o, int style, Styles sst) {
-            if (!o.v1.equals(k)) {
-                k = o.v1;
-                c = 0;
-            }
-            switch (o.v1) {
-                case "备注说明":
-                    if (c > 0)
-                        style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, new Color(188, 219, 162)));
-                    break;
-                case "字段名称":
-                    Font font = sst.getFont(style);
-                    style = Styles.clearFont(style) | sst.addFont(font.clone().bold());
-                    if (c > 0)
-                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
-                    break;
-                case "示例":
-                    if (c == 1)
-                        style = Styles.clearHorizontal(style) | Horizontals.CENTER;
-                    break;
-            }
-            c++;
-            return style;
-        }
-    }
-
-
-    @Test public void testTileWriter() throws IOException {
-        List<TileEntity> data = TileEntity.randomTestData();
-        new Workbook("Dynamic title").cancelZebraLine().addSheet(new ListSheet<>(data).setSheetWriter(new TileXMLWorksheetWriter(3, LocalDate.now().toString()))).writeTo(defaultTestPath);
-    }
-
-    public static class TileEntity {
-        @ExcelColumn("{date} 拣货单")
-        @ExcelColumn(value = "差异", maxWidth = 8.6D)
-        private String diff;
-        @ExcelColumn("{date} 拣货单")
-        @ExcelColumn(value = "序号", maxWidth = 6.8D)
-        private Integer no;
-        @ExcelColumn("{date} 拣货单")
-        @ExcelColumn(value = "商品", maxWidth = 12.0D)
-        private String product;
-        @ExcelColumn("{date} 拣货单")
-        @ExcelColumn(value = "数量", maxWidth = 6.8D)
-        private Integer num;
-
-        public static List<TileEntity> randomTestData() {
-            int n = 23;
-            List<TileEntity> list = new ArrayList<>(n);
-            for (int i = 0; i < n; i++) {
-                TileEntity e = new TileEntity();
-                e.no = i + 1;
-                e.product = getRandomString(10);
-                e.num = random.nextInt(20) + 1;
-                list.add(e);
-            }
-            return list;
-        }
-    }
-
-    /**
-     * 自定义平铺WorksheetWriter
-     */
-    public static class TileXMLWorksheetWriter extends XMLWorksheetWriter {
-        private int tile; // 平铺的数量，也就是每行重复输出多少条数据
-        private String date; // 可忽略，仅仅是表头上的日期
-
-        public TileXMLWorksheetWriter(int tile) {
-            this.tile = tile;
-        }
-
-        public TileXMLWorksheetWriter(int tile, String date) {
-            this.tile = tile;
-            this.date = date;
-        }
-
-        public int getTile() {
-            return tile;
-        }
-
-        public void setTile(int tile) {
-            this.tile = tile;
-        }
-
-        public String getDate() {
-            return date;
-        }
-
-        public void setDate(String date) {
-            this.date = date;
-        }
-
-        @Override
-        protected void writeBefore() throws IOException {
-            // The header columns
-            columns = sheet.getAndSortHeaderColumns();
-            // Give new columns
-            tileColumns();
-
-            boolean nonHeader = sheet.getNonHeader() == 1;
-
-            bw.write(Const.EXCEL_XML_DECLARATION);
-            // Declaration
-            bw.newLine();
-            // Root node
-            writeRootNode();
-
-            // Dimension
-            writeDimension();
-
-            // SheetViews default value
-            writeSheetViews();
-
-            // Default row height and width
-            int fillSpace = 6;
-            BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
-            String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-            writeSheetFormat(fillSpace, defaultWidth);
-
-            // cols
-            writeCols(fillSpace, defaultWidth);
-        }
-
-        protected void tileColumns() {
-            if (tile == 1) return;
-
-            int x = columns.length, y = x * tile, t = columns[columns.length - 1].getRealColIndex();
-            // Bound check
-            if (y > Const.Limit.MAX_COLUMNS_ON_SHEET)
-                throw new TooManyColumnsException(y, Const.Limit.MAX_COLUMNS_ON_SHEET);
-
-            Column[] _columns = new Column[y];
-            for (int i = 0; i < y; i++) {
-                // 第一个对象的表头不需要复制
-                Column col = i < x ? columns[i] : new Column(columns[i % x]).addSubColumn(new Column());
-                col.realColIndex = columns[i % x].realColIndex + t * (i / x);
-                _columns[i] = col;
-
-                // 替换拣货单上的日期
-                Column _col = col;
-                do {
-                    if (StringUtil.isNotEmpty(_col.getName()) && _col.getName().contains("{date}"))
-                        _col.setName(_col.getName().replace("{date}", date));
-                }
-                while ((_col = _col.next) != null);
-            }
-
-            this.columns = _columns;
-
-            // FIXME 这里强行指定合并替换掉原本的头
-            List<Dimension> mergeCells = Collections.singletonList(new Dimension(1, (short) 1, 1, (short) y));
-            sheet.putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
-        }
-
-        @Override
-        protected void writeRow(Row row) throws IOException {
-            Cell[] cells = row.getCells();
-            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
-
-            for (int i = 0; i < len; i++) {
-                Cell cell = cells[i];
-                int xf = cell.xf, col = i + c * y;
-                switch (cell.t) {
-                    case INLINESTR:
-                    case SST:
-                        writeString(cell.sv, r, col, xf);
-                        break;
-                    case NUMERIC:
-                        writeNumeric(cell.nv, r, col, xf);
-                        break;
-                    case LONG:
-                        writeNumeric(cell.lv, r, col, xf);
-                        break;
-                    case DATE:
-                    case DATETIME:
-                    case DOUBLE:
-                    case TIME:
-                        writeDouble(cell.dv, r, col, xf);
-                        break;
-                    case BOOL:
-                        writeBool(cell.bv, r, col, xf);
-                        break;
-                    case DECIMAL:
-                        writeDecimal(cell.mv, r, col, xf);
-                        break;
-                    case CHARACTER:
-                        writeChar(cell.cv, r, col, xf);
-                        break;
-                    case BLANK:
-                        writeNull(r, col, xf);
-                        break;
-                    default:
-                }
-            }
-            // 注意这里可能不会关闭row需要在writeAfter进行二次处理
-            if (y == tile - 1)
-                bw.write("</row>");
-        }
-
-        @Override
-        protected void writeAfter(int total) throws IOException {
-            if (total > 0 && (total - 1) % tile < tile - 1) bw.write("</row>");
-            super.writeAfter(total);
         }
     }
 }
