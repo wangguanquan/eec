@@ -20,8 +20,11 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -30,29 +33,144 @@ import java.io.IOException;
 public class FreezeSheetTest extends WorkbookTest {
 
     @Test public void testFreezeTopRow() throws IOException {
-        new Workbook("Freeze Annotation Top Row", author)
-                .addSheet(new ListSheet<>(FreezeTopRow.randomTestData(FreezeTopRow::new)))
-                .writeTo(defaultTestPath);
+        String fileName = "Freeze Annotation Top Row.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = FreezeTopRow.randomTestData(FreezeTopRow::new);
+        new Workbook()
+                .addSheet(new ListSheet<>(expectList))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<FreezeTopRow> list = reader.sheet(0).dataRows().map(row -> row.to(FreezeTopRow.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                FreezeTopRow expect = (FreezeTopRow) expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testFreezeFirstColumn() throws IOException {
-        new Workbook("Freeze Annotation First Column", author)
-                .addSheet(new ListSheet<>(FreezeFirstColumn.randomTestData(FreezeFirstColumn::new)))
-                .writeTo(defaultTestPath);
+        String fileName = "Freeze Annotation First Column.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = FreezeTopRow.randomTestData(FreezeTopRow::new);
+        new Workbook()
+                .addSheet(new ListSheet<>(expectList))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<FreezeTopRow> list = reader.sheet(0).dataRows().map(row -> row.to(FreezeTopRow.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                FreezeTopRow expect = (FreezeTopRow) expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
 
     @Test public void testFreezePanes11() throws IOException {
-        new Workbook("Freeze Annotation Panes Row1 Column1", author)
-                .addSheet(new ListSheet<>(FreezePanesRow1Column1.randomTestData(FreezePanesRow1Column1::new)))
-                .writeTo(defaultTestPath);
+        String fileName = "Freeze Annotation Panes Row1 Column1.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = FreezePanesRow1Column1.randomTestData(FreezePanesRow1Column1::new);
+        new Workbook(fileName)
+                .addSheet(new ListSheet<>(expectList))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<FreezePanesRow1Column1> list = reader.sheet(0).dataRows().map(row -> row.to(FreezePanesRow1Column1.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                FreezePanesRow1Column1 expect = (FreezePanesRow1Column1) expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
+    @Test public void testFreezeByExtPropertyRow2() throws IOException {
+        String fileName = "Freeze Top Row2.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = ListObjectSheetTest.AllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList)
+                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(2)))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
+    }
+
+    @Test public void testFreezeByExtPropertyColumn2() throws IOException {
+        String fileName = "Freeze first Column2.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = ListObjectSheetTest.AllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList)
+                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.col(2)))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
+    }
+
+    @Test public void testFreezeByExtPropertyRow2Column2() throws IOException {
+        String fileName = "Freeze Panes Row2 Column2.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = ListObjectSheetTest.AllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList)
+                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(2, 2)))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
+    }
+
+    @Test public void testFreezeByExtPropertyRow2Column2FromRow4() throws IOException {
+        String fileName = "Freeze Panes Row2 Column2 From Row4.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = ListObjectSheetTest.AllType.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList).setStartRowIndex(4)
+                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(4)))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
+    }
 
     @Test public void testFreezePans52() throws IOException {
-        new Workbook("Freeze Annotation Panes Row5 Column2", author)
-                .addSheet(new ListSheet<>(FreezePanesRow5Column2.randomTestData(FreezePanesRow5Column2::new)))
-                .writeTo(defaultTestPath);
+        String fileName = "Freeze Annotation Panes Row5 Column2.xlsx";
+        List<ListObjectSheetTest.AllType> expectList = FreezePanesRow5Column2.randomTestData(FreezePanesRow5Column2::new);
+        new Workbook()
+                .addSheet(new ListSheet<>(expectList))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<FreezePanesRow5Column2> list = reader.sheet(0).dataRows().map(row -> row.to(FreezePanesRow5Column2.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                FreezePanesRow5Column2 expect = (FreezePanesRow5Column2) expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     // Freeze the first row
@@ -71,31 +189,4 @@ public class FreezeSheetTest extends WorkbookTest {
     @FreezePanes(topRow = 5, firstColumn = 2)
     public static class FreezePanesRow5Column2 extends ListObjectSheetTest.AllType { }
 
-    @Test public void testFreezeByExtPropertyRow2() throws IOException {
-        new Workbook("Freeze Top Row2", author)
-                .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(2)))
-                .writeTo(defaultTestPath);
-    }
-
-    @Test public void testFreezeByExtPropertyColumn2() throws IOException {
-        new Workbook("Freeze first Column2", author)
-                .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.col(2)))
-                .writeTo(defaultTestPath);
-    }
-
-    @Test public void testFreezeByExtPropertyRow2Column2() throws IOException {
-        new Workbook("Freeze Panes Row2 Column2", author)
-                .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData())
-                        .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.of(2, 2)))
-                .writeTo(defaultTestPath);
-    }
-
-    @Test public void testFreezeByExtPropertyRow2Column2FromRow4() throws IOException {
-        new Workbook("Freeze Panes Row2 Column2 From Row4")
-            .addSheet(new ListSheet<>(ListObjectSheetTest.AllType.randomTestData()).setStartRowIndex(4)
-                .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(4)))
-            .writeTo(defaultTestPath);
-    }
 }
