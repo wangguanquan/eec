@@ -20,6 +20,9 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.HeaderRow;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -27,7 +30,10 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
@@ -45,39 +51,142 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testFmtInAnnotation() throws IOException {
-        new Workbook("customize_numfmt").setAutoSize(true).addSheet(new ListSheet<>(Item.random())).writeTo(defaultTestPath);
+        String fileName = "customize_numfmt.xlsx";
+        List<Item> expectList = Item.random();
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(Item.class).iterator();
+            for (Item expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.get());
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(2);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "yyyy\\-mm\\-dd".equals(numFmt.getCode());
+            }
+        }
     }
 
     @Test public void testFmtInAnnotationYmdHms() throws IOException {
-        new Workbook("customize_numfmt_full").setAutoSize(true).addSheet(new ListSheet<>(ItemFull.randomFull())).writeTo(defaultTestPath);
+        String fileName = "customize_numfmt_full.xlsx";
+        List<ItemFull> expectList = ItemFull.randomFull();
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(ItemFull.class).iterator();
+            for (ItemFull expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.get());
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(3);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt.getCode());
+            }
+        }
     }
 
     @Test public void testDateFmt() throws IOException {
-        new Workbook("customize_date_format")
+        String fileName = "customize_date_format.xlsx";
+        List<ItemFull> expectList = ItemFull.randomFull();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(ItemFull.randomFull()
+            .addSheet(new ListSheet<>(expectList
             , new Column("编码", "code")
             , new Column("姓名", "name")
             , new Column("日期", "date").setNumFmt("yyyy年mm月dd日 hh日mm分ss秒")
-        )).writeTo(defaultTestPath);
+        )).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator();
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "编码".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "日期".equals(header.get(2));
+
+            for (ItemFull expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                Map<String, Object> e = row.toMap();
+                assert expect.code.equals(e.get("编码"));
+                assert expect.name.equals(e.get("姓名"));
+                assert expect.date.getTime() / 1000 == ((Timestamp) e.get("日期")).getTime() / 1000;
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(2);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "yyyy年mm月dd日\\ hh日mm分ss秒".equals(numFmt.getCode());
+            }
+        }
     }
 
     @Test public void testNumFmt() throws IOException {
-        new Workbook("customize_numfmt_full")
+        String fileName = "customize_numfmt_full.xlsx";
+        List<ItemFull> expectList = ItemFull.randomFull();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(ItemFull.randomFull()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("编码", "code")
                 , new Column("姓名", "name")
                 , new Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
                 , new Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
-            )).writeTo(defaultTestPath);
+            )).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator();
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "编码".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "日期".equals(header.get(2));
+            assert "数字".equals(header.get(3));
+
+            for (ItemFull expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                Map<String, Object> e = row.toMap();
+                assert expect.code.equals(e.get("编码"));
+                assert expect.name.equals(e.get("姓名"));
+                assert expect.date.getTime() / 1000 == ((Timestamp) e.get("日期")).getTime() / 1000;
+                assert expect.num == (Long) e.get("数字");
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(2);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "上午/下午hh\"時\"mm\"分\"".equals(numFmt.getCode());
+                int styleIndex3 = row.getCellStyle(3);
+                NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
+                assert numFmt3 != null && "#,##0\\ ;[Red]\\-#,##0\\ ".equals(numFmt3.getCode());
+            }
+        }
     }
 
     @Test public void testNegativeNumFmt() throws IOException {
-        new Workbook("customize_negative")
+        String fileName = "customize_negative.xlsx";
+        List<Num> expectList;
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(Arrays.asList(new Num(1234565435236543436L), new Num(0), new Num(-1234565435236543436L))))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList = Arrays.asList(new Num(1234565435236543436L), new Num(0), new Num(-1234565435236543436L))))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(Num.class).iterator();
+            for (Num expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.get());
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(0);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "[Blue]#,##0.00_);[Red]\\-#,##0.00_);0_)".equals(numFmt.getCode());
+            }
+        }
     }
 
     @Test public void testNumFmtWidth() {
@@ -144,26 +253,66 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testAutoWidth() throws IOException {
-        new Workbook("Auto Width Test")
+        String fileName = "Auto Width Test.xlsx";
+        List<WidthTestItem> expectList = WidthTestItem.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(WidthTestItem.randomTestData()))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(WidthTestItem.class).iterator();
+            for (WidthTestItem expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.get());
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(0);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "#,##0_);[Red]\\-#,##0_);0_)".equals(numFmt.getCode());
+                int styleIndex3 = row.getCellStyle(3);
+                NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
+                assert numFmt3 != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt3.getCode());
+            }
+        }
     }
 
     @Test public void testAutoAndMaxWidth() throws IOException {
-        new Workbook("Auto Max Width Test")
+        String fileName = "Auto Max Width Test.xlsx";
+        List<WidthTestItem> expectList = MaxWidthTestItem.randomTestData();
+        new Workbook()
                 .setAutoSize(true)
-                .addSheet(new ListSheet<>(MaxWidthTestItem.randomTestData()))
-                .writeTo(defaultTestPath);
+                .addSheet(new ListSheet<>(expectList))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(MaxWidthTestItem.class).iterator();
+            for (WidthTestItem expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.get());
+
+                Styles styles = row.getStyles();
+                int styleIndex = row.getCellStyle(0);
+                NumFmt numFmt = styles.getNumFmt(styleIndex);
+                assert numFmt != null && "#,##0_);[Red]\\-#,##0_);0_)".equals(numFmt.getCode());
+                int styleIndex3 = row.getCellStyle(3);
+                NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
+                assert numFmt3 != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt3.getCode());
+            }
+        }
     }
 
-    static class Item {
+    public static class Item {
         @ExcelColumn
         String code;
         @ExcelColumn
         String name;
         @ExcelColumn(format = "yyyy-mm-dd")
         Date date;
+
+        public Item() { }
 
         static List<Item> random() {
             int n = random.nextInt(10) + 1;
@@ -177,12 +326,29 @@ public class CustomerNumFmtTest extends WorkbookTest {
             }
             return list;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Item item = (Item) o;
+            return Objects.equals(code, item.code) &&
+                Objects.equals(name, item.name) &&
+                date.getTime() / 1000 == item.date.getTime() / 1000;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(code, name, date);
+        }
     }
 
-    static class ItemFull extends Item {
+    public static class ItemFull extends Item {
 
         @ExcelColumn
         long num;
+
+        public ItemFull() { }
 
         @ExcelColumn(format = "yyyy-mm-dd hh:mm:ss")
         public Date getDate() {
@@ -202,14 +368,42 @@ public class CustomerNumFmtTest extends WorkbookTest {
             }
             return list;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            ItemFull itemFull = (ItemFull) o;
+            return num == itemFull.num;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), num);
+        }
     }
 
-    static class Num {
+    public static class Num {
         @ExcelColumn(format = "[Blue]#,##0.00_);[Red]-#,##0.00_);0_)")
         long num;
 
+        public Num() { }
         Num(long num) {
             this.num = num;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Num num1 = (Num) o;
+            return num == num1.num;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(num);
         }
     }
 
@@ -222,6 +416,8 @@ public class CustomerNumFmtTest extends WorkbookTest {
         String scn;
         @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
         Timestamp iv;
+
+        public WidthTestItem() { }
 
         public static List<WidthTestItem> randomTestData() {
             return randomTestData(WidthTestItem::new);
@@ -239,6 +435,22 @@ public class CustomerNumFmtTest extends WorkbookTest {
             }
             return list;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            WidthTestItem that = (WidthTestItem) o;
+            return Objects.equals(nv, that.nv) &&
+                Objects.equals(sen, that.sen) &&
+                Objects.equals(scn, that.scn) &&
+                iv.getTime() / 1000 == that.iv.getTime() / 1000;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(nv, sen, scn, iv);
+        }
     }
 
     public static class MaxWidthTestItem extends WidthTestItem {
@@ -247,6 +459,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
             return scn;
         }
 
+        public MaxWidthTestItem() { }
         public static List<WidthTestItem> randomTestData() {
             return randomTestData(MaxWidthTestItem::new);
         }
