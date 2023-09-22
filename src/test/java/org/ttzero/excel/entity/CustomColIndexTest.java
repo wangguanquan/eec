@@ -20,51 +20,153 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.HeaderRow;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author guanquan.wang at 2022-07-24 10:34
  */
 public class CustomColIndexTest extends WorkbookTest {
 
-    @Test
-    public void testOrderColumn() throws IOException {
-        new Workbook(("Order column")).addSheet(new ListSheet<>(OrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
+    @Test public void testOrderColumn() throws IOException {
+        String fileName = "Order column.xlsx";
+        List<OrderEntry> expectList = OrderEntry.randomTestData();
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
 
-    @Test public void testSameOrderColumn() throws IOException {
-        new Workbook(("Same order column")).addSheet(new ListSheet<>(SameOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testFractureOrderColumn() throws IOException {
-        new Workbook(("Fracture order column")).addSheet(new ListSheet<>(FractureOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testLargeOrderColumn() throws IOException {
-        new Workbook(("Large order column")).addSheet(new ListSheet<>(LargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-    }
-
-    @Test public void testOverLargeOrderColumn() throws IOException {
-        try {
-            new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
-            assert false;
-        } catch (TooManyColumnsException e) {
-            assert true;
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).iterator();
+            for (OrderEntry expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.equals(row.to(OrderEntry.class));
+            }
         }
     }
 
+    @Test public void testSameOrderColumn() throws IOException {
+        String fileName = "Same order column.xlsx";
+        List<OrderEntry> expectList = SameOrderEntry.randomTestData();
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "s".equals(header.get(0));
+            assert "date".equals(header.get(1));
+            assert "s3".equals(header.get(4));
+            assert "d".equals(header.get(5));
+            assert "s2".equals(header.get(6));
+            assert "s4".equals(header.get(7));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (OrderEntry expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.s.equals(row.getString("s"));
+                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
+                assert Double.compare(expect.d, row.getDouble("d")) == 0;
+                assert expect.s2.equals(row.getString("s2"));
+                assert expect.s4.equals(row.getString("s4"));
+            }
+        }
+    }
+
+    @Test public void testFractureOrderColumn() throws IOException {
+        String fileName = "Fracture order column.xlsx";
+        List<OrderEntry> expectList = FractureOrderEntry.randomTestData();
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "s2".equals(header.get(0));
+            assert "s".equals(header.get(1));
+            assert "d".equals(header.get(2));
+            assert "date".equals(header.get(3));
+            assert "s4".equals(header.get(4));
+            assert "s3".equals(header.get(5));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (OrderEntry expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.s2.equals(row.getString("s2"));
+                assert expect.s.equals(row.getString("s"));
+                assert Double.compare(expect.d, row.getDouble("d")) == 0;
+                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
+                assert expect.s4.equals(row.getString("s4"));
+                assert expect.s3.equals(row.getString("s3"));
+            }
+        }
+    }
+
+    @Test public void testLargeOrderColumn() throws IOException {
+        String fileName = "Large order column.xlsx";
+        List<OrderEntry> expectList = LargeOrderEntry.randomTestData();
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "s".equals(header.get(1));
+            assert "d".equals(header.get(2));
+            assert "s3".equals(header.get(4));
+            assert "s4".equals(header.get(5));
+            assert "s2".equals(header.get(189));
+            assert "date".equals(header.get(Const.Limit.MAX_COLUMNS_ON_SHEET - 1));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (OrderEntry expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.s.equals(row.getString("s"));
+                assert Double.compare(expect.d, row.getDouble("d")) == 0;
+                assert expect.s3.equals(row.getString("s3"));
+                assert expect.s4.equals(row.getString("s4"));
+                assert expect.s2.equals(row.getString("s2"));
+                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
+            }
+        }
+    }
+
+    @Test(expected = TooManyColumnsException.class) public void testOverLargeOrderColumn() throws IOException {
+        new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
+    }
+
     @Test public void testOrderColumnSpecifyOnColumn() throws IOException {
-        new Workbook("Order column 2")
-            .addSheet(new ListSheet<>("期末成绩", ListObjectSheetTest.Student.randomTestData()
+        String fileName = "Order column 2.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column("学号", "id").setColIndex(3)
                 , new Column("姓名", "name")
-                , new Column("成绩", "score").setColIndex(5) // un-declare field
-            )).writeTo(defaultTestPath);
+                , new Column("成绩", "score").setColIndex(5)
+            )).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "姓名".equals(header.get(0));
+            assert "学号".equals(header.get(3));
+            assert "成绩".equals(header.get(5));
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (ListObjectSheetTest.Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                ListObjectSheetTest.Student e = row.too(ListObjectSheetTest.Student.class);
+                expect.setId(0); // ID ignore field
+                assert expect.equals(e);
+            }
+        }
     }
 
 
@@ -124,6 +226,24 @@ public class CustomColIndexTest extends WorkbookTest {
 
         public String getS4() {
             return s4;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            OrderEntry that = (OrderEntry) o;
+            return Objects.equals(s, that.s) &&
+                date.getTime() / 1000 == that.date.getTime() / 1000 &&
+                Double.compare(d, that.d) == 0 &&
+                Objects.equals(s2, that.s2) &&
+                Objects.equals(s3, that.s3) &&
+                Objects.equals(s4, that.s4);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(s, date, d, s2, s3, s4);
         }
     }
 
