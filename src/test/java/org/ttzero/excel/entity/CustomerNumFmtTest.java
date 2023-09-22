@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -112,10 +111,9 @@ public class CustomerNumFmtTest extends WorkbookTest {
             for (ItemFull expect : expectList) {
                 assert iter.hasNext();
                 org.ttzero.excel.reader.Row row = iter.next();
-                Map<String, Object> e = row.toMap();
-                assert expect.code.equals(e.get("编码"));
-                assert expect.name.equals(e.get("姓名"));
-                assert expect.date.getTime() / 1000 == ((Timestamp) e.get("日期")).getTime() / 1000;
+                assert expect.code.equals(row.getString("编码"));
+                assert expect.name.equals(row.getString("姓名"));
+                assert expect.date.getTime() / 1000 == row.getTimestamp("日期").getTime() / 1000;
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
@@ -149,11 +147,10 @@ public class CustomerNumFmtTest extends WorkbookTest {
             for (ItemFull expect : expectList) {
                 assert iter.hasNext();
                 org.ttzero.excel.reader.Row row = iter.next();
-                Map<String, Object> e = row.toMap();
-                assert expect.code.equals(e.get("编码"));
-                assert expect.name.equals(e.get("姓名"));
-                assert expect.date.getTime() / 1000 == ((Timestamp) e.get("日期")).getTime() / 1000;
-                assert expect.num == (Long) e.get("数字");
+                assert expect.code.equals(row.getString("编码"));
+                assert expect.name.equals(row.getString("姓名"));
+                assert expect.date.getTime() / 1000 == row.getTimestamp("日期").getTime() / 1000;
+                assert expect.num == row.getLong("数字");
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
