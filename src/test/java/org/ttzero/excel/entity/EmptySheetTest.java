@@ -143,4 +143,21 @@ public class EmptySheetTest extends WorkbookTest {
             assert reader.sheet(0).rows().count() == 0L;
         }
     }
+
+    @Test public void testEmptyMapListSpecifyHeaders() throws IOException {
+        String fileName = "empty map list sheet specify headers.xlsx";
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListMapSheet("empty", new Column("id"), new Column("name")))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        // Check header row
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assert "empty".equals(reader.sheet(0).getName());
+            Iterator<Row> iter = reader.sheet(0).rows().iterator();
+            assert iter.hasNext();
+            org.ttzero.excel.reader.Row row = iter.next();
+            assert "id".equals(row.getString(0));
+            assert "name".equals(row.getString(1));
+        }
+    }
 }

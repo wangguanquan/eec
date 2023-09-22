@@ -19,23 +19,47 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author guanquan.wang at 2022-08-03 08:50
  */
 public class HideColumnTest extends WorkbookTest {
     @Test public void testColumnHide() throws IOException {
+        String fileName = "Hide Column.xlsx";
+        List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData(10);
         Column[] columns = {new Column("ID", "id").hide(), new Column("NAME", "name")};
-        new Workbook("Hide Column").addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData(10), columns))
-            .writeTo(defaultTestPath);
+        new Workbook().addSheet(new ListSheet<>(expectList, columns))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> list = reader.sheet(0).headerColumnIgnoreCase().dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testColumnAnnoHide() throws IOException {
-        new Workbook("Hide Column Annotation").addSheet(new ListSheet<>(HideColumnItem.randomTestData(10)))
-            .writeTo(defaultTestPath);
+        String fileName = "Hide Column Annotation.xlsx";
+        List<ListObjectSheetTest.Item> expectList = HideColumnItem.randomTestData(10);
+        new Workbook().addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Item expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     public static class HideColumnItem extends ListObjectSheetTest.Item {
