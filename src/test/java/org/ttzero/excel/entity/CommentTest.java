@@ -20,10 +20,13 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.reader.ExcelReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 /**
@@ -31,22 +34,44 @@ import java.util.List;
  */
 public class CommentTest extends WorkbookTest {
     @Test public void testComment() throws IOException {
-        new Workbook("comment test")
-            .addSheet(new ListSheet<>(Student.randomTestData()))
-            .writeTo(defaultTestPath);
+        String fileName = "comment test.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testCommentLongText() throws IOException {
-        Sheet sheet = new ListSheet<>(Student.randomTestData());
+        String fileName = "long text comment test.xlsx";
+        List<Student> expectList = Student.randomTestData();
+        Sheet sheet = new ListSheet<>(expectList);
         Comments comments = sheet.getComments();
         if (comments == null) comments = sheet.createComments();
         comments.addComment("C5", new Comment("提示：", "1、第一行批注内容较多时无法完全显示内容，增加弹出框大小设置\n" +
             "2、第二行批注内容较多时无法完全显示内容\n" +
             "3、第三行批注内容较多时无法完全显示内容\n" +
             "4、第四行批注内容较多时无法完全显示内容", 180D, 80D));
-        new Workbook("long text comment test")
+        new Workbook()
             .addSheet(sheet)
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Student expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     /**
@@ -109,6 +134,21 @@ public class CommentTest extends WorkbookTest {
         public static List<Student> randomTestData() {
             int n = random.nextInt(100) + 1;
             return randomTestData(n);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Student student = (Student) o;
+            return id == student.id &&
+                score == student.score &&
+                Objects.equals(name, student.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, name, score);
         }
 
         @Override

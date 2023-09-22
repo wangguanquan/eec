@@ -153,6 +153,7 @@ public class CustomColIndexTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
+            assert "期末成绩".equals(sheet.getName());
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
             assert "姓名".equals(header.get(0));
             assert "学号".equals(header.get(3));

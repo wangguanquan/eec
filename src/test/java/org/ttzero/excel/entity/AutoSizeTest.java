@@ -21,13 +21,18 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.Row;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author guanquan.wang at 2023-02-04 22:15
@@ -35,7 +40,7 @@ import java.util.Map;
 public class AutoSizeTest extends WorkbookTest {
 
     @Test public void testAutoSize() throws IOException {
-        List<ServerReport> reports = new ArrayList<>(2);
+        List<ServerReport> expectList = new ArrayList<>(2);
         for (int i = 0; i < 2; i++) {
             ServerReport e = new ServerReport();
             e.index = i + 1;
@@ -44,56 +49,114 @@ public class AutoSizeTest extends WorkbookTest {
             e.duration = 12345L;
             e.zipkinDt = "22-07-07";
             e.timestamp = new Date();
-            reports.add(e);
+            expectList.add(e);
         }
-        new Workbook("服务数据")
+        String fileName = "服务数据.xlsx";
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>("服务报表1", reports))
-            .writeTo(defaultTestPath);
+            .addSheet(new ListSheet<>("服务报表1", expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ServerReport> list = reader.sheet(0).dataRows().map(row -> row.to(ServerReport.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ServerReport expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testAutoSize2() throws IOException {
-        List<Map<String, ?>> reports = new ArrayList<>(2);
+        List<Map<String, ?>> expectList = new ArrayList<>(2);
         for (int i = 0; i < 2; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
             for (int j = 1; j <= Const.Limit.MAX_COLUMNS_ON_SHEET; j++) {
                 map.put("COLUMN" + j, getRandomString());
             }
-            reports.add(map);
+            expectList.add(map);
         }
-        new Workbook("服务数据")
+        String fileName = "服务数据.xlsx";
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("服务报表1", reports)
+            .addSheet(new ListMapSheet("服务报表1", expectList)
             .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1)))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testAutoWidthAndFixedWidth() throws IOException {
-        new Workbook("auto-width and fixed-width")
+        String fileName = "auto-width and fixed-width.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id").fixedSize(16)
                 , new Column("姓名", "name")
                 , new Column("成绩", "score"))
-            ).writeTo(defaultTestPath);
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Student> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+            assert expectList.size() == list.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i), e = list.get(i);
+                expect.setId(0);
+                assert expect.equals(e);
+            }
+        }
     }
 
     @Test public void testSpecifyColumnAutoWidth() throws IOException {
-        new Workbook("specify column auto-width")
-            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+        String fileName = "specify column auto-width.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id")
                 , new Column("姓名", "name").autoSize()
                 , new Column("成绩", "score")).fixedSize(10)
-            ).writeTo(defaultTestPath);
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataIterator();
+            for (ListObjectSheetTest.Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.getId() == row.getInt(0);
+                assert expect.getName().equals(row.getString(1));
+                assert expect.getScore() == row.getInt(2);
+            }
+        }
     }
 
     @Test public void testFixedAndAutoWidth() throws IOException {
-        new Workbook("fixed and fixed-width")
-            .addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+        String fileName = "fixed and fixed-width.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
                 , new Column("学号", "id")
                 , new Column("姓名", "name").autoSize()
                 , new Column("成绩", "score"))
-            ).writeTo(defaultTestPath);
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataIterator();
+            for (ListObjectSheetTest.Student expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                assert expect.getId() == row.getInt(0);
+                assert expect.getName().equals(row.getString(1));
+                assert expect.getScore() == row.getInt(2);
+            }
+        }
     }
 
     @FreezePanes(topRow = 1)
@@ -116,5 +179,23 @@ public class AutoSizeTest extends WorkbookTest {
 
         @ExcelColumn(colIndex = 5, value = "持续时间")
         private Long duration;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ServerReport that = (ServerReport) o;
+            return Objects.equals(index, that.index) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(zipkinDt, that.zipkinDt) &&
+                timestamp.getTime() / 1000 == that.timestamp.getTime() / 1000 &&
+                Objects.equals(clientRequestNum, that.clientRequestNum) &&
+                Objects.equals(duration, that.duration);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(index, name, zipkinDt, timestamp, clientRequestNum, duration);
+        }
     }
 }
