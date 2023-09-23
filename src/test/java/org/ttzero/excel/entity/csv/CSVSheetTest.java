@@ -21,31 +21,25 @@ import org.junit.Test;
 import org.ttzero.excel.entity.CSVSheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
+import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.util.CSVUtil;
-import org.ttzero.excel.util.CSVUtilTest;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.ttzero.excel.util.FileUtil.exists;
-import static org.ttzero.excel.util.FileUtil.isWindows;
 
 /**
  * @author guanquan.wang at 2019-09-26 10:07
  */
 public class CSVSheetTest extends WorkbookTest {
     private Path path;
-    @Before
-    public void before() {
-        URL url = CSVUtilTest.class.getClassLoader().getResource(".");
-        if (url == null) {
-            throw new RuntimeException("Load test resources error.");
-        }
-        path = isWindows() ? Paths.get(url.getFile().substring(1)) : Paths.get(url.getFile());
-        path = path.resolve("1.csv");
+    @Before public void before() throws IOException {
+        path = getOutputTestPath().resolve("1.csv");
 
         // Create a test file
         if (!exists(path)) {
@@ -86,34 +80,99 @@ public class CSVSheetTest extends WorkbookTest {
                     // break row
                     writer.newLine();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                assert false;
             }
         }
     }
 
     @Test public void testFromPath() throws IOException {
-        new Workbook("csv path test", author)
+        String fileName = "csv path test.xlsx";
+        new Workbook()
             .addSheet(new CSVSheet(path))
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve(fileName));
+
+        List<String[]> expectList = CSVUtil.read(path);
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            for (String[] expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                for (int i = 0; i < expect.length; i++) {
+                    if (expect[i] != null) {
+                        assert expect[i].equals(row.getString(i));
+                    } else {
+                        assert StringUtil.isEmpty(row.getString(i));
+                    }
+                }
+            }
+        }
     }
 
     @Test public void testFromInputStream() throws IOException {
-        new Workbook("csv inputstream test", author)
+        String fileName = "csv inputstream test.xlsx";
+        new Workbook()
             .addSheet(new CSVSheet(Files.newInputStream(path)))
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve(fileName));
+
+        List<String[]> expectList = CSVUtil.read(path);
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            for (String[] expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                for (int i = 0; i < expect.length; i++) {
+                    if (expect[i] != null) {
+                        assert expect[i].equals(row.getString(i));
+                    } else {
+                        assert StringUtil.isEmpty(row.getString(i));
+                    }
+                }
+            }
+        }
     }
 
     @Test public void testFromReader() throws IOException {
-        new Workbook("csv reader test", author)
+        String fileName = "csv reader test.xlsx";
+        new Workbook()
             .addSheet(new CSVSheet(Files.newBufferedReader(path)))
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve(fileName));
+
+        List<String[]> expectList = CSVUtil.read(path);
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            for (String[] expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                for (int i = 0; i < expect.length; i++) {
+                    if (expect[i] != null) {
+                        assert expect[i].equals(row.getString(i));
+                    } else {
+                        assert StringUtil.isEmpty(row.getString(i));
+                    }
+                }
+            }
+        }
     }
 
     @Test public void testHasHeaderFromPath() throws IOException {
-        new Workbook("csv header path test", author)
+        String fileName = "csv header path test.xlsx";
+        new Workbook()
             .addSheet(new CSVSheet(path).setHasHeader(true))
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve(fileName));
+
+        List<String[]> expectList = CSVUtil.read(path);
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            for (String[] expect : expectList) {
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row row = iter.next();
+                for (int i = 0; i < expect.length; i++) {
+                    if (expect[i] != null) {
+                        assert expect[i].equals(row.getString(i));
+                    } else {
+                        assert StringUtil.isEmpty(row.getString(i));
+                    }
+                }
+            }
+        }
     }
 }
