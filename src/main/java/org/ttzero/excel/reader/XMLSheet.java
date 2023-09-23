@@ -441,7 +441,7 @@ public class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         // Prevent multiple parsing
-        if (sRow != null) {
+        if (sRow != null && reader != null) {
             reset();
             return this;
         }
