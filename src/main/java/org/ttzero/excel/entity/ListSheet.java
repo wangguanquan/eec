@@ -574,7 +574,7 @@ public class ListSheet<T> extends Sheet {
                         hc.ignoreValue();
                     }
                     // Write as Object#toString()
-                    else LOGGER.warn("Column one does not specify method and filed");
+                    else LOGGER.warn("Column one does not specify method or filed");
                 } else if (hc.getClazz() == null) {
                     hc.setClazz(ec.method != null ? ec.method.getReturnType() : ec.field.getType());
                 }
