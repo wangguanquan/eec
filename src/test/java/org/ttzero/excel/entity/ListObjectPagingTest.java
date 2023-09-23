@@ -47,9 +47,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
@@ -73,9 +73,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
@@ -100,9 +100,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
@@ -131,9 +131,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
@@ -162,9 +162,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
@@ -196,19 +196,23 @@ public class ListObjectPagingTest extends WorkbookTest {
                     if (sub != null) expectList.addAll(sub);
                     return sub;
                 }
+                @Override
+                protected Class<?> getTClass() {
+                    return ListObjectSheetTest.Student.class;
+                }
             })
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row;
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
-                Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
+                Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Student.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assert "姓名".equals(header.get(0));
+                assert "成绩".equals(header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Student expect = expectList.get(a++), e = iter.next().get();
@@ -227,9 +231,9 @@ public class ListObjectPagingTest extends WorkbookTest {
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
@@ -263,29 +267,29 @@ public class ListObjectPagingTest extends WorkbookTest {
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "s2".equals(header.get(0));
                 assert "s".equals(header.get(1));
                 assert "d".equals(header.get(2));
-                assert "date".equals(header.get(3));
-                assert "s4".equals(header.get(4));
-                assert "s3".equals(header.get(5));
+                assert "s3".equals(header.get(4));
+                assert "s4".equals(header.get(5));
+                assert "s2".equals(header.get(189));
+                assert "date".equals(header.get(16_383));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
-                    CustomColIndexTest.FractureOrderEntry expect = (CustomColIndexTest.FractureOrderEntry) expectList.get(a++);
+                    CustomColIndexTest.LargeOrderEntry expect = (CustomColIndexTest.LargeOrderEntry) expectList.get(a++);
                     Row row = iter.next();
-                    assert expect.getS2().equals(row.getString(0));
                     assert expect.getS().equals(row.getString(1));
                     assert expect.getD().equals(row.getDouble(2));
-                    assert expect.getDate().getTime() / 1000 == row.getDate(3).getTime() / 1000; // TODO miss milliseconds
-                    assert expect.getS4().equals(row.getString(4));
-                    assert expect.getS3().equals(row.getString(5));
+                    assert expect.getS3().equals(row.getString(4));
+                    assert expect.getS4().equals(row.getString(5));
+                    assert expect.getS2().equals(row.getString(189));
+                    assert expect.getDate().getTime() / 1000 == row.getDate(16_383).getTime() / 1000;
                 }
             }
         }
@@ -303,9 +307,9 @@ public class ListObjectPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);

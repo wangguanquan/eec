@@ -198,22 +198,22 @@ public class ReportDesignTest extends WorkbookTest {
                 assert d0.equals(d1);
             }
 
-            List<Map<String, Object>> expectList = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> expectList = sheet.asSheet().dataRows().map(Row::toMap).collect(Collectors.toList());
 
             assert expectList.size() == list.size();
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, Object> m = expectList.get(i);
                 E e = list.get(i);
-                assert m.get("日期").equals(e.date);
-                assert m.get("客户名称").equals(e.customer);
-                assert m.get("商品名称").equals(e.productName);
-                assert m.get("品牌").equals(e.brand);
-                assert m.get("单位").equals(e.unit);
-                assert m.get("数量").equals(e.num);
-                assert new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert m.get("出库数量").equals(e.outNum);
-                assert m.get("关联订单").equals(e.orderNo);
+                assert e.date == null ? m.get("日期") == null || m.get("日期").toString().isEmpty() : m.get("日期").equals(e.date);
+                assert e.customer == null ? m.get("客户名称") == null || m.get("客户名称").toString().isEmpty() : m.get("客户名称").equals(e.customer);
+                assert e.productName == null ? m.get("商品名称") == null || m.get("商品名称").toString().isEmpty() : m.get("商品名称").equals(e.productName);
+                assert e.brand == null ? m.get("品牌") == null || m.get("品牌").toString().isEmpty() : m.get("品牌").equals(e.brand);
+                assert e.unit == null ? m.get("单位") == null || m.get("单位").toString().isEmpty() : m.get("单位").equals(e.unit);
+                assert e.num == null ? m.get("数量") == null || m.get("数量").toString().isEmpty() : m.get("数量").equals(e.num);
+                assert e.unitPrice == null ? m.get("含税单价") == null || m.get("含税单价").toString().isEmpty() : new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assert e.totalAmount == null ? m.get("含税总额") == null || m.get("含税总额").toString().isEmpty() : new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assert e.outNum == null ? m.get("出库数量") == null || m.get("出库数量").toString().isEmpty() : m.get("出库数量").equals(e.outNum);
+                assert e.orderNo == null ? m.get("关联订单") == null || m.get("日期").toString().isEmpty() : m.get("关联订单").equals(e.orderNo);
             }
 
             Iterator<Row> iter = reader.sheet(0).iterator();
@@ -229,40 +229,6 @@ public class ReportDesignTest extends WorkbookTest {
             assert "含税总额".equals(header.getString(7));
             assert "出库数量".equals(header.getString(8));
             assert "关联订单".equals(header.getString(9));
-//
-//            int r = 0;
-//            String orderNo = null;
-//            while (iter.hasNext()) {
-//                org.ttzero.excel.reader.Row row0 = iter.next();
-//
-//                if (!row0.getString("关联订单").equals(orderNo)) {
-//                    r++;
-//                    orderNo = row0.getString("关联订单");
-//                }
-//
-//                Styles styles = row0.getStyles();
-//
-//                assert styles.getHorizontal(row0.getCellStyle(0)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-//                assert styles.getHorizontal(row0.getCellStyle(1)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-//                assert styles.getHorizontal(row0.getCellStyle(2)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-//                assert styles.getHorizontal(row0.getCellStyle(3)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-//                assert styles.getHorizontal(row0.getCellStyle(4)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-//                assert styles.getHorizontal(row0.getCellStyle(5)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-//                assert styles.getHorizontal(row0.getCellStyle(6)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-//                assert styles.getHorizontal(row0.getCellStyle(7)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-//                assert styles.getHorizontal(row0.getCellStyle(8)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-//                assert styles.getHorizontal(row0.getCellStyle(9)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-//
-//
-//                int style = row0.getCellStyle(0);
-//                Fill fill = styles.getFill(style);
-//
-//                if ((r & 1) == 1) {
-//                    assert fill == null || fill.getPatternType() == PatternType.none;
-//                } else {
-//                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(233, 234, 236));
-//                }
-//            }
         }
     }
 

@@ -89,18 +89,18 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
         List<RepeatableEntry> expectList = RepeatableEntry.randomTestData(10000);
-        IWorksheetWriter worksheetWriter;
-        new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(expectList).setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {
+        Workbook workbook = new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(expectList).setSheetWriter(new XMLWorksheetWriter() {
                 @Override
                 public int getRowLimit() {
                     return 500;
                 }
-            })).writeTo(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"));
+            }));
+        workbook.writeTo(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"));
 
-        int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"))) {
-            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 List<RepeatableEntry> list = reader.sheet(i).header(1, 4).bind(RepeatableEntry.class).rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
@@ -390,22 +390,22 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
     @Test public void testAutoSizeAndHideColPaging() throws IOException {
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
-        IWorksheetWriter worksheetWriter;
-        new Workbook().setAutoSize(true)
+        Workbook workbook = new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score").hide()
-            ).setSheetWriter(worksheetWriter = new XMLWorksheetWriter() {
+            ).setSheetWriter(new XMLWorksheetWriter() {
                 @Override
                 public int getRowLimit() {
                     return 10;
                 }
-            })).writeTo(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"));
+            }));
+        workbook.writeTo(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"));
 
-        int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"))) {
-            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
             for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
                 List<Map<String, Object>> list = reader.sheet(i).header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
