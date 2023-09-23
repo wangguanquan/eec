@@ -67,7 +67,7 @@ public class XMLSheet implements Sheet {
         this.eof = sheet.eof;
         this.heof = sheet.heof;
         this.mark = sheet.mark;
-        this.sRow = sheet.sRow;
+        this.sRow = (sheet.sRow instanceof XMLMergeRow) || (sheet.sRow instanceof XMLCalcRow) ? createRow().init(sst, styles, startRow) : sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
