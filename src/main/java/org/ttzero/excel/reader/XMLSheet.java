@@ -442,7 +442,7 @@ public class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         // Prevent multiple parsing
-        if (sRow != null && reader != null) {
+        if (sRow != null) {
             reset();
             return this;
         }
@@ -741,6 +741,7 @@ public class XMLSheet implements Sheet {
                 reader.close();
             }
             if (cb == null) {
+                sRow = null; // Repair possible dead cycles
                 return this.load();
             }
             // Reload
