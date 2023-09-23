@@ -30,7 +30,7 @@ import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
  * @author guanquan.wang at 2019-05-07 17:41
  */
 public class SharedStringsTest {
-    @Test public void testGet() {
+    @Test public void testGet() throws IOException {
         try (SharedStrings sst = new SharedStrings()) {
             int index = sst.get("abc");
             assert index == 0;
@@ -49,13 +49,10 @@ public class SharedStringsTest {
 
             index = sst.get("test");
             assert index == 2;
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
     }
 
-    @Test public void testGetChar() {
+    @Test public void testGetChar() throws IOException {
         try (SharedStrings sst = new SharedStrings()) {
             for (int i = 0; i <= 0x7F; i++) {
                 sst.get((char) i);
@@ -66,9 +63,6 @@ public class SharedStringsTest {
                 int index = sst.get(c);
                 assert index == c;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            assert false;
         }
     }
 

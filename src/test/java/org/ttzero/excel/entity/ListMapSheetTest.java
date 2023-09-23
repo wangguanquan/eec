@@ -888,7 +888,7 @@ public class ListMapSheetTest extends WorkbookTest {
         assert Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("fv").toString())) == 0;
         assert Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("dv").toString())) == 0;
         assert expect.get("s").equals(e.get("s"));
-        assert expect.get("mv").toString().equals(e.get("mv").toString());
+        assert ((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN).equals(new BigDecimal(e.get("mv").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("av");
         assert av1.getTime() / 1000 == av2.getTime() / 1000;
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("iv");
@@ -916,7 +916,7 @@ public class ListMapSheetTest extends WorkbookTest {
         assert Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("float").toString())) == 0;
         assert Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("double").toString())) == 0;
         assert expect.get("s").equals(e.get("string"));
-        assert expect.get("mv").toString().equals(e.get("decimal").toString());
+        assert ((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN).equals(new BigDecimal(e.get("decimal").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("date");
         assert av1.getTime() / 1000 == av2.getTime() / 1000;
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("timestamp");

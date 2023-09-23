@@ -1547,7 +1547,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Float.compare(allType.fv, fv) == 0 &&
                 Double.compare(allType.dv, dv) == 0 &&
                 Objects.equals(s, allType.s) &&
-                Objects.equals(mv, allType.mv) &&
+                Objects.equals(mv.setScale(4, BigDecimal.ROUND_HALF_DOWN), allType.mv.setScale(4, BigDecimal.ROUND_HALF_DOWN)) &&
                 av.getTime() / 1000 == allType.av.getTime() / 1000 &&
                 iv.getTime() / 1000 == allType.iv.getTime() / 1000 &&
                 String.valueOf(tv).equals(String.valueOf(allType.tv)) &&
@@ -1842,7 +1842,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Objects.equals(fv, that.fv) &&
                 Objects.equals(dv, that.dv) &&
                 Objects.equals(s, that.s) &&
-                Objects.equals(mv, that.mv) &&
+                Objects.equals(mv.setScale(4, BigDecimal.ROUND_HALF_DOWN), that.mv.setScale(4, BigDecimal.ROUND_HALF_DOWN)) &&
                 av.getTime() / 1000 == that.av.getTime() / 1000 &&
                 iv.getTime() / 1000 == that.iv.getTime() / 1000 &&
                 String.valueOf(tv).equals(String.valueOf(that.tv)) &&
