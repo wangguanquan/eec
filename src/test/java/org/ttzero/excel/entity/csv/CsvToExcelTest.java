@@ -36,7 +36,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
 /**
  * @author guanquan.wang at 2019-09-26 10:07
  */
-public class CSVSheetTest extends WorkbookTest {
+public class CsvToExcelTest extends WorkbookTest {
     private Path path;
     @Before public void before() throws IOException {
         path = getOutputTestPath().resolve("1.csv");
