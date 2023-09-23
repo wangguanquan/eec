@@ -1506,7 +1506,7 @@ public abstract class Row {
     public Map<String, Object> toMap() {
         if (isEmpty() || hr == null) return Collections.emptyMap();
         // Maintain the column orders
-        Map<String, Object> data = new LinkedHashMap<>(hr.lc - hr.fc);
+        Map<String, Object> data = new LinkedHashMap<>(Math.max(16, hr.lc - hr.fc));
         String[] names = hr.names;
         String key;
         for (int i = hr.fc; i < hr.lc; i++) {
