@@ -199,7 +199,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
      */
     public int find(char c, long pos) throws IOException {
         // Flush before read
-        flush();
+//        flush();
         int index = 0;
         // Mark current position
         mark().skip(pos);
@@ -248,8 +248,9 @@ public class SharedStringTable implements Closeable, Iterable<String> {
      * @throws IOException if io error occur
      */
     public int find(String key, long pos) throws IOException {
-        // Flush before read
-        flush();
+        if (key != null && key.length() == 1) return find(key.charAt(0), pos);
+//        // Flush before read
+//        flush();
         // Mark current position
         mark().skip(pos);
 
