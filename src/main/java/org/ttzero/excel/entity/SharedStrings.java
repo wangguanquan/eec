@@ -132,8 +132,6 @@ public class SharedStrings implements Storable, Closeable {
         }
     }
 
-    private final ThreadLocal<char[]> charCache = ThreadLocal.withInitial(() -> new char[1]);
-
     /**
      * Getting the character value index (zero base)
      *
@@ -154,8 +152,7 @@ public class SharedStrings implements Storable, Closeable {
             total_char_cache++;
             return n;
         } else {
-            char[] cs = charCache.get();
-            cs[0] = c;
+            char[] cs = { c };
             return get(new String(cs));
         }
     }
