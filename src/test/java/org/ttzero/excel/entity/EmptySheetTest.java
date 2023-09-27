@@ -23,6 +23,10 @@ import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +35,7 @@ import java.util.List;
  * @author guanquan.wang at 2019-04-29 21:36
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class EmptySheetTest extends WorkbookTest {
+public class EmptySheetTest extends SQLWorkbookTest {
     @Test public void testEmpty() throws IOException {
         String fileName = "test empty.xlsx";
         new Workbook()
@@ -160,4 +164,30 @@ public class EmptySheetTest extends WorkbookTest {
             assert "name".equals(row.getString(1));
         }
     }
+
+    @Test public void testEmptyStatementSheet() throws SQLException, IOException {
+        try (Connection con = getConnection()) {
+            String fileName = "test empty statement sheet.xlsx",
+                sql = "select id, name, age, create_date, update_date from student where id < 0"; //
+            new Workbook()
+                .addSheet(new StatementSheet(con, sql))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+                assert iter.hasNext();
+                org.ttzero.excel.reader.Row header = iter.next();
+                assert "id".equals(header.getString(0));
+                assert "name".equals(header.getString(1));
+                assert "age".equals(header.getString(2));
+                assert "create_date".equals(header.getString(3));
+                assert "update_date".equals(header.getString(4));
+            }
+            rs.close();
+            ps.close();
+        }
+    }
+
 }
