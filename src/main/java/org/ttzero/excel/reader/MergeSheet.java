@@ -41,6 +41,8 @@ import java.util.List;
 public interface MergeSheet extends Sheet {
     /**
      * Returns CellMerged info
+     *
+     * @return merged {@link Grid}
      */
     Grid getMergeGrid();
 
