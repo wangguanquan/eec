@@ -60,9 +60,7 @@ public class ExtXMLWriter extends XMLWriter {
                     writer.write(" encoding=\"UTF-8\"");
                 }
 
-                writer.write(" standalone=\"yes\"");
-
-                writer.write("?>");
+                writer.write(" standalone=\"yes\"?>");
             } else {
                 writer.write("<?xml version=\"1.0\"");
 
@@ -70,9 +68,7 @@ public class ExtXMLWriter extends XMLWriter {
                     writer.write(" encoding=\"" + encoding + "\"");
                 }
 
-                writer.write(" standalone=\"yes\"");
-
-                writer.write("?>");
+                writer.write(" standalone=\"yes\"?>");
             }
 
             if (format.isNewLineAfterDeclaration()) {
