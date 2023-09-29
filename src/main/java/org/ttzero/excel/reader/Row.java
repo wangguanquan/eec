@@ -1702,6 +1702,43 @@ public abstract class Row {
         }
         return n;
     }
+
+    // -1: not a number
+    // 0: empty
+    // 1: int
+    // 2: long
+    // 3: double / decimal
+    public static int testNumberType(char[] cb, int a, int b) {
+        if (a == b) return 0;
+        if (b - a == 1) return cb[a] >= '0' && cb[a] <= '9' ? 1 : -1;
+        int dotIdx = -1, eIdx = -1, i = a, j;
+        if (cb[i] == '-') i++;
+        j = i;
+        for ( ; i < b; ) {
+            char c = cb[i++];
+            if (c >= '0' && c <= '9') continue;
+            else if (c == '.') {
+                if (dotIdx >= 0 || eIdx >= 0) return -1;
+                dotIdx = i - 1;
+            }
+            else if (c == 'e' || c == 'E') {
+                if (eIdx > 0 || i == 1) return -1;
+                eIdx = i - 1;
+                if (i + 1 > b) return -1;
+                c = cb[i++];
+                if (c == '-' || c == '+') {
+                    if (i + 1 > b) return -1;
+                }
+                else if (c < '0' || c > '9') return -1;
+            }
+            else return -1;
+        }
+
+//        int intPart = dotIdx == -1 ? eIdx == -1 ? b : eIdx : dotIdx, ePart = eIdx > 0 ? b - ep : 0, dotPart = dotIdx >= 0 ? (eIdx > 0 ? eIdx : b) - dotIdx - 1 : 0;
+
+        if (b - j == 1 && dotIdx >= 0) return -1;
+        return dotIdx >= 0 || eIdx > 1 ? 3 : b - j >= 10 ? 2 : 1;
+    }
 }
 
 /**

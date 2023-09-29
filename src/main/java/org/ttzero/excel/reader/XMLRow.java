@@ -20,6 +20,8 @@ import org.ttzero.excel.entity.TooManyColumnsException;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 
+import java.math.BigDecimal;
+
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
@@ -241,36 +243,10 @@ public class XMLRow extends Row {
         return _n ? -n : n;
     }
 
-    protected static String toString(char[] cb, int a, int b) {
-        return new String(cb, a, b - a);
-    }
+//    protected static double toDouble(char[] cb, int a, int b) {
+//        return Double.parseDouble(new String(cb, a, b - a));
+//    }
 
-    protected static double toDouble(char[] cb, int a, int b) {
-        return Double.parseDouble(toString(cb, a, b));
-    }
-
-    protected static boolean isNumber(char[] cb, int a, int b) {
-        if (a == b) return false;
-        if (cb[a] == '-') a++;
-        for (; a < b; ) {
-            char c = cb[a++];
-            if (c < '0' || c > '9') break;
-        }
-        return a == b;
-    }
-
-    protected static boolean isDouble(char[] cb, int a, int b) {
-        if (a == b) return false;
-        if (cb[a] == '-') a++;
-        for (char i = 0, e = 0; a < b; ) {
-            char c = cb[a++];
-            if (i > 1 || e > 1) return false;
-            if (c == '.') i++;
-            else if (c == 'e' || c == 'E') e++;
-            else if (c < '0' || c > '9') return false;
-        }
-        return true;
-    }
 
     /* Found specify target  */
     protected int get(char c) {
@@ -366,17 +342,23 @@ public class XMLRow extends Row {
             default:
                 a = getV();
                 if (a < cursor) {
-                    if (isNumber(cb, a, cursor)) {
-                        long l = toLong(cb, a, cursor);
-                        if (l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE) {
-                            cell.setNv((int) l);
-                        } else {
-                            cell.setLv(l);
+                    int t = testNumberType(cb, a, cursor);
+                    // -1: not a number
+                    // 0: empty
+                    // 1: int
+                    // 2: long
+                    // 3: double
+                    switch (t) {
+                        case 3: cell.setMv(new BigDecimal(cb, a, cursor - a)); break;
+                        case 2: {
+                            long l = toLong(cb, a, cursor);
+                            if (l > Integer.MAX_VALUE || l < Integer.MIN_VALUE) cell.setLv(l);
+                            else cell.setNv((int) l);
+                            break;
                         }
-                    } else if (isDouble(cb, a, cursor)) {
-                        cell.setDv(toDouble(cb, a, cursor));
-                    } else {
-                        cell.setSv(toString(cb, a, cursor));
+                        case 1: cell.setNv(toInt(cb, a, cursor));    break;
+                        case 0: cell.emptyTag();                     break;
+                        default: cell.setSv(escape(cb, a, cursor));
                     }
                 }
                 // Maybe the cell should be merged
