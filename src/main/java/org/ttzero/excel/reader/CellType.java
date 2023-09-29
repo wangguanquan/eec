@@ -37,6 +37,10 @@ public enum CellType {
      */
     , DOUBLE
     /*
+    decimal
+     */
+    , DECIMAL
+    /*
     boolean
      */
     , BOOLEAN
