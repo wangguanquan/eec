@@ -23,6 +23,7 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
+import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -35,6 +36,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -43,6 +46,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -129,28 +133,35 @@ public class ExcelReaderTest {
     @Test public void testForEach() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             Sheet sheet = reader.sheet(0);
+            assert "Object测试".equals(sheet.getName());
 
-            Row header = sheet.getHeader();
+            Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
+            if (Files.exists(expectPath)) {
+                List<String[]> expectList = CSVUtil.read(expectPath);
 
-            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
-                Row row = it.next();
-                if (row.getRowNum() == 0) continue;
+                Iterator<Row> it = sheet.iterator();
+                for (String[] expect : expectList) {
+                    assert it.hasNext();
+                    Row row = it.next();
 
-                print(row.getRowNum());
-                for (int start = 0, end = row.getLastColumnIndex(); start < end; start++) {
-                    print(header.getString(start));
-                    print(" : ");
-                    CellType type = row.getCellType(start);
-                    switch (type) {
-                        case DATE    : print(row.getTimestamp(start)); break;
-                        case INTEGER : print(row.getInt(start))      ; break;
-                        case LONG    : print(row.getLong(start))     ; break;
-                        case DOUBLE  : print(row.getDouble(start))   ; break;
-                        default      : print(row.getString(start))   ; break;
+                    for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                        Cell cell = row.getCell(start);
+                        CellType type = row.getCellType(cell);
+                        String e = expect[start], o;
+                        switch (type) {
+                            case INTEGER : o = row.getInt(cell).toString();                   break;
+                            case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
+                            case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
+                            default: o = row.getString(start);
+                        }
+                        assert e.equals(o);
                     }
-                    print(' ');
                 }
-                println();
+            } else {
+                for (Iterator<Row> iter = sheet.iterator(); iter.hasNext(); ) {
+                    Row row = iter.next();
+                    assert  StringUtil.isNotEmpty(row.toString());
+                }
             }
         }
     }
