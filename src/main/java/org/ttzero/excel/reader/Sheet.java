@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.DECIMAL;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
 import static org.ttzero.excel.reader.Cell.FUNCTION;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
@@ -367,32 +368,24 @@ public interface Sheet extends Closeable {
                 for (int i = 0; i < row.lc; i++) {
                     Cell c = row.cells[i];
                     switch (c.t) {
-                        case SST:
-                            if (c.sv == null) {
-                                c.setSv(row.sst.get(c.nv));
-                            }
-                            writer.write(c.sv);
-                            break;
-                        case INLINESTR:
-                        case FUNCTION: // Formula string value
-                            writer.write(c.sv);
-                            break;
-                        case BOOL:
-                            writer.write(c.bv);
-                            break;
-                        case NUMERIC:
+                        case SST       : if (c.sv == null) c.setSv(row.sst.get(c.nv));
+                        case INLINESTR :
+                        case FUNCTION  : writer.write(c.sv); break;
+                        case NUMERIC   :
                             if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.nv);
                             else writer.write(toLocalDate(c.nv).toString());
                             break;
-                        case LONG:
-                            writer.write(c.lv);
+                        case LONG      : writer.write(c.lv); break;
+                        case DECIMAL   :
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.mv.toString());
+                            else writer.write(toTimestamp(c.mv.doubleValue()).toString());
                             break;
-                        case DOUBLE:
+                        case DOUBLE    :
                             if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.dv);
                             else writer.write(toTimestamp(c.dv).toString());
                             break;
-                        default:
-                            writer.writeEmpty();
+                        case BOOL      : writer.write(c.bv); break;
+                        default        : writer.writeEmpty();
                     }
                 }
                 writer.newLine();
