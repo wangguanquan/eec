@@ -129,19 +129,19 @@ public class ExtBufferedWriter extends BufferedWriter {
             if (c > 62) continue;
             // UnDisplay char
             if (c < 32) {
-                if (i > last) utf8Write(block, last, i - last);
+                if (i > last) writeUTF8(block, last, i - last);
                 write(c == 9 || c == 10 || c == 13 ? c : MALFORMED_CHAR);
                 last = i + 1;
             }
             // html escape char
             else if ((ec = ESCAPE_CHARS[c]) != null) {
-                if (i > last) utf8Write(block, last, i - last);
+                if (i > last) writeUTF8(block, last, i - last);
                 write(ec);
                 last = i + 1;
             }
         }
 
-        if (last < size) utf8Write(block, last, i - last);
+        if (last < size) writeUTF8(block, last, i - last);
     }
 
     /**
@@ -162,7 +162,7 @@ public class ExtBufferedWriter extends BufferedWriter {
      * @param  len   Number of characters to write
      * @throws IOException if I/O error occur
      */
-    public void utf8Write(char[] cb, int off, int len) throws IOException {
+    public void writeUTF8(char[] cb, int off, int len) throws IOException {
         if (len <= 0) return;
         int end = off + len, i = lookupMalformedUTF8Char(cb, off, end);
         if (i >= 0) {
