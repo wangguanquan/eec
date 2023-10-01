@@ -18,6 +18,7 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
+import org.ttzero.excel.annotation.CustomAnnoReaderTest;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.IgnoreImport;
@@ -37,7 +38,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -107,10 +107,7 @@ public class ExcelReaderTest {
             Sheet sheet = reader.sheet(0);
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
                 Row row = it.next();
-                println(row.getRowNum()
-                    + " | " + row.getFirstColumnIndex()
-                    + " - " + row.getLastColumnIndex()
-                    + " => " + row);
+                assert row.getRowNum() == rn++;
             }
         }
     }
@@ -119,14 +116,48 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
 
             Sheet sheet = reader.sheet(0);
-            sheet.rows().forEach(Print::println);
+            Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
+            List<String[]> expectList = CSVUtil.read(expectPath);
 
-            println("------------------");
+            Iterator<Row> it = sheet.iterator();
+            for (String[] expect : expectList) {
+                assert it.hasNext();
+                Row row = it.next();
+
+                for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                    Cell cell = row.getCell(start);
+                    CellType type = row.getCellType(cell);
+                    String e = expect[start], o;
+                    switch (type) {
+                        case INTEGER : o = row.getInt(cell).toString();                   break;
+                        case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
+                        case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
+                        default: o = row.getString(start);
+                    }
+                    assert e.equals(o);
+                }
+            }
 
             sheet.reset(); // Reset the row index to begging
 
-            sheet.rows().forEach(Print::println);
+            it = sheet.iterator();
+            for (String[] expect : expectList) {
+                assert it.hasNext();
+                Row row = it.next();
 
+                for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                    Cell cell = row.getCell(start);
+                    CellType type = row.getCellType(cell);
+                    String e = expect[start], o;
+                    switch (type) {
+                        case INTEGER : o = row.getInt(cell).toString();                   break;
+                        case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
+                        case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
+                        default: o = row.getString(start);
+                    }
+                    assert e.equals(o);
+                }
+            }
         }
     }
 
@@ -168,13 +199,35 @@ public class ExcelReaderTest {
 
     @Test public void testToStandardObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(StandardEntry.class)).forEach(Print::println);
+            reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(StandardEntry.class)).forEach(o -> {
+                assert o.account == null;
+                assert o.address == null;
+                assert o.channelId == null;
+                assert o.registered == null;
+                assert o.pro == null;
+                assert o.id == 0;
+                assert !o.up30;
+                assert o.c == 0;
+            });
         }
     }
 
     @Test public void testToObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(Entry.class)).forEach(Print::println);
+            List<Entry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Entry.class)).collect(Collectors.toList());
+            Path expectPath = testResourceRoot().resolve("expect/1$Object测试.txt");
+            List<String[]> expectList = CSVUtil.read(expectPath);
+            assert expectList.size() - 1 == list.size();
+            for (int i = 0, len = list.size(); i < len; i++) {
+                String[] o = expectList.get(i + 1);
+                Entry e = list.get(i);
+                assert o[0].equals(e.channelId.toString());
+                assert o[1].equals(CustomAnnoReaderTest.GameConverter.names[Integer.parseInt(e.pro)]);
+                assert o[2].equals(e.account);
+                assert o[3].equals(DateUtil.toDateString(e.registered));
+                assert o[4].equals(e.up30 ? "TRUE" : "FALSE");
+                assert o[5].equals(new String(new char[] {e.c}, 0, 1));
+            }
         }
     }
 

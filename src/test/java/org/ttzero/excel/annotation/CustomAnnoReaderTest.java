@@ -70,7 +70,7 @@ public class CustomAnnoReaderTest {
     }
 
     public static class GameConverter implements Converter<Integer> {
-        final String[] names = {"未知", "LOL", "WOW", "极品飞车", "守望先锋", "怪物世界"};
+        public static final String[] names = {"未知", "LOL", "WOW", "极品飞车", "守望先锋", "怪物世界"};
 
         @Override
         public Integer convertToJavaData(CellData cellData) throws Exception {
