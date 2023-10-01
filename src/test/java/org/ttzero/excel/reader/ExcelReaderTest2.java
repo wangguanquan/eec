@@ -26,11 +26,16 @@ import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Workbook;
+import org.ttzero.excel.util.CSVUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -65,12 +70,32 @@ public class ExcelReaderTest2 {
 
     @Test public void test354() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
-            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            Map<String, Object> row1 = list.get(0);
-            assert row1.get("通讯地址") != null;
-            assert row1.get("紧急联系人姓名") != null;
-            assert !"名字".equals(row1.get("通讯地址"));
-            assert !"名字".equals(row1.get("紧急联系人姓名"));
+            for (int i = 0, len = reader.getSize(); i < len; i++) {
+                Sheet sheet = reader.sheet(i);
+                Path expectPath = testResourceRoot().resolve("expect/#354$" + sheet.getName() + ".txt");
+                if (Files.exists(expectPath)) {
+                    List<String[]> expectList = CSVUtil.read(expectPath);
+                    Iterator<Row> it = sheet.iterator();
+                    for (String[] expect : expectList) {
+                        assert it.hasNext();
+                        Row row = it.next();
+
+                        for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                            Cell cell = row.getCell(start);
+                            CellType type = row.getCellType(cell);
+                            String e = expect[start], o;
+                            if (type == CellType.INTEGER) o = row.getInt(cell).toString();
+                            else o = row.getString(start);
+                            assert StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o);
+                        }
+                    }
+                } else {
+                    for (Iterator<Row> iter = sheet.iterator(); iter.hasNext(); ) {
+                        Row row = iter.next();
+                        assert  StringUtil.isNotEmpty(row.toString());
+                    }
+                }
+            }
         }
     }
 
