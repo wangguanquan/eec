@@ -535,8 +535,8 @@ public class ExcelReaderTest {
                                 case LONG    : o = row.getLong(cell).toString();                  break;
                                 case DECIMAL : o = row.getDecimal(cell).toString();               break;
                                 case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                                case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
-                                default: o = row.getString(start);
+                                case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                                default      : o = row.getString(start);
                             }
                             assert StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o);
                         }
