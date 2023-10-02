@@ -37,7 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -46,7 +45,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -117,7 +115,7 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
 
             Sheet sheet = reader.sheet(0);
-            Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
+            Path expectPath = testResourceRoot().resolve("expect/1$Object测试.txt");
             List<String[]> expectList = CSVUtil.read(expectPath);
 
             Iterator<Row> it = sheet.iterator();
@@ -132,8 +130,8 @@ public class ExcelReaderTest {
                     switch (type) {
                         case INTEGER : o = row.getInt(cell).toString();                   break;
                         case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                        case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
-                        default: o = row.getString(start);
+                        case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                        default      : o = row.getString(start);
                     }
                     assert e.equals(o);
                 }
@@ -153,8 +151,8 @@ public class ExcelReaderTest {
                     switch (type) {
                         case INTEGER : o = row.getInt(cell).toString();                   break;
                         case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                        case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
-                        default: o = row.getString(start);
+                        case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                        default      : o = row.getString(start);
                     }
                     assert e.equals(o);
                 }
@@ -225,7 +223,7 @@ public class ExcelReaderTest {
                 assert o[0].equals(e.channelId.toString());
                 assert o[1].equals(CustomAnnoReaderTest.GameConverter.names[Integer.parseInt(e.pro)]);
                 assert o[2].equals(e.account);
-                assert o[3].equals(DateUtil.toDateString(e.registered));
+                assert o[3].equals(DateUtil.toString(e.registered));
                 assert o[4].equals(e.up30 ? "TRUE" : "FALSE");
                 assert o[5].equals(new String(new char[] {e.c}, 0, 1));
             }
