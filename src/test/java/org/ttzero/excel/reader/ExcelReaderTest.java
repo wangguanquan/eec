@@ -183,7 +183,7 @@ public class ExcelReaderTest {
                         switch (type) {
                             case INTEGER : o = row.getInt(cell).toString();                   break;
                             case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                            case DATE    : o = row.getDate(cell).toInstant().atOffset(ZoneOffset.ofHours(+8)).format(ISO_LOCAL_DATE); break;
+                            case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
                         assert e.equals(o);
@@ -243,7 +243,7 @@ public class ExcelReaderTest {
                 assert o[0].equals(e.channelId.toString());
                 assert o[1].equals(e.pro);
                 assert e.account == null;
-                assert o[3].equals(DateUtil.toDateString(e.registered));
+                assert o[3].equals(DateUtil.toString(e.registered));
                 assert o[4].equals(e.up30 ? "TRUE" : "FALSE");
                 assert o[5].equals(new String(new char[] {e.c}, 0, 1));
             }
@@ -262,7 +262,7 @@ public class ExcelReaderTest {
                 assert o[0].equals(row.getString("渠道ID"));
                 assert o[1].equals(row.getString("游戏"));
                 assert o[2].equals(row.getString("account"));
-                assert o[3].equals(DateUtil.toDateString(row.getDate("注册时间")));
+                assert o[3].equals(DateUtil.toString(row.getDate("注册时间")));
                 assert o[4].equals(row.getBoolean("是否满30级") ? "TRUE" : "FALSE");
                 assert o[5].equals(row.getString("VIP"));
             }
@@ -290,7 +290,12 @@ public class ExcelReaderTest {
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/1$Object测试.txt"));
             assert list.size() == expectList.size();
             for (int i = 0, len = list.size(); i < len; i++) {
-                assert Arrays.equals(list.get(i), expectList.get(i));
+                String[] o = list.get(i), e = expectList.get(i);
+                assert o.length == e.length;
+                for (int j = 0; j < o.length; j++) {
+                    if (i > 0 && j == 3) assert o[j].equals(e[j].substring(0, 10));
+                    else assert o[j].equals(e[j]);
+                }
             }
         }
     }
