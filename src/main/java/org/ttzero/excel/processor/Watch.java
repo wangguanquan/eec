@@ -20,13 +20,17 @@ package org.ttzero.excel.processor;
  * Output operation logs
  *
  * @author guanquan.wang on 2018-10-13
+ * @deprecated will be deleted soon, replace with log4j
  */
+@Deprecated
 @FunctionalInterface
 public interface Watch {
     /**
      * print operation logs
      *
      * @param msg the logs
+     * @deprecated will be deleted soon,
      */
+    @Deprecated
     void what(String msg);
 }

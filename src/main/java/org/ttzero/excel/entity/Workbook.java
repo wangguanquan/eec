@@ -862,7 +862,9 @@ public class Workbook implements Storable {
      *
      * @param watch a debug watch
      * @return the {@link Workbook}
+     * @deprecated will be deleted soon,
      */
+    @Deprecated
     public Workbook watch(Watch watch) {
         this.watch = watch;
         return this;
@@ -875,7 +877,9 @@ public class Workbook implements Storable {
      *
      * @return the {@link Workbook}
      * @throws OperationNotSupportedException if eec-e3-support not import into class path
+     * @deprecated Excel97-2003 Not support now.
      */
+    @Deprecated
     public Workbook saveAsExcel2003() throws OperationNotSupportedException {
         try {
             // Create Styles and SharedStringTable
@@ -903,7 +907,9 @@ public class Workbook implements Storable {
      * Output the export detail info
      *
      * @param code the message code in message properties file
+     * @deprecated will be deleted soon, replace with log4j
      */
+    @Deprecated
     public void what(String code) {
         String msg = i18N.get(code);
         LOGGER.debug(msg);
@@ -917,7 +923,9 @@ public class Workbook implements Storable {
      *
      * @param code the message code in message properties file
      * @param args the placeholder values
+     * @deprecated will be deleted soon, replace with log4j
      */
+    @Deprecated
     public void what(String code, String... args) {
         String msg = i18N.get(code, args);
         LOGGER.debug(msg);
