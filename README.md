@@ -2,15 +2,17 @@
 
 [![Release][release-image]][releases] [![License][license-image]][license]
 
-EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，目前支持xlsx格式的`读/写`以及xls格式的`读`，EEC的轻量体现在包体小、接入代码量少以及运行时消耗资源少三个方面，下载 [eec-benchmark](https://github.com/wangguanquan/eec-benchmark) 项目进行性能测试
+EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，它具有包体小、接入代码量少和运行时消耗资源少三个特点
 
-EEC的设计初衷是为了解决Apache POI速度慢、内存高且API臃肿的诟病。EEC的底层并不依赖POI包，所有的底层读写代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
+EEC的设计初衷是为了解决Apache POI内存高、速度慢且API臃肿的诟病。EEC的底层并不依赖POI包，所有的底层代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
-EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
+EEC在JVM参数`-Xmx10m -Xms10m`下读写100w行x29列内存使用截图，下载 [eec-benchmark](https://github.com/wangguanquan/eec-benchmark) 项目进行性能测试
 
-![write_read 100w](./images/write_read_100w.png)
+![write_read 100w](./images/write_read_100w.jpg)
 
 ## 现状
+
+EEC支持大多数日常应用场景，最擅长的是表格处理，比如转对象数组、转Map数组、内容检查等导入/导出常见功能。
 
 目前已实现worksheet类型有六种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
 
@@ -20,8 +22,6 @@ EEC在JVM参数`-Xmx6m -Xms6m`下读写100w行x29列内存使用截图
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
-
-EEC并不是一个功能全面的Excel工具类，它支持大多数日常应用场景，最擅长的是表格处理，比如转对象数组、转Map数组、内容检查等导入/导出常见功能。
 
 ## WIKI
 
@@ -64,7 +64,7 @@ private int channelId;
 private String account;
 ```
 
-默认情况下导出的列顺序与字段在对象中的定义顺序一致，可以设置`colIndex`或者在`addSheet`时重置列头顺序。
+默认情况下导出的列顺序与字段在对象中的定义顺序一致，可以设置`colIndex`或者指定Column数组。
 
 ```java
 // 创建一个名为"test object"的excel文件
