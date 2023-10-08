@@ -2,7 +2,7 @@
 
 [![Release][release-image]][releases] [![License][license-image]][license]
 
-EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，它具有包体小、接入代码量少和运行时消耗资源少三个特点
+EEC（Excel Export Core）是一款轻量且高效的Excel读写工具，它具有包体小、接入代码量少和运行时消耗资源少等优点
 
 EEC的设计初衷是为了解决Apache POI内存高、速度慢且API臃肿的诟病。EEC的底层并不依赖POI包，所有的底层代码均自己实现，事实上EEC仅依赖`dom4j`和`slf4j`，前者用于小文件xml读取，后者统一日志接口。
 
@@ -23,11 +23,6 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
 
-## WIKI
-
-阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法
-
-
 ## 主要功能
 
 1. 支持**大数据量导出**，行数无上限，超过单个Sheet上限会自动分页
@@ -36,8 +31,12 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 4. 支持一键设置斑马线，利于阅读
 5. **自适应列宽对中文更精准**
 6. 采用Stream流读文件，按需加载不会将整个文件读入到内存
-7. 支持iterator和stream+lambda读文件，你可以像操作集合类一样操作Excel
+7. 支持Iterator和Stream+Lambda读文件，你可以像操作集合类一样操作Excel
 8. 支持csv与excel格式相互转换
+
+## WIKI
+
+阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法
 
 ## 使用方法
 
@@ -166,7 +165,7 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 
 #### 6. 支持28种预设图片样式
 
-关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
+导出图片时可以设置图片样式，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
 ![effect](./images/preset_effect.jpg)
 
@@ -274,6 +273,15 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.11 (2023-10-08)
+-------------
+- 优化ExcelReader性能，性能提升100%~300%
+- 增加`setHeaderColumnReadOption`方法提高ExcelReader丰富性
+- 修复读取16进制转义字符时出现乱码问题
+- 修复非法UTF8字符导致写文件异常
+- 无数据且能获取表头信息时正常写表头([#361](https://github.com/wangguanquan/eec/issues/361))
+- 屏蔽JDK17以上版本使用ExcelReader抛异常的问题
+
 Version 0.5.10 (2023-08-10)
 -------------
 - 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
@@ -298,13 +306,6 @@ Version 0.5.8 (2023-04-08)
 - 导出数据支持指定起始行号([#345](https://github.com/wangguanquan/eec/issues/345))
 - 修复xls解析RK Value丢失精度问题
 - 修复部分已知BUG([#334](https://github.com/wangguanquan/eec/issues/334), [#342](https://github.com/wangguanquan/eec/issues/342), [#346](https://github.com/wangguanquan/eec/issues/346))
-
-Version 0.5.7 (2023-02-17)
--------------
-- 修复读取font-size时因为浮点数造成异常
-- 修复auto-size重置列宽时抛Buffer异常
-- 新增 #setRowHeight, #setHeaderRowHeight 方法设置行高
-
 
 [更多...](./CHANGELOG)
 
