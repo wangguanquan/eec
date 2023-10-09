@@ -232,7 +232,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (!exists(this.workSheetPath)) {
             FileUtil.mkdir(workSheetPath);
         }
-        sheet.what("0010", sheet.getName());
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
 
@@ -429,7 +428,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         } else {
             bw.write("</worksheet>");
         }
-        sheet.what("0009", sheet.getName(), String.valueOf(total));
+        LOGGER.debug("Sheet [{}] writing completed, total rows: {}", sheet.getName(), total);
     }
 
     /**
