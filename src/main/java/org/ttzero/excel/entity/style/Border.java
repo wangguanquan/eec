@@ -374,6 +374,7 @@ public class Border implements Cloneable {
      *
      * @param text the border value
      * @return the parse value of {@link Border}
+     * @throws IllegalArgumentException if convert failed.
      */
     public static Border parse(String text) {
         Border border = new Border();
@@ -384,7 +385,7 @@ public class Border implements Cloneable {
         for (int i = 0; i < values.length; i++) {
             BorderStyle style = BorderStyle.getByName(values[i]);
             if (style == null) {
-                throw new BorderParseException("Border style error.");
+                throw new IllegalArgumentException("Border style error.");
             }
             int n = i + 1;
             if (values.length <= n) break;
@@ -398,7 +399,7 @@ public class Border implements Cloneable {
                         Field field = Color.class.getDeclaredField(v);
                         color = (Color) field.get(null);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        throw new ColorParseException("Color \"" + v + "\" not support.");
+                        throw new IllegalArgumentException("Color \"" + v + "\" not support.");
                     }
                 }
                 border.setBorder(index++, style, color);

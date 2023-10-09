@@ -80,8 +80,9 @@ public class Font implements Cloneable {
      * eq: bold underLine 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
      * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
      * @return the {@link Font}
+     * @throws IllegalArgumentException if convert failed.
      */
-    public static Font parse(String fontString) throws FontParseException {
+    public static Font parse(String fontString) {
         if (fontString.isEmpty()) {
             throw new NullPointerException("Font string empty");
         }
@@ -91,7 +92,7 @@ public class Font implements Cloneable {
             do {
                 i2 = s.indexOf('\'', i1 + 1);
                 if (i2 == -1) {
-                    throw new FontParseException("Miss end char \"'\"");
+                    throw new IllegalArgumentException("Miss end char \"'\"");
                 }
                 String sub = s.substring(i1, i2 + 1)
                         , mark = sub.substring(1, sub.length() - 1).replace(' ', '+');
@@ -134,18 +135,18 @@ public class Font implements Cloneable {
                     try {
                         font.style |= Style.valueOf(v);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        throw new FontParseException("Property " + v + " not support.");
+                        throw new IllegalArgumentException("Property " + v + " not support.");
                     }
                 } else if (size > 0) {
                     font.size = checkAndCrop(round10(size));
                     if (i + 1 < values.length) {
                         font.name = values[++i].trim().replace('+', ' ');
                     } else {
-                        throw new FontParseException("Font family must after size.");
+                        throw new IllegalArgumentException("Font family must after size.");
                     }
                     beforeSize = false;
                 } else {
-                    throw new FontParseException("Font size must be greater than zero.");
+                    throw new IllegalArgumentException("Font size must be greater than zero.");
                 }
             } else {
                 if (temp.indexOf('#') == 0) {
@@ -155,7 +156,7 @@ public class Font implements Cloneable {
                         Field field = Color.class.getDeclaredField(temp);
                         font.color = (Color) field.get(null);
                     } catch (NoSuchFieldException | IllegalAccessException e) {
-                        throw new ColorParseException("Color \"" + temp + "\" not support.");
+                        throw new IllegalArgumentException("Color \"" + temp + "\" not support.");
                     }
                 }
             }
