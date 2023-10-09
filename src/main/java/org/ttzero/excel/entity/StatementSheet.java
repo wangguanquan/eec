@@ -235,8 +235,20 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param ps PreparedStatement
      * @return the {@link StatementSheet}
+     * @deprecated replace with {@link #setStatement(PreparedStatement)}
      */
+    @Deprecated
     public StatementSheet setPs(PreparedStatement ps) {
+        return setStatement(ps);
+    }
+
+    /**
+     * Setting PreparedStatement
+     *
+     * @param ps PreparedStatement
+     * @return the {@link StatementSheet}
+     */
+    public StatementSheet setStatement(PreparedStatement ps) {
         this.ps = ps;
         return this;
     }
