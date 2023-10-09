@@ -339,7 +339,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
         }
 
-        if (hasTopNs) {
+        if (prefixs != null && prefixs.length > 0) {
             for (int i = 0; i < prefixs.length; i++) {
                 rootElement.add(Namespace.get(prefixs[i], uris[i]));
             }
@@ -444,8 +444,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             FileUtil.rm_rf(root.toFile(), true);
             LOGGER.debug("Clean up temporary files");
             return zipFile;
-        } catch (IOException | ExcelWriteException e) {
-            // remove temp path
+        } catch (Exception e) {
+            // Remove temp path
             if (root != null) FileUtil.rm_rf(root);
             workbook.getSst().close();
             throw e;
