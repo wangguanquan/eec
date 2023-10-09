@@ -29,6 +29,7 @@ import org.ttzero.excel.util.DateUtil;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
@@ -50,6 +51,10 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class CSVWorksheetWriter implements IWorksheetWriter {
     protected Sheet sheet;
     protected CSVUtil.Writer writer;
+    /**
+     * A progress window
+     */
+    protected BiConsumer<Sheet, Integer> progressConsumer;
 
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
@@ -85,12 +90,26 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         writeBefore();
 
         if (rowBlock != null && rowBlock.hasNext()) {
-            do {
-                // write row-block data
-                writeRow(rowBlock.next());
-                // end of row
-                if (rowBlock.isEOF()) break;
-            } while ((rowBlock = supplier.get()) != null);
+            if (progressConsumer == null) {
+                do {
+                    // write row-block data
+                    writeRow(rowBlock.next());
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                } while ((rowBlock = supplier.get()) != null);
+            } else {
+                Row row;
+                do {
+                    row = rowBlock.next();
+                    // write row-block data
+                    writeRow(row);
+                    // Fire progress
+                    if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                } while ((rowBlock = supplier.get()) != null);
+                progressConsumer.accept(sheet, row.getIndex());
+            }
         }
         // Write some final info
         sheet.afterSheetAccess(workSheetPath);
@@ -123,13 +142,31 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         writeBefore();
 
         if (rowBlock.hasNext()) {
-            for (; ; ) {
-                // write row-block data
-                for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
-                // end of row
-                if (rowBlock.isEOF()) break;
-                // Get the next block
-                rowBlock = sheet.nextBlock();
+            if (progressConsumer == null) {
+                for (; ; ) {
+                    // write row-block data
+                    for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
+            } else {
+                Row row;
+                for (; ; ) {
+                    // write row-block data and fire progress event
+                    while (rowBlock.hasNext()) {
+                        row = rowBlock.next();
+                        writeRow(row);
+                        // Fire progress
+                        if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
+                    }
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
+                if (rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
             }
         }
         // Write some final info
@@ -139,6 +176,12 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     protected Path initWriter(Path root) throws IOException {
         Path workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
         writer = CSVUtil.newWriter(workSheetPath);
+        // Init progress window
+        progressConsumer = sheet.getProgressConsumer();
+
+        // Fire progress event
+        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
+
         return workSheetPath;
     }
 
@@ -180,38 +223,17 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         for (Cell cell : cells) {
             switch (cell.t) {
                 case INLINESTR:
-                case SST:
-                    writer.write(cell.sv);
-                    break;
-                case NUMERIC:
-                    writer.write(cell.nv);
-                    break;
-                case LONG:
-                    writer.write(cell.lv);
-                    break;
-                case DOUBLE:
-                    writer.write(cell.dv);
-                    break;
-                case BOOL:
-                    writer.write(cell.bv);
-                    break;
-                case DECIMAL:
-                    writer.write(cell.mv.toString());
-                    break;
-                case CHARACTER:
-                    writer.writeChar(cell.cv);
-                    break;
-                case DATE:
-                    writer.write(DateUtil.toDateString(DateUtil.toDate(cell.nv)));
-                    break;
-                case DATETIME:
-                    writer.write(DateUtil.toString(DateUtil.toDate(cell.dv)));
-                    break;
-                case TIME:
-                    writer.write(DateUtil.toDate(cell.dv).toString());
-                    break;
-                default:
-                    writer.writeEmpty();
+                case SST      : writer.write(cell.sv);                                         break;
+                case NUMERIC  : writer.write(cell.nv);                                         break;
+                case LONG     : writer.write(cell.lv);                                         break;
+                case DOUBLE   : writer.write(cell.dv);                                         break;
+                case BOOL     : writer.write(cell.bv);                                         break;
+                case DECIMAL  : writer.write(cell.mv.toString());                              break;
+                case CHARACTER: writer.writeChar(cell.cv);                                     break;
+                case DATE     : writer.write(DateUtil.toDateString(DateUtil.toDate(cell.nv))); break;
+                case DATETIME : writer.write(DateUtil.toString(DateUtil.toDate(cell.dv)));     break;
+                case TIME     : writer.write(DateUtil.toDate(cell.dv).toString());             break;
+                default       : writer.writeEmpty();
             }
         }
         writer.newLine();

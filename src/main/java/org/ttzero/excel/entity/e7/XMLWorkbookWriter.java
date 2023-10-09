@@ -404,8 +404,13 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (workbook.getForceExport() > sheet.getForceExport()) {
                 sheet.forceExport();
             }
+
+            // Merge Progress window
+            if (workbook.getProgressConsumer() != null && sheet.getProgressConsumer() == null) {
+                sheet.onProgress(workbook.getProgressConsumer());
+            }
         }
-        workbook.what("0001");
+        LOGGER.debug("Sheet initialization completed.");
 
         Path root = null;
         try {

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
@@ -87,6 +88,9 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2017/9/26.
  */
 public abstract class Sheet implements Cloneable, Storable {
+    /**
+     * LOGGER
+     */
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     protected Workbook workbook;
@@ -202,6 +206,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * Specify the first row index
      */
     protected int startRowIndex = 1;
+    /**
+     * A progress window
+     */
+    private BiConsumer<Sheet, Integer> progressConsumer;
 
     public int getId() {
         return id;
@@ -728,6 +736,31 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Column[] getColumns() {
         return columns;
+    }
+
+    /**
+     * Setting a progress watch
+     *
+     * <blockquote><pre>
+     * new ListSheet&lt;&gt;().onProgress((sheet, row) -&gt; {
+     *     System.out.println(sheet + " write " + row + " rows");
+     * })</pre></blockquote>
+     *
+     * @param progressConsumer a progress watch
+     * @return the {@link Sheet}
+     */
+    public Sheet onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
+        this.progressConsumer = progressConsumer;
+        return this;
+    }
+
+    /**
+     * Returns progress watch
+     *
+     * @return progress consumer if setting
+     */
+    public BiConsumer<Sheet, Integer> getProgressConsumer() {
+        return progressConsumer;
     }
 
     /**

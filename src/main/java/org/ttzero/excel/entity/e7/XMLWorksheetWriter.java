@@ -64,6 +64,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
@@ -133,6 +134,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Picture and Chart Support
      */
     protected IDrawingsWriter drawingsWriter;
+    /**
+     * A progress window
+     */
+    protected BiConsumer<Sheet, Integer> progressConsumer;
 
     public XMLWorksheetWriter() { }
 
@@ -161,12 +166,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         beforeSheetData(sheet.getNonHeader() == 1);
 
         if (rowBlock != null && rowBlock.hasNext()) {
-            do {
-                // write row-block data
-                writeRowBlock(rowBlock);
-                // end of row
-                if (rowBlock.isEOF()) break;
-            } while ((rowBlock = supplier.get()) != null);
+            if (progressConsumer == null) {
+                do {
+                    // write row-block data
+                    writeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                } while ((rowBlock = supplier.get()) != null);
+            } else {
+                do {
+                    // write row-block data and fire progress event
+                    writeRowBlockFireProgress(rowBlock);
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                } while ((rowBlock = supplier.get()) != null);
+                if (rowBlock != null && rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
+            }
         }
 
         totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
@@ -203,13 +218,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         beforeSheetData(sheet.getNonHeader() == 1);
 
         if (rowBlock.hasNext()) {
-            for (; ; ) {
-                // write row-block data
-                writeRowBlock(rowBlock);
-                // end of row
-                if (rowBlock.isEOF()) break;
-                // Get the next block
-                rowBlock = sheet.nextBlock();
+            if (progressConsumer == null) {
+                for (; ; ) {
+                    // write row-block data
+                    writeRowBlock(rowBlock);
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
+            } else {
+                for (; ; ) {
+                    // write row-block data and fire progress event
+                    writeRowBlockFireProgress(rowBlock);
+                    // end of row
+                    if (rowBlock.isEOF()) break;
+                    // Get the next block
+                    rowBlock = sheet.nextBlock();
+                }
+                if (rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
             }
         }
 
@@ -235,8 +262,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
 
-        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(
-            sheetPath, StandardCharsets.UTF_8));
+        this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
         if (sst == null) this.sst = sheet.getSst();
 
@@ -247,6 +273,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (getRowLimit() <= startHeaderRow)
             throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startHeaderRow + ") >= limit(" + getRowLimit() + ")");
         startRow = startHeaderRow;
+
+        // Init progress window
+        progressConsumer = sheet.getProgressConsumer();
+
+        // Fire progress event
+        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
+
+        LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
         return sheetPath;
     }
 
@@ -442,41 +476,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * Write a row-block as auto size
+     * Write a row-block and fire progress event
      *
      * @param rowBlock the row-block
      * @throws IOException if I/O error occur.
      */
-    @Deprecated
-    private void writeAutoSizeRowBlock(RowBlock rowBlock) throws IOException {
-        for (; rowBlock.hasNext(); writeRowAutoSize(rowBlock.next())) ;
-    }
-
-    /**
-     * Write begin of row
-     *
-     * @param rows    the row index (zero base)
-     * @param columns the column length
-     * @return the row index (one base)
-     * @throws IOException if I/O error occur
-     * @deprecated replace with {@link #startRow(int, int, double)}
-     */
-    @Deprecated
-    protected int startRow(int rows, int columns) throws IOException {
-        // Row number
-        int r = rows + startRow;
-        // logging
-        if (r % 1_0000 == 0) {
-            sheet.what("0014", String.valueOf(r));
+    protected void writeRowBlockFireProgress(RowBlock rowBlock) throws IOException {
+        Row row;
+        while (rowBlock.hasNext()) {
+            row = rowBlock.next();
+            writeRow(row);
+            // Fire progress
+            if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
         }
-
-        bw.write("<row r=\"");
-        bw.writeInt(r);
-        // default data row height 16.5
-        bw.write("\" spans=\"1:");
-        bw.writeInt(columns);
-        bw.write("\">");
-        return r;
     }
 
     /**
@@ -491,10 +503,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected int startRow(int rows, int columns, double rowHeight) throws IOException {
         // Row number
         int r = rows + startRow;
-        // logging
-        if (r % 1_0000 == 0) {
-            sheet.what("0014", String.valueOf(r));
-        }
 
         bw.write("<row r=\"");
         bw.writeInt(r);

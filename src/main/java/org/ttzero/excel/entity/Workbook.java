@@ -16,8 +16,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
@@ -25,27 +23,18 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.processor.ParamProcessor;
-import org.ttzero.excel.processor.Watch;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
-import javax.naming.OperationNotSupportedException;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -56,8 +45,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * When writing an Excel file, you must setting the property first and
  * then add {@link Sheet} into Workbook, finally call the {@link #writeTo}
  * method to perform the write operation. The default file format is open-xml(xlsx).
- * You can also call the {@link #saveAsExcel2003()} method to output as 'xls'
- * format (only supported BIFF8 format, ie excel 97~2003).
  * <p>
  * The property contains {@link #setName(String)}, {@link #setCreator(String)},
  * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setZebraLine(Fill)}
@@ -87,7 +74,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storable {
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
      * The Workbook name, reaction to the Excel file name
      */
@@ -115,9 +101,9 @@ public class Workbook implements Storable {
      */
     private Fill zebraFill;
     /**
-     * A windows to debug
+     * A progress window
      */
-    private Watch watch;
+    private BiConsumer<Sheet, Integer> progressConsumer;
     private final I18N i18N;
 
     private SharedStrings sst;
@@ -858,39 +844,49 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting a {@link Watch}
+     * Setting a progress watch
      *
-     * @param watch a debug watch
+     * <blockquote><pre>
+     * new Workbook().onProgress((sheet, row) -&gt; {
+     *     System.out.println(sheet + " write " + row + " rows");
+     * })</pre></blockquote>
+     *
+     * @param progressConsumer a progress watch
      * @return the {@link Workbook}
-     * @deprecated will be deleted soon,
      */
-    @Deprecated
-    public Workbook watch(Watch watch) {
-        this.watch = watch;
+    public Workbook onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
+        this.progressConsumer = progressConsumer;
         return this;
     }
 
     /**
-     * Save as excel97~2003
-     * <p>
-     * You mast add eec-e3-support.jar into class path to support excel97~2003
+     * Returns progress watch
      *
-     * @return the {@link Workbook}
-     * @throws OperationNotSupportedException if eec-e3-support not import into class path
-     * @deprecated Excel97-2003 Not support now.
+     * @return progress consumer if setting
      */
-    @Deprecated
-    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
-        try {
-            // Create Styles and SharedStringTable
-            Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
-            Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
-            workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
-        } catch (Exception e) {
-            throw new OperationNotSupportedException("Excel97-2003 Not support now.");
-        }
-        return this;
+    public BiConsumer<Sheet, Integer> getProgressConsumer() {
+        return progressConsumer;
     }
+
+//    /**
+//     * Save as excel97~2003
+//     * <p>
+//     * You mast add eec-e3-support.jar into class path to support excel97~2003
+//     *
+//     * @return the {@link Workbook}
+//     * @throws OperationNotSupportedException if eec-e3-support not import into class path
+//     */
+//    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
+//        try {
+//            // Create Styles and SharedStringTable
+//            Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
+//            Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
+//            workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
+//        } catch (Exception e) {
+//            throw new OperationNotSupportedException("Excel97-2003 Not support now.");
+//        }
+//        return this;
+//    }
 
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
@@ -901,37 +897,6 @@ public class Workbook implements Storable {
     public Workbook saveAsCSV() {
         workbookWriter = new CSVWorkbookWriter(this);
         return this;
-    }
-
-    /**
-     * Output the export detail info
-     *
-     * @param code the message code in message properties file
-     * @deprecated will be deleted soon, replace with log4j
-     */
-    @Deprecated
-    public void what(String code) {
-        String msg = i18N.get(code);
-        LOGGER.debug(msg);
-        if (watch != null) {
-            watch.what(msg);
-        }
-    }
-
-    /**
-     * Output export detail info
-     *
-     * @param code the message code in message properties file
-     * @param args the placeholder values
-     * @deprecated will be deleted soon, replace with log4j
-     */
-    @Deprecated
-    public void what(String code, String... args) {
-        String msg = i18N.get(code, args);
-        LOGGER.debug(msg);
-        if (watch != null) {
-            watch.what(msg);
-        }
     }
 
     private void ensureCapacityInternal() {
