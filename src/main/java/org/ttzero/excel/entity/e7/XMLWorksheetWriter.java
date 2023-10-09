@@ -556,45 +556,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</row>");
     }
 
-
-    /**
-     * Write a row data
-     *
-     * @param row a row data
-     * @throws IOException if I/O error occur
-     */
-    @Deprecated
-    protected void writeRowAutoSize(Row row) throws IOException {
-        Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
-
-        for (int i = 0; i < len; i++) {
-            Cell cell = cells[i];
-            int xf = cell.xf;
-            switch (cell.t) {
-                case INLINESTR:
-                case SST:          writeStringAutoSize(cell.sv, r, i, xf);    break;
-                case NUMERIC:      writeNumericAutoSize(cell.nv, r, i, xf);   break;
-                case LONG:         writeNumericAutoSize(cell.lv, r, i, xf);   break;
-                case DATE:
-                case DATETIME:
-                case DOUBLE:
-                case TIME:         writeDoubleAutoSize(cell.dv, r, i, xf);    break;
-                case BOOL:         writeBool(cell.bv, r, i, xf);              break;
-                case DECIMAL:      writeDecimalAutoSize(cell.mv, r, i, xf);   break;
-                case CHARACTER:    writeChar(cell.cv, r, i, xf);              break;
-                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);       break;
-                case BINARY:       writeBinary(cell.binary, r, i, xf);        break;
-                case FILE:         writeFile(cell.path, r, i, xf);            break;
-                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);           break;
-                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);    break;
-                case BLANK:        writeNull(r, i, xf);                       break;
-                default:
-            }
-        }
-        bw.write("</row>");
-    }
-
     /**
      * Write string value
      *
@@ -642,25 +603,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * Write string value and cache the max string length
-     *
-     * @param s      the string value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    @Deprecated
-    protected void writeStringAutoSize(String s, int row, int column, int xf) throws IOException {
-        writeString(s, row, column, xf);
-//        Column hc = columns[column];
-//        double ln;
-//        if (hc.o < (ln = stringWidth(s, xf))) {
-//            hc.o = ln;
-//        }
-    }
-
-    /**
      * Write double value
      *
      * @param d      the double value
@@ -688,25 +630,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * Write double value and cache the max value
-     *
-     * @param d      the double value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    @Deprecated
-    protected void writeDoubleAutoSize(double d, int row, int column, int xf) throws IOException {
-        writeDouble(d, row, column, xf);
-//        Column hc = columns[column];
-//        int n;
-//        if (hc.width == 0 && hc.o < (n = Double.toString(d).length())) {
-//            hc.o = n;
-//        }
-    }
-
-    /**
      * Write decimal value
      *
      * @param bd     the decimal value
@@ -730,25 +653,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int l;
             if (hc.o < (l = bd.toString().length())) hc.o = l;
         }
-    }
-
-    /**
-     * Write decimal value and cache the max value
-     *
-     * @param bd     the decimal value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    @Deprecated
-    protected void writeDecimalAutoSize(BigDecimal bd, int row, int column, int xf) throws IOException {
-        writeDecimal(bd, row, column, xf);
-//        Column hc = columns[column];
-//        int l;
-//        if (hc.width == 0 && hc.o < (l = bd.toString().length())) {
-//            hc.o = l;
-//        }
     }
 
     /**
@@ -795,25 +699,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int n;
             if (hc.o < (n = stringSize(l))) hc.o = n;
         }
-    }
-
-    /**
-     * Write numeric value and cache the max value
-     *
-     * @param l      the numeric value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    @Deprecated
-    protected void writeNumericAutoSize(long l, int row, int column, int xf) throws IOException {
-        writeNumeric(l, row, column, xf);
-//        Column hc = columns[column];
-//        int n;
-//        if (hc.width == 0 && hc.o < (n = stringSize(l))) {
-//            hc.o = n;
-//        }
     }
 
     /**
