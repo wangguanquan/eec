@@ -389,6 +389,15 @@ public class Font implements Cloneable {
         return element;
     }
 
+    /**
+     * Convert to {@link java.awt.Font}
+     *
+     * @return a {@code java.awt.Font}
+     */
+    public java.awt.Font toAwtFont() {
+        return new java.awt.Font(name, style >> 1, getSize());
+    }
+
     public static List<Font> domToFont(Element root) {
         // Fonts tags
         Element ele = root.element("fonts");
