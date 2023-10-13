@@ -390,6 +390,16 @@ public class Font implements Cloneable {
     }
 
     /**
+     * Base on {@code java.awt.Font}
+     *
+     * @param awtFont {@link java.awt.Font}
+     * @return a {@code org.ttzero.excel.entity.style.Font}
+     */
+    public static Font of(java.awt.Font awtFont) {
+        return new Font(awtFont.getName(), awtFont.getSize(), awtFont.getStyle() << 1, Color.BLACK);
+    }
+
+    /**
      * Convert to {@link java.awt.Font}
      *
      * @return a {@code java.awt.Font}
