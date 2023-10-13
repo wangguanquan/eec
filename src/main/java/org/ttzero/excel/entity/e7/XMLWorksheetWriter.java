@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Column;
@@ -63,6 +65,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -1388,13 +1391,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * Char buffer
+     * FontMetrics cache
      */
-    protected static char[] cacheChar = new char[1 << 8];
-
+    protected java.awt.FontMetrics[] fms = new java.awt.FontMetrics[100];
     /**
      * Calculate text width
-     * FIXME reference {@link sun.swing.SwingUtilities2#stringWidth}
+     * <p>
+     * Reference {@link sun.swing.SwingUtilities2#stringWidth}
      *
      * @param s      the string value
      * @param xf     the style index
@@ -1402,12 +1405,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected double stringWidth(String s, int xf) {
         if (StringUtil.isEmpty(s)) return 0.0D;
-        int n = Math.min(s.length(), cacheChar.length);
-        double w = 0.0D;
-        s.getChars(0, n, cacheChar, 0);
-        // TODO Calculate text width based on font-family and font-size
-        for (int i = 0; i < n; w += cacheChar[i++] > 0x4E00 ? 1.86D : 1.0D);
-        return w;
+        if (xf >= fms.length) fms = Arrays.copyOf(fms, Math.max(xf, fms.length + 100));
+        java.awt.FontMetrics fm =fms[xf];
+        if (fm == null) {
+            // Obtain the font corresponding to the current text through xf
+            Styles styles = sheet.getWorkbook().getStyles();
+            int style = styles.getStyleByIndex(xf);
+            Font font = styles.getFont(style);
+
+            // {@code sun.*} does not have access, so using the {@code javax.swing.*} bridging
+            fms[xf] = fm = new javax.swing.JLabel().getFontMetrics(font.toAwtFont());
+        }
+        return fm.stringWidth(s) / 6.0D * 1.02D;
     }
 
     /**
