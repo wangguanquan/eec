@@ -209,4 +209,36 @@ public class StylesTest {
         assert font.getSize2() == 12.5D;
         assert font.getName().equals("宋体");
     }
+
+    @Test public void testFontConversion() {
+        // awt Font to eec Font
+        java.awt.Font awtFont = new java.awt.Font("Arial", java.awt.Font.PLAIN, 12);
+        Font font = Font.of(awtFont);
+
+        assert font.getName().equals(awtFont.getName());
+        assert font.getSize() == awtFont.getSize();
+        assert font.getStyle() == Font.Style.PLAIN;
+
+        // eec Font to awt Font
+        java.awt.Font awtFont2 = font.toAwtFont();
+        assert awtFont.equals(awtFont2);
+
+        awtFont = new java.awt.Font("宋体", java.awt.Font.BOLD, 16);
+        font = Font.of(awtFont);
+        assert font.getName().equals(awtFont.getName());
+        assert font.getSize() == awtFont.getSize();
+        assert font.isBold();
+
+        awtFont2 = font.toAwtFont();
+        assert awtFont.equals(awtFont2);
+
+        awtFont = new java.awt.Font("宋体", java.awt.Font.BOLD | java.awt.Font.ITALIC, 16);
+        font = Font.of(awtFont);
+        assert font.getName().equals(awtFont.getName());
+        assert font.getSize() == awtFont.getSize();
+        assert font.isBold() && font.isItalic();
+
+        awtFont2 = font.toAwtFont();
+        assert awtFont.equals(awtFont2);
+    }
 }
