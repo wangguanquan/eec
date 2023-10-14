@@ -1406,7 +1406,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected double stringWidth(String s, int xf) {
         if (StringUtil.isEmpty(s)) return 0.0D;
         if (xf >= fms.length) fms = Arrays.copyOf(fms, Math.max(xf, fms.length + 100));
-        java.awt.FontMetrics fm =fms[xf];
+        java.awt.FontMetrics fm = fms[xf];
         if (fm == null) {
             // Obtain the font corresponding to the current text through xf
             Styles styles = sheet.getWorkbook().getStyles();
