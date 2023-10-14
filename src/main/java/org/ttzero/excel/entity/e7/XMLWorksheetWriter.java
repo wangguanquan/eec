@@ -1015,7 +1015,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void resizeColumnWidth(File path, int rows) throws IOException {
         // There has no column to reset width
         if (columns.length <= 0 || rows <= 0) return;
-//        String[] widths = new String[columns.length];
         // Collect column width
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i];
@@ -1023,11 +1022,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // If fixed width or media cell
             if (k == 2 || hc.getColumnType() == 1) {
                 double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
-//                widths[i] = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
                 hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                 continue;
             }
-            double _l = stringWidth(hc.name, hc.getCellStyleIndex()), len;
+            double len;
             Class<?> clazz = hc.getClazz();
             if (isString(clazz)) {
                 len = hc.o;
@@ -1076,12 +1074,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             else {
                 len = hc.o > 0 ? hc.o : 10.0D;
             }
-            double width = Math.max(_l, len) + 1.86D;
+            double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex()), len)) + 1.86D;
             if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
             if (width > Const.Limit.COLUMN_WIDTH) {
                 width = Const.Limit.COLUMN_WIDTH;
             }
-//            widths[i] = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).toString();
             hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
