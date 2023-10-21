@@ -26,8 +26,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify column write as Media
+ * 指定当前列为"媒体"格式
  *
+ * <p>默认情况下EEC总是以"值"的形式导出，如果需要导出图片则必须添加{@code MediaColumn}注解，
+ * 在指定属性的同时可以使用{@link #presetEffect()}设置预设图片效果</p>
+ *
+ * @see PresetPictureEffect
  * @author guanquan.wang at 2023-08-06 09:15
  */
 @Target({ ElementType.FIELD, ElementType.METHOD })
@@ -35,7 +39,7 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface MediaColumn {
     /**
-     * Preset Picture Effect
+     * 设置预设图片效果，默认无效果
      *
      * @return {@link PresetPictureEffect}
      */

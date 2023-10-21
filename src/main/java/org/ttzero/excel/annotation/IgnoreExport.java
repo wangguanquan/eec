@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specified the field witch not exported
+ * 忽略导出，标记有此注解的字段和方法导出时将被忽略，一般用于忽略敏感字段
  *
  * @author guanquan.wang at 2018-01-30 15:09
  */
@@ -35,9 +35,9 @@ import java.lang.annotation.Target;
 @Documented
 public @interface IgnoreExport {
     /**
-     * Add reasons for not exporting, for developers to read
+     * 填写忽略原因，无实际意义
      *
-     * @return the reason for not export
+     * @return 忽略的原因
      */
     String value() default "";
 }

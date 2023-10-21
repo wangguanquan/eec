@@ -24,7 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Inject line number.
+ * 注入行号
+ *
+ * <p>注意:此行号是Excel的绝对行号，从1开始</p>
  *
  * @author guanquan.wang at 2021-12-03 13:40
  */

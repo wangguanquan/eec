@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specified the field witch not imported mapping.
+ * 忽略导入，标记有此注解的字段和方法导入时将被忽略
  *
  * @author guanquan.wang at 2018-10-24 09:29
  */
@@ -34,9 +34,9 @@ import java.lang.annotation.Target;
 @Documented
 public @interface IgnoreImport {
     /**
-     * Add reasons for not importing, for developers to read
+     * 填写忽略原因，无实际意义
      *
-     * @return the reason for not import
+     * @return 忽略的原因
      */
     String value() default "";
 }
