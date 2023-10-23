@@ -24,6 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 表头批注，{@code title}将加粗显示但不是必须的，大多数情况下将批注文本放到{@code value}下即可，
+ * 描述文本较多时需要使用{@code width}和{@code height}两个属性来调整弹出框的大小以将内容显示完全
+ *
  * @author guanquan.wang at 2020-05-21 16:43
  */
 @Target({ElementType.FIELD, ElementType.METHOD})
@@ -31,30 +34,30 @@ import java.lang.annotation.Target;
 @Documented
 public @interface HeaderComment {
     /**
-     * Description detail
+     * 批注正文
      *
-     * @return the comment detail desc
+     * @return 正文文本，为空时不显示批注
      */
     String value() default "";
 
     /**
-     * Specify a title, the title will be bold display
+     * 批注标题，加粗显示
      *
-     * @return sub-title of comment
+     * @return 标题，可为空
      */
     String title() default "";
 
     /**
-     * Specify the comment width
+     * 指定批注弹出框宽度
      *
-     * @return comment width
+     * @return 批注宽度
      */
     double width() default 100.8D;
 
     /**
-     * Specify the comment height
+     * 指定批注弹出框高度
      *
-     * @return comment height
+     * @return 批注高度
      */
     double height() default 60.6D;
 }
