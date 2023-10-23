@@ -27,18 +27,28 @@ import java.util.List;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
 /**
- * The creation information
+ * Excel属性，除{@code company}属性外其余属性均由{@link org.ttzero.excel.entity.Workbook}生成，
+ * 外部不要随意修改否则将导致不可预期的异常。
  *
  * @author guanquan.wang on 2017/9/21.
  */
 @TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
     , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
 public class App extends XmlEntity {
+    /**
+     * 指定由哪个App生成或打开
+     */
     private String application;
+    /**
+     * 是否加密，当前不支持加密
+     */
     @SuppressWarnings("unused")
     private int docSecurity;
     @SuppressWarnings("unused")
     private boolean scaleCrop;
+    /**
+     * 公司名，可用于防伪，通过鼠标右建-&gt;详细属性查看
+     */
     private String company;
     @SuppressWarnings("unused")
     private boolean linksUpToDate;
@@ -46,8 +56,17 @@ public class App extends XmlEntity {
     private boolean sharedDoc;
     @SuppressWarnings("unused")
     private boolean hyperlinksChanged;
+    /**
+     * App版本，对应{@link #application}
+     */
     private String appVersion;
+    /**
+     * Worksheet名称集合
+     */
     private TitlesOfParts titlesOfParts;
+    /**
+     * Worksheet数量信息
+     */
     private HeadingPairs headingPairs;
 
     public class TitlesOfParts {

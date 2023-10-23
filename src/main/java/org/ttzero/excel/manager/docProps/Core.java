@@ -24,6 +24,8 @@ import org.ttzero.excel.manager.TopNS;
 import java.util.Date;
 
 /**
+ * Excel核心属性，指定主题，作者和关键词等信息，可以通过鼠标右建-&gt;详细属性查看这些内容
+ *
  * @author guanquan.wang on 2017/9/18.
  */
 @TopNS(prefix = {"dc", "cp", "dcterms"}
@@ -32,59 +34,59 @@ import java.util.Date;
     , "http://purl.org/dc/terms/"}, value = "cp:coreProperties")
 public class Core extends XmlEntity {
     /**
-     * Title of workbook(null able)
+     * 标题
      */
     @NS("dc")
     private String title;
     /**
-     * Subject of workbook(null able)
+     * 主题
      */
     @NS("dc")
     private String subject;
     /**
-     * Author, default get the system login user
+     * 作者，默认使用当前系统登陆用户名
      */
     @NS("dc")
     private String creator;
     /**
-     * Description(null able)
+     * 描述
      */
     @NS("dc")
     private String description;
     /**
-     * List keyword about this workbook, Multiple keywords are separated by ';'(null able)
+     * 关键词，多个关键词使用分号{@code ';'}分隔
      */
     @NS("cp")
     private String keywords;
     /**
-     * The last modify user(null able)
+     * 最后修改人
      */
     @NS("cp")
     private String lastModifiedBy;
     /**
-     * The file version(null able)
+     * 版本，默认使用EEC版本号
      */
     @NS("cp")
     private String version;
     /**
-     * The file reversion(null able)
+     * 修订版本号
      */
     @NS("cp")
     private String revision;
     /**
-     * Specify category about this workbook, Multiple keywords are separated by ';'(null able)
+     * 分类，多个分类词使用分号{@code ';'}分隔
      */
     @NS("cp")
     private String category;
     /**
-     * Create time(notnull)
+     * 创建时间
      */
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF"
             , namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date created;
     /**
-     * The last modify time(notnull)
+     * 修改时间
      */
     @NS("dcterms")
     @Attr(name = "type", value = "dcterms:W3CDTF"
