@@ -24,7 +24,7 @@ import org.ttzero.excel.manager.TopNS;
 import java.util.Date;
 
 /**
- * Excel核心属性，指定主题，作者和关键词等信息，可以通过鼠标右建-&gt;详细属性查看这些内容
+ * 文档属性，指定主题，作者和关键词等信息，可以通过鼠标右建-&gt;详细属性查看这些内容
  *
  * @author guanquan.wang on 2017/9/18.
  */

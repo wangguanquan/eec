@@ -27,7 +27,7 @@ import java.util.List;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
 /**
- * Excel属性，除{@code company}属性外其余属性均由{@link org.ttzero.excel.entity.Workbook}生成，
+ * App属性，除{@code company}属性外其余属性均由{@link org.ttzero.excel.entity.Workbook}生成，
  * 外部不要随意修改否则将导致不可预期的异常。
  *
  * @author guanquan.wang on 2017/9/21.

@@ -50,8 +50,8 @@ import java.util.Map;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * The workbook is the basic unit of Excel, and an 'xlsx' or 'xls' file
- * corresponds to a workbook instance.
+ * 一个{@code Workbook}实例即表示一个Excel文件，它包含一个或多个{@link Sheet}，
+ * Workbook用于收集全局属性，如文件属性，样式等。
  * <p>
  * When writing an Excel file, you must setting the property first and
  * then add {@link Sheet} into Workbook, finally call the {@link #writeTo}
