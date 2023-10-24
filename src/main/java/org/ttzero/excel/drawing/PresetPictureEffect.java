@@ -36,18 +36,22 @@ import static org.ttzero.excel.drawing.Enums.Rig;
 import static org.ttzero.excel.drawing.Enums.ShapeType;
 
 /**
- * Preset Picture Effects
+ * 图片预设效果，实现Excel内置的28种图片样式
  *
  * @author guanquan.wang at 2023-07-25 09:59
  */
 public enum PresetPictureEffect implements EffectProducer {
-    // 0
+    /**
+     * 0 无效果（默认）
+     */
     None {
         @Override public Effect getEffect() {
             return null;
         }
     },
-    // 1
+    /**
+     * 1 简单框架，白色
+     */
     SimpleFrame_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -98,7 +102,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 2
+    /**
+     * 2 棱台亚光，白色
+     */
     BeveledMatte_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -146,7 +152,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 3
+    /**
+     * 3 金属框架
+     */
     MetalFrame {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -194,7 +202,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 4
+    /**
+     * 4 矩形投影
+     */
     DropShadowRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -213,7 +223,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 5
+    /**
+     * 5 映像圆角矩形
+     */
     ReflectedRoundedRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -236,7 +248,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 6
+    /**
+     * 6 柔化边缘矩形
+     */
     SoftEdgeRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -247,7 +261,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 7
+    /**
+     * 7 双框架，黑色
+     */
     DoubleFrame_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -272,7 +288,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 8
+    /**
+     * 8 厚重亚光，黑色
+     */
     ThickMatte_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -305,7 +323,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 9
+    /**
+     * 9 简单框架，黑色
+     */
     SimpleFrame_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -333,7 +353,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 10
+    /**
+     * 10 棱台形椭圆，黑色
+     */
     BeveledOval_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -379,7 +401,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 11
+    /**
+     * 11 复杂框架，黑色
+     */
     CompoundFrame_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -404,7 +428,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 12
+    /**
+     * 12 中等复杂框架，黑色
+     */
     ModerateFrame_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -431,7 +457,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 13
+    /**
+     * 13 居中矩型阴影
+     */
     CenterShadowRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -448,7 +476,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 14
+    /**
+     * 14 圆形对角，白色
+     */
     RoundedDiagonalCorner_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -474,7 +504,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 15
+    /**
+     * 15 剪去对象，白色
+     */
     SnipDiagonalCorner_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -523,7 +555,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 16
+    /**
+     * 16 中等复杂框架，白色
+     */
     ModerateFrame_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -574,7 +608,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 17
+    /**
+     * 17 旋转，白色
+     */
     Rotated_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -629,7 +665,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 18
+    /**
+     * 18 透视阴影，白色
+     */
     PerspectiveShadow_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -677,7 +715,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 19
+    /**
+     * 19 松散透视，白色
+     */
     RelaxedPerspective_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -733,7 +773,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 20
+    /**
+     * 20 柔化边缘椭圆
+     */
     SoftEdgeOval_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -744,7 +786,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 21
+    /**
+     * 21 棱台矩形
+     */
     BevelRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -785,7 +829,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 22
+    /**
+     * 22 棱台透视
+     */
     BevelPerspective {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -831,7 +877,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 23
+    /**
+     * 23 映像右透视
+     */
     ReflectedPerspectiveRight {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -868,7 +916,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 24
+    /**
+     * 24 棱台左透视，白色
+     */
     BevelPerspectiveLeft_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -920,7 +970,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 25
+    /**
+     * 25 映像棱台，黑色
+     */
     ReflectedBevel_Black {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -968,7 +1020,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 26
+    /**
+     * 26 映像棱台，白色
+     */
     ReflectedBevel_White {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -1018,7 +1072,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 27
+    /**
+     * 27 金属圆角矩形
+     */
     MetalRoundedRectangle {
         @Override public Effect getEffect() {
             if (effect != null) return effect;
@@ -1067,7 +1123,9 @@ public enum PresetPictureEffect implements EffectProducer {
             return effect;
         }
     },
-    // 28
+    /**
+     * 28 金属椭圆
+     */
     MetalOval {
         @Override public Effect getEffect() {
             if (effect != null) return effect;

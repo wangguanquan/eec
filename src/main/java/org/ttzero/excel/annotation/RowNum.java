@@ -24,9 +24,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 注入行号
+ * 注入行号，可用于读取Excel时注入该行在文件中的绝对行号
  *
- * <p>注意:此行号是Excel的绝对行号，从1开始</p>
+ * <p>注意:此行号是Excel的绝对行号，与打开Excel看到的行号完全一致，从1开始</p>
  *
  * @author guanquan.wang at 2021-12-03 13:40
  */

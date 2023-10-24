@@ -25,11 +25,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * If you have a large table of data in Excel, it can be useful to
- * freeze rows or columns. This way you can keep rows or columns
- * visible while scrolling through the rest of the worksheet.
- * <p>
+ * 设置行列“冻结”，滚动工作表时保持首行或首列总是可见，此功能为增强型功能。
  *
+ * <p>注意：不能指定一个范围值，冻结必须从首行和首列开始，只能指定结尾行/列号，如{@code FreezePanes(topRow = 3)}
+ * 这段代码将冻结前3行即1,2,3这三行在滚动工作表时总是可见且总是在顶部，{@code firstColumn}也是同样的效果</p>
  *
  * @author guanquan.wang at 2022-04-17 11:35
  */
@@ -39,16 +38,16 @@ import java.lang.annotation.Target;
 @Documented
 public @interface FreezePanes {
     /**
-     * Specify the top row to freeze(one-base). Negative numbers are not allowed
+     * 指定冻结的结尾行号（从1开始），0和负数表示不冻结
      *
-     * @return the top row number to freeze, 0 means unfreeze
+     * @return 从1开始的行号，0和负数表示不冻结
      */
     int topRow() default 0;
 
     /**
-     * Specify the first column to freeze(one-base), Negative numbers are not allowed
+     * 指定冻结的结尾列号（从1开始），0和负数表示不冻结
      *
-     * @return the first column number to freeze, 0 means unfreeze
+     * @return 从1开始的列号，0和负数表示不冻结
      */
     int firstColumn() default 0;
 }

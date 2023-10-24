@@ -29,8 +29,8 @@ import java.lang.annotation.Target;
 /**
  * 指定Excel列属性，用于设置Title、列宽等常用属性
  *
- * <p>处于信息安全考虑，EEC只会导出标有{@code ExcelColumn}注解的属性和方法，使用{@link org.ttzero.excel.entity.Workbook#forceExport()}
- * 可以绕过此限制强制导出所有字段，但并不建议这么做，后续Java Bean被其它人添加了敏感字段则会在无预警的情况下被导出
+ * <p>基于数据安全考虑，EEC只会导出标有{@code ExcelColumn}注解的属性和方法，使用{@link org.ttzero.excel.entity.Workbook#forceExport()}
+ * 可以绕过此限制强制导出所有字段，但并不建议这么做，Bean对象被其它人添加了敏感字段则会在无预警的情况下被导出
  * 导致信息泄露，本工具不会对此类安全事故负责。</p>
  *
  * <p>多个{@code ExcelColumn}注解组合可以实现多行表头，{@link #value()}相同的行或列会自动合并。
@@ -76,7 +76,7 @@ public @interface ExcelColumn {
     /**
      * 设置表头“批注”
      *
-     * <p>如果此注释与{@link HeaderComment}同时出现时，则独立的HeaderComment注释优先</p>
+     * <p>{@link HeaderComment}注解可以单独使用，如果此注释与HeaderComment同时出现时，则独立的HeaderComment注释优先</p>
      *
      * <p>注意: 该注解只作用于表头</p>
      *
@@ -104,37 +104,45 @@ public @interface ExcelColumn {
     /**
      * 单元格自动换行
      *
-     * <p>Microsoft Excel可以将文本换行，使其显示在单元格中的多行中。以下两种情况将自动换行，一是字符串长度超过列宽，二是字符串包含"回车"符</p>
+     * <p>Microsoft Excel可以将文本换行，使其显示在单元格中的多行中。以下两种情况将自动换行，一是字符串长度超过列宽，
+     * 二是字符串包含"回车"符</p>
      *
      * @return true: 自动换行 false: 不换行（默认）
      */
     boolean wrapText() default false;
 
     /**
-     * Specify the column index(zero base), Range from {@code 0} to {@code 16383} include {@code 16383}
-     * <p>
-     * The column set by colIndex is an absolute position. For example,
-     * if {@code colIndex=100}, this column must be placed at the {@code "CV"} position
+     * 设置列索引，取值范围 {@code 0 <= colIndex < 16384}
      *
-     * @return -1 means unset
+     * <p>默认情况下导出的列顺序与字段在对象中的定义顺序或指定的Column数组顺序一致，使用{@code colIndex}将指定一个
+     * 绝对位置且仅作用于当前字段，其后的字段并不会基于当前字段的序号自增。如果存在相同的{@code colIndex}则按字段在对
+     * 象中的定义顺序进行重排。任何负数均表示“未设置”，将按照默认顺序处理</p>
+     *
+     * @return 有效范围[0, 16384)，任何小于0的值均表示"未设置"
      */
     int colIndex() default -1;
 
     /**
-     * If {@link Sheet#autoSize()} is {@code true} (exclusive {@code MEDIA} type), The column width take the minimum of `width` and `maxWidth`,
-     * otherwise the column width use `maxWidth` directly as the column width
+     * 设置列宽
      *
-     * @return max cell width, negative number means unset
+     * <p>如果当前列设置"自适应列宽"且不是{@code MEDIA}类型则{@code width = min(自适应列宽, maxWidth)}，
+     * 否则{@code width = maxWidth}。</p>
+     *
+     * <p>任何负数均表示”未设置“，默认列宽为{@code 20}，可以使用{@link Sheet#fixedSize(double)}重置</p>
+     *
+     * @return 有效范围[0, 256)，任何小于0的值均表示"未设置"
      */
     double maxWidth() default -1D;
 
     /**
-     * Hidden current column
-     * <p>
-     * Only set the column to hide, the data will still be written,
-     * you can right-click to "un-hide" to display in file
+     * 设置列隐藏
      *
-     * @return true: hidden otherwise show
+     * <p>导出时标记隐藏列的数据会正常写，只是使用Office等工具打开时该列默认不显示，你可以使用鼠标右键选择“取消隐藏”
+     * 来查看数据，某些情况下可以起到数据安全的作用。</p>
+     *
+     * <p>在隐藏列上其设置的所有属性依旧有效，比如设置自适应列宽，那么该列显示时依旧会显示“自适应列宽”</p>
+     *
+     * @return true: 隐藏，false: 显示（默认）
      */
     boolean hide() default false;
 }

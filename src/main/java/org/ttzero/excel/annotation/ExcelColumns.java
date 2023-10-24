@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Repeat ExcelColumn
+ * 定义可重复的{@link ExcelColumn}注解以支持多行表头，导出时的表头顺序按注解顺序
  *
  * @author guanquan.wang at 2022-06-27 23:05
  */
@@ -34,9 +34,9 @@ import java.lang.annotation.Target;
 @Documented
 public @interface ExcelColumns {
     /**
-     * Repeat ExcelColumn
+     * 支持多个ExcelColumn
      *
-     * @return header {@link ExcelColumn} array
+     * @return ExcelColumn数组
      */
     ExcelColumn[] value();
 }
