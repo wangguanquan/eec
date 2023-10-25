@@ -31,7 +31,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * 水印，Excel并没有水印功能，EEC的水印功能是使用Excel的背景实现，打印的时候该背景会被忽略
+ * 水印，Excel并没有水印功能，EEC的水印功能是使用Excel的背景实现，打印的时候该背景会被忽略。
+ *
+ * <p>注意：只接受{@link FileSignatures#whitelist}白名单的图片格式</p>
  *
  * @author guanquan.wang at 2018-01-26 15:23
  */
@@ -60,7 +62,7 @@ public class WaterMark {
     }
 
     /**
-     * 使用本地图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
+     * 使用本地图片创建水印
      *
      * @param imagePath 图片的本地文件
      */
@@ -70,7 +72,7 @@ public class WaterMark {
     }
 
     /**
-     * 使用图片流创建水印，可以下载远程图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
+     * 使用图片流创建水印，可以下载远程图片创建水印
      *
      * @param inputStream 图片流
      * @throws IOException 读取流异常
@@ -102,7 +104,7 @@ public class WaterMark {
     }
 
     /**
-     * 使用本地图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
+     * 使用本地图片创建水印
      *
      * @param path 图片的本地文件
      * @return 水印对象WaterMark
@@ -112,7 +114,7 @@ public class WaterMark {
     }
 
     /**
-     * 使用图片流创建水印，可以下载远程图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
+     * 使用图片流创建水印，可以下载远程图片创建水印
      *
      * @param is 图片流
      * @return 水印对象WaterMark
