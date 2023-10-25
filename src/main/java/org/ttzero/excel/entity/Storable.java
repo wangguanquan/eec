@@ -20,13 +20,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
+ * 持久化公共接口，默认落盘处理
+ *
  * @author guanquan.wang at 2019-05-08 13:13
  */
 public interface Storable {
     /**
-     * Write to disk
-     * @param root the parent path
-     * @throws IOException if io error occur
+     * 写入指定路径，传入的参数可以是一个文件也可以是文件夹，需要在实现类具体处理
+     *
+     * @param root 父级文件夹或文件绝对路径
+     * @throws IOException 写失败异常
      */
     void writeTo(Path root) throws IOException;
 }

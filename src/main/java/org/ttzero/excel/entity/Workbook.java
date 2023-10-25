@@ -39,120 +39,148 @@ import java.util.function.BiConsumer;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * 一个{@code Workbook}实例即表示一个Excel文件，它包含一个或多个{@link Sheet}，
- * Workbook用于收集全局属性，如文件属性，样式等。
- * <p>
- * When writing an Excel file, you must setting the property first and
- * then add {@link Sheet} into Workbook, finally call the {@link #writeTo}
- * method to perform the write operation. The default file format is open-xml(xlsx).
- * <p>
- * The property contains {@link #setName(String)}, {@link #setCreator(String)},
- * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setZebraLine(Fill)}
- * You can also call {@link #setWorkbookWriter(IWorkbookWriter)} method to setting
- * a custom WorkbookWriter to achieve special demand.
- * <p>
- * The {@link #writeTo} method is a terminating statement, and all settings
- * placed after this statement will not be reflected in the final Excel file.
- * <p>
- * A typical example as follow:
+ * 一个{@code Workbook}实例即表示一个Excel文件，它包含一个或多个{@link Sheet}工作表，
+ * Workbook收集全局属性，如文档属性、样式，字符串共享区等。
+ *
+ * <p>在导出Excel文件时需要遵循以下三个步骤：</p>
+ * <ol>
+ *     <li>设置文件属性（非必须）</li>
+ *     <li>调用{@link #addSheet}添加Worksheet工作表（必须）</li>
+ *     <li>调用{@link #writeTo}方法来执行写入操作（必须）</li>
+ * </ol>
+ * <p>当前仅支持xlsx(默认）和csv格式输出，保存为csv格式须在调用writeTo之前调用{@link #saveAsCSV()}方法，
+ * 如果当前Workbook包含多个Worksheet则会生成多个csv文件并将多个文件压缩为zip格式。</p>
+ *
+ * <p>常用的属性包含{@link #setCreator}设置作者, {@link #setCompany}设置公司名,
+ * {@link #setAutoSize}设置自适应列宽和{@link #setZebraLine}设置斑马线，
+ * 前两种需要打开文件详细属性查看，后两种起美化作用有利于阅读，后两个属性可以设置到Workbook或各Worksheet中，
+ * 如果设置到Workbook则会应用于所有Worksheet，当Workbook和Worksheet均设置了同一属性则Worksheet优先。</p>
+ *
+ * <p>{@link #writeTo}方法是一个终止符它将执行实际的写操作，所以需要将该方法放在所有语句之后，
+ * 任何放置在该方法之后的指令将会被忽略。</p>
+ *
+ * <p>EEC将数据源和输出协议分开设计，工作表Sheet为数据源，{@link IWorkbookWriter}和{@link IWorksheetWriter}
+ * 为输出协议，实现不同的输出协议即实现不同格式化输出，已实现的{@link org.ttzero.excel.entity.e7.XMLWorksheetWriter}和
+ * {@link org.ttzero.excel.entity.csv.CSVWorksheetWriter}就是xlsx和csv格式的输出协议实现。</p>
+ *
+ * <p>一个典型的导出示例：
  * <blockquote><pre>
- * new Workbook("{name}", "{author}")
- *     // Auto size the column width
+ * new Workbook("双11销量统计")
+ *     // 设置作者
+ *     .setCreator("作者")
+ *     // 设置自适应列宽
  *     .setAutoSize(true)
- *     // Add a Worksheet
- *     .addSheet(new ListSheet&lt;Item&gt;("{worksheet name}").setData(new ArrayList&lt;&gt;()))
- *     // Add an other Worksheet
- *     .addSheet(new ListMapSheet("{worksheet name}").setData(new ArrayList&lt;&gt;()))
- *     // Write to absolute path '/tmp/{name}.xlsx'
+ *     // 添加一个名为"总销量排行"的Worksheet
+ *     .addSheet(new ListSheet&lt;Item&gt;("总销量排行")
+ *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
+ *     // 添加一个名为"单品销量排行"的Worksheet
+ *     .addSheet(new ListMapSheet("单品销量排行")
+ *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
+ *     // 指定输出路径 '/tmp/"双11销量统计".xlsx'
  *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
- * <p>Some referer links:
- * <a href="https://poi.apache.org">POI</a>&nbsp;|&nbsp;
- * <a href="https://msdn.microsoft.com/library">Office 365</a>&nbsp;|&nbsp;
- * <a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">DocumentFormat.OpenXml.Spreadsheet Namespace</a>&nbsp;|&nbsp;
- * <a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">介绍 Microsoft Office (2007) Open XML 文件格式</a>
+ * <p>参考文档:</p>
+ * <p><a href="https://poi.apache.org">POI</a></p>
+ * <p><a href="https://msdn.microsoft.com/library">Office 365</a></p>
+ * <p><a href="https://msdn.microsoft.com/en-us/library/documentformat.openxml.spreadsheet(v=office.14).aspx#">DocumentFormat.OpenXml.Spreadsheet Namespace</a></p>
+ * <p><a href="https://docs.microsoft.com/zh-cn/previous-versions/office/office-12/ms406049(v=office.12)">介绍 Microsoft Office (2007) Open XML 文件格式</a></p>
  *
  * @author guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storable {
     /**
-     * The Workbook name, reaction to the Excel file name
+     * 工作薄名
      */
     private String name;
+    /**
+     * 工作表数组，按数组顺序输出
+     */
     private Sheet[] sheets;
+    /**
+     * 水印
+     */
     private WaterMark waterMark;
+    /**
+     * 记录工作表几数
+     */
     private int size;
     /**
-     * Auto size flag
+     * 全局自适应列宽标识
      */
     private boolean autoSize;
     /**
-     * Author
+     * 作者，未指定时将默认取当前系统登录名
      */
     private String creator;
+    /**
+     * 工作薄属性
+     */
     private Core core;
     /**
-     * Specify a company name(null able)
+     * 公司名
      */
     private String company;
     /**
-     * The zebra-line fill style
+     * 全局斑马线
      */
     private Fill zebraFill;
     /**
-     * A progress window
+     * 导出进度监控器
      */
     private BiConsumer<Sheet, Integer> progressConsumer;
     private final I18N i18N;
-
-    private SharedStrings sst;
-    private Styles styles;
-
-    private IWorkbookWriter workbookWriter;
-
     /**
-     * Force export all attributes
+     * 全局字符串共享区
+     */
+    private SharedStrings sst;
+    /**
+     * 全局样式
+     */
+    private Styles styles;
+    /**
+     * WorkbookWriter输出协议，输出协议影响最终的文件格式
+     */
+    private IWorkbookWriter workbookWriter;
+    /**
+     * 强制导出，绕过安全限制导出全字段
      */
     private int forceExport;
     /**
-     * A global ContentType attributes
+     * 全局ContentType
      */
     private final ContentType contentType;
     /**
-     * Drawing worksheet counter
+     * 全局Drawing记数器
      */
     private int drawingCounter;
     /**
-     * Count of media in global workbook
+     * 全局多媒体记数器（当前仅支持图片）
      */
     private int mediaCounter;
 
     /**
-     * Create a unnamed workbook
+     * 创建一个未命名工作薄
      *
-     * EEC finds the 'non-name-file' keyword under the {@code resources/I18N/message.XXX.properties}
-     * file first. If there contains the keyword, use this value as the default file name,
-     * otherwise use 'Non name' as the name.
+     * <p>如果writeTo方法指定的File或Path为文件夹时，未命名工作薄将会从{@code resources/I18N/message.XXX.properties}
+     * 查找名为'non-name-file'的配置，有且不为空时以该配置为文件名否则以'Non name'作为文件名</p>
      */
     public Workbook() {
         this(null);
     }
 
     /**
-     * Create a workbook with the specified name. Use this name as
-     * the file name when saving to disk
+     * 创建一个工作薄并指定名称
      *
-     * @param name the workbook name
+     * @param name 工作薄名
      */
     public Workbook(String name) {
         this(name, null);
     }
 
     /**
-     * Create a workbook with the specified name and author.
+     * 创建一个工作薄并指定名称和作者
      *
-     * @param name    the workbook name
-     * @param creator the author, it will getting the
-     *      {@code System.getProperty("user.name")} if it not be setting.
+     * @param name    工作薄名
+     * @param creator 作者，默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名.
      */
     public Workbook(String name, String creator) {
         this.name = name;
@@ -163,19 +191,19 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the workbook name
+     * 获取当前工作薄名称
      *
-     * @return the workbook name
+     * @return 工作薄名称
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Setting the workbook name
+     * 设置工作薄名称，如果writeTo方法指定的Path或File为文件夹时该名称将作为最终文件名
      *
-     * @param name the workbook name
-     * @return the {@link Workbook}
+     * @param name 工作薄名，长度最好不超过255个字符
+     * @return 当前工作薄
      */
     public Workbook setName(String name) {
         this.name = name;
@@ -183,55 +211,55 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the excel author
+     * 获取当前工作薄作者
      *
-     * @return the author
+     * @return 作者
      */
     public String getCreator() {
         return creator;
     }
 
     /**
-     * Returns the company name where the author is employed
+     * 获取当前工作薄公司名
      *
-     * @return the company name
+     * @return 公司名
      */
     public String getCompany() {
         return company;
     }
 
     /**
-     * Returns the {@link I18N} util
+     * 获取全局{@link I18N}配置
      *
-     * @return the {@link I18N} util
+     * @return 全局I18N配置
      */
     public I18N getI18N() {
         return i18N;
     }
 
     /**
-     * Returns the size of {@link Sheet} in this workbook
+     * 获取当前工作薄包含的工作表个数
      *
-     * @return ths size of Worksheet
+     * @return 工作表个数
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * Returns the basic information about workbook
+     * 获取文档属性，包含主题，关键词，分类等信息
      *
-     * @return the {@link Core} instance
+     * @return 文档属性
      */
     public Core getCore() {
         return core;
     }
 
     /**
-     * Setting basic information,such as title, subject, keyword, category...
+     * 设置文档属性，包含主题，关键词，分类等信息
      *
-     * @param core the {@link Core} instance
-     * @return ths size of Worksheet
+     * @param core 文档属性
+     * @return 当前工作薄
      */
     public Workbook setCore(Core core) {
         this.core = core;
@@ -239,9 +267,9 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the Shared String Table
+     * 获取全局字符串共享区，此共享区独立于Worksheet，所有worksheet共享
      *
-     * @return the global {@link SharedStrings}
+     * @return 全局字符串共享区{@link SharedStrings}
      */
     public SharedStrings getSst() {
         // CSV do not need SharedStringTable
@@ -251,29 +279,30 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns all {@link Sheet} in this workbook
+     * 获取所有{@link Sheet}集合
      *
-     * @return array of {@link Sheet}
+     * <p>注意：返回的对象是一个浅拷贝对其做任何修改将影响最终效果</p>
+     *
+     * @return {@link Sheet}集合
      */
     public final Sheet[] getSheets() {
         return Arrays.copyOf(sheets, size);
     }
 
     /**
-     * Returns the {@link WaterMark}
+     * 获取水印{@link WaterMark}
      *
-     * @return the {@link Workbook}
+     * @return 水印
      */
     public WaterMark getWaterMark() {
         return waterMark;
     }
 
     /**
-     * Setting {@link WaterMark}
-     * <p>Use {@link WaterMark#of} method to create a water mark.</p>
+     * 设置水印{@link WaterMark}，可以使用{@link WaterMark#of}静态方法创建
      *
-     * @param waterMark the water mark
-     * @return the {@link Workbook}
+     * @param waterMark 水印
+     * @return 当前工作薄
      */
     public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -281,10 +310,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting auto-adjust the column width
+     * 设置全局自适应列宽
      *
-     * @param autoSize boolean value
-     * @return the {@link Workbook}
+     * @param autoSize true: 自适应宽度，false：固定宽度（默认）
+     * @return 当前工作薄
      */
     public Workbook setAutoSize(boolean autoSize) {
         this.autoSize = autoSize;
@@ -292,18 +321,20 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns whether to auto-adjust the column width
+     * 获取当前工作薄是否为自适应宽度
      *
-     * @return true if auto-adjust the column width
+     * @return true: 自适应宽度，false：固定宽度
      */
     public boolean isAutoSize() {
         return autoSize;
     }
 
     /**
-     * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
+     * 强制导出
+     * 
+     * <p>注意：设置此标记后将无视安全规则导出Java对象中的所有字段，请根据实际情况谨慎使用</p>
      *
-     * @return the {@link Workbook}
+     * @return 当前工作薄
      */
     public Workbook forceExport() {
         this.forceExport = 1;
@@ -311,18 +342,18 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the force export
+     * 获取当前工作薄是否为“强制导出”
      *
-     * @return 1 if force, otherwise returns 0
+     * @return 强制导出时返回1，其它情况返回0
      */
     public int getForceExport() {
         return forceExport;
     }
 
     /**
-     * Returns the global {@link Styles}
+     * 获取全局样式{@link Styles}
      *
-     * @return the Styles
+     * @return 全局样式
      */
     public Styles getStyles() {
         // CSV do not need Styles
@@ -332,10 +363,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Specify a custom global {@link Styles}
+     * 设置全局样式{@link Styles}
      *
-     * @param styles custom Styles
-     * @return the {@link Workbook}
+     * @param styles 定制化全局样式
+     * @return 当前工作薄
      */
     public Workbook setStyles(Styles styles) {
         this.styles = styles;
@@ -343,19 +374,16 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting the excel author name.
-     * <p>
-     * If you do not set the creator it will get the current OS login user name,
-     * usually this is not a good idea. Applications are usually publish on server
-     * or cloud server, getting the system login user name doesn't make sense.
-     * If you don't want to set it and default setting the system login user name,
-     * you can set it to an empty string ("").
-     * <p>
-     * Does anyone agree with this idea? If anyone agrees, I will consider removing
-     * this setting.
+     * 设置作者
      *
-     * @param creator the author name
-     * @return the {@link Workbook}
+     * <p>默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名，这通常不是一个好主意。
+     * 应用程序一般发布在容器或云服务器上，获取系统登录用户名是没有意义的。如果不想设置它并默认设置系统登录用户名，
+     * 可以将其设置为空字符串("")。</p>
+     *
+     * <p>后续会去掉获取系统登录用户名的逻辑以防止信息泄露</P>
+     *
+     * @param creator 作者
+     * @return 当前工作薄
      */
     public Workbook setCreator(String creator) {
         this.creator = creator;
@@ -363,10 +391,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting the name of the company where the author is employed
+     * 设置公司名，建议控制在64个字符以内
      *
-     * @param company the company name
-     * @return the {@link Workbook}
+     * @param company 公司名
+     * @return 当前工作薄
      */
     public Workbook setCompany(String company) {
         this.company = company;
@@ -374,10 +402,11 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting the zebra-line fill style
+     * 设置斑马线背景，斑马线是由相同间隔的背景色造成的视觉效果，有助于从视觉上区分每行数据，
+     * 但刺眼的背景色可能造成相反的效果，设置之前最好在Office中提前预览效果
      *
-     * @param fill the zebra-line {@link Fill} style
-     * @return the {@link Workbook}
+     * @param fill 背景样式{@link Fill}
+     * @return 当前工作薄
      */
     public Workbook setZebraLine(Fill fill) {
         this.zebraFill = fill;
@@ -385,9 +414,9 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Cancel the zebra-line style
+     * 取消斑马线
      *
-     * @return the {@link Workbook}
+     * @return 当前工作薄
      */
     public Workbook cancelZebraLine() {
         this.zebraFill = null;
@@ -395,36 +424,36 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting zebra-line style, the default fill color is #EFF5EB
+     * 指定以默认斑马线输出，默认背景颜色为{@code #EFF5EB}
      *
-     * @return the {@link Workbook}
+     * @return 当前工作薄
      */
     public Workbook defaultZebraLine() {
         return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
     }
 
     /**
-     * Returns the zebra-line fill style
+     * 获取斑马线背景样式
      *
-     * @return the {@link Fill} style
+     * @return 斑马线背景 {@link Fill}样式
      */
     public Fill getZebraFill() {
         return zebraFill;
     }
 
     /**
-     * Returns current workbook has zebra-line
+     * 判断当前工作薄是否设置了全局斑马线背景
      *
-     * @return true if zebra-line is not null
+     * @return true: 有全局斑马线
      */
     public boolean hasZebraFill() {
         return zebraFill != null && zebraFill.getPatternType() != PatternType.none;
     }
 
     /**
-     * Returns the {@link IWorkbookWriter}
+     * 获取工作薄输出协议{@link IWorkbookWriter}
      *
-     * @return the workbook writer
+     * @return 工作薄输出协议
      */
     public IWorkbookWriter getWorkbookWriter() {
         if (workbookWriter == null)
@@ -433,10 +462,11 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Add a {@link Sheet} to the tail
+     * 添加一个工作表{@link Sheet}，新添加的工作表总是排在队列最后，
+     * 可以使用{@link #insertSheet}插入到指定位置
      *
-     * @param sheet a Worksheet
-     * @return the {@link Workbook}
+     * @param sheet 工作表
+     * @return 当前工作薄
      */
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
@@ -446,11 +476,11 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Insert a {@link Sheet} at the specified index
+     * 在指定下标插入一个工作表{@link Sheet}
      *
-     * @param index the index (zero-base) to insert at
-     * @param sheet a worksheet
-     * @return the {@link Workbook}
+     * @param index 指定工作表插入的位置（从0开始）
+     * @param sheet 待插入的工作表
+     * @return 当前工作薄
      */
     public Workbook insertSheet(int index, Sheet sheet) {
         ensureCapacityInternal();
@@ -469,10 +499,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Remove the {@link Sheet} from the specified index
+     * 移除指定位置的工作表{@link Sheet}
      *
-     * @param index the index (zero-base) to be delete
-     * @return the {@link Workbook}
+     * @param index 待移除的工作表下标（从0开始）
+     * @return 当前工作薄
      */
     public Workbook remove(int index) {
         if (index < 0 || index >= size) {
@@ -491,12 +521,14 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the Sheet of the specified index
+     * 获取指定位置的工作表
      *
-     * @param index the index (zero-base)
-     * @return the {@link Sheet}
-     * @throws IndexOutOfBoundsException if index is negative number
-     * or greater than the worksheet size in current workbook
+     * <p>如果使用{@link #insertSheet}方法插入了一个较大的下标，调用此方法可能返回null值。
+     * 例如在下标为100的位置插入了一个工作表，获取第90位的工作薄将返回一个null值。</p>
+     *
+     * @param index 工作表在队列中的位置（从0开始）
+     * @return 指定位置的工作表 {@link Sheet}
+     * @throws IndexOutOfBoundsException 如果下标为负数或者超过工作薄队列长度
      */
     public Sheet getSheetAt(int index) {
         if (index < 0 || index >= size)
@@ -505,12 +537,12 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Return a {@link Sheet} with the specified name
-     * <p>
-     * Note: This method can only return the {@code Sheet} which name specified when created.
+     * 返回指定名称的工作表{@link Sheet}
      *
-     * @param sheetName the sheet name
-     * @return the {@link Sheet}, returns null if not found
+     * <p>注意：只能查找那些在创建时设置了名称的工作表</p>
+     *
+     * @param sheetName 待查找的工作表名称
+     * @return 按工作表名称查询，未找到时返回{code null}
      */
     public Sheet getSheet(String sheetName) {
         if (StringUtil.isEmpty(sheetName)) return null;
@@ -523,15 +555,15 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting a progress watch
+     * 添加一个进度监听器，可以在较大导出时展示进度
      *
      * <blockquote><pre>
      * new Workbook().onProgress((sheet, row) -&gt; {
      *     System.out.println(sheet + " write " + row + " rows");
      * })</pre></blockquote>
      *
-     * @param progressConsumer a progress watch
-     * @return the {@link Workbook}
+     * @param progressConsumer 进度监听器
+     * @return 当前工作薄
      */
     public Workbook onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
         this.progressConsumer = progressConsumer;
@@ -539,9 +571,9 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns progress watch
+     * 获取进度监听器
      *
-     * @return progress consumer if setting
+     * @return 如果设置了监听器就返回，未设置时返回null
      */
     public BiConsumer<Sheet, Integer> getProgressConsumer() {
         return progressConsumer;
@@ -552,7 +584,7 @@ public class Workbook implements Storable {
 //     * <p>
 //     * You mast add eec-e3-support.jar into class path to support excel97~2003
 //     *
-//     * @return the {@link Workbook}
+//     * @return 当前工作薄
 //     * @throws OperationNotSupportedException if eec-e3-support not import into class path
 //     */
 //    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
@@ -568,16 +600,18 @@ public class Workbook implements Storable {
 //    }
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     * 另存为Comma-Separated Values格式，默认使用','逗号分隔
      *
-     * @return the {@link Workbook}
+     * @return 当前工作薄
      */
     public Workbook saveAsCSV() {
         workbookWriter = new CSVWorkbookWriter(this);
         return this;
     }
 
+    /**
+     * 确认边距并在越界时自动扩容
+     */
     private void ensureCapacityInternal() {
         if (size >= sheets.length) {
             sheets = Arrays.copyOf(sheets, size + 1);
@@ -587,16 +621,15 @@ public class Workbook implements Storable {
     //////////////////////////Print Out/////////////////////////////
 
     /**
-     * Export the workbook to the specified folder
-     * <p>
-     * If the path is a folder, save the workbook to that folder,
-     * if there has duplicate file name, add '(n)' after the output
-     * file name to avoid overwriting the original file.
-     * If it is a file, overwrite the file.
+     * 指定输出路径，Path可以是文件夹或者文件
      *
-     * @param path the output pat, It can be a directory or a
-     *             full file path
-     * @throws IOException if I/O error occur
+     * <p>如果Path为文件夹时将在该文件夹下生成名为{@link #getName()} + {@link IWorkbookWriter#getSuffix()}的文件，
+     * 文件后缀随输出协议变动。如果存在相同的文件名则会在文件名后面添加'(n)'，n为自增的数字，例已存在"abc.xlsx"，
+     * 再次导出时将保存为"abc(1).xlsx"。如果Path为明确的文件绝对路径，那将保存在Path的绝对路径下，已存在相同文件时会覆盖原文件，
+     * 需要注意覆盖失败的情况</p>
+     *
+     * @param path Excel保存位置
+     * @throws IOException I/O操作异常
      */
     @Override
     public void writeTo(Path path) throws IOException {
@@ -619,22 +652,21 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Export the workbook to the specified {@link OutputStream}.
-     * It mostly used for small excel file export and download
+     * 导出到{@link OutputStream}流，适用于小文件Excel直接导出的场景
+     *
      * <blockquote><pre>
      * public void export(HttpServletResponse response) throws IOException {
-     *     String fileName = java.net.URLEncoder.encode("{name}.xlsx", "UTF-8");
+     *     String fileName = java.net.URLEncoder.encode("abc.xlsx", "UTF-8");
      *     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"; filename*=utf-8''" + fileName);
-     *     new Workbook("{name}", "{author}")
-     *     .setAutoSize(true)
-     *     .addSheet(new ListSheet&lt;ListObjectSheetTest.Item&gt;("{worksheet name}", new ArrayList&lt;&gt;()))
-     *     // Write to HttpServletResponse
-     *     .writeTo(response.getOutputStream());
+     *     new Workbook()
+     *         .addSheet(new ListSheet&lt;Item&gt;("总销量排行", new ArrayList&lt;&gt;()))
+     *         // 直接写到Response
+     *         .writeTo(response.getOutputStream());
      * }</pre></blockquote>
      *
-     * @param os the OutputStream
-     * @throws IOException         if I/O error occur
-     * @throws ExcelWriteException other runtime error
+     * @param os 输出流
+     * @throws IOException         I/O操作异常
+     * @throws ExcelWriteException 其它运行时异常
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
         checkAndInitWriter();
@@ -642,11 +674,16 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Export the workbook to the specified folder
+     * 指定输出路径，File可以是文件夹或者文件
      *
-     * @param file                 the output file name
-     * @throws IOException         if I/O error occur
-     * @throws ExcelWriteException other runtime error
+     * <p>如果File为文件夹时将在该文件夹下生成名为{@link #getName()} + {@link IWorkbookWriter#getSuffix()}的文件，
+     * 文件后缀随输出协议变动。如果存在相同的文件名则会在文件名后面添加'(n)'，n为自增的数字，例已存在"abc.xlsx"，
+     * 再次导出时将保存为"abc(1).xlsx"。如果File为明确的文件绝对路径，那将保存在File的绝对路径下，已存在相同文件时会覆盖原文件，
+     * 需要注意覆盖失败的情况</p>
+     *
+     * @param file                 Excel保存位置
+     * @throws IOException         I/O操作异常
+     * @throws ExcelWriteException 其它运行时异常
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
         checkAndInitWriter();
@@ -656,35 +693,42 @@ public class Workbook implements Storable {
         workbookWriter.writeTo(file);
     }
 
-    /////////////////////////////////Template///////////////////////////////////
+    /////////////////////////////////模板，目前只实现简单模板///////////////////////////////////
+    /**
+     * 模板输入流
+     */
     private InputStream is;
+    /**
+     * 替换对象
+     */
     private Object o;
 
     /**
-     * Returns the template io-stream
+     * 获取模板输入流
      *
-     * @return the io-stream of template
+     * @return 模板的输入流
+     * @deprecated 无实际用处将很快删除
      */
+    @Deprecated
     public InputStream getTemplate() {
         return is;
     }
 
     /**
-     * Returns the replacement object
+     * 获取绑定对象
      *
-     * @return the object
+     * @return 绑定对象
      */
     public Object getBind() {
         return o;
     }
 
     /**
-     * Bind a excel template and set an object to replace the
-     * placeholder character in template
+     * 指定模板输入流并绑定替换对象
      *
-     * @param is the template io-stream
-     * @param o  bind a replacement object
-     * @return the {@link Workbook}
+     * @param is 模板输入流
+     * @param o  绑定替换对象
+     * @return 当前工作薄
      */
     public Workbook withTemplate(InputStream is, Object o) {
         this.is = is;
@@ -697,10 +741,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting a customize workbook writer
+     * 设置自定义工作薄输出协议
      *
-     * @param workbookWriter a customize {@link IWorkbookWriter}
-     * @return the {@link Workbook}
+     * @param workbookWriter 自定义工作薄{@link IWorkbookWriter}协议
+     * @return 当前工作薄
      */
     public Workbook setWorkbookWriter(IWorkbookWriter workbookWriter) {
         this.workbookWriter = workbookWriter;
@@ -709,35 +753,36 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Create some global entry.
+     * 初始化，创建全局样式和字符串共享区
      */
     protected void init() {
-        // Create SharedStringTable
+        // 创建全局字符串共享区
+        // FIXME 根据worksheet配置来判断是否需要创建字符串共享区
         if (sst == null) {
             sst = new SharedStrings();
         }
-        // Create a global styles
+        // 创建全局样式
         if (styles == null) {
             styles = Styles.create(i18N);
         }
     }
 
     /**
-     * Check and Create {@link IWorkbookWriter}
+     * 检查并创建工作薄协议{@link IWorkbookWriter}
      */
     protected void checkAndInitWriter() {
         if (workbookWriter == null) {
-            // Create Styles and SharedStringTable
+            // 初始化
             init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
     }
 
     /**
-     * Add a content-type
+     * 添加ContentType，导出图片时按照图片格式添加不同的ContentType，一般情况下开发者不需要关心
      *
-     * @param type {@link ContentType.Type}
-     * @return current {@link Workbook}
+     * @param type 资源的{@link ContentType.Type}
+     * @return 当前工作薄
      */
     public Workbook addContentType(ContentType.Type type) {
         contentType.add(type);
@@ -745,10 +790,10 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Add a content-type refer
+     * 添加ContentType关系，一般情况下开发者不需要关心
      *
-     * @param rel {@link Relationship}
-     * @return current {@link Workbook}
+     * @param rel {@link Relationship}关系
+     * @return 当前工作薄
      */
     public Workbook addContentTypeRel(Relationship rel) {
         contentType.addRel(rel);
@@ -756,45 +801,45 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the global ContentType
+     * 获取全局的ContentType，一般情况下开发者不需要关心
      *
-     * @return {@link ContentType}
+     * @return {@link ContentType}对象
      */
     public ContentType getContentType() {
         return contentType;
     }
 
     /**
-     * Increment and returns drawing-counter
+     * 图片记数器自增
      *
-     * @return drawing-counter
+     * @return 图片记数器
      */
     public int incrementDrawingCounter() {
         return ++drawingCounter;
     }
 
     /**
-     * Returns count of drawing object
+     * 获取当前工作薄包含多少张图片
      *
-     * @return count of drawing object
+     * @return 图片数量
      */
     public int getDrawingCounter() {
         return drawingCounter;
     }
 
     /**
-     * Increment and returns media-counter
+     * 媒体记数器，一般情况下media与worksheet对应
      *
-     * @return media-counter
+     * @return 媒体记数器
      */
     public int incrementMediaCounter() {
         return ++mediaCounter;
     }
 
     /**
-     * Returns count of media object
+     * 获取当前工作薄含有多媒体的工作表个数
      *
-     * @return count of media object
+     * @return 含有多媒体的工作表个数
      */
     public int getMediaCounter() {
         return mediaCounter;
