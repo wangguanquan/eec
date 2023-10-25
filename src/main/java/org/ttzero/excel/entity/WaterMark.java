@@ -16,7 +16,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.util.FileSignatures;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -26,74 +26,106 @@ import java.awt.AlphaComposite;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * Excel does not have a watermark function. The watermark here
- * only designs the Worksheet background image. This setting
- * will be ignored when printing.
+ * 水印，Excel并没有水印功能，EEC的水印功能是使用Excel的背景实现，打印的时候该背景会被忽略
  *
  * @author guanquan.wang at 2018-01-26 15:23
  */
 public class WaterMark {
+    /**
+     * 水印图片临时路径
+     */
     private final Path imagePath;
+    /**
+     * 标记是否为临时创建，文本和InputStream流时为true
+     */
     private boolean temp;
-
+    /**
+     * 水印图片签名
+     */
+    private final FileSignatures.Signature signature;
+    /**
+     * 使用一段文本创建水印
+     *
+     * @param word 一段有意义的文本
+     */
     public WaterMark(String word) {
         imagePath = createWaterMark(word);
-    }
-
-    public WaterMark(Path imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public WaterMark(InputStream inputStream) throws IOException {
-        imagePath = createTemp();
-        Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    public Path get() {
-        return imagePath;
+        // 水印由内部制作所以这里不需要检查签名
+        signature = new FileSignatures.Signature("png", FileSignatures.whitelist.getOrDefault("png", "image/png"), 510, 300);
     }
 
     /**
-     * Create a water mark with string value
+     * 使用本地图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
      *
-     * @param mark the mark value
-     * @return WaterMark
+     * @param imagePath 图片的本地文件
+     */
+    public WaterMark(Path imagePath) {
+        this.imagePath = imagePath;
+        signature = FileSignatures.test(imagePath);
+    }
+
+    /**
+     * 使用图片流创建水印，可以下载远程图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
+     *
+     * @param inputStream 图片流
+     * @throws IOException 读取流异常
+     */
+    public WaterMark(InputStream inputStream) throws IOException {
+        imagePath = createTemp();
+        Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
+        signature = FileSignatures.test(imagePath);
+    }
+
+    /**
+     * 获取水印图片路径
+     *
+     * @return 水印图片临时路径，
+     */
+    public Path get() {
+        // 非白名单图片格式返回null
+        return canWrite() ? imagePath : null;
+    }
+
+    /**
+     * 使用一段文本创建水印
+     *
+     * @param mark 文本
+     * @return 水印对象
      */
     public static WaterMark of(String mark) {
         return new WaterMark(mark);
     }
 
     /**
-     * Create a water mark with location image
+     * 使用本地图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
      *
-     * @param path the image location path
-     * @return WaterMark
+     * @param path 图片的本地文件
+     * @return 水印对象WaterMark
      */
     public static WaterMark of(Path path) {
         return new WaterMark(path);
     }
 
     /**
-     * Create a water mark with InputStream image
+     * 使用图片流创建水印，可以下载远程图片创建水印，只接受{@link FileSignatures#whitelist}白名单的图片格式
      *
-     * @param is the image InputStream
-     * @return WaterMark
-     * @throws IOException if io error occur
+     * @param is 图片流
+     * @return 水印对象WaterMark
+     * @throws IOException 读取流异常
      */
     public static WaterMark of(InputStream is) throws IOException {
         return new WaterMark(is);
     }
 
     /**
-     * Make a picture with string value
+     * 使用指定文本制作一张水印图片
      *
-     * @param watermark mark value
+     * @param watermark 一段有意义的文本
      * @return the temp image path
      */
     private Path createWaterMark(String watermark) {
@@ -127,15 +159,26 @@ public class WaterMark {
             ImageIO.write(bi, "png", temp.toFile());
             return temp;
         } catch (IOException e) {
-            throw new ExcelWriteException("Create Water Mark error.", e);
+            throw new ExcelWriteException("创建水印失败.", e);
         }
     }
 
+    /**
+     * 创建临时文件
+     *
+     * @return 临时文件路径
+     * @throws IOException 没有权限或者磁盘不足等情况
+     */
     private Path createTemp() throws IOException {
         temp = true;
         return Files.createTempFile("waterMark", "png");
     }
 
+    /**
+     * 删除临时文件，传入InputStream或文本时会保存到临时文件，所以需要清理资源
+     *
+     * @return 出异常时返回false
+     */
     public boolean delete() {
         if (imagePath != null && temp) {
             try {
@@ -148,39 +191,29 @@ public class WaterMark {
     }
 
     /**
-     * @return the picture suffix
+     * 获取水印图片的后缀
+     *
+     * @return 水印图片后缀
      */
     public String getSuffix() {
-        String suffix = null;
-        if (temp) {
-            suffix = Const.Suffix.PNG;
-        } else if (imagePath != null) {
-            String name = imagePath.getFileName().toString();
-            int n;
-            if ((n = name.lastIndexOf('.')) > 0) {
-                suffix = name.substring(n);
-            }
-        }
-        return suffix != null ? suffix : Const.Suffix.PNG;
+        return "." + signature.extension;
     }
 
     /**
-     * content-type
+     * 水印图片Content-type
      *
-     * @return string
+     * @return Content-type
      */
     public String getContentType() {
-        String suffix = getSuffix().substring(1).toUpperCase();
-        Field[] fields = Const.ContentType.class.getDeclaredFields();
-        for (Field f : fields) {
-            if (f.getName().equals(suffix)) {
-                try {
-                    return f.get(null).toString();
-                } catch (IllegalAccessException e) {
-                    // Empty
-                }
-            }
-        }
-        return Const.ContentType.PNG;
+        return signature.contentType;
+    }
+
+    /**
+     * 测试水印图片是否可输出
+     *
+     * @return true: 资源可信任输出到Excel
+     */
+    public boolean canWrite() {
+        return signature.isTrusted();
     }
 }

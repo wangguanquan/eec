@@ -754,7 +754,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeNull(row, column, xf);
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
-        if (signature == null) {
+        if (signature == null || !signature.isTrusted()) {
             LOGGER.warn("File types that are not allowed");
             return;
         }
@@ -781,7 +781,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         int position = byteBuffer.position();
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(byteBuffer);
-        if (signature == null) {
+        if (signature == null || !signature.isTrusted()) {
             LOGGER.warn("File types that are not allowed");
             return;
         }
@@ -811,7 +811,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         writeNull(row, column, xf);
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(path);
-        if ("unknown".equals(signature.extension)) {
+        if (!signature.isTrusted()) {
             LOGGER.warn("File types that are not allowed");
             return;
         }
@@ -845,7 +845,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // Empty stream
             if (n <= 0) return;
             FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes, 0, n));
-            if (signature == null) {
+            if (signature == null || !signature.isTrusted()) {
                 LOGGER.warn("File types that are not allowed");
                 return;
             }
@@ -1428,7 +1428,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(body));
-        if (signature != null) {
+        if (signature != null && signature.isTrusted()) {
             String name = "image" + picture.id + "." + signature.extension;
             // Store onto disk
             Files.write(mediaPath.resolve(name), body, StandardOpenOption.CREATE_NEW);

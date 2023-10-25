@@ -40,7 +40,7 @@ public class FileSignatures {
      */
     final static Logger LOGGER = LoggerFactory.getLogger(FileSignatures.class);
     /**
-     * Configure trusted image types
+     * 白名单配置列表
      */
     public static Map<String, String> whitelist = new HashMap<String, String>() {{
         put("png", "image/png");
@@ -56,6 +56,12 @@ public class FileSignatures {
     }};
     private FileSignatures() { }
 
+    /**
+     * 简单测试资源签名
+     *
+     * @param path 文件路径
+     * @return 签名
+     */
     public static Signature test(Path path) {
         Signature signature = null;
         try (InputStream is = Files.newInputStream(path)) {
@@ -74,6 +80,12 @@ public class FileSignatures {
         return signature;
     }
 
+    /**
+     * 简单测试资源签名
+     *
+     * @param buffer 资源数据
+     * @return 签名
+     */
     public static Signature test(ByteBuffer buffer) {
         if (buffer.remaining() < 32) return null;
         int t0 = buffer.getShort() & 0xFFFF;
@@ -242,7 +254,7 @@ public class FileSignatures {
                 } else buffer.position(buffer.position() + 10);
             }
         }
-        return new Signature("tiff", "image/tiff", width, height);
+        return new Signature("tiff", whitelist.getOrDefault("tiff", "image/unknown"), width, height);
     }
 
     public static class Signature {
@@ -263,6 +275,15 @@ public class FileSignatures {
             this.contentType = contentType;
             this.width = width;
             this.height = height;
+        }
+
+        /**
+         * 可信任的，必须在白名单列出的资源格式
+         *
+         * @return true：可信任
+         */
+        public boolean isTrusted() {
+            return extension != null && contentType != null && whitelist.containsKey(extension) && !"image/unknown".equals(contentType);
         }
     }
 }

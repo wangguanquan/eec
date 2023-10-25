@@ -177,14 +177,14 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         addRel(new Relationship("sharedStrings.xml", Const.Relationship.SHARED_STRING));
 
         WaterMark waterMark;
-        if ((waterMark = workbook.getWaterMark()) != null) {
+        if ((waterMark = workbook.getWaterMark()) != null && waterMark.canWrite()) {
             contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
         }
 
         int size = workbook.getSize();
         for (int i = 0; i < size; i++) {
             WaterMark wm = workbook.getSheetAt(i).getWaterMark();
-            if (wm != null) {
+            if (wm != null && wm.canWrite()) {
                 contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
             }
         }
@@ -202,7 +202,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
             // Marker
             WaterMark wm = sheet.getWaterMark();
-            if (wm != null) {
+            if (wm != null && wm.canWrite()) {
                 contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
             }
         } // END
@@ -282,7 +282,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         Relationship supRel = null;
         int n = 1;
         WaterMark waterMark = workbook.getWaterMark();
-        if (waterMark != null) {
+        if (waterMark != null && waterMark.canWrite()) {
             Path media = parent.resolve("media");
             if (!exists(media)) {
                 Files.createDirectory(media);
@@ -295,7 +295,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         WaterMark wm;
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            if ((wm = sheet.getWaterMark()) != null) {
+            if ((wm = sheet.getWaterMark()) != null && wm.canWrite()) {
                 Path media = parent.resolve("media");
                 if (!exists(media)) {
                     Files.createDirectory(media);
@@ -303,7 +303,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 Path image = media.resolve("image" + n++ + wm.getSuffix());
                 Files.copy(wm.get(), image);
                 sheet.addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
-            } else if (waterMark != null) {
+            } else if (waterMark != null && waterMark.canWrite()) {
                 sheet.setWaterMark(waterMark);
                 sheet.addRel(supRel);
             }
