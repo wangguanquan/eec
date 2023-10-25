@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity.csv;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
@@ -38,6 +40,10 @@ import java.nio.file.Path;
  * @author guanquan.wang at 2019-08-21 21:46
  */
 public class CSVWorkbookWriter implements IWorkbookWriter {
+    /**
+     * LOGGER
+     */
+    protected Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Workbook workbook;
     // The csv suffix
     private String suffix = Const.Suffix.CSV;
@@ -122,7 +128,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         }
         if (i < path.getNameCount()) {
             FileUtil.rm_rf(path.getRoot().resolve(path.subpath(0, i)).toFile(), true);
-            workbook.what("0005");
+            LOGGER.debug("Clean up temporary files");
         }
     }
 
@@ -133,7 +139,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         }
 
         Path resultPath = reMarkPath(src, path, name);
-        workbook.what("0006", resultPath.toString());
+        LOGGER.debug("Write completed. {}", resultPath);
     }
 
     // Create csv file
@@ -156,12 +162,12 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
                 sheet.forceExport();
             }
         }
-        workbook.what("0001");
+        LOGGER.debug("Sheet initialization completed.");
 
         Path root = null;
         try {
             root = FileUtil.mktmp(Const.EEC_PREFIX);
-            workbook.what("0002", root.toString());
+            LOGGER.debug("Create temporary folder {}", root);
 
             // Write worksheet data one by one
             for (int i = 0; i < workbook.getSize(); i++) {
@@ -174,7 +180,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             if (workbook.getSize() > 1) {
                 suffix = Const.Suffix.ZIP;
                 Path zipFile = ZipUtil.zipExcludeRoot(root, root);
-                workbook.what("0004", zipFile.toString());
+                LOGGER.debug("Compression completed. {}", zipFile);
                 FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
             } else {

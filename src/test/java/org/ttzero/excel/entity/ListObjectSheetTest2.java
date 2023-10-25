@@ -298,6 +298,21 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testSpecifyActualClass() throws IOException {
+        String fileName = "specify unrelated class.xlsx";
+        new Workbook()
+            .addSheet(new ListSheet<>().setClass(SubModel.class))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            assert iter.hasNext();
+            org.ttzero.excel.reader.Row row = iter.next();
+            assert "name".equals(row.getString(0));
+            assert "score".equals(row.getString(1));
+        }
+    }
+
     public static class TemplateStyleProcessor implements StyleProcessor<Template> {
         String k;
         int c = 0;
@@ -544,4 +559,10 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    public static class SubModel {
+        @ExcelColumn
+        private String name;
+        @ExcelColumn
+        private int score;
+    }
 }

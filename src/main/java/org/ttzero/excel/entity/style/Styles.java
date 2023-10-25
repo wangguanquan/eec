@@ -370,7 +370,7 @@ public class Styles implements Storable {
      */
     public final int addFont(Font font) {
         if (isEmpty(font.getName())) {
-            throw new FontParseException("Font name not support.");
+            throw new IllegalArgumentException("Font name not support.");
         }
         int i = fonts.indexOf(font);
         if (i <= -1) {
@@ -950,7 +950,7 @@ public class Styles implements Storable {
      *
      * @param v hexadecimal numbers or color name
      * @return the new <code>Color</code> object.
-     * @throws ColorParseException if convert failed.
+     * @throws IllegalArgumentException if convert failed.
      */
     public static Color toColor(String v) {
         Color color;
@@ -958,14 +958,14 @@ public class Styles implements Storable {
             try {
                 color = Color.decode(v);
             } catch (NumberFormatException e) {
-                throw new ColorParseException("Color \"" + v + "\" not support.");
+                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
             }
         } else {
             try {
                 Field field = Color.class.getDeclaredField(v);
                 color = (Color) field.get(null);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new ColorParseException("Color \"" + v + "\" not support.");
+                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
             }
         }
         return color;

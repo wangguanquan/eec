@@ -233,7 +233,7 @@ public class ResultSetSheet extends Sheet {
             try {
                 rs.close();
             } catch (SQLException e) {
-                workbook.what("9006", e.getMessage());
+                LOGGER.warn("Close ResultSet error.", e);
             }
         }
         super.close();
@@ -346,7 +346,7 @@ public class ResultSetSheet extends Sheet {
                 columns = newColumns;
             } else {
                 columns = new Column[count];
-                for (; ++i <= count; ) {
+                while (++i <= count) {
                     SQLColumn column = new SQLColumn(metaData.getColumnLabel(i), metaData.getColumnType(i)
                         , columnTypeToClass(metaData.getColumnType(i)));
                     column.ri = StringUtil.isNotEmpty(column.key) ? findByKey(metaData, column.key) : i;
@@ -402,7 +402,6 @@ public class ResultSetSheet extends Sheet {
             case REAL:      clazz = Float.class;         break;
             case FLOAT:
             case DOUBLE:    clazz = Double.class;        break;
-//            case CHAR:      clazz = char.class;          break;
             case TIME:      clazz = java.sql.Time.class; break;
             default:        clazz = Object.class;
         }

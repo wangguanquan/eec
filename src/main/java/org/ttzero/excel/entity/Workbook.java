@@ -16,8 +16,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.csv.CSVWorkbookWriter;
 import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
@@ -25,27 +23,18 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.processor.ParamProcessor;
-import org.ttzero.excel.processor.Watch;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
-import javax.naming.OperationNotSupportedException;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -56,8 +45,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * When writing an Excel file, you must setting the property first and
  * then add {@link Sheet} into Workbook, finally call the {@link #writeTo}
  * method to perform the write operation. The default file format is open-xml(xlsx).
- * You can also call the {@link #saveAsExcel2003()} method to output as 'xls'
- * format (only supported BIFF8 format, ie excel 97~2003).
  * <p>
  * The property contains {@link #setName(String)}, {@link #setCreator(String)},
  * {@link #setCompany(String)}, {@link #setAutoSize(boolean)} and {@link #setZebraLine(Fill)}
@@ -87,7 +74,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/9/26.
  */
 public class Workbook implements Storable {
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
      * The Workbook name, reaction to the Excel file name
      */
@@ -95,8 +81,6 @@ public class Workbook implements Storable {
     private Sheet[] sheets;
     private WaterMark waterMark;
     private int size;
-    @Deprecated
-    private Connection con;
     /**
      * Auto size flag
      */
@@ -115,9 +99,9 @@ public class Workbook implements Storable {
      */
     private Fill zebraFill;
     /**
-     * A windows to debug
+     * A progress window
      */
-    private Watch watch;
+    private BiConsumer<Sheet, Integer> progressConsumer;
     private final I18N i18N;
 
     private SharedStrings sst;
@@ -199,17 +183,6 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Returns the autoOdd setting
-     *
-     * @return 1 if odd-fill
-     * @deprecated replace with {@code getZebraFill() != null}
-     */
-    @Deprecated
-    public int getAutoOdd() {
-        return hasZebraFill() ? 1 : 0;
-    }
-
-    /**
      * Returns the excel author
      *
      * @return the author
@@ -225,17 +198,6 @@ public class Workbook implements Storable {
      */
     public String getCompany() {
         return company;
-    }
-
-    /**
-     * Returns the odd-fill style
-     *
-     * @return the {@link Fill} style
-     * @deprecated rename to {@link #getZebraFill()}
-     */
-    @Deprecated
-    public Fill getOddFill() {
-        return getZebraFill();
     }
 
     /**
@@ -315,24 +277,6 @@ public class Workbook implements Storable {
      */
     public Workbook setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
-        return this;
-    }
-
-    /**
-     * Setting the database {@link Connection}
-     * <p>
-     * EEC does not actively close the database connection,
-     * and needs to be manually closed externally. The {@link java.sql.Statement}
-     * and {@link ResultSet} generated inside this EEC will
-     * be actively closed.
-     *
-     * @param con the database connection
-     * @return the {@link Workbook}
-     * @deprecated insecurity
-     */
-    @Deprecated
-    public Workbook setConnection(Connection con) {
-        this.con = con;
         return this;
     }
 
@@ -430,29 +374,6 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Cancel the odd-fill style
-     *
-     * @return the {@link Workbook}
-     * @deprecated rename to {@link #cancelZebraLine()}
-     */
-    @Deprecated
-    public Workbook cancelOddFill() {
-        return cancelZebraLine();
-    }
-
-    /**
-     * Setting the odd-fill style, default fill color is #E2EDDA
-     *
-     * @param fill the {@link Fill} style
-     * @return the {@link Workbook}
-     * @deprecated rename to {@link #setZebraLine(Fill)}
-     */
-    @Deprecated
-    public Workbook setOddFill(Fill fill) {
-        return setZebraLine(fill);
-    }
-
-    /**
      * Setting the zebra-line fill style
      *
      * @param fill the zebra-line {@link Fill} style
@@ -521,262 +442,6 @@ public class Workbook implements Storable {
         ensureCapacityInternal();
         sheet.setWorkbook(this);
         sheets[size++] = sheet;
-        return this;
-    }
-
-    /**
-     * Add a {@link ListSheet} to the tail with header {@link Column} setting.
-     * Also you can use {@code addSheet(new ListSheet&lt;&gt;(data, columns)}
-     * to achieve the same effect.
-     *
-     * @param data    List&lt;?&gt; data
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(List<?> data, Column... columns) {
-        return addSheet(null, data, columns);
-    }
-
-    /**
-     * Add a {@link ListSheet} to the tail with Worksheet name
-     * and header {@link Column} setting. Also you can use
-     * {@code addSheet(new ListSheet&lt;&gt;(name, data, columns)}
-     * to achieve the same effect.
-     *
-     * @param name    the name of worksheet
-     * @param data    List&lt;?&gt; data
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public Workbook addSheet(String name, List<?> data, Column... columns) {
-        Object o;
-        if (data == null || data.isEmpty() || (o = getFirst(data)) == null) {
-            addSheet(new EmptySheet(name, columns));
-            return this;
-        }
-
-        if (o instanceof Map) {
-            addSheet(new ListMapSheet(name, columns).setData((List<Map<String, ?>>) data));
-        } else {
-            addSheet(new ListSheet(name, columns).setData(data));
-        }
-        return this;
-    }
-
-    // Find the first not null data
-    private Object getFirst(List<?> data) {
-        if (data == null || data.isEmpty()) return null;
-        Object first = data.get(0);
-        if (first != null) return first;
-        int i = 1;
-        do {
-            first = data.get(i++);
-        } while (first == null);
-        return first;
-    }
-
-    /**
-     * Add a {@link ResultSetSheet} to the tail with header {@link Column} setting.
-     * Also you can use {@code addSheet(new ResultSetSheet(rs, columns)}
-     * to achieve the same effect.
-     *
-     * @param rs      the {@link ResultSet}
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(ResultSet rs, Column... columns) {
-        return addSheet(null, rs, columns);
-    }
-
-    /**
-     * Add a {@link ResultSetSheet} to the tail with worksheet name
-     * and header {@link Column} setting. Also you can use
-     * {@code addSheet(new ResultSetSheet(name, rs, columns)}
-     *
-     * @param name    the worksheet name
-     * @param rs      the {@link ResultSet}
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String name, ResultSet rs, Column... columns) {
-        ResultSetSheet sheet = new ResultSetSheet(name, columns);
-        sheet.setRs(rs);
-        addSheet(sheet);
-        return this;
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
-     * Also you can use {@code addSheet(new StatementSheet(connection, sql, columns)}
-     * to achieve the same effect.
-     *
-     * @param sql     the query SQL string
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String sql, Column... columns) throws SQLException {
-        return addSheet(null, sql, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Column} setting. Also you can use
-     * {@code addSheet(new StatementSheet(name, connection, sql, columns)}
-     * to achieve the same effect.
-     *
-     * @param name    the worksheet name
-     * @param sql     the query SQL string
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String name, String sql, Column... columns) throws SQLException {
-        PreparedStatement ps = con.prepareStatement(sql
-            , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        return addSheet(name, ps, null, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with header {@link Column}
-     * setting. The {@link ParamProcessor} is a sql parameter replacement
-     * function-interface to replace "?" in the sql string.
-     * <p>
-     * Also you can use {@code addSheet(new StatementSheet(connection, sql, paramProcessor, columns)}
-     * to achieve the same effect.
-     * <blockquote><pre>
-     * workbook.addSheet("users", "select id, name from users where `class` = ?"
-     *      , ps -&gt; ps.setString(1, "middle") ...</pre></blockquote>
-     *
-     * @param sql     the query SQL string
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String sql, ParamProcessor pp, Column... columns) throws SQLException {
-        return addSheet(null, sql, pp, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Column} setting. The {@link ParamProcessor}
-     * is a sql parameter replacement function-interface to replace "?" in
-     * the sql string.
-     * <p>
-     * Also you can use {@code addSheet(new StatementSheet(name, connection, sql, paramProcessor, columns)}
-     * to achieve the same effect.
-     * <blockquote><pre>
-     * workbook.addSheet("users", "select id, name from users where `class` = ?"
-     *      , ps -&gt; ps.setString(1, "middle") ...</pre></blockquote>
-     *
-     * @param name    the worksheet name
-     * @param sql     the query SQL string
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String name, String sql, ParamProcessor pp
-        , Column... columns) throws SQLException {
-        PreparedStatement ps = con.prepareStatement(sql
-            , ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-        return addSheet(name, ps, pp, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
-     * Also you can use {@code addSheet(new StatementSheet(null, columns).setPs(ps)}
-     * to achieve the same effect.
-     *
-     * @param ps      the {@link PreparedStatement}
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(PreparedStatement ps, Column... columns) throws SQLException {
-        return addSheet(null, ps, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Column} setting. Also you can use
-     * {@code addSheet(new StatementSheet(name, columns).setPs(ps)}
-     * to achieve the same effect.
-     *
-     * @param name    the worksheet name
-     * @param ps      the {@link PreparedStatement}
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String name, PreparedStatement ps, Column... columns) throws SQLException {
-        return addSheet(name, ps, null, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with header {@link Column} setting.
-     *
-     * @param ps      the {@link PreparedStatement}
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
-        return addSheet(null, ps, pp, columns);
-    }
-
-    /**
-     * Add a {@link StatementSheet} to the tail with worksheet name
-     * and header {@link Column} setting.
-     * <blockquote><pre>
-     * workbook.addSheet("users", ps, ps -&gt; ps.setString(1, "middle") ...
-     * </pre></blockquote>
-     *
-     * @param name    the worksheet name
-     * @param ps      PreparedStatement
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header columns
-     * @return the {@link Workbook}
-     * @throws SQLException if a database access error occurs
-     * @deprecated use {@link #addSheet(Sheet)}
-     */
-    @Deprecated
-    public Workbook addSheet(String name, PreparedStatement ps, ParamProcessor pp, Column... columns) throws SQLException {
-        StatementSheet sheet = new StatementSheet(name, columns);
-        try {
-            ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
-        } catch (SQLException e) {
-            what("Not support fetch size value of " + Integer.MIN_VALUE);
-        }
-        if (pp != null) pp.build(ps);
-        sheet.setPs(ps);
-        addSheet(sheet);
         return this;
     }
 
@@ -858,39 +523,49 @@ public class Workbook implements Storable {
     }
 
     /**
-     * Setting a {@link Watch}
+     * Setting a progress watch
      *
-     * @param watch a debug watch
+     * <blockquote><pre>
+     * new Workbook().onProgress((sheet, row) -&gt; {
+     *     System.out.println(sheet + " write " + row + " rows");
+     * })</pre></blockquote>
+     *
+     * @param progressConsumer a progress watch
      * @return the {@link Workbook}
-     * @deprecated will be deleted soon,
      */
-    @Deprecated
-    public Workbook watch(Watch watch) {
-        this.watch = watch;
+    public Workbook onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
+        this.progressConsumer = progressConsumer;
         return this;
     }
 
     /**
-     * Save as excel97~2003
-     * <p>
-     * You mast add eec-e3-support.jar into class path to support excel97~2003
+     * Returns progress watch
      *
-     * @return the {@link Workbook}
-     * @throws OperationNotSupportedException if eec-e3-support not import into class path
-     * @deprecated Excel97-2003 Not support now.
+     * @return progress consumer if setting
      */
-    @Deprecated
-    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
-        try {
-            // Create Styles and SharedStringTable
-            Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
-            Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
-            workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
-        } catch (Exception e) {
-            throw new OperationNotSupportedException("Excel97-2003 Not support now.");
-        }
-        return this;
+    public BiConsumer<Sheet, Integer> getProgressConsumer() {
+        return progressConsumer;
     }
+
+//    /**
+//     * Save as excel97~2003
+//     * <p>
+//     * You mast add eec-e3-support.jar into class path to support excel97~2003
+//     *
+//     * @return the {@link Workbook}
+//     * @throws OperationNotSupportedException if eec-e3-support not import into class path
+//     */
+//    public Workbook saveAsExcel2003() throws OperationNotSupportedException {
+//        try {
+//            // Create Styles and SharedStringTable
+//            Class<?> clazz = Class.forName("org.ttzero.excel.entity.e3.BIFF8WorkbookWriter");
+//            Constructor<?> constructor = clazz.getDeclaredConstructor(this.getClass());
+//            workbookWriter = (IWorkbookWriter) constructor.newInstance(this);
+//        } catch (Exception e) {
+//            throw new OperationNotSupportedException("Excel97-2003 Not support now.");
+//        }
+//        return this;
+//    }
 
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
@@ -901,37 +576,6 @@ public class Workbook implements Storable {
     public Workbook saveAsCSV() {
         workbookWriter = new CSVWorkbookWriter(this);
         return this;
-    }
-
-    /**
-     * Output the export detail info
-     *
-     * @param code the message code in message properties file
-     * @deprecated will be deleted soon, replace with log4j
-     */
-    @Deprecated
-    public void what(String code) {
-        String msg = i18N.get(code);
-        LOGGER.debug(msg);
-        if (watch != null) {
-            watch.what(msg);
-        }
-    }
-
-    /**
-     * Output export detail info
-     *
-     * @param code the message code in message properties file
-     * @param args the placeholder values
-     * @deprecated will be deleted soon, replace with log4j
-     */
-    @Deprecated
-    public void what(String code, String... args) {
-        String msg = i18N.get(code, args);
-        LOGGER.debug(msg);
-        if (watch != null) {
-            watch.what(msg);
-        }
     }
 
     private void ensureCapacityInternal() {

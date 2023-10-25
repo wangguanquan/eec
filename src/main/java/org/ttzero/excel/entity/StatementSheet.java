@@ -113,7 +113,7 @@ public class StatementSheet extends ResultSetSheet {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -148,7 +148,7 @@ public class StatementSheet extends ResultSetSheet {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -215,7 +215,7 @@ public class StatementSheet extends ResultSetSheet {
             ps.setFetchSize(Integer.MIN_VALUE);
             ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-//            what("Not support fetch size value of " + Integer.MIN_VALUE);
+            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -235,8 +235,20 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param ps PreparedStatement
      * @return the {@link StatementSheet}
+     * @deprecated replace with {@link #setStatement(PreparedStatement)}
      */
+    @Deprecated
     public StatementSheet setPs(PreparedStatement ps) {
+        return setStatement(ps);
+    }
+
+    /**
+     * Setting PreparedStatement
+     *
+     * @param ps PreparedStatement
+     * @return the {@link StatementSheet}
+     */
+    public StatementSheet setStatement(PreparedStatement ps) {
         this.ps = ps;
         return this;
     }
@@ -254,7 +266,7 @@ public class StatementSheet extends ResultSetSheet {
             try {
                 ps.close();
             } catch (SQLException e) {
-                what("9006", e.getMessage());
+                LOGGER.warn("Close ResultSet error.", e);
             }
         }
     }

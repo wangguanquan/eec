@@ -505,7 +505,7 @@ public class ExcelReader implements Closeable {
     public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
         Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         if (temp == null) {
-            throw new IOException("Create temp directory error. Please check your permission");
+            throw new IOException("Create temp directory error. Please check permission");
         }
         FileUtil.cp(stream, temp);
 

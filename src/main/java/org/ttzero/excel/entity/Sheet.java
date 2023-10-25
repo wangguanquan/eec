@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
@@ -87,6 +88,9 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2017/9/26.
  */
 public abstract class Sheet implements Cloneable, Storable {
+    /**
+     * LOGGER
+     */
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     protected Workbook workbook;
@@ -126,17 +130,6 @@ public abstract class Sheet implements Cloneable, Storable {
      * The header style value
      */
     protected int headStyle;
-
-    /**
-     * Automatic interlacing color
-     */
-    @Deprecated
-    protected int autoOdd = -1;
-    /**
-     * Odd row's background color
-     */
-    @Deprecated
-    protected int oddFill;
     /**
      * The zebra-line fill style value
      */
@@ -202,6 +195,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * Specify the first row index
      */
     protected int startRowIndex = 1;
+    /**
+     * A progress window
+     */
+    private BiConsumer<Sheet, Integer> progressConsumer;
 
     public int getId() {
         return id;
@@ -316,25 +313,6 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Output the export detail info
-     *
-     * @param code the message code in message properties file
-     */
-    public void what(String code) {
-        workbook.what(code);
-    }
-
-    /**
-     * Output export detail info
-     *
-     * @param code the message code in message properties file
-     * @param args the placeholder values
-     */
-    public void what(String code, String... args) {
-        workbook.what(code, args);
-    }
-
-    /**
      * Returns shared string
      *
      * @return global {@link SharedStrings} in workbook
@@ -360,30 +338,6 @@ public abstract class Sheet implements Cloneable, Storable {
     public Sheet autoSize() {
         this.autoSize = 1;
         return this;
-    }
-
-    /**
-     * Setting fix column width
-     *
-     * @return current {@link Sheet}
-     * @deprecated rename to {@link #fixedSize()}
-     */
-    @Deprecated
-    public Sheet fixSize() {
-        this.autoSize = 2;
-        return this;
-    }
-
-    /**
-     * Setting fix column width
-     *
-     * @param width the column width
-     * @return current {@link Sheet}
-     * @deprecated rename to {@link #fixedSize(double)}
-     */
-    @Deprecated
-    public Sheet fixSize(double width) {
-        return fixedSize(width);
     }
 
     /**
@@ -437,67 +391,6 @@ public abstract class Sheet implements Cloneable, Storable {
             }
         }
         return this;
-    }
-
-
-    /**
-     * Cancel the odd row's fill style
-     *
-     * @return current {@link Sheet}
-     * @deprecated rename to {@link #cancelZebraLine()}
-     */
-    @Deprecated
-    public Sheet cancelOddStyle() {
-        return cancelZebraLine();
-    }
-
-    /**
-     * Returns auto setting odd background flag
-     *
-     * @return 1: auto setting, others none
-     * @deprecated replace with {@code getZebraFill() != null}
-     */
-    @Deprecated
-    public int getAutoOdd() {
-        return zebraFill != null ? 1 : 0;
-    }
-
-    /**
-     * Setting auto setting odd background flag
-     *
-     * @param autoOdd 1: setting, others none
-     * @return current {@link Sheet}
-     * @deprecated will be delete
-     */
-    @Deprecated
-    public Sheet setAutoOdd(int autoOdd) {
-        if (autoOdd == 1) {
-            if (zebraFill == null) setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
-        } else setZebraLine(null);
-        return this;
-    }
-
-    /**
-     * Setting the odd row's fill style
-     *
-     * @param fill the fill style
-     * @return current {@link Sheet}
-     * @deprecated rename to {@link #setZebraLine(Fill)}
-     */
-    @Deprecated
-    public Sheet setOddFill(Fill fill) {
-        return setZebraLine(fill);
-    }
-
-    /**
-     * Returns the odd columns fill style
-     *
-     * @return the fill style value
-     * @deprecated replace with {@link #getZebraFillStyle()}
-     */
-    @Deprecated
-    public int getOddFill() {
-        return getZebraFillStyle();
     }
 
     /**
@@ -728,6 +621,31 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Column[] getColumns() {
         return columns;
+    }
+
+    /**
+     * Setting a progress watch
+     *
+     * <blockquote><pre>
+     * new ListSheet&lt;&gt;().onProgress((sheet, row) -&gt; {
+     *     System.out.println(sheet + " write " + row + " rows");
+     * })</pre></blockquote>
+     *
+     * @param progressConsumer a progress watch
+     * @return the {@link Sheet}
+     */
+    public Sheet onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
+        this.progressConsumer = progressConsumer;
+        return this;
+    }
+
+    /**
+     * Returns progress watch
+     *
+     * @return progress consumer if setting
+     */
+    public BiConsumer<Sheet, Integer> getProgressConsumer() {
+        return progressConsumer;
     }
 
     /**

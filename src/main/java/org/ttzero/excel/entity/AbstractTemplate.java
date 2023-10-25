@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.ContentType;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.FileUtil;
@@ -42,6 +44,10 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang at 2018-02-26 13:45
  */
 public abstract class AbstractTemplate {
+    /**
+     * LOGGER
+     */
+    protected Logger LOGGER = LoggerFactory.getLogger(getClass());
     static final String inlineStr = "inlineStr";
     protected Workbook wb;
 
@@ -66,7 +72,7 @@ public abstract class AbstractTemplate {
         try {
             document = reader.read(Files.newInputStream(contentTypePath));
         } catch (DocumentException | IOException e) {
-            wb.what("9002", "[Content_Types].xml");
+            LOGGER.debug("{} loading error", "[Content_Types].xml");
             return false;
         }
 
@@ -88,7 +94,7 @@ public abstract class AbstractTemplate {
     protected boolean checkDefault(List<ContentType.Default> list) {
         // Double check
         if (list.isEmpty() || !checkDouble(list)) {
-            wb.what("9003", "Default");
+            LOGGER.debug("The attribute[Default] is empty or the same attribute exists");
         }
         return true;
     }
@@ -96,13 +102,13 @@ public abstract class AbstractTemplate {
     protected boolean checkOverride(List<ContentType.Override> list) {
         // Double check
         if (list.isEmpty() || !checkDouble(list)) {
-            wb.what("9003", "Override");
+            LOGGER.debug("The attribute[Override] is empty or the same attribute exists");
         }
         // File exists check
         for (ContentType.Override o : list) {
             Path subPath = zipPath.resolve(o.getPartName().substring(1));
             if (!exists(subPath)) {
-                wb.what("9004", subPath.toString());
+                LOGGER.debug("{} does not exists", subPath.toString());
                 return false;
             }
         }
@@ -158,7 +164,7 @@ public abstract class AbstractTemplate {
         // inner text
         int n2 = bindSheetData();
 
-        wb.what("0099", String.valueOf(n1 + n2));
+        LOGGER.debug("Found {} words that need to be replaced", n1 + n2);
     }
 
     protected int bindSstData() {
@@ -169,7 +175,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(shareStringPath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            wb.what("9002", "shareStrings.xml");
+            LOGGER.debug("The file format is incorrect or corrupted. [shareStrings.xml]");
             return 0;
         }
 
@@ -196,7 +202,7 @@ public abstract class AbstractTemplate {
             try {
                 FileUtil.writeToDiskNoFormat(document, shareStringPath);
             } catch (IOException e) {
-                wb.what("9004", shareStringPath.toString());
+                LOGGER.debug("Write {} failed.", shareStringPath.toString());
                 // Do nothing
             }
         }
@@ -212,7 +218,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(contentTypePath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            wb.what("9002", "[Content_Types].xml");
+            LOGGER.debug("The file format is incorrect or corrupted. [[Content_Types].xml]");
             return 0;
         }
 
@@ -236,7 +242,7 @@ public abstract class AbstractTemplate {
             document = reader.read(Files.newInputStream(sheetPath));
         } catch (DocumentException | IOException e) {
             // read style file fail.
-            wb.what("9002", sheetPath.toString());
+            LOGGER.debug("The file format is incorrect or corrupted. [{}]", sheetPath);
             return 0;
         }
 
@@ -268,7 +274,7 @@ public abstract class AbstractTemplate {
             try {
                 FileUtil.writeToDiskNoFormat(document, sheetPath);
             } catch (IOException e) {
-                wb.what("9004", sheetData.toString());
+                LOGGER.debug("Compression completed. {}", sheetData);
                 // Do nothing
             }
         }

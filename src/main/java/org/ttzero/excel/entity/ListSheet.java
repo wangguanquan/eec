@@ -73,6 +73,7 @@ public class ListSheet<T> extends Sheet {
     protected int start, end;
     protected boolean eof;
     private int size;
+    protected Class<?> tClazz;
 
     /**
      * The row styleProcessor
@@ -170,7 +171,6 @@ public class ListSheet<T> extends Sheet {
         setData(data);
     }
 
-
     /**
      * Constructor worksheet
      *
@@ -214,6 +214,17 @@ public class ListSheet<T> extends Sheet {
     public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         setData(data);
+    }
+
+    /**
+     * Specify custom class
+     *
+     * @param tClazz Object types that need to be exported
+     * @return current sheet
+     */
+    public Sheet setClass(Class<?> tClazz) {
+        this.tClazz = tClazz;
+        return this;
     }
 
     /**
@@ -381,7 +392,8 @@ public class ListSheet<T> extends Sheet {
 
     // Returns the reflect <T> type
     protected Class<?> getTClass() {
-        Class<?> clazz = null;
+        Class<?> clazz = tClazz;
+        if (clazz != null) return clazz;
         if (getClass().getGenericSuperclass() instanceof ParameterizedType) {
             Type type = ((ParameterizedType) getClass()
                 .getGenericSuperclass()).getActualTypeArguments()[0];
@@ -394,6 +406,7 @@ public class ListSheet<T> extends Sheet {
             if (o == null) return null;
             clazz = o.getClass();
         }
+        tClazz = clazz;
         return clazz;
     }
 

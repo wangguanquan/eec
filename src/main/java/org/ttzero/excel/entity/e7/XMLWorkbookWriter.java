@@ -21,6 +21,8 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
@@ -59,7 +61,10 @@ import static org.ttzero.excel.util.FileUtil.exists;
 @TopNS(prefix = {"", "r"}, value = "workbook"
     , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
 public class XMLWorkbookWriter implements IWorkbookWriter {
-
+    /**
+     * LOGGER
+     */
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private Workbook workbook;
     private final RelManager relManager;
 
@@ -329,12 +334,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (hasTopNs) {
                 rootElement = factory.createElement(rootName);
             } else {
-                workbook.what("9004", "workbook.xml");
+                LOGGER.error("Workbook missing necessary information.");
                 return;
             }
         }
 
-        if (hasTopNs) {
+        if (prefixs != null && prefixs.length > 0) {
             for (int i = 0; i < prefixs.length; i++) {
                 rootElement.add(Namespace.get(prefixs[i], uris[i]));
             }
@@ -399,13 +404,18 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (workbook.getForceExport() > sheet.getForceExport()) {
                 sheet.forceExport();
             }
+
+            // Merge Progress window
+            if (workbook.getProgressConsumer() != null && sheet.getProgressConsumer() == null) {
+                sheet.onProgress(workbook.getProgressConsumer());
+            }
         }
-        workbook.what("0001");
+        LOGGER.debug("Sheet initialization completed.");
 
         Path root = null;
         try {
             root = FileUtil.mktmp(Const.EEC_PREFIX);
-            workbook.what("0002", root.toString());
+            LOGGER.debug("Create temporary folder {}", root);
 
             Path xl = Files.createDirectory(root.resolve("xl"));
             // Create  watermark first, it need to use when writing each sheet
@@ -424,18 +434,18 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             writeGlobalAttribute(xl);
             if (workbook.getWaterMark() != null)
                 workbook.getWaterMark().delete() ; // Delete template image
-            workbook.what("0003");
+            LOGGER.debug("All sheets have completed writing, starting to compression ...");
 
             // Zip compress
             Path zipFile = ZipUtil.zipExcludeRoot(root, root);
-            workbook.what("0004", zipFile.toString());
+            LOGGER.debug("Compression completed. {}", zipFile);
 
             // Delete source files
             FileUtil.rm_rf(root.toFile(), true);
-            workbook.what("0005");
+            LOGGER.debug("Clean up temporary files");
             return zipFile;
-        } catch (IOException | ExcelWriteException e) {
-            // remove temp path
+        } catch (Exception e) {
+            // Remove temp path
             if (root != null) FileUtil.rm_rf(root);
             workbook.getSst().close();
             throw e;
@@ -449,33 +459,32 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
 
         Path resultPath = reMarkPath(zip, path, name);
-        workbook.what("0006", resultPath.toString());
+        LOGGER.debug("Write completed. {}", resultPath);
     }
 
     // --- TEMPLATE
 
     @Override
     public Path template() throws IOException {
-        workbook.what("0007");
+        // TODO do not unzip
         // Store template stream as zip file
         Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         ZipUtil.unzip(workbook.getTemplate(), temp);
-        workbook.what("0008");
 
         // Bind data
         EmbedTemplate bt = new EmbedTemplate(temp, workbook);
         if (bt.check()) { // Check files
             bt.bind(workbook.getBind());
         }
-        workbook.what("0003");
+        LOGGER.debug("All sheets have completed writing, starting to compression ...");
 
         // Zip compress
         Path zipFile = ZipUtil.zipExcludeRoot(temp, temp);
-        workbook.what("0004", zipFile.toString());
+        LOGGER.debug("Compression completed. {}", zipFile);
 
         // Delete source files
         FileUtil.rm_rf(temp.toFile(), true);
-        workbook.what("0005");
+        LOGGER.debug("Clean up temporary files");
 
         // Close shared string table
         workbook.getSst().close();
