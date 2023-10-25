@@ -382,7 +382,7 @@ public class Workbook implements Storable {
      */
     public Styles getStyles() {
         // CSV do not need Styles
-        if (!(workbookWriter instanceof CSVWorkbookWriter) && styles == null)
+        if (styles == null && !(workbookWriter instanceof CSVWorkbookWriter))
             styles = Styles.create(i18N);
         return styles;
     }

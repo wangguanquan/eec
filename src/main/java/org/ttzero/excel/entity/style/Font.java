@@ -44,11 +44,11 @@ public class Font implements Cloneable {
     private Font() {}
 
     public Font(String name, int size) {
-        this(name, size, Style.NORMAL, null);
+        this(name, size, Style.PLAIN, null);
     }
 
     public Font(String name, int size, Color color) {
-        this(name, size, Style.NORMAL, color);
+        this(name, size, Style.PLAIN, color);
     }
 
     public Font(String name, int size, int style, Color color) {
@@ -59,11 +59,11 @@ public class Font implements Cloneable {
     }
 
     public Font(String name, double size) {
-        this(name, size, Style.NORMAL, null);
+        this(name, size, Style.PLAIN, null);
     }
 
     public Font(String name, double size, Color color) {
-        this(name, size, Style.NORMAL, color);
+        this(name, size, Style.PLAIN, color);
     }
 
     public Font(String name, double size, int style, Color color) {
@@ -389,6 +389,25 @@ public class Font implements Cloneable {
         return element;
     }
 
+    /**
+     * Base on {@code java.awt.Font}
+     *
+     * @param awtFont {@link java.awt.Font}
+     * @return a {@code org.ttzero.excel.entity.style.Font}
+     */
+    public static Font of(java.awt.Font awtFont) {
+        return new Font(awtFont.getName(), awtFont.getSize(), awtFont.getStyle() << 1, Color.BLACK);
+    }
+
+    /**
+     * Convert to {@link java.awt.Font}
+     *
+     * @return a {@code java.awt.Font}
+     */
+    public java.awt.Font toAwtFont() {
+        return new java.awt.Font(name, style >> 1, getSize());
+    }
+
     public static List<Font> domToFont(Element root) {
         // Fonts tags
         Element ele = root.element("fonts");
@@ -456,7 +475,12 @@ public class Font implements Cloneable {
     // ######################################Static inner class######################################
 
     public static class Style {
+        /**
+         * @deprecated Rename to {@link #PLAIN}
+         */
+        @Deprecated
         public static final int NORMAL    = 0;
+        public static final int PLAIN     = 0;
         public static final int UNDERLINE = 1;
         public static final int BOLD      = 1 << 1;
         public static final int ITALIC    = 1 << 2;
