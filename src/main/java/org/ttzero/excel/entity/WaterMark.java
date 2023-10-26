@@ -147,14 +147,11 @@ public class WaterMark {
             }
 
             Graphics2D g2d = bi.createGraphics();
-            g2d.setColor(new Color(200, 200, 200));
+            g2d.setColor(new Color(230, 230, 230));
             g2d.setStroke(new BasicStroke(1));
-            g2d.setFont(new java.awt.Font("华文细黑", java.awt.Font.ITALIC, 50));
-            g2d.rotate(Math.toRadians(-10));
-
-            for (int i = 1; i < 10; i++) {
-                g2d.drawString(watermark, 0, 60 * i);
-            }
+            g2d.setFont(new java.awt.Font("华文细黑", java.awt.Font.ITALIC, 24));
+            g2d.rotate(Math.toRadians(-25));
+            g2d.drawString(watermark, 100, 250);
             // Setting alpha
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
             g2d.dispose();
