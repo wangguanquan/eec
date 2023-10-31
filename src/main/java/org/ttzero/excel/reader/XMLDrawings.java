@@ -206,7 +206,7 @@ public class XMLDrawings implements Drawings {
             Namespace r = blip.getNamespaceForPrefix("r");
             String embed = blip.attributeValue(QName.get("embed", r));
             Relationship rel = relManager.getById(embed);
-            if (r != null && Const.Relationship.IMAGE.equals(rel.getType())) {
+            if (rel != null && Const.Relationship.IMAGE.equals(rel.getType())) {
                 Picture picture = new Picture();
                 pictures.add(picture);
                 // Copy image to tmp path
