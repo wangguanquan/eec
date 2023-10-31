@@ -353,14 +353,14 @@ public class ExcelReader implements Closeable {
         // Close Shared String Table
         if (sst != null) sst.close();
 
+        // Close source file
+        if (zipFile != null) zipFile.close();
+
         // Remove temp file
         if (temp != null) FileUtil.rm(temp);
 
         // Remove temp dir
         if (tempDir != null) FileUtil.rm_rf(tempDir);
-
-        // Close src file
-        if (zipFile != null) zipFile.close();
     }
 
     /**
