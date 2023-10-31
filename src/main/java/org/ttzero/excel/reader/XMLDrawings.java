@@ -105,7 +105,7 @@ public class XMLDrawings implements Drawings {
 
             if (excelReader.tempDir == null) {
                 try {
-                    excelReader.tempDir = FileUtil.mktmp("eec+");
+                    excelReader.tempDir = FileUtil.mktmp("eec-");
                 } catch (IOException e) {
                     throw new ExcelReadException("Create temp directory failed.", e);
                 }
