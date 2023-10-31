@@ -466,7 +466,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     @Override
     public Path template() throws IOException {
-        // TODO do not unzip
         // Store template stream as zip file
         Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
         ZipUtil.unzip(workbook.getTemplate(), temp);

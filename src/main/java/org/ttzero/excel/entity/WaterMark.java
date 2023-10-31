@@ -31,7 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * 水印，Excel并没有水印功能，EEC的水印功能是使用Excel的背景实现，打印的时候该背景会被忽略。
+ * 水印，Excel并没有水印功能，本工具的水印功能是使用Excel的背景实现，打印的时候该背景会被忽略。
  *
  * <p>注意：只接受{@link FileSignatures#whitelist}白名单的图片格式</p>
  *

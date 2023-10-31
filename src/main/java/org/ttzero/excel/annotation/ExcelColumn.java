@@ -62,7 +62,7 @@ public @interface ExcelColumn {
     /**
      * 设置字符串共享
      *
-     * <p>EEC默认使用{@code inline}模式输出字符串，即将字符串直接写到每个Cell里并不共享。对于某些枚举值的列使用
+     * <p>默认使用{@code inline}模式输出字符串，即将字符串直接写到每个Cell里并不共享。对于某些枚举值的列使用
      * 字符串共享将会起到压缩目的，比如"姓别"列只会有“男”，“女”和“未知”三种值。</p>
      *
      * <p>共享字符串会将值写入一个公共区域，xlsx格式保存在{@code sharedStrings.xml}文件中，整个Workbook的

@@ -39,7 +39,7 @@ import java.util.function.BiConsumer;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * 一个{@code Workbook}实例即表示一个Excel文件，它包含一个或多个{@link Sheet}工作表，
+ * 一个{@code Workbook}工作薄实例即表示一个Excel文件，它包含一个或多个{@link Sheet}工作表，
  * Workbook收集全局属性，如文档属性、样式，字符串共享区等。
  *
  * <p>在导出Excel文件时需要遵循以下三个步骤：</p>
@@ -707,9 +707,7 @@ public class Workbook implements Storable {
      * 获取模板输入流
      *
      * @return 模板的输入流
-     * @deprecated 无实际用处将很快删除
      */
-    @Deprecated
     public InputStream getTemplate() {
         return is;
     }
