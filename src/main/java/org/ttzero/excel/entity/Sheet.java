@@ -461,6 +461,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return current {@link Sheet}
      */
     public Sheet setName(String name) {
+        if (name != null && name.length() > 31) {
+            LOGGER.warn("The worksheet name is too long, maximum length of 31 characters. Currently {}", name.length());
+            name = name.substring(0, 31);
+        }
         this.name = name;
         return this;
     }
