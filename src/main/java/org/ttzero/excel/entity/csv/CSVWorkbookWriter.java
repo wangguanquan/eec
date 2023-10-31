@@ -195,7 +195,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
 
     // --- Customize worksheet writer
 
-    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+    public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
         return new CSVWorksheetWriter(sheet);
     }
 }
