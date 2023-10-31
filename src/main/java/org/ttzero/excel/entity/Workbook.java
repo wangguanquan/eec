@@ -59,9 +59,10 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * <p>{@link #writeTo}方法是一个终止符它将执行实际的写操作，所以需要将该方法放在所有语句之后，
  * 任何放置在该方法之后的指令将会被忽略。</p>
  *
- * <p>EEC将数据源和输出协议分开设计，工作表Sheet为数据源，{@link IWorkbookWriter}和{@link IWorksheetWriter}
+ * <p>本工具将数据源和输出协议分开设计，工作表Sheet为数据源，{@link IWorkbookWriter}和{@link IWorksheetWriter}
  * 为输出协议，实现不同的输出协议即实现不同格式化输出，已实现的{@link org.ttzero.excel.entity.e7.XMLWorksheetWriter}和
- * {@link org.ttzero.excel.entity.csv.CSVWorksheetWriter}就是xlsx和csv格式的输出协议实现。</p>
+ * {@link org.ttzero.excel.entity.csv.CSVWorksheetWriter}就是xlsx和csv格式的输出协议实现。
+ * 工作薄Workbook对应的输出协议为{@link IWorkbookWriter}，它负责协调所有部件输出并将所有零散的文件组装为OpenXml格式。</p>
  *
  * <p>一个典型的导出示例：
  * <blockquote><pre>
