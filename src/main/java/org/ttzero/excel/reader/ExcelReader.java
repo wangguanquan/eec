@@ -394,7 +394,7 @@ public class ExcelReader implements Closeable {
      */
     public ExcelReader parseFormula() {
         if (hasFormula) {
-            ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+            ZipEntry entry = getEntry("xl/calcChain.xml");
             if (entry == null) return this;
             long[][] calcArray = null;
             try (InputStream is = zipFile.getInputStream(entry)) {
@@ -459,7 +459,7 @@ public class ExcelReader implements Closeable {
 
     protected ContentType checkContentType() {
         // Read [Content_Types].xml
-        ZipEntry entry = getEntry(zipFile, "[Content_Types].xml");
+        ZipEntry entry = getEntry("[Content_Types].xml");
         if (entry == null) {
             if (temp != null) FileUtil.rm(temp);
             throw new ExcelReadException("The file format is incorrect or corrupted. [[Content_Types].xml]");
@@ -477,7 +477,7 @@ public class ExcelReader implements Closeable {
         for (Element e : list) {
             if ("Override".equals(e.getName())) {
                 ContentType.Override override = new ContentType.Override(e.attributeValue("ContentType"), e.attributeValue("PartName"));
-                entry = getEntry(zipFile, override.getPartName());
+                entry = getEntry(override.getPartName());
                 if (entry == null) {
                     if (MUST_CHECK_PART.contains(override.getContentType())) {
                         if (temp != null) FileUtil.rm(temp);
@@ -542,18 +542,18 @@ public class ExcelReader implements Closeable {
         Document document;
 
         // Load SharedString
-        ZipEntry entry = getEntry(zipFile, "xl/sharedStrings.xml");
+        ZipEntry entry = getEntry("xl/sharedStrings.xml");
         if (entry != null) {
             sst = new SharedStrings(zipFile.getInputStream(entry), bufferSize, cacheSize).load();
         }
 
         // Load Styles
-        entry = getEntry(zipFile, "xl/styles.xml");
+        entry = getEntry("xl/styles.xml");
         if (entry != null) {
             try {
                 styles = Styles.load(zipFile.getInputStream(entry));
                 // Load Theme style
-                ZipEntry themeEntry = getEntry(zipFile, "theme/theme1.xml");
+                ZipEntry themeEntry = getEntry("theme/theme1.xml");
                 if (themeEntry != null) Theme.load(zipFile.getInputStream(themeEntry));
             } catch (Exception ex) {
                 LOGGER.warn("Parse style failed.", ex);
@@ -565,9 +565,9 @@ public class ExcelReader implements Closeable {
         }
 
         this.option = option;
-        hasFormula = getEntry(zipFile, "xl/calcChain.xml") != null;
+        hasFormula = getEntry("xl/calcChain.xml") != null;
 
-        entry = getEntry(zipFile, "xl/_rels/workbook.xml.rels");
+        entry = getEntry("xl/_rels/workbook.xml.rels");
         if (entry == null)
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/_rels/workbook.xml.rels]");
 
@@ -585,7 +585,7 @@ public class ExcelReader implements Closeable {
         }
         RelManager relManager = RelManager.of(rels);
 
-        entry = getEntry(zipFile, "xl/workbook.xml");
+        entry = getEntry("xl/workbook.xml");
         if (entry == null)
             throw new ExcelReadException("The file format is incorrect or corrupted. [xl/workbook.xml]");
         try {
@@ -611,7 +611,7 @@ public class ExcelReader implements Closeable {
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
             sheet.setPath("xl/" + r.getTarget());
-            entry = getEntry(zipFile, "xl/" + r.getTarget());
+            entry = getEntry("xl/" + r.getTarget());
             if (entry == null) {
                 sheet.close();
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
@@ -762,7 +762,7 @@ public class ExcelReader implements Closeable {
         SAXReader reader = SAXReader.createDefault();
         App app = null;
         Core core = null;
-        ZipEntry entry = getEntry(zipFile, "docProps/app.xml");
+        ZipEntry entry = getEntry("docProps/app.xml");
         if (entry != null) {
             Document document = null;
             try {
@@ -780,7 +780,7 @@ public class ExcelReader implements Closeable {
             }
         } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/app.xml]");
 
-        entry = getEntry(zipFile, "docProps/core.xml");
+        entry = getEntry("docProps/core.xml");
         if (entry != null) {
             Document document = null;
             try {
@@ -935,6 +935,16 @@ public class ExcelReader implements Closeable {
     }
 
     /**
+     * 读取Zip包中的实体
+     *
+     * @param name 实体名
+     * @return 如果实体存在则返回 {@link ZipEntry} 否则返回{@code null}
+     */
+    public ZipEntry getEntry(String name) {
+        return getEntry(zipFile, name);
+    }
+
+    /**
      * Find {@code ZipEntry} by name
      *
      * @param zipFile src zip file
@@ -967,7 +977,7 @@ public class ExcelReader implements Closeable {
      * @param path file path
      * @return zip path
      */
-    static String toZipPath(String path) {
+    public static String toZipPath(String path) {
         int i = 0;
         if (path.startsWith("../") || path.startsWith("..\\")) i = 3;
         else if (path.startsWith("./") || path.startsWith(".\\")) i = 2;
