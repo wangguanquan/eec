@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 /**
  * 指定当前列为"媒体"格式
  *
- * <p>默认情况下EEC总是以"值"的形式导出，如果需要导出图片则必须添加{@code MediaColumn}注解，
+ * <p>默认情况下总是以"值"的形式导出，如果需要导出图片则必须添加{@code MediaColumn}注解，
  * 在指定属性的同时可以使用{@link #presetEffect()}设置预设图片效果</p>
  *
  * @see PresetPictureEffect
