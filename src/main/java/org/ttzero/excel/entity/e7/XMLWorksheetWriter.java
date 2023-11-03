@@ -990,6 +990,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
+        _writer.includeAutoWidth = includeAutoWidth;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         _writer.bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
         _writer.writeBefore();
@@ -1061,7 +1062,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            size = (size + startRow - 1) % getRowLimit();
+            size = includeAutoWidth || sheet.getNonHeader() == 1 ? (size + startRow - 1) % getRowLimit() : size + startRow + columns[0].subColumnSize() - 1;
             bw.writeInt(size);
             n -= stringSize(size);
         }
