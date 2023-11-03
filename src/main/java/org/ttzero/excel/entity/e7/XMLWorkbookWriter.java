@@ -23,6 +23,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
@@ -401,8 +402,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
 
             // Force export all fields
-            if (workbook.getForceExport() > sheet.getForceExport()) {
-                sheet.forceExport();
+            if (workbook.getForceExport() > sheet.getForceExport() && ListSheet.class.isAssignableFrom(sheet.getClass())) {
+                ((ListSheet<?>) sheet).forceExport();
             }
 
             // Merge Progress window

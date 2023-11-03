@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
+import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.manager.Const;
@@ -158,8 +159,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             sheet.setCellValueAndStyle(new CSVCellValueAndStyle());
 
             // Force export all fields
-            if (workbook.getForceExport() > sheet.getForceExport()) {
-                sheet.forceExport();
+            if (workbook.getForceExport() > sheet.getForceExport() && ListSheet.class.isAssignableFrom(sheet.getClass())) {
+                ((ListSheet<?>) sheet).forceExport();
             }
         }
         LOGGER.debug("Sheet initialization completed.");
