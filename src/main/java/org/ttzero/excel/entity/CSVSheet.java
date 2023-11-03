@@ -154,7 +154,7 @@ public class CSVSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len = columns.length, n = 0, limit = getRowLimit();
-        for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && iterator.hasNext(); rows++) {
+        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && iterator.hasNext(); rows++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);

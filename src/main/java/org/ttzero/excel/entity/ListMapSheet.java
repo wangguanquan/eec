@@ -157,7 +157,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      */
     @Override
     protected void resetBlockData() {
-        if (!eof && left() < getRowBlockSize()) {
+        if (!eof && left() < rowBlock.capacity()) {
             append();
         }
         int end = getEndIndex(), len = columns.length;

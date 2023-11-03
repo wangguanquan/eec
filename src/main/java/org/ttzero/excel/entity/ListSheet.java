@@ -298,7 +298,7 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        if (!eof && left() < getRowBlockSize()) {
+        if (!eof && left() < rowBlock.capacity()) {
             append();
         }
 
@@ -351,7 +351,7 @@ public class ListSheet<T> extends Sheet {
      * or more than the row limit
      */
     protected void append() {
-        int rbs = getRowBlockSize();
+        int rbs = rowBlock.capacity();
         for (; ; ) {
             List<T> list = more();
             // No more data

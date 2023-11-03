@@ -247,7 +247,7 @@ public class ResultSetSheet extends Sheet {
         int len = columns.length, n = 0, limit = getRowLimit();
         boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         try {
-            for (int rbs = getRowBlockSize(); n++ < rbs && rows < limit && rs.next(); rows++) {
+            for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rs.next(); rows++) {
                 Row row = rowBlock.next();
                 row.index = rows;
                 row.height = getRowHeight();

@@ -109,6 +109,20 @@ public class RowBlock implements Iterator<Row> {
         return this;
     }
 
+    /**
+     * 获取容器大小
+     *
+     * @return 行块容器大小
+     */
+    public final int capacity() {
+        return limit;
+    }
+
+    /**
+     * 判断迭代器是否更多数据
+     *
+     * @return Row
+     */
     @Override
     public boolean hasNext() {
         return i < n;
