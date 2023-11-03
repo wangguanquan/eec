@@ -118,7 +118,7 @@ public class StyleDesignTest extends WorkbookTest {
         new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst) -> {
                 if (item != null && item.getId() < 10) {
-                    style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                    style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
                 }
                 return style;
             }))
@@ -151,7 +151,7 @@ public class StyleDesignTest extends WorkbookTest {
     @Test public void testStyleDesignSpecifyColumns() throws IOException {
         new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()
-                , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> Styles.clearHorizontal(s) | Horizontals.CENTER)
+                , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> sst.modifyHorizontal(s, Horizontals.CENTER))
                 , new Column("数学成绩", "score").setWidth(12D)
                 , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
             )).writeTo(defaultTestPath.resolve("标识行样式3.xlsx"));
@@ -336,12 +336,12 @@ public class StyleDesignTest extends WorkbookTest {
         public int build(DesignStudent o, int style, Styles sst) {
             // 低于60分时背景色标黄
             if (o.getScore() < 60) {
-                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                style = sst.modifyFill(style, new Fill(PatternType.solid, Color.orange));
             } else if (o.getScore() < 70) {
-                style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
             } else if (o.getScore() > 90) {
                 Font newFont = sst.getFont(style).clone();
-                style = Styles.clearFont(style) | sst.addFont(newFont.underLine().bold());
+                style = sst.modifyFont(style, newFont.underLine().bold());
             }
             return style;
         }
@@ -349,11 +349,11 @@ public class StyleDesignTest extends WorkbookTest {
 
     public static StyleProcessor<ListObjectSheetTest.Item> rainbowStyle = (item, style, sst) -> {
         if (item.getId() % 3 == 0) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
         } else if (item.getId() % 3 == 1) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.blue));
+            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.blue));
         } else if (item.getId() % 3 == 2) {
-            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.pink));
+            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.pink));
         }
         return style;
     };
@@ -366,7 +366,7 @@ public class StyleDesignTest extends WorkbookTest {
         public int build(String name, int style, Styles sst) {
             if (VIP_SET.contains(name)) {
                 Font font = sst.getFont(style).clone();
-                style = Styles.clearFont(style) | sst.addFont(font.bold());
+                style = sst.modifyFont(style, font.bold());
             }
             return style;
         }

@@ -778,7 +778,7 @@ public class Column {
 
         // Reset custom number format if specified.
         if (numFmt != null) {
-            style = Styles.clearNumFmt(style) | styles.addNumFmt(numFmt);
+            style = styles.modifyNumFmt(style, numFmt);
         }
 
         return style | (option & 1);

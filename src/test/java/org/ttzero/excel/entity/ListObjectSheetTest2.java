@@ -324,17 +324,17 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             }
             if (o.v1.startsWith("备注说明")) {
                 if (c == 0)
-                    style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, new Color(188, 219, 162)));
+                    style = sst.modifyFill(style, new Fill(PatternType.solid, new Color(188, 219, 162)));
             }
             else if (o.v1.equals("字段名称")) {
                 Font font = sst.getFont(style);
-                style = Styles.clearFont(style) | sst.addFont(font.clone().bold());
+                style = sst.modifyFont(style, font.clone().bold());
                 if (c > 0)
-                    style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    style = sst.modifyHorizontal(style, Horizontals.CENTER);
             }
             else if (o.v1.equals("示例")) {
                 if (c == 1)
-                    style = Styles.clearHorizontal(style) | Horizontals.CENTER;
+                    style = sst.modifyHorizontal(style, Horizontals.CENTER);
             }
             c++;
             return style;

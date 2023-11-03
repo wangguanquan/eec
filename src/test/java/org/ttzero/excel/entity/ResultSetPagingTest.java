@@ -112,7 +112,7 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
                 .addSheet(new ResultSetSheet().setResultSet(rs).setStyleProcessor((rst, style, sst)->{
                     try {
                         if (rst.getInt("age") > 14) {
-                            style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.yellow));
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.yellow));
                         }
                     } catch (SQLException ex) {
                         // Ignore

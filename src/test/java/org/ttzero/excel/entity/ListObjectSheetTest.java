@@ -267,8 +267,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int) o < 60) {
-                            style = Styles.clearFill(style)
-                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.orange));
                         }
                         return style;
                     })
@@ -312,8 +311,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int)o < 60) {
-                            style = Styles.clearFill(style)
-                                | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, new Color(246, 209, 139)));
                         }
                         return style;
                     })
@@ -697,8 +695,7 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     public static StyleProcessor sp = (o, style, sst) -> {
         if ((int)o < 60) {
-            style = Styles.clearFill(style)
-                | sst.addFill(new Fill(PatternType.solid,Color.green, Color.blue));
+            style = sst.modifyFill(style, new Fill(PatternType.solid,Color.green, Color.blue));
         }
         return style;
     };
@@ -715,7 +712,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                     , new Column("姓名", "name", String.class)
                     , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
                 ).setStyleProcessor((o, style, sst) ->
-                    o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+                    o.getScore() < 60 ? sst.modifyFill(style, new Fill(PatternType.solid, Color.orange)) : style)
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {

@@ -91,7 +91,7 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook()
                 .addSheet(new ListMapSheet("Map", expectList).setStyleProcessor((map, style, sst) -> {
                     if ((Boolean) map.get("bv")) {
-                        style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                        style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
                     }
                     return style;
                 }))
@@ -130,12 +130,12 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
-                , new Column("int", "nv", int.class).setStyleProcessor((n,s,sst) -> ((int) n) < 0 ? Styles.clearHorizontal(s) | Horizontals.LEFT : s).setNumFmt("¥0.00_);[Red]-¥0.00_);¥0_)")
+                , new Column("int", "nv", int.class).setStyleProcessor((n,s,sst) -> ((int) n) < 0 ? sst.modifyHorizontal(s, Horizontals.LEFT) : s).setNumFmt("¥0.00_);[Red]-¥0.00_);¥0_)")
                 , new Column("long", "lv", long.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Column("LocalTime", "ltv", LocalTime.class)).setStyleProcessor((map, style, sst)->{
                 if ((Boolean) map.get("bv")) {
-                    style = Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.green));
+                    style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
                 }
                 return style;
             }))

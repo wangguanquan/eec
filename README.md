@@ -87,7 +87,7 @@ new Workbook("2021小五班期未考试成绩")
          , new Column("姓名", "name", String.class)
          , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
     ).setStyleProcessor((o, style, sst) -> 
-            o.getScore() < 60 ? Styles.clearFill(style) | sst.addFill(new Fill(PatternType.solid, Color.orange)) : style)
+            o.getScore() < 60 ? sst.modifyFill(style, new Fill(PatternType.solid, Color.orange)) : style)
     ).writeTo(Paths.get("f:/excel"));
 ```
 

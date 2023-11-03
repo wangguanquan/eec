@@ -30,7 +30,6 @@ import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
-import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.ListObjectSheetTest.AllType;
 import org.ttzero.excel.entity.ListObjectSheetTest.Item;
 import org.ttzero.excel.entity.ListObjectSheetTest.Student;
@@ -136,9 +135,8 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("姓名", "name")
                 , new Column("成绩", "score")
                     .setStyleProcessor((o, style, sst) -> {
-                        if ((int)o < 60) {
-                            style = Styles.clearFill(style)
-                                | sst.addFill(new Fill(PatternType.solid, Color.orange));
+                        if ((int) o < 60) {
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.orange));
                         }
                         return style;
                     })
@@ -155,8 +153,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
                     .setStyleProcessor((o, style, sst) -> {
                         if ((int) o < 60) {
-                            style = Styles.clearFill(style)
-                                | sst.addFill(new Fill(PatternType.solid, new Color(246, 209, 139)));
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, new Color(246, 209, 139)));
                         }
                         return style;
                     })

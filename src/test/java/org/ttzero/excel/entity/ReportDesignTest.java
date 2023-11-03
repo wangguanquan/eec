@@ -246,16 +246,16 @@ public class ReportDesignTest extends WorkbookTest {
 
     public static Column[] createColumns() {
         return new Column[]{
-            new Column("日期", "date").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            new Column("日期", "date").setStyleProcessor((n, i, st) -> st.modifyHorizontal(i, Horizontals.CENTER))
             , new Column("客户名称", "customer")
             , new Column("商品名称", "productName").setWidth(30.68D).setWrapText(true)
-            , new Column("品牌", "brand").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
-            , new Column("单位", "unit").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            , new Column("品牌", "brand").setStyleProcessor((n, i, st) -> st.modifyHorizontal(i, Horizontals.CENTER))
+            , new Column("单位", "unit").setStyleProcessor((n, i, st) -> st.modifyHorizontal(i, Horizontals.CENTER))
             , new Column("数量", "num")
             , new Column("含税单价", "unitPrice").setNumFmt("#,##0.00_);0_)")
             , new Column("含税总额", "totalAmount").setNumFmt("#,##0.00_);0_)")
             , new Column("出库数量", "outNum")
-            , new Column("关联订单", "orderNo").setStyleProcessor((n, i, st) -> Styles.clearHorizontal(i) | Horizontals.CENTER)
+            , new Column("关联订单", "orderNo").setStyleProcessor((n, i, st) -> st.modifyHorizontal(i, Horizontals.CENTER))
         };
     }
 
@@ -348,7 +348,7 @@ public class ReportDesignTest extends WorkbookTest {
             if (u.isSummary()) {
                 Font font = sst.getFont(style).clone();
                 font.bold();
-                style = Styles.clearFont(style) | sst.addFont(font);
+                style = sst.modifyFont(style, font);
             } else if (u.groupBy() != null && !group.equals(u.groupBy())) {
                 group = u.groupBy();
                 o ^= 1;
