@@ -20,30 +20,41 @@ import org.ttzero.excel.entity.style.Styles;
 
 
 /**
- * The style conversion
+ * 动态样式处理器，根据行数据动态修改样式，可以非常简单的实现高亮效果，
+ * 对于预警类型的导出尤为实用。
+ *
+ * <p>处理器有3个重要的参数：</p>
+ *  <ol>
+ *    <li>o: 单元格的值，作用于行级时o为一个Bean实体</li>
+ *    <li>style: 当前单元格样式值</li>
+ *    <li>sst: 全局的样式对象{@link Styles}</li>
+ *  </ol>
+ *
+ * <p>{@code StyleProcessor}可作用于行级或者单元格，放在工作表上可修改整行样式，
+ * 放在单个{@code Column}上作用于单个单元格，</p>
  *
  * @author guanquan.wang on 2017/10/13.
  */
 @FunctionalInterface
 public interface StyleProcessor<T> {
     /**
-     * The style conversion
-     * You must add it using {@code Styles#addXXX} method before adding a style,
-     * and then use the returned int value as the return value of the converter.
+     * 动态样式处理，修改样式请使用{@code Styles.modifyXX}方法
+     *
      * <blockquote><pre>
-     * StyleProcessor sp = (o, style, sst) // Fill of 'yellow' color
-     *     -&gt; style |= Styles.clearFill(style) | sst.addFill(new Fill(Color.yellow));
+     * StyleProcessor sp = (o, style, sst)
+     *     // 库存小于100时高亮显示 - 填充黄色
+     *     -&gt; o < 100 ? style |= sst.modifyFill(new Fill(Color.yellow)) : style;
      * </pre></blockquote>
      *
-     * @param o     the value of cell
-     * @param style the current style of cell
-     * @param sst   the {@link Styles} entry
-     * @return new style of cell
+     * @param o     单元格的值
+     * @param style 当前单元格样式值
+     * @param sst   全局的样式对象{@link Styles}
+     * @return 新的样式值
      */
     int build(T o, int style, Styles sst);
 
     /**
-     * None processor
+     * 无动态样式，默认
      */
     final class None implements StyleProcessor<Object> {
 

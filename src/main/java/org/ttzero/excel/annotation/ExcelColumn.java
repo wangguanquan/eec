@@ -29,15 +29,15 @@ import java.lang.annotation.Target;
 /**
  * 指定Excel列属性，用于设置Title、列宽等常用属性
  *
- * <p>基于数据安全考虑，默认只会导出标有{@code ExcelColumn}注解的属性和方法，使用{@link org.ttzero.excel.entity.Workbook#forceExport()}
- * 可以绕过此限制强制导出所有字段，但并不建议这么做，Bean对象被其它人添加了敏感字段则会在无预警的情况下被导出
- * 导致信息泄露，本工具不会对此类安全事故负责。</p>
+ * <p>基于数据安全考虑，默认只会导出标有&#x40;ExcelColumn注解的属性和方法，使用{@link org.ttzero.excel.entity.Workbook#forceExport()}
+ * 可以绕过此限制强制导出所有字段，但并不建议这么做，Bean对象被其它人添加了敏感字段则会在无预警的情况下被导出导致信息泄露，
+ * 本工具不会对此类安全事故负责。</p>
  *
- * <p>多个{@code ExcelColumn}注解组合可以实现多行表头，{@link #value()}相同的行或列会自动合并。
+ * <p>多个&#x40;ExcelColumn注解组合可以实现多行表头，{@link #value()}相同的行或列会自动合并。
  * 默认情况下导出顺序是按照Bean定义顺序，也可以通过{@link #colIndex()}指定列顺序，对于多行表头
- * 必须将该属性定义在最底层的{@code ExcelColumn}注解上。</p>
+ * 必须将该属性定义在最底层的&#x40;ExcelColumn注解上。</p>
  *
- * <p>不建议使用{@code ExcelColumn}注解来导出Excel，开发者推荐手动指定{@link org.ttzero.excel.entity.Column}
+ * <p>不建议使用&#x40;ExcelColumn注解来导出Excel，开发者推荐手动指定{@link org.ttzero.excel.entity.Column}
  * 后者不会破坏Java对象，且有更丰富的属性和转换器</p>
  *
  * <p>参考文档:</p>

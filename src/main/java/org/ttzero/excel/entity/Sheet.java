@@ -55,28 +55,33 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * Each worksheet corresponds to one or more sheet.xml of physical.
- * When the amount of data exceeds the upper limit of the worksheet,
- * the extra data will be written in the next worksheet page of the
- * current position, with the name of the parent worksheet. After
- * adding "(1,2,3...n)" as the name of the copied sheet, the pagination
- * is automatic without additional settings.
- * <p>
- * Usually worksheetWriter calls the
- * {@link #nextBlock} method to load a row-block for writing.
- * When the row-block returns the flag EOF, mean is the current worksheet
- * finished written, and the next worksheet is written.
- * <p>
- * Extends the existing worksheet to implement a custom data source worksheet.
- * The data source can be micro-services, Mybatis, JPA or any others. If
- * the data source returns an array of json objects, please convert to
- * an object ArrayList or Map ArrayList, the object ArrayList needs to
- * extends {@link ListSheet}, the Map ArrayList needs to extends
- * {@link ListMapSheet} and implement the {@link ListSheet#more} method.
- * <p>
- * If other formats cannot be converted to ArrayList, you
- * need to inherit from the base class {@link Sheet} and implement the
- * {@link #resetBlockData} and {@link #getHeaderColumns} methods.
+ * 工作表Worksheet是Excel最重要的组件，在Excel看见的所有内容都是由Worksheet工作表呈现。
+ * 本工具将工作表{@code Sheet}及其子类视为数据源，它本身除了收集数据外并不输出任何格式的文件，
+ * 它必须与输出协议搭配使用才会输出相应格式的文件。如与{@link XMLWorksheetWriter}输出协议搭配时，
+ * 每个{@code Sheet}对应一个Excel工作表和{@code sheet.xml}文件。
+ *
+ * <p>工作表对应的输出协议为{@link IWorksheetWriter}，它会循环调用{@link #nextBlock}
+ * 方法获取数据并写入磁盘直到{@link RowBlock#isEOF}返回EOF标记为止，整个过程只有一个
+ * RowBlock行块常驻内存，一个{@code RowBlock}行块默认包含32个{@code Row}行，这样可以保证
+ * 较小的内存开销。</p>
+ *
+ * <p>当前支持的数据源有{@link ListSheet}, {@link ListMapSheet}, {@link StatementSheet}
+ * 和{@link ResultSetSheet}4种，前两种较为常用，后两种可实现将数据库查询结果直接导出到Excel
+ * 省掉转Java实体的中间环节。继承Sheet并实现抽象方法{@link Sheet#resetBlockData}可以扩展新的数据源，
+ * 你需要在该方法中获取数据并使用{@link ICellValueAndStyle}转换器将数据转换为输出协议允许的结构。</p>
+ *
+ * <p>{@code ListSheet}及其子类支持超大数据导出，理论上导出数据行无上限，当超过Worksheet行数限制时
+ * 将会在下一个位置插入一个与当前{@code Sheet}一样的工作表，然后将剩余数据写到新插入的工作表中，
+ * 分页是自动触发的无需额外设置。超大数据导出时建议使用{@link ListSheet#more}方法分批查询数据，
+ * 返回空数组或{@code null}时结束。</p>
+ *
+ * <p>每个Worksheet都可以设置一个{@link #onProgress}窗口来观察导出进度，通过此窗口可以记录每个
+ * RowBlock导出时间然后预估整体的导出时间。</p>
+ *
+ * <p>关于扩展属性：随着功能越加越多，在{@code Sheet}中定义的属性也越来越多，这样无限添加可不是个好主意，
+ * 所以在{@code v0.5.0}引入了一个{@code Map}类型的扩展属性{@link #extProp}，通过{@link #putExtProp}
+ * 和{@link #getExtPropValue}方法添加和读取扩展属性，一般情况下在数据源中添加属性，在输出协议中读取属性，
+ * 像合并单元格、冻结首行都是通过扩展参数实现。</p>
  *
  * @see ListSheet
  * @see ListMapSheet
@@ -92,128 +97,155 @@ public abstract class Sheet implements Cloneable, Storable {
      * LOGGER
      */
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-
+    /**
+     * 工作薄
+     */
     protected Workbook workbook;
-
+    /**
+     * 工作表名称
+     */
     protected String name;
+    /**
+     * 表头
+     */
     protected Column[] columns;
+    /**
+     * 水印
+     */
     protected WaterMark waterMark;
+    /**
+     * 关系管理器
+     */
     protected RelManager relManager;
+    /**
+     * 工作表ID，与当前工作表在工作薄中的下标一致
+     */
     protected int id;
     /**
-     * The header column comments
+     * 表头批注
      */
     protected Comments comments;
     /**
-     * To mark the cell auto-width
+     * 自适应列宽标记，优先级从小到大为 0: 未设置 1: 自适应列宽 2: 固定宽度
      */
     protected int autoSize;
     /**
-     * The default cell width
+     * 默认列宽
      */
     protected double width = 20D;
     /**
-     * The row number
+     * 统计已写入数据行数，不包含表头
      */
     protected int rows;
     /**
-     * Mark the cell is hidden
+     * 标记是否“隐藏”
      */
     protected boolean hidden;
-
     /**
-     * The header style index
+     * 兜底的表头样式索引，优先级低Column独立设置的样式
      */
     protected int headStyleIndex = -1;
-
     /**
-     * The header style value
+     * 统一的表头样式，优先级低Column独立设置的样式
      */
     protected int headStyle;
     /**
-     * The zebra-line fill style value
+     * 斑马线样式索引
      */
     protected int zebraFillStyle = -1;
     /**
-     * The zebra-line fill style
+     * 斑马线填充样式，斑马线从表头以下的第2行开始每隔一行进行一次填充
      */
     protected Fill zebraFill;
     /**
-     * A copy worksheet flag
+     * 标记是否为自动分页的“复制”工作表
      */
     protected boolean copySheet;
+    /**
+     * 记录自动分页的“复制”工作表数量
+     */
     protected int copyCount;
-
+    /**
+     * 行块，它由连续的一组默认大小为{@code 32}个{@code Row}组成的迭代器，该对象是内存共享的，
+     * 可以通过覆写{@link #getRowBlockSize()}指定其它大小，一般不建议修改。
+     */
     protected RowBlock rowBlock;
+    /**
+     * 工作表输出协议
+     */
     protected IWorksheetWriter sheetWriter;
     /**
-     * To mark the header column is ready
+     * 标记表头是否已采集，默认情况下会进行收集-排序-多表头合并等过程后状态才为"ready"
      */
     protected boolean headerReady;
     /**
-     * Close resource on the last copy worksheet
+     * 标记是否需要关闭，自动分页情况下最后一个worksheet页需要关闭资源，因为所有的数据都是从最原始
+     * 的工作表获取，所以只有写完数据之后才能关闭。
      */
     protected boolean shouldClose = true;
-
-    protected ICellValueAndStyle cellValueAndStyle;
-
     /**
-     * Force export all attributes
+     * 转换器，将外部数据转换为Worksheet输出协议需要的数据类型并设置单元格样式
      */
-    protected int forceExport;
-
+    protected ICellValueAndStyle cellValueAndStyle;
     /**
-     * Ignore header when export
+     * 忽略表头
      */
     protected int nonHeader = -1;
     /**
-     * Limit row number in worksheet
+     * 工作表body行数上限，它记录的是输出协议行上限-表头行数，例如xls格式最多{@code 65535}行，
+     * 导出的表头为1行，那{code rowLimit = 65534}
      */
     private int rowLimit;
-
     /**
-     * Other extend properties
+     * 扩展属性
      */
     protected Map<String, Object> extProp = new HashMap<>();
     /**
-     * The bit flag of the extended parameter. If there is an extended parameter,
-     * the corresponding bit is 1. The lower 16 bits are occupied by the system,
-     * and the upper 16 bits can be extended by themselves.
+     * 扩展参数的位标志。如果存在扩展参数则相应的位为1，低16位由系统占用
      */
     protected int extPropMark;
-
     /**
-     * Show grid lines
+     * 是否显示"网格线"，默认显示
      */
     protected Boolean showGridLines;
-
     /**
-     * Specify custom header row height
+     * 指定表头行高和数据行高
      */
     protected double headerRowHeight = 20.5D, rowHeight = -1D;
     /**
-     * Specify the first row index
+     * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
      */
     protected int startRowIndex = 1;
     /**
-     * A progress window
+     * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
     private BiConsumer<Sheet, Integer> progressConsumer;
 
+    /**
+     * 获取工作表ID，与当前工作表在工作薄中的下标一致，一般与其它资源关联使用
+     *
+     * @return 工作表ID
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * 设置工作表ID，请不要在外部随意修改，否则打开文件异常
+     * 
+     * @param id 工作表ID
+     * @return 当前工作表
+     */
     public Sheet setId(int id) {
         this.id = id;
         return this;
     }
 
     /**
-     * Settings custom IWorksheetWriter
+     * 设置输出协议，必须与对应的{@link IWorkbookWriter}工作薄输出协议一起使用
      *
-     * @param sheetWriter {@link IWorksheetWriter}
-     * @return current Sheet
+     * @param sheetWriter 工作表输出协议{@link IWorksheetWriter}
+     * @return 当前工作表
      */
     public Sheet setSheetWriter(IWorksheetWriter sheetWriter) {
         this.sheetWriter = sheetWriter;
@@ -222,31 +254,51 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns {@link IWorksheetWriter}
+     * 获取工作表输出协议{@link IWorksheetWriter}
      *
-     * @return custom IWorksheetWriter
+     * @return 工作表输出协议
      */
     public IWorksheetWriter getSheetWriter() {
         return sheetWriter;
     }
 
+    /**
+     * 设置数据转换器，用于将Java对象转为各工作表输出协议可接受的数据结构，一般会将每个单元格的值输出为{@link Cell}对象，
+     * 它与{@code Sheet}数据源中的Java类型完全分离，使得下游的输出协议有统一输入源。
+     *
+     * <p>除了数据转换外，该转换器还兼具采集样式，采集样式时会先从表头{@link Column#getCellStyle}中获取初始样式，
+     * 如果该列有动态样式则会将该初始样式做为入参传入{@link org.ttzero.excel.processor.StyleProcessor}
+     * 动态样式处理器以制定动态样式，如果设置有工作表级的样式处理器则会将动态样式的结果做为入参继续调工作表级
+     * 样式处理器制定最终的样式</p>
+     *
+     * @param cellValueAndStyle 数据转换器
+     * @return 当前工作表
+     */
     public Sheet setCellValueAndStyle(ICellValueAndStyle cellValueAndStyle) {
         this.cellValueAndStyle = cellValueAndStyle;
         return this;
     }
 
+    /**
+     * 获取数据转换器
+     *
+     * @return 数据转换器 {@link ICellValueAndStyle}
+     */
     public ICellValueAndStyle getCellValueAndStyle() {
         return cellValueAndStyle;
     }
 
+    /**
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
+     */
     public Sheet() {
         relManager = new RelManager();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public Sheet(String name) {
         this.name = name;
@@ -254,9 +306,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定表头信息
      *
-     * @param columns the header info
+     * @param columns 表头信息
      */
     public Sheet(final Column... columns) {
         this.columns = columns;
@@ -264,21 +316,21 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public Sheet(String name, final Column... columns) {
         this(name, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public Sheet(String name, WaterMark waterMark, final Column... columns) {
         this.name = name;
@@ -288,19 +340,20 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns workbook
+     * 获取当前工作表对应的工作薄
      *
-     * @return current {@link Workbook}
+     * @return 当前工作表对应的 {@link Workbook}
      */
     public Workbook getWorkbook() {
         return workbook;
     }
 
     /**
-     * Setting the workbook
+     * 设置工作薄，一般在调用{@link Workbook#addSheet}时设置工作薄，{@code Workbook}包含
+     * 样式、共享字符区、ContentType等全局配置，为了方便读取所以每个worksheet均包含Workbook句柄
      *
-     * @param workbook the {@link Workbook}
-     * @return current {@link Sheet}
+     * @param workbook 工作薄{@link Workbook}
+     * @return 当前工作表
      */
     public Sheet setWorkbook(Workbook workbook) {
         this.workbook = workbook;
@@ -313,27 +366,27 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns shared string
+     * 获取字符串共享区{@link SharedStrings}
      *
-     * @return global {@link SharedStrings} in workbook
+     * @return 字符串共享区
      */
     public SharedStrings getSst() {
         return workbook.getSst();
     }
 
     /**
-     * Return the cell default width
+     * 获取默认列宽，如果未在Column上特殊指定宽度时该宽度将应用于每一列
      *
-     * @return the width value
+     * @return 默认列宽20
      */
     public double getDefaultWidth() {
         return width;
     }
 
     /**
-     * Setting auto resize cell's width
+     * 标记当前工作表自适应列宽，此优先级低于使用{@link Column#setWidth}指定列宽
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet autoSize() {
         this.autoSize = 1;
@@ -341,27 +394,27 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the re-size setting
+     * 获取工作表的全局自适应列宽标记
      *
-     * @return 1: auto-size 2:fix-size
+     * @return 1: 自适应列宽 2: 固定宽度
      */
     public int getAutoSize() {
         return autoSize;
     }
 
     /**
-     * Test is auto size column width
+     * 是否全局自适应列宽，此值使用{@code autoSize()==1}判断
      *
-     * @return true if auto-size
+     * @return true：自适应列宽
      */
     public boolean isAutoSize() {
         return autoSize == 1;
     }
 
     /**
-     * Setting fixed column width
+     * 设置当前工作表使用固定列宽，将默认使用{@link #getDefaultWidth()}返回的宽度
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet fixedSize() {
         this.autoSize = 2;
@@ -369,10 +422,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting fix column width
+     * 设置当前工作表使用固定列宽并指定宽度，此方法会对入参进行重算，当宽度为'零'时效果相当于隐藏该列
      *
-     * @param width the column width
-     * @return current {@link Sheet}
+     * @param width 列宽
+     * @return 当前工作表
      */
     public Sheet fixedSize(double width) {
         if (width < 0.0D) {
@@ -394,10 +447,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting the zebra-line fill style, default fill color is #EFF5EB
+     * 设置斑马线填充样式，为了不影响正常阅读建议使用浅色，默认无斑马线
      *
-     * @param fill the zebra-line {@link Fill} style
-     * @return current {@link Workbook}
+     * @param fill 斑马线填充 {@link Fill}
+     * @return 当前工作表
      */
     public Sheet setZebraLine(Fill fill) {
         this.zebraFill = fill;
@@ -405,9 +458,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Cancel the zebra-line style
+     * 取消斑马线，如果在工作薄Workbook设置了全局斑马线可使用此方法取消当前工作表Worksheet的斑马线
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet cancelZebraLine() {
         this.zebraFill = null;
@@ -416,18 +469,19 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the zebra-line fill style
+     * 获取当前工作表的斑马线填充样式，如果当前工作表未设置则从全局工作薄中获取
      *
-     * @return the zebra-line {@link Fill} style
+     * @return 斑马线填充 {@link Fill}
      */
     public Fill getZebraFill() {
-        return zebraFill;
+        return zebraFill != null ? zebraFill : workbook.getZebraFill();
     }
 
     /**
-     * Returns the zebra-line fill style value
+     * 获取斑马线样式值，它返回的是全局样式中斑马线填充样式的值，全局第{@code n}个填充返回 {@code n<<INDEX_FILL}，
+     * 更多参考{@link Styles#addFill}
      *
-     * @return the zebra-line {@link Fill} style
+     * @return 斑马线样式值
      */
     public int getZebraFillStyle() {
         if (zebraFillStyle < 0 && zebraFill != null) {
@@ -437,28 +491,34 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting zebra-line style, the default fill color is #E9EAEC
+     * 设置默认斑马线，默认填充色HEX值为{@code E9EAEC}
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet defaultZebraLine() {
         return setZebraLine(new Fill(PatternType.solid, new Color(233, 234, 236)));
     }
 
     /**
-     * Returns the worksheet name
+     * 获取当前工作表的表名
      *
-     * @return the worksheet name
+     * <p>注意：仅返回实例化Worksheet时指定的表名或通过 {@link #setName}方法设置的表名，
+     * 对于未指定的表名的工作表受分页和{@link Workbook#insertSheet(int, Sheet)}插入指定位置
+     * 影响只能在最终执行输出时确定位置，在此之前表名均返回{@code null}</p>
+     *
+     * @return 外部指定的表名，未指定表名时返回{@code null}
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Setting the worksheet name
+     * 设置工作表表名，使用Office打开文件时它将显示在底部的Tab栏
      *
-     * @param name the worksheet name
-     * @return current {@link Sheet}
+     * <p>注意：内部不会检查重名，所以请在外部保证在一个工作薄下所有工作表名唯一，否则打开文件异常</p>
+     *
+     * @param name 工作表表名，最多31个字符超过时截取前31个字符
+     * @return 当前工作表
      */
     public Sheet setName(String name) {
         if (name != null && name.length() > 31) {
@@ -470,9 +530,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the header column {@link Comments}
+     * 获取批注 {@link Comments}
      *
-     * @return Columns instance if exists
+     * @return 如果添加了批注则返回 {@code Comments}对象否则返回{@code null}
      */
     public Comments getComments() {
         if (comments != null && comments.id == 0) {
@@ -482,9 +542,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Create a {@link Comments} and add relationship
+     * 创建批注对象，一般由各工作表输出协议创建，外部用户勿用
      *
-     * @return a comment instance
+     * @return {@code Comments}实体，与工作表一一对应
      */
     public Comments createComments() {
         if (comments == null) {
@@ -500,18 +560,18 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns show grid lines flag
+     * 是否显示“网格线”
      *
-     * @return true if {@code showGridLines} is null or {@code true}
+     * @return true: 显示 false: 不显示
      */
     public boolean isShowGridLines() {
         return showGridLines == null || showGridLines;
     }
 
     /**
-     * Setting show grid lines flag
+     * 设置显示“网格线”
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet showGridLines() {
         this.showGridLines = true;
@@ -519,9 +579,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting show grid lines flag
+     * 设置隐藏“网格线”
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet hideGridLines() {
         this.showGridLines = false;
@@ -529,22 +589,21 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the header row height
+     * 获取表头行高，默认20.5
      *
-     * @return header row height
+     * @return 表头行高
      */
     public double getHeaderRowHeight() {
         return headerRowHeight;
     }
 
     /**
-     * Specify custom header row height
+     * 设置表头行高，其优化级低于{@link Column#setHeaderHeight}设置的值
      *
-     * If it is negative, it means that there is no special setting
-     * , and the default height is generally about {@code 13.5}
+     * <p>可接受负数和零，负数等价与未设置默认行高为{@code 13.5}，零效果等价于隐藏，但不能通过右建“取消隐藏”</p>
      *
-     * @param headerRowHeight row height or negative number
-     * @return current {@link Sheet}
+     * @param headerRowHeight 指定表头行高，建议表头行高比数据行大
+     * @return 当前工作表
      */
     public Sheet setHeaderRowHeight(double headerRowHeight) {
         this.headerRowHeight = headerRowHeight;
@@ -552,22 +611,19 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the row height
+     * 获取数据行高
      *
-     * @return row height
+     * @return 数据行高
      */
     public double getRowHeight() {
         return rowHeight;
     }
 
     /**
-     * Specify custom row height
+     * 设置数据行高，未指定或负数时默认行高为{@code 13.5}
      *
-     * If it is negative, it means that there is no special setting
-     * , and the default height is generally about {@code 13.5}
-     *
-     * @param rowHeight row height or negative number
-     * @return current {@link Sheet}
+     * @param rowHeight 指定数据行高
+     * @return 当前工作表
      */
     public Sheet setRowHeight(double rowHeight) {
         this.rowHeight = rowHeight;
@@ -575,39 +631,44 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the first row index(default 1)
+     * 获取工作表的起始行号(从1开始)，这里是行号也就是打开Excel左侧看到的行号，
+     * 此行号将决定从哪一行开始写数据
      *
-     * @return the first row index
+     * @return 起始行号
      */
     public int getStartRowIndex() {
         return Math.abs(startRowIndex);
     }
 
     /**
-     * Returns the auto scroll mark
+     * 是否滚动到可视区，当起始行列不在{@code A1}时，如果返回{@code true}则打开Excel文件时
+     * 自动将首行首列滚动左上角第一个位置，如果返回{@code false}时打开Excel文件左上角可视区为{@code A1}
      *
-     * @return {@code true} if auto scroll to top-left area
+     * @return {@code true}将首行首列滚动到左上角第一个位置，否则{@code A1}将为左上角第一个位置
      */
     public boolean isScrollToVisibleArea() {
         return startRowIndex > 0;
     }
 
     /**
-     * Specify the first row index, which must be greater than 0
+     * 指定起始行并将该行自动滚到窗口左上角，行号必须大于0
      *
-     * @param startRowIndex row index
-     * @return current {@link Sheet}
+     * @param startRowIndex 起始行号（从1开始）
+     * @return 当前工作表
      */
     public Sheet setStartRowIndex(int startRowIndex) {
         return setStartRowIndex(startRowIndex, true);
     }
 
     /**
-     * Specify the first row index, which must be greater than 0
+     * 指定起始行并设置是否将该行滚动到窗口左上角，行号必须大于0
      *
-     * @param startRowIndex row index
-     * @param scrollToVisibleArea setting the activeCell to the {@code startRowIndex}
-     * @return current {@link Sheet}
+     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=0}则打开文件时{@code StartRowIndex}
+     * 将会显示在窗口的第一行</p>
+     *
+     * @param startRowIndex 起始行号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
      */
     public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
         if (startRowIndex <= 0)
@@ -619,24 +680,25 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the columns
+     * 获取表头，对于非外部传入的表头，只有要执行导出的时候通过行数据进行反射或读取Meta元数据获取，
+     * 在此之前该接口将返回{@code null}
      *
-     * @return array of column
+     * @return 表头信息
      */
     public Column[] getColumns() {
         return columns;
     }
 
     /**
-     * Setting a progress watch
+     * 添加进度观察者，在数据较大的导出过程中添加观察者打印进度可避免被误解为程序假死
      *
      * <blockquote><pre>
      * new ListSheet&lt;&gt;().onProgress((sheet, row) -&gt; {
      *     System.out.println(sheet + " write " + row + " rows");
      * })</pre></blockquote>
      *
-     * @param progressConsumer a progress watch
-     * @return the {@link Sheet}
+     * @param progressConsumer 进度消费窗口
+     * @return 当前工作表
      */
     public Sheet onProgress(BiConsumer<Sheet, Integer> progressConsumer) {
         this.progressConsumer = progressConsumer;
@@ -644,22 +706,18 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns progress watch
+     * 获取进度观察者
      *
-     * @return progress consumer if setting
+     * @return 如果设置了观察者则返回观察者否则返回 {@code null}
      */
     public BiConsumer<Sheet, Integer> getProgressConsumer() {
         return progressConsumer;
     }
 
     /**
-     * Returns the header column info
-     * <p>
-     * The copy sheet will use the parent worksheet header information.
-     * <p>
-     * Use the method {@link #getAndSortHeaderColumns()} to get Columns
+     * 获取表头，子类覆写此方法创建表头
      *
-     * @return array of column
+     * @return 表头信息
      */
     protected Column[] getHeaderColumns() {
         if (!headerReady) {
@@ -671,32 +729,35 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Sort column by {@code colIndex}
+     * 获取表头，Worksheet工作表输出协议调用此方法来获取表头信息
      *
-     * @return header columns
+     * <p>此方法先调用内部{@link #getHeaderColumns}获取基础信息，然后对其进行排序，列反转，
+     * 合并等深加工处理</p>
+     *
+     * @return 加工好的表头
      */
     public Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
-            // Create header columns
+            // 获取表头基础信息
             this.columns = getHeaderColumns();
 
             // Ready Flag
             headerReady |= (this.columns.length > 0);
 
             if (headerReady) {
-                // Sort column index
+                // 排序
                 sortColumns(columns);
 
-                // Turn to one-base
+                // 计算每列在Excel中的列下标
                 calculateRealColIndex();
 
-                // Reverse
+                // 列反转，由于尾部Column包含必要的信息，多行表头时为方便获取主要信息这里进行一次反转
                 reverseHeadColumn();
 
-                // Add merge cell properties
+                // 合并，将相同列名的列进行合并
                 mergeHeaderCellsIfEquals();
 
-                // Reset Common Properties
+                // 重置通用属性
                 resetCommonProperties(columns);
 
                 // Check the limit of columns
@@ -728,6 +789,20 @@ public abstract class Sheet implements Cloneable, Storable {
         }
     }
 
+    /**
+     * 列排序，首先会根据用户指定的{@code colIndex}进行一次排序，未指定{@code colIndex}的列排在最后，
+     * 然后将尾部没有{@code colIndex}的列插入到数组前方不连续的空白位，如果有重复的{@code colIndex}则按
+     * 列在当前数组中的顺序依次排序
+     *
+     * <p>示例：现有A:1,B,C:4,D,E五列，其中A的{@code colIndex=1}，C的{@code colIndex=4}</p>
+     *
+     * <p>第一轮按{@code colIndex}排序后结果为 =&gt; {@code A:1,C:4,B,D,E}</p>
+     *
+     * <p>第二轮将尾部没有{@code colIndex}的BDE列插入到前方空白位，A在第1列它前方可以插入B，
+     * A:1和C:4之间有2,3两个空白位，将DE分别插入到2，3位，现在结果为 =&gt; {@code B:0,A:1,D:2,E:3,C:4}</p>
+     *
+     * @param columns 表头信息
+     */
     protected void sortColumns(Column[] columns) {
         if (columns.length <= 1) return;
         int j = 0;
@@ -756,14 +831,15 @@ public abstract class Sheet implements Cloneable, Storable {
         return i;
     }
 
-    private void insert(Column[] columns, int n, int k) {
+    protected void insert(Column[] columns, int n, int k) {
         Column t = columns[k];
         System.arraycopy(columns, n, columns, n + 1, k - n);
         columns[n] = t;
     }
 
     /**
-     * Calculate the true col-Index
+     * 计算列的实际下标，Excel下标从1开始，计算后的值将重置{@link Column#realColIndex}属性，
+     * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
         for (int i = 0; i < columns.length; i++) {
@@ -781,10 +857,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting the header rows's columns
+     * 设置表头，无数据时依然会导出该表头
      *
-     * @param columns the header row's columns
-     * @return current {@link Sheet}
+     * @param columns 表头数组
+     * @return 当前工作表
      */
     public Sheet setColumns(final Column ... columns) {
         this.columns = columns;
@@ -792,10 +868,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting the header rows's columns
+     * 设置表头，无数据时依然会导出该表头
      *
-     * @param columns the header row's columns
-     * @return current {@link Sheet}
+     * @param columns 表头数组
+     * @return 当前工作表
      */
     public Sheet setColumns(List<Column> columns) {
         if (columns != null && !columns.isEmpty()) {
@@ -806,20 +882,19 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the {@link WaterMark}
+     * 获取水印
      *
-     * @return the {@link WaterMark} in worksheet
-     * @see WaterMark
+     * @return 水印对象 {@link WaterMark}
      */
     public WaterMark getWaterMark() {
         return waterMark;
     }
 
     /**
-     * Setting the {@link WaterMark}
+     * 设置水印，优先级高于Workbook中的全局水印
      *
-     * @param waterMark the {@link WaterMark}
-     * @return current {@link Sheet}
+     * @param waterMark 水印对象 {@link WaterMark}
+     * @return 当前工作表
      */
     public Sheet setWaterMark(WaterMark waterMark) {
         this.waterMark = waterMark;
@@ -827,18 +902,18 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the worksheet is hidden
+     * 工作表是否隐藏
      *
-     * @return true: hidden, false: not hidden
+     * @return true: 隐藏, false: 显示
      */
     public boolean isHidden() {
         return hidden;
     }
 
     /**
-     * Setting the worksheet status
+     * 隐藏工作表
      *
-     * @return current {@link Sheet}
+     * @return 当前工作表
      */
     public Sheet hidden() {
         this.hidden = true;
@@ -846,36 +921,16 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Force export of attributes without {@link org.ttzero.excel.annotation.ExcelColumn} annotations
+     * 获取强制导出标识，只对{@link ListSheet}生效，用于
      *
-     * @return current {@link Sheet}
-     */
-    public Sheet forceExport() {
-        this.forceExport = 1;
-        return this;
-    }
-
-    /**
-     * Cancel force export
-     *
-     * @return current {@link Sheet}
-     */
-    public Sheet cancelForceExport() {
-        this.forceExport = 2;
-        return this;
-    }
-
-    /**
-     * Returns the force export
-     *
-     * @return 1 if force, otherwise returns 0
+     * @return 1: 强制导出 其它值均表示不强制导出
      */
     public int getForceExport() {
-        return forceExport;
+        return 0;
     }
 
     /**
-     * abstract method close
+     * 回闭连接，回收资源，删除临时文件等
      *
      * @throws IOException if I/O error occur
      */
@@ -886,9 +941,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Write worksheet data to path
+     * 落盘，将工作表写到指定路径
      *
-     * @param path the storage path
+     * @param path 指定保存路径
      * @throws IOException if I/O error occur
      */
     @Override
@@ -911,15 +966,18 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Split worksheet data
+     * 分批拉取数据
      */
     protected void paging() { }
 
     /**
-     * Add relationship
+     * 添加关联，当工作表需要引入其它资源时必须将其添加进关联关系中，关联关系由{@link RelManager}管理。
      *
-     * @param rel Relationship
-     * @return current worksheet
+     * <p>例如：向工作表添加图片时，图片由media统一存放，工作表中只需要加入图片的关联关系，通过rId值找到图片。
+     * 除了图片外，像批注，公式，图表等都属于外部资源</p>
+     *
+     * @param rel 关联关系 {@link Relationship}
+     * @return 当前工作表
      */
     public Sheet addRel(Relationship rel) {
         relManager.add(rel);
@@ -927,17 +985,17 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Find relationship by key
+     * 通过相对位置模糊匹配查找关联关系
      *
-     * @param key relationship key
-     * @return null if not exists
+     * @param key 要查询的关联key
+     * @return 第一个匹配的关联，如果未匹配则返回{@code null}
      */
     public Relationship findRel(String key) {
         return relManager.likeByTarget(key);
     }
 
     /**
-     * Returns current sheet's relationship manager
+     * 获取当前工作表的关系管理器
      *
      * @return {@link RelManager}
      */
@@ -946,50 +1004,50 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the worksheet name
+     * 获取当前工作表的文件名
      *
-     * @return name of worksheet
+     * @return 工作表文件名
      */
     public String getFileName() {
         return "sheet" + id + cellValueAndStyle.getFileSuffix();
     }
 
     /**
-     * Setting the header column styles
+     * 设置统一的表头样式
      *
-     * @param font   the font
-     * @param fill   the fill style
-     * @param border the border style
-     * @return current {@link Sheet}
+     * @param font   字体
+     * @param fill   填充色
+     * @param border 边框
+     * @return 当前工作表
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
         return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
     }
 
     /**
-     * Setting the header column styles
+     * 设置统一的表头样式
      *
-     * @param font       the font
-     * @param fill       the fill style
-     * @param border     the border style
-     * @param vertical   the vertical style
-     * @param horizontal the horizontal style
-     * @return current {@link Sheet}
+     * @param font       字体
+     * @param fill       填充色
+     * @param border     边框
+     * @param vertical   垂直对齐
+     * @param horizontal 水平对齐
+     * @return 当前工作表
      */
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         return setHeadStyle(null, font, fill, border, vertical, horizontal);
     }
 
     /**
-     * Setting the header column styles
+     * 设置统一的表头样式
      *
-     * @param numFmt     the number format
-     * @param font       the font
-     * @param fill       the fill style
-     * @param border     the border style
-     * @param vertical   the vertical style
-     * @param horizontal the horizontal style
-     * @return current {@link Sheet}
+     * @param numFmt     格式化
+     * @param font       字体
+     * @param fill       填充色
+     * @param border     边框
+     * @param vertical   垂直对齐
+     * @param horizontal 水平对齐
+     * @return 当前工作表
      */
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
@@ -1004,10 +1062,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting the header cell styles
+     * 设置统一的表头样式值
      *
-     * @param style the styles value
-     * @return current {@link Sheet}
+     * @param style 样式值，0表示默认样式
+     * @return 当前工作表
      */
     public Sheet setHeadStyle(int style) {
         headStyle = style;
@@ -1016,10 +1074,10 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Setting the header cell styles
+     * 设置统一的表头样式索引
      *
-     * @param styleIndex the styles index
-     * @return current {@link Sheet}
+     * @param styleIndex 样式索引，索引从0开始，负数表示未设置样式
+     * @return 当前工作表
      */
     public Sheet setHeadStyleIndex(int styleIndex) {
         headStyleIndex = styleIndex;
@@ -1028,29 +1086,29 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the header style value
+     * 获取统一的表头样式值
      *
-     * @return 0 if not set
+     * @return 样式值，0表示默认样式
      */
     public int getHeadStyle() {
         return headStyle;
     }
 
     /**
-     * Returns the header style index
+     * 获取统一的表头样式索引
      *
-     * @return -1 if not set
+     * @return 样式索引，索引从0开始，负数表示未设置样式
      */
     public int getHeadStyleIndex() {
         return headStyleIndex;
     }
 
     /**
-     * Custom header style according to parameters
+     * 使用默认样式并修改文字颜色和充填色创建统一表头样式
      *
-     * @param fontColor the font color
-     * @param fillBgColor the fill background color
-     * @return style value
+     * @param fontColor 文字颜色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
+     * @param fillBgColor 充填色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
+     * @return 样式值
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
@@ -1064,18 +1122,18 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Build default header style
+     * 获取默认的表头样式值
      *
-     * @return style value
+     * @return 样式值
      */
     public int defaultHeadStyle() {
         return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("black", "#E9EAEC"));
     }
 
     /**
-     * Build default header style
+     * 获取默认的表头样式索引
      *
-     * @return style index
+     * @return 样式索引
      */
     public int defaultHeadStyleIndex() {
         if (headStyleIndex == -1) {
@@ -1084,31 +1142,35 @@ public abstract class Sheet implements Cloneable, Storable {
         return headStyleIndex;
     }
 
-    protected static boolean nonOrIntDefault(int style) {
-        return style == -1
-            || style == Styles.defaultIntBorderStyle()
-            || style == Styles.defaultIntStyle();
-    }
+//    protected static boolean nonOrIntDefault(int style) {
+//        return style == -1
+//            || style == Styles.defaultIntBorderStyle()
+//            || style == Styles.defaultIntStyle();
+//    }
 
     /**
-     * Returns total rows in this worksheet
+     * 获取已写入的数据行数，这里不包含表头行
      *
-     * @return -1 if unknown or uncertain
+     * <p>注意：由于数据行经由{@link RowBlock}行块统一处理，所以这里的已写入只表示写入到
+     * {@link RowBlock}行块的数据并非实际已导出的行数，精准的已导出行可以通过{@link Workbook#onProgress}监听获取</p>
+     *
+     * @return 写入的数据行数
      */
     public int size() {
-        return -1;
+        return rows;
     }
 
     /**
-     * Returns a row-block. The row-block is content by 32 rows
+     * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
+     * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
      *
-     * @return a row-block
+     * @return 行块
      */
     public RowBlock nextBlock() {
         // clear first
         rowBlock.clear();
 
-        if (columns.length > 0 || forceExport == 1) {
+        if (columns.length > 0) {
             resetBlockData();
         }
 
@@ -1116,21 +1178,19 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * The worksheet is written by units of row-block. The default size
-     * of a row-block is 32, which means that 32 rows of data are
-     * written at a time. If the data is not enough, the {@code more()}
-     * method will be called to get more data.
+     * 获取{@link RowBlock}行块的大小，创建行块时会调用此方法获取行块大小，
+     * 子类可覆写该方法指定其它值
      *
-     * @return the row-block size
+     * @return 行块大小
      */
     public int getRowBlockSize() {
         return ROW_BLOCK_SIZE;
     }
 
     /**
-     * Write some final info
+     * 当输出协议输出完成时调用此方法输出关联
      *
-     * @param workSheetPath the worksheet path
+     * @param workSheetPath 当前工作表保存路径
      * @throws IOException if I/O error occur
      */
     public void afterSheetAccess(Path workSheetPath) throws IOException {
@@ -1143,9 +1203,9 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the copy worksheet name
+     * 当数据行超过工作表限制时触发分页，复制得到新的工作表命名为原工作表名+页码数
      *
-     * @return the name of copy worksheet
+     * @return 复制工作表的表名
      */
     protected String getCopySheetName() {
         int sub = copyCount;
@@ -1160,6 +1220,11 @@ public abstract class Sheet implements Cloneable, Storable {
         return _name + " (" + (sub) + ")";
     }
 
+    /**
+     * 深拷贝当前工作表，分页时使用
+     *
+     * @return 当前工作表的副本
+     */
     @Override
     public Sheet clone() {
         Sheet copy = null;
@@ -1223,19 +1288,19 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Check the header information is exist
+     * 是否包含表头
      *
-     * @return true if exist
+     * @return true: 已收集表头
      */
     public boolean hasHeaderColumns() {
         return columns != null && columns.length > 0;
     }
 
     /**
-     * Int conversion to column string number.
-     * The max column on sheet is {@code 16_384} after office 2007 and {@code 256} in office 2003
+     * 列下标转为Excel列标识，Excel列标识由大写字母{@code A-Z}组合，{@code Z}后为{@code AA}如此循环，最大下标{@code XFD}
+     *
      * <blockquote><pre>
-     * int    | column number
+     * 数字   | Excel列
      * -------|---------
      * 1      | A
      * 10     | J
@@ -1245,8 +1310,8 @@ public abstract class Sheet implements Cloneable, Storable {
      * 53     | BA
      * 16_384 | XFD
      * </pre></blockquote>
-     * @param n the column number
-     * @return column string
+     * @param n 列下标
+     * @return Excel列标识
      */
     public static char[] int2Col(int n) {
         char[] c;
@@ -1310,9 +1375,9 @@ public abstract class Sheet implements Cloneable, Storable {
 //    }
 
     /**
-     * Settings nonHeader property
+     * 忽略表头，调用此方法后表头将不会输出到Excel中，注意这里不是隐藏
      *
-     * @return current Worksheet
+     * @return 当前工作表
      */
     public Sheet ignoreHeader() {
         this.nonHeader = 1;
@@ -1320,29 +1385,29 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Returns the nonHeader value.
+     * 获取忽略表头标识
      *
-     * @return -1, 0, 1 means not-set, include header, exclude header
+     * @return -1 未设置, 0 输出表头, 1 忽略表头
      */
     public int getNonHeader() {
         return nonHeader;
     }
 
     /**
-     * The Worksheet row limit
+     * 获取工作表数据行上限，超过上限时触发分页，默认情况下此值由各输出协议决定
      *
-     * @return the limit
+     * @return 数据行上限
      */
     protected int getRowLimit() {
         return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1);
     }
 
     /**
-     * Append extend property
+     * 添加扩展参数，key存在时覆盖原值
      *
-     * @param key key with which the specified value is to be associated
-     * @param value value to be associated with the specified key
-     * @return current Worksheet
+     * @param key 扩展参数Key
+     * @param value 值
+     * @return 当前工作表
      */
     public Sheet putExtProp(String key, Object value) {
         extProp.put(key, value);
@@ -1350,13 +1415,11 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * If the specified key is not already associated with a value (or is mapped
-     * to {@code null}) associates it with the given value and returns
-     * {@code null}, else returns the current value.
+     * 添加扩展参数，如果key不存在则添加，存在时忽略
      *
-     * @param key key with which the specified value is to be associated
-     * @param value value to be associated with the specified key
-     * @return current Worksheet
+     * @param key 扩展参数Key
+     * @param value 值
+     * @return 当前工作表
      */
     public Sheet putExtPropIfAbsent(String key, Object value) {
         extProp.putIfAbsent(key, value);
@@ -1364,38 +1427,39 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Copies all of the mappings from the specified map to extend properties
+     * 批量添加扩展参数，key存在时覆盖原值
      *
-     * @param m mappings to be stored in this map
-     * @return current Worksheet
+     * @param m 扩展参数
+     * @return 当前工作表
      */
     public Sheet putAllExtProp(Map<String, Object> m) {
-        extProp.putAll(m);
+        if (m != null) extProp.putAll(m);
         return this;
     }
 
     /**
-     * Returns the value to which the specified key in extend property,
-     * or {@code null} if it contains no mapping for the key.
+     * 根据key获取扩展参数
      *
-     * @param key the key whose associated value is to be returned
-     * @return the extend property value
+     * @param key 扩展参数Key
+     * @return key对应的扩展参数，不存在时返回{@code null}
      */
     public Object getExtPropValue(String key) {
         return extProp.get(key);
     }
 
     /**
-     * Shallow copy all extend properties
+     * 获取所有扩展参数
      *
-     * @return all extend properties
+     * <p>注意：对返回值进行修改可能会影响原始值，添加/删除无影响</p>
+     *
+     * @return 扩展参数
      */
     public Map<String, Object> getExtPropAsMap() {
         return new HashMap<>(extProp);
     }
 
     /**
-     * Mark ext-properties bit
+     * 标记扩展参数
      */
     protected void markExtProp() {
         // Mark Freeze Panes
@@ -1407,7 +1471,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Reverse and fill Header column
+     * 反转表头
      */
     protected void reverseHeadColumn() {
         if (!headerReady) this.columns = getHeaderColumns();
@@ -1458,7 +1522,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * Merge cells if
+     *合并表头
      */
     protected void mergeHeaderCellsIfEquals() {
         int x = columns.length, y = x > 0 ? columns[0].subColumnSize() : 0, n = x * y;
@@ -1568,11 +1632,8 @@ public abstract class Sheet implements Cloneable, Storable {
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     /**
-     * Each row-block is multiplexed and will be called to reset
-     * the data when a row-block is completely written.
-     * Call the {@link #getRowBlockSize()} method to get
-     * the row-block size, call the {@link ICellValueAndStyle#reset(Row, Cell, Object, org.ttzero.excel.entity.Column)}
-     * method to set value and styles.
+     * 你需要覆写本方法获取行数据并将Java对象或自定义行数据通过{@link ICellValueAndStyle#reset}转换器将数据转换为输出协议允许的结构，
+     * {@code ICellValueAndStyle#reset}方法除转换数据外还添单元格样式
      */
     protected abstract void resetBlockData();
 }

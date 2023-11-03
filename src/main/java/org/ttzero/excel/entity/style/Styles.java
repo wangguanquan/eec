@@ -189,30 +189,79 @@ public class Styles implements Storable {
         return self;
     }
 
+    /**
+     * 修改“边框”样式
+     *
+     * @param style 原样式值
+     * @param newBorder 新“边框”样式
+     * @return 新样式值
+     */
     public int modifyBorder(int style, Border newBorder) {
         return Styles.clearBorder(style) | addBorder(newBorder);
     }
 
+    /**
+     * 修改“格式化”样式
+     *
+     * @param style 原样式值
+     * @param newNumFmt 新“格式化”样式
+     * @return 新样式值
+     */
     public int modifyNumFmt(int style, NumFmt newNumFmt) {
         return Styles.clearNumFmt(style) | addNumFmt(newNumFmt);
     }
 
+    /**
+     * 修改"自动换行"样式
+     *
+     * @param style 原样式值
+     * @param newWrapText true: 自动换行
+     * @return 新样式值
+     */
     public int modifyWrapText(int style, boolean newWrapText) {
         return newWrapText ? style | 1 : Styles.clearWrapText(style);
     }
 
+    /**
+     * 修改“垂直对齐”样式
+     *
+     * @param style 原样式值
+     * @param newVertical 新“垂直对齐”样式，必须使用{@link Verticals}定义的静态值
+     * @return 新样式值
+     */
     public int modifyVertical(int style, int newVertical) {
         return Styles.clearVertical(style) | newVertical;
     }
 
+    /**
+     * 修改“水平对齐”样式
+     *
+     * @param style 原样式值
+     * @param newHorizontal 新“水平对齐”样式，必须使用{@link Horizontals}定义的静态值
+     * @return 新样式值
+     */
     public int modifyHorizontal(int style, int newHorizontal) {
         return Styles.clearHorizontal(style) | newHorizontal;
     }
 
+    /**
+     * 修改“填充”样式
+     *
+     * @param style 原样式值
+     * @param newFill 新“填充”样式
+     * @return 新样式值
+     */
     public int modifyFill(int style, Fill newFill) {
         return Styles.clearFill(style) | addFill(newFill);
     }
 
+    /**
+     * 修改“字体”样式
+     *
+     * @param style 原样式值
+     * @param newFont 新“字体”样式
+     * @return 新样式值
+     */
     public int modifyFont(int style, Font newFont) {
         return Styles.clearFont(style) | addFont(newFont);
     }

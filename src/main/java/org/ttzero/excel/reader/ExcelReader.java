@@ -74,26 +74,35 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * Excel Reader tools
- * <p>
- * A streaming operation chain, using cursor control, the cursor
- * will only move forward, so you cannot repeatedly operate the
- * same Sheet stream. If you need to read the data of a worksheet
- * multiple times please call the {@link Sheet#reset} method.
- * <p>
- * The internal Row object of the same Sheet is memory shared,
- * so don't directly convert Stream&lt;Row&gt; to a {@code Collection}.
- * You should first consider using the try-with-resource block to use Reader
- * or manually close the ExcelReader.
+ * Excel读取工具
+ *
+ * <p>{@code ExcelReader}提供一组静态的{@link #read}方法，支持Iterator和Stream+Lambda读取xls和xlsx文件，
+ * 你可以像操作集合类一样操作Excel。通过{@link Row#to}和{@link Row#too}方法可以将行数据转为指定对象，
+ * 还可以使用{@link Row#toMap}方法转为LinkedHashMap，同时Row也提供更基础的类似于JDBC方式获取单元格的值。</p>
+ *
+ * <p>使用{@code ExcelReader}读取文件时不需要提前判断文件格式，Reader已内置类型判断并加载相应的解析器，
+ * ExcelReader默认只能解析xlsx格式，如果需要解析xls则必须将{@code eec-e3-support}添加到classpath，它包含一个
+ * {@code BIFF8Reader}用于解析BIFF8编码的xls格式文件。为保证功能统一几乎所有接口都由eec定义由support实现，
+ * 大多数情况下ExcelReader和BIFF8Reader提供相同的功能，所以用{@code ExcelReader}读取excel文件时只需要一份代码</p>
+ *
+ * <p>读取过程中可能会产生一些临时文件，比如SharedString索引等临时文件，所以读取结束后需要关闭流并删除临时文件，
+ * 建议使用{@code try...with...resource}块</p>
+ *
+ * <p>一个典型的读取示例如下：</p>
  * <blockquote><pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
- *     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
+ *     // 读取所有工作表并打印
+ *     reader.sheets().flatMap(Sheet::rows)
+ *         .forEach(System.out::println);
  * } catch (IOException e) { }</pre></blockquote>
  *
  * @author guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements Closeable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
+    /**
+     * LOGGER
+     */
+    protected static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
     /**
      * Specify {@link ExcelReader} only parse cell value (Default)
@@ -694,7 +703,7 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Create a read sheet
+     * 通过OPTION创建相应工作表
      *
      * @param option the reader option.
      * @return Sheet extends XMLSheet
@@ -712,10 +721,10 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Check the documents type
+     * 判断文件格式，读取少量文件头字节来判断是否为BIFF和ZIP的文件签名
      *
-     * @param path documents path
-     * @return enum of ExcelType
+     * @param path 临时文件路径
+     * @return {@link ExcelType}枚举，非excel格式时返回{@link ExcelType#UNKNOWN}类型
      */
     public static ExcelType getType(Path path) {
         ExcelType type;
@@ -757,6 +766,12 @@ public class ExcelReader implements Closeable {
         return excelType;
     }
 
+    /**
+     * 解析{@code docProps/app.xml}和{@code docProps/core.xml}文件获取文件基础信息，
+     * 比如创建者、创建时间、分类等信息
+     *
+     * @return App信息
+     */
     protected AppInfo getGeneralInfo() {
         // load app.xml
         SAXReader reader = SAXReader.createDefault();
@@ -884,17 +899,17 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Cell range string convert to long
-     * 0-16: column number
-     * 17-48: row number
+     * 将单元格坐标转为long类型，Excel单元格坐标由列+行组成如A1, B2等，
+     * 转为long类型后第{@code 0-16}位为列号{@code 17-48}位为行号
+     *
      * <blockquote><pre>
-     * range string| long value
+     * 单元格坐标    | 转换后long值
      * ------------|------------
      * A1          | 65537
      * AA10        | 655387
      * </pre></blockquote>
-     * @param r the range string of cell
-     * @return long value
+     * @param r 单元格坐标
+     * @return 转换后的值
      */
     public static long cellRangeToLong(String r) {
         char[] values = r.toCharArray();
@@ -917,45 +932,61 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * List all pictures in excel
+     * 获取Excel包含的所有图片，{@link Drawings.Picture}对象包含工作表的单元格行列信息，最重要的是包含{@code localPath}属性，
+     * 它是图片的临时路径可以通过此路径复制图片
      *
-     * @return picture list or null if not exists.
+     * @return 图片数组，如果不存在图片则返回{@code null}
      */
     public List<Drawings.Picture> listPictures() {
         return drawings != null ? drawings.listPictures() : null;
     }
 
     /**
-     * Returns a global {@link Styles}
+     * 获取一个全局的样式对象 {@link Styles}
      *
-     * @return a style entry
+     * @return 全局样式对象
      */
     public Styles getStyles() {
         return styles;
     }
 
     /**
-     * 读取Zip包中的实体
+     * 从压缩包中获取一个压缩文件
      *
-     * @param name 实体名
+     * @param name 压缩文件路径，必须是一个完整的路径
      * @return 如果实体存在则返回 {@link ZipEntry} 否则返回{@code null}
      */
     public ZipEntry getEntry(String name) {
-        return getEntry(zipFile, name);
+        return getEntry(zipFile, toZipPath(name));
     }
 
     /**
-     * Find {@code ZipEntry} by name
+     * 从压缩包中获取一个压缩文件字节流
      *
-     * @param zipFile src zip file
-     * @param name entry name
-     * @return {@code ZipEntry} if exist, otherwise null
+     * @param name 压缩文件路径，必须是一个完整的路径
+     * @return 如果实体存在则返回该实体的{@code InputStream} 否则返回{@code null}
+     * @throws IOException if I/O error occur.
+     */
+    public InputStream getEntryStream(String name) throws IOException {
+        ZipEntry entry = getEntry(zipFile, toZipPath(name));
+        return entry != null ? zipFile.getInputStream(entry) : null;
+    }
+
+    /**
+     * 从压缩包中获取一个压缩文件，为了兼容windows和linux系统的路径会进行{@code '/'}和{@code '\\'}
+     * 两种分隔符匹配，如果路径无法匹配则遍历压缩包所有文件并忽略大小写匹配
+     *
+     * @param zipFile 压缩包
+     * @param name 压缩文件路径，必须是一个完整的路径
+     * @return 如果实体存在则返回 {@link ZipEntry} 否则返回{@code null}
      */
     public static ZipEntry getEntry(ZipFile zipFile, String name) {
         char c0 = name.charAt(0);
         if (c0 == '/' || c0 == '\\') name = name.substring(1);
         ZipEntry entry = zipFile.getEntry(name);
+        // 如果原始路径查无则将路径替换为windows路径
         if (entry == null) entry = zipFile.getEntry(name.replace('/', '\\'));
+        // 通过路径查无就遍历Zip包下所有资源忽略大小写匹配
         if (entry == null) {
             // Iterator entries
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -972,10 +1003,10 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Simple convert to zip path
+     * 将string转换为zip允许的路径，将相对路径的前缀去掉
      *
-     * @param path file path
-     * @return zip path
+     * @param path 实体路径
+     * @return zip允许的路径
      */
     public static String toZipPath(String path) {
         int i = 0;
