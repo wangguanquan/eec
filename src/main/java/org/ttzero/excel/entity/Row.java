@@ -19,6 +19,9 @@ package org.ttzero.excel.entity;
 import org.ttzero.excel.reader.Cell;
 
 /**
+ * 行数据，每个{@code Row}对象包含一组连续的{@link Cell}单元格，
+ * 它的设计与在Office中看到的结构完全一样
+ *
  * @author guanquan.wang at 2019-04-23 09:57
  */
 public class Row {
@@ -52,20 +55,20 @@ public class Row {
     }
 
     /**
-     * Malloc
+     * 分配指定大小的连续单元格
      *
-     * @param n size_t
-     * @return the cells of row
+     * @param n 单元格数量
+     * @return 单元格数组
      */
     public Cell[] malloc(int n) {
         return cells = new Cell[n];
     }
 
     /**
-     * Malloc and clear
+     * 分配指定大小的连续单元格并初始化
      *
-     * @param n size_t
-     * @return the cells of row
+     * @param n 单元格数量
+     * @return 单元格数组
      */
     public Cell[] calloc(int n) {
         malloc(n);
@@ -76,10 +79,11 @@ public class Row {
     }
 
     /**
-     * Resize and clear
+     * 比较并重分配连续{@code n}个单元格，此方法会比较传入的参数{@code n}与当前单元格数量比较，
+     * 当{@code n}大于当前数量时才进行重分配
      *
-     * @param n size_t
-     * @return the cells of row
+     * @param n 单元格数量
+     * @return 单元格数组
      */
     public Cell[] realloc(int n) {
         if (cells == null || cells.length < n) {
@@ -88,10 +92,21 @@ public class Row {
         return cells;
     }
 
+    /**
+     * 获取行高
+     *
+     * @return 行高
+     */
     public double getHeight() {
         return height;
     }
 
+    /**
+     * 设置行高
+     *
+     * @param height 行高
+     * @return 当前行
+     */
     public Row setHeight(double height) {
         this.height = height;
         return this;
