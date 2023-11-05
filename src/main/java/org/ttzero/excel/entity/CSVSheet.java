@@ -100,7 +100,7 @@ public class CSVSheet extends Sheet {
      * 实例化工作表并指定工作表名和csv文件字节流
      *
      * @param name 工作表名
-     * @param is csv文件字节流
+     * @param is   csv文件字节流
      * @throws IOException if I/O error occur.
      */
     public CSVSheet(String name, InputStream is) throws IOException {
@@ -123,7 +123,7 @@ public class CSVSheet extends Sheet {
     /**
      * 实例化工作表并指定工作表名和csv文件字符流
      *
-     * @param name 工作表名
+     * @param name   工作表名
      * @param reader csv文件字符流
      * @throws IOException if I/O error occur.
      */
