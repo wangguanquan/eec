@@ -17,42 +17,44 @@
 package org.ttzero.excel.entity;
 
 /**
+ * 空工作表，可用于占位，如果指定表头则会输出表头
+ *
  * @author guanquan.wang at 2018-01-29 16:05
  */
 public class EmptySheet extends Sheet {
 
     /**
-     * Constructor worksheet
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
     public EmptySheet() {
         super();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public EmptySheet(String name) {
         super(name);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public EmptySheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public EmptySheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
