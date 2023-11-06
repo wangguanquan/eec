@@ -48,9 +48,14 @@ import static org.ttzero.excel.reader.ExcelReader.toZipPath;
 
 /**
  * 读取xlsx格式Excel图片，解析{@code drawing.xml}和{@code cellimages.xml}，
- * 后者是WPS自定义的嵌入图片，内嵌图片是整个工作薄全局共享的所有无法不包含单元格信息，
- * 为了和Excel图片图片统一接口需要先解析工作表然后再和内嵌图片的ID进行映射
+ * 后者是WPS自定义的嵌入图片，内嵌图片是整个工作薄全局共享的所以无法不包含单元格信息，
+ * 为了和Excel图片图片统一接口需要先解析工作表然后再和内嵌图片的ID进行映射，由于会对工作表
+ * 进行两次读取所以对性能有一定影响，行数小于{@code 1}万影响不大可放心使用，当然你也可以直接
+ * 调用本类的{@link #listCellImages(ZipFile, ZipEntry)}方法获取图片ID映射，然后在读取
+ * 工作表时自己进行ID和单元格行列映射，这样做只会进行一次工作表读不会影响正常的读取性能。
  *
+ * <p>参考文档:</p>
+ * <p><a href="https://github.com/wangguanquan/eec/issues/363">解析POI内嵌图片</a></p>
  * @author guanquan.wang at 2021-04-24 16:18
  */
 public class XMLDrawings implements Drawings {
