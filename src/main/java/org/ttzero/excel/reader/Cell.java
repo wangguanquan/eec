@@ -102,7 +102,7 @@ public class Cell {
     /**
      * Shared calc id
      */
-    public int si;
+    public int si = -1;
     /**
      * Has formula
      */
