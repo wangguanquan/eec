@@ -23,6 +23,8 @@ import org.dom4j.Element;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
@@ -33,7 +35,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -41,32 +47,38 @@ import static org.ttzero.excel.reader.ExcelReader.getEntry;
 import static org.ttzero.excel.reader.ExcelReader.toZipPath;
 
 /**
- * Drawings resources
+ * 读取xlsx格式Excel图片，解析{@code drawing.xml}和{@code cellimages.xml}，
+ * 后者是WPS自定义的嵌入图片，内嵌图片是整个工作薄全局共享的所有无法不包含单元格信息，
+ * 为了和Excel图片图片统一接口需要先解析工作表然后再和内嵌图片的ID进行映射
  *
  * @author guanquan.wang at 2021-04-24 16:18
  */
 public class XMLDrawings implements Drawings {
     /**
-     * Root path
+     * LOGGER
      */
-    private final ExcelReader excelReader;
+    protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     /**
-     * Source
+     * ExcelReader
      */
-    private List<Drawings.Picture> pictures;
+    protected final ExcelReader excelReader;
     /**
-     * Mark parse flag
+     * 临时保存所有工作表包含的图片
      */
-    private boolean parsed;
+    protected List<Drawings.Picture> pictures;
+    /**
+     * 是否已解析，保证数据只被解析一次
+     */
+    protected boolean parsed;
 
     public XMLDrawings(ExcelReader reader) {
         this.excelReader = reader;
     }
 
     /**
-     * List all picture in excel
+     * 列出所有工作表包含的图片
      *
-     * @return list of {@link Drawings.Picture}, or null if not exists.
+     * @return 如果存在图片时返回 {@link Picture}数组, 不存在图片返回{@code null}.
      */
     @Override
     public List<Drawings.Picture> listPictures() {
@@ -74,9 +86,9 @@ public class XMLDrawings implements Drawings {
     }
 
     /**
-     * Parse picture
+     * 解析图片
      *
-     * @return list of {@link Drawings.Picture}
+     * @return 列出所有图片 {@link Picture}
      */
     protected List<Drawings.Picture> parse() {
         parsed = true;
@@ -85,6 +97,12 @@ public class XMLDrawings implements Drawings {
 
         ZipFile zipFile = excelReader.zipFile;
         if (zipFile == null) return null;
+
+        // 兼容读取WPS内嵌图片cellimages.xml
+        ZipEntry cellImagesEntry = getEntry(zipFile, "xl/cellimages.xml");
+        // 内嵌图片临时缓存 ID: 临时路径
+        Map<String, Path> cellImagesMapper = cellImagesEntry != null ? listCellImages(zipFile, cellImagesEntry) : null;
+        boolean hasCellImages = cellImagesMapper != null && !cellImagesMapper.isEmpty();
 
         SAXReader reader = SAXReader.createDefault();
         Document document;
@@ -134,8 +152,8 @@ public class XMLDrawings implements Drawings {
                         Path targetPath = imagesPath.resolve(target);
                         Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
                         picture.localPath = targetPath;
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
+                    } catch (IOException ex) {
+                        LOGGER.error("Copy image into {} failed", target, ex);
                     }
 
                     // Drawings
@@ -147,6 +165,15 @@ public class XMLDrawings implements Drawings {
                             pictures.add(picture);
                         }
                     }
+                }
+            }
+
+            // WPS内嵌图片兼容处理
+            if (hasCellImages) {
+                try {
+                    pictures.addAll(quickFindCellImages(sheet, cellImagesMapper));
+                } catch (IOException e) {
+                    LOGGER.error("Parse build-in cell-images failed", e);
                 }
             }
         }
@@ -259,19 +286,120 @@ public class XMLDrawings implements Drawings {
         return new int[] { r, c };
     }
 
-    public List<Picture> getPictures() {
+    /**
+     * 拉取WPS单元格内嵌图片
+     *
+     * @return ID:图片本地路径
+     */
+    public Map<String, Path> listCellImages(ZipFile zipFile, ZipEntry entry) {
+        SAXReader reader = SAXReader.createDefault();
+
+        ZipEntry refEntry = getEntry(zipFile, "xl/_rels/cellimages.xml.rels");
+        if (refEntry == null) return Collections.emptyMap();
+        Document document;
+        try {
+            document = reader.read(zipFile.getInputStream(refEntry));
+        } catch (DocumentException | IOException e) {
+            LOGGER.warn("Read [xl/_rels/cellimages.xml.rels] failed.", e);
+            return null;
+        }
+        List<Element> list = document.getRootElement().elements();
+        Relationship[] rels = new Relationship[list.size()];
+        int i = 0;
+        for (Element e : list) {
+            rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"));
+        }
+        RelManager relManager = RelManager.of(rels);
+
+        Element cellImages;
+        try {
+            cellImages = reader.read(zipFile.getInputStream(entry)).getRootElement();
+        } catch (IOException | DocumentException e) {
+            LOGGER.warn("Read [xl/cellimages.xml] failed.", e);
+            return null;
+        }
+        List<Element> images = cellImages.elements();
+        Namespace xdr = cellImages.getNamespaceForPrefix("xdr"), a = cellImages.getNamespaceForPrefix("a");
+        // 图片临时存放的位置
+        if (excelReader.tempDir == null) {
+            try {
+                excelReader.tempDir = FileUtil.mktmp("eec-");
+            } catch (IOException e) {
+                throw new ExcelReadException("创建临时文件夹失败.", e);
+            }
+        }
+        Map<String, Path> cellImageMapper = new HashMap<>(images.size());
+        for (Element e : images) {
+            Element pic = e.element(QName.get("pic", xdr));
+            // Not a picture
+            if (pic == null) continue;
+
+            Element nvPicPr = pic.element(QName.get("nvPicPr", xdr));
+            if (nvPicPr == null) continue;
+            Element cNvPr = nvPicPr.element(QName.get("cNvPr", xdr));
+            if (cNvPr == null) continue;
+            String name = cNvPr.attributeValue("name");
+
+            Element blipFill = pic.element(QName.get("blipFill", xdr));
+            if (blipFill == null) continue;
+
+            Element blip = blipFill.element(QName.get("blip", a));
+            if (blip == null) continue;
+
+            Namespace r = blip.getNamespaceForPrefix("r");
+            String embed = blip.attributeValue(QName.get("embed", r));
+            Relationship rel = relManager.getById(embed);
+            if (r != null && Const.Relationship.IMAGE.equals(rel.getType())) {
+                Path localPath = null;
+                // 复制图片到临时文件夹
+                entry = getEntry(zipFile, "xl/" + rel.getTarget());
+                if (entry != null) {
+                    try {
+                        Path targetPath = excelReader.tempDir.resolve(rel.getTarget());
+                        if (!Files.exists(targetPath.getParent())) {
+                            Files.createDirectories(targetPath);
+                        }
+                        Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                        localPath = targetPath;
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                    cellImageMapper.put(name, localPath);
+                }
+
+            }
+        }
+        return cellImageMapper;
+    }
+
+    /**
+     * 快整查询内嵌图片在工作表中的位置
+     *
+     * @param sheet 工作表
+     * @param cellImageMapper 图片ID映射关系
+     * @return 图片列表
+     * @throws IOException if I/O error occur
+     */
+    protected List<Picture> quickFindCellImages(Sheet sheet, Map<String, Path> cellImageMapper) throws IOException {
+        List<Picture> pictures = new ArrayList<>();
+        String formula;
+        // 转为CalcSheet工作表解析公式，解析类似<f>_xlfn.DISPIMG("图片ID",1)</f>，取出图片ID与Mapper进行匹配
+        for (Iterator<Row> iter = sheet.asCalcSheet().load().iterator(); iter.hasNext(); ) {
+            Row row = iter.next();
+            for (int i = row.getFirstColumnIndex(), len = row.getLastColumnIndex(); i < len; i++) {
+                if ((formula = row.getFormula(i)) != null && formula.startsWith("_xlfn.DISPIMG(\"")) {
+                    formula = formula.substring(15, formula.lastIndexOf('"'));
+                    Path path = cellImageMapper.get(formula);
+                    if (path != null) {
+                        Picture pic = new Picture();
+                        pic.sheet = sheet;
+                        pic.localPath = path;
+                        pic.dimension = new Dimension(row.getRowNum(), (short) (i + 1), row.getRowNum(), (short) (i + 1));
+                        pictures.add(pic);
+                    }
+                }
+            }
+        }
         return pictures;
-    }
-
-    public void setPictures(List<Picture> pictures) {
-        this.pictures = pictures;
-    }
-
-    public boolean isParsed() {
-        return parsed;
-    }
-
-    public void setParsed(boolean parsed) {
-        this.parsed = parsed;
     }
 }

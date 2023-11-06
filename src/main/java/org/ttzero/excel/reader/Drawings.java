@@ -24,23 +24,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Drawings resources
+ * 读取Excel图片
  *
  * @author guanquan.wang at 2021-04-24 19:53
  */
 public interface Drawings {
     /**
-     * List all picture in excel
+     * 列出所有工作表包含的图片
      *
-     * @return list of {@link Picture}, or null if not exists.
+     * @return 如果存在图片时返回 {@link Picture}数组, 不存在图片返回{@code null}.
      */
     List<Picture> listPictures();
 
     /**
-     * List all picture in specify worksheet
+     * 列出指定工作表包含的图片
      *
-     * @param sheet Specifies witch {@code Worksheet} to get the picture from
-     * @return list of {@link Picture}, or null if not exists.
+     * @param sheet 指定工作表
+     * @return 如果存在图片时返回 {@link Picture}数组, 不存在图片返回{@code null}.
      */
     default List<Picture> listPictures(final Sheet sheet) {
         List<Picture> pictures = listPictures();
@@ -50,23 +50,23 @@ public interface Drawings {
 
     class Picture {
         /**
-         * Specify the {@link Sheet} which contains the picture
+         * 图片所在的工作表 {@link Sheet}
          */
         Sheet sheet;
         /**
-         * Dimension of picture
+         * 图片在工作表中的位置，记录图片左上角和右下角的行列坐标
          */
         Dimension dimension;
         /**
-         * The local temporary path
+         * 图片的临时路径
          */
         Path localPath;
         /**
-         * If it is an online picture, the {@code srcUrl} is the source address of the picture
+         * 如果是网络图片，则此属性保留网络图片的原始链接
          */
         String srcUrl;
         /**
-         * Is background picture
+         * 是否为背景图片，水印图片
          */
         boolean background;
 
