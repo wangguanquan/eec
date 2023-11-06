@@ -447,14 +447,14 @@ class XMLCalcRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     private void parseCalcFunc(Cell cell) {
-        int _cursor = cursor, a = getF(cell);
+        int a = getF(cell); // _cursor = cursor,
         // Reset the formula flag
-        cell.f = a < cursor;
-        // Tag <f> Not Found
-        if (a == cursor) {
-            cursor = _cursor;
-            return;
-        }
+        cell.f = a < cursor || cell.si >= 0;
+//        // Tag <f> Not Found
+//        if (a == cursor) {
+//            cursor = _cursor;
+//            return;
+//        }
         // Inner text
         if (a < cursor) {
             cell.fv = escape(cb, a, cursor);
