@@ -50,10 +50,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.Print.print;
-import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
-import static org.ttzero.excel.reader.ExcelReader.VALUE_AND_CALC;
 import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
@@ -133,7 +131,7 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assert e.equals(o);
+                    assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
                 }
             }
 
@@ -154,7 +152,7 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assert e.equals(o);
+                    assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
                 }
             }
         }
@@ -184,7 +182,7 @@ public class ExcelReaderTest {
                             case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
-                        assert e.equals(o);
+                        assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
                     }
                 }
             } else {
@@ -335,26 +333,18 @@ public class ExcelReaderTest {
 
     @Test public void testFormula() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-            // Read value
-            reader.sheets().flatMap(Sheet::rows).forEach(Print::println);
+            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+                Map<Long, String> formulasMap = FormulasLoader.load(testResourceRoot().resolve("expect/formula$" + sheet.getName() + "$formulas.txt"));
+                Iterator<Row> it = sheet.iterator();
+                while (it.hasNext()) {
+                    Row row = it.next();
 
-            if (reader.hasFormula()) {
-                // Reset and parse formula
-                reader.parseFormula().sheets().flatMap(sheet -> {
-                    println("----------------" + sheet.getName() + "----------------");
-                    return sheet.dataRows();
-                }).forEach(row -> {
-                    for (int i = row.fc; i < row.lc; i++) {
-                        if (row.hasFormula(i)) {
-                            print(int2Col(i + 1));
-                            print(row.getRowNum());
-                            print("=");
-                            print(row.getFormula(i));
-                            println();
-                        }
+                    for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                        String formula = formulasMap.get(((long) row.getRowNum()) << 16 | (start + 1));
+                        assert formula == null || formula.equals(row.getFormula(start));
                     }
-                });
-            }
+                }
+            });
         }
     }
 
@@ -557,15 +547,18 @@ public class ExcelReaderTest {
 
     private void testFormulaReader(Path path) throws IOException {
         println("----------" + path.getFileName() + "----------");
-        try (ExcelReader reader = ExcelReader.read(path, VALUE_AND_CALC)) {
-            // Read formula
-            reader.sheets().flatMap(Sheet::rows).forEach(row -> {
-                for (int i = row.fc; i < row.lc; i++) {
-                    if (row.hasFormula(i)) {
-                        print(new Dimension(row.getRowNum(), (short) (i + 1)));
-                        print(": ");
-                        print(row.getFormula(i));
-                        println('|');
+        try (ExcelReader reader = ExcelReader.read(path)) {
+            String fileName = path.getFileName().toString();
+            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+                Path expectPath = testResourceRoot().resolve("expect/" + fileName.substring(0, fileName.length() - 5) + "$" + sheet.getName() + "$formulas.txt");
+                Map<Long, String> formulasMap = FormulasLoader.load(expectPath);
+                Iterator<Row> it = sheet.iterator();
+                while (it.hasNext()) {
+                    Row row = it.next();
+
+                    for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                        String formula = formulasMap.get(((long) row.getRowNum()) << 16 | (start + 1));
+                        assert formula == null || formula.equals(row.getFormula(start));
                     }
                 }
             });
