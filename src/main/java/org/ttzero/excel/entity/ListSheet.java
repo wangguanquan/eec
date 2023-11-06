@@ -57,34 +57,48 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * List is the most important data source, you can pass all
- * the data at a time, or customize the worksheet to extends
- * the {@code ListSheet}, and then override the {@link #more}
- * method to achieve segmented loading of data. The {@link #more}
- * method returns NULL or an empty array to complete the current
- * worksheet write
+ * 对象数组工作表，内部使用{@code List<T>}做数据源，所以它是应用最广泛的一种工作表。
  *
- * @see ListMapSheet
+ * <p></p>
  *
  * @author guanquan.wang at 2018-01-26 14:48
+ * @see ListMapSheet
  */
 public class ListSheet<T> extends Sheet {
-    protected List<T> data;
-    protected int start, end;
-    protected boolean eof;
-    private int size;
-    protected Class<?> tClazz;
-
     /**
-     * The row styleProcessor
+     * 临时存放数据
+     */
+    protected List<T> data;
+    /**
+     * 控制读取开始和结束下标
+     */
+    protected int start, end;
+    /**
+     * 结束标记{@code EOF}
+     */
+    protected boolean eof;
+    /**
+     * 已写入数据大小
+     */
+    private int size;
+    /**
+     * 泛型&lt;T&gt;的实际类型
+     */
+    protected Class<?> tClazz;
+    /**
+     * 行级动态样式处理器
      */
     protected StyleProcessor<T> styleProcessor;
+    /**
+     * 强制导出，忽略安全限制全字段导出，确认需求后谨慎使用
+     */
+    protected int forceExport;
 
     /**
-     * Setting a row style processor
+     * 设置行级动态样式处理器，作用于整行优先级高于单元格动态样式处理器
      *
-     * @param styleProcessor a row style processor
-     * @return current worksheet
+     * @param styleProcessor 行级动态样式处理器
+     * @return 当前工作表
      */
     public Sheet setStyleProcessor(StyleProcessor<T> styleProcessor) {
         this.styleProcessor = styleProcessor;
@@ -93,9 +107,9 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the row style processor
+     * 获取当前工作表的行级动态样式处理器，如果未设置则从扩展参数中查找
      *
-     * @return {@link StyleProcessor}
+     * @return 行级动态样式处理器
      */
     public StyleProcessor<T> getStyleProcessor() {
         if (styleProcessor != null) return styleProcessor;
@@ -104,48 +118,47 @@ public class ListSheet<T> extends Sheet {
         return this.styleProcessor = fromExtProp;
     }
 
-
     /**
-     * Constructor worksheet
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
     public ListSheet() {
         super();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public ListSheet(String name) {
         super(name);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定表头信息
      *
-     * @param columns the header info
+     * @param columns 表头信息
      */
     public ListSheet(final Column... columns) {
         super(columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public ListSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -217,9 +230,9 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Specify custom class
+     * 指定泛型{@code T}的实际类型，不指定时默认由反射或数组中第一个对象类型而定
      *
-     * @param tClazz Object types that need to be exported
+     * @param tClazz 泛型{@code T}的实际类型
      * @return current sheet
      */
     public Sheet setClass(Class<?> tClazz) {
@@ -231,16 +244,17 @@ public class ListSheet<T> extends Sheet {
      * Setting the worksheet data
      *
      * @param data the body data
-     * @return worksheet
+     * @return 当前工作表
      */
     public ListSheet<T> setData(final List<T> data) {
-        this.data = data;
+        if (data == null) return this;
+        this.data = new ArrayList<>(data);
         if (!headerReady && workbook != null) {
             getAndSortHeaderColumns();
         }
         // Has data and worksheet can write
         // Paging in advance
-        if (data != null && sheetWriter != null) {
+        if (sheetWriter != null) {
             paging();
         }
         return this;
@@ -292,9 +306,8 @@ public class ListSheet<T> extends Sheet {
         super.close();
     }
 
-
     /**
-     * Reset the row-block data
+     * 重置{@code RowBlock}行块数据
      */
     @Override
     protected void resetBlockData() {
@@ -346,9 +359,7 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Call this method to get more data when the data length
-     * less than the row-block size until there is no more data
-     * or more than the row limit
+     * 加载数据，内部调用{@link #more}获取数据并判断是否需要分页，超过工作表行上限则调用{@link #paging}分页
      */
     protected void append() {
         int rbs = rowBlock.capacity();
@@ -390,7 +401,12 @@ public class ListSheet<T> extends Sheet {
         } else if (start > 0) data.clear();
     }
 
-    // Returns the reflect <T> type
+    /**
+     * 获取泛型T的实际类型，优先使用{@link Class#getGenericSuperclass}方法获取，如果有子类指定{@code T}类型则可以获取，
+     * 否则将使用数组中第一条数据做为泛型的具体类型
+     *
+     * @return T的实际类型，无法获取具体类型时返回{@code null}
+     */
     protected Class<?> getTClass() {
         Class<?> clazz = tClazz;
         if (clazz != null) return clazz;
@@ -411,24 +427,14 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Get the first object of the object array witch is not NULL,
-     * reflect all declared fields, and then do the following steps
-     * <p>
-     * step 1. If the method has {@link ExcelColumn} annotation, the value of
-     * this annotation is used as the column name.
-     * <p>
-     * step 2. If the {@link ExcelColumn} annotation has no value or empty value,
-     * the field name is used as the column name.
-     * <p>
-     * step 3. If the field has {@link ExcelColumn} annotation, the value of
-     * this annotation is used as the column name.
-     * <p>
-     * step 4. Skip this Field if it has a {@link IgnoreExport} annotation,
-     * or the field which has not {@link ExcelColumn} annotation.
-     * <p>
-     * The column order is the same as the order in declared fields.
+     * 初始化表头信息，如果未指定{@code Columns}则默认反射{@code T}及其父类的所有字段，
+     * 并采集所有标记有{@link ExcelColumn}注解的字段和方法（这里限制无参数且仅有一个返回值的方法），
+     * {@code Column}顺序由{@code colIndex}决定，如果没有{@code colIndex}则按字段和方法在
+     * Java Bean中的定义顺序而定。
      *
-     * @return the column array length
+     * <p>如果有指定{@code Columns}则忽略排序仅将{@link Column#key}与字段和方法进行绑定方便后续取值</p>
+     *
+     * @return 表头列个数
      */
     protected int init() {
         Class<?> clazz = getTClass();
@@ -437,7 +443,7 @@ public class ListSheet<T> extends Sheet {
         Map<String, Method> tmp = new HashMap<>();
         try {
             PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                    .getPropertyDescriptors();
+                .getPropertyDescriptors();
             for (PropertyDescriptor pd : propertyDescriptors) {
                 Method method = pd.getReadMethod();
                 if (method != null) tmp.put(pd.getName(), method);
@@ -524,7 +530,7 @@ public class ListSheet<T> extends Sheet {
 
             // No column to write
             if (list.isEmpty()) {
-                // Simple type
+                // 如果没有列可写则判断是否为简单类型，简单类型可直接输出
                 if (cellValueAndStyle.isAllowDirectOutput(clazz)) {
                     list.add(new EntryColumn().setClazz(clazz));
                 } else {
@@ -610,12 +616,10 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Create column from {@link ExcelColumn} annotation
-     * <p>
-     * Override the method to extend custom comments
+     * 创建列信息，默认解析&#x40;Comment注解，支持自定义注解
      *
-     * @param ao {@link AccessibleObject} witch defined the {@code ExcelColumn} annotation
-     * @return the Worksheet's {@link EntryColumn} information
+     * @param ao {@link AccessibleObject} 实体中的属性或方法
+     * @return 单列表头信息
      */
     protected EntryColumn createColumn(AccessibleObject ao) {
         // Filter all ignore column
@@ -623,7 +627,7 @@ public class ListSheet<T> extends Sheet {
 
         ao.setAccessible(true);
         // Style Design
-        StyleProcessor<?> sp = getDesignStyle(ao.getAnnotation(StyleDesign.class));
+        StyleProcessor<?> sp = getDesignStyle(ao);
 
         EntryColumn root = null;
         // Support multi header columns
@@ -666,10 +670,10 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Create column by {@code ExcelColumn} annotation
+     * 解析&#x40;ExcelColumn注解并创建表头
      *
-     * @param ec {@code ExcelColumn} annotation
-     * @return {@link Column} or null if annotation is null
+     * @param ec {@code ExcelColumn}注解
+     * @return 单列表头信息
      */
     protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
         if (ec == null) return null;
@@ -688,17 +692,17 @@ public class ListSheet<T> extends Sheet {
         if (ec.hide()) column.hide();
         // Cell max width
         if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
-//        // Cell write type
-//        if (ec.colType() == ColType.MEDIA) column.writeAsMedia();
         return column;
     }
 
     /**
-     * Build header style
+     * 构建样式，默认解析{@link HeaderStyle}注解
      *
-     * @param main the getter method
-     * @param sub the defined field
-     * @param column the header column
+     * <p>优选从方法上获取注解，如果没有则从field中获取</p>
+     *
+     * @param main   Method
+     * @param sub    Field
+     * @param column 需要添加样式的表头
      */
     protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderStyle hs = null;
@@ -714,11 +718,13 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Build header comment
+     * 构建“批注”，默认解析{@link HeaderComment}注解，支持自定义注解
      *
-     * @param main the getter method
-     * @param sub the defined field
-     * @param column the header column
+     * <p>优选从方法上获取注解，如果没有则从field中获取</p>
+     *
+     * @param main   Method
+     * @param sub    Field
+     * @param column 需要添加批注的表头
      */
     protected void buildHeaderComment(AccessibleObject main, AccessibleObject sub, Column column) {
         HeaderComment comment = null;
@@ -742,9 +748,9 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Merge Header Style defined on Entry Class
+     * 设置全局设置
      *
-     * @param clazz  Class of &lt;T&gt;
+     * @param clazz Class of &lt;T&gt;
      */
     protected void mergeGlobalSetting(Class<?> clazz) {
         HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
@@ -760,7 +766,7 @@ public class ListSheet<T> extends Sheet {
         // Parse the global style processor
         if (styleProcessor == null) {
             @SuppressWarnings({"unchecked", "retype"})
-            StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz.getDeclaredAnnotation(StyleDesign.class));
+            StyleProcessor<T> styleProcessor = (StyleProcessor<T>) getDesignStyle(clazz);
             if (styleProcessor != null) setStyleProcessor(styleProcessor);
         }
 
@@ -769,10 +775,32 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Set custom styleProcessor for declarations on Entry Class
+     * 读取类上的样式处理器注解，默认解析{@link StyleDesign}注解，支持自定义注解
      *
-     * @param styleDesign {@link StyleDesign}
-     * @return a style processor
+     * @param clazz Class of &lt;T&gt;
+     * @return 样式处理器或 {@code null}
+     */
+    protected StyleProcessor<?> getDesignStyle(Class<?> clazz) {
+        StyleDesign styleDesign = clazz.getDeclaredAnnotation(StyleDesign.class);
+        return getDesignStyle(styleDesign);
+    }
+
+    /**
+     * 读取单个字段或者方法上的样式处理器注解，默认解析{@link StyleDesign}注解，支持自定义注解
+     *
+     * @param ao 字段{@code Field}或方法{@code Method}
+     * @return 样式处理器或 {@code null}
+     */
+    protected StyleProcessor<?> getDesignStyle(AccessibleObject ao) {
+        StyleDesign styleDesign = ao.getAnnotation(StyleDesign.class);
+        return getDesignStyle(styleDesign);
+    }
+
+    /**
+     * 读取样式处理器
+     *
+     * @param styleDesign 默认{@link StyleDesign}
+     * @return 样式处理器
      */
     protected StyleProcessor<?> getDesignStyle(StyleDesign styleDesign) {
         if (styleDesign != null && !StyleProcessor.None.class.isAssignableFrom(styleDesign.using())) {
@@ -786,21 +814,21 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Ignore some columns, override this method to add custom filtering
+     * 导出时忽略某些字段或方法，默认解析{@link IgnoreExport}注解，支持自定义注解
      *
      * @param ao {@code Method} or {@code Field}
-     * @return true if ignore current column
+     * @return 如果忽略该属性返回true
      */
     protected boolean ignoreColumn(AccessibleObject ao) {
         return ao.getAnnotation(IgnoreExport.class) != null;
     }
 
     /**
-     * Attach some custom columns
+     * 收集可导出的{@code Method}并创建Column对象
      *
-     * @param existsMethodMapper all exists method collection by default
-     * @param clazz Class of &lt;T&gt;
-     * @return list of {@link Column} or null if no more columns to attach
+     * @param existsMethodMapper 已有的可导出{@code Method}映射，key为方法名
+     * @param clazz              Class of &lt;T&gt;
+     * @return 新收集的可导出{@code Column}数组
      */
     protected List<Column> attachOtherColumn(Map<String, Method> existsMethodMapper, Class<?> clazz) {
         // Collect the method which has ExcelColumn annotation
@@ -837,9 +865,9 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the header column info
+     * 获取表头信息，未实例化表头时会执行初始化方法实例化表头
      *
-     * @return array of column
+     * @return 表头信息
      */
     @Override
     protected Column[] getHeaderColumns() {
@@ -854,12 +882,12 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the end index of row-block
+     * 计算需要读取的尾下标，相对于当前数组的尾下标
      *
-     * @return the end index
+     * @return 尾下标
      */
     protected int getEndIndex() {
-        int blockSize = getRowBlockSize(), rowLimit = getRowLimit();
+        int blockSize = rowBlock.capacity(), rowLimit = getRowLimit();
         if (rows + blockSize > rowLimit) {
             blockSize = rowLimit - rows;
         }
@@ -868,26 +896,16 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns total rows in this worksheet
+     * 数组中剩余多少数据
      *
-     * @return -1 if unknown or uncertain
-     */
-    @Override
-    public int size() {
-        return !shouldClose ? size : -1;
-    }
-
-    /**
-     * Returns left data in array to be write
-     *
-     * @return the left number
+     * @return 数组中剩余数据量
      */
     protected int left() {
         return end - start;
     }
 
     /**
-     * Split worksheet data
+     * 分页处理，如果达到分页条件时会复制一个新的工作表插入到当前位置之后
      */
     @Override
     protected void paging() {
@@ -919,36 +937,33 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns total data size before split
+     * 获取当前数组中有多少数据，数组中的数据是动态变化的，所以这是一个瞬时值
      *
-     * @return the total size
+     * @return 数组中数据大小
      */
     public int dataSize() {
         return data != null ? data.size() : 0;
     }
 
     /**
-     * This method is used for the worksheet to get the data.
-     * This is a data source independent method. You can get data
-     * from any data source. Since this method is stateless, you
-     * should manage paging or other information in your custom Sheet.
-     * <p>
-     * The more data you get each time, the faster write speed. You
-     * should minimize the database query or network request, but the
-     * excessive data will put pressure on the memory. Please balance
-     * this value between the speed and memory. You can refer to {@code 2^8 ~ 2^10}
-     * <p>
-     * This method is blocked
+     * 除了实例化{@code ListSheet}工作表指定的数据外，导出过程中会使用{@code more}方法获取更多数据，
+     * 直到返回{@code null}或空为止。这是一个独立于数据源的方法，它可以从任何数据源获取数据。
+     * 由于此方法是无状态的，所以需要在自定义工作表中维护分页、请求参数和上下文信息。
      *
-     * @return The data output to the worksheet, if a null or empty
-     * ArrayList returned, mean that the current worksheet is finished written.
+     * <p>每次获得的数据越多写入速度就越快, 更多的数据可以减少数据库查询或网络请求次数，
+     * 但过多的数据会占用更多的内存，开发过程中需要在速度和内存消耗之间做权衡。
+     * 建议批量不要太大，整个过程最大的压力在写磁盘操作上，所以批量太大对性能改善甚微，
+     * 但最小批量最好要超过{@link #getRowBlockSize()}设置的大小也就是最小32</p>
+     *
+     * @return 数组，{@code null}和空数组表示结束
      */
     protected List<T> more() {
         return null;
     }
 
     /**
-     * Parse and attach freeze info
+     * 添加“冻结”窗格，默认解析{@link FreezePanes}注解，支持自定义注解，
+     * 只需包含冻结的行列信息即可
      *
      * @param clazz Class of &lt;T&gt;
      */
@@ -977,11 +992,13 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Filter methods that need to be exported
+     * 查找其它可导出的{@code Method}方法，此方法将扩大查找范围，
+     * 包含无参且仅有一个返回值的方法也做为查找对象，如果该方法标记有&#x40;ExcelColumn
+     * 注解且无&#x40;IgnoreExport注解则添加到导出数组
      *
-     * @param existsMethodMapper all exists method collection by default
-     * @param clazz Class of &lt;T&gt;
-     * @return All Read-Method witch can be export
+     * @param existsMethodMapper 已有的可导出{@code Method}映射，key为方法名
+     * @param clazz              Class of &lt;T&gt;
+     * @return 可导出的{@code Method}数组
      */
     protected Method[] filterOthersMethodsCanExport(Map<String, Method> existsMethodMapper, Class<?> clazz) {
         // Collect the method which has ExcelColumn annotation
@@ -996,17 +1013,64 @@ public class ListSheet<T> extends Sheet {
         return readMethods;
     }
 
+    /**
+     * 强制导出
+     *
+     * <p>为了保证数据安全默认情况下Java Bean只导出标记有&#x40;ExcelColumn的字段和方法，
+     * 但某些情况不方便修改实体此时可以使用强制导出功能将Bean中的全字段导出（标记有&#x40;IgnroeExport注解除外），
+     * 此方法可能会造成数据泄漏风险，可参考{@link ExcelColumn}注解说明</p>
+     *
+     * @return 当前工作表
+     */
+    public Sheet forceExport() {
+        this.forceExport = 1;
+        return this;
+    }
+
+    /**
+     * 取消强制导出，可以取消在工作表{@link Workbook}上设置的全局强制导出标记
+     *
+     * @return 当前工作表
+     */
+    public Sheet cancelForceExport() {
+        this.forceExport = 2;
+        return this;
+    }
+
+    /**
+     * 返回“强制导出”标识
+     *
+     * @return 1: 强制导出 其余值：不强制
+     */
+    @Override
+    public int getForceExport() {
+        return forceExport;
+    }
+
+    /**
+     * {@code ListSheet}独有的列对象，除了{@link Column}包含的信息外，它还保存当列对应的字段和方法，
+     * 后续会通过这两个属性进行反射获取对象中的值，优先通过get方法获取，如果找不到get方法则直接
+     * 使用{@link Field}获取值
+     */
     public static class EntryColumn extends Column {
+        /**
+         * 当前列对应的get方法，这里不限get方法，无参且仅有一个返回值的方法均可以
+         */
         public Method method;
+        /**
+         * 当前列对应的Bean字段
+         */
         public Field field;
 
         public EntryColumn() {
             super();
         }
+
         public EntryColumn(String name) {
             super();
             this.name = name;
         }
+
         public EntryColumn(String name, Class<?> clazz) {
             super(name, clazz);
         }
@@ -1075,10 +1139,20 @@ public class ListSheet<T> extends Sheet {
             }
         }
 
+        /**
+         * 获取当前列对应的get方法
+         *
+         * @return Method
+         */
         public Method getMethod() {
             return method;
         }
 
+        /**
+         * 获取当前列对应的Bean字段
+         *
+         * @return Field
+         */
         public Field getField() {
             return field;
         }

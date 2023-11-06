@@ -31,76 +31,74 @@ import java.util.Map;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
 /**
- * ListMapSheet is a subclass of {@link ListSheet}, the difference is
- * in the way the data is taken
- *
- * @see ListSheet
+ * {@code ListMapSheet}是{@code ListSheet}的一个子集，因为取值方式完全不同所以将其独立，
+ * 未指定表头信息时{@code ListMapSheet}将导出全字段这是与{@code ListSheet}完全不同的设定
  *
  * @author guanquan.wang at 2018-01-26 14:46
+ * @see ListSheet
  */
 public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
     /**
-     * Constructor worksheet
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
     public ListMapSheet() {
         super();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public ListMapSheet(String name) {
         super(name);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定表头信息
      *
-     * @param columns the header info
+     * @param columns 表头信息
      */
     public ListMapSheet(final Column... columns) {
         super(columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public ListMapSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
-
     /**
-     * Constructor worksheet
+     * 实例化工作表并添加导出数据
      *
-     * @param data the worksheet's body data
+     * @param data 需要导出的数据
      */
     public ListMapSheet(List<Map<String, ?>> data) {
         this(null, data);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名和添加导出数据
      *
-     * @param name the worksheet name
-     * @param data the worksheet's body data
+     * @param name 工作表名称
+     * @param data 需要导出的数据
      */
     public ListMapSheet(String name, List<Map<String, ?>> data) {
         super(name);
@@ -108,44 +106,44 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并添加导出数据和表头信息
      *
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param data    需要导出的数据
+     * @param columns 表头信息
      */
     public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
         this(null, data, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化指定名称工作表并添加导出数据和表头信息
      *
-     * @param name    the worksheet name
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param data    需要导出的数据
+     * @param columns 表头信息
      */
     public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并添加导出数据和表头信息
      *
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param data      需要导出的数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化指定名称工作表并添加导出数据和表头信息
      *
-     * @param name      the worksheet name
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名
+     * @param data      需要导出的数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -153,7 +151,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     }
 
     /**
-     * Reset the row-block data
+     * 重置{@code RowBlock}行块数据
      */
     @Override
     protected void resetBlockData() {
@@ -185,9 +183,9 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
 
 
     /**
-     * Returns the header column info
+     * 获取表头信息，未指定{@code Columns}时默认以第1个非{@code null}的Map值做为参考，将该map中所有key做为表头
      *
-     * @return array of column
+     * @return 初如化表头
      */
     @Override
     protected Column[] getHeaderColumns() {
@@ -224,12 +222,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     }
 
     /**
-     * Create column from {@link Map.Entry}
-     * <p>
-     * Override the method to extend custom comments
+     * 从{@link Map.Entry}提取信息创建表头，除忽略{@code null}作为key以外的其它所有key均默认导出
      *
-     * @param entry the first entry from ListMap
-     * @return the Worksheet's {@link EntryColumn} information
+     * @param entry 第一个非{@code null}的map包含的所有值
+     * @return 单列表头信息
      */
     protected Column createColumn(Map.Entry<String, ?> entry) {
         // Ignore the null key
@@ -239,7 +235,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     }
 
     /**
-     * Merge cells if
+     * 合并表头
      */
     @Override
     protected void mergeHeaderCellsIfEquals() {
@@ -252,7 +248,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             for (Column col : columns) {
                 if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
                     Column next = col.next;
-                    for (; next != null && StringUtil.isEmpty(next.key); next = next.next);
+                    for (; next != null && StringUtil.isEmpty(next.key); next = next.next) ;
                     if (next != null) col.key = next.key; // Keep the key to get the value
                 }
             }
@@ -260,9 +256,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     }
 
     /**
-     * Returns a row-block. The row-block is content by 32 rows
+     * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
+     * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
      *
-     * @return a row-block
+     * @return 行块
      */
     @Override
     public RowBlock nextBlock() {

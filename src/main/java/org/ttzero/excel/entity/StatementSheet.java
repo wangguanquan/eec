@@ -26,84 +26,93 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Statement is one of the worksheet data sources, it's
- * extends from {@link ResultSetSheet}, and will be obtained from
- * MetaData if no header information is given. When MetaData
- * cannot be obtained, the header name will be setting as 1, 2,
- * and 3...
- * <p>
- * The Connection will not be actively closed, but the {@link java.sql.Statement}
- * and {@link ResultSet} will be closed with worksheet.
+ * {@code StatementSheet}的数据源为{@link ResultSet}，它也是{@code ResultSetSheet}的子类，
+ * 用于将数据库的数据导出到Excel，它并不限制数据库类型，只需实现jdbc协议即可，使用{@code StatementSheet}
+ * 可以避免将查询结果转为Java实体。
  *
- * @see ResultSetSheet
+ * <p>这是一个比较小众的工作表，最好只在比较简单的场景下使用，比如一次性导出的场景。因为{@code StatementSheet}
+ * 并不支持数据切片，所以当查询结果较大时可能出现OOM。如果不确认数据量时最好使用{@link ListSheet}分片获取数据</p>
+ *
+ * <blockquote><pre>
+ * try (Connection con = getConnection()) {
+ *     String sql = "select name,age,create_date,update_date " +
+ *               "from student where id between ? and ?";
+ *     new Workbook()
+ *         .addSheet(new StatementSheet(con, sql, ps -> {
+ *             ps.setInt(1, 10);
+ *             ps.setInt(2, 20);
+ *         }))
+ *         .writeTo(Paths.get("/tmp/student.xlsx"));
+ * }</pre></blockquote>
  *
  * @author guanquan.wang on 2017/9/26.
+ * @see ResultSetSheet
  */
 public class StatementSheet extends ResultSetSheet {
     private PreparedStatement ps;
 
     /**
-     * Constructor worksheet
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
     public StatementSheet() {
         super();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public StatementSheet(String name) {
         super(name);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定表头信息
      *
-     * @param columns the header info
+     * @param columns 表头信息
      */
     public StatementSheet(final Column... columns) {
         super(columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public StatementSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表
      *
-     * @param con the Connection
-     * @param sql the query SQL string
+     * @param con 数据库连接 {@code Connection}
+     * @param sql SQL语句
      */
     public StatementSheet(Connection con, String sql) {
         this(null, con, sql);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param name the worksheet name
-     * @param con  the Connection
-     * @param sql  the query SQL string
+     * @param name 工作表名
+     * @param con  数据库连接 {@code Connection}
+     * @param sql  SQL语句
      */
     public StatementSheet(String name, Connection con, String sql) {
         super(name);
@@ -122,23 +131,23 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param con the Connection
-     * @param sql the query SQL string
-     * @param pp  the sql parameter replacement function-interface
+     * @param con 数据库连接 {@code Connection}
+     * @param sql SQL语句
+     * @param pp  参数处理器
      */
     public StatementSheet(Connection con, String sql, ParamProcessor pp) {
         this(null, con, sql, pp);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param name the worksheet name
-     * @param con  the Connection
-     * @param sql  the query SQL string
-     * @param pp   the sql parameter replacement function-interface
+     * @param name 工作表名
+     * @param con  数据库连接 {@code Connection}
+     * @param sql  SQL语句
+     * @param pp   参数处理器
      */
     public StatementSheet(String name, Connection con, String sql, ParamProcessor pp) {
         super(name);
@@ -164,48 +173,48 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param con     the Connection
-     * @param sql     the sql string
-     * @param columns the header column
+     * @param con     数据库连接 {@code Connection}
+     * @param sql     SQL语句
+     * @param columns 表头信息
      */
     public StatementSheet(Connection con, String sql, Column... columns) {
         this(null, con, sql, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param name    the worksheet name
-     * @param con     the Connection
-     * @param sql     the sql string
-     * @param columns the header column
+     * @param name    工作表名
+     * @param con     数据库连接 {@code Connection}
+     * @param sql     SQL语句
+     * @param columns 表头信息
      */
     public StatementSheet(String name, Connection con, String sql, Column... columns) {
         this(name, con, sql, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param con     the Connection
-     * @param sql     the sql string
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header column
+     * @param con     数据库连接 {@code Connection}
+     * @param sql     SQL语句
+     * @param pp      参数处理器
+     * @param columns 表头信息
      */
     public StatementSheet(Connection con, String sql, ParamProcessor pp, Column... columns) {
         this(null, con, sql, pp, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名
      *
-     * @param name    the worksheet name
-     * @param con     the Connection
-     * @param sql     the sql string
-     * @param pp      the sql parameter replacement function-interface
-     * @param columns the header column
+     * @param name    工作表名
+     * @param con     数据库连接 {@code Connection}
+     * @param sql     SQL语句
+     * @param pp      参数处理器
+     * @param columns 表头信息
      */
     public StatementSheet(String name, Connection con, String sql, ParamProcessor pp, Column... columns) {
         super(name, columns);
@@ -231,11 +240,11 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * Setting PreparedStatement
+     * 设置数据源{@code PreparedStatement}
      *
-     * @param ps PreparedStatement
-     * @return the {@link StatementSheet}
-     * @deprecated replace with {@link #setStatement(PreparedStatement)}
+     * @param ps 数据源{@code PreparedStatement}
+     * @return 当前工作表
+     * @deprecated 使用 {@link #setStatement(PreparedStatement)}替代
      */
     @Deprecated
     public StatementSheet setPs(PreparedStatement ps) {
@@ -243,10 +252,10 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * Setting PreparedStatement
+     * 设置数据源{@code PreparedStatement}
      *
-     * @param ps PreparedStatement
-     * @return the {@link StatementSheet}
+     * @param ps 数据源{@code PreparedStatement}
+     * @return 当前工作表
      */
     public StatementSheet setStatement(PreparedStatement ps) {
         this.ps = ps;
@@ -254,8 +263,7 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * Release resources
-     * will close the {@code Statement} and {@code ResultSet}
+     * 关闭数据源并关闭{@code Statement} and {@code ResultSet}
      *
      * @throws IOException if I/O error occur
      */
@@ -272,9 +280,9 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * write worksheet data to path
+     * 落盘，将工作表写到指定路径
      *
-     * @param path the storage path
+     * @param path 指定保存路径
      * @throws IOException if I/O error occur
      */
     @Override

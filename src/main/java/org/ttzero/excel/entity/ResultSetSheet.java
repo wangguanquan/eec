@@ -47,83 +47,90 @@ import static java.sql.Types.TINYINT;
 import static java.sql.Types.VARCHAR;
 
 /**
- * ResultSet is one of the worksheet data sources, It has a subclass
- * {@link StatementSheet}. Most of the time it is used to get the
- * result of a stored procedure.
- * <p>
- * Write data to the row-block via the cursor, finished write when
- * {@link ResultSet#next} returns false
+ * {@code ResultSetSheet}的数据源为{@link ResultSet}一般情况下它用于存储过程，
+ * {@code ResultSetSheet}可以将存储过程的查询结果直接转为工作表的数据，省掉将查结果转为
+ * Java对象再转为工作表输出协议的数据结构。
  *
- * @see StatementSheet
+ * <p>如果未指定{@code Columns}表头时将从{@link ResultSetMetaData}源数据中获取，
+ * 优先使用别名做为表头，列顺序与query字段一致</p>
+ *
+ * <p>这是一个比较小众的工作表，最好只在比较简单的场景下使用，比如一次性导出的场景。
+ * 因为{@code StatementSheet}并不支持数据切片，所以当查询结果较大时可能出现OOM。
+ * 如果不确认数据量时最好使用{@link ListSheet}分片获取数据</p>
  *
  * @author guanquan.wang on 2017/9/27.
+ * @see StatementSheet
  */
 public class ResultSetSheet extends Sheet {
+    /**
+     * 数据源ResultSet
+     */
     protected ResultSet rs;
     /**
-     * The row styleProcessor
+     * 行级动态样式处理器
      */
     private StyleProcessor<ResultSet> styleProcessor;
+
     /**
-     * Constructor worksheet
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
     public ResultSetSheet() {
         super();
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称
      *
-     * @param name the worksheet name
+     * @param name 工作表名称
      */
     public ResultSetSheet(String name) {
         super(name);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定表头信息
      *
-     * @param columns the header info
+     * @param columns 表头信息
      */
     public ResultSetSheet(final Column... columns) {
         super(columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和表头信息
      *
-     * @param name    the worksheet name
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param columns 表头信息
      */
     public ResultSetSheet(String name, final Column... columns) {
         super(name, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称，水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ResultSetSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定数据源{@code ResultSet}
      *
-     * @param rs the ResultSet
+     * @param rs 数据源{@code ResultSet}
      */
     public ResultSetSheet(ResultSet rs) {
         this(null, rs);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名和数据源{@code ResultSet}
      *
-     * @param name the worksheet name
-     * @param rs   the ResultSet
+     * @param name 工作表名
+     * @param rs   数据源{@code ResultSet}
      */
     public ResultSetSheet(String name, ResultSet rs) {
         super(name);
@@ -131,44 +138,44 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定数据源{@code ResultSet}和表头信息
      *
-     * @param rs      the ResultSet
-     * @param columns the header info
+     * @param rs      数据源{@code ResultSet}
+     * @param columns 表头信息
      */
     public ResultSetSheet(ResultSet rs, final Column... columns) {
         this(null, rs, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名、数据源{@code ResultSet}和表头信息
      *
-     * @param name    the worksheet name
-     * @param rs      the ResultSet
-     * @param columns the header info
+     * @param name    工作表名
+     * @param rs      数据源{@code ResultSet}
+     * @param columns 表头信息
      */
     public ResultSetSheet(String name, ResultSet rs, final Column... columns) {
         this(name, rs, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定数据源{@code ResultSet}、水印和表头信息
      *
-     * @param rs        the ResultSet
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param rs        数据源{@code ResultSet}
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ResultSetSheet(ResultSet rs, WaterMark waterMark, final Column... columns) {
         this(null, rs, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名、数据源{@code ResultSet}、水印和表头信息
      *
-     * @param name      the worksheet name
-     * @param rs        the ResultSet
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名
+     * @param rs        数据源{@code ResultSet}
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -176,11 +183,11 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Setting ResultSet
+     * 设置数据源{@code ResultSet}
      *
-     * @param rs the ResultSet
-     * @return {@code ResultSetSheet}
-     * @deprecated rename to {@link #setResultSet(ResultSet)}
+     * @param rs 数据源{@code ResultSet}
+     * @return 当前工作表
+     * @deprecated 使用 {@link #setResultSet(ResultSet)}替换
      */
     @Deprecated
     public ResultSetSheet setRs(ResultSet rs) {
@@ -188,10 +195,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Setting ResultSet
+     * 设置数据源{@code ResultSet}
      *
-     * @param resultSet the ResultSet
-     * @return {@code ResultSetSheet}
+     * @param resultSet 数据源{@code ResultSet}
+     * @return 当前工作表
      */
     public ResultSetSheet setResultSet(ResultSet resultSet) {
         this.rs = resultSet;
@@ -199,10 +206,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Setting a row style processor
+     * 设置行级动态样式处理器，作用于整行优先级高于单元格动态样式处理器
      *
-     * @param styleProcessor a row style processor
-     * @return current worksheet
+     * @param styleProcessor 行级动态样式处理器
+     * @return 当前工作表
      */
     public Sheet setStyleProcessor(StyleProcessor<ResultSet> styleProcessor) {
         this.styleProcessor = styleProcessor;
@@ -211,9 +218,9 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Returns the row style processor
+     * 获取当前工作表的行级动态样式处理器，如果未设置则从扩展参数中查找
      *
-     * @return {@link StyleProcessor}
+     * @return 行级动态样式处理器
      */
     public StyleProcessor<ResultSet> getStyleProcessor() {
         if (styleProcessor != null) return styleProcessor;
@@ -223,7 +230,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Release resources
+     * 关闭数据源并关闭{@code ResultSet}
      *
      * @throws IOException if I/O error occur
      */
@@ -240,7 +247,7 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Reset the row-block data
+     * 重置{@code RowBlock}行块数据
      */
     @Override
     protected void resetBlockData() {
@@ -285,7 +292,7 @@ public class ResultSetSheet extends Sheet {
 
                     cellValueAndStyle.reset(row, cell, e, hc);
                     if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(rs , cell, hc, getStyleProcessor());
+                        cellValueAndStyle.setStyleDesign(rs, cell, hc, getStyleProcessor());
                     }
                 }
             }
@@ -302,10 +309,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Get header information, get from MetaData if not specified
-     * The copy sheet will use the parent worksheet header information.
+     * 获取表头，未指定表头时从{@link ResultSetMetaData}源数据中获取，
+     * 优先使用别名做为表头，列顺序与query字段一致
      *
-     * @return the header information
+     * @return 表头信息
      */
     @Override
     protected Column[] getHeaderColumns() {
@@ -378,10 +385,10 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * Convert {@link java.sql.Types} to java type
+     * 将SQL类型{@link java.sql.Types}转换为Java类型
      *
-     * @param type type sql type
-     * @return java class
+     * @param type SQL类型{@code java.sql.Types}
+     * @return Java类型
      */
     protected Class<?> columnTypeToClass(int type) {
         Class<?> clazz;
@@ -402,14 +409,26 @@ public class ResultSetSheet extends Sheet {
             case REAL:      clazz = Float.class;         break;
             case FLOAT:
             case DOUBLE:    clazz = Double.class;        break;
+//            case CHAR:      clazz = char.class;          break;
             case TIME:      clazz = java.sql.Time.class; break;
             default:        clazz = Object.class;
         }
         return clazz;
     }
 
+    /**
+     * {@code ResultSetSheet}独有的列对象，除了{@link Column}包含的信息外，它还保存当列对应的SQL类型和
+     * {@code ResultSet}下标，有了下标后续列取值可直接根据{@code ri}直接取值
+     */
     public static class SQLColumn extends Column {
-        int sqlType, ri; // ResultSet index
+        /**
+         * SQL类型，等同于{@link java.sql.Types}中的静态类型
+         */
+        public int sqlType;
+        /**
+         * ResultSet下标
+         */
+        public int ri;
 
         public SQLColumn(String name, int sqlType, Class<?> clazz) {
             super(name, clazz);

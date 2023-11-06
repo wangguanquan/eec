@@ -1154,10 +1154,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * <p>注意：由于数据行经由{@link RowBlock}行块统一处理，所以这里的已写入只表示写入到
      * {@link RowBlock}行块的数据并非实际已导出的行数，精准的已导出行可以通过{@link Workbook#onProgress}监听获取</p>
      *
-     * @return 写入的数据行数
+     * @return 写入的数据行数，-1表示不确定
      */
     public int size() {
-        return rows;
+        return !shouldClose ? rows : -1;
     }
 
     /**
@@ -1522,7 +1522,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     *合并表头
+     * 合并表头
      */
     protected void mergeHeaderCellsIfEquals() {
         int x = columns.length, y = x > 0 ? columns[0].subColumnSize() : 0, n = x * y;
