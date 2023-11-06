@@ -860,6 +860,8 @@ public class ExcelReader implements Closeable {
         int[] indices = new int[n];
         for (; ite.hasNext(); ) {
             Element e = ite.next();
+            // i: index of sheets
+            // r: range
             String si = e.attributeValue("i"), r = e.attributeValue("r");
             if (isNotEmpty(si)) {
                 i = toInt(si.toCharArray(), 0, si.length());
