@@ -38,7 +38,7 @@ import java.sql.SQLException;
  *     String sql = "select name,age,create_date,update_date " +
  *               "from student where id between ? and ?";
  *     new Workbook()
- *         .addSheet(new StatementSheet(con, sql, ps -> {
+ *         .addSheet(new StatementSheet(con, sql, ps -&gt; {
  *             ps.setInt(1, 10);
  *             ps.setInt(2, 20);
  *         }))

@@ -105,69 +105,80 @@ public class ExcelReader implements Closeable {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
     /**
-     * Specify {@link ExcelReader} only parse cell value (Default)
+     * 解析模式-只解析值（默认）
      */
     public static final int VALUE_ONLY = 0;
     /**
-     * Parse cell value and calc
+     * 解析模式-解析公式
      */
     public static final int VALUE_AND_CALC = 1 << 1;
     /**
-     * Copy value on merge cells
+     * 解析模式-复制合并单元格的值
      */
     public static final int COPY_ON_MERGED = 1 << 2;
 
     protected ExcelReader() { }
 
+    /**
+     * 保存所有工作表，读取工作表之前必须调用{@link Sheet#load}方法加载初始信息
+     */
     protected Sheet[] sheets;
+    /**
+     * Excel临时文件路径，当传入参数为{@code InputStream}时会先将流写到此临时路径再进行读操作
+     */
     private Path temp;
+    /**
+     * 文件格式，这里仅返回excel格式，其它文件一律返回{@code unknown}
+     */
     private ExcelType type;
+    /**
+     * Excel文件基础信息包含作者、日期等信息，在windows操作系统上使用鼠标右键-&gt;属性-&gt;详细信息查看
+     */
     private AppInfo appInfo;
     /**
-     * Store temporary files (Copy images to temp directory)
+     * 临时文件路径，读文件过程中产生的临时文件
      */
     protected Path tempDir;
     /**
-     * The Shared String Table
+     * 共享字符区
      */
     private SharedStrings sst;
 
     /**
-     * Reader Option
-     * <ul>
-     * <li>0: only parse cell value (default)</li>
-     * <li>2: parse cell value and calc</li>
-     * <li>4: copy value on merge cells</li>
-     * </ul>
+     * 解析模式
      *
-     * These attributes can be combined via `|`,
-     * like: VALUE_ONLY|COPY_ON_MERGED
+     * <ul>
+     * <li>0: {@code VALUE_ONLY}</li>
+     * <li>2: {@code VALUE_AND_CALC}</li>
+     * <li>4: {@code COPY_ON_MERGED}</li>
+     * </ul>
      */
     protected int option;
 
     /**
-     * A formula flag
+     * 是否包含公式标记，此标记不可信，因为它只检查是否包含{@code calcChain.xml}文件，
+     * 并不检查单元格中的内嵌公式。
      */
     protected boolean hasFormula;
 
     /**
-     * Picture or Tables
+     * 图片管理器
      */
     protected Drawings drawings;
     /**
-     * A global styles
+     * 全局的样式管理器
      */
     protected Styles styles;
     /**
-     * Xlsx src file
+     * Excel原始文件
      */
     protected ZipFile zipFile;
 
     /**
-     * Constructor Excel Reader
+     * 以只读"值"的方式读取指定路径的Excel文件
      *
-     * @param path the excel path
-     * @return the {@link ExcelReader}
+     * @param path excel绝对路径
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
     public static ExcelReader read(Path path) throws IOException {
@@ -175,10 +186,10 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 以只读"值"的方式读取Excel字节流
      *
-     * @param stream the {@link InputStream} of excel
-     * @return the {@link ExcelReader}
+     * @param stream excel字节流
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream) throws IOException {
@@ -186,11 +197,11 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel文件
      *
-     * @param path the excel path
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
+     * @param path   excel文件路径
+     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
     public static ExcelReader read(Path path, int option) throws IOException {
@@ -198,11 +209,11 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel文件
      *
-     * @param stream the {@link InputStream} of excel
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
+     * @param stream excel字节流
+     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream, int option) throws IOException {
@@ -210,13 +221,12 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel文件
      *
-     * @param path       the excel path
-     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
-     *                   This parameter affects the number of read times.
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
+     * @param path       excel文件路径
+     * @param bufferSize 共享字符区的大小，默认{@code 64}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if path not exists or I/O error occur
      */
     public static ExcelReader read(Path path, int bufferSize, int option) throws IOException {
@@ -224,13 +234,12 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel字节流
      *
-     * @param stream     the {@link InputStream} of excel
-     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
-     *                   This parameter affects the number of read times.
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
+     * @param stream     excel字节流
+     * @param bufferSize 共享字符区的大小，默认{@code 64}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream, int bufferSize, int option) throws IOException {
@@ -238,14 +247,13 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel字节流
      *
-     * @param stream     the {@link InputStream} of excel
-     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
-     *                   This parameter affects the number of read times.
-     * @param cacheSize  the {@link Cache} size, default is 512
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
+     * @param stream     excel字节流
+     * @param bufferSize 共享字符区的大小，默认{@code 16}
+     * @param cacheSize  共享字符区的缓存大小，默认{@code 512}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
@@ -260,18 +268,19 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Type of excel
+     * 获取当前Excel的文件类型，返回{@code xlsx}或{@code xls}，当文件不是excel时返回{@code unknown}
      *
-     * @return enum type ExcelType
+     * @return {@link ExcelType}枚举
      */
     public ExcelType getType() {
         return type;
     }
 
     /**
-     * to streams
+     * 返回一个工作表的流，它将按顺序解析当前excel包含所有工作表（含隐藏工作表），
+     * 此方法默认{@code load}工作表所以外部无需再次调用{@code load}方法
      *
-     * @return {@link Stream} of {@link Sheet}
+     * @return 一个顺序的工作表流
      */
     public Stream<Sheet> sheets() {
         Iterator<Sheet> iter = new Iterator<Sheet>() {
@@ -297,10 +306,10 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * get by index
+     * 获取指定位置的工作表，此方法默认{@code load}工作表所以外部无需再次调用{@code load}方法
      *
-     * @param index sheet index of workbook
-     * @return sheet
+     * @param index 工作表在excel的下标（从0开始）
+     * @return 指定工作表，如果指定下标无工作表将抛{@code IndexOutOfBoundException}
      */
     public Sheet sheet(int index) {
         try {
@@ -311,10 +320,10 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * get by name
+     * 获取指定名称的工作表，此方法默认{@code load}工作表所以外部无需再次调用{@code load}方法
      *
-     * @param sheetName name
-     * @return null if not found
+     * @param sheetName 工作表名
+     * @return 指定工作表，如果不存在则返回{@code null}
      */
     public Sheet sheet(String sheetName) {
         try {
@@ -330,25 +339,25 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Returns all sheets
+     * 获取全部工作表，通过此方法获取的工作表在读取前需要先调用{@code load}方法
      *
-     * @return Sheet Array
+     * @return 当前excel包含的所有工作表
      */
     public Sheet[] all() {
         return sheets;
     }
 
     /**
-     * Size of sheets
+     * 获取当前excel包含的工作表数量
      *
-     * @return int
+     * @return 当前excel包含的工作表数量
      */
     public int getSize() {
         return sheets != null ? sheets.length : 0;
     }
 
     /**
-     * Close stream and delete temp files
+     * 关闭流并删除临时文件
      *
      * @throws IOException when fail close readers
      */
@@ -373,23 +382,21 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * General information like title,subject and creator
+     * Excel文件基础信息包含作者、日期等信息，在windows操作系统上使用鼠标右键-&gt;属性-&gt;详细信息查看
      *
-     * @return the information
+     * @return {@link AppInfo}通过此对象可以获取excel详细属性
      */
     public AppInfo getAppInfo() {
         return appInfo != null ? appInfo : (appInfo = getGeneralInfo());
     }
 
     /**
-     * Check current workbook has formula
+     * 是否包含"公式"，返回{@code true}一定包含公式，返回{@code false}则不一定不包含
      *
-     * @return boolean
-     * @deprecated This method can not accurately reflect whether
-     * the workbook contains formulas. Here we only check whether
-     * they contain a common calcChain file, and the Excel files
-     * generated by some tools do not contain the calcChain file,
-     * but write all formulas in each cell.
+     * @return true: 包含 false: 不确认是否包含
+     * @deprecated 此方法无法准确反映工作簿是否包含公式，这里仅检查是否包含一个通用的calcChain文件，
+     * 某些工具生成的Excel文件不包含calcChain文件而是内嵌在每个单元格中，这部分公式只有在读取单元格时才
+     * 明确知道，通过{@link Row#hasFormula(int)}可以精准判断某些单元格是否包含公式。
      */
     @Deprecated
     public boolean hasFormula() {
@@ -397,9 +404,9 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Make the reader parse formula
+     * 强制解析公式，将所有工作表转换为{@link CalcSheet}，也可以在单个工作表中使用{@link Sheet#asCalcSheet()}转换单个工作表
      *
-     * @return {@link ExcelReader}
+     * @return 当前 {@code ExcelReader}
      */
     public ExcelReader parseFormula() {
         if (hasFormula) {
@@ -434,11 +441,12 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Copy values when reading merged cells.
-     * <p>
-     * By default, the values of the merged cells are only
-     * stored in the first Cell, and other cells have no values.
-     * Call this method to copy the value to other cells in the merge.
+     * 复制合并单元格，默认情况下合并单元格的值仅存储在第一个单元格中其他单元格没有值。读取到这部分单元格时将直接返回{@code null}值，
+     * 需要在业务代码里特殊处理合并单元格，本工具内置处理合并单格，调用此方法可将值复制到合并中的其他单元格中。
+     *
+     * <p>本方法将当前所有工作表都转换为{@link MergeSheet}，也可以在单个工作表中使用{@link Sheet#asMergeSheet()} ()}转换单个工作表，
+     * <b>注意：</b>{@code MergeSheet}性能不佳，建议读完合并单元格后使用{@link Sheet#asSheet()}将其转换为普通工作表，
+     * 它们之间可以无缝切换无需担心漏读或重复读的问题</p>
      * <blockquote><pre>
      * |---------|     |---------|     |---------|
      * |         |     |  1 |    |     |  1 |  1 |
@@ -451,7 +459,7 @@ public class ExcelReader implements Closeable {
      *                  `null`
      * </pre></blockquote>
      *
-     * @return {@link ExcelReader}
+     * @return 当前 {@code ExcelReader}
      */
     public ExcelReader copyOnMergeCells() {
         for (int i = 0; i < sheets.length; i++) {
@@ -463,9 +471,19 @@ public class ExcelReader implements Closeable {
 
     // --- PROTECTED FUNCTIONS
 
+    /**
+     * 配置必要的安全检查项，解析Excel文件之前会检查是否包含这些必须项，只要有一个不包含就抛{@link ExcelReadException}异常，
+     * 可以在外部移除/添加检查项，当前支持的资源类型看请查看{@link Const.ContentType}
+     */
     public static final Set<String> MUST_CHECK_PART = new HashSet<>(Arrays.asList(Const.ContentType.WORKBOOK
             , Const.ContentType.SHAREDSTRING, Const.ContentType.SHEET, Const.ContentType.STYLE));
 
+    /**
+     * 解析Content_Types并进行安全检查，必要安全检查不通过将抛{@link ExcelReadException}异常，
+     * 必要检查项配置在{@link #MUST_CHECK_PART}中，外部可以视情况进行添加/移除
+     *
+     * @return 当前excel包含的全部资源类型
+     */
     protected ContentType checkContentType() {
         // Read [Content_Types].xml
         ZipEntry entry = getEntry("[Content_Types].xml");
@@ -503,12 +521,25 @@ public class ExcelReader implements Closeable {
         return contentType;
     }
 
-    public ExcelReader(InputStream is) throws IOException {
-        this(is, 0, 0, VALUE_ONLY);
+    /**
+     * 以只读"值"的方式读取Excel字节流
+     *
+     * @param stream excel字节流
+     * @throws IOException if I/O error occur
+     */
+    public ExcelReader(InputStream stream) throws IOException {
+        this(stream, 0, 0, VALUE_ONLY);
     }
 
-    public ExcelReader(InputStream is, int option) throws IOException {
-        this(is, 0, 0, option);
+    /**
+     * 指定解析模式读取Excel文件
+     *
+     * @param stream excel字节流
+     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @throws IOException if I/O error occur
+     */
+    public ExcelReader(InputStream stream, int option) throws IOException {
+        this(stream, 0, 0, option);
     }
 
     public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
@@ -521,18 +552,50 @@ public class ExcelReader implements Closeable {
         init(temp, bufferSize, cacheSize, option);
     }
 
+    /**
+     * 以只读"值"的方式读取指定路径的Excel文件
+     *
+     * @param path excel绝对路径
+     * @throws IOException if path not exists or I/O error occur
+     */
     public ExcelReader(Path path) throws IOException {
         init(path, 0, 0, VALUE_ONLY);
     }
 
+    /**
+     * 指定解析模式读取Excel文件
+     *
+     * @param path   excel文件路径
+     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @throws IOException if path not exists or I/O error occur
+     */
     public ExcelReader(Path path, int option) throws IOException {
         init(path, 0, 0, option);
     }
 
+    /**
+     * 指定解析模式读取Excel文件
+     *
+     * @param path       excel文件路径
+     * @param bufferSize 共享字符区的大小，默认{@code 64}
+     * @param cacheSize  共享字符区缓存大小，默认{@code 512}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @throws IOException if path not exists or I/O error occur
+     */
     public ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         init(path, bufferSize, cacheSize, option);
     }
 
+    /**
+     * 初始化，初始化过程将进行内容检查，和创建全局属性（样式，字符共享区）以及工作表但不会实际读取工作表
+     *
+     * @param path       excel文件路径
+     * @param bufferSize 共享字符区的大小，默认{@code 64}
+     * @param cacheSize  共享字符区缓存大小，默认{@code 512}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
+     * @throws IOException if I/O error occur
+     */
     protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         this.zipFile = new ZipFile(path.toFile());
         LOGGER.debug("Check file integrity.");
@@ -652,16 +715,16 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * Constructor Excel Reader
+     * 指定解析模式读取Excel文件，如果文件为{@code xls}格式将加载{@code org.ttzero.excel.reader.BIFF8Reader}
+     * 如果要支持{@code xls}格式需要将{@code eec-e3-support}添加进classpath，如果未识别到文件类型则抛{@link ExcelReadException}
      *
-     * @param path       the excel path
-     * @param bufferSize the {@link SharedStrings} buffer size. default is 512
-     *                   This parameter affects the number of read times.
-     * @param cacheSize  the {@link Cache} size, default is 512
-     * @param option the reader option.
-     * @return the {@link ExcelReader}
-     * @throws FileNotFoundException if the path not exists or no permission to read
-     * @throws IOException if I/O error occur
+     * @param path       excel文件路径
+     * @param bufferSize 共享字符区的大小，默认{@code 16}
+     * @param cacheSize  共享字符区的缓存大小，默认{@code 512}
+     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
+     * @return 一个Excel解析器 {@link ExcelReader}
+     * @throws FileNotFoundException 文件不存在
+     * @throws IOException           if I/O error occur
      */
     public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         if (!exists(path)) {
@@ -910,6 +973,7 @@ public class ExcelReader implements Closeable {
      * A1          | 65537
      * AA10        | 655387
      * </pre></blockquote>
+     *
      * @param r 单元格坐标
      * @return 转换后的值
      */
@@ -979,7 +1043,7 @@ public class ExcelReader implements Closeable {
      * 两种分隔符匹配，如果路径无法匹配则遍历压缩包所有文件并忽略大小写匹配
      *
      * @param zipFile 压缩包
-     * @param name 压缩文件路径，必须是一个完整的路径
+     * @param name    压缩文件路径，必须是一个完整的路径
      * @return 如果实体存在则返回 {@link ZipEntry} 否则返回{@code null}
      */
     public static ZipEntry getEntry(ZipFile zipFile, String name) {

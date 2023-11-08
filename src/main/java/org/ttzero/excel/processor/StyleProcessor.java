@@ -43,7 +43,7 @@ public interface StyleProcessor<T> {
      * <blockquote><pre>
      * StyleProcessor sp = (o, style, sst)
      *     // 库存小于100时高亮显示 - 填充黄色
-     *     -&gt; o < 100 ? style |= sst.modifyFill(new Fill(Color.yellow)) : style;
+     *     -&gt; o &lt; 100 ? style |= sst.modifyFill(new Fill(Color.yellow)) : style;
      * </pre></blockquote>
      *
      * @param o     单元格的值

@@ -83,14 +83,13 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 和{@link #getExtPropValue}方法添加和读取扩展属性，一般情况下在数据源中添加属性，在输出协议中读取属性，
  * 像合并单元格、冻结首行都是通过扩展参数实现。</p>
  *
+ * @author guanquan.wang on 2017/9/26.
  * @see ListSheet
  * @see ListMapSheet
  * @see ResultSetSheet
  * @see StatementSheet
  * @see CSVSheet
  * @see EmptySheet
- *
- * @author guanquan.wang on 2017/9/26.
  */
 public abstract class Sheet implements Cloneable, Storable {
     /**
@@ -232,7 +231,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * 设置工作表ID，请不要在外部随意修改，否则打开文件异常
-     * 
+     *
      * @param id 工作表ID
      * @return 当前工作表
      */
@@ -350,7 +349,7 @@ public abstract class Sheet implements Cloneable, Storable {
 
     /**
      * 设置工作薄，一般在调用{@link Workbook#addSheet}时设置工作薄，{@code Workbook}包含
-     * 样式、共享字符区、ContentType等全局配置，为了方便读取所以每个worksheet均包含Workbook句柄
+     * 样式、共享字符区、资源类型等全局配置，为了方便读取所以每个worksheet均包含Workbook句柄
      *
      * @param workbook 工作薄{@link Workbook}
      * @return 当前工作表
@@ -666,7 +665,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=0}则打开文件时{@code StartRowIndex}
      * 将会显示在窗口的第一行</p>
      *
-     * @param startRowIndex 起始行号（从1开始）
+     * @param startRowIndex       起始行号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      */
@@ -845,7 +844,8 @@ public abstract class Sheet implements Cloneable, Storable {
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
-            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex) hc.realColIndex = columns[i - 1].realColIndex + 1;
+            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
+                hc.realColIndex = columns[i - 1].realColIndex + 1;
             else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
             else hc.realColIndex = hc.colIndex + 1;
 
@@ -1106,7 +1106,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 使用默认样式并修改文字颜色和充填色创建统一表头样式
      *
-     * @param fontColor 文字颜色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
+     * @param fontColor   文字颜色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
      * @param fillBgColor 充填色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
      * @return 样式值
      */
@@ -1310,6 +1310,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * 53     | BA
      * 16_384 | XFD
      * </pre></blockquote>
+     *
      * @param n 列下标
      * @return Excel列标识
      */
@@ -1405,7 +1406,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 添加扩展参数，key存在时覆盖原值
      *
-     * @param key 扩展参数Key
+     * @param key   扩展参数Key
      * @param value 值
      * @return 当前工作表
      */
@@ -1417,7 +1418,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 添加扩展参数，如果key不存在则添加，存在时忽略
      *
-     * @param key 扩展参数Key
+     * @param key   扩展参数Key
      * @param value 值
      * @return 当前工作表
      */

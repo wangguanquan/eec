@@ -56,6 +56,7 @@ import static org.ttzero.excel.reader.ExcelReader.toZipPath;
  *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/issues/363">解析POI内嵌图片</a></p>
+ *
  * @author guanquan.wang at 2021-04-24 16:18
  */
 public class XMLDrawings implements Drawings {
@@ -294,6 +295,8 @@ public class XMLDrawings implements Drawings {
     /**
      * 拉取WPS单元格内嵌图片
      *
+     * @param zipFile xlsx源
+     * @param entry   cellimages
      * @return ID:图片本地路径
      */
     public Map<String, Path> listCellImages(ZipFile zipFile, ZipEntry entry) {
@@ -380,7 +383,7 @@ public class XMLDrawings implements Drawings {
     /**
      * 快整查询内嵌图片在工作表中的位置
      *
-     * @param sheet 工作表
+     * @param sheet           工作表
      * @param cellImageMapper 图片ID映射关系
      * @return 图片列表
      * @throws IOException if I/O error occur

@@ -778,9 +778,9 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 添加ContentType，导出图片时按照图片格式添加不同的ContentType，一般情况下开发者不需要关心
+     * 添加资源类型，导出图片时按照图片格式添加不同的资源类型，一般情况下开发者不需要关心
      *
-     * @param type 资源的{@link ContentType.Type}
+     * @param type 资源类型{@link ContentType.Type}
      * @return 当前工作薄
      */
     public Workbook addContentType(ContentType.Type type) {
@@ -800,9 +800,9 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 获取全局的ContentType，一般情况下开发者不需要关心
+     * 获取全局的资源类型，一般情况下开发者不需要关心
      *
-     * @return {@link ContentType}对象
+     * @return 资源类型{@link ContentType}对象
      */
     public ContentType getContentType() {
         return contentType;
