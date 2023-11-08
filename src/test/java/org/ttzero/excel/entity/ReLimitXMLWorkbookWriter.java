@@ -25,7 +25,7 @@ import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 public class ReLimitXMLWorkbookWriter extends XMLWorkbookWriter {
 
     @Override
-    protected IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+    public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
         return new ReLimitXMLWorksheetWriter(sheet);
     }
 }
