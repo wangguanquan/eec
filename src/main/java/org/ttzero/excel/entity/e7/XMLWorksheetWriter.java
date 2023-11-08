@@ -668,14 +668,23 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
+        Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        bw.write("\" t=\"s\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"><v>");
-        bw.writeInt(sst.get(c));
-        bw.write("</v></c>");
+        if (hc.isShare()) {
+            bw.write("\" t=\"s\" s=\"");
+            bw.writeInt(xf);
+            bw.write("\"><v>");
+            bw.writeInt(sst.get(c));
+            bw.write("</v></c>");
+        } else {
+            bw.write("\" t=\"inlineStr\" s=\"");
+            bw.writeInt(xf);
+            bw.write("\"><is><t>");
+            bw.escapeWrite(c);
+            bw.write("</t></is></c>");
+        }
     }
 
     /**
@@ -1201,6 +1210,16 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (sheetDataReady > 0) return;
         // Start to write sheet data
         bw.write("<sheetData>");
+
+        // 判断是否有共享设置，有共享需要对SharedStrings进行初始化
+        for (Column col : columns) {
+            do {
+                if (col.isShare()) {
+                    sst.init();
+                    break;
+                }
+            } while ((col = col.next) != null);
+        }
 
         int headerRow = 0;
         // Write header rows

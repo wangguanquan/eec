@@ -83,7 +83,7 @@ public class SharedStrings implements Storable, Closeable {
     /**
      * Cache ASCII value
      */
-    private final int[] ascii;
+    private int[] ascii;
     private Path temp;
     private ExtBufferedWriter writer;
 
@@ -107,21 +107,19 @@ public class SharedStrings implements Storable, Closeable {
      */
     private final long expectedInsertions = 1L << 17;
 
-    SharedStrings() {
+    /**
+     * Create a temp file to storage all text cells
+     *
+     * @return 当前共享字符区
+     */
+    public SharedStrings init() {
         hot = FixSizeLRUCache.create();
         ascii = new int[1 << 7];
         // -1 means the keyword not exists
         Arrays.fill(ascii, -1);
-        // Create a 2^17 expected insertions and 0.3% fpp bloom filter
+        // Create a 2^17 expected insertions and 0.3% fpp bloom filter 2.84M
         filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 
-        init();
-    }
-
-    /**
-     * Create a temp file to storage all text cells
-     */
-    private void init() {
         try {
             temp = Files.createTempFile("~", "sst");
             writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
@@ -130,6 +128,7 @@ public class SharedStrings implements Storable, Closeable {
         } catch (IOException e) {
             throw new ExcelWriteException(e);
         }
+        return this;
     }
 
     /**
@@ -234,6 +233,7 @@ public class SharedStrings implements Storable, Closeable {
             FileUtil.mkdir(root);
         }
 
+        int uniqueCount = sst != null ? sst.size() : 0;
         StringBuilder buf = new StringBuilder();
         TopNS topNS = getClass().getAnnotation(TopNS.class);
         if (topNS != null) {
@@ -241,11 +241,11 @@ public class SharedStrings implements Storable, Closeable {
             buf.append(Const.lineSeparator);
             buf.append("<").append(topNS.value()).append(" xmlns=\"").append(topNS.uri()[0]).append("\"")
                 .append(" count=\"").append(count).append("\"")
-                .append(" uniqueCount=\"").append(sst.size()).append("\">")
+                .append(" uniqueCount=\"").append(uniqueCount).append("\">")
                 .append(Const.lineSeparator);
         } else {
             buf.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")
-                .append(count).append("\" uniqueCount=\"").append(sst.size()).append("\">")
+                .append(count).append("\" uniqueCount=\"").append(uniqueCount).append("\">")
                 .append(Const.lineSeparator);
         }
 
@@ -259,7 +259,7 @@ public class SharedStrings implements Storable, Closeable {
             buffer.flip();
             channel.write(buffer);
 
-            if (sst.size() > 0) {
+            if (uniqueCount > 0) {
                 transfer(channel);
             }
 
@@ -309,9 +309,11 @@ public class SharedStrings implements Storable, Closeable {
         LOGGER.debug("Total: {}, Hot: {}, SST: {}, Char Cache: {}, Filter Constructor: {}"
             , count, total_hot, total_sst_find, total_char_cache, filter_constructor);
         filter = null;
-        hot.clear();
-        hot = null;
-        sst.close();
-        FileUtil.rm(temp);
+        if (hot != null) {
+            hot.clear();
+            hot = null;
+        }
+        if (sst != null) sst.close();
+        if (temp != null) FileUtil.rm(temp);
     }
 }
