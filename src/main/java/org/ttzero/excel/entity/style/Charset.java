@@ -17,27 +17,78 @@
 package org.ttzero.excel.entity.style;
 
 /**
+ * 字符集
+ *
  * @author guanquan.wang at 2018-02-08 17:05
  */
 public class Charset {
-    public static final int ANSI = 0x00 // ANSI Latin
-        , DEFAULT = 0x01  // not a real charset; rather
-        // , it is a constant akin to NULL that means
-        // "show characters in whatever charsets are available."
-        , SYMBOL = 0x02 //  Symbol
-        , SHIFTJIS = 0x80 // 日文
-        , HANGUL = 0x81 // 韩国、朝鲜
-        , JOHAB = 0x82 //  ANSI Korean (Johab)
-        , GB2312 = 0x86 // 简体
-        , CHINESEBIG5 = 0x88 // 繁体
-        , GREEK = 0xA1 //  ANSI Greek
-        , TURKISH = 0xA2 // ANSI Turkish
-        , HEBREW = 0xB1 // ANSI Hebrew
-        , ARABIC = 0xB2 // ANSI Arabic
-        , BALTIC = 0xBA // ANSI Baltic
-        , RUSSIAN = 0xCC // ANSI Cyrillic
-        , THAI = 0xDE //  ANSI Thai
-        , EE = 0xEE // ANSI Latin II (Central European)
-        , OEM = 0xFF // OEM Latin I
-        ;
+    /**
+     * 0 标准 Windows 字符 (ANSI)
+     */
+    public static final int ANSI = 0x00;
+    /**
+     * 1 默认字符集
+     * 不是真正的字符集；它是一个类似于NULL的常量，意思是“显示可用字符集中的字符”
+     */
+    public static final int DEFAULT = 0x01;
+    /**
+     * 2 符号字符集
+     */
+    public static final int SYMBOL = 0x02;
+    /**
+     * 128 日文字符集
+     */
+    public static final int SHIFTJIS = 0x80;
+    /**
+     * 129 朝鲜语字符集(韩国、朝鲜)
+     */
+    public static final int HANGUL = 0x81;
+    /**
+     * 130 朝鲜语字符集(Johab)
+     */
+    public static final int JOHAB = 0x82;
+    /**
+     * 134 简体中文字符集
+     */
+    public static final int GB2312 = 0x86;
+    /**
+     * 136 繁体中文字符集
+     */
+    public static final int CHINESEBIG5 = 0x88;
+    /**
+     * 161 希腊字符集
+     */
+    public static final int GREEK = 0xA1;
+    /**
+     * 162 土耳其字符集
+     */
+    public static final int TURKISH = 0xA2;
+    /**
+     * 177 希伯来语字符集
+     */
+    public static final int HEBREW = 0xB1;
+    /**
+     * 178 阿拉伯语字符集
+     */
+    public static final int ARABIC = 0xB2;
+    /**
+     * 186 印欧语系中的）波罗的语族
+     */
+    public static final int BALTIC = 0xBA;
+    /**
+     * 204 西里尔文 用于俄语、保加利亚语及其他一些中欧语言
+     */
+    public static final int RUSSIAN = 0xCC;
+    /**
+     * 222 泰国字符集
+     */
+    public static final int THAI = 0xDE;
+    /**
+     * 238 拉丁语II（中欧）
+     */
+    public static final int EE = 0xEE;
+    /**
+     * 255 通常由 Microsoft MS-DOS 应用程序显示的扩展字符
+     */
+    public static final int OEM = 0xFF;
 }
