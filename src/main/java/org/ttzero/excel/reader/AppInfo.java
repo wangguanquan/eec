@@ -26,12 +26,18 @@ import java.util.Date;
 import java.util.StringJoiner;
 
 /**
- * The file basic information
+ * Excel文件基础信息包含作者、日期等信息，在windows操作系统上使用鼠标右键-&gt;属性-&gt;详细信息查看
  *
  * @author guanquan.wang at 2019-04-15 16:00
  */
 public class AppInfo {
+    /**
+     * App属性
+     */
     private final App app;
+    /**
+     * 文档详细属性
+     */
     private final Core core;
 
     AppInfo(App app, Core core) {
@@ -40,126 +46,126 @@ public class AppInfo {
     }
 
     /**
-     * The app name for file creation
+     * 获取Excel由哪个App生成或打开
      *
-     * @return the app name
+     * @return 属性-详细属性-程序名称
      */
     public String getApplication() {
         return app.getApplication();
     }
 
     /**
-     * About company info
+     * 获取公司名
      *
-     * @return company value or null
+     * @return 属性-详细属性-公司
      */
     public String getCompany() {
         return app.getCompany();
     }
 
     /**
-     * The app version for file creation
+     * 获取App版号
      *
-     * @return the app version not null
+     * @return 属性-详细属性-版本号
      */
     public String getAppVersion() {
         return app.getAppVersion();
     }
 
     /**
-     * The content's title
+     * 获取标题
      *
-     * @return title value or null
+     * @return 属性-详细属性-标题
      */
     public String getTitle() {
         return core.getTitle();
     }
 
     /**
-     * The content's subject
+     * 获取主题
      *
-     * @return subject value or null
+     * @return 属性-详细属性-主题
      */
     public String getSubject() {
         return core.getSubject();
     }
 
     /**
-     * The file creator name
+     * 获取作者
      *
-     * @return name of creator or null
+     * @return 属性-详细属性-作者
      */
     public String getCreator() {
         return core.getCreator();
     }
 
     /**
-     * The content's short description
+     * 获取备注
      *
-     * @return the desc value or null
+     * @return 属性-详细属性-备注
      */
     public String getDescription() {
         return core.getDescription();
     }
 
     /**
-     * The content keyword, join with ','
+     * 获取标记，多个标记使用{@code ','}逗号分隔
      *
-     * @return keyword value or null
+     * @return 属性-详细属性-标记
      */
     public String getKeywords() {
         return core.getKeywords();
     }
 
     /**
-     * Returns the last modified user
+     * 获取最后一次保存者
      *
-     * @return the modified user or null
+     * @return 属性-详细属性-最后一次保存者
      */
     public String getLastModifiedBy() {
         return core.getLastModifiedBy();
     }
 
     /**
-     * Returns the App version
+     * 获取版本号
      *
-     * @return the excel app version or the eec version if it used eec
+     * @return 属性-详细属性-版本号
      */
     public String getVersion() {
         return core.getVersion();
     }
 
     /**
-     * Returns the file revision
+     * 获取修订号
      *
-     * @return revision or null
+     * @return 属性-详细属性-修订号
      */
     public String getRevision() {
         return core.getRevision();
     }
 
     /**
-     * Returns the content's category, the value join with ','
+     * 获取类别，多个类别使用{@code ','}逗号分隔
      *
-     * @return category value or null
+     * @return 属性-详细属性-类别
      */
     public String getCategory() {
         return core.getCategory();
     }
 
     /**
-     * Returns the create time
+     * 获取创建时间
      *
-     * @return the file create date or null
+     * @return 属性-详细属性-创建时间
      */
     public Date getCreated() {
         return core.getCreated();
     }
 
     /**
-     * Returns the last modified
+     * 获取修改时间
      *
-     * @return last modified date or null
+     * @return 属性-详细属性-修改时间
      */
     public Date getModified() {
         return core.getModified();
@@ -177,7 +183,7 @@ public class AppInfo {
                 if (o != null) {
                     joiner.add(method.getReturnType() == boolean.class ? method.getName().substring(2)
                         : method.getName().substring(3) + ": "
-                        + (o instanceof Date ? DateUtil.toString((Date)o) : o.toString()));
+                        + (o instanceof Date ? DateUtil.toString((Date) o) : o.toString()));
                 }
             }
         } catch (Exception e) {
