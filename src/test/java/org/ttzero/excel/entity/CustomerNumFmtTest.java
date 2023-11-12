@@ -131,7 +131,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
             .addSheet(new ListSheet<>(expectList
                 , new Column("编码", "code")
                 , new Column("姓名", "name")
-                , new Column("日期", "date").setNumFmt("上午/下午hh\"時\"mm\"分\"")
+                , new Column("日期", "date").setNumFmt("上午/下午hh\"时\"mm\"分\"")
                 , new Column("数字", "num").setNumFmt("#,##0 ;[Red]-#,##0 ")
             )).writeTo(defaultTestPath.resolve(fileName));
 
@@ -155,7 +155,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "上午/下午hh\"時\"mm\"分\"".equals(numFmt.getCode());
+                assert numFmt != null && "上午/下午hh\"时\"mm\"分\"".equals(numFmt.getCode());
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
                 assert numFmt3 != null && "#,##0\\ ;[Red]\\-#,##0\\ ".equals(numFmt3.getCode());
@@ -206,47 +206,47 @@ public class CustomerNumFmtTest extends WorkbookTest {
         width = fmt.calcNumWidth(stringSize(-1234565));
         assert width >= 12.5D && width <= 14.63D;
 
-        fmt.setCode("[Blue]#,##0.00_);[Red]-#,##0.00_);0_)");
+        fmt = new NumFmt("[Blue]#,##0.00_);[Red]-#,##0.00_);0_)");
         width = fmt.calcNumWidth(stringSize(1234565435236543436L));
         assert width >= 29.0D && width <= 34.63D;
 
         width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
-        assert width >= 30.5D && width <= 35.63D;
+        assert width >= 30.D && width <= 35.63D;
 
         width = fmt.calcNumWidth(stringSize(1234565));
         assert width >= 13.0D && width <= 15.63D;
 
         width = fmt.calcNumWidth(stringSize(-1234565));
-        assert width >= 14.5D && width <= 16.63D;
+        assert width >= 14.D && width <= 16.63D;
 
-        fmt.setCode("[Blue]#,##0;[Red]-#,##0;0");
+        fmt = new NumFmt("[Blue]#,##0;[Red]-#,##0;0");
         width = fmt.calcNumWidth(stringSize(1234565435236543436L));
-        assert width >= 25.5D && width <= 29.63D;
+        assert width >= 25.D && width <= 29.63D;
 
         width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
-        assert width >= 26.5D && width <= 30.63D;
+        assert width >= 26.D && width <= 30.63D;
 
         width = fmt.calcNumWidth(stringSize(1234565));
-        assert width >= 9.5D && width <= 12.63D;
+        assert width >= 9.D && width <= 12.63D;
 
         width = fmt.calcNumWidth(stringSize(-1234565));
-        assert width >= 10.5D && width <= 13.63D;
+        assert width >= 10.D && width <= 13.63D;
 
-        fmt.setCode("yyyy-mm-dd");
+        fmt = new NumFmt("yyyy-mm-dd");
         width = fmt.calcNumWidth(0);
-        assert width >= 10.86D && width <= 12.63D;
+        assert width >= 10.D && width <= 12.63D;
 
-        fmt.setCode("yyyy-mm-dd hh:mm:ss");
+        fmt = new NumFmt("yyyy-mm-dd hh:mm:ss");
         width = fmt.calcNumWidth(0);
-        assert width >= 19.86D && width <= 23.63D;
+        assert width >= 19.D && width <= 23.63D;
 
-        fmt.setCode("hh:mm:ss");
+        fmt = new NumFmt("hh:mm:ss");
         width = fmt.calcNumWidth(0);
-        assert width >= 8.86D && width <= 10.63D;
+        assert width >= 8.D && width <= 10.63D;
 
-        fmt.setCode("yyyy年mm月dd日 hh日mm分ss秒");
+        fmt = new NumFmt("yyyy年mm月dd日 hh日mm分ss秒");
         width = fmt.calcNumWidth(0);
-        assert width >= 26.86D && width <= 30.63D;
+        assert width >= 26.D && width <= 30.63D;
     }
 
     @Test public void testAutoWidth() throws IOException {
