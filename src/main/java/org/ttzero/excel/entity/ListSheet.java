@@ -58,8 +58,42 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * 对象数组工作表，内部使用{@code List<T>}做数据源，所以它是应用最广泛的一种工作表。
+ * {@code ListSheet}默认支持数据切片，少量数据可以在实例化时一次性传入，数据量较大时建议切片获取数据
  *
- * <p></p>
+ * <blockquote><pre>
+ * new Workbook("11月待拜访客户")
+ *     .addSheet(new ListSheet&lt;Customer&gt;() {
+ *         &#x40;Override
+ *         protected List&lt;Customer&gt; more() {
+ *             // 分页查询数据
+ *             List&lt;Customer&gt; list = customerService.list(queryVo);
+ *             // 页码 + 1
+ *             queryVo.setPageNum(queryVo.getPageNum() + 1);
+ *             return list;
+ *         }
+ *     }).writeTo(response.getOutputStream());</pre></blockquote>
+ *
+ * <p>如上示例覆写{@link #more}方法获取切片数据，直到返回空数据或{@code null}为止,这样不至少将大量数据堆积到内存，
+ * 输出协议使用{@link RowBlock}进行装填数据并落盘。{@code more}方法在{@code ListSheet}工作表是一定会被
+ * 调用的即使初始化工作表传入了数据，工作表判断无需导出的情况除外，比如未指定表头且{@code Bean}对象无任何&#x40;ExcelColumn注释，
+ * 此时效果等同于{@link EmptySheet}</p>
+ *
+ * <p>{@code ListSheet}使用{@link #getTClass}方法获取泛型的实际类型，内部优先使用{@link Class#getGenericSuperclass}方法获取，
+ * 如果有子类指定{@code T}类型则可以获取到{@code T}的类型，否则将使用数组中第一条数据做为泛型的具体类型，
+ * 如果希望无数据时依然导出表头就必须让{@code ListSheet}获取泛型{@code T}的实际类型，当无数据且无子类指定{@code T}时可以使用
+ * {@link #setClass}方法设置泛型的类型</p>
+ *
+ * <p>大多数使用{@code ListSheet}工作表导数据时都会使用注解，{@code ListSheet}支持自定义注解以延申功能，
+ * 你甚至可以不使用任何的内置注释全部使用自定义注解来实现导入导出，使用自定义注解时需要搭配自定义{@code ListSheet}解析注解，
+ * 其中最重要的两个方法{@link #ignoreColumn(AccessibleObject)}和{@link #createColumn(AccessibleObject)}就是读取
+ * 方法或字段上的注解来创建{@code Column}对象，{@code AccessibleObject}可能是一个{@code Method}或者一个{@code Field}</p>
+ *
+ * <p>对象取值会优先调用get方法获取，如果未发现get方法则直接从{@code field}取值。导出数据并不仅限于get方法，
+ * 你可以在任何无参且仅有一个返回值的方法上添加&#x40;ExcelColumn注解进行导出，你还可以在子类定义相同的方法来替换父类上的&#x40;ExcelColumn注解，
+ * 解析注解时会从子类往上逐级解析至到父级为{@code Object}为止</p>
+ *
+ * <p>参考文档:</p>
+ * <p><a href="https://github.com/wangguanquan/eec/wiki/%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3">自定义注解</a></p>
  *
  * @author guanquan.wang at 2018-01-26 14:48
  * @see ListMapSheet
