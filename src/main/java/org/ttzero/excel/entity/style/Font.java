@@ -29,19 +29,64 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
+ * 字体，为了简化本字体包含颜色属性，在输出时包含颜色的字体将以指定颜色渲染，
+ * 注意：字体在全局样式中是共享的，如果要修改某个属性必须先调用{@link #clone}方法
+ * 复制一个字体然后再修改属性，这样才不会影响之前使用过此字体的文本
+ *
  * @author guanquan.wang at 2018-02-02 16:51
  */
 public class Font implements Cloneable {
+    /**
+     * 加粗，斜体等字体样式被定义在{@link Font.Style}类中
+     */
     private int style;
-    // this value is actually the result of the actual font size*10, eg: font-size:11 save as 110
+    /**
+     * 字体大小，为发兼容Excel小数字体实际保存的值为乘{@code 10}后的结果，在
+     * 例Excel字体大小为{@code 10.5}那么{@code size}为 {@code 105}，
+     * 使用{@link #getSize}方法将会得到去尾数的结果{@code 10}，要得到原始值
+     * 需要调用{@link #getSize2}
+     */
     private int size;
+    /**
+     * 字体名
+     */
     private String name;
+    /**
+     * 输本文本颜色
+     */
     private Color color;
+    /**
+     * 定义此字体所属的字体方案，有三种取值{@code "none"},{@code "major"}和{@code "minor"},
+     * 通常主要字体用于标题等样式，次要字体用于正文和段落文本。
+     */
     private String scheme;
+    /**
+     * 一个整数值，该值指定字体使用的字符集。枚举值参考{@link Charset}，
+     * 本类并不会根据字体名自动判断字符集请自行设置
+     */
     private int charset;
+    /**
+     * 字体家族，取值0-255
+     *
+     * <blockquote><pre>
+     * 示例
+     *  Value| Font Family
+     * ----- |------------
+     *     0 | Not applicable.
+     *     1 | Roman
+     *     2 | Swiss
+     *     3 | Modern
+     *     4 | Script
+     *     5 | Decorative
+     * </pre></blockquote>
+     */
     private int family;
+    /**
+     * FontMetrics计算文本宽度
+     */
+    private transient java.awt.FontMetrics fm;
 
-    private Font() {}
+    private Font() { }
 
     public Font(String name, int size) {
         this(name, size, Style.PLAIN, null);
@@ -56,6 +101,8 @@ public class Font implements Cloneable {
         this.size = checkAndCrop(size * 10);
         this.name = name;
         this.color = color;
+        // 这里仅简单判断是否为双字节并设置简体中文
+        if (name != null && !name.isEmpty() && name.charAt(0) > 0x4E) this.charset = Charset.GB2312;
     }
 
     public Font(String name, double size) {
@@ -71,13 +118,17 @@ public class Font implements Cloneable {
         this.size = checkAndCrop(round10(size));
         this.name = name;
         this.color = color;
+        // 这里仅简单判断是否为双字节并设置简体中文
+        if (name != null && !name.isEmpty() && name.charAt(0) > 0x4E) this.charset = Charset.GB2312;
     }
 
     /**
-     * Create a Font from font-string
+     * 解析字符串为字体
+     * <p>
      * italic_bold_underLine_size_family_color or italic bold underLine size family color
      * eq: italic_bold_12_宋体 // 斜体 加粗 12号字 宋体
      * eq: bold underLine 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
+     *
      * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
      * @return the {@link Font}
      * @throws IllegalArgumentException if convert failed.
@@ -94,8 +145,7 @@ public class Font implements Cloneable {
                 if (i2 == -1) {
                     throw new IllegalArgumentException("Miss end char \"'\"");
                 }
-                String sub = s.substring(i1, i2 + 1)
-                        , mark = sub.substring(1, sub.length() - 1).replace(' ', '+');
+                String sub = s.substring(i1, i2 + 1), mark = sub.substring(1, sub.length() - 1).replace(' ', '+');
                 s = s.replace(sub, mark);
                 i1 = s.indexOf('\'', i2);
             } while (i1 >= 0);
@@ -165,133 +215,362 @@ public class Font implements Cloneable {
         return font;
     }
 
+    /**
+     * 获取去尾数后的字体大小{@code 10.5}实际返回{@code 10}
+     *
+     * @return 去尾数的字体大小
+     */
     public int getSize() {
         return size / 10;
     }
 
+    /**
+     * 获取字体大小
+     *
+     * @return 字体大小
+     */
     public double getSize2() {
         return size / 10.0D;
     }
 
+    /**
+     * 设置字体大小
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param size 字体大小
+     * @return 当前字体
+     */
     public Font setSize(int size) {
         this.size = checkAndCrop(size * 10);
         return this;
     }
 
+    /**
+     * 设置字体大小
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param size 字体大小
+     * @return 当前字体
+     */
     public Font setSize(double size) {
         this.size = checkAndCrop(round10(size));
         return this;
     }
 
+    /**
+     * 获取字体名
+     *
+     * @return 字体名
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * 设置字体名
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param name 字体名
+     * @return 当前字体
+     */
     public Font setName(String name) {
         this.name = name;
         return this;
     }
 
+    /**
+     * 获取字体家族
+     *
+     * @return family取值范围{@code 0-255}
+     */
     public int getFamily() {
         return family;
     }
 
+    /**
+     * 设置字体家族
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param family 取值范围{@code 0-255}
+     * @return 当前字体
+     */
     public Font setFamily(int family) {
-        this.family = family;
+        this.family = family & 0xFF;
         return this;
     }
 
+    /**
+     * 获取字体颜色，未主动设置时返回{@code null}，输出到xml时显示黑色
+     *
+     * @return 字体颜色
+     */
     public Color getColor() {
         return color;
     }
 
+    /**
+     * 设置字体颜色
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param color 字体颜色
+     * @return 当前字体
+     */
     public Font setColor(Color color) {
         this.color = color;
         return this;
     }
 
+    /**
+     * 获取字体样式，样式定义在{@link Font.Style}类中，建议直接调用专用方法{@link #isBold},
+     * {@link #isUnderLine}, {@link #isStrikeThru}和{@link #isItalic}方法，
+     * 它们直接返回{@code boolean}类型的值方便后续判断
+     *
+     * @return {@link Font.Style}定义的样式
+     */
     public int getStyle() {
         return style;
     }
 
+    /**
+     * 设置字体样式，样式定义在{@link Font.Style}类中，建议直接调用专用方法{@link #bold},
+     * {@link #underLine}, {@link #strikeThru}和{@link #italic}方法设置，
+     * 这几个方法可以组合调用最终效果为组合效果
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param style {@link Font.Style}定义的样式
+     * @return 当前字体
+     */
     public Font setStyle(int style) {
-        this.style = style;
+        this.style = style & 15;
         return this;
     }
 
+    /**
+     * 获取此字体所属的字体方案，有三种可能的取值{@code "none"},{@code "major"}和{@code "minor"}
+     *
+     * @return 字体方案
+     */
     public String getScheme() {
         return scheme;
     }
 
+    /**
+     * 设置此字体所属的字体方案，有三种可能的取值{@code "none"},{@code "major"}和{@code "minor"}
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param scheme {@code "none"},{@code "major"}和{@code "minor"}三种取值之一
+     * @return 当前字体
+     */
     public Font setScheme(String scheme) {
         this.scheme = scheme;
         return this;
     }
 
+    /**
+     * 获取字符集
+     *
+     * @return 字体的字符集参考 {@link Charset}
+     */
     public int getCharset() {
         return charset;
     }
 
+    /**
+     * 设置字体的字符集
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @param charset {@link Charset}
+     * @return 当前字体
+     */
     public Font setCharset(int charset) {
         this.charset = charset;
         return this;
     }
 
+    /**
+     * 添加“斜体”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font italic() {
         style |= Style.ITALIC;
         return this;
     }
 
+    /**
+     * 添加“粗休”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font bold() {
         style |= Style.BOLD;
         return this;
     }
 
+    /**
+     * 添加“下划线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font underLine() {
         style |= Style.UNDERLINE;
         return this;
     }
 
+    /**
+     * 添加“删除线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     * @deprecated 使用 {@link #strikeThru()}替换
+     */
+    @Deprecated
     public Font deleteLine() {
         style |= Style.DELETE;
         return this;
     }
 
+    /**
+     * 添加“删除线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
+    public Font strikeThru() {
+        style |= Style.DELETE;
+        return this;
+    }
+
+    /**
+     * 检查是否有“斜体”样式
+     *
+     * @return true: 是
+     */
     public boolean isItalic() {
         return (style & Style.ITALIC) == Style.ITALIC;
     }
+
+    /**
+     * 检查是否有“粗体”样式
+     *
+     * @return true: 是
+     */
     public boolean isBold() {
         return (style & Style.BOLD) == Style.BOLD;
     }
+
+    /**
+     * 检查是否有“下划线”样式
+     *
+     * @return true: 是
+     */
     public boolean isUnderLine() {
         return (style & Style.UNDERLINE) == Style.UNDERLINE;
     }
 
+    /**
+     * 检查是否有“删除线”样式
+     *
+     * @return true: 是
+     * @deprecated 使用 {@link #isStrikeThru()}替换
+     */
+    @Deprecated
     public boolean isDeleteLine() {
         return (style & Style.DELETE) == Style.DELETE;
     }
 
+    /**
+     * 检查是否有“删除线”样式
+     *
+     * @return true: 是
+     */
+    public boolean isStrikeThru() {
+        return (style & Style.DELETE) == Style.DELETE;
+    }
+
+    /**
+     * 删除"斜体"样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font delItalic() {
         style &= (Style.UNDERLINE | Style.BOLD | Style.DELETE);
         return this;
     }
 
+    /**
+     * 删除"加粗"样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font delBold() {
         style &= (Style.UNDERLINE | Style.ITALIC | Style.DELETE);
         return this;
     }
 
+    /**
+     * 删除"下划线"样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
     public Font delUnderLine() {
         style &= (Style.BOLD | Style.ITALIC | Style.DELETE);
         return this;
     }
 
+    /**
+     * 删除“删除线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     * @deprecated 使用 {@link #delStrikeThru()}替换
+     */
+    @Deprecated
     public Font delDeleteLine() {
         style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
         return this;
     }
 
+    /**
+     * 删除“删除线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
+    public Font delStrikeThru() {
+        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
+        return this;
+    }
+
+    /**
+     * 字体样式对应xml名
+     */
     private static final String[] NODE_NAME = {"u", "b", "i", "strike"};
+
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder("<font>");
@@ -358,6 +637,12 @@ public class Font implements Cloneable {
         return false;
     }
 
+    /**
+     * 输出为dom树
+     *
+     * @param root 父节点
+     * @return dom树
+     */
     public Element toDom4j(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         element.addElement("sz").addAttribute("val", ((size & 1) == 0) ? String.valueOf(size / 10) : String.valueOf(size / 10.0D));
@@ -391,7 +676,7 @@ public class Font implements Cloneable {
     }
 
     /**
-     * Base on {@code java.awt.Font}
+     * 将{@code java.awt.Font}字体转为当前字体
      *
      * @param awtFont {@link java.awt.Font}
      * @return a {@code org.ttzero.excel.entity.style.Font}
@@ -401,9 +686,9 @@ public class Font implements Cloneable {
     }
 
     /**
-     * Convert to {@link java.awt.Font}
+     * 将当前字体转为 {@link java.awt.Font}字体
      *
-     * @return a {@code java.awt.Font}
+     * @return {@code java.awt.Font}
      */
     public java.awt.Font toAwtFont() {
         return new java.awt.Font(name, style >> 1, getSize());
@@ -431,7 +716,7 @@ public class Font implements Cloneable {
     /**
      * 粗略估算单／双字节宽度，与实际计算出来的结果可能有很大区别，输出到Excel的宽度需要除{@code 6}，
      * 中文的宽度相对简单几乎都是一样的宽度，英文却很复杂较窄的有{@code 'i','l',':'}和部分符号而像
-     * {@code 'X','E','G'，’%'，‘@’}这类又比较宽
+     * {@code 'X','E','G'，’%'，‘@’}这类又比较宽，本方法取20个字符平均宽度为单子节宽度
      *
      * @return 高16位保存单字节宽度，低16位保存双字节宽度
      */
@@ -456,6 +741,12 @@ public class Font implements Cloneable {
         return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
     }
 
+    /**
+     * 解析xml内容创建字体
+     *
+     * @param tag dom树font节点
+     * @return 字体
+     */
     static Font parseFontTag(Element tag) {
         List<Element> sub = tag.elements();
         Font font = new Font();
@@ -470,14 +761,15 @@ public class Font implements Cloneable {
                 case "u"      : font.style |= Style.UNDERLINE;                              break;
                 case "b"      : font.style |= Style.BOLD;                                   break;
                 case "i"      : font.style |= Style.ITALIC;                                 break;
-                case "strike" : font.style |= Style.DELETE;                                 break;
+                case "strike" : font.style |= Style.STRIKE;                                 break;
             }
         }
 
         return font;
     }
 
-    @Override public Font clone() {
+    @Override
+    public Font clone() {
         Font other;
         try {
             other = (Font) super.clone();
@@ -512,17 +804,44 @@ public class Font implements Cloneable {
 
     // ######################################Static inner class######################################
 
+    /**
+     * 字体样式
+     */
     public static class Style {
         /**
-         * @deprecated Rename to {@link #PLAIN}
+         * 默认文本
+         *
+         * @deprecated 使用 {@code PLAIN}替换
          */
         @Deprecated
-        public static final int NORMAL    = 0;
-        public static final int PLAIN     = 0;
+        public static final int NORMAL = 0;
+        /**
+         * 默认文本
+         */
+        public static final int PLAIN = 0;
+        /**
+         * 下划线
+         */
         public static final int UNDERLINE = 1;
-        public static final int BOLD      = 1 << 1;
-        public static final int ITALIC    = 1 << 2;
-        public static final int DELETE    = 1 << 3;
+        /**
+         * 粗体
+         */
+        public static final int BOLD = 1 << 1;
+        /**
+         * 斜体
+         */
+        public static final int ITALIC = 1 << 2;
+        /**
+         * 删除线
+         *
+         * @deprecated 使用 {@code STRIKE}替换
+         */
+        @Deprecated
+        public static final int DELETE = 1 << 3;
+        /**
+         * 删除线
+         */
+        public static final int STRIKE = 1 << 3;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name.toUpperCase());
