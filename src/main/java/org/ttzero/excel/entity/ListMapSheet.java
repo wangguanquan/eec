@@ -209,9 +209,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             Object o;
             for (int i = 0; i < columns.length; i++) {
                 Column hc = columns[i].getTail();
-                if (isEmpty(hc.key)) {
-                    throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
-                }
+                boolean emptyKey = isEmpty(hc.key), emptyName = isEmpty(hc.name);
+                if (emptyKey && emptyName) throw new ExcelWriteException(getClass() + " must specify the 'key' name.");
+                else if (emptyKey) hc.key = hc.name;
+                else if (emptyName) hc.name = hc.key;
                 if (hc.getClazz() == null) {
                     hc.setClazz((o = first.get(hc.key)) != null ? o.getClass() : String.class);
                 }
