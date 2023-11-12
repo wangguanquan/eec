@@ -778,8 +778,8 @@ public class ListMapSheetTest extends WorkbookTest {
         List<Map<String, ?>> list = createTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListMapSheet(list
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setStartRowIndex(5))
             .writeTo(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"));
 
@@ -799,8 +799,8 @@ public class ListMapSheetTest extends WorkbookTest {
         List<Map<String, ?>> list = createTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListMapSheet(list
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setStartRowIndex(5, false))
             .writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"));
 

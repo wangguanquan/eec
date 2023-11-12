@@ -93,8 +93,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setData(list)
                 .setStartRowIndex(4)
             ).writeTo(defaultTestPath.resolve("test specify row and cel ListSheet.xlsx"));
@@ -111,8 +111,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setData(list)
                 .setStartRowIndex(4, false)
             ).writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListSheet.xlsx"));
@@ -167,8 +167,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setData(list)
                 .setStartRowIndex(4)
                 .ignoreHeader()
@@ -191,8 +191,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
-                , new Column("id", "id").setColIndex(3)
-                , new Column("name", "name").setColIndex(4))
+                , new Column("id").setColIndex(3)
+                , new Column("name").setColIndex(4))
                 .setData(list)
                 .setStartRowIndex(4, false)
                 .ignoreHeader()
