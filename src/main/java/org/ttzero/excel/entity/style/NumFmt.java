@@ -191,10 +191,10 @@ public class NumFmt implements Comparable<NumFmt> {
         // 获取code预处理后的中间结果
         int widthCache = getCodeWidthFromCache(font);
 
-        double width;
+        double width = 0D;
         // 日期
         if ((widthCache & 1) == 1) width = (widthCache >> 2) / 10000.0;
-        else {
+        else if (base >= 1) {
             int comma = (widthCache >>> 1) & 1, k = (widthCache >>> 2) & 63;
             double s = (widthCache >>> 8) / 10000.0;
             width = (base + (comma == 1 ? (base - 1) / 3 : 1) + k) * s; // 有逗号分隔符时计算分隔符个数
@@ -270,7 +270,7 @@ public class NumFmt implements Comparable<NumFmt> {
                     }
                     int _len = len;
                     if (len >= 2 && code.charAt(len - 1) == ')' && code.charAt(len - 2) == '_') _len--;
-                    k = k >= 0 ? _len - k : 0;
+                    k = k >= 0 && _len > k ? _len - k : 0;
                     ks[i] = (k << 1) | (comma ? 1 : 0);
                 }
             }
