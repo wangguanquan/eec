@@ -78,6 +78,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <p>每个Worksheet都可以设置一个{@link #onProgress}窗口来观察导出进度，通过此窗口可以记录每个
  * RowBlock导出时间然后预估整体的导出时间。</p>
  *
+ * <p>能被直接导出的类型包含Java定义的简单类型、包装类型以及时间类型，除此之外的其它类型均会调用{@code toString}
+ * 后直接输出，所以自定义类型或枚举可以覆写{@code toString}方法转为可读的字符串，或者使用
+ * {@link org.ttzero.excel.processor.ConversionProcessor}动态转换将不可读的状态值{@code 1,2,3}转换为
+ * 可读的文字”申请中“，“二申中”，“通过”等，对于未知的类型还可以实现{@link ICellValueAndStyle}转换器并覆写
+ * {@link ICellValueAndStyle#unknownType}方法进行转换</p>
+ *
  * <p>关于扩展属性：随着功能越加越多，在{@code Sheet}中定义的属性也越来越多，这样无限添加可不是个好主意，
  * 所以在{@code v0.5.0}引入了一个{@code Map}类型的扩展属性{@link #extProp}，通过{@link #putExtProp}
  * 和{@link #getExtPropValue}方法添加和读取扩展属性，一般情况下在数据源中添加属性，在输出协议中读取属性，
