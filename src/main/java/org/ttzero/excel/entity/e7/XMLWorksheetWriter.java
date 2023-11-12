@@ -89,20 +89,6 @@ import static org.ttzero.excel.reader.Cell.REMOTE_URL;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
-import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
-import static org.ttzero.excel.entity.IWorksheetWriter.isBool;
-import static org.ttzero.excel.entity.IWorksheetWriter.isString;
-import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
-import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDate;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDateTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isFloat;
-import static org.ttzero.excel.entity.IWorksheetWriter.isDouble;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
-import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
@@ -627,8 +613,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
-            int n;
-            if (hc.o < (n = Double.toString(d).length())) hc.o = n;
+            double n;
+            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(Double.toString(d).length(), getFont(xf)))
+                || hc.o < (n = Double.toString(d).length()))
+                hc.o = n;
         }
     }
 
@@ -653,8 +641,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
-            int l;
-            if (hc.o < (l = bd.toString().length())) hc.o = l;
+            double n;
+            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(bd.toString().length(), getFont(xf)))
+                || hc.o < (n = bd.toString().length()))
+                hc.o = n;
         }
     }
 
@@ -708,8 +698,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("</v></c>");
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
-            int n;
-            if (hc.o < (n = stringSize(l))) hc.o = n;
+            double n;
+            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(stringSize(l), getFont(xf)))
+                || hc.o < (n = stringSize(l)))
+                hc.o = n;
         }
     }
 
@@ -926,60 +918,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                 continue;
             }
-            double len;
-            Class<?> clazz = hc.getClazz();
-            if (isString(clazz)) {
-                len = hc.o;
-            }
-            else if (isDateTime(clazz) || isLocalDateTime(clazz)) {
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(0);
-                } else len = hc.o;
-            }
-            else if (isDate(clazz) || isLocalDate(clazz)) {
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(0);
-                } else len = hc.o;
-            }
-            else if (isChar(clazz)) {
-                len = 1;
-            }
-            else if (isInt(clazz) || isLong(clazz)) {
-                // TODO Calculate character width based on numFmt
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(hc.o);
-                } else len = hc.o;
-            }
-            else if (isFloat(clazz) || isDouble(clazz)) {
-                // TODO Calculate character width based on numFmt
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(hc.o);
-                } else len = hc.o;
-            }
-            else if (isBigDecimal(clazz)) {
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(hc.o);
-                } else len = hc.o;
-            }
-            else if (isTime(clazz) || isLocalTime(clazz)) {
-                if (hc.getNumFmt() != null) {
-                    len = hc.getNumFmt().calcNumWidth(0);
-                } else len = hc.o;
-            }
-            else if (isBool(clazz)) {
-                len = 5.0D;
-            }
-            else if (hc.getNumFmt() != null) {
-                len = hc.getNumFmt().calcNumWidth(0);
-            }
-            else {
-                len = hc.o > 0 ? hc.o : 10.0D;
-            }
+            double len = hc.o > 0 ? hc.o : sheet.getDefaultWidth();
             double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
             if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
-            if (width > Const.Limit.COLUMN_WIDTH) {
-                width = Const.Limit.COLUMN_WIDTH;
-            }
+            if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
             hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
@@ -1300,10 +1242,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * FontMetrics cache
-     */
-    protected java.awt.FontMetrics[] fms = new java.awt.FontMetrics[100];
-    /**
      * Calculate text width
      * <p>
      * Reference {@link sun.swing.SwingUtilities2#stringWidth}
@@ -1314,18 +1252,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected double stringWidth(String s, int xf) {
         if (StringUtil.isEmpty(s)) return 0.0D;
-        if (xf >= fms.length) fms = Arrays.copyOf(fms, Math.max(xf, fms.length + 100));
-        java.awt.FontMetrics fm = fms[xf];
-        if (fm == null) {
-            // Obtain the font corresponding to the current text through xf
-            Styles styles = sheet.getWorkbook().getStyles();
-            int style = styles.getStyleByIndex(xf);
-            Font font = styles.getFont(style);
-
-            // {@code sun.*} does not have access, so using the {@code javax.swing.*} bridging
-            fms[xf] = fm = new javax.swing.JLabel().getFontMetrics(font.toAwtFont());
-        }
-        return fm.stringWidth(s) / 6.0D * 1.02D;
+        return getFont(xf).getFontMetrics().stringWidth(s) / 6.0D * 1.02D;
     }
 
     /**
@@ -1492,5 +1419,27 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.effect = columns[column].effect;
 
         return picture;
+    }
+
+    /**
+     * 按cellXfs下标缓存字体
+     */
+    protected Font[] fs = new Font[100];
+    /**
+     * 通过单元格样式索引获取{@code FontMetrics}用以计算文本宽度
+     *
+     * @param xf 单元格样式索引
+     * @return 字体度量对象
+     */
+    protected Font getFont(int xf) {
+        if (xf >= fs.length) fs = Arrays.copyOf(fs, Math.max(xf, fs.length + 100));
+        Font f = fs[xf];
+        if (f == null) {
+            // 通过xf获取当前文本对应的字体
+            Styles styles = sheet.getWorkbook().getStyles();
+            int style = styles.getStyleByIndex(xf);
+            fs[xf] = f = styles.getFont(style);
+        }
+        return f;
     }
 }

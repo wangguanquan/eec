@@ -20,8 +20,11 @@ import org.dom4j.Element;
 import org.ttzero.excel.util.StringUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.ttzero.excel.entity.style.Styles.getAttr;
@@ -152,53 +155,133 @@ public class NumFmt implements Comparable<NumFmt> {
     }
 
     /**
-     * Roughly calculate the cell length
+     * 兼容之前版本，这里固定按默认字体 “宋体” 11字号处理，后续将删除
+     */
+    static final Font SONG = new Font("宋体", 11);
+    /**
+     * 粗略计算单元格长度
      *
      * @param base the cell value length
      * @return cell length
+     * @deprecated 使用 {@link #calcNumWidth(double, Font)}替代，新方法会根据字体/字号进行计算
      */
+    @Deprecated
     public double calcNumWidth(double base) {
+        return calcNumWidth(base, SONG);
+    }
+
+    /**
+     * 缓存code的宽度
+     *
+     * key: 字号+字体
+     * value: 预计算的结果
+     */
+    protected transient Map<String, Integer> codeWidthCache;
+
+    /**
+     * 粗略计算单元格长度，优先从缓存中获取预处理结果，缓存key由字号+字体名组成这样就保存能计算出相近的宽度，
+     * 未命中缓存则从先预处理再丢入缓存以便下次使用
+     *
+     * @param base the cell value length
+     * @param font font
+     * @return cell length
+     */
+    public double calcNumWidth(double base, Font font) {
         if (StringUtil.isBlank(code)) return 0.0D;
-        // Calculate the segment length separately and return the maximum value
-        String[] codes = code.split(";");
-        double max = 0.0D;
-        for (String code : codes) {
-            double n = base < 0.0D ? 1.0D : 0.0D;
-            boolean ignore = false, comma = false;
-            for (int i = 0; i < code.length(); i++) {
-                char c = code.charAt(i);
-                if (c == '"' || c == '\\') continue;
-                if (ignore) {
-                    if (c == ']' || c == ')') {
-                        ignore = false;
-                    }
-                    continue;
-                }
-                if (c == '[' || c == '(') {
-                    ignore = true;
-                    continue;
-                }
-                if (c == ',') comma = true;
-                n += c > 0x4E00 ? 1.86D : 1.0D;
-            }
-            // Test date format
-            boolean isDate = Styles.testCodeIsDate(code);
-            int k = 0;
-            if (!isDate) {
-                k = code.lastIndexOf('.');
-                if (k < 0) {
-                    k = code.length();
-                    for (; k > 0; k--) {
-                        char c = code.charAt(k - 1);
-                        if (!(c == '_' || c == ' ' || c == '.')) break;
-                    }
-                }
-                k = k >= 0 ? code.length() - k : 0;
-            }
-            double len = isDate ? n : (comma ? base + base / 3 : base) + k;
-            if (max < len) max = len;
+        // 获取code预处理后的中间结果
+        int widthCache = getCodeWidthFromCache(font);
+
+        double width;
+        // 日期
+        if ((widthCache & 1) == 1) width = (widthCache >> 2) / 10000.0;
+        else {
+            int comma = (widthCache >>> 1) & 1, k = (widthCache >>> 2) & 63;
+            double s = (widthCache >>> 8) / 10000.0;
+            width = (base + (comma == 1 ? (base - 1) / 3 : 1) + k) * s; // 有逗号分隔符时计算分隔符个数
         }
-        return max + 0.86D;
+        return width;
+    }
+
+    /**
+     * 计算并缓存格式化串的长度，以此长度为基础计算文本长度
+     *
+     * @param font 字体
+     * @return 一个二进制结果，第0位表示日期，第1位表示是否有逗号分隔符，当第0位为1时高30位保存格式化串的宽度（已按字体计算好的宽度），
+     * 当第0位为0时第2-9位表示小数点后面的位数，10-31位表示单字节单个字符宽度
+     */
+    protected int getCodeWidthFromCache(Font font) {
+        if (codeWidthCache == null) codeWidthCache = new HashMap<>();
+        return codeWidthCache.computeIfAbsent(font.getSize() + font.getName(), key -> {
+            int wc = 0;
+            boolean isDate = Styles.testCodeIsDate(code);
+            // 计算每一段的宽度取最大值
+            String[] codes = code.split(";");
+            int[] ks = new int[codes.length];
+            int fw = font.roughEstimateCharWidth();
+            double s = ((fw >>> 16) & 0xFFFF) / 6.0D, d = (fw & 0xFFFF) / 6.0D;
+            for (int i = 0; i < codes.length; i++) {
+                String code = codes[i];
+                double n = 0.0D;
+                boolean ignore = false, comma = false;
+                int len = code.length();
+                for (int j = 0; j < len; j++) {
+                    char c = code.charAt(j);
+                    if (c == '"' || c == '\\') continue;
+                    if (ignore) {
+                        if (c == ']' || c == ')') {
+                            ignore = false;
+                        }
+                        continue;
+                    }
+                    if (c == '[' || c == '(') {
+                        ignore = true;
+                        continue;
+                    }
+                    if (c == ',') comma = true;
+                    // 需要使用"方言"为了简单这里只处理am/pm 或者 上午/下午 特殊处理，最终显示只显示其中一个
+                    else if (c == '/' && j >= 2 && j + 2 < len) {
+                        char p1 = code.charAt(j - 2), p2 = code.charAt(j - 1)
+                            , n1 = code.charAt(j + 1), n2 = code.charAt(j + 2);
+                        if (p1 == '上' && n1 == '下' && p2 == '午' && n2 == '午'
+                            || (p1 == 'a' || p1 == 'A') && (n1 == 'p' || n1 == 'P') && (p2 == 'm' || p2 == 'M') && (n2 == 'm' || n2 == 'M')) {
+                            j += 2;
+                            continue;
+                        }
+                    }
+                    n += c > 0x4E00 ? d : s;
+                }
+
+                // 日期格式，只有一个段
+                if (isDate) {
+                    wc = ((int) (n * 10000 + 0.5)) << 2;
+                    wc |= comma ? 3 : 1;
+                    break;
+                }
+                // 数字格式，可能包含多个段，这里要计算出最长的那个段并进行缓存
+                // 整数部分可能添加逗号等分隔符
+                else {
+                    int k = code.lastIndexOf('.');
+                    if (k < 0) {
+                        k = code.length();
+                        for (; k > 0; k--) {
+                            char c = code.charAt(k - 1);
+                            if (!(c == '_' || c == ' ' || c == '.')) break;
+                        }
+                    }
+                    int _len = len;
+                    if (len >= 2 && code.charAt(len - 1) == ')' && code.charAt(len - 2) == '_') _len--;
+                    k = k >= 0 ? _len - k : 0;
+                    ks[i] = (k << 1) | (comma ? 1 : 0);
+                }
+            }
+
+            if (!isDate) {
+                int max = Arrays.stream(ks).max().orElse(0);
+                wc = max << 1;
+                wc |= ((int) (s * 10000 + 0.5)) << 8;
+            }
+            return wc;
+        });
     }
 
     @Override

@@ -409,6 +409,43 @@ public class Font implements Cloneable {
         return new java.awt.Font(name, style >> 1, getSize());
     }
 
+    /**
+     * 通过{@link Font}获取{@code FontMetrics}用以计算文本宽度
+     *
+     * @return 字体度量对象
+     */
+    public java.awt.FontMetrics getFontMetrics() {
+        return fm != null ? fm : (fm = getFontMetrics(toAwtFont()));
+    }
+
+    /**
+     * 通过{@link java.awt.Font}获取{@code FontMetrics}用以计算文本宽度
+     *
+     * @param font awt字体
+     * @return 字体度量对象
+     */
+    public static java.awt.FontMetrics getFontMetrics(java.awt.Font font) {
+        return new javax.swing.JLabel().getFontMetrics(font);
+    }
+
+    /**
+     * 粗略估算单／双字节宽度，与实际计算出来的结果可能有很大区别，输出到Excel的宽度需要除{@code 6}，
+     * 中文的宽度相对简单几乎都是一样的宽度，英文却很复杂较窄的有{@code 'i','l',':'}和部分符号而像
+     * {@code 'X','E','G'，’%'，‘@’}这类又比较宽
+     *
+     * @return 高16位保存单字节宽度，低16位保存双字节宽度
+     */
+    public int roughEstimateCharWidth() {
+        java.awt.FontMetrics fm = getFontMetrics();
+        return ((int) (fm.stringWidth("abcdil234#ABCDETX*@%") / 20.0 + 0.5)) << 16 | fm.charWidth('中');
+    }
+
+    /**
+     * 解析字体
+     *
+     * @param root styles树root
+     * @return styles字体
+     */
     public static List<Font> domToFont(Element root) {
         // Fonts tags
         Element ele = root.element("fonts");
