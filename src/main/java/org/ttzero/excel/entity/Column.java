@@ -174,7 +174,7 @@ public class Column {
      * @param clazz the cell type
      */
     public Column(String name, Class<?> clazz) {
-        this(name, clazz, true);
+        this(name, clazz, false);
     }
 
     /**
@@ -184,7 +184,7 @@ public class Column {
      * @param key  field
      */
     public Column(String name, String key) {
-        this(name, key, true);
+        this(name, key, false);
     }
 
     /**
@@ -195,7 +195,7 @@ public class Column {
      * @param clazz the cell type
      */
     public Column(String name, String key, Class<?> clazz) {
-        this(name, key, true);
+        this(name, key, false);
         this.clazz = clazz;
     }
 
@@ -207,7 +207,7 @@ public class Column {
      * @param processor The int value conversion
      */
     public Column(String name, Class<?> clazz, ConversionProcessor processor) {
-        this(name, clazz, processor, true);
+        this(name, clazz, processor, false);
     }
 
     /**
@@ -218,7 +218,7 @@ public class Column {
      * @param processor The int value conversion
      */
     public Column(String name, String key, ConversionProcessor processor) {
-        this(name, key, processor, true);
+        this(name, key, processor, false);
     }
 
     /**
