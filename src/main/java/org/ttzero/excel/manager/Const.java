@@ -123,7 +123,7 @@ public interface Const {
         /**
          * The header sub-columns length
          */
-        int HEADER_SUB_COLUMNS = 10;
+        int HEADER_SUB_COLUMNS = 1024;
     }
 
     /**
