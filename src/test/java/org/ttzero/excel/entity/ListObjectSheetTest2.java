@@ -26,6 +26,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
@@ -313,6 +314,21 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testSpecifyConvertClass() throws IOException {
+        List<SpecifyConvertModel> expectList = SpecifyConvertModel.randomTestData(20);
+        String fileName = "specify converter test.xlsx";
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<SpecifyConvertModel> readList = reader.sheet(0).header(1).rows().map(row -> row.to(SpecifyConvertModel.class)).collect(Collectors.toList());
+            assert expectList.size() == readList.size();
+            for (int i = 0, len = expectList.size(); i < len; i++)
+                assert expectList.get(i).equals(readList.get(i));
+        }
+    }
+
     public static class TemplateStyleProcessor implements StyleProcessor<Template> {
         String k;
         int c = 0;
@@ -563,6 +579,56 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         @ExcelColumn
         private String name;
         @ExcelColumn
-        private int score;
+        private int status;
+    }
+
+    public static class SpecifyConvertModel {
+        @ExcelColumn
+        private String name;
+        @ExcelColumn(converter = StatusConvert.class)
+        private int status;
+
+        public static List<SpecifyConvertModel> randomTestData(int n) {
+            List<SpecifyConvertModel> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                SpecifyConvertModel e = new SpecifyConvertModel();
+                e.name = getRandomString(10);
+                e.status = random.nextInt(4);
+                list.add(e);
+            }
+            return list;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SpecifyConvertModel that = (SpecifyConvertModel) o;
+            return status == that.status && Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, status);
+        }
+    }
+
+    public static class StatusConvert implements Converter<Integer> {
+        final String[] statusDesc = { "未开始", "进行中", "完结", "中止" };
+
+        @Override
+        public Integer reversion(String v) {
+            for (int i = 0; i < statusDesc.length; i++) {
+                if (statusDesc[i].equals(v)) {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public Object conversion(Object v) {
+            return v != null ? statusDesc[(int) v] : null;
+        }
     }
 }
