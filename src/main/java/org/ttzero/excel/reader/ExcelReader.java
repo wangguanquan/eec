@@ -257,7 +257,7 @@ public class ExcelReader implements Closeable {
      * @throws IOException if I/O error occur
      */
     public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        Path temp = FileUtil.mktmp("eec-");
         if (temp == null) {
             throw new IOException("Create temp directory error. Please check your permission");
         }
@@ -543,7 +543,7 @@ public class ExcelReader implements Closeable {
     }
 
     public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
+        Path temp = FileUtil.mktmp("eec-");
         if (temp == null) {
             throw new IOException("Create temp directory error. Please check permission");
         }
