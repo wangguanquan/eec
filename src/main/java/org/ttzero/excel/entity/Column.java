@@ -50,26 +50,28 @@ import static org.ttzero.excel.entity.style.NumFmt.DATE_FORMAT;
 import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
 
 /**
- * Associated with Worksheet for controlling head style and cache
- * column data types and conversions
+ * Excel列，{@code Column}用于收集列属性将Java实体与Excel列进行映射，
+ * 多个{@code Column}组成Excel表头行，当前最大支持1024层表头
+ *
  *
  * @author guanquan.wang at 2021-08-29 19:49
  */
 public class Column {
     /**
-     * The key of Map or field name of entry
+     * Java对象中的字段、Map的Key或者SQL语句中的select字段，具体值由工作表类型决定
      */
     public String key;
     /**
-     * The header name
+     * Excel表头名称，未指定表头名时默认以{@code #key}的值代替
      */
     public String name;
     /**
-     * The cell type
+     * Excel列值的类型，不特殊指定时该类型与Java对象类型一致，它影响最终输出到Excel单元格值的类型和对齐方式
+     * 默认情况下文本类型左对齐，数字右对齐，日期居中，表头单元格全部居中
      */
     public Class<?> clazz;
     /**
-     * The int value conversion
+     * 输出转换器，通常用于将不可读的状态值或枚举值转换为可读的文本输出到Excel
      */
     public ConversionProcessor processor;
     /**
@@ -83,81 +85,85 @@ public class Column {
      */
     public StyleProcessor styleProcessor;
     /**
-     * The style of cell
+     * 表格体的样式值
      */
     public Integer cellStyle;
     /**
-     * The style of header
+     * 表格头的样式值
      */
     public Integer headerStyle;
     /**
-     * The style index of cell, -1 if not be setting
+     * 表格体的样式索引, -1表示未设置
      */
     protected int cellStyleIndex = -1;
     /**
-     * The style index of header, -1 if not be setting
+     * 表格头的样式索引, -1表示未设置
      */
     protected int headerStyleIndex = -1;
     /**
-     * The cell width and height
+     * 列宽，表头行高
      */
-    public double width = -1D, headerHeight = -1D;
+    public double width = -1D,
+    /**
+     * 表头行高
+     */
+    headerHeight = -1D;
     public double o;
+    /**
+     * 全局样式对象
+     */
     public Styles styles;
+    /**
+     * 表头批注
+     */
     public Comment headerComment, cellComment;
     /**
-     * Specify the cell number format
+     * 表格体格式化，自定义格式化可以覆写方法{@link NumFmt#calcNumWidth(double, Font)}调整计算
      */
     public NumFmt numFmt;
     /**
-     * Specify the column index
+     * 列索引，从0开始的数字，0对应Excel的{@code 'A'}列以此类推，-1表示未设置
      */
     public int colIndex = -1;
     /**
-     * The previous Column point
-     *
-     * Support multi header columns
+     * 多行表头中指向前一个{@code Column}
      *
      * @since 0.5.1
      */
     public Column prev;
     /**
-     * The next Column point
-     *
-     * Support multi header columns
+     * 多行表头中指向后一个{@code Column}
      *
      * @since 0.5.1
      */
     public Column next;
     /**
-     * The tail Column point
-     *
-     * Support multi header columns
+     * 多行表头中指向最后一个{@code Column}
      *
      * @since 0.5.1
      */
     public Column tail;
     /**
-     * The real col-Index used to write
+     * 实际列索引，它与Excel列号对应，该值通过内部计算而来，请不要在外部修改
      */
     public int realColIndex;
     /**
-     * Simple properties
+     * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
      *
      * <blockquote><pre>
      *  Bit  | Contents
      * ------+---------
-     * 31. 1 | Warp Text
-     * 30. 2 | Auto size, 0: default, 1: auto-size 2: fixed-size
-     * 28. 1 | Ignore Value, Only export column name
-     * 27. 1 | Hide column
-     * 26. 1 | Shared String
-     * 25. 2 | Column type, 0: default 1: picture
+     * 31. 1 | 自动换行 1位
+     * 30. 2 | 自适应列宽 2位, 0: auto, 1: auto-size 2: fixed-size
+     * 28. 1 | 忽略导出值 1位, 仅导出表头
+     * 27. 1 | 隐藏列 1位
+     * 26. 1 | 共享字符串 1位
+     * 25. 2 | 列类型, 0: 默认导出为文本 1: 导出为图片
      * </pre></blockquote>
      */
-    public int option;
+    protected int option;
     /**
-     * Picture Effect
+     * 图片效果
      */
     public Effect effect;
     /**
