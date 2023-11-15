@@ -27,6 +27,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
+import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.processor.StyleProcessor;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isBigDecimal;
@@ -72,7 +73,13 @@ public class Column {
      */
     public ConversionProcessor processor;
     /**
-     * The style conversion
+     * 数据转换器，与{@code ConversionProcessor}不同的是这是一个双向转换器，
+     * 同时{@code Converter}继承{@code ConversionProcessor}接口，当{@code processor}与
+     * {@code converter}同时存在时前者具有更高的优先级
+     */
+    public Converter<?> converter;
+    /**
+     * 动态样式转换器，可根据单元格的值动态设置单元格或整行样式，通常用于高亮显示某些需要重视的行或单元格
      */
     public StyleProcessor styleProcessor;
     /**
@@ -356,6 +363,7 @@ public class Column {
         this.clazz = other.clazz;
 //        this.share = other.share;
         this.processor = other.processor;
+        this.converter = other.converter;
         this.styleProcessor = other.styleProcessor;
         this.width = other.width;
         this.headerHeight = other.headerHeight;
@@ -471,7 +479,31 @@ public class Column {
      * @return the {@link Column}
      */
     public Column setStyleProcessor(StyleProcessor styleProcessor) {
-        this.styleProcessor = styleProcessor;
+        if (styleProcessor != null && !StyleProcessor.None.class.isAssignableFrom(styleProcessor.getClass())) {
+            this.styleProcessor = styleProcessor;
+        }
+        return this;
+    }
+
+    /**
+     * 获取输出转换器，优先返回{@code ConversionProcessor}，其次是{@code Converter}
+     *
+     * @return 值转换器
+     */
+    public ConversionProcessor getConversion() {
+        return processor != null ? processor : converter;
+    }
+
+    /**
+     * 设置转换器
+     *
+     * @param converter 值转换器
+     * @return 当前列
+     */
+    public Column setConverter(Converter<?> converter) {
+        if (converter != null && !Converter.None.class.isAssignableFrom(converter.getClass())) {
+            this.converter = converter;
+        }
         return this;
     }
 

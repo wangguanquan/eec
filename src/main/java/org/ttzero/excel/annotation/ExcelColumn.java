@@ -17,6 +17,7 @@
 package org.ttzero.excel.annotation;
 
 import org.ttzero.excel.entity.Sheet;
+import org.ttzero.excel.processor.Converter;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -130,7 +131,7 @@ public @interface ExcelColumn {
      *
      * <p>任何负数均表示”未设置“，默认列宽为{@code 20}，可以使用{@link Sheet#fixedSize(double)}重置</p>
      *
-     * @return 有效范围[0, 256)，任何小于0的值均表示"未设置"
+     * @return 有效范围 {@code [0, 256)}，任何小于0的值均表示"未设置"
      */
     double maxWidth() default -1D;
 
@@ -145,4 +146,13 @@ public @interface ExcelColumn {
      * @return true: 隐藏，false: 显示（默认）
      */
     boolean hide() default false;
+
+    /**
+     * 数据转换，导出的时候可以将不可读的状态码或者枚举值转为可读的文本，导入的时候则做相反的工作。
+     * 它不是必须的通常建议在创建列的时候直接使用{@link org.ttzero.excel.processor.ConversionProcessor}
+     * 表达式更简洁无需定义一个类来处理
+     *
+     * @return 数据转换器，默认{@code None}无转换
+     */
+    Class<? extends Converter<?>> converter() default Converter.None.class;
 }

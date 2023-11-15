@@ -27,6 +27,7 @@ import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.drawing.PresetPictureEffect;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
+import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.StringUtil;
@@ -726,6 +727,15 @@ public class ListSheet<T> extends Sheet {
         if (ec.hide()) column.hide();
         // Cell max width
         if (ec.maxWidth() >= 0.0D) column.width = ec.maxWidth();
+        // Converter
+        if (!Converter.None.class.isAssignableFrom(ec.converter())) {
+            try {
+                 column.setConverter(ec.converter().newInstance());
+            } catch (InstantiationException | IllegalAccessException e) {
+                LOGGER.warn("Construct {} error occur, it will be ignore.", ec.converter(), e);
+            }
+        }
+
         return column;
     }
 

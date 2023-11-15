@@ -58,9 +58,10 @@ public interface ICellValueAndStyle {
      * @param hc   the header column
      */
     default void reset(Row row, Cell cell, Object e, Column hc) {
-        setCellValue(row.index, cell, e, hc, hc.getClazz(), hc.processor != null);
+        boolean hasConversion = hc.getConversion() != null;
+        setCellValue(row.index, cell, e, hc, hc.getClazz(), hasConversion);
         // Cell style
-        if (hc.processor == null) {
+        if (!hasConversion) {
             cell.xf = getStyleIndex(row, hc, e);
         }
         // Reset row height
@@ -136,10 +137,10 @@ public interface ICellValueAndStyle {
      * @param e     the cell value
      * @param hc    the header column
      * @param clazz the cell value type
-     * @param hasProcessor Specify the cell has value converter
+     * @param hasConversion 是否有输出转换器
      */
-    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasProcessor) {
-        if (hasProcessor) {
+    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
+        if (hasConversion) {
             conversion(row, cell, e, hc);
             return;
         }
@@ -216,7 +217,7 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      */
     default void setNullValue(int row, Cell cell, Column hc) {
-        boolean hasProcessor = hc.processor != null;
+        boolean hasProcessor = hc.getConversion() != null;
         if (hasProcessor) {
             conversion(row, cell, 0, hc);
         } else
@@ -232,7 +233,7 @@ public interface ICellValueAndStyle {
      * @param hc   the header column
      */
     default void conversion(int row, Cell cell, Object o, Column hc) {
-        Object e = hc.processor.conversion(o);
+        Object e = hc.getConversion().conversion(o);
         if (e != null) {
             Class<?> clazz = e.getClass();
             if (isInt(clazz)) {

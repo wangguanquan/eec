@@ -58,7 +58,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
     @Deprecated
     @Override
     public void reset(int row, Cell cell, Object e, Column hc) {
-        setCellValue(row, cell, e, hc, hc.getClazz(), hc.processor != null);
+        setCellValue(row, cell, e, hc, hc.getClazz(), hc.getConversion() != null);
     }
 
     /**
@@ -90,10 +90,11 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param e     the cell value
      * @param hc    the header column
      * @param clazz the cell value type
+     * @param hasConversion 是否有输出转换器
      */
     @Override
-    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasProcessor) {
-        if (hasProcessor) {
+    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
+        if (hasConversion) {
             conversion(row, cell, e, hc);
             return;
         }

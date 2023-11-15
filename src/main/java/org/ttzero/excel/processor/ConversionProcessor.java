@@ -17,20 +17,25 @@
 package org.ttzero.excel.processor;
 
 /**
- * A value Conversion
- * Typically used to convert state values or enumerated values
- * to meaningful values
+ * 输出转换器，将Java数据类型转为Excel输出类型，通常用于将状态值、枚举值转换为文本
+ *
+ * <blockquote><pre>
+ * new Workbook()
+ *   .addSheet(new ListSheet<>(
+ *      new Column("审核单号", "billNo"),
+ *      new Column("审核状态", "status", n -> AuditStatus.byVal((int)n).desc())
+ *   ))
+ *   .writeTo(Paths.get("/tmp/"));</pre></blockquote>
  *
  * @author guanquan.wang on 2021-11-30 19:10
  */
 @FunctionalInterface
 public interface ConversionProcessor {
     /**
-     * A value Converter, the converted value is used as the export value
-     * and the style is also changed accordingly
+     * 输出转换器，导出Excel时将数据转换后输出
      *
-     * @param v the original value
-     * @return the converted value
+     * @param v 原始值
+     * @return 转换后的值
      */
     Object conversion(Object v);
 }

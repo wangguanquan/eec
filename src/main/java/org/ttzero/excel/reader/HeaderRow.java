@@ -23,6 +23,7 @@ import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
@@ -525,7 +526,10 @@ public class HeaderRow extends Row {
         ListSheet.EntryColumn ec = columns[i];
         int c = ec.colIndex;
         Class<?> fieldClazz = ec.clazz;
-        if (fieldClazz == String.class) {
+        if (ec.converter != null) {
+            ec.field.set(t, ec.converter.reversion(row.getString(c)));
+        }
+        else if (fieldClazz == String.class) {
             ec.field.set(t, row.getString(c));
         }
         else if (fieldClazz == Integer.class) {
@@ -614,7 +618,10 @@ public class HeaderRow extends Row {
         ListSheet.EntryColumn ec = columns[i];
         int c = ec.colIndex;
         Class<?> fieldClazz = ec.clazz;
-        if (fieldClazz == String.class) {
+        if (ec.converter != null) {
+            ec.method.invoke(t, ec.converter.reversion(row.getString(c)));
+        }
+        else if (fieldClazz == String.class) {
             ec.method.invoke(t, row.getString(c));
         }
         else if (fieldClazz == Integer.class) {
@@ -797,6 +804,14 @@ public class HeaderRow extends Row {
             column.setColIndex(ec.colIndex());
             // Hidden Column
             if (ec.hide()) column.hide();
+            // Converter
+            if (!Converter.None.class.isAssignableFrom(ec.converter())) {
+                try {
+                    column.setConverter(ec.converter().newInstance());
+                } catch (InstantiationException | IllegalAccessException e) {
+                    LOGGER.warn("Construct {} error occur, it will be ignore.", ec.converter(), e);
+                }
+            }
         } else if (anno instanceof RowNum) {
             column = new ListSheet.EntryColumn(EMPTY, RowNum.class);
         }
