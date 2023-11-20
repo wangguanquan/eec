@@ -113,20 +113,22 @@ public class SharedStrings implements Storable, Closeable {
      * @return 当前共享字符区
      */
     public SharedStrings init() {
-        hot = FixSizeLRUCache.create();
-        ascii = new int[1 << 7];
-        // -1 means the keyword not exists
-        Arrays.fill(ascii, -1);
-        // Create a 2^17 expected insertions and 0.3% fpp bloom filter 2.84M
-        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
+        if (sst == null) {
+            hot = FixSizeLRUCache.create();
+            ascii = new int[1 << 7];
+            // -1 means the keyword not exists
+            Arrays.fill(ascii, -1);
+            // Create a 2^17 expected insertions and 0.3% fpp bloom filter 2.84M
+            filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
 
-        try {
-            temp = Files.createTempFile("~", "sst");
-            writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
+            try {
+                temp = Files.createTempFile("~", "sst");
+                writer = new ExtBufferedWriter(Files.newBufferedWriter(temp, StandardCharsets.UTF_8));
 
-            sst = new SharedStringTable();
-        } catch (IOException e) {
-            throw new ExcelWriteException(e);
+                sst = new SharedStringTable();
+            } catch (IOException e) {
+                throw new ExcelWriteException(e);
+            }
         }
         return this;
     }
