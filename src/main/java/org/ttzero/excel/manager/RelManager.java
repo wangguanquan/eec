@@ -38,7 +38,7 @@ import java.util.List;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * Relation manager
+ * 引用管理器
  *
  * @author guanquan.wang on 2017/9/30.
  */
