@@ -426,7 +426,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 WidthTestItem o = supplier.get();
                 o.nv = random.nextInt();
                 o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
-                o.sen = getRandomString(20);
+                o.sen = getRandomAssicString(20);
                 o.scn = "联想笔记本电脑拯救者R7000(标压 6核 R5-5600H 16G 512G RTX3050 100%sRGB)黑";
                 list.add(o);
             }
