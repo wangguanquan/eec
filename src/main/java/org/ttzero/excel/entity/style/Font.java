@@ -714,18 +714,6 @@ public class Font implements Cloneable {
     }
 
     /**
-     * 粗略估算单／双字节宽度，与实际计算出来的结果可能有很大区别，输出到Excel的宽度需要除{@code 6}，
-     * 中文的宽度相对简单几乎都是一样的宽度，英文却很复杂较窄的有{@code 'i','l',':'}和部分符号而像
-     * {@code 'X','E','G'，’%'，‘@’}这类又比较宽，本方法取20个字符平均宽度为单子节宽度
-     *
-     * @return 高16位保存单字节宽度，低16位保存双字节宽度
-     */
-    public int roughEstimateCharWidth() {
-        java.awt.FontMetrics fm = getFontMetrics();
-        return ((int) (fm.stringWidth("abcdil234#ABCDETX*@%") / 20.0 + 0.5)) << 16 | fm.charWidth('中');
-    }
-
-    /**
      * 解析字体
      *
      * @param root styles树root

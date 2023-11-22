@@ -217,8 +217,14 @@ public class NumFmt implements Comparable<NumFmt> {
             // 计算每一段的宽度取最大值
             String[] codes = code.split(";");
             int[] ks = new int[codes.length];
-            int fw = font.roughEstimateCharWidth();
-            double s = ((fw >>> 16) & 0xFFFF) / 6.0D, d = (fw & 0xFFFF) / 6.0D;
+            java.awt.FontMetrics fm = font.getFontMetrics();
+            /*
+             粗略估算单／双字节宽度，与实际计算出来的结果可能有很大区别，输出到Excel的宽度需要除{@code 6}，
+             中文的宽度相对简单几乎都是一样的宽度，英文却很复杂较窄的有{@code 'i','l',':'}和部分符号而像
+             {@code 'X','E','G'，’%'，‘@’}这类又比较宽，本方法取20个字符平均宽度为单字节宽度，format大多数是数字或数字相关的符号
+             所以这里只计算数字和数字相关符号的平均宽度
+             */
+            double s = fm.stringWidth("1234567890.,: %*-+<>") / 120.0D, d = font.getSize2() / 6.0D;
             for (int i = 0; i < codes.length; i++) {
                 String code = codes[i];
                 double n = 0.0D;
