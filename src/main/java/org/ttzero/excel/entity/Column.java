@@ -53,7 +53,6 @@ import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
  * Excel列，{@code Column}用于收集列属性将Java实体与Excel列进行映射，
  * 多个{@code Column}组成Excel表头行，当前最大支持1024层表头
  *
- *
  * @author guanquan.wang at 2021-08-29 19:49
  */
 public class Column {
@@ -108,7 +107,6 @@ public class Column {
      * 表头行高
      */
     headerHeight = -1D;
-    public double o;
     /**
      * 全局样式对象
      */
@@ -367,13 +365,11 @@ public class Column {
         this.key = other.key;
         this.name = other.name;
         this.clazz = other.clazz;
-//        this.share = other.share;
         this.processor = other.processor;
         this.converter = other.converter;
         this.styleProcessor = other.styleProcessor;
         this.width = other.width;
         this.headerHeight = other.headerHeight;
-        this.o = other.o;
         this.styles = other.styles;
         this.headerComment = other.headerComment;
         this.cellComment = other.cellComment;
