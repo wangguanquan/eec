@@ -21,9 +21,9 @@ package org.ttzero.excel.processor;
  *
  * <blockquote><pre>
  * new Workbook()
- *   .addSheet(new ListSheet<>(
+ *   .addSheet(new ListSheet&lt;&gt;(
  *      new Column("审核单号", "billNo"),
- *      new Column("审核状态", "status", n -> AuditStatus.byVal((int)n).desc())
+ *      new Column("审核状态", "status", n -&gt; AuditStatus.byVal((int)n).desc())
  *   ))
  *   .writeTo(Paths.get("/tmp/"));</pre></blockquote>
  *
