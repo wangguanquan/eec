@@ -31,6 +31,6 @@ public class Verticals {
     public static final String[] _names = {"center", "bottom", "top", "both"};
 
     public static String of(int n) {
-        return _names[n];
+        return _names[n >> Styles.INDEX_VERTICAL];
     }
 }

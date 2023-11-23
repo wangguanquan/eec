@@ -46,6 +46,6 @@ public class Horizontals {
     };
 
     public static String of(int n) {
-        return _names[n];
+        return _names[n >> Styles.INDEX_HORIZONTAL];
     }
 }

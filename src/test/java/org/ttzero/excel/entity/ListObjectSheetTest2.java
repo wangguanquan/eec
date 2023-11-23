@@ -243,16 +243,16 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             assert font0.isBold();
             assert font1.isBold();
             assert font2.isBold();
-            assert styles.getHorizontal(row1.getCellStyle(0)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-            assert styles.getHorizontal(row1.getCellStyle(1)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-            assert styles.getHorizontal(row1.getCellStyle(2)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+            assert styles.getHorizontal(row1.getCellStyle(0)) == Horizontals.LEFT;
+            assert styles.getHorizontal(row1.getCellStyle(1)) == Horizontals.CENTER;
+            assert styles.getHorizontal(row1.getCellStyle(2)) == Horizontals.CENTER;
 
             assert iter.hasNext();
             org.ttzero.excel.reader.Row row2 = iter.next();
             assert list.get(2).equals(Template.of(row2.getString(0), row2.getString(1), row2.getString(2)));
-            assert styles.getHorizontal(row2.getCellStyle(0)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-            assert styles.getHorizontal(row2.getCellStyle(1)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-            assert styles.getHorizontal(row2.getCellStyle(2)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
+            assert styles.getHorizontal(row2.getCellStyle(0)) == Horizontals.LEFT;
+            assert styles.getHorizontal(row2.getCellStyle(1)) == Horizontals.CENTER;
+            assert styles.getHorizontal(row2.getCellStyle(2)) == Horizontals.LEFT;
         }
     }
 

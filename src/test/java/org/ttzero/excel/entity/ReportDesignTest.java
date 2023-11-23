@@ -95,16 +95,16 @@ public class ReportDesignTest extends WorkbookTest {
 
                 Styles styles = row.getStyles();
 
-                assert styles.getHorizontal(row.getCellStyle(0)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(1)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-                assert styles.getHorizontal(row.getCellStyle(2)) << Styles.INDEX_HORIZONTAL == Horizontals.LEFT;
-                assert styles.getHorizontal(row.getCellStyle(3)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(4)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(5)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(6)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(7)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(8)) << Styles.INDEX_HORIZONTAL == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(9)) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(0)) == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(1)) == Horizontals.LEFT;
+                assert styles.getHorizontal(row.getCellStyle(2)) == Horizontals.LEFT;
+                assert styles.getHorizontal(row.getCellStyle(3)) == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(4)) == Horizontals.CENTER;
+                assert styles.getHorizontal(row.getCellStyle(5)) == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(6)) == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(7)) == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(8)) == Horizontals.RIGHT;
+                assert styles.getHorizontal(row.getCellStyle(9)) == Horizontals.CENTER;
 
 
                 int style = row.getCellStyle(0);

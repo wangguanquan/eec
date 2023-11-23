@@ -161,7 +161,7 @@ public class StyleDesignTest extends WorkbookTest {
                 Styles styles = row.getStyles();
                 int c0 = row.getCellStyle(0), c2 = row.getCellStyle(2);
                 assert styles.getWrapText(c0) == 1;
-                assert styles.getHorizontal(c0) << Styles.INDEX_HORIZONTAL == Horizontals.CENTER;
+                assert styles.getHorizontal(c0) == Horizontals.CENTER;
                 assert styles.getWrapText(c2) == 1;
             });
         }

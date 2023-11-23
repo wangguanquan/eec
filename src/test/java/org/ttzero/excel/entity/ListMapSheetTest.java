@@ -182,7 +182,7 @@ public class ListMapSheetTest extends WorkbookTest {
                     }
                 }
 
-                int styleIndex3 = row.getCellStyle(3), horizontals = styles.getHorizontal(styleIndex3) << Styles.INDEX_HORIZONTAL;
+                int styleIndex3 = row.getCellStyle(3), horizontals = styles.getHorizontal(styleIndex3);
                 NumFmt numFmt = styles.getNumFmt(styleIndex3);
                 assert "¥0.00_);[Red]\\-¥0.00_);¥0_)".equals(numFmt.getCode());
                 if ((Integer) expect.get("nv") < 0) {

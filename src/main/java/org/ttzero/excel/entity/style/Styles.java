@@ -575,9 +575,9 @@ public class Styles implements Storable {
                 newXf.addAttribute(attrNames[start + 4], "1");
             }
 
-            Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals.of(styles[4]));
+            Element subEle = newXf.addElement("alignment").addAttribute(attrNames[4], Verticals._names[styles[4]]);
             if (styles[5] > 0) {
-                subEle.addAttribute(attrNames[5], Horizontals.of(styles[5]));
+                subEle.addAttribute(attrNames[5], Horizontals._names[styles[5]]);
             }
             if (styles[6] > 0) {
                 subEle.addAttribute(attrNames[6], "1");
@@ -870,7 +870,7 @@ public class Styles implements Storable {
      * @return 当前样式包含的垂直对齐
      */
     public int getVertical(int style) {
-        return style << 26 >>> (INDEX_VERTICAL + 26);
+        return style << 26 >>> (INDEX_VERTICAL + 26) << INDEX_VERTICAL;
     }
 
     /**
@@ -880,7 +880,7 @@ public class Styles implements Storable {
      * @return 当前样式包含的水平对齐
      */
     public int getHorizontal(int style) {
-        return style << 28 >>> (INDEX_HORIZONTAL + 28);
+        return style << 28 >>> (INDEX_HORIZONTAL + 28) << INDEX_HORIZONTAL;
     }
 
     /**
