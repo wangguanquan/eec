@@ -17,6 +17,8 @@
 package org.ttzero.excel.entity.style;
 
 /**
+ * 水平对齐，在样式中位于第{@code 1-3}位
+ *
  * @author guanquan.wang at 2018-02-11 15:02
  */
 public class Horizontals {

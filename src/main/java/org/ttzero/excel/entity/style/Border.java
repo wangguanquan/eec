@@ -28,12 +28,8 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
- * Border line styles and colors
- *
- * The border contains orientation, style and color. The Excel
- * border has 6 orientations, which are left, right, top, bottom,
- * diagonalDown, diagonalUp. For the style, please refer to {@link BorderStyle}.
- * The default border color is #333333 in EEC
+ * 边框，在样式中位于第{@code 6-12}位，边框包含方向、样式和颜色。
+ * Excel边框有6个方向分别是左、右、上、下、对角线向下、对角线向上。
  *
  * @see BorderStyle
  * @author guanquan.wang on 2018-02-06 08:55
@@ -48,16 +44,22 @@ public class Border implements Cloneable {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
     }
 
+    /**
+     * 实例化上-下-左-右四个方位的边框样式
+     * 
+     * @param style 边框样式
+     * @param color 边框颜色
+     */
     public Border(BorderStyle style, Color color) {
         borders = new SubBorder[6];
         setBorder(style, color);
     }
 
     /**
-     * Top line style
+     * 设置上边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setBorderTop(BorderStyle style) {
         borders[2] = new SubBorder(style, defaultColor);
@@ -65,10 +67,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Right line style
+     * 设置右边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setBorderRight(BorderStyle style) {
         borders[1] = new SubBorder(style, defaultColor);
@@ -76,10 +78,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Bottom line style
+     * 设置下边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setBorderBottom(BorderStyle style) {
         borders[3] = new SubBorder(style, defaultColor);
@@ -87,10 +89,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Left line style
+     * 设置上边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setBorderLeft(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
@@ -98,10 +100,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Top-left to bottom-right line style [\]
+     * 设置左上到右下的边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setDiagonalDown(BorderStyle style) {
         borders[4] = new SubBorder(style, defaultColor);
@@ -109,10 +111,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Bottom-left to top-right line style [/]
+     * 设置左下到右上的边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setDiagonalUp(BorderStyle style) {
         borders[5] = new SubBorder(style, defaultColor);
@@ -120,10 +122,10 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Setting top-right-bottom-left line style
+     * 设置上-下-左-右四个方位的边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setBorder(BorderStyle style) {
         borders[0] = new SubBorder(style, defaultColor);
@@ -133,10 +135,10 @@ public class Border implements Cloneable {
 
 
     /**
-     * Setting top-left to bottom-right and bottom-left to top-right line style [X]
+     * 设置左上右下和左下右上的边框样式
      *
-     * @param style the {@link BorderStyle}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @return 当前边框
      */
     public Border setDiagonal(BorderStyle style) {
         borders[4] = new SubBorder(style, defaultColor);
@@ -145,11 +147,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Top line style
+     * 设置上边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setBorderTop(BorderStyle style, Color color) {
         borders[2] = new SubBorder(style, color);
@@ -157,11 +159,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Right line style
+     * 设置右边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setBorderRight(BorderStyle style, Color color) {
         borders[1] = new SubBorder(style, color);
@@ -169,11 +171,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Bottom line style
+     * 设置下边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setBorderBottom(BorderStyle style, Color color) {
         borders[3] = new SubBorder(style, color);
@@ -181,11 +183,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Left line style
+     * 设置左边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setBorderLeft(BorderStyle style, Color color) {
         borders[0] = new SubBorder(style, color);
@@ -193,11 +195,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Top-left to bottom-right line style [\]
+     * 设置左上到右下边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setDiagonalDown(BorderStyle style, Color color) {
         borders[4] = new SubBorder(style, color);
@@ -205,11 +207,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Bottom-left to top-right line style [/]
+     * 设置左下到右上边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setDiagonalUp(BorderStyle style, Color color) {
         borders[5] = new SubBorder(style, color);
@@ -217,11 +219,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Setting top-left to bottom-right and bottom-left to top-right line style [X]
+     * 设置左上右下和左下右上的边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setDiagonal(BorderStyle style, Color color) {
         borders[4] = new SubBorder(style, color);
@@ -230,11 +232,11 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Setting top-right-bottom-left line style
+     * 设置上-下-左-右四个方位的边框样式和颜色
      *
-     * @param style the {@link BorderStyle}
-     * @param color the border {@link Color}
-     * @return the {@link Border}
+     * @param style 边框样式
+     * @param color 边框颜色
+     * @return 当前边框
      */
     public Border setBorder(BorderStyle style, Color color) {
         borders[0] = new SubBorder(style, color);
@@ -255,7 +257,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns top line style
+     * 获取上边框样式
      *
      * @return {@link SubBorder}
      */
@@ -264,7 +266,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns right line style
+     * 获取右边框样式
      *
      * @return {@link SubBorder}
      */
@@ -273,7 +275,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns bottom line style
+     * 获取下边框样式
      *
      * @return {@link SubBorder}
      */
@@ -282,7 +284,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns left line style
+     * 获取左边框样式
      *
      * @return {@link SubBorder}
      */
@@ -291,7 +293,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns Diagonal-Down line style
+     * 获取左上到右下边框样式
      *
      * @return {@link SubBorder}
      */
@@ -300,7 +302,7 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns Diagonal-Up line style
+     * 获取左下到右上边框样式
      *
      * @return {@link SubBorder}
      */
@@ -309,25 +311,31 @@ public class Border implements Cloneable {
     }
 
     /**
-     * Returns the specify axis border
+     * 获取指定位置的边框样式
      *
-     * @param axis border axis (left-right-top-bottom-diagonalDown-diagonalUp)
-     * @return {@link SubBorder}
+     * @param axis 位置取值{@code 0-5}, 对应left-right-top-bottom-diagonalDown-diagonalUp
+     * @return 边框样式
      */
     public SubBorder getBorder(int axis) {
         return axis >= 0 && axis < borders.length ? borders[axis] : null;
     }
 
     /**
-     * Returns all borders
+     * 获取所有位置的边框样式
      *
-     * @return {@link SubBorder}
+     * @return 边框样式
      */
     public SubBorder[] getBorders() {
         return borders;
     }
 
-    Border delBorder(int index) {
+    /**
+     * 删除某个位置的边框
+     *
+     * @param index 位置取值{@code 0-5}, 对应left-right-top-bottom-diagonalDown-diagonalUp
+     * @return 当前边框
+     */
+    public Border delBorder(int index) {
         borders[index] = null;
         return this;
     }

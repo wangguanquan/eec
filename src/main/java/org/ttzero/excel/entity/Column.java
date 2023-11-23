@@ -151,17 +151,19 @@ public class Column {
      * <blockquote><pre>
      *  Bit  | Contents
      * ------+---------
-     * 31. 1 | 自动换行 1位
-     * 30. 2 | 自适应列宽 2位, 0: auto, 1: auto-size 2: fixed-size
-     * 28. 1 | 忽略导出值 1位, 仅导出表头
-     * 27. 1 | 隐藏列 1位
-     * 26. 1 | 共享字符串 1位
-     * 25. 2 | 列类型, 0: 默认导出为文本 1: 导出为图片
+     * 31, 1 | 自动换行 1位
+     * 30, 2 | 自适应列宽 2位, 0: auto, 1: auto-size 2: fixed-size
+     * 28, 1 | 忽略导出值 1位, 仅导出表头
+     * 27, 1 | 隐藏列 1位
+     * 26, 1 | 共享字符串 1位
+     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片
+     * 23, 2 | 垂直对齐
+     * 21, 3 | 水平对齐
      * </pre></blockquote>
      */
     protected int option;
     /**
-     * 图片效果
+     * 图片效果，可以简单使用内置的{@link org.ttzero.excel.drawing.PresetPictureEffect} 28种效果
      */
     public Effect effect;
     /**
@@ -170,40 +172,40 @@ public class Column {
     public Column() { }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name  the column name
+     * @param name 列名，列名对应Excel表头
      */
     public Column(String name) {
         this.name = name;
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name  the column name
-     * @param clazz the cell type
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      */
     public Column(String name, Class<?> clazz) {
         this(name, clazz, false);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name the column name
-     * @param key  field
+     * @param name 列名，列名对应Excel表头
+     * @param key  取值使用的关键字对应Java对象字段名或者Map的Key
      */
     public Column(String name, String key) {
         this(name, key, false);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name  the column name
-     * @param key   field
-     * @param clazz the cell type
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      */
     public Column(String name, String key, Class<?> clazz) {
         this(name, key, false);
@@ -211,33 +213,33 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param clazz     the cell type
-     * @param processor The int value conversion
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param processor 输出转换器，动态转换状态值或枚举值为文本
      */
     public Column(String name, Class<?> clazz, ConversionProcessor processor) {
         this(name, clazz, processor, false);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param key       field
-     * @param processor The int value conversion
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param processor 输出转换器，动态转换状态值或枚举值为文本
      */
     public Column(String name, String key, ConversionProcessor processor) {
         this(name, key, processor, false);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name  the column name
-     * @param clazz the cell type
-     * @param share true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, Class<?> clazz, boolean share) {
         this.name = name;
@@ -246,11 +248,11 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name  the column name
-     * @param key   filed
-     * @param share true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, String key, boolean share) {
         this.name = name;
@@ -259,12 +261,12 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param clazz     the cell type
-     * @param processor The int value conversion
-     * @param share     true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param processor 输出转换器，动态转换状态值或枚举值为文本
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
         this(name, clazz, share);
@@ -272,12 +274,12 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param key       field
-     * @param clazz     type of cell
-     * @param processor The int value conversion
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param processor 输出转换器，动态转换状态值或枚举值为文本
      */
     public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
         this(name, key, clazz);
@@ -285,12 +287,12 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param key       field
-     * @param processor The int value conversion
-     * @param share     true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param processor 输出转换器，动态转换状态值或枚举值为文本
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, String key, ConversionProcessor processor, boolean share) {
         this(name, key, share);
@@ -298,34 +300,34 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param clazz     the cell type
-     * @param cellStyle the style of cell
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
      */
     public Column(String name, Class<?> clazz, int cellStyle) {
         this(name, clazz, cellStyle, true);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param key       field
-     * @param cellStyle the style of cell
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
      */
     public Column(String name, String key, int cellStyle) {
         this(name, key, cellStyle, true);
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param clazz     the cell type
-     * @param cellStyle the style of cell
-     * @param share     true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
+     * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
         this(name, clazz, share);
@@ -333,12 +335,12 @@ public class Column {
     }
 
     /**
-     * Constructor Column
+     * 实例化列信息
      *
-     * @param name      the column name
-     * @param key       field
-     * @param cellStyle the style of cell
-     * @param share     true:shared false:inline string
+     * @param name  列名，列名对应Excel表头
+     * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
+     * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
+     * @param share 是否将值放到字符串共享区
      */
     public Column(String name, String key, int cellStyle, boolean share) {
         this(name, key, share);
@@ -346,9 +348,9 @@ public class Column {
     }
 
     /**
-     * Create column from exists column
+     * 通过已有列实例化列信息
      *
-     * @param other the other column
+     * @param other 其它列
      */
     public Column(Column other) {
         from(other);
@@ -356,10 +358,10 @@ public class Column {
     }
 
     /**
-     * Copy properties from other column
+     * 复制列信息
      *
-     * @param other the other column
-     * @return current
+     * @param other 其它列
+     * @return 当前列 
      */
     public Column from(Column other) {
         this.key = other.key;
@@ -386,11 +388,12 @@ public class Column {
 
         return this;
     }
+
     /**
-     * Setting the cell's width
+     * 设置列宽，当该列同时标记为“自适应列宽”时最终的列宽取两者中的较小值，当列宽设置为{@code 0}时效果与隐藏相同
      *
-     * @param width the width value
-     * @return the {@link Column}
+     * @param width 列宽，必须大于等于0
+     * @return 当前列
      */
     public Column setWidth(double width) {
         if (width < 0) {
@@ -401,10 +404,10 @@ public class Column {
     }
 
     /**
-     * Setting the cell's height, The row height is equal to the maximum cell height
+     * 设置行高，最终的行高取所有列最大值，当行高设置为{@code 0}时效果与隐藏相同
      *
-     * @param headerHeight the header height value
-     * @return the {@link Column}
+     * @param headerHeight 行高，必须大于等于{@code 0}
+     * @return 当前列
      */
     public Column setHeaderHeight(double headerHeight) {
         if (headerHeight < 0) {
@@ -415,28 +418,28 @@ public class Column {
     }
 
     /**
-     * Setting the cell is shared
+     * 获取是否将字符串放入共享区
      *
-     * @return true:shared false:inline string
+     * @return true: 共享，false：内嵌
      */
     public boolean isShare() {
         return (option >> 5 & 1) == 1;
     }
 
     /**
-     * Returns the column name
+     * 获取列名，列名对应Excel表头
      *
-     * @return the column name
+     * @return 列名
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Setting the column name
+     * 设置表头列名
      *
-     * @param name the column name
-     * @return the {@link Column}
+     * @param name 表头列名
+     * @return 当前列
      */
     public Column setName(String name) {
         this.name = name;
@@ -444,19 +447,19 @@ public class Column {
     }
 
     /**
-     * Returns the cell type
+     * 获取列数据类型
      *
-     * @return the cell type
+     * @return 数据行的数据类型
      */
     public Class<?> getClazz() {
         return clazz;
     }
 
     /**
-     * Setting the cell type
+     * 设置列数据类型，数据影响单元格对齐，默认字符串左对齐、数字右对齐、日期居中
      *
-     * @param clazz the cell type
-     * @return the {@link Column}
+     * @param clazz 列数据类型
+     * @return 当前列
      */
     public Column setClazz(Class<?> clazz) {
         this.clazz = clazz;
@@ -464,10 +467,10 @@ public class Column {
     }
 
     /**
-     * Setting the int value conversion
+     * 设置输出转换器，通常用于动态转换状态值或枚举值为文本
      *
-     * @param processor The int value conversion
-     * @return the {@link Column}
+     * @param processor 输出转换器
+     * @return 当前列
      */
     public Column setProcessor(ConversionProcessor processor) {
         this.processor = processor;
@@ -475,10 +478,10 @@ public class Column {
     }
 
     /**
-     * Setting the style conversion
+     * 设置动态样式转换器，通常用于高亮显示单元格起提醒作用
      *
-     * @param styleProcessor The style conversion
-     * @return the {@link Column}
+     * @param styleProcessor 样式转换器
+     * @return 当前列
      */
     public Column setStyleProcessor(StyleProcessor styleProcessor) {
         if (styleProcessor != null && !StyleProcessor.None.class.isAssignableFrom(styleProcessor.getClass())) {
@@ -497,7 +500,7 @@ public class Column {
     }
 
     /**
-     * 设置转换器
+     * 设置转换器，导出的时候将状态值或枚举值转为文本，导入的时候将文本转为状态或枚举值
      *
      * @param converter 值转换器
      * @return 当前列
@@ -510,19 +513,19 @@ public class Column {
     }
 
     /**
-     * Returns the width of cell
+     * 获取列宽，这里仅返回通过{@link #setWidth}设置的列宽不包含自适应列宽，自适应列宽通常是在导出的时候动态计算
      *
-     * @return the cell width
+     * @return 当前列宽，未设置时返回{@code -1}
      */
     public double getWidth() {
         return width;
     }
 
     /**
-     * Setting the cell's style
+     * 设置单元格样式值，样式值由背景，边框，字体等进行“或”运算而来
      *
-     * @param cellStyle the styles value
-     * @return the {@link Column}
+     * @param cellStyle 样式值
+     * @return 当前列
      */
     public Column setCellStyle(int cellStyle) {
         this.cellStyle = cellStyle;
@@ -531,10 +534,10 @@ public class Column {
     }
 
     /**
-     * Setting the header's style
+     * 设置表头单元格样式值，样式值由背景，边框，字体等进行“或”运算而来
      *
-     * @param headerStyle the styles value
-     * @return the {@link Column}
+     * @param headerStyle 样式值
+     * @return 当前列
      */
     public Column setHeaderStyle(int headerStyle) {
         this.headerStyle = headerStyle;
@@ -543,10 +546,11 @@ public class Column {
     }
 
     /**
-     * Settings the x-axis of column in row
+     * 设置列下标，下标从{@code 0}开始对应Excel的{@code A}列，这里设置的下标是绝对位置，
+     * 如果表头下标不连续那么导出的时候列也是不连续的
      *
-     * @param colIndex column index (zero base)
-     * @return the {@link Column}
+     * @param colIndex 从0开始的列号
+     * @return 当前列
      */
     public Column setColIndex(int colIndex) {
         this.colIndex = colIndex;
@@ -554,31 +558,30 @@ public class Column {
     }
 
     /**
-     * Returns the style index of cell, -1 if not be setting
+     * 获取单元格样式索引，不包含动态样式
      *
-     * @return index of style
+     * @return 单元格样式索引，未设置样式时返回{@code -1}
      */
     public int getCellStyleIndex() {
         return cellStyleIndex >= 0 ? cellStyleIndex : (cellStyleIndex = styles != null && cellStyle != null ? styles.of(cellStyle) : -1);
     }
 
     /**
-     * Returns the header style index of cell, -1 if not be setting
+     * 获取表头单元格样式索引，不包含动态样式
      *
-     * @return index of style
+     * @return 表头单元格样式索引，未设置样式时返回{@code -1}
      */
     public int getHeaderStyleIndex() {
         return headerStyleIndex >= 0 ? headerStyleIndex : (headerStyleIndex = styles != null && headerStyle != null ? styles.of(headerStyle) : -1);
     }
 
     /**
-     * Returns the default horizontal style
-     * the Date, Character, Bool has center value, the
-     * Numeric has right value, otherwise left value
+     * 获取默认水平对齐，水平对齐可用值包含在{@link Horizontals}定义中，
+     * 默认的时间居中，数字居右其余居左
      *
-     * @return the horizontal value
+     * @return 水平对齐
      */
-    int defaultHorizontal() {
+    protected int defaultHorizontal() {
         int horizontal;
         if (isDate(clazz) || isDateTime(clazz)
                 || isLocalDate(clazz) || isLocalDateTime(clazz)
@@ -596,11 +599,13 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font the font
-     * @return the {@link Column}
+     * @param font 字体
+     * @return 当前列
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
      */
+    @Deprecated
     public Column setCellStyle(Font font) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -610,12 +615,14 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font       the font
-     * @param horizontal the horizontal style
-     * @return the {@link Column}
+     * @param font       字体
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @return 当前列
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
      */
+    @Deprecated
     public Column setCellStyle(Font font, int horizontal) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -625,12 +632,14 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font   the font
-     * @param border the border style
-     * @return the {@link Column}
+     * @param font   字体
+     * @param border 边框
+     * @return 当前列
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
      */
+    @Deprecated
     public Column setCellStyle(Font font, Border border) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -641,13 +650,15 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font       the font
-     * @param border     the border style
-     * @param horizontal the horizontal style
-     * @return the {@link Column}
+     * @param font       字体
+     * @param border     边框
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
+     * @return 当前列
      */
+    @Deprecated
     public Column setCellStyle(Font font, Border border, int horizontal) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -658,13 +669,15 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font   the font
-     * @param fill   the fill style
-     * @param border the border style
-     * @return the {@link Column}
+     * @param font   字体
+     * @param fill   填充
+     * @param border 边框
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
+     * @return 当前列
      */
+    @Deprecated
     public Column setCellStyle(Font font, Fill fill, Border border) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -676,14 +689,16 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font       the font
-     * @param fill       the fill style
-     * @param border     the border style
-     * @param horizontal the horizontal style
-     * @return the {@link Column}
+     * @param font   字体
+     * @param fill   填充
+     * @param border 边框
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
+     * @return 当前列
      */
+    @Deprecated
     public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -695,15 +710,17 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param font       the font
-     * @param fill       the fill style
-     * @param border     the border style
-     * @param vertical   the vertical style
-     * @param horizontal the horizontal style
-     * @return the {@link Column}
+     * @param font   字体
+     * @param fill   填充
+     * @param border 边框
+     * @param vertical   垂直对齐,参考值{@link Verticals}
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
+     * @return 当前列
      */
+    @Deprecated
     public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         this.cellStyle = styles.of(
                 (font != null ? styles.addFont(font) : 0)
@@ -715,16 +732,18 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 设置单元格样式
      *
-     * @param numFmt     the number format
-     * @param font       the font
-     * @param fill       the fill style
-     * @param border     the border style
-     * @param vertical   the vertical style
-     * @param horizontal the horizontal style
-     * @return the {@link Column}
+     * @param numFmt     格式化
+     * @param font   字体
+     * @param fill   填充
+     * @param border 边框
+     * @param vertical   垂直对齐,参考值{@link Verticals}
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
+     * @return 当前列
      */
+    @Deprecated
     public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         this.cellStyle = styles.of(
                 (numFmt != null ? styles.addNumFmt(numFmt) : 0)
@@ -737,12 +756,10 @@ public class Column {
     }
 
     /**
-     * Setting cell string value is shared
-     * Shared is only valid for strings, and the converted cell type
-     * is also valid for strings.
+     * 设置共享字符串标记，当此标记为{@code true}时单元格的字符串将独立保存在共享区
      *
-     * @param share true:shared false:inline string
-     * @return the {@link Column}
+     * @param share true: 共享, false: 内嵌
+     * @return 当前列
      */
     public Column setShare(boolean share) {
         if (share) this.option |= 1 << 5;
@@ -751,10 +768,10 @@ public class Column {
     }
 
     /**
-     * Setting a cell format of number or date type
+     * 设置当前列统一“格式化”样式
      *
-     * @param code the format string
-     * @return the {@link Column}
+     * @param code 格式化串
+     * @return 当前列
      */
     public Column setNumFmt(String code) {
         this.numFmt = new NumFmt(code);
@@ -762,10 +779,10 @@ public class Column {
     }
 
     /**
-     * Setting a cell format of number or date type
+     * 设置当前列统一“格式化”样式
      *
-     * @param numFmt {@link NumFmt}
-     * @return the {@link Column}
+     * @param numFmt 格式化{@link NumFmt}
+     * @return 当前列
      */
     public Column setNumFmt(NumFmt numFmt) {
         this.numFmt = numFmt;
@@ -773,19 +790,19 @@ public class Column {
     }
 
     /**
-     * Returns the column {@link NumFmt}
+     * 获取当前列统一“格式化”，仅返回通过{@link #setNumFmt}设置的统一值，不包含动态样式
      *
-     * @return number format
+     * @return 格式化 {@link NumFmt}
      */
     public NumFmt getNumFmt() {
         return numFmt != null ? numFmt : (numFmt = styles.getNumFmt(cellStyle));
     }
 
     /**
-     * Returns default style based on cell type
+     * 获取单元格默认样式，通常该方法仅初始化时被调用一次
      *
-     * @param clazz the cell type
-     * @return the styles value
+     * @param clazz 列数据类型
+     * @return 样式值
      */
     public int getCellStyle(Class<?> clazz) {
         int style;
@@ -819,9 +836,9 @@ public class Column {
     }
 
     /**
-     * Setting the cell styles
+     * 获取单元格样式值
      *
-     * @return the styles value
+     * @return 样式值
      */
     public int getCellStyle() {
         if (cellStyle != null) {
@@ -832,16 +849,18 @@ public class Column {
     }
 
     /**
-     * @return bool
+     * 是否忽略数据
+     *
+     * @return true: 忽略数据只输出表头
      */
     public boolean isIgnoreValue() {
         return (option >> 3 & 1) == 1;
     }
 
     /**
-     * Ignore value
+     * 忽略{@code Body}的数据只输出表头
      *
-     * @return the {@link Column} self
+     * @return 当前列
      */
     public Column ignoreValue() {
         this.option |= 1 << 3;
@@ -849,13 +868,12 @@ public class Column {
     }
 
     /**
-     * Wrap text in a cell
-     * <p>
-     * Microsoft Excel can wrap text so it appears on multiple lines in a cell.
-     * You can format the cell so the text wraps automatically, or enter a manual line break.
+     * 设置“自动折行”
      *
-     * @param wrapText set wrap
-     * @return the {@link Column} self
+     * <p>折行触发条件：一是当长度超过列宽时折行，二是包含回车符时折行</p>
+     *
+     * @param wrapText 自动折行
+     * @return 当前列
      */
     public Column setWrapText(boolean wrapText) {
         if (wrapText) this.option |= 1;
@@ -864,10 +882,10 @@ public class Column {
     }
 
     /**
-     * Setting the header cell comment
+     * 设置表头批注
      *
-     * @param headerComment {@link Comment}
-     * @return the {@link Column} self
+     * @param headerComment 批注{@link Comment}
+     * @return 当前列
      */
     public Column setHeaderComment(Comment headerComment) {
         this.headerComment = headerComment;
@@ -875,10 +893,10 @@ public class Column {
     }
 
     /**
-     * Append sub-column at the tail
+     * 在尾部添加表头
      *
-     * @param column a sub-column
-     * @return the {@link Column} self
+     * @param column 表头
+     * @return 当前列
      */
     public Column addSubColumn(Column column) {
         if (this == column) return this;
@@ -898,9 +916,9 @@ public class Column {
     }
 
     /**
-     * Returns the size of sub-column
+     * 获取表头行数，单表头返回1，多表头时返回表头行数
      *
-     * @return size of sub-column(include root column)
+     * @return 表头行数
      */
     public int subColumnSize() {
         int i = 1;
@@ -913,23 +931,13 @@ public class Column {
     }
 
     /**
-     * Returns an array containing all of the sub-column
+     * 多表头时将链表转为数组
      *
-     * @return an array containing all of the Column
+     * @return 表头
      */
     public Column[] toArray() {
-        return toArray(new Column[subColumnSize()]);
-    }
-
-    /**
-     * Returns an array containing all of the sub-column
-     *
-     * @param dist the array into which the elements of the column are to be stored
-     * @return header columns
-     * @throws NullPointerException if the specified array is null
-     */
-    public Column[] toArray(Column[] dist) {
-        int len = Math.min(subColumnSize(), dist.length);
+        int len = subColumnSize();
+        Column[] dist = new Column[len];
         if (len < 1) return dist;
         Column e = this;
         for (int i = 0; i < len; i++) {
@@ -940,27 +948,27 @@ public class Column {
     }
 
     /**
-     * Returns the real col-index(one base)
+     * 获取列在Excel中的实际位置（从{@code A}开始）
      *
-     * @return real col-index(one base)
+     * @return 列在Excel中的实际位置
      */
     public int getRealColIndex() {
         return realColIndex;
     }
 
     /**
-     * Returns hide flag
+     * 判断当前列是否“隐藏”
      *
-     * @return true: hidden otherwise show
+     * @return true: 隐藏
      */
     public boolean isHide() {
         return (option >> 4 & 1) == 1;
     }
 
     /**
-     * Hidden current column
+     * 隐藏当前列
      *
-     * @return current {@link Column}
+     * @return 当前列
      */
     public Column hide() {
         this.option |= 1 << 4;
@@ -968,9 +976,9 @@ public class Column {
     }
 
     /**
-     * Show current column
+     * 标记当前列可见（默认可见）
      *
-     * @return current {@link Column}
+     * @return 当前列
      */
     public Column show() {
         this.option &= ~(1 << 4);
@@ -978,18 +986,18 @@ public class Column {
     }
 
     /**
-     * Returns the last column
+     * 获取尾列，Excel从上到下记为首-尾列，尾列为最接近表格体{@code Body}的列
      *
-     * @return the last column (real column)
+     * @return 尾列
      */
     public Column getTail() {
         return tail != null ? tail : this;
     }
 
     /**
-     * Setting auto resize cell's width
+     * 标记“自适应”列宽，导出时根据单元格内容动态计算列宽
      *
-     * @return current {@link Column}
+     * @return 当前列
      */
     public Column autoSize() {
         this.option |= 1 << 1;
@@ -997,20 +1005,10 @@ public class Column {
     }
 
     /**
-     * Setting fix column width
+     * 设置固定列宽
      *
-     * @return current {@link Column}
-     */
-    public Column fixedSize() {
-        this.option |= 1 << 2;
-        return this;
-    }
-
-    /**
-     * Setting fixed column width
-     *
-     * @param width the column width
-     * @return current {@link Column}
+     * @param width 列宽，必须大于等于0
+     * @return 当前列
      */
     public Column fixedSize(double width) {
         this.option |= 1 << 2;
@@ -1019,18 +1017,18 @@ public class Column {
     }
 
     /**
-     * Returns the re-size setting
+     * 获取列宽属性
      *
-     * @return 0: not setting 1: auto-size 2:fixed-size
+     * @return 0: 未设置 1: 自适应列宽 2: 固定列宽
      */
     public int getAutoSize() {
         return option >> 1 & 3;
     }
 
     /**
-     * Write cell value as default
+     * 指定当前列以“值”类型导出
      *
-     * @return current {@link Column}
+     * @return 当前列
      */
     public Column writeAsDefault() {
         this.option &= ~(3 << 6);
@@ -1038,9 +1036,9 @@ public class Column {
     }
 
     /**
-     * Specify the cell type as media (drawing,chart eq.)
+     * 指定当前列以“媒体”类型导出
      *
-     * @return current {@link Column}
+     * @return 当前列
      */
     public Column writeAsMedia() {
         this.option = this.option & ~(3 << 6) | (1 << 6);
@@ -1048,19 +1046,19 @@ public class Column {
     }
 
     /**
-     * Returns the column type
+     * 获取列属性
      *
-     * @return 0: default 1: picture
+     * @return 0: 默认 1: 媒体（图片）
      */
     public int getColumnType() {
         return (this.option >> 6) & 3;
     }
 
     /**
-     * Specify the image effect, which only takes effect when the column write as Media
+     * 设置当前列全局图片效果，只有当{@code columnType}为{@code Media}时生效
      *
-     * @param effect {@link Effect}
-     * @return current {@link Column}
+     * @param effect 图片效果{@link Effect}
+     * @return 当前列
      */
     public Column setEffect(Effect effect) {
         this.effect = effect;
@@ -1068,9 +1066,9 @@ public class Column {
     }
 
     /**
-     * Returns {@code Effect}
+     * 获取当前列设置的图片效果
      *
-     * @return {@link Effect}
+     * @return 图片效果 {@link Effect}
      */
     public Effect getEffect() {
         return effect;

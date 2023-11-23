@@ -50,22 +50,28 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * Each excel style consists of {@link NumFmt}, {@link Font},
- * {@link Fill}, {@link Border}, {@link Verticals} and
- * {@link Horizontals}, each Worksheet introduced by subscript.
- * <p>
- * EEC uses an Integer value to store Extended Format:
+ * Excel样式包含格式化{@link NumFmt}、字体{@link Font}、填充{@link Fill}、边框{@link Border}、
+ * 垂直对齐{@link Verticals}和水平对齐{@link Horizontals}以及自动折行组成，样式存放在共享区域供多个工作表共用，
+ * 每个样式值都是由这7种值进行组合而来。全局样式库统管样式读写，添加样式时会查询当前库是否已存在，如果存在则直接返回该样式在库中的索引值，
+ * 如果不存在则鼗样式添加到样式库末尾
+ *
+ * <p>本工具简化了样式设计，基础的4种样式由数组保存，而组合而来的单元格样式值由一个{@code int}值保存，
+ * 它可以极大压缩内存消耗和快速查找，但短板是可用的样式减少，通过最多只能包含256个格式化，64个字体，填充和边框，
+ * 对于日常的导出来说应该是够用的，复杂场景就需要考虑将{@code int}扩大到{@code long}</p>
+ *
+ * <p>由于使用2进制位点保存各个样式，所以要修改样式时必须先清除原位点上的值然后再添加新样式，否则位点在进行“或”运行时将保留全部{@code 1}
+ * 致使样式错乱，可以直接使用位运算来处理样式，也可以通过{@code Styles.modify}开头的方法来修改</p>
+ *
  * <blockquote><pre>
  *  Bit  | Contents
  * ------+---------
- *  0, 8 | NumFmt
- *  8, 6 | Font
- * 14, 6 | Fill
- * 20, 6 | Border
- * 26, 2 | Vertical
- * 28, 3 | Horizontal
- * 31. 1 | Warp Text</pre></blockquote>
- * The Build-In number format does not write into styles.
+ *  0, 1 | 自动折行
+ *  1, 3 | 水平对齐
+ *  4, 2 | 垂直对齐
+ *  6, 6 | 边框
+ * 12, 6 | 填充
+ * 18, 6 | 字体
+ * 24. 8 | 格式化</pre></blockquote>
  *
  * @author guanquan.wang on 2017/10/13.
  */
@@ -98,11 +104,11 @@ public class Styles implements Storable {
     }
 
     /**
-     * Returns the style index, if the style not exists it will
-     * be insert into styles
+     * 向全局样式库中添加样式，添加前会先查询是否已有相同样式，如果有则直接返回该样式在全局样式库中的索引值，
+     * 不存在则将该样式添加到样式库末尾
      *
-     * @param s the value of style
-     * @return the style index
+     * @param s 样式值
+     * @return 样式索引
      */
     public int of(int s) {
         int n = map.getOrDefault(s, -1);
@@ -118,10 +124,10 @@ public class Styles implements Storable {
     }
 
     /**
-     * Search the style value by style index
+     * 通过样式索引查询样式值
      *
-     * @param styleIndex the style index
-     * @return -1 if not found
+     * @param styleIndex 样式索引
+     * @return 样式值，查找失败时返回{@code -1}
      */
     public int getStyleByIndex(int styleIndex) {
         if (styleIndex >= counter.get()) {
@@ -212,10 +218,10 @@ public class Styles implements Storable {
     }
 
     /**
-     * 修改"自动换行"样式
+     * 修改"自动折行"样式
      *
      * @param style 原样式值
-     * @param newWrapText true: 自动换行
+     * @param newWrapText true: 自动折行
      * @return 新样式值
      */
     public int modifyWrapText(int style, boolean newWrapText) {
@@ -373,10 +379,12 @@ public class Styles implements Storable {
     }
 
     /**
-     * Add number format
+     * 添加“格式化”，对格式化串去重处理
      *
-     * @param numFmt the {@link NumFmt} entry
-     * @return the numFmt part value in style
+     * <p>返回样式值中“格式化”部分的2进制值，拿到这个值后可以与其它部分值进行“或”运算以组成最终的样式值</p>
+     *
+     * @param numFmt 格式化{@link NumFmt}
+     * @return 样式值中“格式化”部分的2进制值
      */
     public final int addNumFmt(NumFmt numFmt) {
         // All indexes from 0 to 175 are reserved for built-in formats.
@@ -408,10 +416,12 @@ public class Styles implements Storable {
     }
 
     /**
-     * Add font
+     * 添加“字体”
      *
-     * @param font the {@link Font} entry
-     * @return the font part value in style
+     * <p>返回样式值中“字体”部分的2进制值，拿到这个值后可以与其它部分值进行“或”运算以组成最终的样式值</p>
+     *
+     * @param font 字体{@link Font}
+     * @return 样式值中“字体”部分的2进制值
      */
     public final int addFont(Font font) {
         if (isEmpty(font.getName())) {
@@ -426,10 +436,12 @@ public class Styles implements Storable {
     }
 
     /**
-     * Add fill
+     * 添加“填充”
      *
-     * @param fill the {@link Fill} entry
-     * @return the fill part value in style
+     * <p>返回样式值中“填充”部分的2进制值，拿到这个值后可以与其它部分值进行“或”运算以组成最终的样式值</p>
+     *
+     * @param fill 填充{@link Font}
+     * @return 样式值中“填充”部分的2进制值
      */
     public final int addFill(Fill fill) {
         int i = fills.indexOf(fill);
@@ -441,10 +453,12 @@ public class Styles implements Storable {
     }
 
     /**
-     * Add border
+     * 添加“边框”
      *
-     * @param border the {@link Border} entry
-     * @return the border part value in style
+     * <p>返回样式值中“边框”部分的2进制值，拿到这个值后可以与其它部分值进行“或”运算以组成最终的样式值</p>
+     *
+     * @param border 边框{@link Border}
+     * @return 样式值中“边框”部分的2进制值
      */
     public final int addBorder(Border border) {
         int i = borders.indexOf(border);
@@ -613,35 +627,78 @@ public class Styles implements Storable {
 
     ////////////////////////clear style///////////////////////////////
 
+    /**
+     * 清除样式中的“格式化”
+     *
+     * @param style 样式值
+     * @return 清除“格式化”后的样式
+     */
     public static int clearNumFmt(int style) {
         return style & (-1 >>> 32 - INDEX_NUMBER_FORMAT);
     }
 
+    /**
+     * 清除样式中的“字体”
+     *
+     * @param style 样式值
+     * @return 清除“字体”后的样式
+     */
     public static int clearFont(int style) {
         return style & ~((-1 >>> 32 - (INDEX_NUMBER_FORMAT - INDEX_FONT)) << INDEX_FONT);
     }
 
+    /**
+     * 清除样式中的“填充”
+     *
+     * @param style 样式值
+     * @return 清除“填充”后的样式
+     */
     public static int clearFill(int style) {
         return style & ~((-1 >>> 32 - (INDEX_FONT - INDEX_FILL)) << INDEX_FILL);
     }
 
+    /**
+     * 清除样式中的“边框”
+     *
+     * @param style 样式值
+     * @return 清除“边框”后的样式
+     */
     public static int clearBorder(int style) {
         return style & ~((-1 >>> 32 - (INDEX_FILL - INDEX_BORDER)) << INDEX_BORDER);
     }
 
+    /**
+     * 清除样式中的“垂直对齐”
+     *
+     * @param style 样式值
+     * @return 清除“垂直对齐”后的样式
+     */
     public static int clearVertical(int style) {
         return style & ~((-1 >>> 32 - (INDEX_BORDER - INDEX_VERTICAL)) << INDEX_VERTICAL);
     }
 
+    /**
+     * 清除样式中的“水平对齐”
+     *
+     * @param style 样式值
+     * @return 清除“水平对齐”后的样式
+     */
     public static int clearHorizontal(int style) {
         return style & ~((-1 >>> 32 - (INDEX_VERTICAL - INDEX_HORIZONTAL)) << INDEX_HORIZONTAL);
     }
 
+    /**
+     * 清除样式中的“自动折行”
+     *
+     * @param style 样式值
+     * @return 清除“自动折行”后的样式
+     */
     public static int clearWrapText(int style) {
         return style & ~(-1 >>> 32 - (INDEX_HORIZONTAL - INDEX_WRAP_TEXT));
     }
 
     ////////////////////////reset style/////////////////////////////
+    @Deprecated
     public static int reset(int style, int newStyle) {
         int[] sub = unpack(style), nsub = unpack(newStyle);
         for (int i = 0; i < sub.length; i++) {
@@ -687,35 +744,85 @@ public class Styles implements Storable {
     }
 
     ////////////////////////////////Check style////////////////////////////////
+
+    /**
+     * 判断样式是否包含“格式化"
+     *
+     * @param style 样式值
+     * @return true: 包含”格式化“
+     */
     public static boolean hasNumFmt(int style) {
         return style >>> INDEX_NUMBER_FORMAT != 0;
     }
 
+    /**
+     * 判断样式是否包含“字体"
+     *
+     * @param style 样式值
+     * @return true: 包含”字体“
+     */
     public static boolean hasFont(int style) {
         return true; // Font is required
     }
 
+    /**
+     * 判断样式是否包含“填充"
+     *
+     * @param style 样式值
+     * @return true: 包含”填充“
+     */
     public static boolean hasFill(int style) {
         return style << 14 >>> (INDEX_FILL + 14) != 0;
     }
 
+    /**
+     * 判断样式是否包含“边框"
+     *
+     * @param style 样式值
+     * @return true: 包含”边框“
+     */
     public static boolean hasBorder(int style) {
         return style << 20 >>> (INDEX_BORDER + 20) != 0;
     }
 
+    /**
+     * 判断样式是否包含“垂直对齐"
+     *
+     * @param style 样式值
+     * @return true: 包含”垂直对齐“（非默认）
+     */
     public static boolean hasVertical(int style) {
         return style << 26 >>> (INDEX_VERTICAL + 26) != 0;
     }
 
+    /**
+     * 判断样式是否包含“水平对齐"
+     *
+     * @param style 样式值
+     * @return true: 包含”水平对齐“（非默认）
+     */
     public static boolean hasHorizontal(int style) {
         return style << 28 >>> (INDEX_HORIZONTAL + 28) != 0;
     }
 
+    /**
+     * 判断样式是否自动折行
+     *
+     * @param style 样式值
+     * @return true: 自动折行
+     */
     public static boolean hasWrapText(int style) {
         return (style & 1) > 0;
     }
 
     ////////////////////////////////To object//////////////////////////////////
+
+    /**
+     * 获取样式中的格式化值
+     *
+     * @param style 样式值
+     * @return 格式化或 {@code null}
+     */
     public NumFmt getNumFmt(int style) {
         int n = style >>> INDEX_NUMBER_FORMAT;
         if (n <= 0) return null;
@@ -726,26 +833,62 @@ public class Styles implements Storable {
         return null;
     }
 
+    /**
+     * 获取样式中的格式化
+     *
+     * @param style 样式值
+     * @return 当前样式包含的格式化，不含格式化时返回{@code null}
+     */
     public Fill getFill(int style) {
         return fills.get(style << 14 >>> (INDEX_FILL + 14));
     }
 
+    /**
+     * 获取样式中的字体
+     *
+     * @param style 样式值
+     * @return 当前样式包含的字体，样式一定包含字体
+     */
     public Font getFont(int style) {
         return fonts.get(Math.max(0, style << 8 >>> (INDEX_FONT + 8)));
     }
 
+    /**
+     * 获取样式中的边框
+     *
+     * @param style 样式值
+     * @return 当前样式包含的边框，不含边框时返回{@code null}
+     */
     public Border getBorder(int style) {
         return borders.get(style << 20 >>> (INDEX_BORDER + 20));
     }
 
+    /**
+     * 获取样式中的垂直对齐，参考范围{@link Verticals}
+     *
+     * @param style 样式值
+     * @return 当前样式包含的垂直对齐
+     */
     public int getVertical(int style) {
         return style << 26 >>> (INDEX_VERTICAL + 26);
     }
 
+    /**
+     * 获取样式中的水平对齐，参考范围{@link Horizontals}
+     *
+     * @param style 样式值
+     * @return 当前样式包含的水平对齐
+     */
     public int getHorizontal(int style) {
         return style << 28 >>> (INDEX_HORIZONTAL + 28);
     }
 
+    /**
+     * 获取样式中自动折行标记，标记为{@code 1}时表示自动折行
+     *
+     * @param style 样式值
+     * @return 1: 自动折行
+     */
     public int getWrapText(int style) {
         return style & 1;
     }

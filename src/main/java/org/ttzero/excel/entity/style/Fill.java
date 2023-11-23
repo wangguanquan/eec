@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
+ * 填充，在样式中位于第{@code 18-24}位
+ *
  * @author guanquan.wang at 2018-02-06 08:55
  */
 public class Fill implements Cloneable {

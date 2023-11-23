@@ -17,6 +17,8 @@
 package org.ttzero.excel.entity.style;
 
 /**
+ * 垂直对齐，在样式中位于第{@code 4,5}位
+ *
  * @author guanquan.wang at 2018-02-11 14:59
  */
 public class Verticals {
