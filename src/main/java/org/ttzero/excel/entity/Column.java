@@ -167,7 +167,19 @@ public class Column {
      */
     public Effect effect;
     /**
-     * Constructor Column
+     * 单元格字体
+     */
+    public Font font;
+    /**
+     * 单元格填充
+     */
+    public Fill fill;
+    /**
+     * 单元格边框
+     */
+    public Border border;
+    /**
+     * 实例化列信息
      */
     public Column() { }
 
@@ -376,6 +388,9 @@ public class Column {
         this.headerComment = other.headerComment;
         this.cellComment = other.cellComment;
         this.numFmt = other.numFmt;
+        this.font = other.font;
+        this.border = other.border;
+        this.fill = other.fill;
         this.colIndex = other.colIndex;
         this.option = other.option;
         this.realColIndex = other.realColIndex;
@@ -756,6 +771,61 @@ public class Column {
     }
 
     /**
+     * 设置当前列统一“字体”样式
+     *
+     * @param font 字体
+     * @return 当前列
+     */
+    public Column setFont(Font font) {
+        this.font = font;
+        return this;
+    }
+
+    /**
+     * 设置当前列统一“填充”样式
+     *
+     * @param fill 填充
+     * @return 当前列
+     */
+    public Column setFill(Fill fill) {
+        this.fill = fill;
+        return this;
+    }
+
+    /**
+     * 设置当前列统一“边框”样式
+     *
+     * @param border 边框
+     * @return 当前列
+     */
+    public Column setBorder(Border border) {
+        this.border = border;
+        return this;
+    }
+
+    /**
+     * 设置当前列统一“垂直对齐”样式
+     *
+     * @param vertical 垂直对齐，参考值{@link Verticals}
+     * @return 当前列
+     */
+    public Column setVertical(int vertical) {
+        option = (option & ~(3 << 8)) | (((vertical >> Styles.INDEX_VERTICAL) & 3) << 8);
+        return this;
+    }
+
+    /**
+     * 设置当前列统一“水平对齐”样式
+     *
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @return 当前列
+     */
+    public Column setHorizontal(int horizontal) {
+        option = (option & ~(7 << 10)) | (((horizontal >> Styles.INDEX_HORIZONTAL) & 7) << 10);
+        return this;
+    }
+
+    /**
      * 设置共享字符串标记，当此标记为{@code true}时单元格的字符串将独立保存在共享区
      *
      * @param share true: 共享, false: 内嵌
@@ -804,7 +874,7 @@ public class Column {
      * @param clazz 列数据类型
      * @return 样式值
      */
-    public int getCellStyle(Class<?> clazz) {
+    protected int getCellStyle(Class<?> clazz) {
         int style;
         if (isString(clazz)) {
             style = Styles.defaultStringBorderStyle();
@@ -827,25 +897,40 @@ public class Column {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
 
-        // Reset custom number format if specified.
-        if (numFmt != null) {
-            style = styles.modifyNumFmt(style, numFmt);
-        }
-
-        return style | (option & 1);
+        return style;
     }
 
     /**
-     * 获取单元格样式值
+     * 获取单元格样式值，导出过程中通常只计算一次通用样式，计算完后值将保存在{@code cellStyle}中，
+     * 默认样式做为底色外部设置的“字体”，“填充”等样式将覆盖默认样式，
      *
      * @return 样式值
      */
     public int getCellStyle() {
-        if (cellStyle != null) {
-            return cellStyle;
-        }
-        setCellStyle(getCellStyle(clazz));
-        return cellStyle;
+        if (cellStyle != null) return cellStyle;
+        // 获取默认样式
+        int style = getCellStyle(clazz);
+
+        // 重置"字体"
+        if (font != null) style = styles.modifyFont(style, font);
+        // 重置“格式化”
+        if (numFmt != null) style = styles.modifyNumFmt(style, numFmt);
+        // 重置“边框”
+        if (border != null) style = styles.modifyBorder(style, border);
+        // 重置“填充”
+        if (fill != null) style = styles.modifyFill(style, fill);
+        // 重置“垂直对齐”
+        int v = ((option >>> 8) & 3) << Styles.INDEX_VERTICAL;
+        if (v > 0) style = styles.modifyVertical(style, v);
+        // 重置“水平对齐”
+        int h = ((option >>> 10) & 7) << Styles.INDEX_HORIZONTAL;
+        if (h > 0) style = styles.modifyHorizontal(style, h);
+        // 重置“自动折行”
+        style |= (option & 1);
+
+        // 保存样式
+        setCellStyle(style);
+        return style;
     }
 
     /**
