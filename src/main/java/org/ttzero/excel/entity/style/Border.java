@@ -40,6 +40,9 @@ public class Border implements Cloneable {
 
     private final SubBorder[] borders;
 
+    /**
+     * 创建一个无边框的边框样式
+     */
     public Border() {
         borders = new SubBorder[6]; // left-right-top-bottom-diagonalDown-diagonalUp
     }

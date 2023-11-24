@@ -103,12 +103,12 @@ public @interface ExcelColumn {
     String format() default "";
 
     /**
-     * 单元格自动换行
+     * 单元格自动折行
      *
-     * <p>Microsoft Excel可以将文本换行，使其显示在单元格中的多行中。以下两种情况将自动换行，一是字符串长度超过列宽，
+     * <p>Microsoft Excel可以将文本折行使其显示在单元格中的多行中。以下两种情况将触发自动折行，一是字符串长度超过列宽，
      * 二是字符串包含"回车"符</p>
      *
-     * @return true: 自动换行 false: 不换行（默认）
+     * @return true: 自动折行 false: 不换行（默认）
      */
     boolean wrapText() default false;
 

@@ -198,7 +198,7 @@ public abstract class Sheet implements Cloneable, Storable {
     protected int nonHeader = -1;
     /**
      * 工作表body行数上限，它记录的是输出协议行上限-表头行数，例如xls格式最多{@code 65535}行，
-     * 导出的表头为1行，那{code rowLimit = 65534}
+     * 导出的表头为1行，那{@code rowLimit = 65534}
      */
     private int rowLimit;
     /**
@@ -225,7 +225,6 @@ public abstract class Sheet implements Cloneable, Storable {
      * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
     private BiConsumer<Sheet, Integer> progressConsumer;
-
     /**
      * 获取工作表ID，与当前工作表在工作薄中的下标一致，一般与其它资源关联使用
      *
@@ -1148,12 +1147,6 @@ public abstract class Sheet implements Cloneable, Storable {
         return headStyleIndex;
     }
 
-//    protected static boolean nonOrIntDefault(int style) {
-//        return style == -1
-//            || style == Styles.defaultIntBorderStyle()
-//            || style == Styles.defaultIntStyle();
-//    }
-
     /**
      * 获取已写入的数据行数，这里不包含表头行
      *
@@ -1354,32 +1347,6 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     private static final char[][] cache = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
-
-//    /**
-//     * Check empty header row
-//     *
-//     * @return true if none header row
-//     */
-//    public boolean hasNonHeader() {
-//        int nonHeader = getNonHeader();
-//        if (nonHeader == -1) {
-//            columns = getAndSortHeaderColumns();
-//            boolean noneHeader = columns == null || columns.length == 0;
-//            if (!noneHeader) {
-//                int n = 0;
-//                for (Column column : columns) {
-//                    if (isEmpty(column.name)) n++;
-//                }
-//                noneHeader = n == columns.length;
-//            }
-//            if (noneHeader) {
-////                rows--;
-//                ignoreHeader();
-//            } else this.nonHeader = 0;
-//            return noneHeader;
-//        }
-//        return nonHeader == 1;
-//    }
 
     /**
      * 忽略表头，调用此方法后表头将不会输出到Excel中，注意这里不是隐藏
