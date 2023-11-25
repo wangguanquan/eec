@@ -93,6 +93,8 @@ import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
+ * XML工作表输出
+ *
  * @author guanquan.wang at 2019-04-22 16:31
  */
 @TopNS(prefix = {"", "r"}, value = "worksheet"
@@ -109,6 +111,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Sheet sheet;
     protected Column[] columns;
     protected SharedStrings sst;
+    /**
+     * 全局样式，为工作表的一个指针
+     */
+    protected Styles styles;
     protected Comments comments;
     protected int startRow // The first data-row index
         , startHeaderRow // The first header row index
@@ -128,11 +134,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected BiConsumer<Sheet, Integer> progressConsumer;
 
+    // 自适应列宽专用
+    protected double[] columnWidths;
+
     public XMLWorksheetWriter() { }
 
     public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
-        this.sst = sheet.getSst();
     }
 
     /**
@@ -253,7 +261,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
-        if (sst == null) this.sst = sheet.getSst();
+        if (sst == null) this.sst = sheet.getWorkbook().getSst();
+        if (styles == null) this.styles = sheet.getWorkbook().getStyles();
 
         // Check the first row index
         startHeaderRow = sheet.getStartRowIndex();
@@ -363,6 +372,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // The header columns
         columns = sheet.getAndSortHeaderColumns();
         boolean nonHeader = sheet.getNonHeader() == 1;
+
+        // 收集表头信息
+        collectHeaderColumns();
 
         bw.write(Const.EXCEL_XML_DECLARATION);
         // Declaration
@@ -597,7 +609,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double ln;
-            if (hc.o < (ln = stringWidth(s, xf))) hc.o = ln;
+            if (columnWidths[column] < (ln = stringWidth(s, xf))) columnWidths[column] = ln;
         }
     }
 
@@ -624,9 +636,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double n;
-            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(Double.toString(d).length(), getFont(xf)))
-                || hc.o < (n = Double.toString(d).length()))
-                hc.o = n;
+            if (hc.getNumFmt() != null) {
+                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(Double.toString(d).length(), getFont(xf)))) columnWidths[column] = n;
+            }
+            else if (columnWidths[column] < (n = stringWidth(Double.toString(d), xf))) columnWidths[column] = n;
         }
     }
 
@@ -652,9 +665,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double n;
-            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(bd.toString().length(), getFont(xf)))
-                || hc.o < (n = bd.toString().length()))
-                hc.o = n;
+            if (hc.getNumFmt() != null) {
+                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(bd.toString().length(), getFont(xf)))) columnWidths[column] = n;
+            }
+            else if (columnWidths[column] < (n = stringWidth(bd.toString(), xf))) columnWidths[column] = n;
         }
     }
 
@@ -685,6 +699,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.escapeWrite(c);
             bw.write("</t></is></c>");
         }
+        // TODO optimize If auto-width
+        if (hc.getAutoSize() == 1) {
+            Font font = getFont(xf);
+            double n = (c > 0x4E00 ? font.getSize() : font.getFontMetrics().charWidth(c)) / 6.0 * 1.02;
+            if (columnWidths[column] < n) columnWidths[column] = n;
+        }
     }
 
     /**
@@ -709,9 +729,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double n;
-            if (hc.getNumFmt() != null && hc.o < (n = hc.getNumFmt().calcNumWidth(stringSize(l), getFont(xf)))
-                || hc.o < (n = stringSize(l)))
-                hc.o = n;
+            if (hc.getNumFmt() != null) {
+                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(stringSize(l), getFont(xf)))) columnWidths[column] = n;
+            } else if (columnWidths[column] < (n = stringWidth(Long.toString(l), xf))) columnWidths[column] = n;
         }
     }
 
@@ -725,14 +745,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
+        Column hc = columns[column];
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" t=\"b\" s=\"");
         bw.writeInt(xf);
         bw.write("\"><v>");
         bw.writeInt(bool ? 1 : 0);
         bw.write("</v></c>");
+        // TODO optimize If auto-width
+        if (hc.getAutoSize() == 1) {
+            double ln;
+            if (columnWidths[column] < (ln = stringWidth(Boolean.toString(bool), xf))) columnWidths[column] = ln;
+        }
     }
 
     /**
@@ -928,7 +954,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
                 continue;
             }
-            double len = hc.o > 0 ? hc.o : sheet.getDefaultWidth();
+            double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
             double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
             if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
             if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
@@ -952,6 +978,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
         _writer.includeAutoWidth = includeAutoWidth;
+        _writer.styles = styles;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         _writer.bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
         _writer.writeBefore();
@@ -1130,8 +1157,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<cols>");
             for (int i = 0; i < columns.length; i++) {
                 Column col = columns[i];
-                // Mark auto-width
-                includeAutoWidth |= col.getAutoSize() == 1;
                 String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
                 int w = width.length();
                 bw.write("<col customWidth=\"1\" width=\"");
@@ -1162,16 +1187,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (sheetDataReady > 0) return;
         // Start to write sheet data
         bw.write("<sheetData>");
-
-        // 判断是否有共享设置，有共享需要对SharedStrings进行初始化
-        for (Column col : columns) {
-            do {
-                if (col.isShare()) {
-                    sst.init();
-                    break;
-                }
-            } while ((col = col.next) != null);
-        }
 
         int headerRow = 0;
         // Write header rows
@@ -1252,17 +1267,45 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * Calculate text width
-     * <p>
-     * Reference {@link sun.swing.SwingUtilities2#stringWidth}
+     * 计算文本在单元格的宽度，参考{@link sun.swing.SwingUtilities2#stringWidth}
      *
-     * @param s      the string value
-     * @param xf     the style index
-     * @return cell width
+     * <p>Java的{@link java.awt.FontMetrics}计算中文字符有个问题，对于绝大多数英文字体计算出来的中文字符宽度都不准，
+     * 在英文字体中显示的中文字体可能会默认显示"宋体"，默认字体与地区和操作系统相关这里只取简体中文的临近值约为字体大小，
+     * 英文字符计算比较复杂每种字体显示的宽度差异很大，有较窄的字符{@code 'i','l',':'}也有较宽的字符{@code 'X','E','G'，’%'，‘@’}，
+     * 对于英文字符统一使用{@code FontMetrics}计算。</p>
+     *
+     * <p>对于自动折行且自适应列宽的单元格则分别计算每一段文本宽度取最大值，这也是为什么不直接调用{@link java.awt.FontMetrics#stringWidth}
+     * 的原因因为它并不会分段计算</p>
+     *
+     * <p>本方法计算的宽度在某些字体下计算出来的结果与实际显示效果可能有很大偏差，此时可以覆写本方法并进行特殊计算</p>
+     *
+     * @param s      文本
+     * @param xf     单元格样式索引
+     * @return 文本在excel的宽度
      */
     protected double stringWidth(String s, int xf) {
         if (StringUtil.isEmpty(s)) return 0.0D;
-        return getFont(xf).getFontMetrics().stringWidth(s) / 6.0D * 1.02D;
+        Font font = getFont(xf);
+        int fs = font.getSize(), w = 0;
+        java.awt.FontMetrics fm = font.getFontMetrics();
+        int len = s.length(), i = 0;
+        char c;
+        for (; i < len && w < 1500 && (c = s.charAt(i++)) != '\n'; w += c > 0x4E00 ? fs : fm.charWidth(c));
+        // 如果包含回车则特殊处理
+        if (i < len && w < 1500 && s.charAt(i - 1) == '\n') {
+            int style = styles.getStyleByIndex(xf);
+            // “自动折行”时计算每段长度取最大值
+            if (Styles.hasWrapText(style)) {
+                do {
+                    int sectionWidth = 0;
+                    for (; i < len && sectionWidth < 1500 && (c = s.charAt(i++)) != '\n'; sectionWidth += c > 0x4E00 ? fs : fm.charWidth(c));
+                    if (sectionWidth > w) w = sectionWidth;
+                } while (i < len && w < 1500);
+            }
+            // 非“自动折行”将显示为一行，宽度直接相加
+            else for (; i < len && w < 1500; w += (c = s.charAt(i++)) > 0x4E00 ? fs : fm.charWidth(c));
+        }
+        return w / 6.0D * 1.02D;
     }
 
     /**
@@ -1432,6 +1475,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * 收集表头信息，如果有共享字符串标记则初始化SharedStringsTable
+     */
+    protected void collectHeaderColumns() {
+        // 判断是否有共享设置，有共享需要对SharedStrings进行初始化
+        boolean hasSharedString = false;
+        for (Column col : columns) {
+            // 自适应列宽标识
+            includeAutoWidth |= col.getAutoSize() == 1;
+            hasSharedString |= col.isShare();
+        }
+        // 初始化SharedStringsTable
+        if (hasSharedString) sst.init();
+        // 如果有自适应列宽则创建临时数组
+        if (includeAutoWidth) {
+            columnWidths = new double[columns.length];
+        }
+    }
+
+    /**
      * 按cellXfs下标缓存字体
      */
     protected Font[] fs = new Font[100];
@@ -1446,7 +1508,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Font f = fs[xf];
         if (f == null) {
             // 通过xf获取当前文本对应的字体
-            Styles styles = sheet.getWorkbook().getStyles();
             int style = styles.getStyleByIndex(xf);
             fs[xf] = f = styles.getFont(style);
         }
