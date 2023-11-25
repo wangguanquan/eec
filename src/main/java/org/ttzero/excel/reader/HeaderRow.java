@@ -254,6 +254,9 @@ public class HeaderRow extends Row {
         Map<String, Method> otherColumns = attachOtherColumn(clazz);
 
         if (!otherColumns.isEmpty()) {
+            // 排除已存在的列
+            for (Column col : list) otherColumns.remove(col.name);
+            // 添加
             for (Map.Entry<String, Method> entry : otherColumns.entrySet()) {
                 column = createColumn(entry.getValue());
                 if (column == null) column = new ListSheet.EntryColumn(entry.getKey());
