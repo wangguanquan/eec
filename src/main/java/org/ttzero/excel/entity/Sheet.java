@@ -373,7 +373,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * 获取字符串共享区{@link SharedStrings}
      *
      * @return 字符串共享区
+     * @deprecated 直接从workbook获取
      */
+    @Deprecated
     public SharedStrings getSst() {
         return workbook.getSst();
     }
@@ -1014,7 +1016,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 工作表文件名
      */
     public String getFileName() {
-        return "sheet" + id + cellValueAndStyle.getFileSuffix();
+        return "sheet" + id + sheetWriter.getFileSuffix();
     }
 
     /**
