@@ -92,6 +92,13 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     IWorksheetWriter clone();
 
     /**
+     * Returns the worksheet name
+     *
+     * @return name of worksheet
+     */
+    String getFileSuffix();
+
+    /**
      * Test if it is a {@link java.util.Date} type
      *
      * @param clazz the type

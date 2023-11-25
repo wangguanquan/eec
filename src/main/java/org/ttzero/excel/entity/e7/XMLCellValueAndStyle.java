@@ -16,111 +16,34 @@
 
 package org.ttzero.excel.entity.e7;
 
-import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
-import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.reader.Cell;
-
-import static org.ttzero.excel.entity.IWorksheetWriter.isChar;
-import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
-import static org.ttzero.excel.entity.IWorksheetWriter.isShort;
 
 /**
  * @author guanquan.wang at 2019-09-25 11:25
  */
 public class XMLCellValueAndStyle implements ICellValueAndStyle {
 
-    /**
-     * Int value conversion to others
-     *
-     * @param row  the row number
-     * @param cell the cell
-     * @param o    the cell value
-     * @param hc   the header column
-     */
-    @Override
-    public void conversion(int row, Cell cell, Object o, Column hc) {
-        Object e = hc.getConversion().conversion(o);
-        if (e != null) {
-            Class<?> clazz = e.getClass();
-            if (isInt(clazz)) {
-                if (isChar(clazz)) {
-                    cell.setCv((Character) e);
-                } else if (isShort(clazz)) {
-                    cell.setNv((Short) e);
-                } else {
-                    cell.setNv((Integer) e);
-                }
-                cell.xf = getStyleIndex(row, hc, e);
-            } else {
-                setCellValue(row, cell, e, hc, clazz, false);
-                // FIXME Here will override the style set by the user
-                int style = hc.getCellStyle(clazz);
-                cell.xf = getStyleIndex(row, hc, o, style);
-            }
-        } else {
-            cell.blank();
-            cell.xf = getStyleIndex(row, hc, null);
-        }
-    }
+//    /**
+//     * Int value conversion to others
+//     *
+//     * @param row  the row number
+//     * @param cell the cell
+//     * @param o    the cell value
+//     * @param hc   the header column
+//     */
+//    @Override
+//    public void conversion(Row row, Cell cell, Object o, Column hc) {
+//        Object e = hc.getConversion().conversion(o);
+//        if (e != null) {
+//            Class<?> clazz = e.getClass();
+//            setCellValue(row, cell, e, hc, clazz, false);
+//            // FIXME 转转换后是否根据转换后的类型重新设置对齐不明确，暂时不重置
+////            int style = hc.getCellStyle(clazz);
+//            cell.xf = getStyleIndex(row, hc, o, hc.getCellStyle());
+//        } else {
+//            cell.blank();
+//            cell.xf = getStyleIndex(row, hc, null, hc.getCellStyle());
+//        }
+//    }
 
-    /**
-     * Setting cell value and cell styles
-     *
-     * @param row  the row number
-     * @param cell the cell
-     * @param e    the cell value
-     * @param hc   the header column
-     */
-    @Deprecated
-    @Override
-    public void reset(int row, Cell cell, Object e, Column hc) {
-        boolean hasConversion = hc.getConversion() != null;
-        setCellValue(row, cell, e, hc, hc.getClazz(), hasConversion);
-        if (!hasConversion) {
-            cell.xf = getStyleIndex(row, hc, e);
-        }
-    }
-
-    /**
-     * Returns the cell style index
-     *
-     * @param row  the row number
-     * @param hc    the header column
-     * @param o     the cell value
-     * @param style the default style
-     * @return the style index in xf
-     */
-    @Deprecated
-    protected int getStyleIndex(int row, Column hc, Object o, int style) {
-        if (hc.styleProcessor != null) {
-            style = hc.styleProcessor.build(o, style, hc.styles);
-        }
-        return hc.styles.of(style);
-    }
-
-    /**
-     * Returns the cell style index
-     *
-     * @param rows  the row number
-     * @param hc the header column
-     * @param o  the cell value
-     * @return the style index in xf
-     */
-    @Deprecated
-    @Override
-    public int getStyleIndex(int rows, Column hc, Object o) {
-        int style = hc.getCellStyle();
-        return getStyleIndex(rows, hc, o, style);
-    }
-
-    /**
-     * Returns the worksheet name
-     *
-     * @return name of worksheet
-     */
-    @Override
-    public String getFileSuffix() {
-        return Const.Suffix.XML;
-    }
 }

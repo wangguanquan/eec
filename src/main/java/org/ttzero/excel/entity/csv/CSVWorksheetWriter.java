@@ -126,6 +126,17 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         throw new ExcelWriteException("Overflow the max row limit.");
     }
 
+    /**
+     * Returns the worksheet name
+     *
+     * @return name of worksheet
+     */
+    @Override
+    public String getFileSuffix() {
+        return Const.Suffix.CSV;
+    }
+
+
     @Override
     public void close() throws IOException {
         if (writer != null)

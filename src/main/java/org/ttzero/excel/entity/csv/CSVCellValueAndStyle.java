@@ -19,7 +19,6 @@ package org.ttzero.excel.entity.csv;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.Row;
-import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.DateUtil;
@@ -48,18 +47,6 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
  * @author guanquan.wang at 2019-09-25 11:46
  */
 public class CSVCellValueAndStyle implements ICellValueAndStyle {
-    /**
-     * Setting cell value and cell styles
-     *
-     * @param cell the cell
-     * @param e    the cell value
-     * @param hc   the header column
-     */
-    @Deprecated
-    @Override
-    public void reset(int row, Cell cell, Object e, Column hc) {
-        setCellValue(row, cell, e, hc, hc.getClazz(), hc.getConversion() != null);
-    }
 
     /**
      * Setting all cell style of the specified row
@@ -74,16 +61,6 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
     public <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) { }
 
     /**
-     * Returns the worksheet name
-     *
-     * @return name of worksheet
-     */
-    @Override
-    public String getFileSuffix() {
-        return Const.Suffix.CSV;
-    }
-
-    /**
      * Setting cell value
      *
      * @param cell  the cell
@@ -93,7 +70,7 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
      * @param hasConversion 是否有输出转换器
      */
     @Override
-    public void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
+    public void setCellValue(Row row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
         if (hasConversion) {
             conversion(row, cell, e, hc);
             return;
@@ -151,16 +128,4 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
         return 0;
     }
 
-    /**
-     * Returns the cell style index
-     *
-     * @param hc the header column
-     * @param o  the cell value
-     * @return const zero (general style)
-     */
-    @Deprecated
-    @Override
-    public int getStyleIndex(int rows, Column hc, Object o) {
-        return 0;
-    }
 }

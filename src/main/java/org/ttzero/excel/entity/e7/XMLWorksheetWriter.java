@@ -321,6 +321,16 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * Returns the worksheet name
+     *
+     * @return name of worksheet
+     */
+    @Override
+    public String getFileSuffix() {
+        return Const.Suffix.XML;
+    }
+
+    /**
      * Override this method to modify the maximum number
      * of rows per page, this value contains the header
      * row and data rows

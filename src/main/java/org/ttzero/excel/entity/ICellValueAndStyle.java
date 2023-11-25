@@ -58,13 +58,10 @@ public interface ICellValueAndStyle {
      * @param hc   the header column
      */
     default void reset(Row row, Cell cell, Object e, Column hc) {
-        boolean hasConversion = hc.getConversion() != null;
-        setCellValue(row.index, cell, e, hc, hc.getClazz(), hasConversion);
-        // Cell style
-        if (!hasConversion) {
-            cell.xf = getStyleIndex(row, hc, e);
-        }
-        // Reset row height
+        // 将值转输出需要的统一格式
+        setCellValue(row, cell, e, hc, hc.getClazz(), hc.getConversion() != null);
+        // 单元格样式
+        cell.xf = getStyleIndex(row, hc, e);
     }
 
     /**
@@ -82,37 +79,6 @@ public interface ICellValueAndStyle {
         }
         return hc.styles.of(style);
     }
-
-    /**
-     * Setting cell value and cell styles
-     *
-     * @param row  the row number
-     * @param cell the cell
-     * @param e    the cell value
-     * @param hc   the header column
-     * @deprecated Replace with {@link #reset(Row, Cell, Object, Column)}
-     */
-    @Deprecated
-    void reset(int row, Cell cell, Object e, Column hc);
-
-    /**
-     * Returns the worksheet name
-     *
-     * @return name of worksheet
-     */
-    String getFileSuffix();
-
-    /**
-     * Returns the cell style index
-     *
-     * @param rows the row number
-     * @param hc the header column
-     * @param o  the cell value
-     * @return the style index in xf
-     * @deprecated Replace with {@link #getStyleIndex(Row, Column, Object)}
-     */
-    @Deprecated
-    int getStyleIndex(int rows, Column hc, Object o);
 
     /**
      * Setting all cell style of the specified row
@@ -139,7 +105,7 @@ public interface ICellValueAndStyle {
      * @param clazz the cell value type
      * @param hasConversion 是否有输出转换器
      */
-    default void setCellValue(int row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
+    default void setCellValue(Row row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
         if (hasConversion) {
             conversion(row, cell, e, hc);
             return;
@@ -216,7 +182,7 @@ public interface ICellValueAndStyle {
      * @param cell  the cell
      * @param hc    the header column
      */
-    default void setNullValue(int row, Cell cell, Column hc) {
+    default void setNullValue(Row row, Cell cell, Column hc) {
         boolean hasProcessor = hc.getConversion() != null;
         if (hasProcessor) {
             conversion(row, cell, 0, hc);
@@ -232,21 +198,10 @@ public interface ICellValueAndStyle {
      * @param o    the cell value
      * @param hc   the header column
      */
-    default void conversion(int row, Cell cell, Object o, Column hc) {
+    default void conversion(Row row, Cell cell, Object o, Column hc) {
         Object e = hc.getConversion().conversion(o);
         if (e != null) {
-            Class<?> clazz = e.getClass();
-            if (isInt(clazz)) {
-                if (isChar(clazz)) {
-                    cell.setCv((Character) e);
-                } else if (isShort(clazz)) {
-                    cell.setNv((Short) e);
-                } else {
-                    cell.setNv((Integer) e);
-                }
-            } else {
-                setCellValue(row, cell, e, hc, clazz, false);
-            }
+            setCellValue(row, cell, e, hc, e.getClass(), false);
         } else {
             cell.blank();
         }
@@ -261,7 +216,7 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      * @param clazz the cell value type
      */
-    default void unknownType(int row, Cell cell, Object e, Column hc, Class<?> clazz) {
+    default void unknownType(Row row, Cell cell, Object e, Column hc, Class<?> clazz) {
         cell.setSv(e.toString());
     }
 
@@ -274,7 +229,7 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      * @param clazz the cell value type
      */
-    default void writeAsMedia(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+    default void writeAsMedia(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
         int b, len = e.length();
         // Base64 image
         if (len > 64 && e.startsWith("data:") && (b = StringUtil.indexOf(e, ',', 6, 64)) > 6
@@ -304,7 +259,7 @@ public interface ICellValueAndStyle {
      * @param hc    the header column
      * @param clazz the cell value type
      */
-    default void downloadRemoteResource(int row, Cell cell, String e, Column hc, Class<?> clazz) {
+    default void downloadRemoteResource(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
         cell.setSv(e);
         cell.t = Cell.REMOTE_URL;
     }
