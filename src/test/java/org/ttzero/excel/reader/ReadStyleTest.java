@@ -85,7 +85,7 @@ public class ReadStyleTest {
                         assert fmt.getCode().equals("d-mmm-yy");
 
                         Font font = styles.getFont(style);
-                        assert font.isDeleteLine();
+                        assert font.isStrikeThru();
                     }
                 }
             });

@@ -1617,7 +1617,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
-                Student e = new Student(i, (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
+                Student e = new Student(random.nextInt(100), (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;

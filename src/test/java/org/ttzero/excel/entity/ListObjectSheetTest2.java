@@ -20,6 +20,8 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -32,6 +34,7 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
+import org.ttzero.excel.reader.Sheet;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -326,6 +329,76 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             assert expectList.size() == readList.size();
             for (int i = 0, len = expectList.size(); i < len; i++)
                 assert expectList.get(i).equals(readList.get(i));
+        }
+    }
+
+    @Test public void testAutoSize() throws IOException {
+        String fileName = "test auto size.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(expectList
+                , new Column("学号", "id").setStyleProcessor((o, style, sst)
+                    -> (((int) o & 1) == 1 ? sst.modifyFont(style, new Font("Algerian", 24)) : ((int) o) < 10 ? sst.modifyFont(style, new Font("Algerian", 56)) : style))
+                , new Column("姓名", "name").setStyleProcessor((o, style, sst) -> {
+                    int len = ((String) o).length();
+                    if (len < 5) {
+                        style = sst.modifyFont(style, new Font("Trebuchet MS", 72));
+                    } else if (len > 15) {
+                        style = sst.modifyFont(style, new Font("宋体", 5));
+                    } else if (len > 10) {
+                        style = sst.modifyFont(style, new Font("Bauhaus 93", 18));
+                    }
+                    return style;
+                })
+            ))
+            .writeTo(defaultTestPath.resolve(fileName));
+    }
+
+    @Test public void testCustomStyle() throws IOException {
+        String fileName = "test custom style.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
+                , new Column("id").setFont(new Font("微软雅黑", 16)).setHorizontal(Horizontals.CENTER)
+                , new Column("name").setFont(new Font("华文行楷", 23)).setBorder(new Border()).autoSize()
+            ))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Sheet sheet = reader.sheet(0);
+            List<ListObjectSheetTest.Student> list = sheet.forceImport().dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+            assert list.size() == expectList.size();
+            for (int i = 0; i < expectList.size(); i++) {
+                ListObjectSheetTest.Student e = expectList.get(i), o = list.get(i);
+                assert e.getName().equals(o.getName());
+                assert e.getId() == o.getId();
+            }
+
+            for (Iterator<org.ttzero.excel.reader.Row> iter = sheet.reset().dataRows().iterator(); iter.hasNext(); ) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                Styles styles = row.getStyles();
+                // 第一列样式
+                {
+                    int style = row.getCellStyle(0);
+                    Font font = styles.getFont(style);
+                    assert "微软雅黑".equals(font.getName());
+                    assert font.getSize() == 16;
+                    int horizontal = styles.getHorizontal(style);
+                    assert horizontal == Horizontals.CENTER;
+                }
+                // 第二列样式
+                {
+                    int style = row.getCellStyle(1);
+                    Font font = styles.getFont(style);
+                    assert "华文行楷".equals(font.getName());
+                    assert font.getSize() == 23;
+                    int horizontal = styles.getHorizontal(style);
+                    assert horizontal == Horizontals.LEFT;
+                    Border border = styles.getBorder(style);
+                    assert border == null || border.getBorderTop().getStyle() == BorderStyle.NONE;
+                }
+            }
         }
     }
 

@@ -19,8 +19,11 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.StyleDesign;
+import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
 
@@ -191,61 +194,62 @@ public class CustomerNumFmtTest extends WorkbookTest {
         nf.setGroupingUsed(false);
         nf.setMaximumFractionDigits(6);
 
+        Font song11 = new Font("宋体", 11);
         NumFmt fmt = new NumFmt("[Blue]###0.00_);[Red]-###0.00_);0_)");
         double width;
 
-        width = fmt.calcNumWidth(nf.format(12345654352365434.36D).length());
+        width = fmt.calcNumWidth(nf.format(12345654352365434.36D).length(), song11);
         assert width >= 20.86D && width <= 25.63D;
 
-        width = fmt.calcNumWidth(nf.format(-12345654352365434.36D).length());
+        width = fmt.calcNumWidth(nf.format(-12345654352365434.36D).length(), song11);
         assert width >= 21.5D && width <= 26.63D;
 
-        width = fmt.calcNumWidth(stringSize(1234565));
+        width = fmt.calcNumWidth(stringSize(1234565), song11);
         assert width >= 11.5D && width <= 13.63D;
 
-        width = fmt.calcNumWidth(stringSize(-1234565));
+        width = fmt.calcNumWidth(stringSize(-1234565), song11);
         assert width >= 12.5D && width <= 14.63D;
 
         fmt = new NumFmt("[Blue]#,##0.00_);[Red]-#,##0.00_);0_)");
-        width = fmt.calcNumWidth(stringSize(1234565435236543436L));
+        width = fmt.calcNumWidth(stringSize(1234565435236543436L), song11);
         assert width >= 29.0D && width <= 34.63D;
 
-        width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
+        width = fmt.calcNumWidth(stringSize(-1234565435236543436L), song11);
         assert width >= 30.D && width <= 35.63D;
 
-        width = fmt.calcNumWidth(stringSize(1234565));
+        width = fmt.calcNumWidth(stringSize(1234565), song11);
         assert width >= 13.0D && width <= 15.63D;
 
-        width = fmt.calcNumWidth(stringSize(-1234565));
+        width = fmt.calcNumWidth(stringSize(-1234565), song11);
         assert width >= 14.D && width <= 16.63D;
 
         fmt = new NumFmt("[Blue]#,##0;[Red]-#,##0;0");
-        width = fmt.calcNumWidth(stringSize(1234565435236543436L));
+        width = fmt.calcNumWidth(stringSize(1234565435236543436L), song11);
         assert width >= 25.D && width <= 29.63D;
 
-        width = fmt.calcNumWidth(stringSize(-1234565435236543436L));
+        width = fmt.calcNumWidth(stringSize(-1234565435236543436L), song11);
         assert width >= 26.D && width <= 30.63D;
 
-        width = fmt.calcNumWidth(stringSize(1234565));
+        width = fmt.calcNumWidth(stringSize(1234565), song11);
         assert width >= 9.D && width <= 12.63D;
 
-        width = fmt.calcNumWidth(stringSize(-1234565));
+        width = fmt.calcNumWidth(stringSize(-1234565), song11);
         assert width >= 10.D && width <= 13.63D;
 
         fmt = new NumFmt("yyyy-mm-dd");
-        width = fmt.calcNumWidth(0);
+        width = fmt.calcNumWidth(0, song11);
         assert width >= 10.D && width <= 12.63D;
 
         fmt = new NumFmt("yyyy-mm-dd hh:mm:ss");
-        width = fmt.calcNumWidth(0);
+        width = fmt.calcNumWidth(0, song11);
         assert width >= 19.D && width <= 23.63D;
 
         fmt = new NumFmt("hh:mm:ss");
-        width = fmt.calcNumWidth(0);
+        width = fmt.calcNumWidth(0, song11);
         assert width >= 8.D && width <= 10.63D;
 
         fmt = new NumFmt("yyyy年mm月dd日 hh日mm分ss秒");
-        width = fmt.calcNumWidth(0);
+        width = fmt.calcNumWidth(0, song11);
         assert width >= 26.D && width <= 30.63D;
     }
 
@@ -405,12 +409,16 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     public static class WidthTestItem {
+        @StyleDesign(using = AnyStyleDesign.class)
         @ExcelColumn(value = "整型", format = "#,##0_);[Red]-#,##0_);0_)")
         Integer nv;
+        @StyleDesign(using = AnyStyleDesign.class)
         @ExcelColumn("字符串(en)")
         String sen;
-        @ExcelColumn("字符串(中文)")
+        @StyleDesign(using = AnyStyleDesign.class)
+        @ExcelColumn(value = "字符串(中文)", wrapText = true)
         String scn;
+        @StyleDesign(using = AnyStyleDesign.class)
         @ExcelColumn(value = "日期时间", format = "yyyy-mm-dd hh:mm:ss")
         Timestamp iv;
 
@@ -425,9 +433,9 @@ public class CustomerNumFmtTest extends WorkbookTest {
             for (int i = 0; i < size; i++) {
                 WidthTestItem o = supplier.get();
                 o.nv = random.nextInt();
-                o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
+                 o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
                 o.sen = getRandomAssicString(20);
-                o.scn = "联想笔记本电脑拯救者R7000(标压 6核 R5-5600H 16G 512G RTX3050 100%sRGB)黑";
+                o.scn = "联想笔记本电脑拯救者R7000\n(标压6核 R5-5600H 16G 512G RTX3050\n 100%sRGB)黑";
                 list.add(o);
             }
             return list;
@@ -459,6 +467,22 @@ public class CustomerNumFmtTest extends WorkbookTest {
         public MaxWidthTestItem() { }
         public static List<WidthTestItem> randomTestData() {
             return randomTestData(MaxWidthTestItem::new);
+        }
+    }
+
+    public static class TimestampStyleDesign implements StyleProcessor<Timestamp> {
+        Font font = new Font("Arial Narrow", 15);
+        @Override
+        public int build(Timestamp o, int style, Styles sst) {
+            return sst.modifyFont(style, font);
+        }
+    }
+
+    public static class AnyStyleDesign implements StyleProcessor<Object> {
+        Font font = new Font("Lucida Sans", 17);
+        @Override
+        public int build(Object o, int style, Styles sst) {
+            return sst.modifyFont(style, font);
         }
     }
 }
