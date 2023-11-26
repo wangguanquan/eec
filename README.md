@@ -273,6 +273,15 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.12 (2023-11-26)
+-------------
+- 移除watch改用slf4j输出日志
+- 新增进度窗口`onProgress`
+- 优化自适应列宽算法使其支持更多字体和大小
+- 数据转换器功能增强，ExcelColumn增加converter属性以支持导出/导入时双向数据转换([#362](https://github.com/wangguanquan/eec/issues/362))
+- 支持读取xlsx格式wps的内嵌图片([#363](https://github.com/wangguanquan/eec/issues/363))
+- 部分类的注释改为中文，后续会将全部注释改为中文
+
 Version 0.5.11 (2023-10-08)
 -------------
 - 优化ExcelReader性能，性能提升100%~300%
@@ -291,26 +300,10 @@ Version 0.5.9 (2023-05-10)
 -------------
 - 修复dom4j默认构造器容易造成XXE安全漏洞
 
-Version 0.5.8 (2023-04-08)
--------------
-- 删除部分已标记为过时的方法和类，兼容处理请查看[wiki升级指引](https://github.com/wangguanquan/eec/wiki/%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E5%8D%87%E7%BA%A7%E6%8C%87%E5%BC%95#%E5%8D%87%E7%BA%A7%E5%88%B0-058-%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
-    1. 删除Sheet.Column类
-    2. 删除Row#getRowNumber方法
-    3. 删除IntConversionProcessor类
-- 重命名xxOddFill为xxZebraLine
-- 修复自动分页后打开文件弹出警告
-- 取消默认斑马线，增加XMLZebraLineCellValueAndStyle自定义斑马线
-- 表头背景从666699调整为E9EAEC，斑马线颜色从EFF5EB调整为E9EAEC
-- 单个Column可以指定auto-size属性([#337](https://github.com/wangguanquan/eec/issues/337))
-- 提供入口自定义处理未知的数据类型
-- 导出数据支持指定起始行号([#345](https://github.com/wangguanquan/eec/issues/345))
-- 修复xls解析RK Value丢失精度问题
-- 修复部分已知BUG([#334](https://github.com/wangguanquan/eec/issues/334), [#342](https://github.com/wangguanquan/eec/issues/342), [#346](https://github.com/wangguanquan/eec/issues/346))
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.11-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.12-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
