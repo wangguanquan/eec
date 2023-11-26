@@ -38,6 +38,10 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 
 阅读[WIKI](https://github.com/wangguanquan/eec/wiki) 了解更多用法
 
+## Gitee
+
+国内用户可访问[Gitee](https://gitee.com/wangguanquan/eec)
+
 ## 使用方法
 
 pom.xml添加
