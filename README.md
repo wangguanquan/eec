@@ -40,7 +40,7 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 
 ## Gitee
 
-国内用户可访问[Gitee](https://gitee.com/wangguanquan/eec)
+国内用户可访问[Gitee](https://gitee.com/wangguanquan/eec)，git无法访问时可直接访问gitee在里提issue开发者也同样会及时回复
 
 ## 使用方法
 
