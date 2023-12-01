@@ -262,7 +262,16 @@ public class ExcelReader implements Closeable {
             throw new IOException("Create temp directory error. Please check your permission");
         }
         FileUtil.cp(stream, temp);
-        ExcelReader reader = read(temp, bufferSize, cacheSize, option);
+        ExcelReader reader;
+        try {
+            reader = read(temp, bufferSize, cacheSize, option);
+        } catch (IOException ex) {
+            FileUtil.rm(temp);
+            throw ex;
+        } catch (Exception ex) {
+            FileUtil.rm(temp);
+            throw new IOException(ex);
+        }
         reader.temp = temp;
         return reader;
     }
@@ -548,6 +557,7 @@ public class ExcelReader implements Closeable {
             throw new IOException("Create temp directory error. Please check permission");
         }
         FileUtil.cp(stream, temp);
+        this.temp = temp;
 
         init(temp, bufferSize, cacheSize, option);
     }
