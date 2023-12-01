@@ -34,23 +34,44 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
- * A date util for excel 07
+ * Excel07日期工具类，Excel07日期从1900年1月1日开始对应数字{@code 1}，每增加一天数字加1所以2表示{@code 1900-1-2}日，
+ * 小数部分表示时分秒在1天中的比例，例中午12点它在1天中比例为0.5所以{@code 1.5}就表示{@code 1900-1-1 12:00:00}
  *
  * @author guanquan.wang on 2017/9/21.
  */
 public class DateUtil {
+    /**
+     * Java timestamp从1970年开始，所以这里计算从1900到1970之前相差的天数
+     */
     public static final int DAYS_1900_TO_1970 = ~(int) LocalDate.of(1900, 1, 1).toEpochDay() + 3;
+    /**
+     * 保存1天的秒数
+     */
     public static final double SECOND_OF_DAY = 24 * 60 * 60.0D;
 
-    // time-zone
+    /**
+     * 时区，默认随系统，外部可根据实际的数据时区修改此值
+     */
     public static final int tz = TimeZone.getDefault().getRawOffset();
 
+    /**
+     * 通用日期格式化 {@code yyyy-MM-dd'T'HH:mm:ss'Z'}
+     */
     public static final ThreadLocal<SimpleDateFormat> utcDateTimeFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"));
+    /**
+     * 通用日期格式化 {@code yyyy-MM-dd HH:mm:ss}
+     */
     public static final ThreadLocal<SimpleDateFormat> dateTimeFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+    /**
+     * 通用日期格式化 {@code yyyy-MM-dd}
+     */
     public static final ThreadLocal<SimpleDateFormat> dateFormat
         = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+    /**
+     * 通用日期格式化 {@code yyyy-MM-dd HH:mm:ss}
+     */
     public static final DateTimeFormatter LOCAL_DATE_TIME;
 
     static {
@@ -62,28 +83,48 @@ public class DateUtil {
             .toFormatter();
     }
 
+    /**
+     * 将日期{@code date}格式化为{@code yyyy-MM-dd HH:mm:ss}
+     *
+     * @param date 待转换日期
+     * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
+     */
     public static String toString(Date date) {
         return dateTimeFormat.get().format(date);
     }
-
+    /**
+     * 将日期{@code date}格式化为{@code yyyy-MM-dd'T'HH:mm:ss'Z'}
+     *
+     * @param date 待转换日期
+     * @return {@code yyyy-MM-dd'T'HH:mm:ss'Z'}格式字符串
+     */
     public static String toTString(Date date) {
         return utcDateTimeFormat.get().format(date);
     }
-
+    /**
+     * 将日期{@code date}格式化为{@code yyyy-MM-dd}
+     *
+     * @param date 待转换日期
+     * @return {@code yyyy-MM-dd}格式字符串
+     */
     public static String toDateString(Date date) {
         return dateFormat.get().format(date);
     }
-
+    /**
+     * 获取当日{@code yyyy-MM-dd}字符串
+     *
+     * @return 当日格式化为{@code yyyy-MM-dd}格式字符串
+     */
     public static String today() {
         return LocalDate.now().toString();
     }
 
     private DateUtil() { }
     /**
-     * Timestamp to Office open xml timestamp
+     * 将{@code Timestamp}转为距{@code 1900-1-1}相差的值，精准到秒
      *
-     * @param ts the java.sql.timestamp value
-     * @return Office open xml timestamp
+     * @param ts java.sql.Timestamp(not null)
+     * @return 距{@code 1900-1-1}相差的值
      */
     public static double toDateTimeValue(Timestamp ts) {
         LocalDateTime ldt = ts.toLocalDateTime();
@@ -93,20 +134,20 @@ public class DateUtil {
     }
 
     /**
-     * java.util.Date to Office open xml date
+     * 将{@code Date}转为距{@code 1900-1-1}相差的值，精准到秒
      *
-     * @param date the java.util.Date value
-     * @return Office open xml date
+     * @param date java.util.Date(not null)
+     * @return 距{@code 1900-1-1}相差的值
      */
     public static double toDateTimeValue(Date date) {
         return toDateTimeValue(new Timestamp(date.getTime()));
     }
 
     /**
-     * java.util.Date to Office open xml date
+     * 将{@code Date}转为距{@code 1900-1-1}相差的天数，精准到天
      *
-     * @param date the java.util.Date value
-     * @return Office open xml date
+     * @param date java.util.Date(not null)
+     * @return 距{@code 1900-1-1}相差的天数
      */
     public static int toDateValue(Date date) {
         int n;
@@ -119,40 +160,40 @@ public class DateUtil {
     }
 
     /**
-     * Timestamp to Office open xml time-of-day
+     * 取{@code Timestamp}的时分秒转时分秒在一天的比值{@code second-of-day}
      *
-     * @param ts the Timestamp value
-     * @return Office open xml time-of-day
+     * @param ts java.sql.Timestamp(not null)
+     * @return 时分秒在一天的比值{@code second-of-day}
      */
     public static double toTimeValue(Timestamp ts) {
         return toTimeValue(ts.toLocalDateTime().toLocalTime());
     }
 
     /**
-     * java.util.Date to Office open xml time-of-day
+     * 取{@code Date}的时分秒转为时分秒在一天的比值{@code second-of-day}
      *
-     * @param date the java.util.Date value
-     * @return Office open xml time-of-day
+     * @param date java.util.Date(not null)
+     * @return 时分秒在一天的比值{@code second-of-day}
      */
     public static double toTimeValue(Date date) {
         return toTimeValue(new Timestamp(date.getTime()));
     }
 
     /**
-     * java.sql.Time to Office open xml time-of-day
+     * 将{@code java.sql.Time}转为时分秒在一天的比值{@code second-of-day}
      *
-     * @param time the java.sql.Time value
-     * @return Office open xml time-of-day
+     * @param time java.sql.Time(not null)
+     * @return 时分秒在一天的比值{@code second-of-day}
      */
     public static double toTimeValue(Time time) {
         return toTimeValue(time.toLocalTime());
     }
 
     /**
-     * LocalDateTime to Office open xml timestamp
+     * 将{@code LocalDateTime}转为距{@code 1900-1-1}相差的值，精准到秒
      *
-     * @param ldt the java.time.LocalDateTime value
-     * @return Office open xml timestamp
+     * @param ldt java.time.LocalDateTime(not null)
+     * @return 距{@code 1900-1-1}相差的值
      */
     public static double toDateTimeValue(LocalDateTime ldt) {
         long day = ldt.toLocalDate().toEpochDay();
@@ -161,20 +202,20 @@ public class DateUtil {
     }
 
     /**
-     * LocalDate to Office open xml date
+     * 将{@code LocalDate}转为距{@code 1900-1-1}相差的天数，精准到天
      *
-     * @param date the java.time.LocalDate value
-     * @return Office open xml date
+     * @param date java.time.LocalDate(not null)
+     * @return 距{@code 1900-1-1}相差的天数
      */
     public static int toDateValue(LocalDate date) {
         return (int) date.toEpochDay() + DAYS_1900_TO_1970;
     }
 
     /**
-     * LocalTime to Office open xml time-of-day
+     * 将{@code java.sql.Time}转为时分秒在一天的比值{@code second-of-day}
      *
-     * @param time the LocalTime value
-     * @return Office open xml time-of-day
+     * @param time LocalTime(not null)
+     * @return 时分秒在一天的比值 {@code second-of-day}
      */
     public static double toTimeValue(LocalTime time) {
         return time.toSecondOfDay() / SECOND_OF_DAY;
@@ -183,9 +224,9 @@ public class DateUtil {
     /////////////////////////////number to date//////////////////////////////////
 
     /**
-     * Office open XML timestamp to java.util.Date
+     * Excel07时间转为{@code java.util.Date}
      *
-     * @param n the office open xml timestamp value
+     * @param n excel读取的时间值
      * @return java.util.Date
      */
     public static java.util.Date toDate(int n) {
@@ -193,9 +234,9 @@ public class DateUtil {
     }
 
     /**
-     * Office open xml timestamp to java.util.Date
+     * Excel07时间转为{@code java.util.Date}
      *
-     * @param d the Office open xml timestamp value
+     * @param d excel读取的时间值
      * @return java.util.Date
      */
     public static java.util.Date toDate(double d) {
@@ -203,25 +244,55 @@ public class DateUtil {
         return Date.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
+    /**
+     * 时间字符串转时间，最少需要包含{@code yyyy-MM-dd}
+     *
+     * @param dateStr 时间字符串
+     * @return java.util.Date
+     */
     public static java.util.Date toDate(String dateStr) {
         return new java.util.Date(toTimestamp(dateStr).getTime());
     }
 
+    /**
+     * Excel07时间转为{@code java.sql.Time}
+     *
+     * @param d excel读取的时间值
+     * @return java.sql.Time
+     */
     public static java.sql.Time toTime(double d) {
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return java.sql.Time.valueOf(LocalTime.ofSecondOfDay(m));
     }
 
+    /**
+     * 时间字符串转时间，字符串格式必须为{@code HH:mm:ss}
+     *
+     * @param s 时间字符串
+     * @return java.sql.Time
+     */
     public static java.sql.Time toTime(String s) {
         LocalTime time = toLocalTime(s);
         return time != null ? java.sql.Time.valueOf(time) : null;
     }
 
+    /**
+     * Excel07时间转为{@code java.time.LocalTime}
+     *
+     * @param d excel读取的时间值
+     * @return java.time.LocalTime
+     */
     public static LocalTime toLocalTime(double d) {
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalTime.ofSecondOfDay(m);
     }
 
+    /**
+     * 时间字符串转时间，字符串格式必须为{@code HH:mm:ss}
+     *
+     * @param s 时间字符串
+     * @return java.time.LocalTime
+     */
     public static LocalTime toLocalTime(String s) {
         try {
             return LocalTime.parse(s);
@@ -230,25 +301,53 @@ public class DateUtil {
         }
     }
 
+    /**
+     * Excel07时间转为{@code java.sql.Timestamp}
+     *
+     * @param d excel读取的时间值
+     * @return java.sql.Timestamp
+     */
     public static java.sql.Timestamp toTimestamp(double d) {
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz));
     }
 
-
+    /**
+     * Excel07时间转为{@code java.time.LocalDateTime}
+     *
+     * @param d excel读取的时间值
+     * @return java.time.LocalDateTime
+     */
     public static LocalDateTime toLocalDateTime(double d) {
         int n = (int) d, m = (int) ((d - n) * SECOND_OF_DAY + 0.5D); // Causes data over 0.5s to be carried over to 1s
         return LocalDateTime.ofInstant(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L + m).minusMillis(tz), ZoneId.systemDefault());
     }
-
+    /**
+     * Excel07时间转为{@code java.sql.Timestamp}
+     *
+     * @param n excel读取的时间值
+     * @return java.sql.Timestamp
+     */
     public static java.sql.Timestamp toTimestamp(int n) {
         return Timestamp.from(Instant.ofEpochSecond((n - DAYS_1900_TO_1970) * 86400L).minusMillis(tz));
     }
 
+    /**
+     * Excel07时间转为{@code java.time.LocalDate}
+     *
+     * @param n excel读取的时间值
+     * @return java.time.LocalDate
+     */
     public static LocalDate toLocalDate(int n) {
         return LocalDate.ofEpochDay(n - DAYS_1900_TO_1970);
     }
 
+    /**
+     * 时间字符串转时间，最少需要包含{@code yyyy-MM-dd}
+     *
+     * @param dateStr 时间字符串
+     * @return java.sql.Timestamp
+     */
     public static java.sql.Timestamp toTimestamp(String dateStr) {
         String v = dateStr.trim().replace('/', '-');
         int dividingSpace = v.indexOf(' ');

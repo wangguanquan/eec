@@ -54,7 +54,7 @@ public class StringUtil {
      * 建议只应用于小数组查找，待查找字符串{@code v}可以为{@code null}，但数组不能为{@code null}
      *
      * @param array 查找源，不为{@code null}
-     * @param v 待查找字符串
+     * @param v     待查找字符串
      * @return 如果存在则返回字符串在数组中第一次出现的下标否则返回 {@code -1}
      */
     public static int indexOf(String[] array, String v) {
@@ -118,6 +118,7 @@ public class StringUtil {
      * goods__name | goodsName
      * _goods__name| _goodsName
      * </pre></blockquote>
+     *
      * @param name 待转换字符串
      * @return 驼峰风格字符串
      */
@@ -145,8 +146,8 @@ public class StringUtil {
      * 交换数组中的值，交换是<b>强制</b>的它并不会检查下标的范围，外部最好不要使用
      *
      * @param values 数组
-     * @param a 指定交换下标
-     * @param b 指定交换下标
+     * @param a      指定交换下标
+     * @param b      指定交换下标
      */
     public static void swap(String[] values, int a, int b) {
         String t = values[a];
@@ -176,7 +177,7 @@ public class StringUtil {
     /**
      * 检查字符串不为{@code null}或非空白字符
      *
-     * @param cs  待检查的字符串
+     * @param cs 待检查的字符串
      * @return {@code true} 字符串不为{@code null}或非空白字符
      */
     public static boolean isNotBlank(final CharSequence cs) {
@@ -219,11 +220,11 @@ public class StringUtil {
      * 查找某个字符{@code ch}在字符串{@code str}的位置，与{@link String#indexOf(int, int)}不同之处在于
      * 后者从开始位置查找到字符串结尾，而前者需要指定一个结束位置查找范围在{@code fromIndex}到{@code toIndex}之间
      *
-     * @param str 字符串源
-     * @param   ch          待查找的字符
-     * @param   fromIndex   起始位置（包含）
-     * @param   toIndex   结束位置（不包含）
-     * @return  字符 {@code ch} 在字符串的位置，未找到时返回{@code -1}
+     * @param str       字符串源
+     * @param ch        待查找的字符
+     * @param fromIndex 起始位置（包含）
+     * @param toIndex   结束位置（不包含）
+     * @return 字符 {@code ch} 在字符串的位置，未找到时返回{@code -1}
      */
     public static int indexOf(String str, int ch, int fromIndex, int toIndex) {
         final int max = Math.min(str.length(), toIndex);

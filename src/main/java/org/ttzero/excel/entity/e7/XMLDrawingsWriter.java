@@ -55,7 +55,7 @@ import java.util.Arrays;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * Drawings writer(For Picture only)
+ * 多媒体类型输出协议（目前只支持图片）
  *
  * @author guanquan.wang at 2023-03-07 09:09
  */

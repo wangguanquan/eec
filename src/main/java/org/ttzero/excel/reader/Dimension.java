@@ -20,22 +20,39 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 
 /**
- * Worksheet dimension
- * <p>
- * This record contains the range address of the used area in the current sheet.
+ * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
+ *
+ * <p>Excel的列由{@code A-Z}大写字母组成，行由{@code 1,2,3}数字组成，每个坐标都由列+行组成
+ * {@code 1}行{@code 1}列表示为{@code A1}以此类推，当列到达{@code Z}之后就由两位字母联合组成，
+ * {@code Z}的下一列表示为{@code AA}，同理{@code ZZ}列的下一列表示为{@code AAA}</p>
+ *
+ *
+ * <p>范围值包含两个坐标，例{@code A1:B5}它表示从1行1列到5行2列的范围，如果起始坐标和结束坐标一样
+ * 也就是压缩到一个单元格可以简写为起始坐标{@code A1:A1}被记为{@code A1}</p>
  *
  * @author guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
-    // Index to first used row (one base)
+    /**
+     * 起始行号 (one base)
+     */
     public final int firstRow;
-    // Index to last used row (one base)
+    /**
+     * 末尾行号 (one base)
+     */
     public final int lastRow;
-    // Index to first used column (one base)
+    /**
+     * 起始列号 (one base)
+     */
     public final short firstColumn;
-    // Index to last used column (one base)
+    /**
+     * 末尾列号 (one base)
+     */
     public final short lastColumn;
-    // Width and Height
+    /**
+     * 宽 = 末尾列-起始列+1
+     * 高 = 末尾行-起始行+1
+     */
     public final int width, height;
 
     public Dimension(int firstRow, short firstColumn) {
@@ -59,9 +76,9 @@ public class Dimension {
     }
 
     /**
-     * Create {@link Dimension} from a range string
+     * 解析范围字符串，有效的范围字符串至少包含一个起始坐标，最多包含两个坐标，坐标间使用{@code ‘:’}分隔
      *
-     * @param range range string like {@code A2:B2}
+     * @param range 范围字符串 像{@code A2:B2}
      * @return the {@link Dimension} entry
      */
     public static Dimension of(String range) {
@@ -80,7 +97,7 @@ public class Dimension {
     }
 
     /**
-     * Returns the index to first used row, the min value is 1
+     * 获取起始行号，最小为1
      *
      * @return the first row number
      */
@@ -89,8 +106,7 @@ public class Dimension {
     }
 
     /**
-     * Returns the index to last used row, the max value
-     * is 1,048,576 in office 2007 or later and 65,536 in office 2003
+     * 获取末尾行号
      *
      * @return the last row number
      */
@@ -99,7 +115,7 @@ public class Dimension {
     }
 
     /**
-     * Returns the index to first used column, the min value is 1
+     * 获取起始列号，最小为1
      *
      * @return the first column number
      */
@@ -108,8 +124,7 @@ public class Dimension {
     }
 
     /**
-     * Returns the index to last used column, the max value
-     * is 16,384 in office 2007 or later and 256 in office 2003
+     * 获取末尾列号
      *
      * @return the last column number
      */
@@ -118,18 +133,18 @@ public class Dimension {
     }
 
     /**
-     * Returns the width in dimension
+     * 获取范围宽度，宽 = 末尾列-起始列+1
      *
-     * @return width
+     * @return 宽度
      */
     public int getWidth() {
         return width;
     }
 
     /**
-     * Returns the height in dimension
+     * 获取范围高度，高 = 末尾行-起始行+1
      *
-     * @return height
+     * @return 高度
      */
     public int getHeight() {
         return height;
@@ -143,11 +158,11 @@ public class Dimension {
     }
 
     /**
-     * Determine whether the specified coordinates are within the {@link Dimension}
+     * 检查指定坐标是否在本范围中
      *
-     * @param r row number
-     * @param c column number
-     * @return true if axis is in {@link Dimension}
+     * @param r 行号
+     * @param c 列号
+     * @return true 如果坐标在范围中
      */
     public boolean checkRange(int r, int c) {
         return r >= firstRow && r <= lastRow && c >= firstColumn && c <= lastColumn;

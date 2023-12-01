@@ -64,6 +64,8 @@ import static org.ttzero.excel.util.StringUtil.lowFirstKey;
 import static org.ttzero.excel.util.StringUtil.toCamelCase;
 
 /**
+ * 表头行，包含列与对象的映射关系
+ *
  * @author guanquan.wang at 2019-04-17 11:55
  */
 public class HeaderRow extends Row {

@@ -34,7 +34,7 @@ import java.util.List;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
- * A simple implementation
+ * 批注的简单实现
  *
  * @author guanquan.wang at 2020-05-21 16:31
  */
