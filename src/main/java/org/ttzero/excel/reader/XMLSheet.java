@@ -522,7 +522,7 @@ public class XMLSheet implements Sheet {
         // find end of row tag
         for (; ++nChar < length && cb[nChar] != '>'; ) ;
         // Empty Row
-        if (cb[nChar++ - 1] == '/') {
+        if (nChar < length && cb[nChar - 1] == '/') {
             return sRow.empty(cb, start, nChar - start);
         }
         // Not empty
