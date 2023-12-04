@@ -185,18 +185,6 @@ public class ResultSetSheet extends Sheet {
     /**
      * 设置数据源{@code ResultSet}
      *
-     * @param rs 数据源{@code ResultSet}
-     * @return 当前工作表
-     * @deprecated 使用 {@link #setResultSet(ResultSet)}替换
-     */
-    @Deprecated
-    public ResultSetSheet setRs(ResultSet rs) {
-        return setResultSet(rs);
-    }
-
-    /**
-     * 设置数据源{@code ResultSet}
-     *
      * @param resultSet 数据源{@code ResultSet}
      * @return 当前工作表
      */
