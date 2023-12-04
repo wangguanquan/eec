@@ -20,11 +20,11 @@ package org.ttzero.excel.reader;
 import java.util.List;
 
 /**
- * Copy values when reading merged cells.
- * <p>
- * By default, the values of the merged cells are only
- * stored in the first Cell, and other cells have no values.
- * Call this method to copy the value to other cells in the merge.
+ * 支持复制合并单元格的工作表，可以通过{@link #asMergeSheet}将普通工作表转为{@code MergeSheet}
+ *
+ * <p>通常合并单元格的值保存在左上角第一个单元格中其余单元格的值为{@code null}，如果要读取这类合并单元的值就需要特殊处理，
+ * 如果将工作表转为{@code MergeSheet}就可以直接获取合并范围内的所有单元格的值，每个值均为首个单元格的值。
+ * 使用{@code MergeSheet}会有一定的性能损耗，数据量少时可忽略这种损耗</p>
  * <blockquote><pre>
  * |---------|     |---------|     |---------|
  * |         |     |  1 |    |     |  1 |  1 |
@@ -36,20 +36,21 @@ import java.util.List;
  *                  others are
  *                  `null`
  * </pre></blockquote>
+ *
  * @author guanquan.wang at 2022-08-10 11:36
  */
 public interface MergeSheet extends Sheet {
     /**
-     * Returns CellMerged info
+     * 获取抽象的合并表格，通过表格快速判断某个坐标是否为合并单元格的一部分
      *
      * @return merged {@link Grid}
      */
     Grid getMergeGrid();
 
     /**
-     * Returns all merged cells
+     * 获取所有合并单元格的合并范围
      *
-     * @return If no merged cells are returned, Null is returned
+     * @return 如果存在合并单元格则返回所有合并单元格的范围，否则返回{@code null}
      */
     List<Dimension> getMergeCells();
 }

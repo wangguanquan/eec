@@ -50,14 +50,17 @@ import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
+ * 用于读的工作表，为了性能本工具将读和写分开设计它们具有完全不同的方法，
+ * 读取数据时可以通过{@link #header}方法指定表头位置
+ *
  * @author guanquan.wang at 2019-04-17 11:36
  */
 public interface Sheet extends Closeable {
 
     /**
-     * The worksheet name
+     * 获取工作表的名称
      *
-     * @return the sheet name
+     * @return 工作表名
      */
     String getName();
 
@@ -288,13 +291,13 @@ public interface Sheet extends Closeable {
         return n;
     }
 
-    /**
-     * Close resource
-     *
-     * @throws IOException if I/O error occur
-     */
-    @Override
-    void close() throws IOException;
+//    /**
+//     * Close resource
+//     *
+//     * @throws IOException if I/O error occur
+//     */
+//    @Override
+//    void close() throws IOException;
 
     /**
      * Save file as Comma-Separated Values. Each worksheet corresponds to
@@ -400,86 +403,85 @@ public interface Sheet extends Closeable {
      * are matched by default. {@code forceImport} will skip this restriction,
      * and fields without {@code ExcelColumn} annotations will be matched with field name
      *
-     * @return this {@link Sheet}
+     * @return 当前工作表
      */
     default Sheet forceImport() {
         return addHeaderColumnReadOption(HeaderRow.FORCE_IMPORT);
     }
 
     /**
-     * Settings ignore case matching column names
+     * 设置忽略大小写匹配表头字段
      *
-     * @return this {@link Sheet}
+     * @return 当前工作表
      */
     default Sheet headerColumnIgnoreCase() {
         return addHeaderColumnReadOption(HeaderRow.IGNORE_CASE);
     }
 
     /**
-     * Convert column name to camel case
+     * 设置驼峰风格匹配表头字段
      *
-     * @return this {@link Sheet}
+     * @return 当前工作表
      */
     default Sheet headerColumnToCamelCase() {
         return addHeaderColumnReadOption(HeaderRow.CAMEL_CASE);
     }
 
     /**
-     * Add header columns preprocessing properties
+     * 添加表头读取属性
      *
-     * @param option header column options
-     * @return this {@link Sheet}
+     * @param option 额外属性
+     * @return 当前工作表
      */
     default Sheet addHeaderColumnReadOption(int option) {
         return setHeaderColumnReadOption(getHeaderColumnReadOption() | option);
     }
 
     /**
-     * Setting header columns preprocessing properties
+     * 设置表头读取属性，将行数据转对象时由于Excel中的值与Java对象中定义的不同会使双方不匹配，设置读取属性可丰富读取能力，
+     * 多个属性可叠加
      *
      * <ul>
-     *     <li>HeaderRow.FORCE_IMPORT: Match with field name if without ExcelColumn annotation</li>
-     *     <li>HeaderRow.IGNORE_CASE: Ignore case matching column names</li>
-     *     <li>HeaderRow.CAMEL_CASE: CAMEL_CASE to camelCase</li>
+     *     <li>HeaderRow.FORCE_IMPORT: 强制导入，即使没有&#40;ExcelColumn注解</li>
+     *     <li>HeaderRow.IGNORE_CASE: 忽略大小写匹配</li>
+     *     <li>HeaderRow.CAMEL_CASE: 驼峰风格匹配</li>
      * </ul>
      * <blockquote><pre>
      *     reader.sheet(0).setHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)
      * </pre></blockquote>
      *
-     * @param option header column options
-     * @return this {@link Sheet}
+     * @param option 额外属性
+     * @return 当前工作表
      */
     Sheet setHeaderColumnReadOption(int option);
 
     /**
-     * Returns Header column options
+     * 获取表头读取属性
      *
-     * @return this {@link Sheet}
+     * @return 属性值
      */
     int getHeaderColumnReadOption();
 
     /**
-     * Make worksheets parse value only
+     * 将工作表转为普通工作表{@code Sheet}，它只专注获取值
      *
-     * @return a empty {@link Sheet}
+     * @return {@link Sheet}
      */
     Sheet asSheet();
 
     /**
-     * Make worksheets parse formulas
+     * 将工作表转为{@code CalcSheet}以解析单元格公式
      *
-     * @return a empty {@link CalcSheet}
+     * @return {@link CalcSheet}
      */
     CalcSheet asCalcSheet();
 
     /**
-     * Make worksheets copy value on merge cells
+     * 将工作表转为{@code MergeSheet}，它将复制合并单元格的首坐标值到合并范围内的其它单元格中
      *
-     * @return a empty {@link MergeSheet}
+     * @return {@link MergeSheet}
      */
     MergeSheet asMergeSheet();
 
 //    FullSheet asFullSheet();
 }
-
-//interface FullSheet extends CalcSheet, MergeSheet { }
