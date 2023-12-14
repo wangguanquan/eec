@@ -460,7 +460,7 @@ public class Border implements Cloneable {
 
     static final String[] direction = {"left", "right", "top", "bottom", "diagonal", "diagonal"};
 
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         for (int i = 0; i < direction.length; i++) {
             Element sub = element.element(direction[i]);

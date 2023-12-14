@@ -309,7 +309,7 @@ public class NumFmt implements Comparable<NumFmt> {
         return "id: " + id + ", code: " + code;
     }
 
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         if (StringUtil.isEmpty(code)) return root; // Build in style
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)

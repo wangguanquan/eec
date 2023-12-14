@@ -643,7 +643,7 @@ public class Font implements Cloneable {
      * @param root 父节点
      * @return dom树
      */
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         element.addElement("sz").addAttribute("val", ((size & 1) == 0) ? String.valueOf(size / 10) : String.valueOf(size / 10.0D));
         element.addElement("name").addAttribute("val", name);

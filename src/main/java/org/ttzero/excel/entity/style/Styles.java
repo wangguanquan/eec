@@ -522,28 +522,28 @@ public class Styles implements Storable {
         if (!numFmts.isEmpty()) {
             Element element = document.getRootElement().element("numFmts");
             element.attribute("count").setValue(String.valueOf(numFmts.size()));
-            for (NumFmt numFmt : numFmts) numFmt.toDom4j(element);
+            for (NumFmt numFmt : numFmts) numFmt.toDom(element);
         }
 
         // Font
         if (!fonts.isEmpty()) {
             Element element = document.getRootElement().element("fonts");
             element.attribute("count").setValue(String.valueOf(fonts.size()));
-            for (Font font : fonts) font.toDom4j(element);
+            for (Font font : fonts) font.toDom(element);
         }
 
         // Fill
         if (!fills.isEmpty()) {
             Element element = document.getRootElement().element("fills");
             element.attribute("count").setValue(String.valueOf(fills.size()));
-            for (Fill fill : fills) fill.toDom4j(element);
+            for (Fill fill : fills) fill.toDom(element);
         }
 
         // Border
         if (!borders.isEmpty()) {
             Element element = document.getRootElement().element("borders");
             element.attribute("count").setValue(String.valueOf(borders.size()));
-            for (Border border : borders) border.toDom4j(element);
+            for (Border border : borders) border.toDom(element);
         }
 
         Element cellXfs = root.element("cellXfs").addAttribute("count", String.valueOf(map.size()));

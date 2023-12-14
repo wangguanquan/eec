@@ -149,7 +149,7 @@ public class Fill implements Cloneable {
         return fill;
     }
 
-    Element toDom4j(Element root) {
+    Element toDom(Element root) {
         if (patternType == null) {
             patternType = PatternType.solid;
         }
