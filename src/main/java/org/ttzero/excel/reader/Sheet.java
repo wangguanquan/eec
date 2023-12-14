@@ -232,13 +232,6 @@ public interface Sheet extends Closeable {
     List<Drawings.Picture> listPictures();
 
     /**
-     * Create a {@link Row} to read
-     *
-     * @return subclass
-     */
-    Row createRow();
-
-    /**
      * Reset the {@link Sheet}'s row index to begging
      *
      * @return the unread {@link Sheet}
@@ -483,5 +476,10 @@ public interface Sheet extends Closeable {
      */
     MergeSheet asMergeSheet();
 
-//    FullSheet asFullSheet();
+    /**
+     * 将工作表转为{@code FullSheet}支持全属性读取
+     *
+     * @return {@link FullSheet}
+     */
+    FullSheet asFullSheet();
 }

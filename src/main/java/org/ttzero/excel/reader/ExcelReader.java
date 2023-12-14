@@ -825,8 +825,7 @@ public class ExcelReader implements Closeable {
         switch (option) {
             case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
             case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
-            // TODO full reader
-//            case VALUE_AND_CALC|COPY_ON_MERGED: break;
+            case VALUE_AND_CALC|COPY_ON_MERGED: sheet = new XMLSheet().asFullSheet(); break;
             default            : sheet = new XMLSheet();
         }
         return sheet;

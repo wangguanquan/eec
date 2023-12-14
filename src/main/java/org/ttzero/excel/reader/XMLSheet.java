@@ -16,9 +16,15 @@
 
 package org.ttzero.excel.reader;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +71,7 @@ public class XMLSheet implements Sheet {
         this.eof = sheet.eof;
         this.heof = sheet.heof;
         this.mark = sheet.mark;
-        this.sRow = (sheet.sRow instanceof XMLMergeRow) || (sheet.sRow instanceof XMLCalcRow) ? createRow().init(sst, styles, startRow) : sheet.sRow;
+        this.sRow = sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class ? createRow().init(sst, styles, startRow) : sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
@@ -725,7 +731,6 @@ public class XMLSheet implements Sheet {
         return this;
     }
 
-    @Override
     public XMLRow createRow() {
         return new XMLRow();
     }
@@ -828,10 +833,11 @@ public class XMLSheet implements Sheet {
         return !(this instanceof XMLMergeSheet) ? new XMLMergeSheet(this) : (XMLMergeSheet) this;
     }
 
-//    public FullSheet asFullSheet() {
-//        throw new IllegalArgumentException();
-//    }
-
+    @Override
+    public XMLFullSheet asFullSheet() {
+        // XMLCalcSheet 和 XMLMergeSheet 继承至 XMLFullSheet 所以这里没办法使用instanceof判断
+        return this.getClass() != XMLFullSheet.class ? new XMLFullSheet(this) : (XMLFullSheet) this;
+    }
 
     interface HeaderRowFunc {
         Row accept(char[] cb, int start, int n);
@@ -891,60 +897,14 @@ public class XMLSheet implements Sheet {
 /**
  * A sub {@link XMLSheet} to parse cell calc
  */
-class XMLCalcSheet extends XMLSheet implements CalcSheet {
-    private long[] calc; // Array of formula
-    boolean ready;
-
+class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
     XMLCalcSheet(XMLSheet sheet) {
-        this.name = sheet.name;
-        this.index = sheet.index;
-        this.path = sheet.path;
-        this.sst = sheet.sst;
-        this.styles = sheet.styles;
-        this.id = sheet.id;
-        this.startRow = sheet.startRow;
-        this.header = sheet.header;
-        this.hidden = sheet.hidden;
-        this.dimension = sheet.dimension;
-        this.drawings = sheet.drawings;
-        this.reader = sheet.reader;
-        this.cb = sheet.cb;
-        this.nChar = sheet.nChar;
-        this.length = sheet.length;
-        this.eof = sheet.eof;
-        this.heof = sheet.heof;
-        this.mark = sheet.mark;
-        this.sRow = sheet.sRow;
-        this.lastRowMark = sheet.lastRowMark;
-        this.zipFile = sheet.zipFile;
-        this.entry = sheet.entry;
-        this.hrf = sheet.hrf;
-        this.hrl = sheet.hrl;
-        this.option = sheet.option;
-
-        if (this.path != null) {
-
-            if (reader != null && !ready) this.load0();
-        }
+        super(sheet);
     }
 
-    /**
-     * Load sheet.xml as BufferedReader
-     *
-     * @return Sheet
-     * @throws IOException if io error occur
-     */
     @Override
-    public XMLCalcSheet load() throws IOException {
-        super.load();
-
-        load0();
-
-        return this;
-    }
-
     void load0() {
-        if (ready) return;
+        if (ready || eof) return;
 
         // Parse calcChain.xml
         ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
@@ -956,11 +916,122 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         }
         if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
 
-        if (!eof && !(sRow instanceof XMLCalcRow)) {
-            sRow = sRow.asCalcRow();
-            if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
-        }
+        if (!(sRow instanceof XMLCalcRow)) sRow = sRow.asCalcRow();
+        if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
         ready = true;
+    }
+
+    @Override
+    Row createHeader(char[] cb, int start, int n) {
+        return createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n).asCalcRow().setCalcFun(this::findCalc);
+    }
+}
+
+/**
+ * A sub {@link XMLSheet} to copy value on merge cells
+ */
+class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
+
+    XMLMergeSheet(XMLSheet sheet) {
+        super(sheet);
+    }
+
+    // Parse merge tag
+    @Override
+    void load0() {
+        if (ready || eof) return;
+        if (mergeCells == null) {
+            List<Dimension> mergeCells = parseMerge();
+
+            if (mergeCells != null && !mergeCells.isEmpty()) {
+                this.mergeCells = GridFactory.create(mergeCells);
+                LOGGER.debug("Grid: {} ===> Size: {}", this.mergeCells.getClass(), this.mergeCells.size());
+                this.dimensions = mergeCells;
+            } else {
+                this.mergeCells = new Grid.FastGrid(Dimension.of("A1"));
+                this.dimensions = Collections.emptyList();
+            }
+        }
+
+        if (!(sRow instanceof XMLMergeRow)) sRow = sRow.asMergeRow();
+        ((XMLMergeRow) sRow).setCopyValueFunc(mergeCells,  mergeCells::merge);
+        ready = true;
+    }
+
+    @Override
+    Row createHeader(char[] cb, int start, int n) {
+        return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n).asMergeRow();
+    }
+}
+
+/**
+ * A sub {@link XMLSheet} to parse all attributes
+ */
+class XMLFullSheet extends XMLSheet implements FullSheet {
+    long[] calc; // Array of formula
+    boolean ready;
+    // A merge cells grid
+    Grid mergeCells;
+    List<Dimension> dimensions;
+    int showGridLines = 1; // 默认显示
+    Panes panes; // 冻结
+    double defaultColWidth = -1D, defaultRowHeight = -1D;
+    List<Col> cols; // 列宽
+    Dimension filter; // 过滤
+
+    XMLFullSheet(XMLSheet sheet) {
+        super(sheet);
+
+        if (this.path != null && reader != null && !ready) {
+            this.load0();
+        }
+    }
+
+    /**
+     * Load sheet.xml as BufferedReader
+     *
+     * @return Sheet
+     * @throws IOException if io error occur
+     */
+    @Override
+    public XMLFullSheet load() throws IOException {
+        super.load();
+
+        load0();
+
+        return this;
+    }
+
+    void load0() {
+        if (ready || eof) return;
+
+        // 解析公式
+        ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+        long[][] calcArray = null;
+        try {
+            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+        } catch (IOException e) {
+            LOGGER.warn("Parse calcChain failed, formula will be ignored");
+        }
+        if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
+
+        if (!(sRow instanceof XMLFullRow)) sRow = sRow.asFullRow();
+        if (calc != null) ((XMLFullRow) sRow).setCalcFun(this::findCalc);
+
+        // 默认不复制合并单元格的值
+        if (((option >> 17) & 1) == 1 && getMergeGrid() != null) ((XMLFullRow) sRow).setCopyValueFunc(getMergeGrid(), mergeCells::merge);
+        else ((XMLFullRow) sRow).setCopyValueFunc(new Grid.FastGrid(Dimension.of("A1")), (row, cells) -> { });
+
+        ready = true;
+
+        // 再次解析头部
+        if (cols == null && defaultRowHeight < 0D && defaultColWidth < 0D && panes == null && showGridLines == 1) {
+            Marker marker = Marker.of(this);
+            try {
+                super.load(); // 这里再次解析不会出现异常
+            } catch (IOException e) { }
+            marker.reset();
+        }
     }
 
     /**
@@ -968,18 +1039,18 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
      *
      * @param calc array of formula
      */
-    XMLCalcSheet setCalc(long[] calc) {
+    XMLFullSheet setCalc(long[] calc) {
         this.calc = calc;
         return this;
     }
 
     @Override
     Row createHeader(char[] cb, int start, int n) {
-        return new XMLCalcRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, n);
+        return ((XMLRow) super.createHeader(cb, start, n)).asFullRow().setCalcFun(this::findCalc);
     }
 
     /* Found calc */
-    private void findCalc(int row, Cell[] cells, int n) {
+    void findCalc(int row, Cell[] cells, int n) {
         long r = ((long) row) << 16;
         int i = Arrays.binarySearch(calc, r);
         if (i < 0) {
@@ -998,84 +1069,6 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
                 cells[(((int) calc[i + j]) & 0x7FFF) - 1].f = true;
             else break;
         }
-    }
-
-}
-
-/**
- * A sub {@link XMLSheet} to copy value on merge cells
- */
-class XMLMergeSheet extends XMLSheet implements MergeSheet {
-
-    // A merge cells grid
-    private Grid mergeCells;
-    boolean ready;
-    List<Dimension> dimensions;
-
-    XMLMergeSheet(XMLSheet sheet) {
-        this.name = sheet.name;
-        this.index = sheet.index;
-        this.path = sheet.path;
-        this.sst = sheet.sst;
-        this.styles = sheet.styles;
-        this.id = sheet.id;
-        this.startRow = sheet.startRow;
-        this.header = sheet.header;
-        this.hidden = sheet.hidden;
-        this.dimension = sheet.dimension;
-        this.drawings = sheet.drawings;
-        this.reader = sheet.reader;
-        this.cb = sheet.cb;
-        this.nChar = sheet.nChar;
-        this.length = sheet.length;
-        this.eof = sheet.eof;
-        this.heof = sheet.heof;
-        this.mark = sheet.mark;
-        this.sRow = sheet.sRow;
-        this.lastRowMark = sheet.lastRowMark;
-        this.zipFile = sheet.zipFile;
-        this.entry = sheet.entry;
-        this.hrf = sheet.hrf;
-        this.hrl = sheet.hrl;
-        this.option = sheet.option;
-
-        if (path != null) {
-            if (reader != null && !ready) this.load0();
-        }
-    }
-
-    /**
-     * Load sheet.xml as BufferedReader
-     *
-     * @return Sheet
-     * @throws IOException if io error occur
-     */
-    @Override
-    public XMLMergeSheet load() throws IOException {
-        super.load();
-
-        load0();
-
-        return this;
-    }
-
-    // Parse merge tag
-    void load0() {
-        if (ready) return;
-        if (mergeCells == null && !eof) {
-            List<Dimension> mergeCells = parseMerge();
-
-            if (mergeCells != null && !mergeCells.isEmpty()) {
-                this.mergeCells = GridFactory.create(mergeCells);
-                LOGGER.debug("Grid: {} ===> Size: {}", this.mergeCells.getClass(), this.mergeCells.size());
-                this.dimensions = mergeCells;
-            } else this.dimensions = Collections.emptyList();
-        }
-
-        if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
-            sRow = sRow.asMergeRow().setCopyValueFunc(mergeCells, this::mergeCell);
-        }
-        ready = true;
     }
 
     /*
@@ -1102,8 +1095,7 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                         buf[0] = '<';
                         offset = 1;
                     } else if (buf[i - 1] == '<' && buf[i] == 'm') {
-                        buf[0] = '<';
-                        buf[1] = 'm';
+                        buf[0] = '<'; buf[1] = 'm';
                         offset = 2;
                     } else offset = 0;
                     continue;
@@ -1180,17 +1172,109 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
         return list;
     }
 
-    private void mergeCell(int row, Cell cell) {
-        mergeCells.merge(row, cell);
-    }
-
     @Override
     public Grid getMergeGrid() {
+        if (mergeCells != null) return mergeCells;
+        List<Dimension> dims = getMergeCells();
+        if (dims.size() > 0) {
+            mergeCells = GridFactory.create(dims);
+            LOGGER.debug("Grid: {} ===> Size: {}", mergeCells.getClass(), mergeCells.size());
+        }
         return mergeCells;
     }
 
     @Override
     public List<Dimension> getMergeCells() {
-        return dimensions != null ? dimensions : (dimensions = parseMerge());
+        List<Dimension> dims = dimensions;
+        if (dims == null) {
+            dims = parseMerge();
+            dimensions = dims != null ? dims : (dims = Collections.emptyList());
+        }
+        return dims.isEmpty() ? null : dims;
+    }
+
+    @Override
+    void subElement(char[] cb, int offset, int n) {
+        String v = new String(cb, offset, n);
+        v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
+        if (cb[offset + n - 2] == '/') {
+            try {
+                // 去掉不必要的命名空间
+                Document doc = DocumentHelper.parseText(v);
+                Element e = doc.getRootElement();
+                switch (e.getName()) {
+                    case "dimension":
+                        String ref = e.attributeValue("ref");
+                        Dimension dim;
+                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).width > 1 || dim.height > 1)) {
+                            dimension = dim;
+                        }
+                        break;
+                    case "col":
+                        String min = e.attributeValue("min"), max = e.attributeValue("max"), width = e.attributeValue("width"), hidden = e.attributeValue("hidden");
+                        if (cols == null) cols = new ArrayList<>();
+                        cols.add(new Col(Integer.parseInt(min), Integer.parseInt(max), Double.parseDouble(width), "1".equals(hidden)));
+                        break;
+                    case "pane":
+                        String xSplit = e.attributeValue("xSplit"), ySplit = e.attributeValue("ySplit");
+                        if (StringUtil.isNotEmpty(ySplit) && Row.testNumberType(ySplit.toCharArray(), 0, ySplit.length()) == 1) panes = Panes.row(Integer.parseInt(ySplit));
+                        if (StringUtil.isNotEmpty(xSplit) && Row.testNumberType(xSplit.toCharArray(), 0, xSplit.length()) == 1) {
+                            int col = Integer.parseInt(xSplit);
+                            if (panes != null) panes.col = col;
+                            else panes = Panes.col(col);
+                        }
+                        break;
+                    case "sheetFormatPr":
+                        String defaultColWidth = e.attributeValue("defaultColWidth"), defaultRowHeight = e.attributeValue("defaultRowHeight");
+                        if (StringUtil.isNotEmpty(defaultColWidth) && Row.testNumberType(defaultColWidth.toCharArray(), 0, defaultColWidth.length()) > 0)
+                            this.defaultColWidth = Double.parseDouble(defaultColWidth);
+                        if (StringUtil.isNotEmpty(defaultRowHeight) && Row.testNumberType(defaultRowHeight.toCharArray(), 0, defaultRowHeight.length()) > 0)
+                            this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
+                        break;
+                }
+            } catch (DocumentException e) {
+                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+            }
+        } else if (v.startsWith("<sheetView")) {
+            char[] ncb = new char[n + 1];
+            System.arraycopy(cb, offset, ncb, 0, n);
+            ncb[n - 1] = '/'; ncb[n] = '>';
+            try {
+                Document doc = DocumentHelper.parseText(new String(ncb, 0, n + 1));
+                Element e = doc.getRootElement();
+                String showGridLines = e.attributeValue("showGridLines");
+                if ("0".equals(showGridLines)) this.showGridLines = 0;
+            } catch (DocumentException e) {
+                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+            }
+        }
+    }
+
+    @Override
+    public FullSheet copyOnMerged() {
+        if (sRow != null && getMergeGrid() != null) ((XMLFullRow) sRow).setCopyValueFunc(getMergeGrid(), mergeCells::merge);
+        else option |= 1 << 17;
+        return this;
+    }
+
+    @Override
+    public Panes getFreezePanes() {
+        return panes;
+    }
+
+    @Override
+    public List<Col> getCols() {
+        return cols;
+    }
+
+    @Override
+    public Dimension getFilter() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public boolean showGridLines() {
+        return showGridLines == 1;
     }
 }
