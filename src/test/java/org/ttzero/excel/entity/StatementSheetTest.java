@@ -497,7 +497,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
 
             new Workbook()
                 .addSheet(new StatementSheet()
-                    .setPs(con.prepareStatement(sql)))
+                    .setStatement(con.prepareStatement(sql)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps = con.prepareStatement(sql);
@@ -535,7 +535,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
 
             new Workbook()
                 .addSheet(new StatementSheet("Student")
-                    .setPs(con.prepareStatement(sql)))
+                    .setStatement(con.prepareStatement(sql)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps = con.prepareStatement(sql);
@@ -576,7 +576,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
 
             new Workbook()
                 .addSheet(new StatementSheet("Student", WaterMark.of(author))
-                    .setPs(con.prepareStatement(sql)))
+                    .setStatement(con.prepareStatement(sql)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps = con.prepareStatement(sql);
@@ -625,7 +625,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class))
-                    .setPs(con.prepareStatement(sql)))
+                    .setStatement(con.prepareStatement(sql)))
                 .writeTo(defaultTestPath.resolve(fileName).toFile());
 
             PreparedStatement ps = con.prepareStatement(sql);
