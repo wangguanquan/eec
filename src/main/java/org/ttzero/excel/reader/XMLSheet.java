@@ -30,8 +30,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -298,14 +296,14 @@ public class XMLSheet implements Sheet {
     @Override
     public Row getHeader() {
         if (header == null && !heof) {
-            Row row = hrf == 0 ? findRow0(this::createHeader) : getHeader(hrf, hrl);
+            Row row = hrf == 0 ? findRow0() : getHeader(hrf, hrl);
             if (row != null) {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 header.setOptions(option << 16 >>> 16);
                 sRow.setHr(header);
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
-            Row row0 = findRow0(this::createHeader);
+            Row row0 = findRow0();
             if (row0 != null && row0.getRowNum() < hrl) {
                 for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
             }
@@ -434,7 +432,7 @@ public class XMLSheet implements Sheet {
     protected long lastRowMark;
 
     /**
-     * Load sheet.xml as BufferedReader
+     * 加载sheet.xml并解析头信息，如果已加载则直接跳到标记位
      *
      * @return Sheet
      * @throws IOException if io error occur
@@ -449,65 +447,80 @@ public class XMLSheet implements Sheet {
         LOGGER.debug("Load {}", path);
         reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
         cb = new char[8192];
-        nChar = 0;
-        int left = 0;
-        loopA: for (; ; ) {
-            length = reader.read(cb, left, cb.length - left);
-            if (length < 11) break;
-            // read size
-            if (nChar == 0 && startRow < 1) {
-                String line = new String(cb, 56, 1024);
-                String size = "<dimension ref=\"";
-                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index += size.length()) : -1;
-                if (end > 0) {
-                    String l_ = line.substring(index, end);
-                    Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
-                    Matcher mat = pat.matcher(l_);
-                    if (mat.matches()) {
-                        dimension = Dimension.of(l_);
-                        this.startRow = dimension.firstRow;
-                    } else {
-                        pat = Pattern.compile("([A-Z]+)(\\d+)");
-                        mat = pat.matcher(l_);
-                        if (mat.matches()) {
-                            this.startRow = Integer.parseInt(mat.group(2));
-                        }
-                    }
-                    nChar += end;
-                }
-            }
-            // find index of <sheetData>
-            for (int len = length - 12; nChar < len; nChar++) {
-                if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                    && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                    && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                    && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                    nChar += 11;
-                    break loopA;
-                }
-            }
+        nChar = 0; mark = 0;
 
-            // Find the last tag '>'
-            for (left = nChar; left > 0 && cb[left--] != '>'; );
-            if (left > 0) {
-                System.arraycopy(cb, left, cb, 0, length - left);
-                mark += nChar;
-                nChar = 0;
-            }
-        }
+        // 解析头信息
+        parseBOF();
+
         // Empty sheet
-        if (cb[nChar] == '>') {
-            mark += length;
-            eof = true;
-            if (dimension == null) dimension = new Dimension(1, (short) 1);
-        } else {
-            eof = false;
-            mark += nChar;
-            sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
-        }
+        if (length <= 0) eof = true;
+        if (!eof) sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
+
+        LOGGER.debug("eof: {}, mark: {}", eof, mark);
         if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
 
         return this;
+    }
+
+    // 解析工作表头信息，注意reader的position必须从0开始
+    protected void parseBOF() throws IOException {
+        int left = 0;
+        loopA: while ((length = reader.read(cb, left, cb.length - left)) > 0) {
+            if ((length += left) < 11) {
+                left = length;
+                continue;
+            }
+            left = 0;
+
+            for (; ;) {
+                // 查找起始标签
+                for (; nChar < length && cb[nChar] != '<'; nChar++) ;
+
+                if (nChar == length) {
+                    mark += nChar;
+                    nChar = 0;
+                    break;
+                }
+                int offset = nChar;
+                // 跳过结束标签
+                if (++nChar < length && cb[nChar] == '/') continue;
+
+                for (; nChar < length && cb[nChar] != '>'; nChar++) ;
+
+                if (nChar == length) {
+                    if (offset != 0) {
+                        left = nChar - offset;
+                        System.arraycopy(cb, offset, cb, 0, left);
+                        mark += offset;
+                    } else {
+                        cb = Arrays.copyOf(cb, cb.length << 1);
+                        left = length;
+                    }
+                    nChar = 0;
+                    break;
+                }
+
+                int n = ++nChar - offset;
+                if (n >= 11 && cb[offset + 1] == 's' && cb[offset + 2] == 'h'
+                    && cb[offset + 3] == 'e' && cb[offset + 4] == 'e' && cb[offset + 5] == 't'
+                    && cb[offset + 6] == 'D' && cb[offset + 7] == 'a' && cb[offset + 8] == 't'
+                    && cb[offset + 9] == 'a' && (cb[offset + 10] == '>' || cb[offset + 10] == '/')) {
+                    mark += offset + 11;
+                    eof = cb[offset + 10] == '/';
+                    break loopA;
+                }
+                // 如果reader的position不从0开始则遇到<row>就停止否则会一直读取末尾
+                if (n >= 5 && cb[offset + 1] == 'r' && cb[offset + 2] == 'o' && cb[offset + 3] == 'w'
+                    && (cb[offset + 4] == '>' || cb[offset + 4] == '/')) {
+                    mark += offset;
+                    eof = false;
+                    break loopA;
+                }
+
+                // 解析每个子节点
+                subElement(cb, offset, n);
+            }
+        }
     }
 
     /**
@@ -569,73 +582,28 @@ public class XMLSheet implements Sheet {
         return sRow.with(cb, start, nChar - start);
     }
 
-    protected Row findRow0(HeaderRowFunc func) {
-        char[] cb = new char[8192];
-        int nChar = 0, length;
-        // reload file
-        try (Reader reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8)) {
-            if (mark > 0) {
-                reader.skip(mark);
-                length = reader.read(cb);
-            } else {
-                loopA: for (; ; ) {
-                    length = reader.read(cb);
-                    // find index of <sheetData>
-                    for (; nChar < length - 12; nChar++) {
-                        if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                            nChar += 11;
-                            break loopA;
-                        }
-                    }
-                }
+    protected Row findRow0() {
+        // 临时保存工作表现有状态
+        Marker marker = Marker.of(this);
+
+        Row firstRow = null;
+        try {
+            load();
+            if (!this.eof) {
+                XMLRow row = nextRow();
+                if (row != null) firstRow = createHeader(row.cb, row.from, row.to - row.from);
             }
-
-            boolean eof = length <= 0 || cb[nChar] == '>';
-            if (eof) {
-                this.heof = true;
-                return null;
-            }
-
-            int start = nChar;
-            A: for (; ;) {
-                // Not empty
-                for (; nChar < length - 6; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                        nChar += 6;
-                        break A;
-                    }
-                }
-
-                /* Load more when not found end of row tag */
-                int n;
-                char[] _cb = new char[cb.length << 1];
-                System.arraycopy(cb, start, _cb, 0, n = length - start);
-                cb = _cb;
-
-                try {
-                    length = reader.read(cb, n, cb.length - n);
-                    // end of file
-                    if (length < 0) {
-                        reader.close(); // close reader
-                        return null;
-                    }
-                } catch (IOException e) {
-                    throw new ExcelReadException("Parse row data error", e);
-                }
-                start = 0;
-                length += n;
-            }
-
-            return func != null ? func.accept(cb, start, nChar - start) : createHeader(cb, start, nChar - start);
+            this.reader.close();
         } catch (IOException e) {
             LOGGER.error("Read header row error.");
-            return null;
         }
 
+        this.heof = firstRow == null;
+
+        // 还原工作表状态
+        marker.reset();
+
+        return firstRow;
     }
 
     /**
@@ -823,6 +791,24 @@ public class XMLSheet implements Sheet {
         return Dimension.of("A1");
     }
 
+    // 解析感兴趣的子节点
+    void subElement(char[] cb, int offset, int n) {
+        // 这里只处理dimension节点
+        if (n < 20) return;
+        if (cb[offset + 1] == 'd' && cb[offset + 2] == 'i' && cb[offset + 3] == 'm' && cb[offset + 4] == 'e' && cb[offset + 5] == 'n'
+            && cb[offset + 6] == 's' && cb[offset + 7] == 'i' && cb[offset + 8] == 'o' && cb[offset + 9] == 'n') {
+            offset += 10;
+            int end = offset + n + 1;
+            for (; offset < end && cb[offset] != '"'; offset++);
+            int i = ++offset;
+            for (; offset < end && cb[offset] != '"'; offset++);
+            if (offset < end && offset > i) {
+                Dimension dim = Dimension.of(new String(cb, i, offset - i));
+                if (dim.width > 1 || dim.height > 1) this.dimension = dim;
+            }
+        }
+    }
+
     Row createHeader(char[] cb, int start, int n) {
         return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n);
     }
@@ -851,6 +837,55 @@ public class XMLSheet implements Sheet {
         Row accept(char[] cb, int start, int n);
     }
 
+    /**
+     * 保存工作表当前状态并担任reset方法还原
+     */
+    protected static class Marker {
+        private final Reader reader;
+        private final char[] cb;
+        private final int nChar,length;
+        private final boolean eof, heof;
+        private final long mark, lastRowMark;
+        private final XMLRow sRow;
+        private final XMLSheet sheet;
+
+        public Marker(XMLSheet sheet) {
+            this.sheet = sheet;
+            this.reader = sheet.reader;
+            this.cb = sheet.cb;
+            this.nChar = sheet.nChar;
+            this.length = sheet.length;
+            this.eof = sheet.eof;
+            this.heof = sheet.heof;
+            this.mark = sheet.mark;
+            this.lastRowMark = sheet.lastRowMark;
+            this.sRow = sheet.sRow;
+            sheet.reader = null; // 为了保护工作表的reader不被读取
+            sheet.sRow = null;
+        }
+
+        public static Marker of(XMLSheet sheet) {
+            return new Marker(sheet);
+        }
+
+        public void reset() {
+            // 关闭流，非必要操作zip流被关闭的时候所有打开的资源都会被一并清除
+            if (sheet.reader != null) {
+                try {
+                    sheet.reader.close();
+                } catch (IOException e) { }
+            }
+            sheet.reader = this.reader;
+            sheet.cb = this.cb;
+            sheet.nChar = this.nChar;
+            sheet.length = this.length;
+            sheet.eof = this.eof;
+            sheet.heof = this.heof;
+            sheet.mark = this.mark;
+            sheet.lastRowMark = this.lastRowMark;
+            sheet.sRow = this.sRow;
+        }
+    }
 }
 
 /**
