@@ -17,12 +17,13 @@
 package org.ttzero.excel.manager.docProps;
 
 
-import org.ttzero.excel.manager.Attr;
-import org.ttzero.excel.manager.NS;
+import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.ttzero.excel.manager.TopNS;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 
@@ -32,18 +33,18 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  *
  * @author guanquan.wang on 2017/9/21.
  */
-@TopNS(prefix = {"vt", ""}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"
-    , "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}, value = "Properties")
+@TopNS(prefix = {"", "vt"}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+    , "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"}, value = "Properties")
 public class App extends XmlEntity {
     /**
      * 指定由哪个App生成或打开
      */
     private String application;
-    /**
-     * 是否加密，当前不支持加密
-     */
-    @SuppressWarnings("unused")
-    private int docSecurity;
+//    /**
+//     * 是否加密，当前不支持加密
+//     */
+//    @SuppressWarnings("unused")
+//    private int docSecurity;
     @SuppressWarnings("unused")
     private boolean scaleCrop;
     /**
@@ -61,48 +62,21 @@ public class App extends XmlEntity {
      */
     private String appVersion;
     /**
-     * Worksheet名称集合
+     * 工作表名集合
      */
-    private TitlesOfParts titlesOfParts;
-    /**
-     * Worksheet数量信息
-     */
-    private HeadingPairs headingPairs;
-
-    public class TitlesOfParts {
-        @NS(value = "vt", contentUse = true)
-        @Attr(name = {"baseType", "size"}, value = {"lpstr", "#size#"})
-        List<String> vector; // sheetName
-
-        public void setVector(final List<String> vector) {
-            this.vector = vector;
-            headingPairs = new HeadingPairs();
-            headingPairs.vector = new ArrayList<>();
-            headingPairs.vector.add(new Tuple2<>("lpstr", "Workbook"));
-            headingPairs.vector.add(new Tuple2<>("i4", String.valueOf(vector.size())));
-        }
-    }
-
-    private static class HeadingPairs {
-        @NS(value = "vt", contentUse = true)
-        @Attr(name = {"baseType", "size"}, value = {"variant", "#size#"})
-        List<Tuple2<String, String>> vector;
-    }
+    private List<String> titlesOfParts;
 
     public void setTitlePards(List<String> list) {
-        if (titlesOfParts == null) {
-            titlesOfParts = new TitlesOfParts();
-        }
-        titlesOfParts.setVector(list);
+        titlesOfParts = list;
     }
 
     public void setApplication(String application) {
         this.application = application;
     }
 
-    public void setDocSecurity(int docSecurity) {
-        this.docSecurity = docSecurity;
-    }
+//    public void setDocSecurity(int docSecurity) {
+//        this.docSecurity = docSecurity;
+//    }
 
     public void setScaleCrop(boolean scaleCrop) {
         this.scaleCrop = scaleCrop;
@@ -159,5 +133,26 @@ public class App extends XmlEntity {
 
     public String getAppVersion() {
         return appVersion;
+    }
+
+    @Override
+    void toDom(Element rootElement, Map<String, Namespace> namespaceMap) {
+        rootElement.addElement("Application").addText(application);
+        rootElement.addElement("AppVersion").addText(appVersion);
+        if (company != null) rootElement.addElement("Company").addText(company);
+        rootElement.addElement("DocSecurity").addText("0"); // 暂时不支持加密
+        rootElement.addElement("ScaleCrop").addText(Boolean.toString(scaleCrop));
+        rootElement.addElement("LinksUpToDate").addText(Boolean.toString(linksUpToDate));
+        rootElement.addElement("SharedDoc").addText(Boolean.toString(sharedDoc));
+        rootElement.addElement("HyperlinksChanged").addText(Boolean.toString(hyperlinksChanged));
+        Element titleVector = rootElement.addElement("TitlesOfParts").addElement(QName.get("vector", namespaceMap.get("vt")));
+        titleVector.addAttribute("size", Integer.toString(titlesOfParts.size())).addAttribute("baseType", "lpstr");
+        for (String title : titlesOfParts) {
+            titleVector.addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText(title);
+        }
+        Element hpVector = rootElement.addElement("HeadingPairs").addElement(QName.get("vector", namespaceMap.get("vt")));
+        hpVector.addAttribute("size", "2").addAttribute("baseType", "variant");
+        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText("工作表");
+        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("i4", namespaceMap.get("vt"))).addText(Integer.toString(titlesOfParts.size()));
     }
 }
