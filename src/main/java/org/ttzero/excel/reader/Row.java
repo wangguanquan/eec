@@ -184,6 +184,15 @@ public abstract class Row {
     }
 
     /**
+     * 获取行高，只有{@code XMLFullRow}才会实际返回值
+     *
+     * @return 当{@code customHeight=1}时返回自定义行高否则返回{@code null}
+     */
+    public Double getHeight() {
+        return null;
+    }
+
+    /**
      * Check the cell ranges,
      *
      * @param index the index
