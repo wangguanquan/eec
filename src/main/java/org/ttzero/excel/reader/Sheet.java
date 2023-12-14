@@ -19,7 +19,6 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.FileUtil;
-import org.ttzero.excel.util.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -266,24 +265,24 @@ public interface Sheet extends Closeable {
             dataIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
-    /**
-     * Convert column mark to int
-     *
-     * @param col column mark
-     * @return int value
-     */
-    static int col2Int(String col) {
-        if (StringUtil.isEmpty(col)) return 1;
-        char[] values = col.toCharArray();
-        int n = 0;
-        for (char value : values) {
-            if (value < 'A' || value > 'Z')
-                throw new ExcelReadException("Column mark out of range: " + col);
-            n = n * 26 + value - 'A' + 1;
-        }
-        return n;
-    }
-
+//    /**
+//     * Convert column mark to int
+//     *
+//     * @param col column mark
+//     * @return int value
+//     */
+//    static int col2Int(String col) {
+//        if (StringUtil.isEmpty(col)) return 1;
+//        char[] values = col.toCharArray();
+//        int n = 0;
+//        for (char value : values) {
+//            if (value < 'A' || value > 'Z')
+//                throw new ExcelReadException("Column mark out of range: " + col);
+//            n = n * 26 + value - 'A' + 1;
+//        }
+//        return n;
+//    }
+//
 //    /**
 //     * Close resource
 //     *
