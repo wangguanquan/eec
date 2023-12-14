@@ -49,11 +49,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.Print.println;
-import static org.ttzero.excel.Print.print;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
-import static org.ttzero.excel.reader.ExcelReader.COPY_ON_MERGED;
-import static org.ttzero.excel.reader.ExcelReader.VALUE_ONLY;
-import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
 import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
 import static org.ttzero.excel.util.StringUtil.swap;
 
@@ -84,7 +80,7 @@ public class ExcelReaderTest {
         File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
         if (files != null) {
             for (File file : files) {
-                testReader(file.toPath(), COPY_ON_MERGED);
+                testReader(file.toPath(), 2);
             }
         }
     }
@@ -104,7 +100,8 @@ public class ExcelReaderTest {
             int rn = 1;
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
                 Row row = it.next();
-                assert row.getRowNum() == rn++;
+                assert row.getRowNum() == rn;
+                rn++;
             }
         }
     }
@@ -348,16 +345,6 @@ public class ExcelReaderTest {
         }
     }
 
-
-    @Test public void testSearch() {
-        long[] array = { 131075L, 327683L };
-        int column = 2, row = 3;
-        boolean h = Arrays.binarySearch(array, ((column + 1) & 0x7FFF) | ((long) row) << 16) >= 0;
-        println(h);
-
-        print(cellRangeToLong("AA10"));
-    }
-
     @Test public void testClassBind() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheet(0).bind(Entry.class).dataRows().forEach(row -> {
@@ -438,12 +425,7 @@ public class ExcelReaderTest {
 
     @Test public void testMergeFunc() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-//            reader.copyOnMergeCells().sheets().flatMap(s -> {
-//                println("----------------" + s.getName() + "----------------");
-//                println("dimension: " + s.getDimension());
-//                return s.rows();
-//            }).forEach(Print::println);
-            reader.copyOnMergeCells().sheets().flatMap(Sheet::rows).forEach(Print::println);
+            reader.sheets().map(Sheet::asMergeSheet).flatMap(Sheet::rows).forEach(Print::println);
         }
     }
 
@@ -503,14 +485,16 @@ public class ExcelReaderTest {
     }
 
     private void testReader(Path path) throws IOException {
-        testReader(path, VALUE_ONLY);
+        testReader(path, 0);
     }
 
     private void testReader(Path path, int option) throws IOException {
-        try (ExcelReader reader = ExcelReader.read(path, option)) {
+        try (ExcelReader reader = ExcelReader.read(path)) {
             String fileName = path.getFileName().toString();
             for (int i = 0, len = reader.getSize(); i < len; i++) {
                 Sheet sheet = reader.sheet(i);
+                if (option == 1) sheet = sheet.asCalcSheet();
+                else if (option == 2) sheet = sheet.asMergeSheet();
                 Path expectPath = testResourceRoot().resolve("expect/" + fileName.substring(0, fileName.length() - 5) + "$" + sheet.getName() + ".txt");
                 if (Files.exists(expectPath)) {
                     List<String[]> expectList = CSVUtil.read(expectPath);
