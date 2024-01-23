@@ -307,7 +307,7 @@ public class ListSheet<T> extends Sheet {
         int i = start + 1;
         do {
             first = data.get(i++);
-        } while (first == null);
+        } while (first == null && i <= data.size());
         return first;
     }
 
