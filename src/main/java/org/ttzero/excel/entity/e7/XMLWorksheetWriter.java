@@ -261,7 +261,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
-        if (sst == null) this.sst = sheet.getWorkbook().getSst();
+        if (sst == null) this.sst = sheet.getWorkbook().getSharedStrings();
         if (styles == null) this.styles = sheet.getWorkbook().getStyles();
 
         // Check the first row index

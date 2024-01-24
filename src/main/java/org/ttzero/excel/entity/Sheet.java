@@ -377,7 +377,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     @Deprecated
     public SharedStrings getSst() {
-        return workbook.getSst();
+        return workbook.getSharedStrings();
     }
 
     /**

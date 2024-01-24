@@ -226,7 +226,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         workbook.getStyles().writeTo(root.resolve("styles.xml"));
 
         // share string
-        try (SharedStrings sst = workbook.getSst()) {
+        try (SharedStrings sst = workbook.getSharedStrings()) {
             sst.writeTo(root);
         }
     }
@@ -448,7 +448,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (Exception e) {
             // Remove temp path
             if (root != null) FileUtil.rm_rf(root);
-            workbook.getSst().close();
+            workbook.getSharedStrings().close();
             throw e;
         }
     }
@@ -487,7 +487,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         LOGGER.debug("Clean up temporary files");
 
         // Close shared string table
-        workbook.getSst().close();
+        workbook.getSharedStrings().close();
 
         return zipFile;
     }
