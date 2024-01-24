@@ -153,7 +153,7 @@ public class XMLSheet implements Sheet {
      *
      * @param sst the {@link SharedStrings}
      */
-    protected void setSst(SharedStrings sst) {
+    protected void setSharedStrings(SharedStrings sst) {
         this.sst = sst;
     }
 

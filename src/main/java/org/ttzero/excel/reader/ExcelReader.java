@@ -742,7 +742,7 @@ public class ExcelReader implements Closeable {
             sheet.setZipFile(zipFile);
             sheet.setZipEntry(entry);
             // put shared string
-            sheet.setSst(sst);
+            sheet.setSharedStrings(sst);
             // Setting styles
             sheet.setStyles(styles);
             // Drawings
