@@ -747,8 +747,8 @@ public class XMLSheet implements Sheet {
 
             // Mark
             long mark = 0L, mark0 = 0L;
-            int n, offset = 0, limit = 1 << 14, i, len, f, size = 0;
-            byte[] buf = new byte[limit], bytes = new byte[10];
+            int n, offset = 0, limit = 1 << 14, i, len, f, row = 1, col = 1;
+            byte[] buf = new byte[limit];
             while ((n = is.read(buf, offset, limit - offset)) > 0) {
                 mark += n;
                 if ((len = n + offset) < 11) {
@@ -770,7 +770,11 @@ public class XMLSheet implements Sheet {
                         f = i += 3;
                         for (; i < len && buf[i] != '"'; i++);
                         if (i < len) {
-                            System.arraycopy(buf, f, bytes, 0, size = i - f);
+                            long v = coordinateToLong(buf, f, i - f);
+                            row = (int) (v >>> 16);
+                            int c = (int) (v & 0x7FFF);
+                            // 取列较大的值
+                            if (c > col) col = c;
                             if (buf[len - 1] == '<') {
                                 buf[0] = '<';
                                 offset = 1;
@@ -784,16 +788,33 @@ public class XMLSheet implements Sheet {
                 if (i < len) System.arraycopy(buf, i, buf, 0, offset = len - i);
             }
             if (lastRowMark < mark0) lastRowMark = mark0;
-            if (size > 0) {
-                long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
-                return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
-            }
+            return new Dimension(1, (short) 1, row, (short) col);
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
         }
 
         return Dimension.of("A1");
+    }
+
+    // 高48位保存Row，低16位保存Col
+    static long coordinateToLong(byte[] buf, int from, int len) {
+        long v = 0L;
+        int n = 0;
+        for (int i = 0; i < len; i++) {
+            byte value = buf[i + from];
+            if (value >= 'A' && value <= 'Z') {
+                v = v * 26 + value - 'A' + 1;
+            }
+            else if (value >= '0' && value <= '9') {
+                n = n * 10 + value - '0';
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
+            }
+            else break;
+        }
+        return (v & 0x7FFF) | ((long) n) << 16;
     }
 
     // 解析感兴趣的子节点
