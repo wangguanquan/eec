@@ -996,7 +996,7 @@ public class ExcelReader implements Closeable {
                     System.arraycopy(sub, 0, _sub, 0, sub.length);
                     array[i - 1] = sub = _sub;
                 }
-                sub[indices[i - 1] - 1] = cellRangeToLong(r);
+                sub[indices[i - 1] - 1] = coordinateToLong(r);
             }
         }
 
@@ -1012,6 +1012,16 @@ public class ExcelReader implements Closeable {
     }
 
     /**
+     * @param r 单元格坐标
+     * @return 转换后的值 高48位保存Row，低16位保存Col
+     * @deprecated 使用 {@link #coordinateToLong(String)}代替
+     */
+    @Deprecated
+    public static long cellRangeToLong(String r) {
+        return coordinateToLong(r);
+    }
+
+    /**
      * 将单元格坐标转为long类型，Excel单元格坐标由列+行组成如A1, B2等，
      * 转为long类型后第{@code 0-16}位为列号{@code 17-48}位为行号
      *
@@ -1023,13 +1033,13 @@ public class ExcelReader implements Closeable {
      * </pre></blockquote>
      *
      * @param r 单元格坐标
-     * @return 转换后的值
+     * @return 转换后的值 高48位保存Row，低16位保存Col
      */
-    public static long cellRangeToLong(String r) {
-        char[] values = r.toCharArray();
+    public static long coordinateToLong(String r) {
         long v = 0L;
         int n = 0;
-        for (char value : values) {
+        for (int i = 0, len = r.length(); i < len; i++) {
+            char value = r.charAt(i);
             if (value >= 'A' && value <= 'Z') {
                 v = v * 26 + value - 'A' + 1;
             }

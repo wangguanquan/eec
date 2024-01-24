@@ -169,7 +169,7 @@ public class Comments implements Storable, Closeable {
             writer.write(" </v:shapetype>");
             int i = 1;
             for (C c : commentList) {
-                long cr = ExcelReader.cellRangeToLong(c.ref);
+                long cr = ExcelReader.coordinateToLong(c.ref);
                 writer.write(" <v:shape id=\"_x0000_s");writer.write(100 + i);
                 writer.write("\" type=\"#_x0000_t202\" style='width:" + (c.width != null ? c.width : 100.8D) + "pt;height:" + (c.height != null ? c.height : 60.6D) + " pt;z-index:");
                 writer.writeInt(i++);

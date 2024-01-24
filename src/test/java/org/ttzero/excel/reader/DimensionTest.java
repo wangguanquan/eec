@@ -27,8 +27,8 @@ public class DimensionTest {
         Dimension d = Dimension.of("A1");
         assert d.firstColumn == 1;
         assert d.firstRow == 1;
-        assert d.lastColumn == 0;
-        assert d.lastRow == 0;
+        assert d.lastColumn == 1;
+        assert d.lastRow == 1;
         assert d.width == 1;
         assert d.height == 1;
     }
@@ -37,16 +37,16 @@ public class DimensionTest {
         Dimension d = Dimension.of("B3:");
         assert d.firstColumn == 2;
         assert d.firstRow == 3;
-        assert d.lastColumn == 0;
-        assert d.lastRow == 0;
+        assert d.lastColumn == 2;
+        assert d.lastRow == 3;
         assert d.width == 1;
         assert d.height == 1;
     }
 
     @Test public void testLastDim() {
         Dimension d = Dimension.of(":C2");
-        assert d.firstColumn == 0;
-        assert d.firstRow == 0;
+        assert d.firstColumn == 1;
+        assert d.firstRow == 1;
         assert d.lastColumn == 3;
         assert d.lastRow == 2;
         assert d.width == 3;

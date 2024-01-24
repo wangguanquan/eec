@@ -17,7 +17,7 @@
 package org.ttzero.excel.reader;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
-import static org.ttzero.excel.reader.ExcelReader.cellRangeToLong;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 
 /**
  * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
@@ -56,23 +56,19 @@ public class Dimension {
     public final int width, height;
 
     public Dimension(int firstRow, short firstColumn) {
-        this.firstRow = firstRow;
-        this.firstColumn = firstColumn;
-        this.lastRow = 0;
-        this.lastColumn = 0;
-
-        this.width = 1;
-        this.height = 1;
+        this(firstRow, firstColumn, firstRow, firstColumn);
     }
 
     public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
-        this.firstRow = firstRow;
-        this.firstColumn = firstColumn;
-        this.lastRow = lastRow;
-        this.lastColumn = lastColumn;
+        this.firstRow = Math.max(firstRow, 1);
+        this.firstColumn = (short) Math.max(firstColumn, 1);
+        this.lastRow = lastRow > 0 ? lastRow : this.firstRow;
+        this.lastColumn = lastColumn > 0 ? lastColumn : this.firstColumn;
 
-        this.width = lastColumn > 0 && firstColumn > 0 ? lastColumn - firstColumn + 1 : lastColumn > 0 ? lastColumn : 1;
-        this.height = lastRow > 0 && firstRow > 0 ? lastRow - firstRow + 1 : lastRow > 0 ? lastRow : 1;
+        this.width = this.lastColumn - this.firstColumn + 1;
+        this.height = this.lastRow - this.firstRow + 1;
+        if (width < 1 || height < 1)
+            throw new IllegalArgumentException("Dimension(firstRow:" + firstRow + ",firstColumn:" + firstColumn + ",lastRow=" + lastRow + ",lastColumn=" + lastColumn +") contains invalid range");
     }
 
     /**
@@ -86,12 +82,12 @@ public class Dimension {
 
         long f = 0L, t = 0L;
         if (i < 0) {
-            f = cellRangeToLong(range);
+            f = coordinateToLong(range);
         } else if (i == 0) {
-            t = cellRangeToLong(range.substring(i + 1));
+            t = coordinateToLong(range.substring(i + 1));
         } else {
-            f = cellRangeToLong(range.substring(0, i));
-            t = cellRangeToLong(range.substring(i + 1));
+            f = coordinateToLong(range.substring(0, i));
+            t = coordinateToLong(range.substring(i + 1));
         }
         return new Dimension((int) (f >> 16), (short) f, (int) (t >> 16), (short) t);
     }
@@ -153,7 +149,7 @@ public class Dimension {
     @Override
     public String toString() {
         return new String(int2Col(firstColumn)) + this.firstRow
-            + (lastRow > 0 ? ":" + new String(int2Col(lastColumn)) + this.lastRow
+            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + new String(int2Col(lastColumn)) + this.lastRow
             : "");
     }
 
