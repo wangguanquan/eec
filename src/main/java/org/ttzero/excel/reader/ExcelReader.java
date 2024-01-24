@@ -96,6 +96,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *         .forEach(System.out::println);
  * } catch (IOException e) { }</pre></blockquote>
  *
+ * <p>参考文档:</p>
+ * <p><a href="https://github.com/wangguanquan/eec/wiki/2-%E8%AF%BB%E5%8F%96Excel">读取Excel</a></p>
  * @author guanquan.wang on 2018-09-22
  */
 public class ExcelReader implements Closeable {
@@ -187,7 +189,7 @@ public class ExcelReader implements Closeable {
      *
      * @param path excel绝对路径
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      */
     public static ExcelReader read(Path path) throws IOException {
         return read(path, 0, 0, VALUE_ONLY);
@@ -198,7 +200,7 @@ public class ExcelReader implements Closeable {
      *
      * @param stream excel字节流
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      */
     public static ExcelReader read(InputStream stream) throws IOException {
         return read(stream, 0, 0, VALUE_ONLY);
@@ -210,7 +212,7 @@ public class ExcelReader implements Closeable {
      * @param path   excel文件路径
      * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -224,7 +226,7 @@ public class ExcelReader implements Closeable {
      * @param stream excel字节流
      * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -239,7 +241,7 @@ public class ExcelReader implements Closeable {
      * @param bufferSize 共享字符区的大小，默认{@code 64}
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -254,7 +256,7 @@ public class ExcelReader implements Closeable {
      * @param bufferSize 共享字符区的大小，默认{@code 64}
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -270,7 +272,7 @@ public class ExcelReader implements Closeable {
      * @param cacheSize  共享字符区的缓存大小，默认{@code 512}
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -556,7 +558,7 @@ public class ExcelReader implements Closeable {
      * 以只读"值"的方式读取Excel字节流
      *
      * @param stream excel字节流
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      */
     public ExcelReader(InputStream stream) throws IOException {
         this(stream, 0, 0, VALUE_ONLY);
@@ -567,7 +569,7 @@ public class ExcelReader implements Closeable {
      *
      * @param stream excel字节流
      * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -582,7 +584,7 @@ public class ExcelReader implements Closeable {
      * @param bufferSize 共享字符区的大小，默认{@code 64}
      * @param cacheSize  共享字符区缓存大小，默认{@code 512}
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -601,7 +603,7 @@ public class ExcelReader implements Closeable {
      * 以只读"值"的方式读取指定路径的Excel文件
      *
      * @param path excel绝对路径
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      */
     public ExcelReader(Path path) throws IOException {
         init(path, 0, 0, VALUE_ONLY);
@@ -612,7 +614,7 @@ public class ExcelReader implements Closeable {
      *
      * @param path   excel文件路径
      * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException if path not exists or I/O error occur
+     * @throws IOException 读取异常
      * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
     @Deprecated
@@ -643,7 +645,7 @@ public class ExcelReader implements Closeable {
      * @param cacheSize  共享字符区缓存大小，默认{@code 512}
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException if I/O error occur
+     * @throws IOException 读取异常
      */
     protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         this.zipFile = new ZipFile(path.toFile());
@@ -773,7 +775,7 @@ public class ExcelReader implements Closeable {
      * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
      * @throws FileNotFoundException 文件不存在
-     * @throws IOException           if I/O error occur
+     * @throws IOException           读取异常
      */
     public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
         if (!exists(path)) {
@@ -1089,7 +1091,7 @@ public class ExcelReader implements Closeable {
      *
      * @param name 压缩文件路径，必须是一个完整的路径
      * @return 如果实体存在则返回该实体的{@code InputStream} 否则返回{@code null}
-     * @throws IOException if I/O error occur.
+     * @throws IOException 读取异常
      */
     public InputStream getEntryStream(String name) throws IOException {
         ZipEntry entry = getEntry(zipFile, toZipPath(name));

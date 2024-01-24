@@ -18,6 +18,8 @@
 package org.ttzero.excel.drawing;
 
 /**
+ * 3D 场景属性
+ *
  * @author guanquan.wang at 2023-07-26 15:21
  */
 public class Scene3D {

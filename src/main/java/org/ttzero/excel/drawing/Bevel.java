@@ -20,15 +20,19 @@ package org.ttzero.excel.drawing;
 import static org.ttzero.excel.drawing.Enums.PresetBevel;
 
 /**
+ * 此元素定义与应用于表中单元格的3D效果关联的棱台的属性。
+ *
+ * @see Shape3D
  * @author guanquan.wang at 2023-07-25 09:24
  */
 public class Bevel {
     /**
-     * Specifies the bevel width and height
+     * height: 指定棱台的高度，或者它所应用的形状上方有多远。
+     * width: 指定棱台的宽度，或它所应用的形状的距离。
      */
     public double width, height;
     /**
-     * Preset Bevel
+     * 预设棱台
      */
     public PresetBevel prst;
 

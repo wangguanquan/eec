@@ -50,7 +50,8 @@ import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * 用于读的工作表，为了性能本工具将读和写分开设计它们具有完全不同的方法，
- * 读取数据时可以通过{@link #header}方法指定表头位置
+ * 读取数据时可以通过{@link #header}方法指定表头位置，多行表头时可以指定一个起始行和结束行
+ * 来匹配，它将以{@code 行1:行2...行n}拼按的形式做为Key
  *
  * @author guanquan.wang at 2019-04-17 11:36
  */
@@ -64,189 +65,182 @@ public interface Sheet extends Closeable {
     String getName();
 
     /**
-     * The index of worksheet located at the workbook
+     * 获取工作表在工作薄中的下标（从0开始）
      *
-     * @return the index(zero base)
+     * @return 工作表下标(从0开始)
      */
     int getIndex();
 
     /**
-     * The worksheet id, it difference with index is that the id will not change
-     * because of moving or deleting worksheet.
+     * 工作表id，它与索引的区别在于，id不会因为移动或删除工作表而更改。
      *
-     * @return id of worksheet
+     * @return 工作表id
      */
     int getId();
 
     /**
-     * size of rows.
+     * 获取当前工作表的总行数
      *
-     * @return size of rows
-     *      -1: unknown size
-     * @deprecated use {@link #getDimension()} to getting full range address
+     * @return 当前工作表的总行数，{@code -1}表示未知
      */
-    @Deprecated
-    int getSize();
+    default int getSize() {
+        Dimension d = getDimension();
+        return d != null ? d.lastRow - d.firstRow + 1 : -1;
+    }
 
     /**
-     * Returns The range address of the used area in
-     * the current sheet
-     * <p>
-     * NOTE: This method can only guarantee accurate row ranges
+     * 获取当前工作表中有效区域的范围地址（任意值，样式均表示有效值），此值取于头信息&lt;dimension&gt;的值，
+     * 如果头信息没有此值则读取最后一行的范围，此值并不能完全反映工作表的有效行数
      *
-     * @return worksheet {@link Dimension} ranges
+     * @return 当前工作表的有效区域
      */
     Dimension getDimension();
 
     /**
-     * Test Worksheet is hidden
+     * 判断当前工作表是否隐藏
      *
-     * @return true if current worksheet is hidden
+     * @return {@code true} 当前为“隐藏”工作表
      */
     boolean isHidden();
 
     /**
-     * Test Worksheet is show
+     * 判断当前工作表是否显示
      *
-     * @return true if current worksheet is show
+     * @return {@code true} 当前为“显示”工作表
      */
     default boolean isShow() {
         return !isHidden();
     }
 
     /**
-     * Specify the header rows endpoint
+     * 设置工作表的表头行号（从1开始）与Excel看到的行号一致
      *
-     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
-     * @return current {@link Sheet}
-     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
+     * @param fromRowNum 表头行的位置（从1开始）
+     * @return 当前工作表
+     * @throws IndexOutOfBoundsException 如果{@code fromRow}小于1
      */
     default Sheet header(int fromRowNum) {
         return header(fromRowNum, fromRowNum);
     }
 
     /**
-     * Specify the header rows endpoint
-     * <p>
-     * Note: After specifying the header row number, the row-pointer will move to the
-     * next row of the header range. The {@link #bind(Class)}, {@link #bind(Class, int)},
-     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
-     * and {@link #dataIterator()} will all be affected.
+     * 设置工作表的表头行号
      *
-     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
-     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
-     * @return current {@link Sheet}
-     * @throws IndexOutOfBoundsException if {@code fromRow} less than 1
-     * @throws IllegalArgumentException if {@code toRow} less than {@code fromRow}
+     * <p>注意: 指定标题行号后，行指针将移动到标题范围的下一行. 以下方法 {@link #bind(Class)}, {@link #bind(Class, int)},
+     * {@link #bind(Class, int, int)}, {@link #rows()}, {@link #dataRows()}, {@link #iterator()},
+     * 和 {@link #dataIterator()} 将受影响.</p>
+     *
+     * @param fromRowNum 表头行的开始位置（从1开始，包含）
+     * @param toRowNum   表头行的结束位置（从1开始，包含）
+     * @return 当前工作表
+     * @throws IndexOutOfBoundsException 如果{@code fromRow}小于1
+     * @throws IllegalArgumentException  如果{@code toRow}小于{@code fromRow}
      */
     Sheet header(int fromRowNum, int toRowNum);
 
     /**
-     * Returns the header of the list.
-     *
-     * The first non-empty line defaults to the header information. You can also call {@link #header(int, int)}
-     * to specify multiple header rows. If there are multiple rows of headers, ':' will be used for stitching.
+     * 获取当前工作表表头，返回{@link #header}方法设置表头，未指定表头位置时默认取第一个非空行做为表头，如果为多行表头则将使用{@code ':'}拼接
      *
      * <blockquote><pre>
      * +-----------------------------+
-     * |       |        COMMON       |
-     * | TITLE +-------+------+------+
-     * |       |  SUB1 | SUB2 | SUB3 |
-     * +------+-------+-------+------+
+     * |       |        收件人        |
+     * | 订单号 +-------+------+------+
+     * |       |   省  |  市  |   区  |
+     * +-------+-------+------+------+
      * </pre></blockquote>
+     * <p>
+     * 以上表头将返回 "订单号", "收件人:省", "收件人:市", "收件人:区"
      *
-     * The above table will return "TITLE", "COMMON:SUB1", "COMMON:SUB2", "COMMON:SUB3"
-     *
-     * @return the {@link HeaderRow}
+     * @return 表头行
      */
     Row getHeader();
 
     /**
-     * Set the binding type
+     * 绑定数据类型，后续可以通过{@link Row#get}方法直接将行数据转为指定的对象
      *
-     * @param clazz the binding type
-     * @return the {@link Sheet}
+     * @param clazz 行数据需要转换的对象类型
+     * @return 当前工作表
      */
     Sheet bind(Class<?> clazz);
 
     /**
-     * Set the binding type
+     * 绑定数据类型并指定表头行号，后续可以通过{@link Row#get}方法直接将行数据转为指定的对象
      *
-     * @param clazz the binding type
-     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
-     * @return the {@link Sheet}
+     * @param clazz      行数据需要转换的对象类型
+     * @param fromRowNum 表头行的位置（从1开始）
+     * @return 当前工作表
      */
     default Sheet bind(Class<?> clazz, int fromRowNum) {
         return bind(clazz, header(fromRowNum).getHeader());
     }
 
     /**
-     * Set the binding type
+     * 绑定数据类型并指定表头行号，后续可以通过{@link Row#get}方法直接将行数据转为指定的对象
      *
-     * @param clazz the binding type
-     * @param fromRowNum low endpoint (inclusive) of the worksheet (one base)
-     * @param toRowNum high endpoint (inclusive) of the worksheet (one base)
-     * @return the {@link Sheet}
+     * @param clazz      行数据需要转换的对象类型
+     * @param fromRowNum 表头行的位置（从1开始）
+     * @param toRowNum   表头行的结束位置（从1开始，包含）
+     * @return 当前工作表
      */
     default Sheet bind(Class<?> clazz, int fromRowNum, int toRowNum) {
         return bind(clazz, header(fromRowNum, toRowNum).getHeader());
     }
 
     /**
-     * Set the binding type
+     * 绑定数据类型并指定表头，后续可以通过{@link Row#get}方法直接将行数据转为指定的对象
      *
-     * @param clazz the binding type
-     * @param row specify a custom header row
-     * @return the {@link Sheet}
+     * @param clazz 行数据需要转换的对象类型
+     * @param row   自定义表头
+     * @return 当前工作表
      */
     Sheet bind(Class<?> clazz, Row row);
 
     /**
-     * Load the sheet data
+     * 加载工作表，读取工作表之前必须先使用此方法加载，使用Reader的场景已默认加载无需手动加载
      *
-     * @return the {@link Sheet}
-     * @throws IOException if I/O error occur
+     * @return 当前工作表
+     * @throws IOException 读取异常
      */
     Sheet load() throws IOException;
 
     /**
-     * Iterating each row of data contains header information and blank lines
+     * 构建一个行迭代器（包含空行），注意返回的{@code Row}对象是内存共享的所以不能直接收集，
+     * 收集数据前需要使用{@link Row#to}方法转为对象或者使用{@link Row#toMap}方法转为Map再收集。
      *
-     * @return a row iterator
+     * @return 行迭代器
      */
     Iterator<Row> iterator();
 
     /**
-     * Iterating over data rows without header information and blank lines
+     * 构建一个行迭代器（不包含空行），注意返回的{@code Row}对象是内存共享的所以不能直接收集，
+     * 收集数据前需要使用{@link Row#to}方法转为对象或者使用{@link Row#toMap}方法转为Map再收集。
      *
-     * @return a row iterator
+     * @return 行迭代器
      */
     Iterator<Row> dataIterator();
 
     /**
-     * List all pictures in workbook
+     * 获取当前工作表包含的所有图片
      *
-     * @return picture list or null if not exists.
+     * @return 图片列表，如果不包含图片则返回{@code null}
      */
     List<Drawings.Picture> listPictures();
 
     /**
-     * Reset the {@link Sheet}'s row index to begging
+     * 重置游标以重头开始读，可以起到重复读的用处，不过此方法不是必要的，也可以直接通过reader获取对应工作表也可以
      *
-     * @return the unread {@link Sheet}
-     * @throws ExcelReadException if I/O error occur.
-     * @throws UnsupportedOperationException if sub-class un-implement this function.
+     * @return 当前工作表
+     * @throws ExcelReadException            读取异常
+     * @throws UnsupportedOperationException 如果实现类不支持重复读时抛此异常
      */
     default Sheet reset() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Return a stream of all rows
+     * 返回一个行流，它与{@link #iterator()}具有相同的功能
      *
-     * @return a {@code Stream&lt;Row&gt;} providing the lines of row
-     * described by this {@link Sheet}
-     * @since 1.8
+     * @return 行流
      */
     default Stream<Row> rows() {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
@@ -254,61 +248,32 @@ public interface Sheet extends Closeable {
     }
 
     /**
-     * Return stream with out header row and empty rows
+     * 返回一个非空行流，它与{@link #dataIterator}具有相同的功能
      *
-     * @return a {@code Stream&lt;Row&gt;} providing the lines of row
-     * described by this {@link Sheet}
-     * @since 1.8
+     * @return 非空行流
      */
     default Stream<Row> dataRows() {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
             dataIterator(), Spliterator.ORDERED | Spliterator.NONNULL), false);
     }
 
-//    /**
-//     * Convert column mark to int
-//     *
-//     * @param col column mark
-//     * @return int value
-//     */
-//    static int col2Int(String col) {
-//        if (StringUtil.isEmpty(col)) return 1;
-//        char[] values = col.toCharArray();
-//        int n = 0;
-//        for (char value : values) {
-//            if (value < 'A' || value > 'Z')
-//                throw new ExcelReadException("Column mark out of range: " + col);
-//            n = n * 26 + value - 'A' + 1;
-//        }
-//        return n;
-//    }
-//
-//    /**
-//     * Close resource
-//     *
-//     * @throws IOException if I/O error occur
-//     */
-//    @Override
-//    void close() throws IOException;
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     * 将当前工作表另存为{@code CSV}格式并保存到{@code path}文件中，默认以{@code UTF-8}字符集保存
      *
-     * @param path the output storage path
-     * @throws IOException if I/O error occur.
+     * @param path 另存为CSV文件路径
+     * @throws IOException 读写异常
      */
     default void saveAsCSV(Path path) throws IOException {
         saveAsCSV(path, StandardCharsets.UTF_8);
     }
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file.
+     * 将当前工作表另存为{@code CSV}格式以{@code UTF-8}字符集保存保存到{@code path}文件中
      *
-     * @param path the output storage path
-     * @param charset specify a charset, default is UTF-8
-     * @throws IOException if I/O error occur.
+     * @param path    另存为CSV文件路径
+     * @param charset 指定字符集
+     * @throws IOException 读写异常
      */
     default void saveAsCSV(Path path, Charset charset) throws IOException {
         // Create path if not exists
@@ -323,34 +288,31 @@ public interface Sheet extends Closeable {
     }
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     * 将当前工作表另存为{@code CSV}格式并输出到指定字节流
      *
-     * @param os the output
-     * @throws IOException if I/O error occur.
+     * @param os 输出字节流
+     * @throws IOException 读写异常
      */
     default void saveAsCSV(OutputStream os) throws IOException {
         saveAsCSV(os, StandardCharsets.UTF_8);
     }
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file. Default separator character is ','.
+     * 将当前工作表另存为{@code CSV}格式并指定字符集然后输出到指定流
      *
-     * @param os the output
-     * @param charset specify a charset
-     * @throws IOException if I/O error occur.
+     * @param os      输出流
+     * @param charset 字符集
+     * @throws IOException 读写异常
      */
     default void saveAsCSV(OutputStream os, Charset charset) throws IOException {
         saveAsCSV(new BufferedWriter(new OutputStreamWriter(os, charset)));
     }
 
     /**
-     * Save file as Comma-Separated Values. Each worksheet corresponds to
-     * a csv file. Default charset is 'UTF8' and separator character is ','.
+     * 将当前工作表另存为{@code CSV}格式并输出到指定流
      *
-     * @param bw buffer writer
-     * @throws IOException if I/O error occur.
+     * @param bw 输出流
+     * @throws IOException 读写异常
      */
     default void saveAsCSV(BufferedWriter bw) throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
@@ -363,24 +325,32 @@ public interface Sheet extends Closeable {
                 for (int i = 0; i < row.lc; i++) {
                     Cell c = row.cells[i];
                     switch (c.t) {
-                        case SST       : if (c.sv == null) c.setSv(row.sst.get(c.nv));
-                        case INLINESTR :
-                        case FUNCTION  : writer.write(c.sv); break;
-                        case NUMERIC   :
+                        case SST:
+                            if (c.sv == null) c.setSv(row.sst.get(c.nv));
+                        case INLINESTR:
+                        case FUNCTION:
+                            writer.write(c.sv);
+                            break;
+                        case NUMERIC:
                             if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.nv);
                             else writer.write(toLocalDate(c.nv).toString());
                             break;
-                        case LONG      : writer.write(c.lv); break;
-                        case DECIMAL   :
+                        case LONG:
+                            writer.write(c.lv);
+                            break;
+                        case DECIMAL:
                             if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.mv.toString());
                             else writer.write(toTimestamp(c.mv.doubleValue()).toString());
                             break;
-                        case DOUBLE    :
+                        case DOUBLE:
                             if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.dv);
                             else writer.write(toTimestamp(c.dv).toString());
                             break;
-                        case BOOL      : writer.write(c.bv); break;
-                        default        : writer.writeEmpty();
+                        case BOOL:
+                            writer.write(c.bv);
+                            break;
+                        default:
+                            writer.writeEmpty();
                     }
                 }
                 writer.newLine();
@@ -389,11 +359,11 @@ public interface Sheet extends Closeable {
     }
 
     /**
-     * Use field name matching without {@link org.ttzero.excel.annotation.ExcelColumn} annotation
+     * 强制匹配，即使没有{@link org.ttzero.excel.annotation.ExcelColumn}注解的字段也会强制匹配
      *
-     * <p>When converting row data to Java objects, only fields with {@code ExcelColumn} annotations
-     * are matched by default. {@code forceImport} will skip this restriction,
-     * and fields without {@code ExcelColumn} annotations will be matched with field name
+     * <p>将行数据转换为Java对象时默认情况下只匹配带有ExcelColumn注释的字段。
+     * {@code forceImport}将跳过此限制，有&#40;ExcelColumn注释的依然按注解匹配，
+     * 没有&#40;ExcelColumn注释的字段将与字段名匹配</p>
      *
      * @return 当前工作表
      */
