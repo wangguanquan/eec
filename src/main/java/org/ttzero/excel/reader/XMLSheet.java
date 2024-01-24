@@ -218,20 +218,6 @@ public class XMLSheet implements Sheet {
     }
 
     /**
-     * size of rows.
-     *
-     * @return size of rows
-     *      -1: unknown size
-     * @deprecated use {@link #getDimension()} to getting full range address
-     */
-    @Deprecated
-    @Override
-    public int getSize() {
-        Dimension d = getDimension();
-        return d != null ? d.lastRow - d.firstRow + 1 : -1;
-    }
-
-    /**
      * Returns The range address of the used area in
      * the current sheet
      * <p>
