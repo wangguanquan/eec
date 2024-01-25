@@ -396,7 +396,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             width = new BigDecimal(Const.Limit.COLUMN_WIDTH);
         }
         String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-//        writeSheetFormat(fillSpace, defaultWidth);
+
+        // SheetFormatPr
+        writeSheetFormat();
 
         // cols
         writeCols(fillSpace, defaultWidth);
@@ -1141,16 +1143,38 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write the sheet format
      *
-     * @param fillSpace The number of characters to pad when recalculating the width.
-     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
      * @throws IOException if I/O error occur.
      */
-    protected void writeSheetFormat(int fillSpace, String defaultWidth) throws IOException {
-        bw.write("<sheetFormatPr defaultRowHeight=\"18.5\" defaultColWidth=\"");
-        bw.write(defaultWidth);
-        bw.write('"');
-        for (int i = fillSpace - defaultWidth.length(); i-->=0;) bw.write(32); // Fill space
-        bw.write("/>");
+    protected void writeSheetFormat() throws IOException {
+        int n = 0;
+        BigDecimal defaultColWidth = null, defaultRowHeight = null;
+        try {
+            Object o;
+            if ((o = sheet.getExtPropValue("defaultColWidth")) != null) {
+                defaultColWidth = new BigDecimal(o.toString());
+                n |= 1;
+            }
+            if ((o = sheet.getExtPropValue("defaultRowHeight")) != null) {
+                defaultRowHeight = new BigDecimal(o.toString());
+                n |= 2;
+            }
+        } catch (NumberFormatException e) {
+            // Ignore
+        }
+        if (n > 0) {
+            bw.write("<sheetFormatPr");
+            if ((n & 1) == 1) {
+                bw.write(" defaultColWidth=\"");
+                bw.writeInt(defaultColWidth.intValue());
+                bw.write("\"");
+            }
+            if ((n & 2) == 2) {
+                bw.write(" defaultRowHeight=\"");
+                bw.writeInt(defaultRowHeight.intValue());
+                bw.write("\"");
+            }
+            bw.write("/>");
+        }
     }
 
     /**

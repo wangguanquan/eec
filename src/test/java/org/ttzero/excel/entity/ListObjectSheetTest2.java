@@ -553,7 +553,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             int fillSpace = 6;
             BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
             String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-            writeSheetFormat(fillSpace, defaultWidth);
+            writeSheetFormat();
 
             // cols
             writeCols(fillSpace, defaultWidth);
