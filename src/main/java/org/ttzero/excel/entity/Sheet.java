@@ -65,8 +65,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * RowBlock行块常驻内存，一个{@code RowBlock}行块默认包含32个{@code Row}行，这样可以保证
  * 较小的内存开销。</p>
  *
- * <p>当前支持的数据源有{@link ListSheet}, {@link ListMapSheet}, {@link StatementSheet}
- * 和{@link ResultSetSheet}4种，前两种较为常用，后两种可实现将数据库查询结果直接导出到Excel
+ * <p>当前支持的数据源有{@link ListSheet},{@link ListMapSheet},{@link TemplateSheet},{@link StatementSheet}
+ * 和{@link ResultSetSheet}5种，前三种较为常用，后两种可实现将数据库查询结果直接导出到Excel
  * 省掉转Java实体的中间环节。继承Sheet并实现抽象方法{@link Sheet#resetBlockData}可以扩展新的数据源，
  * 你需要在该方法中获取数据并使用{@link ICellValueAndStyle}转换器将数据转换为输出协议允许的结构。</p>
  *
@@ -96,6 +96,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @see StatementSheet
  * @see CSVSheet
  * @see EmptySheet
+ * @see TemplateSheet
  */
 public abstract class Sheet implements Cloneable, Storable {
     /**
