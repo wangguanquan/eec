@@ -33,6 +33,7 @@ import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Sheet;
 import org.ttzero.excel.util.StringUtil;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -397,6 +399,42 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     assert horizontal == Horizontals.LEFT;
                     Border border = styles.getBorder(style);
                     assert border == null || border.getBorderTop().getStyle() == BorderStyle.NONE;
+                }
+            }
+        }
+    }
+
+    @Test public void testAutoFilter() throws IOException {
+        String fileName = "test auto-filter.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        new Workbook()
+            .addSheet(new ListSheet<>(expectList
+                , new Column("学号", "id")
+                , new Column("姓名", "name")
+                , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
+            ).putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, Dimension.of("A1:C1")))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.FullSheet sheet = (FullSheet) reader.sheet(0).asFullSheet().header(1);
+            org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
+            assert "学号".equals(header.get(0));
+            assert "姓名".equals(header.get(1));
+            assert "成绩".equals(header.get(2));
+
+            assert Dimension.of("A1:C1").equals(sheet.getFilter());
+
+
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            for (ListObjectSheetTest.Student expect : expectList) {
+                assert iter.hasNext();
+                Map<String, Object> e = iter.next().toMap();
+                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
+                assert expect.getName().equals(e.get("姓名").toString());
+                if (expect.getScore() < 60) {
+                    assert "不合格".equals(e.get("成绩"));
+                } else {
+                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
                 }
             }
         }
