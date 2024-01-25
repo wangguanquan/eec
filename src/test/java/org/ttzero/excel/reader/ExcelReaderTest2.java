@@ -272,7 +272,7 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testFullReader() throws IOException {
-        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1/1.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
             Panes panes = sheet.getFreezePanes();
             assert panes.row == 1;
@@ -282,6 +282,8 @@ public class ExcelReaderTest2 {
             List<Col> list = sheet.getCols();
             assert list.size() == 6;
             assert list.get(2).hidden;
+            assert (int) sheet.getDefaultColWidth() == 30;
+            assert (int) sheet.getDefaultRowHeight() == 15;
 
             List<Dimension> mergeCells = sheet.getMergeCells();
             assert mergeCells.size() == 1;

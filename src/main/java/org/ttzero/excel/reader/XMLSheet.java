@@ -1298,4 +1298,14 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     public boolean showGridLines() {
         return showGridLines == 1;
     }
+
+    @Override
+    public double getDefaultColWidth() {
+        return defaultColWidth;
+    }
+
+    @Override
+    public double getDefaultRowHeight() {
+        return defaultRowHeight;
+    }
 }

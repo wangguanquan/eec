@@ -61,4 +61,17 @@ public interface FullSheet extends MergeSheet, CalcSheet {
      * @return true: 显示网络线
      */
     boolean showGridLines();
+
+    /**
+     * 获取预置列宽，该列宽优先级最低可以被{@link #getCols()}里的列宽覆盖，有效范围以外的列会展示此宽度
+     *
+     * @return 预置列宽，{@code -1}表示未知
+     */
+    double getDefaultColWidth();
+    /**
+     * 获取预置行高，暂不知道何种场景下此行高生交
+     *
+     * @return 预置行高，{@code -1}表示未知
+     */
+    double getDefaultRowHeight();
 }
