@@ -807,7 +807,7 @@ public class XMLSheet implements Sheet {
     }
 
     // 解析感兴趣的子节点
-    void subElement(char[] cb, int offset, int n) {
+    protected void subElement(char[] cb, int offset, int n) {
         // 这里只处理dimension节点
         if (n < 20) return;
         if (cb[offset + 1] == 'd' && cb[offset + 2] == 'i' && cb[offset + 3] == 'm' && cb[offset + 4] == 'e' && cb[offset + 5] == 'n'
@@ -1032,7 +1032,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 
         ready = true;
 
-        // 再次解析头部
+        // 再次解析头部（需要解析完整的头部覆写subElement方法
         if (cols == null && defaultRowHeight < 0D && defaultColWidth < 0D && panes == null && showGridLines == 1) {
             Marker marker = Marker.of(this);
             try {
@@ -1209,7 +1209,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     }
 
     @Override
-    void subElement(char[] cb, int offset, int n) {
+    protected void subElement(char[] cb, int offset, int n) {
         String v = new String(cb, offset, n);
         // 去掉不必要的命名空间
         v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
