@@ -25,6 +25,7 @@ import org.ttzero.excel.entity.EmptySheet;
 import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.ListSheet;
+import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -267,6 +268,25 @@ public class ExcelReaderTest2 {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test entry miss key.xlsx"))) {
             List<ListObjectSheetTest.Item> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
             assertTrue(listEquals(list, expectList));
+        }
+    }
+
+    @Test public void testFullReader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1/1.xlsx"))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            Panes panes = sheet.getFreezePanes();
+            assert panes.row == 1;
+            assert panes.col == 0;
+            assert sheet.showGridLines();
+            assert sheet.getFilter().equals(Dimension.of("A1:F1"));
+            List<Col> list = sheet.getCols();
+            assert list.size() == 6;
+            assert list.get(2).hidden;
+
+            List<Dimension> mergeCells = sheet.getMergeCells();
+            assert mergeCells.size() == 1;
+            assert mergeCells.get(0).equals(Dimension.of("G3:H6"));
+            sheet.forceImport().dataRows().map(row -> row.to(ExcelReaderTest.AnnotationEntry.class)).forEach(System.out::println);
         }
     }
 
