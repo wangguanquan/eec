@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
+import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
@@ -1254,14 +1255,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // Background image
-        if (sheet.getWaterMark() != null) {
-            RelManager relManager = sheet.getRelManager();
-            r = relManager.getByType(Const.Relationship.IMAGE);
-            if (r != null) {
-                bw.write("<picture r:id=\"");
-                bw.write(r.getId());
-                bw.write("\"/>");
-            }
+        if ((r = writeMark()) != null) {
+            bw.write("<picture r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
         }
 
         // Drawings
@@ -1274,6 +1271,30 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write("\"/>");
             }
         }
+    }
+
+    /**
+     * 水印
+     *
+     * @return 如果有水印则返回该水印的关联否则返回 {@code null}
+     * @throws IOException
+     */
+    private Relationship writeMark() throws IOException {
+        Relationship r = null;
+        WaterMark waterMark = sheet.getWaterMark();
+        if (waterMark == null || !waterMark.canWrite()) {
+            waterMark = sheet.getWorkbook().getWaterMark();
+            sheet.setWaterMark(waterMark);
+        }
+        if (waterMark != null && waterMark.canWrite()) {
+            Path media = workSheetPath.getParent().resolve("media");
+            if (!exists(media)) Files.createDirectory(media);
+            Path image = media.resolve("image" + sheet.getWorkbook().incrementMediaCounter() + waterMark.getSuffix());
+
+            Files.copy(waterMark.get(), image);
+            sheet.addRel(r = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
+        }
+        return r;
     }
 
     /**
