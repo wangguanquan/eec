@@ -620,6 +620,9 @@ public class Font implements Cloneable {
         hash += size << 16;
         hash += name.hashCode() << 8;
         hash += color != null ? color.hashCode() : 0;
+        hash += charset;
+        hash += family;
+        if (StringUtil.isNotEmpty(scheme)) hash += scheme.hashCode();
         return hash;
     }
 
@@ -627,11 +630,13 @@ public class Font implements Cloneable {
     public boolean equals(Object o) {
         if (o instanceof Font) {
             Font other = (Font) o;
-            return other.family == family
-                && other.style == style
-                && other.size == size
-                && (Objects.equals(other.color, color))
+            return other.size == size
                 && (Objects.equals(other.name, name))
+                && (Objects.equals(other.color, color))
+                && other.charset == charset
+                && other.family == family
+                && other.style == style
+                && (Objects.equals(other.scheme, scheme))
                 ;
         }
         return false;
