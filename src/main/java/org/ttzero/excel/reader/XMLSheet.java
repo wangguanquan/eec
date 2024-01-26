@@ -566,6 +566,10 @@ public class XMLSheet implements Sheet {
                     return null;
                 }
             } catch (IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("Stream closed")) {
+                    eof = true;
+                    return null;
+                }
                 throw new ExcelReadException("Parse row data error", e);
             }
             nChar = 0;
