@@ -17,17 +17,29 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Col;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.ExcelReadException;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
+import org.ttzero.excel.util.DateUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制
@@ -60,6 +72,12 @@ public class TemplateSheet extends Sheet {
      * 源工作表
      */
     protected FullSheet sheet;
+    /**
+     * 行数据迭代器
+     */
+    protected Iterator<org.ttzero.excel.reader.Row> rowIterator;
+
+    protected Map<Integer, Integer> styleMap;
 
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
@@ -149,7 +167,15 @@ public class TemplateSheet extends Sheet {
         return columns;
     }
 
+    /**
+     * 读取模板头信息并复杂到当前工作表
+     *
+     * @return 列的个数
+     */
     protected int init() {
+        // 如果未指定工作表名则复制模板工作表名
+        if (StringUtil.isEmpty(name)) this.name = sheet.getName();
+
         // 冻结,直接复制不需要计算移动
         Panes panes = sheet.getFreezePanes();
         if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
@@ -183,12 +209,94 @@ public class TemplateSheet extends Sheet {
         // 忽略表头输出
         super.ignoreHeader();
 
+        // 预置列宽
+        double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
+        if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
+        if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
+
+        // 初始化行迭代器
+        rowIterator = sheet.iterator();
+
+        styleMap = new HashMap<>();
+
         return len;
     }
 
     @Override
     protected void resetBlockData() {
+        int len, n = 0, limit = getRowLimit();
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
+        // 模板文件样式
+        Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
+        try {
+            for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
+                Row row = rowBlock.next();
+                org.ttzero.excel.reader.Row row0 = rowIterator.next();
+                row.index = rows = row0.getRowNum();
+                if (row0.getHeight() != null) {
+                    row.height = row0.getHeight();
+                }
+                len = row0.getLastColumnIndex() - row0.getFirstColumnIndex();
+                Cell[] cells = row.realloc(len);
+                for (int i = 0; i < len; i++) {
+                    // clear cells
+                    Cell cell = cells[i], cell0 = row0.getCell(i);
+                    cell.clear();
 
+                    // 复制数据
+                    switch (row0.getCellType(cell0)) {
+                        case STRING: cell.setString(row0.getString(cell0)); break;
+                        case LONG: cell.setLong(row0.getLong(cell0)); break;
+                        case INTEGER: cell.setInt(row0.getInt(cell0)); break;
+                        case DATE: cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
+                        case BOOLEAN: cell.setBool(row0.getBoolean(cell0)); break;
+                        default:
+                    }
+
+                    // 复制样式
+                    if (cell0.xf > 0) {
+                        Integer xf = styleMap.get(cell0.xf);
+                        if (xf != null) cell.xf = xf;
+                        else {
+                            int style = row0.getCellStyle(cell0);
+                            xf = 0;
+                            // 字体
+                            Font font = styles0.getFont(style);
+                            if (font != null) xf |= styles.addFont(font);
+                            // 填充
+                            Fill fill = styles0.getFill(style);
+                            if (fill != null) xf |= styles.addFill(fill);
+                            // 边框
+                            Border border = styles0.getBorder(style);
+                            if (border != null) xf |= styles.addBorder(border);
+                            // 格式化
+                            NumFmt numFmt = styles0.getNumFmt(style);
+                            if (numFmt != null) xf |= styles.addNumFmt(numFmt);
+                            // 水平对齐、垂直对齐
+                            int h = styles0.getHorizontal(style), v = styles0.getVertical(style);
+
+                            // 添加进样式
+                            cell.xf = styles.of(xf | h | v);
+                            styleMap.put(cell0.xf, cell.xf);
+                        }
+                    }
+
+//                    cellValueAndStyle.reset(row, cell, e, hc);
+//                    if (hasGlobalStyleProcessor) {
+//                        cellValueAndStyle.setStyleDesign(rs, cell, hc, getStyleProcessor());
+//                    }
+                }
+            }
+        } catch (ExcelReadException e) {
+            throw new ExcelWriteException(e);
+        }
+
+//        // Paging
+//        if (rows >= limit) {
+//            shouldClose = false;
+//            ResultSetSheet copy = getClass().cast(clone());
+//            workbook.insertSheet(id, copy);
+//        } else shouldClose = true;
     }
 
     @Override
