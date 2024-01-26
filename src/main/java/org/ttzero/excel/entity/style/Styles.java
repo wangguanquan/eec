@@ -387,9 +387,9 @@ public class Styles implements Storable {
      * @return 样式值中“格式化”部分的2进制值
      */
     public final int addNumFmt(NumFmt numFmt) {
-        // All indexes from 0 to 175 are reserved for built-in formats.
-        // The first user-defined format starts at 176.
-        if (numFmt.getId() < 0 || numFmt.getId() >= 176) {
+        // All indexes from 0 to 163 are reserved for built-in formats.
+        // The first user-defined format starts at 164.
+        if (numFmt.getId() < 0 || numFmt.getId() >= 164) {
             if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }
@@ -401,7 +401,7 @@ public class Styles implements Storable {
                 if (i <= -1) {
                     int id;
                     if (numFmts.isEmpty()) {
-                        id = 176; // customer id
+                        id = 164; // customer id
                     } else {
                         id = numFmts.get(numFmts.size() - 1).getId() + 1;
                     }
@@ -826,7 +826,7 @@ public class Styles implements Storable {
     public NumFmt getNumFmt(int style) {
         int n = style >>> INDEX_NUMBER_FORMAT;
         if (n <= 0) return null;
-        if (n < 176) return BuiltInNumFmt.get(n);
+        if (n < 164) return BuiltInNumFmt.get(n);
         for (NumFmt e : numFmts) {
             if (e.id == n) return e;
         }
