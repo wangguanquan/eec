@@ -101,6 +101,7 @@ public class TemplateSheet extends Sheet {
         this.sheet = reader.sheet(originalSheetIndex).asFullSheet();
         if (sheet == null)
             throw new IOException("The specified index " + originalSheetIndex + " does not exist in template file.");
+        this.name = sheet.getName();
     }
 
     /**
@@ -115,6 +116,7 @@ public class TemplateSheet extends Sheet {
         this.sheet = reader.sheet(originalSheetName).asFullSheet();
         if (sheet == null)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
+        this.name = sheet.getName();
     }
 
     /**
@@ -139,6 +141,7 @@ public class TemplateSheet extends Sheet {
         this.sheet = reader.sheet(originalSheetIndex).asFullSheet();
         if (sheet == null)
             throw new IOException("The specified index " + originalSheetIndex + " does not exist in template file.");
+        this.name = sheet.getName();
     }
 
     /**
@@ -153,6 +156,7 @@ public class TemplateSheet extends Sheet {
         this.sheet = reader.sheet(originalSheetName).asFullSheet();
         if (sheet == null)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
+        this.name = sheet.getName();
     }
 
     @Override
@@ -173,9 +177,6 @@ public class TemplateSheet extends Sheet {
      * @return 列的个数
      */
     protected int init() {
-        // 如果未指定工作表名则复制模板工作表名
-        if (StringUtil.isEmpty(name)) this.name = sheet.getName();
-
         // 冻结,直接复制不需要计算移动
         Panes panes = sheet.getFreezePanes();
         if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);

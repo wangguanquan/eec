@@ -30,6 +30,7 @@ public class TemplateSheetTest extends WorkbookTest {
         new Workbook("simple template")
             .addSheet(new TemplateSheet(ExcelReaderTest.testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
             .addSheet(new ListSheet<>()) // <- 普通对象数组工作表
+            .addSheet(new TemplateSheet(ExcelReaderTest.testResourceRoot().resolve("fracture merged.xlsx")))
             .writeTo(getOutputTestPath());
     }
 }
