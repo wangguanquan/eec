@@ -1223,11 +1223,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // Background image
-        if ((r = writeMark()) != null) {
-            bw.write("<picture r:id=\"");
-            bw.write(r.getId());
-            bw.write("\"/>");
-        }
+        writeWaterMark();
 
         // Drawings
         if (drawingsWriter != null) {
@@ -1242,13 +1238,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * 水印
+     * 添加水印
      *
-     * @return 如果有水印则返回该水印的关联否则返回 {@code null}
-     * @throws IOException
+     * @throws IOException 无权限或磁盘空间不足
      */
-    private Relationship writeMark() throws IOException {
-        Relationship r = null;
+    private void writeWaterMark() throws IOException {
         WaterMark waterMark = sheet.getWaterMark();
         if (waterMark == null || !waterMark.canWrite()) {
             waterMark = sheet.getWorkbook().getWaterMark();
@@ -1260,9 +1254,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             Path image = media.resolve("image" + sheet.getWorkbook().incrementMediaCounter() + waterMark.getSuffix());
 
             Files.copy(waterMark.get(), image);
-            sheet.addRel(r = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
+            Relationship r = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
+            sheet.addRel(r);
+
+            bw.write("<picture r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
         }
-        return r;
     }
 
     /**
