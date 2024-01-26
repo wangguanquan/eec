@@ -26,11 +26,11 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Col;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReadException;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.util.DateUtil;
-import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -214,6 +214,15 @@ public class TemplateSheet extends Sheet {
         double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
         if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
         if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
+        
+        // 图片
+        List<Drawings.Picture> pictures = sheet.listPictures();
+        // FIXME 其它图片支持
+        if (pictures != null && !pictures.isEmpty()) {
+            for (Drawings.Picture p : pictures) {
+                if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+            }
+        }
 
         // 初始化行迭代器
         rowIterator = sheet.iterator();
@@ -233,7 +242,7 @@ public class TemplateSheet extends Sheet {
             for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
                 Row row = rowBlock.next();
                 org.ttzero.excel.reader.Row row0 = rowIterator.next();
-                row.index = rows = row0.getRowNum();
+                row.index = rows = row0.getRowNum() - 1;
                 if (row0.getHeight() != null) {
                     row.height = row0.getHeight();
                 }
