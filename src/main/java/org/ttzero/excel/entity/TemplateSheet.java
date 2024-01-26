@@ -255,41 +255,43 @@ public class TemplateSheet extends Sheet {
 
                     // 复制数据
                     switch (row0.getCellType(cell0)) {
-                        case STRING: cell.setString(row0.getString(cell0)); break;
-                        case LONG: cell.setLong(row0.getLong(cell0)); break;
-                        case INTEGER: cell.setInt(row0.getInt(cell0)); break;
-                        case DATE: cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
-                        case BOOLEAN: cell.setBool(row0.getBoolean(cell0)); break;
+                        case STRING:  cell.setString(row0.getString(cell0));                                break;
+                        case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
+                        case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
+                        case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
+                        case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
                         default:
                     }
 
-                    // 复制样式
-                    if (cell0.xf > 0) {
-                        Integer xf = styleMap.get(cell0.xf);
-                        if (xf != null) cell.xf = xf;
-                        else {
-                            int style = row0.getCellStyle(cell0);
-                            xf = 0;
-                            // 字体
-                            Font font = styles0.getFont(style);
-                            if (font != null) xf |= styles.addFont(font);
-                            // 填充
-                            Fill fill = styles0.getFill(style);
-                            if (fill != null) xf |= styles.addFill(fill);
-                            // 边框
-                            Border border = styles0.getBorder(style);
-                            if (border != null) xf |= styles.addBorder(border);
-                            // 格式化
-                            NumFmt numFmt = styles0.getNumFmt(style);
-                            if (numFmt != null) xf |= styles.addNumFmt(numFmt);
-                            // 水平对齐、垂直对齐
-                            int h = styles0.getHorizontal(style), v = styles0.getVertical(style);
+                    // 无样式
+                    if (cell0.xf <= 0) continue;
 
-                            // 添加进样式
-                            cell.xf = styles.of(xf | h | v);
-                            styleMap.put(cell0.xf, cell.xf);
-                        }
+                    // 复制样式
+                    Integer xf = styleMap.get(cell0.xf);
+                    if (xf != null) cell.xf = xf;
+                    else {
+                        int style = row0.getCellStyle(cell0);
+                        xf = 0;
+                        // 字体
+                        Font font = styles0.getFont(style);
+                        if (font != null) xf |= styles.addFont(font);
+                        // 填充
+                        Fill fill = styles0.getFill(style);
+                        if (fill != null) xf |= styles.addFill(fill);
+                        // 边框
+                        Border border = styles0.getBorder(style);
+                        if (border != null) xf |= styles.addBorder(border);
+                        // 格式化
+                        NumFmt numFmt = styles0.getNumFmt(style);
+                        if (numFmt != null) xf |= styles.addNumFmt(numFmt);
+                        // 水平对齐、垂直对齐、自动折行
+                        int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
+
+                        // 添加进样式表
+                        cell.xf = styles.of(xf | h | v | w);
+                        styleMap.put(cell0.xf, cell.xf);
                     }
+
 
 //                    cellValueAndStyle.reset(row, cell, e, hc);
 //                    if (hasGlobalStyleProcessor) {
