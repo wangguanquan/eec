@@ -190,7 +190,7 @@ public class CSVSheet extends Sheet {
                 Cell cell = cells[i];
                 cell.clear();
 
-                cell.setSv(csvRow[i]);
+                cell.setString(csvRow[i]);
                 cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
 //                cellValueAndStyle.reset(rows, cell, csvRow[i], hc);
             }

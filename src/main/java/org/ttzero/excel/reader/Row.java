@@ -278,13 +278,13 @@ public abstract class Row {
     public Boolean getBoolean(Cell c) {
         boolean v;
         switch (c.t) {
-            case BOOL       : v = c.bv;                                 break;
-            case NUMERIC    : v = c.nv != 0;                            break;
-            case LONG       : v = c.lv != 0L;                           break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : v = "true".equalsIgnoreCase(c.sv);        break;
-            case DECIMAL    : v = c.mv.compareTo(BigDecimal.ZERO) != 0; break;
-            case DOUBLE     : v = c.dv != .0D;                          break;
+            case BOOL       : v = c.boolVal;                                 break;
+            case NUMERIC    : v = c.intVal != 0;                             break;
+            case LONG       : v = c.longVal != 0L;                           break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : v = "true".equalsIgnoreCase(c.stringVal);      break;
+            case DECIMAL    : v = c.decimal.compareTo(BigDecimal.ZERO) != 0; break;
+            case DOUBLE     : v = c.doubleVal != .0D;                        break;
             case BLANK      :
             case EMPTY_TAG  :
             case UNALLOCATED: return null;
@@ -324,11 +324,11 @@ public abstract class Row {
     public Byte getByte(Cell c) {
         byte b = 0;
         switch (c.t) {
-            case NUMERIC    : b |= c.nv;                                break;
-            case LONG       : b |= c.lv;                                break;
-            case DECIMAL    : b = c.mv.byteValue();                     break;
-            case DOUBLE     : b |= (int) c.dv;                          break;
-            case BOOL       : b |= c.bv ? 1 : 0;                        break;
+            case NUMERIC    : b |= c.intVal;                            break;
+            case LONG       : b |= c.longVal;                           break;
+            case DECIMAL    : b = c.decimal.byteValue();                break;
+            case DOUBLE     : b |= (int) c.doubleVal;                   break;
+            case BOOL       : b |= c.boolVal ? 1 : 0;                   break;
             default         : return null;
         }
         return b;
@@ -365,13 +365,13 @@ public abstract class Row {
     public Character getChar(Cell c) {
         char cc = 0;
         switch (c.t) {
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv));   // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : if (isNotEmpty(c.sv)) cc = c.sv.charAt(0);  break;
-            case NUMERIC    : cc |= c.nv;                                 break;
-            case LONG       : cc |= c.lv;                                 break;
-            case BOOL       : cc |= c.bv ? 1 : 0;                         break;
-            case DECIMAL    : cc |= c.mv.intValue();                      break;
-            case DOUBLE     : cc |= (int) c.dv;                           break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : if (isNotEmpty(c.stringVal)) cc = c.stringVal.charAt(0); break;
+            case NUMERIC    : cc |= c.intVal;                           break;
+            case LONG       : cc |= c.longVal;                          break;
+            case BOOL       : cc |= c.boolVal ? 1 : 0;                  break;
+            case DECIMAL    : cc |= c.decimal.intValue();               break;
+            case DOUBLE     : cc |= (int) c.doubleVal;                  break;
             default         : return null;
         }
         return cc;
@@ -408,23 +408,23 @@ public abstract class Row {
     public Short getShort(Cell c) {
         short s = 0;
         switch (c.t) {
-            case NUMERIC    : s |= c.nv;                                break;
-            case LONG       : s |= c.lv;                                break;
-            case DECIMAL    : s = c.mv.shortValue();                    break;
-            case DOUBLE     : s |= (int) c.dv;                          break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case NUMERIC    : s |= c.intVal;                            break;
+            case LONG       : s |= c.longVal;                           break;
+            case DECIMAL    : s = c.decimal.shortValue();               break;
+            case DOUBLE     : s |= (int) c.doubleVal;                   break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR  :
-                if (StringUtil.isEmpty(c.sv)) return null;
-                String ss = c.sv.trim();
+                if (StringUtil.isEmpty(c.stringVal)) return null;
+                String ss = c.stringVal.trim();
                 int t = testNumberType(ss.toCharArray(), 0, ss.length());
                 switch (t) {
                     case 1  : s |= Integer.parseInt(ss);                break;
                     case 2  : s |= Long.parseLong(ss);                  break;
                     case 3  : s = (short) Double.parseDouble(ss);       break;
                     case 0  : return null;
-                    default : throw new NumberFormatException("For input string: \"" + c.sv + "\"");
+                    default : throw new NumberFormatException("For input string: \"" + c.stringVal + "\"");
                 }                                                       break;
-            case BOOL       : s |= c.bv ? 1 : 0;                        break;
+            case BOOL       : s |= c.boolVal ? 1 : 0;                   break;
             default         : return null;
         }
         return s;
@@ -461,23 +461,23 @@ public abstract class Row {
     public Integer getInt(Cell c) {
         int n = 0;
         switch (c.t) {
-            case NUMERIC    : n = c.nv;                                 break;
-            case LONG       : n = (int) c.lv;                           break;
-            case DECIMAL    : n = c.mv.intValue();                      break;
-            case DOUBLE     : n = (int) c.dv;                           break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case NUMERIC    : n = c.intVal;                             break;
+            case LONG       : n = (int) c.longVal;                      break;
+            case DECIMAL    : n = c.decimal.intValue();                 break;
+            case DOUBLE     : n = (int) c.doubleVal;                    break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR  :
-                if (StringUtil.isEmpty(c.sv)) return null;
-                String ss = c.sv.trim();
+                if (StringUtil.isEmpty(c.stringVal)) return null;
+                String ss = c.stringVal.trim();
                 int t = testNumberType(ss.toCharArray(), 0, ss.length());
                 switch (t) {
                     case 1  : n = Integer.parseInt(ss);                 break;
                     case 2  : n |= Long.parseLong(ss);                  break;
                     case 3  : n = (int) Double.parseDouble(ss);         break;
                     case 0  : return null;
-                    default : throw new NumberFormatException("For input string: \"" + c.sv + "\"");
+                    default : throw new NumberFormatException("For input string: \"" + c.stringVal + "\"");
                 }                                                       break;
-            case BOOL       : n = c.bv ? 1 : 0;                         break;
+            case BOOL       : n = c.boolVal ? 1 : 0;                    break;
             default         : return null;
         }
         return n;
@@ -514,23 +514,23 @@ public abstract class Row {
     public Long getLong(Cell c) {
         long l;
         switch (c.t) {
-            case LONG       : l = c.lv;                                 break;
-            case NUMERIC    : l = c.nv;                                 break;
-            case DECIMAL    : l = c.mv.longValue();                     break;
-            case DOUBLE     : l = (long) c.dv;                          break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case LONG       : l = c.longVal;                            break;
+            case NUMERIC    : l = c.intVal;                             break;
+            case DECIMAL    : l = c.decimal.longValue();                break;
+            case DOUBLE     : l = (long) c.doubleVal;                   break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR  :
-                if (StringUtil.isEmpty(c.sv)) return null;
-                String ss = c.sv.trim();
+                if (StringUtil.isEmpty(c.stringVal)) return null;
+                String ss = c.stringVal.trim();
                 int t = testNumberType(ss.toCharArray(), 0, ss.length());
                 switch (t) {
                     case 1  :
                     case 2  : l = Long.parseLong(ss);                   break;
                     case 3  : l = (long) Double.parseDouble(ss);        break;
                     case 0  : return null;
-                    default : throw new NumberFormatException("For input string: \"" + c.sv + "\"");
+                    default : throw new NumberFormatException("For input string: \"" + c.stringVal + "\"");
                 }                                                       break;
-            case BOOL       : l = c.bv ? 1L : 0L;                       break;
+            case BOOL       : l = c.boolVal ? 1L : 0L;                  break;
             default         : return null;
         }
         return l;
@@ -567,17 +567,17 @@ public abstract class Row {
     public String getString(Cell c) {
         String s;
         switch (c.t) {
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : s = c.sv;                                 break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : s = c.stringVal;                          break;
             case BLANK      :
             case EMPTY_TAG  :
             case UNALLOCATED: s = null;                                 break;
-            case LONG       : s = String.valueOf(c.lv);                 break;
-            case NUMERIC    : s = String.valueOf(c.nv);                 break;
-            case DECIMAL    : s = c.mv.toString();                      break;
-            case DOUBLE     : s = String.valueOf(c.dv);                 break;
-            case BOOL       : s = c.bv ? "true" : "false";              break;
-            default         : s = c.sv;
+            case LONG       : s = String.valueOf(c.longVal);            break;
+            case NUMERIC    : s = String.valueOf(c.intVal);             break;
+            case DECIMAL    : s = c.decimal.toString();                 break;
+            case DOUBLE     : s = String.valueOf(c.doubleVal);          break;
+            case BOOL       : s = c.boolVal ? "true" : "false";         break;
+            default         : s = c.stringVal;
         }
         return s;
     }
@@ -646,13 +646,13 @@ public abstract class Row {
     public Double getDouble(Cell c) {
         double d;
         switch (c.t) {
-            case DECIMAL    : d = c.mv.doubleValue();                   break;
-            case DOUBLE     : d = c.dv;                                 break;
-            case NUMERIC    : d = c.nv;                                 break;
-            case LONG       : d = c.lv;                                 break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case DECIMAL    : d = c.decimal.doubleValue();              break;
+            case DOUBLE     : d = c.doubleVal;                          break;
+            case NUMERIC    : d = c.intVal;                             break;
+            case LONG       : d = c.longVal;                            break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR  :
-                if (isNotBlank(c.sv)) d = Double.parseDouble(c.sv.trim());
+                if (isNotBlank(c.stringVal)) d = Double.parseDouble(c.stringVal.trim());
                 else return null;                                       break;
             default         : return null;
         }
@@ -690,12 +690,12 @@ public abstract class Row {
     public BigDecimal getDecimal(Cell c) {
         BigDecimal bd;
         switch (c.t) {
-            case DECIMAL    : bd = c.mv;                                break;
-            case DOUBLE     : bd = BigDecimal.valueOf(c.dv);            break;
-            case NUMERIC    : bd = BigDecimal.valueOf(c.nv);            break;
-            case LONG       : bd = BigDecimal.valueOf(c.lv);            break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : bd = isNotBlank(c.sv) ? new BigDecimal(c.sv.trim()) : null; break;
+            case DECIMAL    : bd = c.decimal;                            break;
+            case DOUBLE     : bd = BigDecimal.valueOf(c.doubleVal);      break;
+            case NUMERIC    : bd = BigDecimal.valueOf(c.intVal);         break;
+            case LONG       : bd = BigDecimal.valueOf(c.longVal);        break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : bd = isNotBlank(c.stringVal) ? new BigDecimal(c.stringVal.trim()) : null; break;
             default         : bd = null;
         }
         return bd;
@@ -732,11 +732,11 @@ public abstract class Row {
     public Date getDate(Cell c) {
         Date date;
         switch (c.t) {
-            case NUMERIC    : date = toDate(c.nv);                      break;
-            case DECIMAL    : date = toDate(c.mv.doubleValue());        break;
-            case DOUBLE     : date = toDate(c.dv);                      break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : date = isNotBlank(c.sv) ? toDate(c.sv.trim()) : null; break;
+            case NUMERIC    : date = toDate(c.intVal);                  break;
+            case DECIMAL    : date = toDate(c.decimal.doubleValue());   break;
+            case DOUBLE     : date = toDate(c.doubleVal);               break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : date = isNotBlank(c.stringVal) ? toDate(c.stringVal.trim()) : null; break;
             default         : date = null;
         }
         return date;
@@ -773,11 +773,11 @@ public abstract class Row {
     public Timestamp getTimestamp(Cell c) {
         Timestamp ts;
         switch (c.t) {
-            case NUMERIC    : ts = toTimestamp(c.nv);                   break;
-            case DECIMAL    : ts = toTimestamp(c.mv.doubleValue());     break;
-            case DOUBLE     : ts = toTimestamp(c.dv);                   break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : ts = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()) : null; break;
+            case NUMERIC    : ts = toTimestamp(c.intVal);                break;
+            case DECIMAL    : ts = toTimestamp(c.decimal.doubleValue()); break;
+            case DOUBLE     : ts = toTimestamp(c.doubleVal);             break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : ts = isNotBlank(c.stringVal) ? toTimestamp(c.stringVal.trim()) : null; break;
             default         : ts = null;
         }
         return ts;
@@ -812,10 +812,10 @@ public abstract class Row {
     public java.sql.Time getTime(Cell c) {
         java.sql.Time t;
         switch (c.t) {
-            case DECIMAL    : t = toTime(c.mv.doubleValue());           break;
-            case DOUBLE     : t = toTime(c.dv);                         break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : t = isNotBlank(c.sv) ? toTime(c.sv.trim()) : null; break;
+            case DECIMAL    : t = toTime(c.decimal.doubleValue());                          break;
+            case DOUBLE     : t = toTime(c.doubleVal);                                      break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : t = isNotBlank(c.stringVal) ? toTime(c.stringVal.trim()) : null; break;
             default         : t = null;
         }
         return t;
@@ -852,11 +852,11 @@ public abstract class Row {
     public LocalDateTime getLocalDateTime(Cell c) {
         LocalDateTime ldt;
         switch (c.t) {
-            case NUMERIC    : ldt = toLocalDateTime(c.nv);              break;
-            case DECIMAL    : ldt = toLocalDateTime(c.mv.doubleValue());break;
-            case DOUBLE     : ldt = toLocalDateTime(c.dv);              break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : ldt = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime() : null; break;
+            case NUMERIC    : ldt = toLocalDateTime(c.intVal);                              break;
+            case DECIMAL    : ldt = toLocalDateTime(c.decimal.doubleValue());               break;
+            case DOUBLE     : ldt = toLocalDateTime(c.doubleVal);                           break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : ldt = isNotBlank(c.stringVal) ? toTimestamp(c.stringVal.trim()).toLocalDateTime() : null; break;
             default         : ldt = null;
         }
         return ldt;
@@ -893,11 +893,11 @@ public abstract class Row {
     public LocalDate getLocalDate(Cell c) {
         LocalDate ld;
         switch (c.t) {
-            case NUMERIC    : ld = toLocalDate(c.nv);                   break;
-            case DECIMAL    : ld = toLocalDate(c.mv.intValue());        break;
-            case DOUBLE     : ld = toLocalDate((int) c.dv);             break;
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : ld = isNotBlank(c.sv) ? toTimestamp(c.sv.trim()).toLocalDateTime().toLocalDate() : null; break;
+            case NUMERIC    : ld = toLocalDate(c.intVal);                   break;
+            case DECIMAL    : ld = toLocalDate(c.decimal.intValue());       break;
+            case DOUBLE     : ld = toLocalDate((int) c.doubleVal);          break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : ld = isNotBlank(c.stringVal) ? toTimestamp(c.stringVal.trim()).toLocalDateTime().toLocalDate() : null; break;
             default         : ld = null;
         }
         return ld;
@@ -934,16 +934,16 @@ public abstract class Row {
     public LocalTime getLocalTime(Cell c) {
         LocalTime lt;
         switch (c.t) {
-            case NUMERIC     : lt = toLocalTime(c.nv);                  break;
-            case DECIMAL     : lt = toLocalTime(c.mv.doubleValue());    break;
-            case DOUBLE      : lt = toLocalTime(c.dv);                  break;
-            case SST         : if (c.sv == null) c.setSv(sst.get(c.nv));// @Mark:=>There is no missing `break`, this is normal logic here
+            case NUMERIC     : lt = toLocalTime(c.intVal);                  break;
+            case DECIMAL     : lt = toLocalTime(c.decimal.doubleValue());   break;
+            case DOUBLE      : lt = toLocalTime(c.doubleVal);               break;
+            case SST         : if (c.stringVal == null) c.setString(sst.get(c.intVal));// @Mark:=>There is no missing `break`, this is normal logic here
             case INLINESTR   :
-                if (isNotBlank(c.sv)) {
-                    c.sv = c.sv.trim();
+                if (isNotBlank(c.stringVal)) {
+                    c.stringVal = c.stringVal.trim();
                     // 00:00:00
-                    if (c.sv.length() == 8 && c.sv.charAt(2) == ':' && c.sv.charAt(5) == ':') lt = toLocalTime(c.sv);
-                    else lt = toTimestamp(c.sv).toLocalDateTime().toLocalTime();
+                    if (c.stringVal.length() == 8 && c.stringVal.charAt(2) == ':' && c.stringVal.charAt(5) == ':') lt = toLocalTime(c.stringVal);
+                    else lt = toTimestamp(c.stringVal).toLocalDateTime().toLocalTime();
                 } else lt = null;
                 break;
             default          : lt = null;
@@ -1106,11 +1106,11 @@ public abstract class Row {
     public boolean isBlank(Cell c) {
         boolean blank;
         switch (c.t) {
-            case SST        : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : blank = StringUtil.isBlank(c.sv); break;
+            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+            case INLINESTR  : blank = StringUtil.isBlank(c.stringVal); break;
             case BLANK      :
             case EMPTY_TAG  :
-            case UNALLOCATED: blank = true;                     break;
+            case UNALLOCATED: blank = true; break;
             default         : blank = false;
         }
         return blank;
@@ -1225,26 +1225,26 @@ public abstract class Row {
         for (int i = fc; i < lc; i++) {
             Cell c = cells[i];
             switch (c.t) {
-                case SST      : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-                case INLINESTR: joiner.add(c.sv);                 break;
+                case SST      : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+                case INLINESTR: joiner.add(c.stringVal); break;
                 case NUMERIC  :
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.nv));
-                    else joiner.add(toLocalDate(c.nv).toString());
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.intVal));
+                    else joiner.add(toLocalDate(c.intVal).toString());
                     break;
-                case LONG     : joiner.add(String.valueOf(c.lv)); break;
+                case LONG     : joiner.add(String.valueOf(c.longVal)); break;
                 case DECIMAL:
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(c.mv.toString());
-                    else if (c.mv.compareTo(BigDecimal.ONE) > 0) joiner.add(toTimestamp(c.mv.doubleValue()).toString());
-                    else joiner.add(toLocalTime(c.mv.doubleValue()).toString());
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(c.decimal.toString());
+                    else if (c.decimal.compareTo(BigDecimal.ONE) > 0) joiner.add(toTimestamp(c.decimal.doubleValue()).toString());
+                    else joiner.add(toLocalTime(c.decimal.doubleValue()).toString());
                     break;
                 case DOUBLE:
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.dv));
-                    else if (c.dv > 1.0000) joiner.add(toTimestamp(c.dv).toString());
-                    else joiner.add(toLocalTime(c.dv).toString());
+                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.doubleVal));
+                    else if (c.doubleVal > 1.0000) joiner.add(toTimestamp(c.doubleVal).toString());
+                    else joiner.add(toLocalTime(c.doubleVal).toString());
                     break;
                 case BLANK    :
-                case EMPTY_TAG: joiner.add(EMPTY);                break;
-                case BOOL     : joiner.add(String.valueOf(c.bv)); break;
+                case EMPTY_TAG: joiner.add(EMPTY); break;
+                case BOOL     : joiner.add(String.valueOf(c.boolVal)); break;
                 default       : joiner.add(null);
             }
         }
@@ -1268,26 +1268,26 @@ public abstract class Row {
             // Ignore null key
             if (key == null) continue;
             switch (c.t) {
-                case SST      : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-                case INLINESTR: data.put(key, c.sv);              break;
+                case SST      : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
+                case INLINESTR: data.put(key, c.stringVal); break;
                 case NUMERIC  :
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.nv);
-                    else data.put(key, toTimestamp(c.nv));
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.intVal);
+                    else data.put(key, toTimestamp(c.intVal));
                     break;
-                case LONG     :  data.put(key, c.lv);             break;
+                case LONG     :  data.put(key, c.longVal); break;
                 case DECIMAL  :
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.mv);
-                    else if (c.mv.compareTo(BigDecimal.ONE) > 0) data.put(key, toTimestamp(c.mv.doubleValue()));
-                    else data.put(key, toTime(c.mv.doubleValue()));
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.decimal);
+                    else if (c.decimal.compareTo(BigDecimal.ONE) > 0) data.put(key, toTimestamp(c.decimal.doubleValue()));
+                    else data.put(key, toTime(c.decimal.doubleValue()));
                     break;
                 case DOUBLE   :
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.dv);
-                    else if (c.dv > 1.00000) data.put(key, toTimestamp(c.dv));
-                    else data.put(key, toTime(c.dv));
+                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.doubleVal);
+                    else if (c.doubleVal > 1.00000) data.put(key, toTimestamp(c.doubleVal));
+                    else data.put(key, toTime(c.doubleVal));
                     break;
                 case BLANK    :
-                case EMPTY_TAG: data.put(key, EMPTY);             break;
-                case BOOL     : data.put(key, c.bv);              break;
+                case EMPTY_TAG: data.put(key, EMPTY); break;
+                case BOOL     : data.put(key, c.boolVal); break;
                 default       : data.put(key, null);
             }
         }

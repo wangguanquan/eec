@@ -125,39 +125,39 @@ public interface ICellValueAndStyle {
         if (isString(clazz)) {
             switch (hc.getColumnType()) {
                 // Default
-                case 0: cell.setSv(e.toString()); break;
+                case 0: cell.setString(e.toString()); break;
                 // Write as media (base64 image, remote url)
                 case 1: writeAsMedia(row, cell, e.toString(), hc, clazz); break;
-                default: cell.setSv(e.toString());
+                default: cell.setString(e.toString());
             }
         } else if (isDate(clazz)) {
-            cell.setIv(DateUtil.toDateTimeValue((java.util.Date) e));
+            cell.setDateTime(DateUtil.toDateTimeValue((java.util.Date) e));
         } else if (isDateTime(clazz)) {
-            cell.setIv(DateUtil.toDateTimeValue((Timestamp) e));
+            cell.setDateTime(DateUtil.toDateTimeValue((Timestamp) e));
         } else if (isChar(clazz)) {
-            cell.setCv((Character) e);
+            cell.setChar((Character) e);
         } else if (isShort(clazz)) {
-            cell.setNv((Short) e);
+            cell.setInt((Short) e);
         } else if (isInt(clazz)) {
-            cell.setNv((Integer) e);
+            cell.setInt((Integer) e);
         } else if (isLong(clazz)) {
-            cell.setLv((Long) e);
+            cell.setLong((Long) e);
         } else if (isFloat(clazz)) {
-            cell.setDv((Float) e);
+            cell.setDouble((Float) e);
         } else if (isDouble(clazz)) {
-            cell.setDv((Double) e);
+            cell.setDouble((Double) e);
         } else if (isBool(clazz)) {
-            cell.setBv((Boolean) e);
+            cell.setBool((Boolean) e);
         } else if (isBigDecimal(clazz)) {
-            cell.setMv((BigDecimal) e);
+            cell.setDecimal((BigDecimal) e);
         } else if (isLocalDate(clazz)) {
-            cell.setIv(DateUtil.toDateValue((java.time.LocalDate) e));
+            cell.setDateTime(DateUtil.toDateValue((java.time.LocalDate) e));
         } else if (isLocalDateTime(clazz)) {
-            cell.setIv(DateUtil.toDateTimeValue((java.time.LocalDateTime) e));
+            cell.setDateTime(DateUtil.toDateTimeValue((java.time.LocalDateTime) e));
         } else if (isTime(clazz)) {
-            cell.setTv(DateUtil.toTimeValue((java.sql.Time) e));
+            cell.setTime(DateUtil.toTimeValue((java.sql.Time) e));
         } else if (isLocalTime(clazz)) {
-            cell.setTv(DateUtil.toTimeValue((java.time.LocalTime) e));
+            cell.setTime(DateUtil.toTimeValue((java.time.LocalTime) e));
         }
         // Write as media if column-type equals {@code 1}
         else if (hc.getColumnType() == 1) {
@@ -221,7 +221,7 @@ public interface ICellValueAndStyle {
      * @param clazz 单元格值的数据类型
      */
     default void unknownType(Row row, Cell cell, Object e, Column hc, Class<?> clazz) {
-        cell.setSv(e.toString());
+        cell.setString(e.toString());
     }
 
     /**
@@ -247,7 +247,7 @@ public interface ICellValueAndStyle {
             downloadRemoteResource(row, cell, e, hc, clazz);
         }
         // Others
-        else cell.setSv(e);
+        else cell.setString(e);
     }
 
     /**
@@ -265,7 +265,7 @@ public interface ICellValueAndStyle {
      * @param clazz 单元格值的数据类型
      */
     default void downloadRemoteResource(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
-        cell.setSv(e);
+        cell.setString(e);
         cell.t = Cell.REMOTE_URL;
     }
 

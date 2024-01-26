@@ -68,31 +68,31 @@ public class Cell {
     /**
      * String value
      */
-    public String sv;
+    public String stringVal;
     /**
      * Integer value contain short
      */
-    public int nv;
+    public int intVal;
     /**
      * Long value
      */
-    public long lv;
+    public long longVal;
     /**
      * Double value contain float
      */
-    public double dv;
+    public double doubleVal;
     /**
      * Boolean value
      */
-    public boolean bv;
+    public boolean boolVal;
     /**
      * Char value
      */
-    public char cv;
+    public char charVal;
     /**
      * Decimal value
      */
-    public BigDecimal mv;
+    public BigDecimal decimal;
     /**
      * Style index
      */
@@ -135,33 +135,33 @@ public class Cell {
         return this;
     }
 
-    public Cell setSv(String sv) {
+    public Cell setString(String sv) {
         this.t = INLINESTR;
-        this.sv = sv;
+        this.stringVal = sv;
         return this;
     }
 
-    public Cell setNv(int nv) {
+    public Cell setInt(int nv) {
         this.t = NUMERIC;
-        this.nv = nv;
+        this.intVal = nv;
         return this;
     }
 
-    public Cell setDv(double dv) {
+    public Cell setDouble(double dv) {
         this.t = DOUBLE;
-        this.dv = dv;
+        this.doubleVal = dv;
         return this;
     }
 
-    public Cell setBv(boolean bv) {
+    public Cell setBool(boolean bv) {
         this.t = BOOL;
-        this.bv = bv;
+        this.boolVal = bv;
         return this;
     }
 
-    public Cell setCv(char c) {
+    public Cell setChar(char c) {
         this.t = CHARACTER;
-        this.cv = c;
+        this.charVal = c;
         return this;
     }
 
@@ -175,33 +175,33 @@ public class Cell {
         return this;
     }
 
-    public Cell setLv(long lv) {
+    public Cell setLong(long lv) {
         this.t = LONG;
-        this.lv = lv;
+        this.longVal = lv;
         return this;
     }
 
-    public Cell setMv(BigDecimal mv) {
+    public Cell setDecimal(BigDecimal mv) {
         this.t = DECIMAL;
-        this.mv = mv;
+        this.decimal = mv;
         return this;
     }
 
-    public Cell setIv(double i) {
+    public Cell setDateTime(double i) {
         this.t = DATETIME;
-        this.dv = i;
+        this.doubleVal = i;
         return this;
     }
 
-    public Cell setAv(int a) {
+    public Cell setDate(int a) {
         this.t = DATE;
-        this.nv = a;
+        this.intVal = a;
         return this;
     }
 
-    public Cell setTv(double t) {
+    public Cell setTime(double t) {
         this.t = TIME;
-        this.dv = t;
+        this.doubleVal = t;
         return this;
     }
 
@@ -231,13 +231,13 @@ public class Cell {
 
     public Cell clear() {
         this.t  = UNALLOCATED;
-        this.sv = null;
-        this.nv = 0;
-        this.dv = 0.0;
-        this.bv = false;
-        this.lv = 0L;
-        this.cv = '\0';
-        this.mv = null;
+        this.stringVal = null;
+        this.intVal = 0;
+        this.doubleVal = 0.0;
+        this.boolVal = false;
+        this.longVal = 0L;
+        this.charVal = '\0';
+        this.decimal = null;
         this.xf = 0;
         this.fv = null;
         this.f  = false;
@@ -251,13 +251,13 @@ public class Cell {
 
     public Cell from(Cell cell) {
         this.t  = cell.t;
-        this.sv = cell.sv;
-        this.nv = cell.nv;
-        this.dv = cell.dv;
-        this.bv = cell.bv;
-        this.lv = cell.lv;
-        this.cv = cell.cv;
-        this.mv = cell.mv;
+        this.stringVal = cell.stringVal;
+        this.intVal = cell.intVal;
+        this.doubleVal = cell.doubleVal;
+        this.boolVal = cell.boolVal;
+        this.longVal = cell.longVal;
+        this.charVal = cell.charVal;
+        this.decimal = cell.decimal;
         this.xf = cell.xf;
         this.fv = cell.fv;
         this.f  = cell.f;

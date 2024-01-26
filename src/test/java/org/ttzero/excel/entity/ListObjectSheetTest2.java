@@ -602,28 +602,28 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 switch (cell.t) {
                     case INLINESTR:
                     case SST:
-                        writeString(cell.sv, r, col, xf);
+                        writeString(cell.stringVal, r, col, xf);
                         break;
                     case NUMERIC:
-                        writeNumeric(cell.nv, r, col, xf);
+                        writeNumeric(cell.intVal, r, col, xf);
                         break;
                     case LONG:
-                        writeNumeric(cell.lv, r, col, xf);
+                        writeNumeric(cell.longVal, r, col, xf);
                         break;
                     case DATE:
                     case DATETIME:
                     case DOUBLE:
                     case TIME:
-                        writeDouble(cell.dv, r, col, xf);
+                        writeDouble(cell.doubleVal, r, col, xf);
                         break;
                     case BOOL:
-                        writeBool(cell.bv, r, col, xf);
+                        writeBool(cell.boolVal, r, col, xf);
                         break;
                     case DECIMAL:
-                        writeDecimal(cell.mv, r, col, xf);
+                        writeDecimal(cell.decimal, r, col, xf);
                         break;
                     case CHARACTER:
-                        writeChar(cell.cv, r, col, xf);
+                        writeChar(cell.charVal, r, col, xf);
                         break;
                     case BLANK:
                         writeNull(r, col, xf);
@@ -647,8 +647,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     private static org.ttzero.excel.reader.Row createHeaderRow () {
         org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
         Cell[] cells = new Cell[2];
-        cells[0] = new Cell((short) 1).setSv("id");
-        cells[1] = new Cell((short) 2).setSv("name");
+        cells[0] = new Cell((short) 1).setString("id");
+        cells[1] = new Cell((short) 2).setString("name");
         headerRow.setCells(cells);
         return headerRow;
     }

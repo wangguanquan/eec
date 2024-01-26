@@ -326,28 +326,28 @@ public interface Sheet extends Closeable {
                     Cell c = row.cells[i];
                     switch (c.t) {
                         case SST:
-                            if (c.sv == null) c.setSv(row.sst.get(c.nv));
+                            if (c.stringVal == null) c.setString(row.sst.get(c.intVal));
                         case INLINESTR:
                         case FUNCTION:
-                            writer.write(c.sv);
+                            writer.write(c.stringVal);
                             break;
                         case NUMERIC:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.nv);
-                            else writer.write(toLocalDate(c.nv).toString());
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.intVal);
+                            else writer.write(toLocalDate(c.intVal).toString());
                             break;
                         case LONG:
-                            writer.write(c.lv);
+                            writer.write(c.longVal);
                             break;
                         case DECIMAL:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.mv.toString());
-                            else writer.write(toTimestamp(c.mv.doubleValue()).toString());
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.decimal.toString());
+                            else writer.write(toTimestamp(c.decimal.doubleValue()).toString());
                             break;
                         case DOUBLE:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.dv);
-                            else writer.write(toTimestamp(c.dv).toString());
+                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.doubleVal);
+                            else writer.write(toTimestamp(c.doubleVal).toString());
                             break;
                         case BOOL:
-                            writer.write(c.bv);
+                            writer.write(c.boolVal);
                             break;
                         default:
                             writer.writeEmpty();

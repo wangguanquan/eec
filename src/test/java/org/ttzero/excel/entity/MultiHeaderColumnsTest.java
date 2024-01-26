@@ -290,12 +290,12 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             // Specify single header row
             org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
             Cell[] cells = new Cell[6];
-            cells[0] = new Cell((short) 1).setSv("订单号");
-            cells[1] = new Cell((short) 2).setSv("收件人");
-            cells[2] = new Cell((short) 3).setSv("省");
-            cells[3] = new Cell((short) 4).setSv("市");
-            cells[4] = new Cell((short) 5).setSv("区");
-            cells[5] = new Cell((short) 6).setSv("详细地址");
+            cells[0] = new Cell((short) 1).setString("订单号");
+            cells[1] = new Cell((short) 2).setString("收件人");
+            cells[2] = new Cell((short) 3).setString("省");
+            cells[3] = new Cell((short) 4).setString("市");
+            cells[4] = new Cell((short) 5).setString("区");
+            cells[5] = new Cell((short) 6).setString("详细地址");
             headerRow.setCells(cells);
             readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(headerRow))
                 .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
@@ -306,12 +306,12 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             // Specify 2 header rows
             org.ttzero.excel.reader.Row headerRow2 = new org.ttzero.excel.reader.Row() {};
             Cell[] cells2 = new Cell[6];
-            cells2[0] = new Cell((short) 1).setSv("订单号");
-            cells2[1] = new Cell((short) 2).setSv("A:收件人");
-            cells2[2] = new Cell((short) 3).setSv("A:省");
-            cells2[3] = new Cell((short) 4).setSv("A:市");
-            cells2[4] = new Cell((short) 5).setSv("B:区");
-            cells2[5] = new Cell((short) 6).setSv("B:详细地址");
+            cells2[0] = new Cell((short) 1).setString("订单号");
+            cells2[1] = new Cell((short) 2).setString("A:收件人");
+            cells2[2] = new Cell((short) 3).setString("A:省");
+            cells2[3] = new Cell((short) 4).setString("A:市");
+            cells2[4] = new Cell((short) 5).setString("B:区");
+            cells2[5] = new Cell((short) 6).setString("B:详细地址");
             headerRow2.setCells(cells2);
             readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(2, headerRow2))
                 .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());

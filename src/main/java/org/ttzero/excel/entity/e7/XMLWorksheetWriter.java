@@ -555,22 +555,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:          writeString(cell.sv, r, i, xf);         break;
-                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);        break;
-                case LONG:         writeNumeric(cell.lv, r, i, xf);        break;
+                case SST:          writeString(cell.stringVal, r, i, xf);      break;
+                case NUMERIC:      writeNumeric(cell.intVal, r, i, xf);        break;
+                case LONG:         writeNumeric(cell.longVal, r, i, xf);       break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:         writeDouble(cell.dv, r, i, xf);         break;
-                case BOOL:         writeBool(cell.bv, r, i, xf);           break;
-                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);        break;
-                case CHARACTER:    writeChar(cell.cv, r, i, xf);           break;
-                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);    break;
-                case BINARY:       writeBinary(cell.binary, r, i, xf);     break;
-                case FILE:         writeFile(cell.path, r, i, xf);         break;
-                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);        break;
-                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf); break;
-                case BLANK:        writeNull(r, i, xf);                    break;
+                case TIME:         writeDouble(cell.doubleVal, r, i, xf);      break;
+                case BOOL:         writeBool(cell.boolVal, r, i, xf);          break;
+                case DECIMAL:      writeDecimal(cell.decimal, r, i, xf);       break;
+                case CHARACTER:    writeChar(cell.charVal, r, i, xf);          break;
+                case REMOTE_URL:   writeRemoteMedia(cell.stringVal, r, i, xf); break;
+                case BINARY:       writeBinary(cell.binary, r, i, xf);         break;
+                case FILE:         writeFile(cell.path, r, i, xf);             break;
+                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);            break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);     break;
+                case BLANK:        writeNull(r, i, xf);                        break;
                 default:
             }
         }

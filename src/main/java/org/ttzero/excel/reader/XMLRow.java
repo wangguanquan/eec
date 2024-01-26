@@ -314,26 +314,26 @@ public class XMLRow extends Row {
             case INLINESTR: // inner string
                 a = getT();
                 if (a < cursor) {
-                    cell.setSv(escape(cb, a, cursor));
+                    cell.setString(escape(cb, a, cursor));
                 } else { // null value
                     cell.blank(); // Reset type to BLANK if null value
                 }
                 break;
             case SST: // shared string lazy get
                 a = getV();
-                cell.setNv(toInt(cb, a, cursor));
+                cell.setInt(toInt(cb, a, cursor));
                 cell.setT(SST);
                 break;
             case BOOL: // boolean value
                 a = getV();
                 if (cursor - a == 1) {
-                    cell.setBv(toInt(cb, a, cursor) == 1);
-                } else cell.setBv(false);
+                    cell.setBool(toInt(cb, a, cursor) == 1);
+                } else cell.setBool(false);
                 break;
             case FUNCTION: // function string
                 a = getV();
                 if (a < cursor) {
-                    cell.setSv(escape(cb, a, cursor));
+                    cell.setString(escape(cb, a, cursor));
                 } else { // null value
                     cell.blank(); // Reset type to BLANK if null value
                 }
@@ -349,16 +349,16 @@ public class XMLRow extends Row {
                     // 2: long
                     // 3: double
                     switch (t) {
-                        case 3: cell.setMv(new BigDecimal(cb, a, cursor - a)); break;
+                        case 3: cell.setDecimal(new BigDecimal(cb, a, cursor - a)); break;
                         case 2: {
                             long l = toLong(cb, a, cursor);
-                            if (l > Integer.MAX_VALUE || l < Integer.MIN_VALUE) cell.setLv(l);
-                            else cell.setNv((int) l);
+                            if (l > Integer.MAX_VALUE || l < Integer.MIN_VALUE) cell.setLong(l);
+                            else cell.setInt((int) l);
                             break;
                         }
-                        case 1: cell.setNv(toInt(cb, a, cursor));    break;
+                        case 1: cell.setInt(toInt(cb, a, cursor));    break;
                         case 0: cell.emptyTag();                     break;
-                        default: cell.setSv(escape(cb, a, cursor));
+                        default: cell.setString(escape(cb, a, cursor));
                     }
                 }
                 // Maybe the cell should be merged

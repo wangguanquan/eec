@@ -153,7 +153,7 @@ public class HeaderRow extends Row {
 
                 Cell cell = new Cell(hCell.i);
                 cell.xf = hCell.xf;
-                cell.setSv(this.names[i]);
+                cell.setString(this.names[i]);
                 this.cells[i] = cell;
             }
         } else {
@@ -176,7 +176,7 @@ public class HeaderRow extends Row {
                 Cell hCell = rows[rows.length - 1].getCell(i);
                 Cell cell = new Cell(hCell != null ? hCell.i : i);
                 cell.xf = hCell != null ? hCell.xf : 0;
-                cell.setSv(this.names[i]);
+                cell.setString(this.names[i]);
                 this.cells[i] = cell;
             }
         }
@@ -307,10 +307,10 @@ public class HeaderRow extends Row {
                 for (int j = sub.length - 1, t; j >= 0; j--) {
                     if (mergedGrid.test(t = sub.length - j, c.realColIndex) && isTopRow(mergeCells, t, c.realColIndex)) {
                         Cell cell = new Cell((short) c.realColIndex);
-                        if (StringUtil.isNotEmpty(sub[j].getName())) cell.setSv(sub[j].getName());
+                        if (StringUtil.isNotEmpty(sub[j].getName())) cell.setString(sub[j].getName());
                         else cell.t = Cell.EMPTY_TAG;
                         mergedGrid.merge(t, cell);
-                        sub[j].name = cell.sv;
+                        sub[j].name = cell.stringVal;
                     }
                 }
             }
@@ -854,7 +854,7 @@ public class HeaderRow extends Row {
                     if (b > 0) {
                         for (int a = r; a < c; a++) {
                             Row t = rows[a];
-                            for (int j = d.firstColumn - 1; j < d.lastColumn; t.cells[j++].setSv(null));
+                            for (int j = d.firstColumn - 1; j < d.lastColumn; t.cells[j++].setString(null));
                         }
                     }
                     Row lastRow = rows[c];
