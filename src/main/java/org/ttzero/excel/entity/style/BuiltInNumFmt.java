@@ -176,7 +176,7 @@ public final class BuiltInNumFmt {
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder();
-            if (!Locale.ROOT.equals(locale)) {
+            if (locale != null && !Locale.ROOT.equals(locale)) {
                 buf.append('[').append(locale.getLanguage()).append('-').append(locale.getCountry());
                 if (unicode) {
                     buf.append('-').append("unicode");
