@@ -57,6 +57,10 @@ import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
  */
 public class Column {
     /**
+     * 未实例化的列，可用于在写超出预知范围外的列
+     */
+    public static final Column UNALLOCATED_COLUMN = new Column();
+    /**
      * Java对象中的字段、Map的Key或者SQL语句中的select字段，具体值由工作表类型决定
      */
     public String key;
