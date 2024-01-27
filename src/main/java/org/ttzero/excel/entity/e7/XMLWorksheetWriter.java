@@ -593,7 +593,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             throw new ExcelWriteException("Characters per cell out of limit. size=" + s.length()
                 + ", limit=" + Const.Limit.MAX_CHARACTERS_PER_CELL);
         }
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -634,7 +634,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeDouble(double d, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -664,7 +664,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -693,7 +693,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeChar(char c, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -728,7 +728,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -756,7 +756,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+        Column hc = getColumn(column);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
@@ -782,7 +782,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeNull(int row, int column, int xf) throws IOException {
         bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
+        bw.write(int2Col(getColumn(column).getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
         bw.writeInt(xf);
@@ -1520,7 +1520,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.col = column;
         picture.row = row;
         picture.setPadding(1);
-        picture.effect = columns[column].effect;
+        picture.effect = getColumn(column).effect;
 
         return picture;
     }
@@ -1563,5 +1563,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             fs[xf] = f = styles.getFont(style);
         }
         return f;
+    }
+
+    /**
+     * 获取列属性
+     *
+     * @param index 列下标（从0开始）
+     * @return 列属性（不为{@code null}）
+     */
+    protected Column getColumn(int index) {
+        Column hc = index < columns.length ? columns[index] : null;
+        if (hc == null) {
+            hc = Column.UNALLOCATED_COLUMN;
+            hc.realColIndex = index + 1;
+        }
+        return hc;
     }
 }
