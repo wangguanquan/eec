@@ -199,7 +199,7 @@ public class TemplateSheet extends Sheet {
         int len = cols.get(cols.size() - 1).max, i = 0;
         columns = new Column[len];
         for (Col col : cols) {
-            for (int a = col.min; a <= col.max; a++) {
+            for (int a = Math.min(i + 1, col.min); a <= col.max; a++) {
                 Column c = new Column();
                 c.width = col.width;
                 c.colIndex = a - 1;
