@@ -167,8 +167,6 @@ public class Styles implements Storable {
         self.numFmts = new ArrayList<>();
 
         self.fonts = new ArrayList<>();
-        Font font1 = new Font(i18N.get("en-font-family"), 11, Color.black);  // en
-        self.addFont(font1);
 
         String lang = Locale.getDefault().toLanguageTag();
         // Add chinese font
