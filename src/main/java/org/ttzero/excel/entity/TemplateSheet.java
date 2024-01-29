@@ -177,13 +177,17 @@ public class TemplateSheet extends Sheet {
     }
 
     @Override
-    protected Column[] getHeaderColumns() {
+    public Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
             // 解析模板工作表并复制信息到当前工作表中
             int size = init();
             if (size <= 0) {
                 columns = new Column[0];
             }
+            // Mark ext-properties
+            markExtProp();
+
+            headerReady = true;
         }
         return columns;
     }
@@ -200,7 +204,7 @@ public class TemplateSheet extends Sheet {
 
         // TODO 合并（较为复杂不能简单复制，需要计算中间插入或扣除的行）
         List<Dimension> mergeCells = sheet.getMergeCells();
-        if (panes != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+        if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
 
         // 过滤
         Dimension autoFilter = sheet.getFilter();
