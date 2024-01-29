@@ -210,18 +210,29 @@ public class TemplateSheet extends Sheet {
         this.showGridLines = sheet.showGridLines();
 
         // 获取列属性
+        int len = 0;
         List<Col> cols = sheet.getCols();
-        cols.sort(Comparator.comparingInt(a -> a.max));
-        // 创建列
-        int len = cols.get(cols.size() - 1).max, i = 0;
-        columns = new Column[len];
-        for (Col col : cols) {
-            for (int a = Math.min(i + 1, col.min); a <= col.max; a++) {
-                Column c = new Column();
-                c.width = col.width;
-                c.colIndex = a - 1;
-                if (col.hidden) c.hide();
-                columns[i++] = c;
+        if (cols != null && !cols.isEmpty()) {
+            cols.sort(Comparator.comparingInt(a -> a.max));
+            // 创建列
+            len = cols.get(cols.size() - 1).max;
+            int i = 0;
+            columns = new Column[len];
+            for (Col col : cols) {
+                if (i + 1 < col.min) {
+                    for (int a = i + 1; a < col.min; a++) {
+                        Column c = new Column();
+                        c.colIndex = a - 1;
+                        columns[i++] = c;
+                    }
+                }
+                for (int a = col.min; a <= col.max; a++) {
+                    Column c = new Column();
+                    c.width = col.width;
+                    c.colIndex = a - 1;
+                    if (col.hidden) c.hide();
+                    columns[i++] = c;
+                }
             }
         }
         // 忽略表头输出
