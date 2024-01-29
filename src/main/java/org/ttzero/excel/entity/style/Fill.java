@@ -183,6 +183,33 @@ public class Fill implements Cloneable {
         return element;
     }
 
+    /**
+     * 解析Dom树并转为填充对象
+     *
+     * @param root dom树
+     * @param indexedColors 特殊indexed颜色（大部分情况下为null）
+     * @return 填充
+     */
+    public static List<Fill> domToFill(Element root, Color[] indexedColors) {
+        List<Fill> fills = domToFill(root);
+        int indexed;
+        for (Fill fill : fills) {
+            if (fill.fgColor instanceof BuildInColor && (indexed = ((BuildInColor) fill.fgColor).getIndexed()) < indexedColors.length) {
+                fill.fgColor = indexedColors[indexed];
+            }
+            if (fill.bgColor instanceof BuildInColor && (indexed = ((BuildInColor) fill.bgColor).getIndexed()) < indexedColors.length) {
+                fill.bgColor = indexedColors[indexed];
+            }
+        }
+        return fills;
+    }
+
+    /**
+     * 解析Dom树并转为填充对象
+     *
+     * @param root dom树
+     * @return 填充
+     */
     public static List<Fill> domToFill(Element root) {
         // Fills tags
         Element ele = root.element("fills");

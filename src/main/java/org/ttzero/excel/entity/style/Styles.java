@@ -312,14 +312,33 @@ public class Styles implements Storable {
         // Parse Number format
         self.numFmts = NumFmt.domToNumFmt(root);
 
-        // Parse Fonts
-        self.fonts = Font.domToFont(root);
+        // Indexed Colors（部分Excel的indexed颜色与标准有所不同，这部分颜色会定义在<colors>标签下）
+        Element colors = root.element("colors");
+        if (colors != null) colors = colors.element("indexedColors");
+        if (colors != null && colors.nodeCount() > 0) {
+            List<Element> sub = colors.elements();
+            Color[] indexedColors = new Color[sub.size()];
+            int i = 0;
+            for (Element e : sub) indexedColors[i++] = parseColor(e);
 
-        // Parse Fills
-        self.fills = Fill.domToFill(root);
+            // Parse Fonts
+            self.fonts = Font.domToFont(root, indexedColors);
 
-        // Parse Borders
-        self.borders = Border.domToBorder(root);
+            // Parse Fills
+            self.fills = Fill.domToFill(root, indexedColors);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root, indexedColors);
+        } else {
+            // Parse Fonts
+            self.fonts = Font.domToFont(root);
+
+            // Parse Fills
+            self.fills = Fill.domToFill(root);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root);
+        }
 
         // Cell xf
         Element cellXfs = root.element("cellXfs");
