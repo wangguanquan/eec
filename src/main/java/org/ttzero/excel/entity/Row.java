@@ -36,7 +36,7 @@ public class Row {
     // Share cell
     Cell[] cells;
     // height
-    public double height = -1D;
+    public Double height;
 
     public int getIndex() {
         return index;
@@ -97,7 +97,7 @@ public class Row {
      *
      * @return 行高
      */
-    public double getHeight() {
+    public Double getHeight() {
         return height;
     }
 
@@ -107,7 +107,7 @@ public class Row {
      * @param height 行高
      * @return 当前行
      */
-    public Row setHeight(double height) {
+    public Row setHeight(Double height) {
         this.height = height;
         return this;
     }

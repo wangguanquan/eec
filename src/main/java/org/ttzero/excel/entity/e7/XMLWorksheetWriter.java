@@ -512,14 +512,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @return the row index (one base)
      * @throws IOException if I/O error occur
      */
-    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
+    protected int startRow(int rows, int columns, Double rowHeight) throws IOException {
         // Row number
         int r = rows + startRow;
 
         bw.write("<row r=\"");
         bw.writeInt(r);
         // default data row height 16.5
-        if (rowHeight >= 0D) {
+        if (rowHeight != null && rowHeight >= 0D) {
             bw.write("\" customHeight=\"1\" ht=\"");
             bw.write(rowHeight);
         }
