@@ -159,6 +159,23 @@ public class TemplateSheet extends Sheet {
         this.name = sheet.getName();
     }
 
+    /**
+     * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
+     * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
+     *
+     * @return 行块
+     */
+    public RowBlock nextBlock() {
+        // 清除数据（仅重置下标）
+        rowBlock.clear();
+
+        // 装载数据（这里不需要判断是否有表头，模板是没有表头的）
+        resetBlockData();
+
+        // 使其可读
+        return rowBlock.flip();
+    }
+
     @Override
     protected Column[] getHeaderColumns() {
         if (!headerReady) {
