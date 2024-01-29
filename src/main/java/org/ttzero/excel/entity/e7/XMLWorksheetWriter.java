@@ -81,6 +81,7 @@ import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DECIMAL;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
 import static org.ttzero.excel.reader.Cell.FILE;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
@@ -576,7 +577,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 case FILE:         writeFile(cell.path, r, i, xf);             break;
                 case INPUT_STREAM: writeStream(cell.isv, r, i, xf);            break;
                 case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);     break;
-                case BLANK:        writeNull(r, i, xf);                        break;
+                case BLANK:
+                case EMPTY_TAG:    writeNull(r, i, xf);                        break;
                 default:
             }
         }
