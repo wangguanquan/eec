@@ -533,10 +533,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\" customHeight=\"1\" ht=\"");
             bw.write(rowHeight);
         }
-        bw.write("\" spans=\"");
-        bw.writeInt(this.columns[0].realColIndex);
-        bw.write(':');
-        bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        if (this.columns.length > 0) {
+            bw.write("\" spans=\"");
+            bw.writeInt(this.columns[0].realColIndex);
+            bw.write(':');
+            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        } else {
+            bw.write("\" spans=\"1:");
+            bw.writeInt(columns);
+        }
         bw.write("\">");
         return r;
     }
