@@ -215,9 +215,13 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Boolean showGridLines;
     /**
-     * 指定表头行高和数据行高
+     * 指定表头行高
      */
-    protected double headerRowHeight = 20.5D, rowHeight = -1D;
+    protected double headerRowHeight = 20.5D;
+    /**
+     * 指定数据行高
+     */
+    protected Double rowHeight;
     /**
      * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
      */
@@ -620,9 +624,9 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 获取数据行高
      *
-     * @return 数据行高
+     * @return 数据行高，返回{@code null}时使用默认行高
      */
-    public double getRowHeight() {
+    public Double getRowHeight() {
         return rowHeight;
     }
 
@@ -1121,7 +1125,7 @@ public abstract class Sheet implements Cloneable, Storable {
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
         Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, ColorIndex.toColor(fontColor));
+                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
         return styles.addFont(font)
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))

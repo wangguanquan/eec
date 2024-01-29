@@ -722,6 +722,25 @@ public class Font implements Cloneable {
      * 解析字体
      *
      * @param root styles树root
+     * @param indexedColors 特殊indexed颜色（大部分情况下为null）
+     * @return styles字体
+     */
+    public static List<Font> domToFont(Element root, Color[] indexedColors) {
+        List<Font> fonts = domToFont(root);
+        // 替换特殊的indexed颜色
+        int indexed;
+        for (Font font : fonts) {
+            if ((font.color instanceof BuildInColor) && (indexed = ((BuildInColor) font.color).getIndexed()) < indexedColors.length) {
+                font.color = indexedColors[indexed];
+            }
+        }
+        return fonts;
+    }
+
+    /**
+     * 解析字体
+     *
+     * @param root styles树root
      * @return styles字体
      */
     public static List<Font> domToFont(Element root) {

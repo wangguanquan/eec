@@ -310,14 +310,33 @@ public class Styles implements Storable {
         // Parse Number format
         self.numFmts = NumFmt.domToNumFmt(root);
 
-        // Parse Fonts
-        self.fonts = Font.domToFont(root);
+        // Indexed Colors（部分Excel的indexed颜色与标准有所不同，这部分颜色会定义在<colors>标签下）
+        Element colors = root.element("colors");
+        if (colors != null) colors = colors.element("indexedColors");
+        if (colors != null && colors.nodeCount() > 0) {
+            List<Element> sub = colors.elements();
+            Color[] indexedColors = new Color[sub.size()];
+            int i = 0;
+            for (Element e : sub) indexedColors[i++] = parseColor(e);
 
-        // Parse Fills
-        self.fills = Fill.domToFill(root);
+            // Parse Fonts
+            self.fonts = Font.domToFont(root, indexedColors);
 
-        // Parse Borders
-        self.borders = Border.domToBorder(root);
+            // Parse Fills
+            self.fills = Fill.domToFill(root, indexedColors);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root, indexedColors);
+        } else {
+            // Parse Fonts
+            self.fonts = Font.domToFont(root);
+
+            // Parse Fills
+            self.fills = Fill.domToFill(root);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root);
+        }
 
         // Cell xf
         Element cellXfs = root.element("cellXfs");
@@ -915,7 +934,7 @@ public class Styles implements Storable {
         Color c = null;
         // Standard Alpha Red Green Blue color value (ARGB).
         if (StringUtil.isNotEmpty(rgb)) {
-            c = ColorIndex.toColor(rgb);
+            c = toColor(rgb);
         }
         // Indexed color value. Only used for backwards compatibility.
         // References a color in indexedColors.
@@ -1139,19 +1158,22 @@ public class Styles implements Storable {
      * @throws IllegalArgumentException if convert failed.
      */
     public static Color toColor(String v) {
-        Color color;
-        if (v.charAt(0) == '#') {
-            try {
-                color = Color.decode(v);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
-            }
-        } else {
+        Color color = null;
+        final String source = v;
+        if (v.charAt(0) != '#') {
             try {
                 Field field = Color.class.getDeclaredField(v);
                 color = (Color) field.get(null);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
+                if (v.length() > 6) v = v.substring(v.length() - 6);
+                v = '#' + v;
+            }
+        }
+        if (color == null) {
+            try {
+                color = Color.decode(v);
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException("Color \"" + source + "\" not support.");
             }
         }
         return color;

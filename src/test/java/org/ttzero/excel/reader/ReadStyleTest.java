@@ -91,4 +91,31 @@ public class ReadStyleTest {
             });
         }
     }
+
+    @Test public void testSpecialIndexedColor() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#145.xlsx"))) {
+            Styles styles = reader.getStyles();
+            Border border = styles.getBorder(styles.getStyleByIndex(2));
+
+            // indexed color = 10 (255, 0, 0)
+            // 实际颜色 (170, 170, 170)
+
+            Border.SubBorder borderLeft = border.getBorderLeft();
+            assert borderLeft.style == BorderStyle.THIN;
+            assert borderLeft.color.equals(new Color(170, 170, 170));
+
+            Border.SubBorder borderTop = border.getBorderTop();
+            assert borderTop.style == BorderStyle.THIN;
+            assert borderTop.color.equals(new Color(170, 170, 170));
+
+            Border.SubBorder borderRight = border.getBorderRight();
+            assert borderRight.style == BorderStyle.THIN;
+            assert borderRight.color.equals(new Color(170, 170, 170));
+
+            Border.SubBorder borderBottom = border.getBorderBottom();
+            assert borderBottom.style == BorderStyle.THIN;
+            assert borderBottom.color.equals(new Color(170, 170, 170));
+        }
+    }
+
 }
