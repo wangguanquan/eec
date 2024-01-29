@@ -936,7 +936,7 @@ public class Styles implements Storable {
         Color c = null;
         // Standard Alpha Red Green Blue color value (ARGB).
         if (StringUtil.isNotEmpty(rgb)) {
-            c = ColorIndex.toColor(rgb);
+            c = toColor(rgb);
         }
         // Indexed color value. Only used for backwards compatibility.
         // References a color in indexedColors.
@@ -1160,19 +1160,22 @@ public class Styles implements Storable {
      * @throws IllegalArgumentException if convert failed.
      */
     public static Color toColor(String v) {
-        Color color;
-        if (v.charAt(0) == '#') {
-            try {
-                color = Color.decode(v);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
-            }
-        } else {
+        Color color = null;
+        final String source = v;
+        if (v.charAt(0) != '#') {
             try {
                 Field field = Color.class.getDeclaredField(v);
                 color = (Color) field.get(null);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
+                if (v.length() > 6) v = v.substring(v.length() - 6);
+                v = '#' + v;
+            }
+        }
+        if (color == null) {
+            try {
+                color = Color.decode(v);
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException("Color \"" + source + "\" not support.");
             }
         }
         return color;

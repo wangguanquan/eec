@@ -122,13 +122,13 @@ public class ColorIndex {
         return new String(chars);
     }
 
+    /**
+     * @deprecated 使用 {@link Styles#toColor(String)} 代替
+     * @param rgb 16进制颜色值或者颜色名称（如：red, black等）
+     * @return java.awt.Color
+     */
+    @Deprecated
     public static Color toColor(String rgb) {
-        // Remove the alpha option of the color
-        if (rgb.length() == 8 && rgb.startsWith("FF")) {
-            rgb = "#" + rgb.substring(2);
-        } else if (rgb.length() == 6 && rgb.charAt(0) != '#') {
-            rgb = "#" + rgb;
-        }
         return Styles.toColor(rgb);
     }
 }
