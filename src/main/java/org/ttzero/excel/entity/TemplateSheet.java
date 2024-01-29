@@ -286,13 +286,13 @@ public class TemplateSheet extends Sheet {
                         case STRING:  cell.setString(row0.getString(cell0));                                break;
                         case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
                         case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
+                        case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
+                        case DOUBLE:  cell.setDouble(row0.getDouble(cell0));                                break;
                         case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
                         case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
+                        case BLANK:   cell.emptyTag();                                                      break;
                         default:
                     }
-
-                    // 无样式
-                    if (cell0.xf <= 0) continue;
 
                     // 复制样式
                     Integer xf = styleMap.get(cell0.xf);
