@@ -71,7 +71,7 @@ public class ExcelReaderTest2 {
 
     @Test public void test354() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
-            for (int i = 0, len = reader.getSize(); i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                 Sheet sheet = reader.sheet(i);
                 Path expectPath = testResourceRoot().resolve("expect/#354$" + sheet.getName() + ".txt");
                 if (Files.exists(expectPath)) {

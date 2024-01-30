@@ -491,7 +491,7 @@ public class ExcelReaderTest {
     private void testReader(Path path, int option) throws IOException {
         try (ExcelReader reader = ExcelReader.read(path)) {
             String fileName = path.getFileName().toString();
-            for (int i = 0, len = reader.getSize(); i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                 Sheet sheet = reader.sheet(i);
                 if (option == 1) sheet = sheet.asCalcSheet();
                 else if (option == 2) sheet = sheet.asMergeSheet();

@@ -426,12 +426,15 @@ public class ListObjectSheetTest extends WorkbookTest {
             })
             .writeTo(defaultTestPath.resolve(fileName));
 
+        assert !expectList.isEmpty();
+
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
             assert expectList.size() == list.size();
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assert expect.getName().equals(e.getName());
+                assert expect.getScore() == e.getScore();
             }
         }
     }

@@ -134,7 +134,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 .writeTo(defaultTestPath.resolve("test multi dataSource worksheet.xlsx"));
 
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test multi dataSource worksheet.xlsx"))) {
-                assert reader.getSize() == 6;
+                assert reader.getSheetCount() == 6;
 
                 // Sheet 0
                 Sheet sheet0 = reader.sheet(0);

@@ -100,9 +100,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<RepeatableEntry> list = reader.sheet(i).header(1, 4).bind(RepeatableEntry.class).rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
                 if (i < len - 1) assert list.size() == rowLimit;
                 else assert expectList.size() - rowLimit * (len - 1) == list.size();
@@ -405,9 +405,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"))) {
-            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<Map<String, Object>> list = reader.sheet(i).header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
                 if (i < len - 1) assert list.size() == rowLimit;
                 else assert expectList.size() - rowLimit * (len - 1) == list.size();

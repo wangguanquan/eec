@@ -42,9 +42,9 @@ public class ListMapPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
                 assert "id".equals(header.get(0));
@@ -68,9 +68,9 @@ public class ListMapPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
                 assert "id".equals(header.get(0));

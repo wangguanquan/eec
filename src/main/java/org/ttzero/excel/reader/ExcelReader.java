@@ -380,8 +380,19 @@ public class ExcelReader implements Closeable {
      * 获取当前excel包含的工作表数量
      *
      * @return 当前excel包含的工作表数量
+     * @deprecated 使用 {@link #getSheetCount()} 代替
      */
+    @Deprecated
     public int getSize() {
+        return getSheetCount();
+    }
+
+    /**
+     * 获取当前excel包含的工作表数量
+     *
+     * @return 当前excel包含的工作表数量
+     */
+    public int getSheetCount() {
         return sheets != null ? sheets.length : 0;
     }
 
