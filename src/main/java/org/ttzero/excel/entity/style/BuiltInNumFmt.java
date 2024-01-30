@@ -72,9 +72,7 @@ public final class BuiltInNumFmt {
                         fmt.code = v2.substring(1, v2.length() - 1);
                         list.add(fmt);
 
-                        if (fmt.code.length() > maxLen) {
-                            maxLen = fmt.code.length();
-                        }
+                        if (fmt.id > maxLen) maxLen = fmt.id;
                     }
                 }
             } catch (IOException e) {
@@ -103,7 +101,7 @@ public final class BuiltInNumFmt {
     public static NumFmt get(String code) {
         NumFmt fmt = null;
         for (NumFmt nf : buildInNumFmts) {
-            if (code.equals(nf.code)) {
+            if (nf != null && code.equals(nf.code)) {
                 fmt = nf;
                 break;
             }
