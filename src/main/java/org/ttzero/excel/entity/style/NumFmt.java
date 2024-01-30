@@ -337,6 +337,6 @@ public class NumFmt implements Comparable<NumFmt> {
 
     @Override
     public int compareTo(NumFmt o) {
-        return id - o.id;
+        return Integer.compare(id, o.id);
     }
 }

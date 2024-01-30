@@ -404,14 +404,13 @@ public class Styles implements Storable {
      * @return 样式值中“格式化”部分的2进制值
      */
     public final int addNumFmt(NumFmt numFmt) {
-        // All indexes from 0 to 163 are reserved for built-in formats.
-        // The first user-defined format starts at 164.
-        if (numFmt.getId() < 0 || numFmt.getId() >= 164) {
+        if (numFmt.getId() < 0 || numFmt.getId() > 58) {
             if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }
             int index = BuiltInNumFmt.indexOf(numFmt.getCode());
-            if (index > -1) { // default code
+            // Build-in NumFmt
+            if (index > -1) {
                 numFmt.setId(index);
             } else {
                 int i = numFmts.indexOf(numFmt);
@@ -843,11 +842,21 @@ public class Styles implements Storable {
     public NumFmt getNumFmt(int style) {
         int n = style >>> INDEX_NUMBER_FORMAT;
         if (n <= 0) return null;
-        if (n < 164) return BuiltInNumFmt.get(n);
+        NumFmt fmt = null;
+        // 优选从自定义队列中查找
         for (NumFmt e : numFmts) {
-            if (e.id == n) return e;
+            if (e.id == n) {
+                fmt = e;
+                break;
+            }
         }
-        return null;
+        // 不在内置队列中则从内置格式化队列中查找
+        if (fmt == null) {
+            // 内置格式化不全可能返回null
+            fmt = BuiltInNumFmt.get(n);
+            if (fmt == null && n <= 58) fmt = new NumFmt().setId(n);
+        }
+        return fmt;
     }
 
     /**

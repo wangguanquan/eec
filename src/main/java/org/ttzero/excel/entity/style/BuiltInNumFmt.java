@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -34,8 +33,7 @@ import java.util.Locale;
  * @author guanquan.wang at 2018-02-12 10:11
  */
 public final class BuiltInNumFmt {
-    private static final NumFmt[][] data;
-    private static final NumFmt[] idData;
+    private static final NumFmt[] buildInNumFmts;
 
     static {
         InputStream is = BuiltInNumFmt.class.getClassLoader().getResourceAsStream("numFmt");
@@ -44,25 +42,15 @@ public final class BuiltInNumFmt {
             int maxLen = 0;
             try (BufferedReader br = new BufferedReader(new InputStreamReader(is ,StandardCharsets.UTF_8))) {
                 String v;
-                Locale locale = Locale.ROOT;
-                boolean unicode = false, damaged = false;
+                String lang = Locale.getDefault().toLanguageTag();
+                boolean damaged = false;
                 while ((v = br.readLine()) != null) {
                     if (StringUtil.isEmpty(v)) continue;
                     v = v.trim();
                     if (v.charAt(0) == '[') {
                         int end = v.indexOf(']');
-                        if (end == -1 || end == 1) {
-                            damaged = true;
-                            continue;
-                        }
-                        String[] loc = v.substring(1, end).split("-");
-                        if (loc.length < 2) { // The file is damaged
-                            damaged = true;
-                            continue;
-                        }
-                        damaged = false;
-                        locale = new Locale(loc[0], loc[1]);
-                        unicode = loc.length >= 3 && "unicode".equals(loc[2]);
+                        // 匹配方言
+                        damaged = end == -1 || end == 1 || !lang.equalsIgnoreCase(v.substring(0, end).trim());
                     } else {
                         if (damaged) continue;
                         int index = v.indexOf('=');
@@ -82,8 +70,6 @@ public final class BuiltInNumFmt {
                         NumFmt fmt = new NumFmt();
                         fmt.id = id;
                         fmt.code = v2.substring(1, v2.length() - 1);
-                        fmt.locale = locale;
-                        fmt.unicode = unicode;
                         list.add(fmt);
 
                         if (fmt.code.length() > maxLen) {
@@ -95,24 +81,11 @@ public final class BuiltInNumFmt {
                 // Empty
             }
 
-            idData = new NumFmt[list.size()];
-            list.toArray(idData);
-
-            data = new NumFmt[maxLen + 1][]; // accept zero size
-            for (int i = 1; i <= maxLen; i++) {
-                final int length = i;
-                data[i] = list.stream()
-                    .filter(o -> o.code.length() == length)
-                    .sorted(Comparator.comparingInt(NumFmt::getId))
-                    .toArray(NumFmt[]::new);
-
-                if (data[i].length == 0) { // Undo empty array
-                    data[i] = null;
-                }
-            }
+            buildInNumFmts = new NumFmt[maxLen + 1];
+            // 检查ID重复ID，复制NumFmt到buildInNumFmts
+            for (NumFmt fmt : list) buildInNumFmts[fmt.id] = fmt;
         } else {
-            data = new NumFmt[0][];
-            idData = new NumFmt[0];
+            buildInNumFmts = new NumFmt[0];
         }
     }
 
@@ -122,69 +95,29 @@ public final class BuiltInNumFmt {
     }
 
     /**
-     * Getting the build-in Number format by code
+     * 按名称查找内置格式化对象，注意此方法不兼容方言，如需支持zh-CN以外的方言需在numFmt文件中添加对应配置
      *
-     * @param code the format code
-     * @return the {@link NumFmt}
+     * @param code 格式化Code
+     * @return 对应 {@link NumFmt}，如果在numFmt文件中未定义时返回{@code null}
      */
     public static NumFmt get(String code) {
-        int index = code.length();
-        if (index >= data.length) return null;
-        NumFmt[] array = data[index];
-        if (array == null) return null;
-        NumFmt v = null;
-        for (NumFmt nf : array) {
-            if (nf.code.equals(code)) {
-                v = nf;
-                break;
-            }
-        }
-        return v;
-    }
-
-    /**
-     * Getting the build-in Number format by id
-     *
-     * @param id the built-in number formats id
-     * @return the {@link NumFmt}
-     */
-    public static NumFmt get(int id) {
         NumFmt fmt = null;
-        if (id >= 0) {
-            if (id < idData.length) {
-                fmt = idData[id];
-            } else if (id < 176) {
-                fmt = new NumFmt();
-                fmt.id = id;
+        for (NumFmt nf : buildInNumFmts) {
+            if (code.equals(nf.code)) {
+                fmt = nf;
+                break;
             }
         }
         return fmt;
     }
 
-    public static class NumFmt extends org.ttzero.excel.entity.style.NumFmt {
-        private Locale locale;
-        private boolean unicode;
-
-        public Locale getLocale() {
-            return locale;
-        }
-
-        public boolean isUnicode() {
-            return unicode;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-            if (locale != null && !Locale.ROOT.equals(locale)) {
-                buf.append('[').append(locale.getLanguage()).append('-').append(locale.getCountry());
-                if (unicode) {
-                    buf.append('-').append("unicode");
-                }
-                buf.append("] ");
-            }
-            buf.append(id).append('=').append(code);
-            return buf.toString();
-        }
+    /**
+     * 按ID查找内置格式化对象
+     *
+     * @param id 内置对象ID
+     * @return 对应 {@link NumFmt}，如果在numFmt文件中未定义时返回{@code null}
+     */
+    public static NumFmt get(int id) {
+        return id >= 0 && id < buildInNumFmts.length ? buildInNumFmts[id] : null;
     }
 }

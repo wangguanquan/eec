@@ -27,7 +27,7 @@ import java.awt.Color;
  */
 public class ColorIndex {
     /** color cache */
-    public static final int[] colors = {
+    public static final int[] indexedColors = {
         -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
         -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,
         -8388608,  -16744448, -16777088, -8355840,  -8388480,  -16744320, -4144960,  -8355712,
@@ -57,10 +57,10 @@ public class ColorIndex {
     public static int indexOf(int rgb) {
         if (rgb >= 0) return -1; // alpha=0
         int i = 8;
-        for ( ; i < colors.length; i++) {
-            if (colors[i] == rgb) break;
+        for (; i < indexedColors.length; i++) {
+            if (indexedColors[i] == rgb) break;
         }
-        return i < colors.length ? i : -1;
+        return i < indexedColors.length ? i : -1;
     }
 
     /**
