@@ -284,9 +284,6 @@ public class ListSheet<T> extends Sheet {
     public ListSheet<T> setData(final List<T> data) {
         if (data == null) return this;
         this.data = new ArrayList<>(data);
-        if (!headerReady && workbook != null) {
-            getAndSortHeaderColumns();
-        }
         // Has data and worksheet can write
         // Paging in advance
         if (sheetWriter != null) {
@@ -296,12 +293,17 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the first not null object
+     * 获取队列中第一个非{@code null}对象用于解析
      *
-     * @return the object
+     * @return 第一个非 {@code null}对象
      */
     protected T getFirst() {
-        if (data == null || data.isEmpty()) return null;
+        // 初始没有数据时调用一次more方法获取数据
+        if (data == null || data.isEmpty()) {
+            List<T> more = more();
+            if (more != null && !more.isEmpty()) data = new ArrayList<>(more);
+            else return null;
+        }
         T first = data.get(start);
         if (first != null) return first;
         int i = start + 1;
