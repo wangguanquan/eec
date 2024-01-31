@@ -404,6 +404,28 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testSpecifyRowLimit() throws IOException {
+        final String fileName = "specify row limit.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData(1000);
+        new Workbook().addSheet(new ListSheet<>(expectList).setSheetWriter(new XMLWorksheetWriter() {
+            @Override
+            public int getRowLimit() {
+                return 150;
+            }
+        })).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assert reader.getSheetCount() == 7;
+            List<ListObjectSheetTest.Student> readList = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+            assert expectList.size() == readList.size();
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i), o = readList.get(i);
+                assert expect.getName().equals(o.getName());
+                assert expect.getScore() == o.getScore();
+            }
+        }
+    }
+
     @Test public void testAutoFilter() throws IOException {
         String fileName = "test auto-filter.xlsx";
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();

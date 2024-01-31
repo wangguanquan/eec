@@ -69,9 +69,9 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+                assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
-                for (int i = 0, len = reader.getSize(); i < len; i++) {
+                for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                     Iterator<Row> iter = reader.sheet(i).iterator();
                     assert iter.hasNext();
                     org.ttzero.excel.reader.Row header = iter.next();
@@ -135,9 +135,9 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+                assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
 
-                for (int i = 0, len = reader.getSize(); i < len; i++) {
+                for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                     Iterator<Row> iter = reader.sheet(i).iterator();
                     assert iter.hasNext();
                     org.ttzero.excel.reader.Row header = iter.next();
