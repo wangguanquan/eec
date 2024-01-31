@@ -713,50 +713,38 @@ public class Styles implements Storable {
         return style & ~(-1 >>> 32 - (INDEX_HORIZONTAL - INDEX_WRAP_TEXT));
     }
 
-    ////////////////////////reset style/////////////////////////////
-    @Deprecated
-    public static int reset(int style, int newStyle) {
-        int[] sub = unpack(style), nsub = unpack(newStyle);
-        for (int i = 0; i < sub.length; i++) {
-            if (nsub[i] > 0) {
-                sub[i] = nsub[i];
-            }
-        }
-        return pack(sub);
-    }
-
     ////////////////////////default border style/////////////////////////////
     public static int defaultCharBorderStyle() {
-        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.CENTER;
+        return (1 << INDEX_BORDER) | Horizontals.CENTER;
     }
 
     public static int defaultStringBorderStyle() {
-        return  (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.LEFT;
+        return  (1 << INDEX_BORDER) | Horizontals.LEFT;
     }
 
     public static int defaultIntBorderStyle() {
-        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.RIGHT;
+        return (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
     public static int defaultDoubleBorderStyle() {
-        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.RIGHT;
+        return (1 << INDEX_BORDER) | Horizontals.RIGHT;
     }
 
     ////////////////////////default style/////////////////////////////
     public static int defaultCharStyle() {
-        return (1 << INDEX_FONT) | Horizontals.CENTER;
+        return Horizontals.CENTER;
     }
 
     public static int defaultStringStyle() {
-        return (1 << INDEX_FONT) | Horizontals.LEFT;
+        return Horizontals.LEFT;
     }
 
     public static int defaultIntStyle() {
-        return (1 << INDEX_FONT) | Horizontals.RIGHT;
+        return Horizontals.RIGHT;
     }
 
     public static int defaultDoubleStyle() {
-        return (1 << INDEX_FONT) | Horizontals.RIGHT;
+        return  Horizontals.RIGHT;
     }
 
     ////////////////////////////////Check style////////////////////////////////

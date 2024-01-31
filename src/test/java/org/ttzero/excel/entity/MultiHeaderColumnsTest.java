@@ -189,9 +189,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook().setAutoSize(true)
                 .addSheet(new StatementSheet(con, sql
-                    , new Column("通用").setHeaderStyle(532550).addSubColumn(new Column("学号", int.class))
+                    , new Column("通用").setHeaderStyle(270406).addSubColumn(new Column("学号", int.class))
                     , new Column("通用").addSubColumn(new Column("姓名", String.class))
-                    , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(532550))
+                    , new Column("通用").addSubColumn(new Column("年龄", int.class).setHeaderStyle(270406))
                     , new Column("创建时间", Timestamp.class)
                     , new Column("更新时间", Timestamp.class).setColIndex(1) // col 1
                 ))
