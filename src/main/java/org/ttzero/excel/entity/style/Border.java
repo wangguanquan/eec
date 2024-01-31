@@ -549,7 +549,7 @@ public class Border implements Cloneable {
                 colorEle.addAttribute("indexed", String.valueOf(((BuildInColor) subBorder.color).getIndexed()));
             }
             else if ((index = ColorIndex.indexOf(subBorder.color)) > -1) {
-                element.addAttribute("indexed", String.valueOf(index));
+                colorEle.addAttribute("indexed", String.valueOf(index));
             }
             else {
                 colorEle.addAttribute("rgb", ColorIndex.toARGB(subBorder.color));
