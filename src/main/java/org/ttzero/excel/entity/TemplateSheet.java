@@ -181,8 +181,14 @@ public class TemplateSheet extends Sheet {
         if (!headerReady) {
             // 解析模板工作表并复制信息到当前工作表中
             int size = init();
-            if (size <= 0) {
-                columns = new Column[0];
+            if (size <= 0) columns = new Column[0];
+            else {
+                // 排序
+                sortColumns(columns);
+                // 计算每列在Excel中的列下标
+                calculateRealColIndex();
+                // 重置通用属性
+                resetCommonProperties(columns);
             }
             // Mark ext-properties
             markExtProp();
