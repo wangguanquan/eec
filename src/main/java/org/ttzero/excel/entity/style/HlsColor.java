@@ -84,7 +84,7 @@ public class HlsColor {
     public static Color hlsToRgb(HlsColor hlsColor) {
         Color rgbColor;
         if (hlsColor.s == 0) {
-            rgbColor = new Color(hlsColor.l, hlsColor.l, hlsColor.l, 1.0f - hlsColor.a);
+            rgbColor = new Color(hlsColor.l, hlsColor.l, hlsColor.l, hlsColor.a);
             return rgbColor;
         }
         float t1;
@@ -99,7 +99,7 @@ public class HlsColor {
         float tB = h - (1.0F / 3.0F);
         float b = hueToRGB(t1, t2, tB);
 //        rgbColor = new Color((int) (r * 255), (int) (g * 255), (int) (b * 255), (int) (hlsColor.a * 255));
-        rgbColor = new Color(r, g, b, 1.0f - hlsColor.a);
+        rgbColor = new Color(r, g, b, hlsColor.a);
         return rgbColor;
     }
 
