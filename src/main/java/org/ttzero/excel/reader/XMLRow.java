@@ -502,6 +502,13 @@ class XMLFullRow extends XMLRow {
         this.startRow = row.startRow;
     }
 
+    @Override
+    protected XMLFullRow empty(char[] cb, int from, int size) {
+        super.empty(cb, from, size);
+        searchSpan0(); // 解析行高
+        return this;
+    }
+
     XMLFullRow setCalcFun(MergeCalcFunc calcFun) {
         this.calcFun = calcFun;
         hasCalcFunc = calcFun != null;
