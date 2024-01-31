@@ -27,7 +27,6 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Col;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
-import org.ttzero.excel.reader.ExcelReadException;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.util.DateUtil;
@@ -276,69 +275,61 @@ public class TemplateSheet extends Sheet {
         boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
-        try {
-            for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
-                Row row = rowBlock.next();
-                org.ttzero.excel.reader.Row row0 = rowIterator.next();
-                row.index = rows = row0.getRowNum() - 1;
-                if (row0.getHeight() != null) {
-                    row.height = row0.getHeight();
+
+        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
+            Row row = rowBlock.next();
+            org.ttzero.excel.reader.Row row0 = rowIterator.next();
+            // 设置行号
+            row.index = rows = row0.getRowNum() - 1;
+            // 设置行高
+            if (row0.getHeight() != null) row.height = row0.getHeight();
+            // 空行特殊处理（lc-fc=-1)
+            len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
+            Cell[] cells = row.realloc(len);
+            for (int i = 0; i < len; i++) {
+                // clear cells
+                Cell cell = cells[i], cell0 = row0.getCell(i);
+                cell.clear();
+
+                // 复制数据
+                switch (row0.getCellType(cell0)) {
+                    case STRING:  cell.setString(row0.getString(cell0));                                break;
+                    case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
+                    case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
+                    case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
+                    case DOUBLE:  cell.setDouble(row0.getDouble(cell0));                                break;
+                    case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
+                    case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
+                    case BLANK:   cell.emptyTag();                                                      break;
+                    default:
                 }
-                len = row0.getLastColumnIndex() - row0.getFirstColumnIndex();
-                Cell[] cells = row.realloc(len);
-                for (int i = 0; i < len; i++) {
-                    // clear cells
-                    Cell cell = cells[i], cell0 = row0.getCell(i);
-                    cell.clear();
 
-                    // 复制数据
-                    switch (row0.getCellType(cell0)) {
-                        case STRING:  cell.setString(row0.getString(cell0));                                break;
-                        case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
-                        case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
-                        case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
-                        case DOUBLE:  cell.setDouble(row0.getDouble(cell0));                                break;
-                        case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
-                        case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
-                        case BLANK:   cell.emptyTag();                                                      break;
-                        default:
-                    }
+                // 复制样式
+                Integer xf = styleMap.get(cell0.xf);
+                if (xf != null) cell.xf = xf;
+                else {
+                    int style = row0.getCellStyle(cell0);
+                    xf = 0;
+                    // 字体
+                    Font font = styles0.getFont(style);
+                    if (font != null) xf |= styles.addFont(font);
+                    // 填充
+                    Fill fill = styles0.getFill(style);
+                    if (fill != null) xf |= styles.addFill(fill);
+                    // 边框
+                    Border border = styles0.getBorder(style);
+                    if (border != null) xf |= styles.addBorder(border);
+                    // 格式化
+                    NumFmt numFmt = styles0.getNumFmt(style);
+                    if (numFmt != null) xf |= styles.addNumFmt(numFmt);
+                    // 水平对齐、垂直对齐、自动折行
+                    int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
 
-                    // 复制样式
-                    Integer xf = styleMap.get(cell0.xf);
-                    if (xf != null) cell.xf = xf;
-                    else {
-                        int style = row0.getCellStyle(cell0);
-                        xf = 0;
-                        // 字体
-                        Font font = styles0.getFont(style);
-                        if (font != null) xf |= styles.addFont(font);
-                        // 填充
-                        Fill fill = styles0.getFill(style);
-                        if (fill != null) xf |= styles.addFill(fill);
-                        // 边框
-                        Border border = styles0.getBorder(style);
-                        if (border != null) xf |= styles.addBorder(border);
-                        // 格式化
-                        NumFmt numFmt = styles0.getNumFmt(style);
-                        if (numFmt != null) xf |= styles.addNumFmt(numFmt);
-                        // 水平对齐、垂直对齐、自动折行
-                        int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
-
-                        // 添加进样式表
-                        cell.xf = styles.of(xf | h | v | w);
-                        styleMap.put(cell0.xf, cell.xf);
-                    }
-
-
-//                    cellValueAndStyle.reset(row, cell, e, hc);
-//                    if (hasGlobalStyleProcessor) {
-//                        cellValueAndStyle.setStyleDesign(rs, cell, hc, getStyleProcessor());
-//                    }
+                    // 添加进样式表
+                    cell.xf = styles.of(xf | h | v | w);
+                    styleMap.put(cell0.xf, cell.xf);
                 }
             }
-        } catch (ExcelReadException e) {
-            throw new ExcelWriteException(e);
         }
 
 //        // Paging
