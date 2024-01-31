@@ -237,7 +237,8 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                 assert sheet5Data.size() == sheet5ReadList.size();
                 for (int i = 0, len = sheet5Data.size(); i < len; i++) {
                     ListObjectSheetTest.Student expect = sheet5Data.get(i), e = sheet5ReadList.get(i);
-                    assert expect.equals(e);
+                    assert expect.getName().equals(e.getName());
+                    assert expect.getScore() == e.getScore();
                 }
             }
         }

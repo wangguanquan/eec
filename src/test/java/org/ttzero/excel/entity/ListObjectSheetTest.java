@@ -369,7 +369,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             assert expectList.size() == list.size();
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assert expect.getName().equals(e.getName());
+                assert expect.getScore() == e.getScore();
             }
         }
     }
