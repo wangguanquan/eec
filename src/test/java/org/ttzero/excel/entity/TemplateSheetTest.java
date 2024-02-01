@@ -20,6 +20,7 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.reader.ExcelReaderTest;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -27,10 +28,16 @@ import java.io.IOException;
  */
 public class TemplateSheetTest extends WorkbookTest {
     @Test public void testSimpleTemplate() throws IOException {
-        new Workbook("simple template")
-            .addSheet(new TemplateSheet(ExcelReaderTest.testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
-            .addSheet(new ListSheet<>()) // <- 普通对象数组工作表
-            .addSheet(new TemplateSheet(ExcelReaderTest.testResourceRoot().resolve("fracture merged.xlsx")))
-            .writeTo(getOutputTestPath());
+        String fileName = "simple template.xlsx";
+        Workbook workbook = new Workbook();
+        File[] files = ExcelReaderTest.testResourceRoot().toFile().listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().endsWith(".xlsx")) {
+                    workbook.addSheet(new TemplateSheet(file.getName(), file.toPath()));
+                }
+            }
+        }
+        workbook.writeTo(getOutputTestPath().resolve(fileName));
     }
 }
