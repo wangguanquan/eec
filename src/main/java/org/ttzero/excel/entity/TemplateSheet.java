@@ -43,16 +43,17 @@ import java.util.Map;
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制
  * 模板工作表的样式并替换占位符，同时{@code TemplateSheet}也可以和其它{@code Sheet}共用，
- * 也可以有多个模板工作表，也就是最终的Excel可以包含多个模板源
+ * 意味着可以添加多个模板工作表和普通工作表。需要注意的是多个模板可能产生重复的工作表名称，所以需要外部指定不同的名称以免
+ * 打开文件异常
  *
- * <p>创建模板工作表需要指定模板文件，它可以是本地文件也可是输入流{@code InputStream}，它同时支持{@code xls}
- * 和{@code xlsx}两种格式的模板，除模板文件外还需要指定Excel中的某个{@code Worksheet}，
+ * <p>创建模板工作表需要指定模板文件，它可以是本地文件也可是输入流{@code InputStream}，支持的类型包含{@code xls}
+ * 和{@code xlsx}两种格式，除模板文件外还需要指定Excel中的某个{@code Worksheet}，
  * 未指定工作表时默认以第一个工作表做为模板，{@code TemplateSheet}工作表导出时不受{@code ExcelColumn}注解限制，
- * 导出的数据范围由默认配置决定</p>
+ * 导出的数据范围由模板内占位符决定</p>
  *
  * <p>默认占位符为一对关闭的大括号{@code ‘${key}’}，</p>
  *
- * <p>考虑到模板工作表的复杂性暂时不支持切片查询数据，数据必须在初始化时设置，换句话说模板工作表只适用于少量数据</p>
+ * <p>考虑到模板工作表的复杂性暂时不支持数据切片，数据必须在初始化时设置，换句话说模板工作表只适用于少量数据</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
@@ -68,9 +69,9 @@ public class TemplateSheet extends Sheet {
      */
     protected ExcelReader reader;
     /**
-     * 源工作表
+     * 源工作表索引
      */
-    protected FullSheet sheet;
+    protected int originalSheetIndex;
     /**
      * 行数据迭代器
      */
@@ -92,15 +93,13 @@ public class TemplateSheet extends Sheet {
      * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
      *
      * @param templatePath 模板路径
-     * @param originalSheetIndex 指定源工作表索引
+     * @param originalSheetIndex 指定源工作表索引（从0开始）
      * @throws IOException 文件不存在或读取模板异常
      */
     public TemplateSheet(Path templatePath, int originalSheetIndex) throws IOException {
         this.reader = ExcelReader.read(templatePath);
-        this.sheet = reader.sheet(originalSheetIndex).asFullSheet();
-        if (sheet == null)
-            throw new IOException("The specified index " + originalSheetIndex + " does not exist in template file.");
-        this.name = sheet.getName();
+        if (reader.getSheetCount() < originalSheetIndex)
+           throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
     }
 
     /**
@@ -112,10 +111,12 @@ public class TemplateSheet extends Sheet {
      */
     public TemplateSheet(Path templatePath, String originalSheetName) throws IOException {
         this.reader = ExcelReader.read(templatePath);
-        this.sheet = reader.sheet(originalSheetName).asFullSheet();
-        if (sheet == null)
+        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
+        int index = 0;
+        for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++);
+        if (index >= sheets.length)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
-        this.name = sheet.getName();
+        originalSheetIndex = index;
     }
 
     /**
@@ -137,10 +138,8 @@ public class TemplateSheet extends Sheet {
      */
     public TemplateSheet(InputStream templateStream, int originalSheetIndex) throws IOException {
         this.reader = ExcelReader.read(templateStream);
-        this.sheet = reader.sheet(originalSheetIndex).asFullSheet();
-        if (sheet == null)
-            throw new IOException("The specified index " + originalSheetIndex + " does not exist in template file.");
-        this.name = sheet.getName();
+        if (reader.getSheetCount() < originalSheetIndex)
+            throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
     }
 
     /**
@@ -152,10 +151,12 @@ public class TemplateSheet extends Sheet {
      */
     public TemplateSheet(InputStream templateStream, String originalSheetName) throws IOException {
         this.reader = ExcelReader.read(templateStream);
-        this.sheet = reader.sheet(originalSheetName).asFullSheet();
-        if (sheet == null)
+        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
+        int index = 0;
+        for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); );
+        if (index >= sheets.length)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
-        this.name = sheet.getName();
+        originalSheetIndex = index;
     }
 
     /**
@@ -203,6 +204,9 @@ public class TemplateSheet extends Sheet {
      * @return 列的个数
      */
     protected int init() {
+        // 加载模板工作表
+        FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
+
         // 冻结,直接复制不需要计算移动
         Panes panes = sheet.getFreezePanes();
         if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
@@ -272,7 +276,6 @@ public class TemplateSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len, n = 0, limit = getRowLimit();
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
 
@@ -331,13 +334,6 @@ public class TemplateSheet extends Sheet {
                 }
             }
         }
-
-//        // Paging
-//        if (rows >= limit) {
-//            shouldClose = false;
-//            ResultSetSheet copy = getClass().cast(clone());
-//            workbook.insertSheet(id, copy);
-//        } else shouldClose = true;
     }
 
     @Override
