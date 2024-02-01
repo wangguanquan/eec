@@ -1195,26 +1195,41 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeCols(int fillSpace, String defaultWidth) throws IOException {
         if (columns.length > 0) {
             bw.write("<cols>");
-            for (int i = 0; i < columns.length; i++) {
-                Column col = columns[i];
-                String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
-                int w = width.length();
-                bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(width);
-                if (col.isHide()) {
-                    bw.write("\" hidden=\"1");
-                    w += 11;
+            Column fCol = columns[0];
+            String fWidth = fCol.width >= 0.0000001D ? new BigDecimal(fCol.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+            // 多个col时将相同属性的col进行压缩
+            if (columns.length > 1) {
+                for (int i = 1; i < columns.length; i++) {
+                    Column col = columns[i], pCol = columns[i - 1];
+                    String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+                    boolean lastColumn = i == columns.length - 1;
+                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1) {
+                        writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.isHide());
+                        fWidth = width;
+                        fCol = col;
+                    }
+                    if (lastColumn) writeCol(width, fCol.getRealColIndex(), col.realColIndex, fillSpace, col.isHide());
                 }
-                bw.write('"');
-                for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
-                bw.write(" min=\"");
-                bw.writeInt(col.getRealColIndex());
-                bw.write("\" max=\"");
-                bw.writeInt(col.getRealColIndex());
-                bw.write("\" bestFit=\"1\"/>");
-            }
+            } else writeCol(fWidth, fCol.getRealColIndex(), fCol.getRealColIndex(), fillSpace, fCol.isHide());
             bw.write("</cols>");
         }
+    }
+
+    protected void writeCol(String width, int min, int max, int fillSpace, boolean isHide) throws IOException {
+        bw.write("<col customWidth=\"1\" width=\"");
+        bw.write(width);
+        int w = width.length();
+        if (isHide) {
+            bw.write("\" hidden=\"1");
+            w += 11;
+        }
+        bw.write('"');
+        for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
+        bw.write(" min=\"");
+        bw.writeInt(min);
+        bw.write("\" max=\"");
+        bw.writeInt(max);
+        bw.write("\" bestFit=\"1\"/>");
     }
 
     /**
