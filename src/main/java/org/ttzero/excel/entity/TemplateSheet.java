@@ -90,30 +90,67 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
+     * 实例化模板工作表，默认以第一个工作表做为模板
+     *
+     * @param name         指定工作表名称
+     * @param templatePath 模板路径
+     * @throws IOException 文件不存在或读取模板异常
+     */
+    public TemplateSheet(String name, Path templatePath) throws IOException {
+        this(name, templatePath, 0);
+    }
+
+    /**
      * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
      *
-     * @param templatePath 模板路径
+     * @param templatePath       模板路径
      * @param originalSheetIndex 指定源工作表索引（从0开始）
      * @throws IOException 文件不存在或读取模板异常
      */
     public TemplateSheet(Path templatePath, int originalSheetIndex) throws IOException {
+        this(null, templatePath, originalSheetIndex);
+    }
+
+    /**
+     * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
+     *
+     * @param name               指定工作表名称
+     * @param templatePath       模板路径
+     * @param originalSheetIndex 指定源工作表索引（从0开始）
+     * @throws IOException 文件不存在或读取模板异常
+     */
+    public TemplateSheet(String name, Path templatePath, int originalSheetIndex) throws IOException {
+        this.name = name;
         this.reader = ExcelReader.read(templatePath);
         if (reader.getSheetCount() < originalSheetIndex)
-           throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
+            throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
     }
 
     /**
      * 实例化模板工作表并指定模板工作表名，如果指定源工作表不存在则抛异常
      *
-     * @param templatePath 模板路径
+     * @param templatePath      模板路径
      * @param originalSheetName 指定源工作表名
      * @throws IOException 文件不存在或读取模板异常
      */
     public TemplateSheet(Path templatePath, String originalSheetName) throws IOException {
+        this(null, templatePath, originalSheetName);
+    }
+
+    /**
+     * 实例化模板工作表并指定模板工作表名，如果指定源工作表不存在则抛异常
+     *
+     * @param name              指定工作表名称
+     * @param templatePath      模板路径
+     * @param originalSheetName 指定源工作表名
+     * @throws IOException 文件不存在或读取模板异常
+     */
+    public TemplateSheet(String name, Path templatePath, String originalSheetName) throws IOException {
+        this.name = name;
         this.reader = ExcelReader.read(templatePath);
         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
         int index = 0;
-        for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++);
+        for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++) ;
         if (index >= sheets.length)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
         originalSheetIndex = index;
@@ -130,13 +167,46 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
+     * 实例化模板工作表，默认以第一个工作表做为模板
      *
      * @param templateStream 模板输入流
+     * @throws IOException 读取模板异常
+     */
+    public TemplateSheet(String name, InputStream templateStream) throws IOException {
+        this(name, templateStream, 0);
+    }
+
+    /**
+     * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
+     *
+     * @param templateStream     模板输入流
      * @param originalSheetIndex 指定源工作表索引
      * @throws IOException 读取模板异常
      */
     public TemplateSheet(InputStream templateStream, int originalSheetIndex) throws IOException {
+        this(null, templateStream, originalSheetIndex);
+    }
+
+    /**
+     * 实例化模板工作表并指定模板工作表名，如果指定源工作表不存在则抛异常
+     *
+     * @param templateStream    模板输入流
+     * @param originalSheetName 指定源工作表名
+     * @throws IOException 读取模板异常
+     */
+    public TemplateSheet(InputStream templateStream, String originalSheetName) throws IOException {
+        this(null, templateStream, originalSheetName);
+    }
+
+    /**
+     * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
+     *
+     * @param templateStream     模板输入流
+     * @param originalSheetIndex 指定源工作表索引
+     * @throws IOException 读取模板异常
+     */
+    public TemplateSheet(String name, InputStream templateStream, int originalSheetIndex) throws IOException {
+        this.name = name;
         this.reader = ExcelReader.read(templateStream);
         if (reader.getSheetCount() < originalSheetIndex)
             throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
@@ -145,15 +215,16 @@ public class TemplateSheet extends Sheet {
     /**
      * 实例化模板工作表并指定模板工作表名，如果指定源工作表不存在则抛异常
      *
-     * @param templateStream 模板输入流
+     * @param templateStream    模板输入流
      * @param originalSheetName 指定源工作表名
      * @throws IOException 读取模板异常
      */
-    public TemplateSheet(InputStream templateStream, String originalSheetName) throws IOException {
+    public TemplateSheet(String name, InputStream templateStream, String originalSheetName) throws IOException {
+        this.name = name;
         this.reader = ExcelReader.read(templateStream);
         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
         int index = 0;
-        for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); );
+        for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); ) ;
         if (index >= sheets.length)
             throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
         originalSheetIndex = index;
@@ -255,7 +326,7 @@ public class TemplateSheet extends Sheet {
         double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
         if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
         if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
-        
+
         // 图片
         List<Drawings.Picture> pictures = sheet.listPictures();
         // FIXME 其它图片支持
