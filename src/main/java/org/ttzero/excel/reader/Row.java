@@ -62,7 +62,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 /**
  * @author guanquan.wang at 2019-04-17 11:08
  */
-public abstract class Row {
+public class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
     protected int index = -1;
