@@ -106,18 +106,18 @@ public class Row {
     protected Styles styles;
 
     /**
-     * The number of row. (one base)
+     * 获取行号，与你打开Excel文件看到的一样从1开始
      *
-     * @return int value
+     * @return 行号
      */
     public int getRowNum() {
         return index;
     }
 
     /**
-     * Returns the index of the first column (zero base)
+     * 获取首列下标 (zero base)
      *
-     * @return the first column index
+     * @return 首列下标
      */
     public int getFirstColumnIndex() {
         return fc;
@@ -1177,7 +1177,11 @@ public class Row {
     /////////////////////////////To object//////////////////////////////////
 
     /**
-     * Convert to object, support annotation
+     * 将行数据转为指定对象&lt;T&gt;，待转换的对象必须包含无参的构建函数且待接收的字段使用{@link org.ttzero.excel.annotation.ExcelColumn}注解，
+     * 如果未指定表头时则以当前行为表头此时{@code to}方法会返回一个{@code null}对象，外部需要过滤非{@code null}对象否则会抛NPE异常。
+     *
+     * <p>指定对象&lt;T&gt;解析的结果会缓存到{@code HeaderRow}对象中，除非指定不同类型否则后续都将从{@code HeaderRow}中获取
+     * 必要信息，这样可以提高转换性能</p>
      *
      * @param clazz the type of binding
      * @param <T>   the type of return object
@@ -1187,7 +1191,6 @@ public class Row {
         if (hr == null) {
             hr = asHeader();
             return null;
-//            throw new UncheckedTypeException("Lost header row info");
         }
         // reset class info
         if (!hr.is(clazz)) {
