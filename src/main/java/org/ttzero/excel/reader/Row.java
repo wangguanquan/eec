@@ -60,6 +60,23 @@ import static org.ttzero.excel.util.StringUtil.isNotBlank;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
+ * 行数据，每行数据都包含0个到多个单元格{@link Cell}，无论是获取单元格的数据还是样式都是通过本类实现，
+ * {@link Cell}对象并不提供任何获取信息的方法，{@code Row}除了提供最原始的{@link #getInt}，{@link #getString}
+ * 等方法外还能调用{@link #to}和{@link #too}方法将行转为指定对象，{@code to}方法和{@code too}的区别在于前者每一行都会
+ * 创建一个独立的对象而后者返回的对象是内存共享的，如果需要使用数组或集合类收集对象则需要使用{@code to}方法，{@code too}方法
+ * 用于流式one-by-one的场景。
+ *
+ * <p>使用{@code to}和{@code too}方法转对象都有一个前提，那就是所转对象的属性或set方法必须使用{@link org.ttzero.excel.annotation.ExcelColumn}注解，
+ * 通过表头行上的文本与&#x40;ExcelColumn注解的{@code value}值进行匹配，衣可以指定{@code colIndex}按照列索引进行匹配。
+ * 如果使用{@link Sheet#forceImport}强制匹配时无&#x40;ExcelColumn注解的字段将会按照字段名进行匹配，</p>
+ *
+ * <p>少量数据也可以使用{@link #toMap}方法将行数据转为字典类型，为了保证列顺序返回的Map方法为{@link LinkedHashMap}，
+ * 字典的Key为表头文本，Value为单元格的值，多行表头按照{@code 行1:行2}进行拼接，参考{@link Sheet#getHeader}文档。</p>
+ *
+ * <p>{@code Row}还提供了{@link #isEmpty}和{@link #isBlank}两个空判断以及{@link #getFirstColumnIndex}和{@link #getLastColumnIndex}
+ * 两个列索引方法。{@code isEmpty}仅判断单元格起始下标是否小于结束下标，至于单元格里是否有值或样式则不在判断之内，{@code isBlank}则会
+ * 判断每个单元格的值是否为{@code blank}，{@code blank}的标准为字符串{@code null}或{@code “”}其余类型{@code null}</p>
+ *
  * @author guanquan.wang at 2019-04-17 11:08
  */
 public class Row {
