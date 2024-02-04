@@ -239,9 +239,8 @@ public class Row {
      * @return the {@link Cell}
      */
     public Cell getCell(String name) {
-        int i = hr.getIndex(name);
-        rangeCheck(i);
-        return i < lc ? cells[i] : UNALLOCATED_CELL;
+        int i;
+        return hr != null && (i = hr.getIndex(name)) >= 0 && i < lc ? cells[i] : UNALLOCATED_CELL;
     }
 
     /**
