@@ -63,12 +63,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 行数据，每行数据都包含0个到多个单元格{@link Cell}，无论是获取单元格的数据还是样式都是通过本类实现，
  * {@link Cell}对象并不提供任何获取信息的方法，{@code Row}除了提供最原始的{@link #getInt}，{@link #getString}
  * 等方法外还能调用{@link #to}和{@link #too}方法将行转为指定对象，{@code to}方法和{@code too}的区别在于前者每一行都会
- * 创建一个独立的对象而后者返回的对象是内存共享的，如果需要使用数组或集合类收集对象则需要使用{@code to}方法，{@code too}方法
- * 用于流式one-by-one的场景。
+ * 创建一个独立的对象而后者是内存共享的，如果需要使用数组或集合类收集对象则需要使用{@code to}方法，流式one-by-one的场景建议
+ * 使用{@code too}方法。
  *
  * <p>使用{@code to}和{@code too}方法转对象都有一个前提，那就是所转对象的属性或set方法必须使用{@link org.ttzero.excel.annotation.ExcelColumn}注解，
- * 通过表头行上的文本与&#x40;ExcelColumn注解的{@code value}值进行匹配，衣可以指定{@code colIndex}按照列索引进行匹配。
- * 如果使用{@link Sheet#forceImport}强制匹配时无&#x40;ExcelColumn注解的字段将会按照字段名进行匹配，</p>
+ * 通过表头行上的文本与&#x40;ExcelColumn注解的{@code value}值进行匹配，如果使用{@link Sheet#forceImport}强制匹配时
+ * 无&#x40;ExcelColumn注解的字段将会按照字段名进行匹配，除了按照表头文本匹配外还支持列索引匹配</p>
  *
  * <p>少量数据也可以使用{@link #toMap}方法将行数据转为字典类型，为了保证列顺序返回的Map方法为{@link LinkedHashMap}，
  * 字典的Key为表头文本，Value为单元格的值，多行表头按照{@code 行1:行2}进行拼接，参考{@link Sheet#getHeader}文档。</p>
@@ -222,10 +222,11 @@ public class Row {
     }
 
     /**
-     * Returns {@link Cell}
+     * 获取单元格{@link Cell}，获取到单元格后可用于后续取值或样式
      *
-     * @param i the position of cell
-     * @return the {@link Cell}
+     * @param i 单元格列索引
+     * @return 单元格 {@link Cell}
+     * @throws IndexOutOfBoundsException 单元络索引为负数时抛此异常
      */
     public Cell getCell(int i) {
         rangeCheck(i);
@@ -233,10 +234,10 @@ public class Row {
     }
 
     /**
-     * Search {@link Cell} by column name
+     * 获取单元格{@link Cell}，获取到单元格后可用于后续取值或样式，如果查找不到时则返回一个空的单元格
      *
-     * @param name the column name
-     * @return the {@link Cell}
+     * @param name 表头
+     * @return 单元格 {@link Cell}
      */
     public Cell getCell(String name) {
         int i;
@@ -244,19 +245,19 @@ public class Row {
     }
 
     /**
-     * convert row to header_row
+     * 将当前行转为表头行
      *
-     * @return header Row
+     * @return 表头行
      */
     public HeaderRow asHeader() {
         return new HeaderRow().with(this);
     }
 
     /**
-     * Setting header row
+     * 设置表头
      *
-     * @param hr {@link HeaderRow}
-     * @return self
+     * @param hr {@link HeaderRow}表头
+     * @return 当前行
      */
     public Row setHr(HeaderRow hr) {
         this.hr = hr;
@@ -264,10 +265,11 @@ public class Row {
     }
 
     /**
-     * Get {@code Boolean} value by column index
+     * 获取单元格的值并转为{@code Boolean}类型，对于非布尔类型则兼容C语言的{@code bool}判断
      *
-     * @param columnIndex the cell index
-     * @return {@code Boolean}
+     * @param columnIndex 单元格索引
+     * @return {@code numeric}类型非{@code 0}为{@code true}其余为{@code false}，
+     * {@code string}类型文本值为{@code "true"}则为{@code true}，单元格为空或未实例化时返回{@code null}
      */
     public Boolean getBoolean(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -275,10 +277,11 @@ public class Row {
     }
 
     /**
-     * Get {@code Boolean} value by column name
+     * 获取单元格的值并转为{@code Boolean}类型，对于非布尔类型则兼容C语言的{@code bool}判断
      *
-     * @param columnName the cell name
-     * @return {@code Boolean}
+     * @param columnName 列名
+     * @return {@code numeric}类型非{@code 0}为{@code true}其余为{@code false}，
+     * {@code string}类型文本值为{@code "true"}则为{@code true}，单元格为空或未实例化时返回{@code null}
      */
     public Boolean getBoolean(String columnName) {
         Cell c = getCell(columnName);
@@ -286,10 +289,11 @@ public class Row {
     }
 
     /**
-     * Get {@code Boolean} value
+     * 获取单元格的值并转为{@code Boolean}类型，对于非布尔类型则兼容C语言的{@code bool}判断
      *
-     * @param c the {@link Cell}
-     * @return {@code Boolean}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}类型非{@code 0}为{@code true}其余为{@code false}，
+     * {@code string}类型文本值为{@code "true"}则为{@code true}，单元格为空或未实例化时返回{@code null}
      */
     public Boolean getBoolean(Cell c) {
         boolean v;
@@ -310,10 +314,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Byte} value by column index
+     * 获取单元格的值并转为{@code Byte}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Byte}
+     * @param columnIndex 列索引
+     * @return {@code numeric}类型强制转为{@code byte}，其余类型返回{@code null}
      */
     public Byte getByte(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -321,10 +325,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Byte} value by column name
+     * 获取单元格的值并转为{@code Byte}类型
      *
-     * @param columnName the cell name
-     * @return {@code Byte}
+     * @param columnName 列名
+     * @return {@code numeric}类型强制转为{@code byte}，其余类型返回{@code null}
      */
     public Byte getByte(String columnName) {
         Cell c = getCell(columnName);
@@ -332,10 +336,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Byte} value
+     * 获取单元格的值并转为{@code Byte}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Byte}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}类型强制转为{@code byte}，其余类型返回{@code null}
      */
     public Byte getByte(Cell c) {
         byte b = 0;
@@ -351,10 +355,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Character} value by column index
+     * 获取单元格的值并转为{@code Character}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Character}
+     * @param columnIndex 列索引
+     * @return {@code numeric}类型强制转为{@code char}，{@code string}类型取第一个字符，其余类型返回{@code null}
      */
     public Character getChar(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -362,10 +366,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Character} value by column name
+     * 获取单元格的值并转为{@code Character}类型
      *
-     * @param columnName the cell name
-     * @return {@code Character}
+     * @param columnName 列名
+     * @return {@code numeric}类型强制转为{@code char}，{@code string}类型取第一个字符，其余类型返回{@code null}
      */
     public Character getChar(String columnName) {
         Cell c = getCell(columnName);
@@ -373,10 +377,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Character} value
+     * 获取单元格的值并转为{@code Character}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Character}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}类型强制转为{@code char}，{@code string}类型取第一个字符，其余类型返回{@code null}
      */
     public Character getChar(Cell c) {
         char cc = 0;
@@ -394,10 +398,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Short} value by column index
+     * 获取单元格的值并转为{@code Short}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Short}
+     * @param columnIndex 列索引
+     * @return {@code numeric}和{@code string}类型能强转为{@code short}，其余类型返回{@code null}
      */
     public Short getShort(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -405,10 +409,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Short} value by column name
+     * 获取单元格的值并转为{@code Short}类型
      *
-     * @param columnName the cell name
-     * @return {@code Short}
+     * @param columnName 列名
+     * @return {@code numeric}和{@code string}类型能强转为{@code short}，其余类型返回{@code null}
      */
     public Short getShort(String columnName) {
         Cell c = getCell(columnName);
@@ -416,10 +420,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Short} value
+     * 获取单元格的值并转为{@code Short}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Short}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}和{@code string}类型能强转为{@code short}，其余类型返回{@code null}
      */
     public Short getShort(Cell c) {
         short s = 0;
@@ -447,10 +451,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Integer} value by column index
+     * 获取单元格的值并转为{@code Integer}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Integer}
+     * @param columnIndex 单元格索引
+     * @return {@code numeric}和{@code string}类型能强转为{@code Integer}，其余类型返回{@code null}
      */
     public Integer getInt(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -458,10 +462,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Integer} value by column name
+     * 获取单元格的值并转为{@code Integer}类型
      *
-     * @param columnName the cell name
-     * @return {@code Integer}
+     * @param columnName 列索引
+     * @return {@code numeric}和{@code string}类型能强转为{@code Integer}，其余类型返回{@code null}
      */
     public Integer getInt(String columnName) {
         Cell c = getCell(columnName);
@@ -469,10 +473,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Integer} value
+     * 获取单元格的值并转为{@code Integer}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Integer}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}和{@code string}类型能强转为{@code Integer}，其余类型返回{@code null}
      */
     public Integer getInt(Cell c) {
         int n = 0;
@@ -500,10 +504,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Long} value by column index
+     * 获取单元格的值并转为{@code Long}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Long}
+     * @param columnIndex 单元格索引
+     * @return {@code numeric}和{@code string}类型能强转为{@code Long}，其余类型返回{@code null}
      */
     public Long getLong(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -511,10 +515,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Long} value by column name
+     * 获取单元格的值并转为{@code Long}类型
      *
-     * @param columnName the cell name
-     * @return {@code Long}
+     * @param columnName 列名
+     * @return {@code numeric}和{@code string}类型能强转为{@code Long}，其余类型返回{@code null}
      */
     public Long getLong(String columnName) {
         Cell c = getCell(columnName);
@@ -522,10 +526,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Long} value
+     * 获取单元格的值并转为{@code Long}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Long}
+     * @param c 单元格{@link Cell}
+     * @return {@code numeric}和{@code string}类型能强转为{@code Long}，其余类型返回{@code null}
      */
     public Long getLong(Cell c) {
         long l;
@@ -553,9 +557,9 @@ public class Row {
     }
 
     /**
-     * Get string value by column index
+     * 获取单元格的值并转为{@code String}类型
      *
-     * @param columnIndex the cell index
+     * @param columnIndex 单元格索引
      * @return string
      */
     public String getString(int columnIndex) {
@@ -564,9 +568,9 @@ public class Row {
     }
 
     /**
-     * Get string value by column name
+     * 获取单元格的值并转为{@code String}类型
      *
-     * @param columnName the cell name
+     * @param columnName 列名
      * @return string
      */
     public String getString(String columnName) {
@@ -575,7 +579,7 @@ public class Row {
     }
 
     /**
-     * Get string value
+     * 获取单元格的值并转为{@code String}类型
      *
      * @param c the {@link Cell}
      * @return string
@@ -1010,9 +1014,14 @@ public class Row {
     }
 
     /**
-     * Returns the type of cell
+     * 获取单元格的数据类型
      *
-     * @param columnIndex the cell index from zero
+     * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
+     * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
+     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
+     *
+     * @param columnIndex 列索引
      * @return the {@link CellType}
      */
     public CellType getCellType(int columnIndex) {
@@ -1021,9 +1030,14 @@ public class Row {
     }
 
     /**
-     * Returns the type of cell
+     * 获取单元格的数据类型
      *
-     * @param columnName the cell name
+     * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
+     * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
+     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
+     *
+     * @param columnName 列名
      * @return the {@link CellType}
      */
     public CellType getCellType(String columnName) {
@@ -1032,7 +1046,12 @@ public class Row {
     }
 
     /**
-     * Returns the type of cell
+     * 获取单元格的数据类型
+     *
+     * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
+     * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
+     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
      *
      * @param c the {@link Cell}
      * @return the {@link CellType}
@@ -1114,7 +1133,7 @@ public class Row {
     }
 
     /**
-     * Tests the specify cell value is blank
+     * 判断单元格的值是否为空值（未实例化或空字符串）
      *
      * @param c the {@link Cell}
      * @return true if cell value is blank
@@ -1182,8 +1201,8 @@ public class Row {
      * <p>指定对象&lt;T&gt;解析的结果会缓存到{@code HeaderRow}对象中，除非指定不同类型否则后续都将从{@code HeaderRow}中获取
      * 必要信息，这样可以提高转换性能</p>
      *
-     * @param clazz the type of binding
-     * @param <T>   the type of return object
+     * @param clazz 指定转换类型
+     * @param <T>   强转返回对象类型
      * @return T
      */
     public <T> T to(Class<T> clazz) {
@@ -1206,11 +1225,10 @@ public class Row {
     }
 
     /**
-     * Convert to T object, support annotation
-     * the is a memory shared object
+     * 与{@link #to}方法功能相同，唯一区别是{@code #too}方法返回的对象是内存共享的，所以不能将返回值收集到集合类或者数组
      *
-     * @param clazz the type of binding
-     * @param <T>   the type of return object
+     * @param clazz 指定转换类型
+     * @param <T>   强转返回对象类型
      * @return T
      */
     public <T> T too(Class<T> clazz) {
@@ -1271,9 +1289,16 @@ public class Row {
     }
 
     /**
-     * Convert row data to LinkedMap(sort by column index)
+     * 将行数据转为字典类型，为保证列顺序实际类型为{@code LinkedHashMap}，如果使用{@link Sheet#dataRows}和{@link Sheet#header}
+     * 指定表头则字典的Key为表头文本，Value为表头对应的列值，如果未指定表头那将以列索引做为Key，与导出指定的colIndex一样索引从{@code 0}开始。
+     * 对于多行表头字典Key将以{@code 行1:行2:行n}的格式进行拼接，横向合并的单元格将自动将值复制到每一列，而纵向合并的单元格则不会复制，
+     * 可以参考{@link Sheet#getHeader}方法。
      *
-     * @return the key is name or index(if not name here)
+     * <p>关于单元格类型的特殊说明：行数据转对象时会根据对象定义进行一次类型转换，将单元格的值转为对象定义中的类型，但是转为字典时却不会有这一步
+     * 逻辑，类型是根据excel中的值进行粗粒度转换，例如数字类型如果带有日期格式化则会返回一个{@code Timestamp}类型，
+     * 所以最终的数据类型可能与预期有所不同</p>
+     *
+     * @return 按列顺序为基础的LinkedHashMap
      */
     public Map<String, Object> toMap() {
         if (isEmpty()) return Collections.emptyMap();
