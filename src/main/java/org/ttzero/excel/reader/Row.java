@@ -1276,38 +1276,51 @@ public class Row {
      * @return the key is name or index(if not name here)
      */
     public Map<String, Object> toMap() {
-        if (isEmpty() || hr == null) return Collections.emptyMap();
+        if (isEmpty()) return Collections.emptyMap();
+        boolean hasHeader = hr != null;
         // Maintain the column orders
-        Map<String, Object> data = new LinkedHashMap<>(Math.max(16, hr.lc - hr.fc));
-        String[] names = hr.names;
+        Map<String, Object> data = new LinkedHashMap<>(hasHeader ? Math.max(16, hr.lc - hr.fc) : 16);
+        String[] names = hasHeader ? hr.names : null;
         String key;
-        for (int i = hr.fc; i < hr.lc; i++) {
+        int from = hasHeader ? hr.fc : fc, to = hasHeader ? hr.lc : lc;
+        for (int i = from; i < to; i++) {
             Cell c = cells[i];
-            key = names[i];
+            key = hasHeader ? names[i] : Integer.toString(i);
             // Ignore null key
             if (key == null) continue;
             switch (c.t) {
-                case SST      : if (c.sv == null) c.setSv(sst.get(c.nv)); // @Mark:=>There is no missing `break`, this is normal logic here
-                case INLINESTR: data.put(key, c.sv);              break;
-                case NUMERIC  :
+                case SST:
+                    if (c.sv == null) c.setSv(sst.get(c.nv));
+                    // @Mark:=>There is no missing `break`, this is normal logic here
+                case INLINESTR:
+                    data.put(key, c.sv);
+                    break;
+                case NUMERIC:
                     if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.nv);
                     else data.put(key, toTimestamp(c.nv));
                     break;
-                case LONG     :  data.put(key, c.lv);             break;
-                case DECIMAL  :
+                case LONG:
+                    data.put(key, c.lv);
+                    break;
+                case DECIMAL:
                     if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.mv);
                     else if (c.mv.compareTo(BigDecimal.ONE) > 0) data.put(key, toTimestamp(c.mv.doubleValue()));
                     else data.put(key, toTime(c.mv.doubleValue()));
                     break;
-                case DOUBLE   :
+                case DOUBLE:
                     if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.dv);
                     else if (c.dv > 1.00000) data.put(key, toTimestamp(c.dv));
                     else data.put(key, toTime(c.dv));
                     break;
-                case BLANK    :
-                case EMPTY_TAG: data.put(key, EMPTY);             break;
-                case BOOL     : data.put(key, c.bv);              break;
-                default       : data.put(key, null);
+                case BLANK:
+                case EMPTY_TAG:
+                    data.put(key, EMPTY);
+                    break;
+                case BOOL:
+                    data.put(key, c.bv);
+                    break;
+                default:
+                    data.put(key, null);
             }
         }
         return data;
