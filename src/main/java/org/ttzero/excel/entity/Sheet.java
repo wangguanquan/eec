@@ -1123,9 +1123,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
-        Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, Styles.toColor(fontColor));
-        return styles.addFont(font)
+        return styles.addFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(fontColor)))
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER

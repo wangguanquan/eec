@@ -134,9 +134,12 @@ public class HeaderStyleTest extends WorkbookTest {
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
                 assert fill.getPatternType() == PatternType.solid;
-                assert fill.getFgColor().equals(Styles.toColor("#ffff00"));
-                if (i == row.getLastColumnIndex() - 1)
+                if (i < row.getLastColumnIndex() - 1) {
+                    assert fill.getFgColor().equals(Styles.toColor("#ffff00"));
+                } else {
                     assert styles.getFont(style).getColor().equals(Styles.toColor("blue"));
+                    assert fill.getFgColor().equals(Styles.toColor("#E9EAEC"));
+                }
             }
         }
     }

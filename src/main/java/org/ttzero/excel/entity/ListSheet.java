@@ -805,7 +805,8 @@ public class ListSheet<T> extends Sheet {
             style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
         }
         for (Column column : columns) {
-            if (style > 0 && column.getHeaderStyleIndex() == -1)
+            // 如果字段未独立设置样式则使用方法上的样式
+            if (style > 0 && column.getHeaderStyleIndex() == -1 && column.headerStyle == null)
                 column.setHeaderStyle(style);
         }
 
