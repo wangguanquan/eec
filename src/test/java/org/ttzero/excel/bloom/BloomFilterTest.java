@@ -22,6 +22,8 @@ import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2019-05-06 16:44
  */
@@ -38,6 +40,6 @@ public class BloomFilterTest {
                 n++;
             }
         }
-        assert n >= 995;
+        assertTrue(n >= 995);
     }
 }
