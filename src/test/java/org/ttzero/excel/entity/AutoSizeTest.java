@@ -34,6 +34,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2023-02-04 22:15
  */
@@ -59,10 +62,10 @@ public class AutoSizeTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ServerReport> list = reader.sheet(0).dataRows().map(row -> row.to(ServerReport.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ServerReport expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -85,10 +88,10 @@ public class AutoSizeTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -106,11 +109,11 @@ public class AutoSizeTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Student> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.Student expect = expectList.get(i), e = list.get(i);
                 expect.setId(0);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -128,11 +131,11 @@ public class AutoSizeTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataIterator();
             for (ListObjectSheetTest.Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.getId() == row.getInt(0);
-                assert expect.getName().equals(row.getString(1));
-                assert expect.getScore() == row.getInt(2);
+                assertEquals((Integer) expect.getId(), row.getInt(0));
+                assertEquals(expect.getName(), row.getString(1));
+                assertEquals((Integer) expect.getScore(), row.getInt(2));
             }
         }
     }
@@ -150,11 +153,11 @@ public class AutoSizeTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).dataIterator();
             for (ListObjectSheetTest.Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.getId() == row.getInt(0);
-                assert expect.getName().equals(row.getString(1));
-                assert expect.getScore() == row.getInt(2);
+                assertEquals((Integer) expect.getId(), row.getInt(0));
+                assertEquals(expect.getName(), row.getString(1));
+                assertEquals((Integer) expect.getScore(), row.getInt(2));
             }
         }
     }
