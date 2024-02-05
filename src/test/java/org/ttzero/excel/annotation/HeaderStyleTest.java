@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * 自定义导出Excel表头样式
  *
@@ -31,16 +34,16 @@ public class HeaderStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Styles styles = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             Row row = iter.next();
             String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
             for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
                 Cell cell = row.getCell(i);
-                assert row.getString(cell).equals(titles[i]);
+                assertEquals(row.getString(cell), titles[i]);
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
-                assert fill.getPatternType() == PatternType.solid;
-                assert fill.getFgColor().equals(Styles.toColor("#E9EAEC"));
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor("#E9EAEC"));
             }
         }
     }
@@ -54,16 +57,16 @@ public class HeaderStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Styles styles = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             Row row = iter.next();
             String[] titles = {"column4", "column1", "column2", "column3", "code", "错误信息"};
             for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
                 Cell cell = row.getCell(i);
-                assert row.getString(cell).equals(titles[i]);
+                assertEquals(row.getString(cell), titles[i]);
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
-                assert fill.getPatternType() == PatternType.solid;
-                assert fill.getFgColor().equals(Styles.toColor(i < row.getLastColumnIndex() - 1 ? "#E9EAEC" : "#ff0000"));
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor(i < row.getLastColumnIndex() - 1 ? "#E9EAEC" : "#ff0000"));
             }
         }
     }
@@ -77,19 +80,19 @@ public class HeaderStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Styles styles = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             Row row = iter.next();
             String[] titles = {"column4", "column5", "column1", "column2", "column3", "code", "错误信息"};
             for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
                 Cell cell = row.getCell(i);
-                assert row.getString(cell).equals(titles[i]);
+                assertEquals(row.getString(cell), titles[i]);
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
-                assert fill.getPatternType() == PatternType.solid;
-                assert fill.getFgColor().equals(Styles.toColor(i != 1 ? "#E9EAEC" : "#cccccc"));
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor(i != 1 ? "#E9EAEC" : "#cccccc"));
 
                 if (i == row.getLastColumnIndex() - 1)
-                    assert styles.getFont(style).getColor().equals(Styles.toColor("#ff0000"));
+                    assertEquals(styles.getFont(style).getColor(), Styles.toColor("#ff0000"));
             }
         }
     }
@@ -102,17 +105,17 @@ public class HeaderStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Styles styles = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             Row row = iter.next();
             String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
             for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
                 Cell cell = row.getCell(i);
-                assert row.getString(cell).equals(titles[i]);
+                assertEquals(row.getString(cell), titles[i]);
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
-                assert fill.getPatternType() == PatternType.solid;
-                assert fill.getFgColor().equals(Styles.toColor("#ffff00"));
-                assert styles.getFont(style).getColor().equals(Styles.toColor("red"));
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor("#ffff00"));
+                assertEquals(styles.getFont(style).getColor(), Styles.toColor("red"));
             }
         }
     }
@@ -125,20 +128,20 @@ public class HeaderStyleTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Styles styles = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             Row row = iter.next();
             String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
             for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
                 Cell cell = row.getCell(i);
-                assert row.getString(cell).equals(titles[i]);
+                assertEquals(row.getString(cell), titles[i]);
                 int style = row.getCellStyle(cell);
                 Fill fill = styles.getFill(style);
-                assert fill.getPatternType() == PatternType.solid;
+                assertEquals(fill.getPatternType(), PatternType.solid);
                 if (i < row.getLastColumnIndex() - 1) {
-                    assert fill.getFgColor().equals(Styles.toColor("#ffff00"));
+                    assertEquals(fill.getFgColor(), Styles.toColor("#ffff00"));
                 } else {
-                    assert styles.getFont(style).getColor().equals(Styles.toColor("blue"));
-                    assert fill.getFgColor().equals(Styles.toColor("#E9EAEC"));
+                    assertEquals(styles.getFont(style).getColor(), Styles.toColor("blue"));
+                    assertEquals(fill.getFgColor(), Styles.toColor("#E9EAEC"));
                 }
             }
         }
