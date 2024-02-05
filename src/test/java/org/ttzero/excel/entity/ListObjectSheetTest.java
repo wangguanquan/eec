@@ -55,6 +55,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -71,10 +74,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -88,10 +91,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<AllType> list =  reader.sheet(0).dataRows().map(row -> row.to(AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -105,11 +108,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
                 expect.id = 0; // ID not exported
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -124,11 +127,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
                 expect.id = 0; // ID not exported
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -143,15 +146,15 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
 
             List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
-            assert pictures.size() == 1;
-            assert pictures.get(0).isBackground();
+            assertEquals(pictures.size(), 1);
+            assertTrue(pictures.get(0).isBackground());
         }
     }
 
@@ -165,18 +168,18 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
 
             List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
-            assert pictures.size() == 1;
+            assertEquals(pictures.size(), 1);
             Drawings.Picture pic = pictures.get(0);
-            assert pic.isBackground();
-            assert Files.size(pic.getLocalPath()) == Files.size(testResourceRoot().resolve("mark.png"));
-            assert crc32(pic.getLocalPath()) == crc32(testResourceRoot().resolve("mark.png"));
+            assertTrue(pic.isBackground());
+            assertEquals(Files.size(pic.getLocalPath()), Files.size(testResourceRoot().resolve("mark.png")));
+            assertEquals(crc32(pic.getLocalPath()), crc32(testResourceRoot().resolve("mark.png")));
         }
     }
 
@@ -190,18 +193,18 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
 
             List<Drawings.Picture> pictures = reader.sheet(0).listPictures();
-            assert pictures.size() == 1;
+            assertEquals(pictures.size(), 1);
             Drawings.Picture pic = pictures.get(0);
-            assert pic.isBackground();
-            assert Files.size(pic.getLocalPath()) == Files.size(testResourceRoot().resolve("mark.png"));
-            assert crc32(pic.getLocalPath()) == crc32(testResourceRoot().resolve("mark.png"));
+            assertTrue(pic.isBackground());
+            assertEquals(Files.size(pic.getLocalPath()), Files.size(testResourceRoot().resolve("mark.png")));
+            assertEquals(crc32(pic.getLocalPath()), crc32(testResourceRoot().resolve("mark.png")));
         }
     }
 
@@ -215,10 +218,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<AllType> list =  reader.sheet(0).dataRows().map(row -> row.to(AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -237,21 +240,21 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "学号".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "成绩".equals(header.get(2));
+            assertEquals("学号", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("成绩", header.get(2));
 
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 Map<String, Object> e = iter.next().toMap();
-                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
-                assert expect.getName().equals(e.get("姓名").toString());
+                assertEquals(expect.getId(), Integer.parseInt(e.get("学号").toString()));
+                assertEquals(expect.getName(), e.get("姓名").toString());
                 if (expect.getScore() < 60) {
-                    assert "不合格".equals(e.get("成绩"));
+                    assertEquals("不合格", e.get("成绩"));
                 } else {
-                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
+                    assertEquals(expect.getScore(), Integer.parseInt(e.get("成绩").toString()));
                 }
             }
         }
@@ -277,25 +280,25 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1).bind(Student.class);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "学号".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "成绩".equals(header.get(2));
+            assertEquals("学号", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("成绩", header.get(2));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 Student e = row.to(Student.class);
                 expect.id = 0; // ID not exported
-                assert expect.equals(e);
+                assertEquals(expect, e);
 
                 Styles styles = row.getStyles();
                 int style = row.getCellStyle(2);
                 Fill fill = styles.getFill(style);
                 if (expect.getScore() < 60) {
-                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.orange);
+                    assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.orange));
                 } else {
-                    assert fill == null || fill.getPatternType() == PatternType.none;
+                    assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                 }
             }
         }
@@ -321,30 +324,30 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "学号".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "成绩".equals(header.get(2));
+            assertEquals("学号", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("成绩", header.get(2));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 Map<String, Object> e = row.toMap();
-                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
-                assert expect.getName().equals(e.get("姓名").toString());
+                assertEquals(expect.getId(), Integer.parseInt(e.get("学号").toString()));
+                assertEquals(expect.getName(), e.get("姓名").toString());
                 if (expect.getScore() < 60) {
-                    assert "不合格".equals(e.get("成绩"));
+                    assertEquals("不合格", e.get("成绩"));
                 } else {
-                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
+                    assertEquals(expect.getScore(), Integer.parseInt(e.get("成绩").toString()));
                 }
 
                 Styles styles = row.getStyles();
                 int style = row.getCellStyle(2);
                 Fill fill = styles.getFill(style);
                 if (expect.getScore() < 60) {
-                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(246, 209, 139));
+                    assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(246, 209, 139)));
                 } else {
-                    assert fill == null || fill.getPatternType() == PatternType.none;
+                    assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                 }
             }
         }
@@ -366,11 +369,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.getName().equals(e.getName());
-                assert expect.getScore() == e.getScore();
+                assertEquals(expect.getName(), e.getName());
+                assertEquals(expect.getScore(), e.getScore());
             }
         }
     }
@@ -384,10 +387,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<BoxAllType> list =  reader.sheet(0).dataRows().map(row -> row.to(BoxAllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 BoxAllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -404,10 +407,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<BoxAllType> list =  reader.sheet(0).dataRows().map(row -> row.to(BoxAllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 BoxAllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -427,15 +430,15 @@ public class ListObjectSheetTest extends WorkbookTest {
             })
             .writeTo(defaultTestPath.resolve(fileName));
 
-        assert !expectList.isEmpty();
+        assertFalse(expectList.isEmpty());
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list =  reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.getName().equals(e.getName());
-                assert expect.getScore() == e.getScore();
+                assertEquals(expect.getName(), e.getName());
+                assertEquals(expect.getScore(), e.getScore());
             }
         }
     }
@@ -450,10 +453,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -467,12 +470,12 @@ public class ListObjectSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert "Item".equals(reader.sheet(0).getName());
+            assertEquals("Item", reader.sheet(0).getName());
             List<Item> list =  reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -489,12 +492,12 @@ public class ListObjectSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert "Item".equals(reader.sheet(0).getName());
+            assertEquals("Item", reader.sheet(0).getName());
             List<Item> list =  reader.sheet(0).headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -512,18 +515,18 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "Item".equals(sheet.getName());
+            assertEquals("Item", sheet.getName());
             List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
 
             List<Drawings.Picture> pictures = sheet.listPictures();
-            assert pictures.size() == 1;
+            assertEquals(pictures.size(), 1);
             Drawings.Picture pic = pictures.get(0);
-            assert pic.isBackground();
+            assertTrue(pic.isBackground());
         }
     }
 
@@ -538,10 +541,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -556,12 +559,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "ITEM".equals(sheet.getName());
+            assertEquals("ITEM", sheet.getName());
             List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -579,10 +582,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -599,12 +602,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "ITEM".equals(sheet.getName());
+            assertEquals("ITEM", sheet.getName());
             List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -623,10 +626,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -645,17 +648,17 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "ITEM".equals(sheet.getName());
+            assertEquals("ITEM", sheet.getName());
             List<Item> list =  sheet.headerColumnIgnoreCase().dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
             List<Drawings.Picture> pictures = sheet.listPictures();
-            assert pictures.size() == 1;
+            assertEquals(pictures.size(), 1);
             Drawings.Picture pic = pictures.get(0);
-            assert pic.isBackground();
+            assertTrue(pic.isBackground());
         }
     }
 
@@ -670,10 +673,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -689,10 +692,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Item> list =  sheet.dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -721,44 +724,44 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "学号".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "成绩".equals(header.get(2));
+            assertEquals("学号", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("成绩", header.get(2));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.getId() == row.getInt("学号");
-                assert expect.getName().equals(row.getString("姓名"));
+                assertEquals(expect.getId(), (long) row.getInt("学号"));
+                assertEquals(expect.getName(), row.getString("姓名"));
 
                 Styles styles = row.getStyles();
                 if (expect.getScore() < 60) {
-                    assert "不合格".equals(row.getString("成绩"));
+                    assertEquals("不合格", row.getString("成绩"));
 
                     int style0 = row.getCellStyle(0);
                     Fill fill0 = styles.getFill(style0);
-                    assert fill0.getPatternType() == PatternType.solid && fill0.getFgColor().equals(Color.orange);
+                    assertTrue(fill0.getPatternType() == PatternType.solid && fill0.getFgColor().equals(Color.orange));
                     int style1 = row.getCellStyle(1);
                     Fill fill1 = styles.getFill(style1);
-                    assert fill1.getPatternType() == PatternType.solid && fill1.getFgColor().equals(Color.orange);
+                    assertTrue(fill1.getPatternType() == PatternType.solid && fill1.getFgColor().equals(Color.orange));
                     int style2 = row.getCellStyle(2);
                     Fill fill2 = styles.getFill(style2);
-                    assert fill2.getPatternType() == PatternType.solid && fill2.getFgColor().equals(Color.orange);
+                    assertTrue(fill2.getPatternType() == PatternType.solid && fill2.getFgColor().equals(Color.orange));
                 } else {
-                    assert expect.getScore() == row.getInt("成绩");
+                    assertEquals(expect.getScore(), (long) row.getInt("成绩"));
 
                     int style0 = row.getCellStyle(0);
                     Fill fill0 = styles.getFill(style0);
-                    assert fill0 == null || fill0.getPatternType() == PatternType.none;
+                    assertTrue(fill0 == null || fill0.getPatternType() == PatternType.none);
                     int style1 = row.getCellStyle(1);
                     Fill fill1 = styles.getFill(style1);
-                    assert fill1 == null || fill1.getPatternType() == PatternType.none;
+                    assertTrue(fill1 == null || fill1.getPatternType() == PatternType.none);
                     int style2 = row.getCellStyle(2);
                     Fill fill2 = styles.getFill(style2);
-                    assert fill2 == null || fill2.getPatternType() == PatternType.none;
+                    assertTrue(fill2 == null || fill2.getPatternType() == PatternType.none);
                 }
             }
         }
@@ -774,12 +777,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "EXT-ITEM".equals(sheet.getName());
+            assertEquals("EXT-ITEM", sheet.getName());
             List<ExtItem> list =  sheet.dataRows().map(row -> row.to(ExtItem.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ExtItem expect = (ExtItem) expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -798,15 +801,15 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list =  sheet.dataRows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i);
                 Map<String, Object> e = list.get(i);
-                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
-                assert expect.getName().equals(e.get("姓名"));
-                assert e.get("成绩") == null || e.get("成绩").equals("");
+                assertEquals(expect.getId(), Integer.parseInt(e.get("学号").toString()));
+                assertEquals(expect.getName(), e.get("姓名"));
+                assertTrue(e.get("成绩") == null || e.get("成绩").equals(""));
             }
         }
     }
@@ -826,13 +829,13 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "重写期末成绩".equals(sheet.getName());
+            assertEquals("重写期末成绩", sheet.getName());
             List<Student> list =  sheet.dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert list.size() == 1;
+            assertEquals(list.size(), 1);
             Student e = list.get(0);
-            assert e.getId() == 0; // Ignore column
-            assert author.equals(e.getName());
-            assert 100 == e.getScore();
+            assertEquals(e.getId(), 0); // Ignore column
+            assertEquals(author, e.getName());
+            assertEquals(100, e.getScore());
         }
     }
 
@@ -858,10 +861,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
                 .map(row -> row.too(ExtStudent.class)).findAny();
-            assert opt.isPresent();
+            assertTrue(opt.isPresent());
             ExtStudent student = opt.get();
-            assert student.getId() == 9527;
-            assert student.getScore() == 0; // The setter column name is 'score'
+            assertEquals(student.getId(), 9527);
+            assertEquals(student.getScore(), 0); // The setter column name is 'score'
         }
     }
 
@@ -873,10 +876,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("忽略父类属性.xlsx"))) {
             Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
                 .map(row -> row.too(ExtStudent.class)).findAny();
-            assert opt.isPresent();
+            assertTrue(opt.isPresent());
             ExtStudent student = opt.get();
-            assert student.getId() == 0;
-            assert student.getScore() == 0;
+            assertEquals(student.getId(), 0);
+            assertEquals(student.getScore(), 0);
         }
     }
 
@@ -896,11 +899,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
                 expect.id = 0; // ID not exported
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -926,10 +929,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NotSharedObject> list = reader.sheet(0).dataRows().map(row -> row.to(NotSharedObject.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 NotSharedObject expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -951,14 +954,14 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Specify Core.xlsx"))) {
             AppInfo info = reader.getAppInfo();
-            assert core.getCreator().equals(info.getCreator());
-            assert core.getTitle().equals(info.getTitle());
-            assert core.getSubject().equals(info.getSubject());
-            assert core.getCategory().equals(info.getCategory());
-            assert core.getDescription().equals(info.getDescription());
-            assert core.getKeywords().equals(info.getKeywords());
-            assert core.getVersion().equals(info.getVersion());
-            assert core.getLastModifiedBy().equals(info.getLastModifiedBy());
+            assertEquals(core.getCreator(), info.getCreator());
+            assertEquals(core.getTitle(), info.getTitle());
+            assertEquals(core.getSubject(), info.getSubject());
+            assertEquals(core.getCategory(), info.getCategory());
+            assertEquals(core.getDescription(), info.getDescription());
+            assertEquals(core.getKeywords(), info.getKeywords());
+            assertEquals(core.getVersion(), info.getVersion());
+            assertEquals(core.getLastModifiedBy(), info.getLastModifiedBy());
         }
     }
 
@@ -1006,35 +1009,35 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert Dimension.of("A1:Y50001").equals(sheet.getDimension());
+            assertEquals(Dimension.of("A1:Y50001"), sheet.getDimension());
             int i = 0;
             for (Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator(); iter.hasNext(); i++) {
                 Map<String, Object> map = iter.next().toMap();
-                assert map.get("str1").equals("str1-" + i);
-                assert map.get("str2").equals("str2-" + i);
-                assert map.get("str3").equals("str3-" + i);
-                assert map.get("str4").equals("str4-" + i);
-                assert map.get("str5").equals("str5-" + i);
-                assert map.get("str6").equals("str6-" + i);
-                assert map.get("str7").equals("str7-" + i);
-                assert map.get("str8").equals("str8-" + i);
-                assert map.get("str9").equals("str9-" + i);
-                assert map.get("str10").equals("str10-" + i);
-                assert map.get("str11").equals("str11-" + i);
-                assert map.get("str12").equals("str12-" + i);
-                assert map.get("str13").equals("str13-" + i);
-                assert map.get("str14").equals("str14-" + i);
-                assert map.get("str15").equals("str15-" + i);
-                assert map.get("str16").equals("str16-" + i);
-                assert map.get("str17").equals("str17-" + i);
-                assert map.get("str18").equals("str18-" + i);
-                assert map.get("str19").equals("str19-" + i);
-                assert map.get("str20").equals("str20-" + i);
-                assert map.get("str21").equals("str21-" + i);
-                assert map.get("str22").equals("str22-" + i);
-                assert map.get("str23").equals("str23-" + i);
-                assert map.get("str24").equals("str24-" + i);
-                assert map.get("str25").equals("str25-" + i);
+                assertEquals(map.get("str1"), "str1-" + i);
+                assertEquals(map.get("str2"), "str2-" + i);
+                assertEquals(map.get("str3"), "str3-" + i);
+                assertEquals(map.get("str4"), "str4-" + i);
+                assertEquals(map.get("str5"), "str5-" + i);
+                assertEquals(map.get("str6"), "str6-" + i);
+                assertEquals(map.get("str7"), "str7-" + i);
+                assertEquals(map.get("str8"), "str8-" + i);
+                assertEquals(map.get("str9"), "str9-" + i);
+                assertEquals(map.get("str10"), "str10-" + i);
+                assertEquals(map.get("str11"), "str11-" + i);
+                assertEquals(map.get("str12"), "str12-" + i);
+                assertEquals(map.get("str13"), "str13-" + i);
+                assertEquals(map.get("str14"), "str14-" + i);
+                assertEquals(map.get("str15"), "str15-" + i);
+                assertEquals(map.get("str16"), "str16-" + i);
+                assertEquals(map.get("str17"), "str17-" + i);
+                assertEquals(map.get("str18"), "str18-" + i);
+                assertEquals(map.get("str19"), "str19-" + i);
+                assertEquals(map.get("str20"), "str20-" + i);
+                assertEquals(map.get("str21"), "str21-" + i);
+                assertEquals(map.get("str22"), "str22-" + i);
+                assertEquals(map.get("str23"), "str23-" + i);
+                assertEquals(map.get("str24"), "str24-" + i);
+                assertEquals(map.get("str25"), "str25-" + i);
             }
         }
     }
@@ -1045,7 +1048,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook().addSheet(new ListSheet<>(new ArrayList<>())).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
     
@@ -1054,8 +1057,8 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook().addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData())).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert Dimension.of("A1").equals(reader.sheet(0).getDimension());
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals(Dimension.of("A1"), reader.sheet(0).getDimension());
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
     
@@ -1067,10 +1070,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
-            assert list.size() == lines;
+            assertEquals(list.size(), lines);
             for (int i = 0; i < lines; i++) {
                 NoColumnAnnotation expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1083,10 +1086,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NoColumnAnnotation> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
-            assert list.size() == lines;
+            assertEquals(list.size(), lines);
             for (int i = 0; i < lines; i++) {
                 NoColumnAnnotation expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1104,17 +1107,17 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<NoColumnAnnotation> list1 = reader.sheet(0).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation.class)).collect(Collectors.toList());
-            assert list1.size() == lines;
+            assertEquals(list1.size(), lines);
             for (int i = 0; i < lines; i++) {
                 NoColumnAnnotation expect = expectList1.get(i), e = list1.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
 
             List<NoColumnAnnotation2> list2 = reader.sheet(1).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation2.class)).collect(Collectors.toList());
-            assert list2.size() == lines2;
+            assertEquals(list2.size(), lines2);
             for (int i = 0; i < lines2; i++) {
                 NoColumnAnnotation2 expect = expectList2.get(i), e = list2.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1131,13 +1134,13 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).dataRows().count() == 0L;
+            assertEquals(reader.sheet(0).dataRows().count(), 0L);
 
             List<NoColumnAnnotation2> list2 = reader.sheet(1).forceImport().dataRows().map(row -> row.to(NoColumnAnnotation2.class)).collect(Collectors.toList());
-            assert list2.size() == lines2;
+            assertEquals(list2.size(), lines2);
             for (int i = 0; i < lines2; i++) {
                 NoColumnAnnotation2 expect = expectList2.get(i), e = list2.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1154,8 +1157,8 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).dataRows().count() == 0L;
-            assert reader.sheet(1).dataRows().count() == 0L;
+            assertEquals(reader.sheet(0).dataRows().count(), 0L);
+            assertEquals(reader.sheet(1).dataRows().count(), 0L);
         }
     }
 
@@ -1170,10 +1173,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list = reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1195,12 +1198,12 @@ public class ListObjectSheetTest extends WorkbookTest {
             for (int i = header.getFirstColumnIndex(), limit = header.getLastColumnIndex(); i < limit; i++) {
                 int styleIndex = header.getCellStyle(i);
                 Fill fill = styles.getFill(styleIndex);
-                assert fill == null || fill.getPatternType() == PatternType.none;
+                assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                 Font font = styles.getFont(styleIndex);
-                assert font.getSize() == 11;
-                assert font.isBold();
-                assert font.getColor().equals(Color.BLACK);
-                assert font.getName().equals("宋体");
+                assertEquals(font.getSize(), 11);
+                assertTrue(font.isBold());
+                assertEquals(font.getColor(), Color.BLACK);
+                assertEquals(font.getName(), "宋体");
             }
         }
     }
@@ -1214,9 +1217,9 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
             Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);
-            assert array.length == list.size();
+            assertEquals(array.length, list.size());
             for (int i = 0; i < array.length; i++) {
-                assert array[i].equals(list.get(i));
+                assertEquals(array[i], list.get(i));
             }
         }
     }
@@ -1228,13 +1231,13 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("UnDisplayChar.xlsx"))) {
             List<Character> subList = reader.sheet(0).rows().map(row -> row.getChar(0)).collect(Collectors.toList());
 
-            assert subList.size() == list.size();
+            assertEquals(subList.size(), list.size());
             for (int i = 0; i < subList.size(); i++) {
                 char c = subList.get(i);
                 if (i == 9 || i == 10 || i == 13) {
-                    assert list.get(i).equals(c);
+                    assertEquals(list.get(i).charValue(), c);
                 } else {
-                    assert 0xFFFD == c;
+                    assertEquals(0xFFFD, c);
                 }
             }
         }
@@ -1249,10 +1252,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
             List<String> subList = reader.sheet(0).rows().map(row -> row.getString(0)).collect(Collectors.toList());
 
-            assert subList.size() == list.size();
+            assertEquals(subList.size(), list.size());
 
             for (int i = 0, len = subList.size(); i < len; i++) {
-                assert subList.get(i).equals(list.get(i));
+                assertEquals(subList.get(i), list.get(i));
             }
         }
     }
@@ -1266,16 +1269,16 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assert "ID".equals(row.getString(0));
-            assert "NAME".equals(row.getString(1));
+            assertEquals("ID", row.getString(0));
+            assertEquals("NAME", row.getString(1));
 
             List<Item> list = reader.sheet(0).headerColumnIgnoreCase().dataRows().map(r -> r.to(Item.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -1290,12 +1293,12 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Item> list = reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
-            assert list.size() == expectList.size() - 3;
+            assertEquals(list.size(), expectList.size() - 3);
             for (int i = 0, j = 0, len = expectList.size(); i < len; i++) {
                 Item expect = expectList.get(i);
                 if (expect == null) continue;
                 Item e = list.get(j++);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }

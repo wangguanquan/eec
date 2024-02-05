@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author guanquan.wang at 2019-04-29 11:14
  */
@@ -42,17 +44,17 @@ public class ListMapPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     Map<String, ?> expect = expectList.get(a++), e = iter.next().toMap();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
             }
         }
@@ -68,17 +70,17 @@ public class ListMapPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     Map<String, ?> expect = expectList.get(a++), e = iter.next().toMap();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
             }
         }
