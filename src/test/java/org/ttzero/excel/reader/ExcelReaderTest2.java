@@ -28,6 +28,7 @@ import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.util.CSVUtil;
+import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -278,17 +279,43 @@ public class ExcelReaderTest2 {
             assert panes.row == 1;
             assert panes.col == 0;
             assert sheet.showGridLines();
-            assert sheet.getFilter().equals(Dimension.of("A1:F1"));
+            assert Dimension.of("A1:F1").equals(sheet.getFilter());
             List<Col> list = sheet.getCols();
             assert list.size() == 6;
             assert list.get(2).hidden;
-            assert (int) sheet.getDefaultColWidth() == 30;
+            assert (int) sheet.getDefaultColWidth() == 21;
             assert (int) sheet.getDefaultRowHeight() == 15;
 
             List<Dimension> mergeCells = sheet.getMergeCells();
             assert mergeCells.size() == 1;
-            assert mergeCells.get(0).equals(Dimension.of("G3:H6"));
-            sheet.forceImport().dataRows().map(row -> row.to(ExcelReaderTest.AnnotationEntry.class)).forEach(System.out::println);
+            assert Dimension.of("B98:E100").equals(mergeCells.get(0));
+
+            Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
+            if (Files.exists(expectPath)) {
+                List<String[]> expectList = CSVUtil.read(expectPath);
+
+                Iterator<Row> it = sheet.iterator();
+                for (String[] expect : expectList) {
+                    assert it.hasNext();
+                    Row row = it.next();
+
+                    // 第20行隐藏
+                    if (row.getRowNum() == 20) assert row.isHidden();
+
+                    for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                        Cell cell = row.getCell(start);
+                        CellType type = row.getCellType(cell);
+                        String e = expect[start], o;
+                        switch (type) {
+                            case INTEGER : o = row.getInt(cell).toString();                   break;
+                            case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
+                            case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                            default: o = row.getString(start);
+                        }
+                        assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
+                    }
+                }
+            }
         }
     }
 
