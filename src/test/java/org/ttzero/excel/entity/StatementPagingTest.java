@@ -27,6 +27,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2019-04-28 22:47
  */
@@ -52,27 +55,27 @@ public class StatementPagingTest extends SQLWorkbookTest {
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                assert reader.getSheetCount() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+                assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
                 for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                     Iterator<Row> iter = reader.sheet(i).iterator();
-                    assert iter.hasNext();
+                    assertTrue(iter.hasNext());
                     org.ttzero.excel.reader.Row header = iter.next();
-                    assert "id".equals(header.getString(0));
-                    assert "name".equals(header.getString(1));
-                    assert "age".equals(header.getString(2));
-                    assert "create_date".equals(header.getString(3));
-                    assert "update_date".equals(header.getString(4));
+                    assertEquals("id", header.getString(0));
+                    assertEquals("name", header.getString(1));
+                    assertEquals("age", header.getString(2));
+                    assertEquals("create_date", header.getString(3));
+                    assertEquals("update_date", header.getString(4));
                     int x = 1;
                     while (rs.next()) {
-                        assert iter.hasNext();
+                        assertTrue(iter.hasNext());
                         org.ttzero.excel.reader.Row row = iter.next();
 
-                        assert rs.getInt(1) == row.getInt(0);
-                        assert rs.getString(2).equals(row.getString(1));
-                        assert rs.getInt(3) == row.getInt(2);
-                        assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null;
-                        assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                        assertEquals(rs.getInt(1), (int) row.getInt(0));
+                        assertEquals(rs.getString(2), row.getString(1));
+                        assertEquals(rs.getInt(3), (int) row.getInt(2));
+                        assertTrue(rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null);
+                        assertTrue(rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null);
 
                         if (++x >= rowLimit) break;
                     }

@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 
@@ -38,107 +39,107 @@ public class ReflectUtilTest {
     @Test public void testListDeclaredFields() {
         Field[] fields = ReflectUtil.listDeclaredFields(A.class);
 
-        assert fields.length == 1;
-        assert fields[0].getName().equals("a");
+        assertEquals(fields.length, 1);
+        assertEquals(fields[0].getName(), "a");
     }
 
     @Test public void testListDeclaredFields2() {
         Field[] fields = ReflectUtil.listDeclaredFields(B.class);
 
-        assert fields.length == 1;
-        assert fields[0].getName().equals("a");
+        assertEquals(fields.length, 1);
+        assertEquals(fields[0].getName(), "a");
     }
 
     @Test public void testListDeclaredFields3() {
         Field[] fields = ReflectUtil.listDeclaredFields(C.class);
 
-        assert fields.length == 2;
-        assert fields[0].getName().equals("c");
-        assert fields[1].getName().equals("a");
+        assertEquals(fields.length, 2);
+        assertEquals(fields[0].getName(), "c");
+        assertEquals(fields[1].getName(), "a");
     }
 
     @Test public void testListDeclaredFields4() {
         Field[] fields = ReflectUtil.listDeclaredFields(C.class, A.class);
 
-        assert fields.length == 1;
-        assert fields[0].getName().equals("c");
+        assertEquals(fields.length, 1);
+        assertEquals(fields[0].getName(), "c");
     }
 
     @Test public void testListDeclaredFields5() {
         Field[] fields = ReflectUtil.listDeclaredFields(C.class
             , field -> field.getAnnotation(ExcelColumn.class) != null);
 
-        assert fields.length == 1;
-        assert fields[0].getName().equals("a");
+        assertEquals(fields.length, 1);
+        assertEquals(fields[0].getName(), "a");
     }
 
     @Test public void testListDeclaredMethod1() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class);
 
-        assert methods.length == 6;
+        assertEquals(methods.length, 6);
     }
 
     @Test public void testListDeclaredMethod2() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class, B.class);
 
-        assert methods.length == 4;
+        assertEquals(methods.length, 4);
     }
 
     @Test public void testListDeclaredMethod3() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class, method -> method.getName().startsWith("set"));
 
-        assert methods.length == 2;
+        assertEquals(methods.length, 2);
     }
 
     @Test public void testListDeclaredMethod4() throws IntrospectionException {
         Method[] methods = ReflectUtil.listDeclaredMethods(C.class, B.class, method -> method.getName().startsWith("set"));
 
-        assert methods.length == 1;
+        assertEquals(methods.length, 1);
     }
 
     @Test public void testListReadMethod1() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class);
 
-        assert methods.length == 3;
+        assertEquals(methods.length, 3);
     }
 
     @Test public void testListReadMethod2() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class, A.class);
 
-        assert methods.length == 2;
+        assertEquals(methods.length, 2);
     }
 
     @Test public void testListReadMethod3() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class
             , method -> method.getAnnotation(ExcelColumn.class) != null);
 
-        assert methods.length == 1;
+        assertEquals(methods.length, 1);
     }
 
     @Test public void testListReadMethod4() throws IntrospectionException {
         Method[] methods = ReflectUtil.listReadMethods(C.class, A.class
             , method -> method.getAnnotation(IgnoreExport.class) != null);
 
-        assert methods.length == 0;
+        assertEquals(methods.length, 0);
     }
 
     @Test public void testListWriteMethod1() throws IntrospectionException {
         Method[] methods = ReflectUtil.listWriteMethods(C.class);
 
-        assert methods.length == 2;
+        assertEquals(methods.length, 2);
     }
 
     @Test public void testListWriteMethod2() throws IntrospectionException {
         Method[] methods = ReflectUtil.listWriteMethods(C.class, A.class);
 
-        assert methods.length == 1;
+        assertEquals(methods.length, 1);
     }
 
     @Test public void testListWriteMethod3() throws IntrospectionException {
         Method[] methods = ReflectUtil.listWriteMethods(C.class
             , method -> method.getAnnotation(ExcelColumn.class) != null);
 
-        assert methods.length == 0;
+        assertEquals(methods.length, 0);
     }
 
     @Test public void testListWriteMethod4() throws IntrospectionException {
@@ -147,7 +148,7 @@ public class ReflectUtilTest {
 
         for (Method method : methods)
             println(method);
-        assert methods.length == 1;
+        assertEquals(methods.length, 1);
     }
 
     @Test public void test() throws IntrospectionException {

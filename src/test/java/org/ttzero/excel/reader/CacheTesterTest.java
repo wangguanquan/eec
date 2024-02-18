@@ -19,39 +19,43 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2020-03-11 15:39
  */
 public class CacheTesterTest {
     @Test public void test() {
         Tester tester = new Tester.BinaryTester(1024);
-        assert !tester.test(0);
-        assert !tester.test(1);
-        assert !tester.test(9);
-        assert tester.test(1);
-        assert tester.test(9);
-        assert !tester.test(5);
-        assert tester.test(0);
+        assertFalse(tester.test(0));
+        assertFalse(tester.test(1));
+        assertFalse(tester.test(9));
+        assertTrue(tester.test(1));
+        assertTrue(tester.test(9));
+        assertFalse(tester.test(5));
+        assertTrue(tester.test(0));
 
         for (int i = 0; i < 63; tester.test(i++)) ;
 
-        assert !tester.test(1000);
+        assertFalse(tester.test(1000));
 
-        assert tester.size() == 16;
+        assertEquals(tester.size(), 16);
 
-        assert tester.test(32);
-        assert tester.test(1000);
-        assert !tester.test(64);
+        assertTrue(tester.test(32));
+        assertTrue(tester.test(1000));
+        assertFalse(tester.test(64));
 
-        assert !tester.test(63);
-        assert !tester.test(1024);
+        assertFalse(tester.test(63));
+        assertFalse(tester.test(1024));
 
-        assert tester.size() == 16;
-        assert tester.limit() == 1087;
+        assertEquals(tester.size(), 16);
+        assertEquals(tester.limit(), 1087);
 
-        assert tester.test(1024);
-        assert !tester.test(1087);
+        assertTrue(tester.test(1024));
+        assertFalse(tester.test(1087));
 
-        assert tester.size() == 16;
+        assertEquals(tester.size(), 16);
     }
 }

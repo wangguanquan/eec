@@ -43,6 +43,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
@@ -58,12 +60,12 @@ public class ExcelReaderTest2 {
             reader.sheet(0).rows().forEach(row -> {
                 switch (row.getRowNum()) {
                     case 1:
-                        assert !row.isEmpty();
-                        assert !row.isBlank();
+                        assertFalse(row.isEmpty());
+                        assertFalse(row.isBlank());
                         break;
                     case 2:
-                        assert !row.isEmpty();
-                        assert row.isBlank();
+                        assertFalse(row.isEmpty());
+                        assertTrue(row.isBlank());
                         break;
                 }
             });
@@ -79,7 +81,7 @@ public class ExcelReaderTest2 {
                     List<String[]> expectList = CSVUtil.read(expectPath);
                     Iterator<Row> it = sheet.iterator();
                     for (String[] expect : expectList) {
-                        assert it.hasNext();
+                        assertTrue(it.hasNext());
                         Row row = it.next();
 
                         for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
@@ -88,13 +90,13 @@ public class ExcelReaderTest2 {
                             String e = expect[start], o;
                             if (type == CellType.INTEGER) o = row.getInt(cell).toString();
                             else o = row.getString(start);
-                            assert StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o);
+                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o));
                         }
                     }
                 } else {
                     for (Iterator<Row> iter = sheet.iterator(); iter.hasNext(); ) {
                         Row row = iter.next();
-                        assert  StringUtil.isNotEmpty(row.toString());
+                        assertTrue(StringUtil.isNotEmpty(row.toString()));
                     }
                 }
             }
@@ -105,28 +107,28 @@ public class ExcelReaderTest2 {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
             MergeSheet sheet = reader.sheet(0).asMergeSheet();
             List<Dimension> list = sheet.getMergeCells();
-            assert list.size() == 4;
-            assert list.get(0).equals(Dimension.of("B2:C2"));
-            assert list.get(1).equals(Dimension.of("E5:F8"));
-            assert list.get(2).equals(Dimension.of("A13:A20"));
-            assert list.get(3).equals(Dimension.of("B16:E17"));
+            assertEquals(list.size(), 4);
+            assertEquals(list.get(0), Dimension.of("B2:C2"));
+            assertEquals(list.get(1), Dimension.of("E5:F8"));
+            assertEquals(list.get(2), Dimension.of("A13:A20"));
+            assertEquals(list.get(3), Dimension.of("B16:E17"));
 
             sheet = reader.sheet(1).asMergeSheet();
             list = sheet.getMergeCells();
-            assert list.size() == 2;
-            assert list.get(0).equals(Dimension.of("BM2:BQ11"));
-            assert list.get(1).equals(Dimension.of("A1:B26"));
+            assertEquals(list.size(), 2);
+            assertEquals(list.get(0), Dimension.of("BM2:BQ11"));
+            assertEquals(list.get(1), Dimension.of("A1:B26"));
 
             sheet = reader.sheet(2).asMergeSheet();
             list = sheet.getMergeCells();
-            assert list.size() == 2;
-            assert list.get(0).equals(Dimension.of("A16428:D16437"));
-            assert list.get(1).equals(Dimension.of("A1:K3"));
+            assertEquals(list.size(), 2);
+            assertEquals(list.get(0), Dimension.of("A16428:D16437"));
+            assertEquals(list.get(1), Dimension.of("A1:K3"));
 
             sheet = reader.sheet(3).asMergeSheet();
             list = sheet.getMergeCells();
-            assert list.size() == 1;
-            assert list.get(0).equals(Dimension.of("A1:CF1434"));
+            assertEquals(list.size(), 1);
+            assertEquals(list.get(0), Dimension.of("A1:CF1434"));
         }
     }
 
@@ -134,26 +136,26 @@ public class ExcelReaderTest2 {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
             MergeSheet sheet = reader.sheet(0).asMergeSheet();
             List<Dimension> list = sheet.getMergeCells();
-            assert list.size() == 2608;
-            assert list.get(0).equals(Dimension.of("C3:F3"));
-            assert list.get(1).equals(Dimension.of("J2:J3"));
-            assert list.get(2).equals(Dimension.of("B2:B3"));
-            assert list.get(3).equals(Dimension.of("C5:F5"));
+            assertEquals(list.size(), 2608);
+            assertEquals(list.get(0), Dimension.of("C3:F3"));
+            assertEquals(list.get(1), Dimension.of("J2:J3"));
+            assertEquals(list.get(2), Dimension.of("B2:B3"));
+            assertEquals(list.get(3), Dimension.of("C5:F5"));
 
-            assert list.get(98).equals(Dimension.of("C82:F82"));
-            assert list.get(120).equals(Dimension.of("A104:A106"));
-            assert list.get(210).equals(Dimension.of("C176:F176"));
-            assert list.get(984).equals(Dimension.of("C821:F821"));
+            assertEquals(list.get(98), Dimension.of("C82:F82"));
+            assertEquals(list.get(120), Dimension.of("A104:A106"));
+            assertEquals(list.get(210), Dimension.of("C176:F176"));
+            assertEquals(list.get(984), Dimension.of("C821:F821"));
 
-            assert list.get(1626).equals(Dimension.of("B1362:B1371"));
-            assert list.get(1627).equals(Dimension.of("J1362:J1363"));
-            assert list.get(2381).equals(Dimension.of("B2006:B2007"));
-            assert list.get(2396).equals(Dimension.of("J2019:J2020"));
+            assertEquals(list.get(1626), Dimension.of("B1362:B1371"));
+            assertEquals(list.get(1627), Dimension.of("J1362:J1363"));
+            assertEquals(list.get(2381), Dimension.of("B2006:B2007"));
+            assertEquals(list.get(2396), Dimension.of("J2019:J2020"));
 
-            assert list.get(2596).equals(Dimension.of("C2190:F2190"));
-            assert list.get(2601).equals(Dimension.of("J2195:J2196"));
-            assert list.get(2605).equals(Dimension.of("C2198:F2198"));
-            assert list.get(2607).equals(Dimension.of("C2200:F2200"));
+            assertEquals(list.get(2596), Dimension.of("C2190:F2190"));
+            assertEquals(list.get(2601), Dimension.of("J2195:J2196"));
+            assertEquals(list.get(2605), Dimension.of("C2198:F2198"));
+            assertEquals(list.get(2607), Dimension.of("C2200:F2200"));
         }
     }
 
@@ -171,9 +173,9 @@ public class ExcelReaderTest2 {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Force Import.xlsx"))) {
             List<U> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert "1: abc".equals(list.get(0).toString());
-            assert "2: xyz".equals(list.get(1).toString());
+            assertEquals(list.size(), 2);
+            assertEquals("1: abc", list.get(0).toString());
+            assertEquals("2: xyz", list.get(1).toString());
         }
     }
 
@@ -192,15 +194,15 @@ public class ExcelReaderTest2 {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Upper case Reader test.xlsx"))) {
             List<U> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert "0: null".equals(list.get(0).toString());
-            assert "0: null".equals(list.get(1).toString());
+            assertEquals(list.size(), 2);
+            assertEquals("0: null", list.get(0).toString());
+            assertEquals("0: null", list.get(1).toString());
 
             list = reader.sheet(0).reset().addHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)
                 .dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert "1: abc".equals(list.get(0).toString());
-            assert "2: xyz".equals(list.get(1).toString());
+            assertEquals(list.size(), 2);
+            assertEquals("1: abc", list.get(0).toString());
+            assertEquals("2: xyz", list.get(1).toString());
         }
     }
 
@@ -219,15 +221,15 @@ public class ExcelReaderTest2 {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Underline case Reader test.xlsx"))) {
             List<User> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(User.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert "0: null".equals(list.get(0).toString());
-            assert "0: null".equals(list.get(1).toString());
+            assertEquals(list.size(), 2);
+            assertEquals("0: null", list.get(0).toString());
+            assertEquals("0: null", list.get(1).toString());
 
             list = reader.sheet(0).reset().addHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.CAMEL_CASE)
                 .dataRows().map(row -> row.to(User.class)).collect(Collectors.toList());
-            assert list.size() == 2;
-            assert "1: abc".equals(list.get(0).toString());
-            assert "2: xyz".equals(list.get(1).toString());
+            assertEquals(list.size(), 2);
+            assertEquals("1: abc", list.get(0).toString());
+            assertEquals("2: xyz", list.get(1).toString());
         }
     }
 
@@ -237,13 +239,13 @@ public class ExcelReaderTest2 {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("empty.xlsx"))) {
             Sheet sheet = reader.sheet(0);
             List<U> list = sheet.header(1, 2).bind(U.class).rows().map(row -> (U) row.get()).collect(Collectors.toList());
-            assert list.isEmpty();
+            assertTrue(list.isEmpty());
 
             list = sheet.reset().header(1).rows().map(row -> row.to(U.class)).collect(Collectors.toList());
-            assert list.isEmpty();
+            assertTrue(list.isEmpty());
 
             list = sheet.reset().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
-            assert list.isEmpty();
+            assertTrue(list.isEmpty());
         }
     }
 
@@ -276,19 +278,19 @@ public class ExcelReaderTest2 {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
             Panes panes = sheet.getFreezePanes();
-            assert panes.row == 1;
-            assert panes.col == 0;
-            assert sheet.showGridLines();
-            assert Dimension.of("A1:F1").equals(sheet.getFilter());
+            assertEquals(panes.row, 1);
+            assertEquals(panes.col, 0);
+            assertTrue(sheet.showGridLines());
+            assertEquals(Dimension.of("A1:F1"), sheet.getFilter());
             List<Col> list = sheet.getCols();
-            assert list.size() == 6;
-            assert list.get(2).hidden;
-            assert (int) sheet.getDefaultColWidth() == 21;
-            assert (int) sheet.getDefaultRowHeight() == 15;
+            assertEquals(list.size(), 6);
+            assertTrue(list.get(2).hidden);
+            assertEquals((int) sheet.getDefaultColWidth(), 21);
+            assertEquals((int) sheet.getDefaultRowHeight(), 15);
 
             List<Dimension> mergeCells = sheet.getMergeCells();
-            assert mergeCells.size() == 1;
-            assert Dimension.of("B98:E100").equals(mergeCells.get(0));
+            assertEquals(mergeCells.size(), 1);
+            assertEquals(Dimension.of("B98:E100"), mergeCells.get(0));
 
             Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
             if (Files.exists(expectPath)) {
@@ -296,11 +298,11 @@ public class ExcelReaderTest2 {
 
                 Iterator<Row> it = sheet.iterator();
                 for (String[] expect : expectList) {
-                    assert it.hasNext();
+                    assertTrue(it.hasNext());
                     Row row = it.next();
 
                     // 第20行隐藏
-                    if (row.getRowNum() == 20) assert row.isHidden();
+                    if (row.getRowNum() == 20) assertTrue(row.isHidden());
 
                     for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
                         Cell cell = row.getCell(start);
@@ -312,7 +314,7 @@ public class ExcelReaderTest2 {
                             case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
-                        assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
+                        assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
                     }
                 }
             }

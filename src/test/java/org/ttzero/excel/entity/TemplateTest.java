@@ -26,6 +26,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -50,19 +52,19 @@ public class TemplateTest extends WorkbookTest {
                 reader.sheet(0).rows().forEach(row -> {
                     switch (row.getRowNum()) {
                         case 1:
-                            assert "通知书".equals(row.getString(0).trim());
+                            assertEquals("通知书", row.getString(0).trim());
                             break;
                         case 3:
-                            assert (map.get("name") + " 同学，在本次期末考试的成绩是 " + map.get("score")+ "，希望").equals(row.getString(1).trim());
+                            assertEquals((map.get("name") + " 同学，在本次期末考试的成绩是 " + map.get("score")+ "，希望"), row.getString(1).trim());
                             break;
                         case 4:
-                            assert ("下学期继续努力，祝你有一个愉快的" + map.get("desc") + "。").equals(row.getString(0).trim());
+                            assertEquals(("下学期继续努力，祝你有一个愉快的" + map.get("desc") + "。"), row.getString(0).trim());
                             break;
                         case 23:
-                            assert map.get("date").equals(row.getString(0).trim());
+                            assertEquals(map.get("date"), row.getString(0).trim());
                             break;
                         default:
-                            assert row.isBlank();
+                            assertTrue(row.isBlank());
                     }
                 });
             }
