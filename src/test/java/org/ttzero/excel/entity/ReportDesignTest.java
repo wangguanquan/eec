@@ -207,16 +207,16 @@ public class ReportDesignTest extends WorkbookTest {
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, Object> m = expectList.get(i);
                 E e = list.get(i);
-                assertEquals(e.date == null ? m.get("日期") == null || m.get("日期").toString().isEmpty() : m.get("日期"), e.date);
-                assertEquals(e.customer == null ? m.get("客户名称") == null || m.get("客户名称").toString().isEmpty() : m.get("客户名称"), e.customer);
-                assertEquals(e.productName == null ? m.get("商品名称") == null || m.get("商品名称").toString().isEmpty() : m.get("商品名称"), e.productName);
-                assertEquals(e.brand == null ? m.get("品牌") == null || m.get("品牌").toString().isEmpty() : m.get("品牌"), e.brand);
-                assertEquals(e.unit == null ? m.get("单位") == null || m.get("单位").toString().isEmpty() : m.get("单位"), e.unit);
-                assertEquals(e.num == null ? m.get("数量") == null || m.get("数量").toString().isEmpty() : m.get("数量"), e.num);
-                assertEquals(e.unitPrice == null ? m.get("含税单价") == null || m.get("含税单价").toString().isEmpty() : new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assertEquals(e.totalAmount == null ? m.get("含税总额") == null || m.get("含税总额").toString().isEmpty() : new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assertEquals(e.outNum == null ? m.get("出库数量") == null || m.get("出库数量").toString().isEmpty() : m.get("出库数量"), e.outNum);
-                assertEquals(e.orderNo == null ? m.get("关联订单") == null || m.get("日期").toString().isEmpty() : m.get("关联订单"), e.orderNo);
+                assertTrue(e.date == null ? m.get("日期") == null || m.get("日期").toString().isEmpty() : m.get("日期").equals(e.date));
+                assertTrue(e.customer == null ? m.get("客户名称") == null || m.get("客户名称").toString().isEmpty() : m.get("客户名称").equals(e.customer));
+                assertTrue(e.productName == null ? m.get("商品名称") == null || m.get("商品名称").toString().isEmpty() : m.get("商品名称").equals(e.productName));
+                assertTrue(e.brand == null ? m.get("品牌") == null || m.get("品牌").toString().isEmpty() : m.get("品牌").equals(e.brand));
+                assertTrue(e.unit == null ? m.get("单位") == null || m.get("单位").toString().isEmpty() : m.get("单位").equals(e.unit));
+                assertTrue(e.num == null ? m.get("数量") == null || m.get("数量").toString().isEmpty() : m.get("数量").equals(e.num));
+                assertTrue(e.unitPrice == null ? m.get("含税单价") == null || m.get("含税单价").toString().isEmpty() : new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN)));
+                assertTrue(e.totalAmount == null ? m.get("含税总额") == null || m.get("含税总额").toString().isEmpty() : new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN)));
+                assertTrue(e.outNum == null ? m.get("出库数量") == null || m.get("出库数量").toString().isEmpty() : m.get("出库数量").equals(e.outNum));
+                assertTrue(e.orderNo == null ? m.get("关联订单") == null || m.get("日期").toString().isEmpty() : m.get("关联订单").equals(e.orderNo));
             }
 
             Iterator<Row> iter = reader.sheet(0).iterator();
