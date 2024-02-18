@@ -100,8 +100,7 @@ public class ExcelReaderTest {
             int rn = 1;
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
                 Row row = it.next();
-                assert row.getRowNum() == rn;
-                rn++;
+                assertEquals(row.getRowNum(), rn++);
             }
         }
     }

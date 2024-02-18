@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2022-07-30 22:31
  */
@@ -53,35 +56,35 @@ public class ReportDesignTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Group Style Processor.xlsx"))) {
             List<Map<String, Object>> expectList = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
 
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, Object> m = expectList.get(i);
                 E e = list.get(i);
-                assert m.get("日期").equals(e.date);
-                assert m.get("客户名称").equals(e.customer);
-                assert m.get("商品名称").equals(e.productName);
-                assert m.get("品牌").equals(e.brand);
-                assert m.get("单位").equals(e.unit);
-                assert m.get("数量").equals(e.num);
-                assert new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert m.get("出库数量").equals(e.outNum);
-                assert m.get("关联订单").equals(e.orderNo);
+                assertEquals(m.get("日期"), e.date);
+                assertEquals(m.get("客户名称"), e.customer);
+                assertEquals(m.get("商品名称"), e.productName);
+                assertEquals(m.get("品牌"), e.brand);
+                assertEquals(m.get("单位"), e.unit);
+                assertEquals(m.get("数量"), e.num);
+                assertEquals(new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assertEquals(new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assertEquals(m.get("出库数量"), e.outNum);
+                assertEquals(m.get("关联订单"), e.orderNo);
             }
 
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row header = iter.next();
-            assert "日期".equals(header.getString(0));
-            assert "客户名称".equals(header.getString(1));
-            assert "商品名称".equals(header.getString(2));
-            assert "品牌".equals(header.getString(3));
-            assert "单位".equals(header.getString(4));
-            assert "数量".equals(header.getString(5));
-            assert "含税单价".equals(header.getString(6));
-            assert "含税总额".equals(header.getString(7));
-            assert "出库数量".equals(header.getString(8));
-            assert "关联订单".equals(header.getString(9));
+            assertEquals("日期", header.getString(0));
+            assertEquals("客户名称", header.getString(1));
+            assertEquals("商品名称", header.getString(2));
+            assertEquals("品牌", header.getString(3));
+            assertEquals("单位", header.getString(4));
+            assertEquals("数量", header.getString(5));
+            assertEquals("含税单价", header.getString(6));
+            assertEquals("含税总额", header.getString(7));
+            assertEquals("出库数量", header.getString(8));
+            assertEquals("关联订单", header.getString(9));
 
             int r = 0;
             String orderNo = null;
@@ -95,25 +98,25 @@ public class ReportDesignTest extends WorkbookTest {
 
                 Styles styles = row.getStyles();
 
-                assert styles.getHorizontal(row.getCellStyle(0)) == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(1)) == Horizontals.LEFT;
-                assert styles.getHorizontal(row.getCellStyle(2)) == Horizontals.LEFT;
-                assert styles.getHorizontal(row.getCellStyle(3)) == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(4)) == Horizontals.CENTER;
-                assert styles.getHorizontal(row.getCellStyle(5)) == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(6)) == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(7)) == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(8)) == Horizontals.RIGHT;
-                assert styles.getHorizontal(row.getCellStyle(9)) == Horizontals.CENTER;
+                assertEquals(styles.getHorizontal(row.getCellStyle(0)), Horizontals.CENTER);
+                assertEquals(styles.getHorizontal(row.getCellStyle(1)), Horizontals.LEFT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(2)), Horizontals.LEFT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(3)), Horizontals.CENTER);
+                assertEquals(styles.getHorizontal(row.getCellStyle(4)), Horizontals.CENTER);
+                assertEquals(styles.getHorizontal(row.getCellStyle(5)), Horizontals.RIGHT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(6)), Horizontals.RIGHT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(7)), Horizontals.RIGHT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(8)), Horizontals.RIGHT);
+                assertEquals(styles.getHorizontal(row.getCellStyle(9)), Horizontals.CENTER);
 
 
                 int style = row.getCellStyle(0);
                 Fill fill = styles.getFill(style);
 
                 if ((r & 1) == 1) {
-                    assert fill == null || fill.getPatternType() == PatternType.none;
+                    assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                 } else {
-                    assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(233, 234, 236));
+                    assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(new Color(233, 234, 236)));
                 }
             }
         }
@@ -192,43 +195,43 @@ public class ReportDesignTest extends WorkbookTest {
             List<Dimension> mergeCells1 = sheet.getMergeCells();
 
             // Expect merge cells
-            assert mergeCells.size() == mergeCells1.size();
+            assertEquals(mergeCells.size(), mergeCells1.size());
             for (int i = 0; i < mergeCells.size(); i++) {
                 Dimension d0 = mergeCells.get(i), d1 = mergeCells1.get(i);
-                assert d0.equals(d1);
+                assertEquals(d0, d1);
             }
 
             List<Map<String, Object>> expectList = sheet.asSheet().dataRows().map(Row::toMap).collect(Collectors.toList());
 
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, Object> m = expectList.get(i);
                 E e = list.get(i);
-                assert e.date == null ? m.get("日期") == null || m.get("日期").toString().isEmpty() : m.get("日期").equals(e.date);
-                assert e.customer == null ? m.get("客户名称") == null || m.get("客户名称").toString().isEmpty() : m.get("客户名称").equals(e.customer);
-                assert e.productName == null ? m.get("商品名称") == null || m.get("商品名称").toString().isEmpty() : m.get("商品名称").equals(e.productName);
-                assert e.brand == null ? m.get("品牌") == null || m.get("品牌").toString().isEmpty() : m.get("品牌").equals(e.brand);
-                assert e.unit == null ? m.get("单位") == null || m.get("单位").toString().isEmpty() : m.get("单位").equals(e.unit);
-                assert e.num == null ? m.get("数量") == null || m.get("数量").toString().isEmpty() : m.get("数量").equals(e.num);
-                assert e.unitPrice == null ? m.get("含税单价") == null || m.get("含税单价").toString().isEmpty() : new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert e.totalAmount == null ? m.get("含税总额") == null || m.get("含税总额").toString().isEmpty() : new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN).equals(e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
-                assert e.outNum == null ? m.get("出库数量") == null || m.get("出库数量").toString().isEmpty() : m.get("出库数量").equals(e.outNum);
-                assert e.orderNo == null ? m.get("关联订单") == null || m.get("日期").toString().isEmpty() : m.get("关联订单").equals(e.orderNo);
+                assertEquals(e.date == null ? m.get("日期") == null || m.get("日期").toString().isEmpty() : m.get("日期"), e.date);
+                assertEquals(e.customer == null ? m.get("客户名称") == null || m.get("客户名称").toString().isEmpty() : m.get("客户名称"), e.customer);
+                assertEquals(e.productName == null ? m.get("商品名称") == null || m.get("商品名称").toString().isEmpty() : m.get("商品名称"), e.productName);
+                assertEquals(e.brand == null ? m.get("品牌") == null || m.get("品牌").toString().isEmpty() : m.get("品牌"), e.brand);
+                assertEquals(e.unit == null ? m.get("单位") == null || m.get("单位").toString().isEmpty() : m.get("单位"), e.unit);
+                assertEquals(e.num == null ? m.get("数量") == null || m.get("数量").toString().isEmpty() : m.get("数量"), e.num);
+                assertEquals(e.unitPrice == null ? m.get("含税单价") == null || m.get("含税单价").toString().isEmpty() : new BigDecimal(m.get("含税单价").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.unitPrice.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assertEquals(e.totalAmount == null ? m.get("含税总额") == null || m.get("含税总额").toString().isEmpty() : new BigDecimal(m.get("含税总额").toString()).setScale(2, BigDecimal.ROUND_HALF_DOWN), e.totalAmount.setScale(2, BigDecimal.ROUND_HALF_DOWN));
+                assertEquals(e.outNum == null ? m.get("出库数量") == null || m.get("出库数量").toString().isEmpty() : m.get("出库数量"), e.outNum);
+                assertEquals(e.orderNo == null ? m.get("关联订单") == null || m.get("日期").toString().isEmpty() : m.get("关联订单"), e.orderNo);
             }
 
             Iterator<Row> iter = reader.sheet(0).iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row header = iter.next();
-            assert "日期".equals(header.getString(0));
-            assert "客户名称".equals(header.getString(1));
-            assert "商品名称".equals(header.getString(2));
-            assert "品牌".equals(header.getString(3));
-            assert "单位".equals(header.getString(4));
-            assert "数量".equals(header.getString(5));
-            assert "含税单价".equals(header.getString(6));
-            assert "含税总额".equals(header.getString(7));
-            assert "出库数量".equals(header.getString(8));
-            assert "关联订单".equals(header.getString(9));
+            assertEquals("日期", header.getString(0));
+            assertEquals("客户名称", header.getString(1));
+            assertEquals("商品名称", header.getString(2));
+            assertEquals("品牌", header.getString(3));
+            assertEquals("单位", header.getString(4));
+            assertEquals("数量", header.getString(5));
+            assertEquals("含税单价", header.getString(6));
+            assertEquals("含税总额", header.getString(7));
+            assertEquals("出库数量", header.getString(8));
+            assertEquals("关联订单", header.getString(9));
         }
     }
 
