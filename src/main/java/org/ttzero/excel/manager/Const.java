@@ -180,5 +180,9 @@ public interface Const {
          * Merge cells key(2-position)
          */
         String MERGE_CELLS  = "merge_cells";
+        /**
+         * AutoFilter(3-position)
+         */
+        String AUTO_FILTER = "auto_filter";
     }
 }

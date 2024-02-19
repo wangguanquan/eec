@@ -459,6 +459,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // End target --sheetData
         bw.write("</sheetData>");
 
+        // Auto Filter
+        Dimension autoFilter = (Dimension) sheet.getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
+        if (autoFilter != null) {
+            bw.write("<autoFilter ref=\"");
+            bw.write(autoFilter.toString());
+            bw.write("\"/>");
+        }
+
         // Merge cells
         writeMergeCells();
 
