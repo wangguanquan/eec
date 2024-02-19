@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -800,7 +801,9 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     // assert column width equals 10
                     List<Col> cols = sheet.getCols();
                     assertNotNull(cols);
-                    assertEquals(cols.size(), 5);
+                    cols.sort(Comparator.comparingInt(a -> a.min));
+                    int colLen = cols.get(cols.size() - 1).max - cols.get(0).min + 1;
+                    assertEquals(colLen, 5);
                     for (Col col : cols) assertTrue(col.width - 10.0D <= 0.8D);
                 }
             }
