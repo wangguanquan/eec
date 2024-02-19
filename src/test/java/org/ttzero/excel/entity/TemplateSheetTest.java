@@ -24,12 +24,15 @@ import org.ttzero.excel.reader.ExcelReaderTest;
 import java.io.File;
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author guanquan.wang at 2024-01-25 09:57
  */
 public class TemplateSheetTest extends WorkbookTest {
-    String fileName = "all template sheets.xlsx";
+
     @Test public void testSimpleTemplate() throws IOException {
+        String fileName = "all template sheets.xlsx";
         new Workbook()
             .addSheet(new TemplateSheet("模板 1.xlsx", ExcelReaderTest.testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
             .addSheet(new ListSheet<>("普通工作表", ListObjectSheetTest.Item.randomTestData())) // <- 普通工作表
@@ -37,7 +40,7 @@ public class TemplateSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == 3;
+            assertEquals(reader.getSheetCount(), 3);
             // TODO 判断每个工作表的内容和样式
         }
     }
