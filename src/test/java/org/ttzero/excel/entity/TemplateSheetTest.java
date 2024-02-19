@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 public class TemplateSheetTest extends WorkbookTest {
 
     @Test public void testSimpleTemplate() throws IOException {
-        String fileName = "all template sheets.xlsx";
+        String fileName = "simple template sheets.xlsx";
         new Workbook()
             .addSheet(new TemplateSheet("模板 1.xlsx", ExcelReaderTest.testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
             .addSheet(new ListSheet<>("普通工作表", ListObjectSheetTest.Item.randomTestData())) // <- 普通工作表
