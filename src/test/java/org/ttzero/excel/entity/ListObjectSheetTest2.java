@@ -442,23 +442,23 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.FullSheet sheet = (FullSheet) reader.sheet(0).asFullSheet().header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "学号".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "成绩".equals(header.get(2));
+            assertEquals("学号", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("成绩", header.get(2));
 
-            assert Dimension.of("A1:C1").equals(sheet.getFilter());
+            assertEquals(Dimension.of("A1:C1"), sheet.getFilter());
 
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (ListObjectSheetTest.Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 Map<String, Object> e = iter.next().toMap();
-                assert expect.getId() == Integer.parseInt(e.get("学号").toString());
-                assert expect.getName().equals(e.get("姓名").toString());
+                assertEquals(expect.getId(), Integer.parseInt(e.get("学号").toString()));
+                assertEquals(expect.getName(), e.get("姓名").toString());
                 if (expect.getScore() < 60) {
-                    assert "不合格".equals(e.get("成绩"));
+                    assertEquals("不合格", e.get("成绩"));
                 } else {
-                    assert expect.getScore() == Integer.parseInt(e.get("成绩").toString());
+                    assertEquals(expect.getScore(), Integer.parseInt(e.get("成绩").toString()));
                 }
             }
         }
