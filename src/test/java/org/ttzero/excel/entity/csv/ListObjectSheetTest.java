@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.entity.ListObjectSheetTest.sp;
 import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
 
@@ -269,7 +270,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .writeTo(getOutputTestPath());
 
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testNoForceExport.csv"))) {
-            assert reader.stream().count() == 0L;
+            assertEquals(reader.stream().count(), 0L);
         }
     }
 
@@ -281,7 +282,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkbook.csv"))) {
-            assert reader.stream().count() == lines + 1;
+            assertEquals(reader.stream().count(), lines + 1);
         }
     }
 
@@ -292,7 +293,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkSheet.csv"))) {
-            assert reader.stream().count() == lines + 1;
+            assertEquals(reader.stream().count(), lines + 1);
         }
     }
 

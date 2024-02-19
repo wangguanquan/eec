@@ -495,6 +495,8 @@ class XMLFullRow extends XMLRow {
     Grid mergeCells;
     // height，只有当customHeight为1时height才会有值
     Double height;
+    // 是否隐藏
+    boolean hidden;
 
     XMLFullRow(XMLRow row) {
         this.sst = row.sst;
@@ -521,6 +523,7 @@ class XMLFullRow extends XMLRow {
     @Override
     protected void parseCells() {
         height = null; // 重置行高
+        hidden = false; // 重置隐藏
         cursor = searchSpan0();
         for (; cb[cursor++] != '>'; ) ;
         unknownLength = lc < 0;
@@ -708,9 +711,9 @@ class XMLFullRow extends XMLRow {
     int searchSpan0() {
         int idx = super.searchSpan(), i = from + 4, cht = 0;
         Double ht = null;
-        // 向后查找ht属性
         for (; cb[i] != '>'; i++) {
-            if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 't' && cb[i + 3] == '=') {
+            // 查找ht属性
+            if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 't' && (cb[i + 3] == '=' || cb[i + 3] <= ' ')) {
                 i += 5;
                 int j = i;
                 for (; cb[i] != '"' && cb[i] != '>'; i++) ;
@@ -718,9 +721,15 @@ class XMLFullRow extends XMLRow {
             } else if (cb[i] <= ' ' && cb[i + 1] == 'c' && cb[i + 2] == 'u' && cb[i + 3] == 's'
                 && cb[i + 4] == 't' && cb[i + 5] == 'o' && cb[i + 6] == 'm' && cb[i + 7] == 'H'
                 && cb[i + 8] == 'e' && cb[i + 9] == 'i' && cb[i + 10] == 'g' && cb[i + 11] == 'h'
-                && cb[i + 12] == 't' && cb[i + 13] == '=') {
+                && cb[i + 12] == 't' && (cb[i + 13] == '=' || cb[i + 13] <= ' ')) {
                 i += 15;
                 if (cb[i] == '1') cht = 1;
+            }
+            // 查找hidden属性
+            else if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 'i' && cb[i + 3] == 'd'
+                && cb[i + 4] == 'd' && cb[i + 5] == 'e' && cb[i + 6] == 'n' && (cb[i + 7] == '=' || cb[i + 7] <= ' ')) {
+                i += 9;
+                if (cb[i] == '1') hidden = true;
             }
         }
         if (cht == 1 && ht != null) height = ht;
@@ -730,5 +739,10 @@ class XMLFullRow extends XMLRow {
     @Override
     public Double getHeight() {
         return height;
+    }
+
+    @Override
+    public boolean isHidden() {
+        return hidden;
     }
 }

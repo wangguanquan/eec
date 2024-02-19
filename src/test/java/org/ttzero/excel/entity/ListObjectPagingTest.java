@@ -32,6 +32,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -49,17 +51,17 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = iter.next().get();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
             }
         }
@@ -75,17 +77,17 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = iter.next().get();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
             }
         }
@@ -102,22 +104,22 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = iter.next().get();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
 
                 List<Drawings.Picture> pictures = sheet.listPictures();
-                assert pictures.size() == 1;
-                assert pictures.get(0).isBackground();
+                assertEquals(pictures.size(), 1);
+                assertTrue(pictures.get(0).isBackground());
             }
         }
     }
@@ -133,22 +135,22 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = iter.next().get();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
 
                 List<Drawings.Picture> pictures = sheet.listPictures();
-                assert pictures.size() == 1;
-                assert pictures.get(0).isBackground();
+                assertEquals(pictures.size(), 1);
+                assertTrue(pictures.get(0).isBackground());
             }
         }
     }
@@ -164,22 +166,22 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = iter.next().get();
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
 
                 List<Drawings.Picture> pictures = sheet.listPictures();
-                assert pictures.size() == 1;
-                assert pictures.get(0).isBackground();
+                assertEquals(pictures.size(), 1);
+                assertTrue(pictures.get(0).isBackground());
             }
         }
     }
@@ -206,18 +208,18 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row;
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Student.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "姓名".equals(header.get(0));
-                assert "成绩".equals(header.get(1));
+                assertEquals("姓名", header.get(0));
+                assertEquals("成绩", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     ListObjectSheetTest.Student expect = expectList.get(a++), e = iter.next().get();
                     expect.setId(0); // ID not exported
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                 }
             }
         }
@@ -233,27 +235,27 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "s2".equals(header.get(0));
-                assert "s".equals(header.get(1));
-                assert "d".equals(header.get(2));
-                assert "date".equals(header.get(3));
-                assert "s4".equals(header.get(4));
-                assert "s3".equals(header.get(5));
+                assertEquals("s2", header.get(0));
+                assertEquals("s", header.get(1));
+                assertEquals("d", header.get(2));
+                assertEquals("date", header.get(3));
+                assertEquals("s4", header.get(4));
+                assertEquals("s3", header.get(5));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     CustomColIndexTest.FractureOrderEntry expect = (CustomColIndexTest.FractureOrderEntry) expectList.get(a++);
                     Row row = iter.next();
-                    assert expect.getS2().equals(row.getString(0));
-                    assert expect.getS().equals(row.getString(1));
-                    assert expect.getD().equals(row.getDouble(2));
-                    assert expect.getDate().getTime() / 1000 == row.getDate(3).getTime() / 1000; // TODO miss milliseconds
-                    assert expect.getS4().equals(row.getString(4));
-                    assert expect.getS3().equals(row.getString(5));
+                    assertEquals(expect.getS2(), row.getString(0));
+                    assertEquals(expect.getS(), row.getString(1));
+                    assertEquals(expect.getD(), row.getDouble(2));
+                    assertEquals(expect.getDate().getTime() / 1000, row.getDate(3).getTime() / 1000); // TODO miss milliseconds
+                    assertEquals(expect.getS4(), row.getString(4));
+                    assertEquals(expect.getS3(), row.getString(5));
                 }
             }
         }
@@ -269,27 +271,27 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "s".equals(header.get(1));
-                assert "d".equals(header.get(2));
-                assert "s3".equals(header.get(4));
-                assert "s4".equals(header.get(5));
-                assert "s2".equals(header.get(189));
-                assert "date".equals(header.get(16_383));
+                assertEquals("s", header.get(1));
+                assertEquals("d", header.get(2));
+                assertEquals("s3", header.get(4));
+                assertEquals("s4", header.get(5));
+                assertEquals("s2", header.get(189));
+                assertEquals("date", header.get(16_383));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     CustomColIndexTest.LargeOrderEntry expect = (CustomColIndexTest.LargeOrderEntry) expectList.get(a++);
                     Row row = iter.next();
-                    assert expect.getS().equals(row.getString(1));
-                    assert expect.getD().equals(row.getDouble(2));
-                    assert expect.getS3().equals(row.getString(4));
-                    assert expect.getS4().equals(row.getString(5));
-                    assert expect.getS2().equals(row.getString(189));
-                    assert expect.getDate().getTime() / 1000 == row.getDate(16_383).getTime() / 1000;
+                    assertEquals(expect.getS(), row.getString(1));
+                    assertEquals(expect.getD(), row.getDouble(2));
+                    assertEquals(expect.getS3(), row.getString(4));
+                    assertEquals(expect.getS4(), row.getString(5));
+                    assertEquals(expect.getS2(), row.getString(189));
+                    assertEquals(expect.getDate().getTime() / 1000, row.getDate(16_383).getTime() / 1000);
                 }
             }
         }
@@ -309,23 +311,23 @@ public class ListObjectPagingTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 1; // 1 header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.getSheetCount() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 Sheet sheet = reader.sheet(i).header(1).bind(ListObjectSheetTest.Item.class);
                 org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-                assert "id".equals(header.get(0));
-                assert "name".equals(header.get(1));
+                assertEquals("id", header.get(0));
+                assertEquals("name", header.get(1));
                 Iterator<Row> iter = sheet.iterator();
                 while (iter.hasNext()) {
                     Row row = iter.next();
                     ListObjectSheetTest.Item expect = expectList.get(a++), e = row.to(ListObjectSheetTest.Item.class);
-                    assert expect.equals(e);
+                    assertEquals(expect, e);
                     if (expect.getId() > 95) {
                         Styles styles = row.getStyles();
                         Fill fill0 = styles.getFill(row.getCellStyle(0)), fill1 = styles.getFill(row.getCellStyle(1));
-                        assert fill0 != null && fill0.getPatternType() == PatternType.solid && fill0.getFgColor().equals(Color.orange);
-                        assert fill1 != null && fill1.getPatternType() == PatternType.solid && fill1.getFgColor().equals(Color.orange);
+                        assertTrue(fill0 != null && fill0.getPatternType() == PatternType.solid && fill0.getFgColor().equals(Color.orange));
+                        assertTrue(fill1 != null && fill1.getPatternType() == PatternType.solid && fill1.getFgColor().equals(Color.orange));
                     }
                 }
             }

@@ -31,6 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2022-07-24 10:34
  */
@@ -44,9 +47,9 @@ public class CustomColIndexTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).iterator();
             for (OrderEntry expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.to(OrderEntry.class));
+                assertEquals(expect, row.to(OrderEntry.class));
             }
         }
     }
@@ -59,22 +62,22 @@ public class CustomColIndexTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "s".equals(header.get(0));
-            assert "date".equals(header.get(1));
-            assert "s3".equals(header.get(4));
-            assert "d".equals(header.get(5));
-            assert "s2".equals(header.get(6));
-            assert "s4".equals(header.get(7));
+            assertEquals("s", header.get(0));
+            assertEquals("date", header.get(1));
+            assertEquals("s3", header.get(4));
+            assertEquals("d", header.get(5));
+            assertEquals("s2", header.get(6));
+            assertEquals("s4", header.get(7));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (OrderEntry expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.s.equals(row.getString("s"));
-                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
-                assert Double.compare(expect.d, row.getDouble("d")) == 0;
-                assert expect.s2.equals(row.getString("s2"));
-                assert expect.s4.equals(row.getString("s4"));
+                assertEquals(expect.s, row.getString("s"));
+                assertEquals(expect.date.getTime() / 1000, row.getTimestamp("date").getTime() / 1000);
+                assertEquals(Double.compare(expect.d, row.getDouble("d")), 0);
+                assertEquals(expect.s2, row.getString("s2"));
+                assertEquals(expect.s4, row.getString("s4"));
             }
         }
     }
@@ -87,23 +90,23 @@ public class CustomColIndexTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "s2".equals(header.get(0));
-            assert "s".equals(header.get(1));
-            assert "d".equals(header.get(2));
-            assert "date".equals(header.get(3));
-            assert "s4".equals(header.get(4));
-            assert "s3".equals(header.get(5));
+            assertEquals("s2", header.get(0));
+            assertEquals("s", header.get(1));
+            assertEquals("d", header.get(2));
+            assertEquals("date", header.get(3));
+            assertEquals("s4", header.get(4));
+            assertEquals("s3", header.get(5));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (OrderEntry expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.s2.equals(row.getString("s2"));
-                assert expect.s.equals(row.getString("s"));
-                assert Double.compare(expect.d, row.getDouble("d")) == 0;
-                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
-                assert expect.s4.equals(row.getString("s4"));
-                assert expect.s3.equals(row.getString("s3"));
+                assertEquals(expect.s2, row.getString("s2"));
+                assertEquals(expect.s, row.getString("s"));
+                assertEquals(Double.compare(expect.d, row.getDouble("d")), 0);
+                assertEquals(expect.date.getTime() / 1000, row.getTimestamp("date").getTime() / 1000);
+                assertEquals(expect.s4, row.getString("s4"));
+                assertEquals(expect.s3, row.getString("s3"));
             }
         }
     }
@@ -116,23 +119,23 @@ public class CustomColIndexTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "s".equals(header.get(1));
-            assert "d".equals(header.get(2));
-            assert "s3".equals(header.get(4));
-            assert "s4".equals(header.get(5));
-            assert "s2".equals(header.get(189));
-            assert "date".equals(header.get(Const.Limit.MAX_COLUMNS_ON_SHEET - 1));
+            assertEquals("s", header.get(1));
+            assertEquals("d", header.get(2));
+            assertEquals("s3", header.get(4));
+            assertEquals("s4", header.get(5));
+            assertEquals("s2", header.get(189));
+            assertEquals("date", header.get(Const.Limit.MAX_COLUMNS_ON_SHEET - 1));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (OrderEntry expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.s.equals(row.getString("s"));
-                assert Double.compare(expect.d, row.getDouble("d")) == 0;
-                assert expect.s3.equals(row.getString("s3"));
-                assert expect.s4.equals(row.getString("s4"));
-                assert expect.s2.equals(row.getString("s2"));
-                assert expect.date.getTime() / 1000 == row.getTimestamp("date").getTime() / 1000;
+                assertEquals(expect.s, row.getString("s"));
+                assertEquals(Double.compare(expect.d, row.getDouble("d")), 0);
+                assertEquals(expect.s3, row.getString("s3"));
+                assertEquals(expect.s4, row.getString("s4"));
+                assertEquals(expect.s2, row.getString("s2"));
+                assertEquals(expect.date.getTime() / 1000, row.getTimestamp("date").getTime() / 1000);
             }
         }
     }
@@ -153,19 +156,19 @@ public class CustomColIndexTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "姓名".equals(header.get(0));
-            assert "学号".equals(header.get(3));
-            assert "成绩".equals(header.get(5));
+            assertEquals("姓名", header.get(0));
+            assertEquals("学号", header.get(3));
+            assertEquals("成绩", header.get(5));
 
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (ListObjectSheetTest.Student expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 ListObjectSheetTest.Student e = row.too(ListObjectSheetTest.Student.class);
                 expect.setId(0); // ID ignore field
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }

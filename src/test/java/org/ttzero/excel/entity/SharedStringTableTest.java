@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
 /**
@@ -33,52 +34,52 @@ public class SharedStringTableTest {
         try (SharedStringTable sst = new SharedStringTable()) {
             int n = sst.push('a');
 
-            assert n == 0;
-            assert sst.size() == 1;
+            assertEquals(n, 0);
+            assertEquals(sst.size(), 1);
 
             int index = sst.find('a');
-            assert index == 0;
+            assertEquals(index, 0);
 
             index = sst.find('z');
-            assert index == -1;
+            assertEquals(index, -1);
         }
     }
 
     @Test public void testPutString() throws IOException {
         try (SharedStringTable sst = new SharedStringTable()) {
             int n = sst.push("abc");
-            assert n == 0;
-            assert sst.size() == 1;
+            assertEquals(n, 0);
+            assertEquals(sst.size(), 1);
 
             sst.push("ab");
 
             int index = sst.find("ab");
-            assert index == 1;
+            assertEquals(index, 1);
 
             index = sst.find("abc");
-            assert index == 0;
+            assertEquals(index, 0);
 
             index = sst.find("acc");
-            assert index == -1;
+            assertEquals(index, -1);
 
             index = sst.find("abd");
-            assert index == -1;
+            assertEquals(index, -1);
 
             index = sst.find("123");
-            assert index == -1;
+            assertEquals(index, -1);
 
             index = sst.push('a');
-            assert index == 2;
+            assertEquals(index, 2);
 
             index = sst.push('z');
-            assert index == 3;
+            assertEquals(index, 3);
 
             index = sst.push('阿');
-            assert index == 4;
+            assertEquals(index, 4);
 
-            assert sst.find('z') == 3;
+            assertEquals(sst.find('z'), 3);
 
-            assert sst.find('阿') == 4;
+            assertEquals(sst.find('阿'), 4);
         }
     }
 
@@ -93,10 +94,10 @@ public class SharedStringTableTest {
                 indexMap.put(v, sst.push(v));
             }
 
-            assert indexMap.size() == sst.size();
+            assertEquals(indexMap.size(), sst.size());
 
             for (Map.Entry<String, Integer> entry : indexMap.entrySet()) {
-                assert entry.getValue().equals(sst.find(entry.getKey()));
+                assertEquals((int) entry.getValue(), sst.find(entry.getKey()));
             }
         }
     }
@@ -107,8 +108,8 @@ public class SharedStringTableTest {
             sst.push("a");
             n = sst.push(null);
 
-            assert n == 1;
-            assert sst.find(null) == n;
+            assertEquals(n, 1);
+            assertEquals(sst.find(null), n);
         }
     }
 

@@ -26,6 +26,9 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.charArray;
 import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
@@ -62,7 +65,7 @@ public class CSVUtilTest {
 
     @Test public void testIterator() throws IOException {
         try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).iterator()) {
-            for (; iterator.hasNext(); ) {
+            while (iterator.hasNext()) {
                 String[] rows = iterator.next();
                 println(Arrays.toString(rows));
             }
@@ -71,7 +74,7 @@ public class CSVUtilTest {
 
     @Test public void testSharedIterator() throws IOException {
         try (CSVUtil.RowsIterator iterator = CSVUtil.newReader(path).sharedIterator()) {
-            for (; iterator.hasNext(); ) {
+            while (iterator.hasNext()) {
                 String[] rows = iterator.next();
                 println(Arrays.toString(rows));
             }
@@ -84,10 +87,10 @@ public class CSVUtilTest {
             writer.write(false);
         }
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == 2;
-        assert String.valueOf(true).toUpperCase().equals(strings.get(0)[0]);
-        assert String.valueOf(false).toUpperCase().equals(strings.get(0)[1]);
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 2);
+        assertEquals(String.valueOf(true).toUpperCase(), strings.get(0)[0]);
+        assertEquals(String.valueOf(false).toUpperCase(), strings.get(0)[1]);
     }
 
     @Ignore @Test public void testWriteChar() throws IOException {
@@ -97,13 +100,13 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path, ',');
-        assert strings.size() == 1;
-        assert strings.get(0).length == 1;
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 1);
         // will be trim
         if (c == '\n' || c == '\t') {
-            assert strings.get(0)[0].isEmpty();
+            assertTrue(strings.get(0)[0].isEmpty());
         } else {
-            assert String.valueOf(c).equals(strings.get(0)[0]);
+            assertEquals(String.valueOf(c), strings.get(0)[0]);
         }
     }
 
@@ -126,16 +129,16 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == 7;
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 7);
         String[] ss = strings.get(0);
-        assert String.valueOf(n1).equals(ss[0]);
-        assert String.valueOf(n2).equals(ss[1]);
-        assert String.valueOf(zero).equals(ss[2]);
-        assert String.valueOf(min).equals(ss[3]);
-        assert String.valueOf(max).equals(ss[4]);
-        assert String.valueOf(min1).equals(ss[5]);
-        assert String.valueOf(max1).equals(ss[6]);
+        assertEquals(String.valueOf(n1), ss[0]);
+        assertEquals(String.valueOf(n2), ss[1]);
+        assertEquals(String.valueOf(zero), ss[2]);
+        assertEquals(String.valueOf(min), ss[3]);
+        assertEquals(String.valueOf(max), ss[4]);
+        assertEquals(String.valueOf(min1), ss[5]);
+        assertEquals(String.valueOf(max1), ss[6]);
     }
 
     @Test public void testWriteLong() throws IOException {
@@ -162,19 +165,19 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 4;
-        assert strings.get(0).length == 2;
-        assert strings.get(1).length == 2;
-        assert strings.get(2).length == 2;
-        assert strings.get(3).length == 2;
-        assert String.valueOf(l1).equals(strings.get(0)[0]);
-        assert String.valueOf(l2).equals(strings.get(0)[1]);
-        assert String.valueOf(l3).equals(strings.get(1)[0]);
-        assert String.valueOf(l4).equals(strings.get(1)[1]);
-        assert String.valueOf(min).equals(strings.get(2)[0]);
-        assert String.valueOf(max).equals(strings.get(2)[1]);
-        assert String.valueOf(min1).equals(strings.get(3)[0]);
-        assert String.valueOf(max1).equals(strings.get(3)[1]);
+        assertEquals(strings.size(), 4);
+        assertEquals(strings.get(0).length, 2);
+        assertEquals(strings.get(1).length, 2);
+        assertEquals(strings.get(2).length, 2);
+        assertEquals(strings.get(3).length, 2);
+        assertEquals(String.valueOf(l1), strings.get(0)[0]);
+        assertEquals(String.valueOf(l2), strings.get(0)[1]);
+        assertEquals(String.valueOf(l3), strings.get(1)[0]);
+        assertEquals(String.valueOf(l4), strings.get(1)[1]);
+        assertEquals(String.valueOf(min), strings.get(2)[0]);
+        assertEquals(String.valueOf(max), strings.get(2)[1]);
+        assertEquals(String.valueOf(min1), strings.get(3)[0]);
+        assertEquals(String.valueOf(max1), strings.get(3)[1]);
     }
 
     @Test public void testWriteFloat() throws IOException {
@@ -190,13 +193,13 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 3;
-        assert strings.get(0).length == 1;
-        assert strings.get(1).length == 1;
-        assert strings.get(2).length == 1;
-        assert String.valueOf(f1).equals(strings.get(0)[0]);
-        assert String.valueOf(f2).equals(strings.get(1)[0]);
-        assert String.valueOf(f3).equals(strings.get(2)[0]);
+        assertEquals(strings.size(), 3);
+        assertEquals(strings.get(0).length, 1);
+        assertEquals(strings.get(1).length, 1);
+        assertEquals(strings.get(2).length, 1);
+        assertEquals(String.valueOf(f1), strings.get(0)[0]);
+        assertEquals(String.valueOf(f2), strings.get(1)[0]);
+        assertEquals(String.valueOf(f3), strings.get(2)[0]);
     }
 
     @Test public void testWriteDouble() throws IOException{
@@ -210,11 +213,11 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == 3;
-        assert String.valueOf(d1).equals(strings.get(0)[0]);
-        assert String.valueOf(d2).equals(strings.get(0)[1]);
-        assert String.valueOf(d3).equals(strings.get(0)[2]);
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 3);
+        assertEquals(String.valueOf(d1), strings.get(0)[0]);
+        assertEquals(String.valueOf(d2), strings.get(0)[1]);
+        assertEquals(String.valueOf(d3), strings.get(0)[2]);
     }
 
     @Test public void testWriteString() throws IOException {
@@ -230,10 +233,10 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == n;
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, n);
 
-        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
+        assertArrayEquals(src, strings.get(0));
     }
 
     @Test public void testEndWithLF() throws IOException {
@@ -250,9 +253,9 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == n;
-        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, n);
+        assertArrayEquals(src, strings.get(0));
     }
 
     @Test public void testLineEndWithComma() throws IOException {
@@ -271,11 +274,11 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == n;
+        assertEquals(strings.size(), n);
         for (int i = 0; i < n; i++) {
-            assert strings.get(i).length == 2;
-            assert src[i].equals(strings.get(i)[0]);
-            assert "".equals(strings.get(i)[1]);
+            assertEquals(strings.get(i).length, 2);
+            assertEquals(src[i], strings.get(i)[0]);
+            assertEquals("", strings.get(i)[1]);
         }
     }
 
@@ -293,10 +296,10 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        assert strings.get(0).length == 7;
-        assert s1.equals(strings.get(0)[2]);
-        assert s2.equals(strings.get(0)[3]);
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 7);
+        assertEquals(s1, strings.get(0)[2]);
+        assertEquals(s2, strings.get(0)[3]);
     }
 
     @Test public void testGBKCharset() throws IOException {
@@ -314,15 +317,15 @@ public class CSVUtilTest {
         try {
             CSVUtil.read(path);
         } catch (IOException e) { // A charset.MalformedInputException occur
-            assert true;
+            assertTrue(true);
         }
 
         // Use GBK
         List<String[]> strings = CSVUtil.read(path, GBK);
-        assert strings.size() == 1;
-        assert strings.get(0).length == 2;
-        assert s1.equals(strings.get(0)[0]);
-        assert s2.equals(strings.get(0)[1]);
+        assertEquals(strings.size(), 1);
+        assertEquals(strings.get(0).length, 2);
+        assertEquals(s1, strings.get(0)[0]);
+        assertEquals(s2, strings.get(0)[1]);
 
 
         // Reset charset
@@ -340,7 +343,6 @@ public class CSVUtilTest {
         for (int i = 0; i < n; i++) {
             src[i] = getRandomString();
         }
-        println(Arrays.toString(src));
         try (CSVUtil.Writer writer = CSVUtil.newWriter(path, comma)) {
             for (String s : src) {
                 writer.write(s);
@@ -348,14 +350,12 @@ public class CSVUtilTest {
         }
 
         List<String[]> strings = CSVUtil.read(path, comma);
-        assert strings.size() == 1;
-        println(Arrays.toString(strings.get(0)));
-        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
+        assertEquals(strings.size(), 1);
+        assertArrayEquals(src, strings.get(0));
 
         strings = CSVUtil.read(path);
-        assert strings.size() == 1;
-        println(Arrays.toString(strings.get(0)));
-        assert Arrays.toString(src).equals(Arrays.toString(strings.get(0)));
+        assertEquals(strings.size(), 1);
+        assertArrayEquals(src, strings.get(0));
     }
 
     public void testWriter() throws IOException {

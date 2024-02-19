@@ -201,12 +201,21 @@ public class Row {
     }
 
     /**
-     * 获取行高，只有{@code XMLFullRow}才会实际返回值
+     * 获取行高，仅{@code XMLFullRow}支持
      *
      * @return 当{@code customHeight=1}时返回自定义行高否则返回{@code null}
      */
     public Double getHeight() {
         return null;
+    }
+
+    /**
+     * 获取当前行是否隐藏，仅{@code XMLFullRow}支持
+     *
+     * @return {@code true}行隐藏
+     */
+    public boolean isHidden() {
+        return false;
     }
 
     /**

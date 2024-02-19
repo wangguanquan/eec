@@ -18,6 +18,7 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
@@ -31,13 +32,13 @@ public class CacheTest {
         hot.put(2, "b");
         hot.put(3, "c");
         hot.put(4, "d");
-        assert "4:d=>3:c=>2:b=>1:a".equals(hot.toString());
+        assertEquals("4:d=>3:c=>2:b=>1:a", hot.toString());
 
-        assert hot.size() == 4;
-        assert hot.get(2).equals("b");
-        assert "2:b=>4:d=>3:c=>1:a".equals(hot.toString());
-        assert hot.get(4).equals("d");
-        assert "4:d=>2:b=>3:c=>1:a".equals(hot.toString());
+        assertEquals(hot.size(), 4);
+        assertEquals(hot.get(2), "b");
+        assertEquals("2:b=>4:d=>3:c=>1:a", hot.toString());
+        assertEquals(hot.get(4), "d");
+        assertEquals("4:d=>2:b=>3:c=>1:a", hot.toString());
         System.out.println();
     }
 
@@ -49,11 +50,11 @@ public class CacheTest {
         hot.put("c", 3);
         hot.put("d", 4);
         hot.put("e", 5);
-        assert "e:5=>d:4=>c:3=>a:8=>b:2".equals(hot.toString());
+        assertEquals("e:5=>d:4=>c:3=>a:8=>b:2", hot.toString());
 
-        assert hot.size() == 5;
-        assert hot.get("c") == 3;
-        assert "c:3=>e:5=>d:4=>a:8=>b:2".equals(hot.toString());
+        assertEquals(hot.size(), 5);
+        assertEquals((int) hot.get("c"), 3);
+        assertEquals("c:3=>e:5=>d:4=>a:8=>b:2", hot.toString());
     }
 
     @Test public void testIterator() {
@@ -67,7 +68,7 @@ public class CacheTest {
         String[] expected = {"e:5", "d:4", "c:3", "b:2", "a:1"};
         int i = 0;
         for (Cache.Entry<String, Integer> e : hot) {
-            assert expected[i++].equals(e.toString());
+            assertEquals(expected[i++], e.toString());
         }
     }
 
@@ -78,37 +79,37 @@ public class CacheTest {
         hot.put(3, "c");
         hot.put(4, "d");
 
-        assert hot.size() == 4;
-        assert hot.get(1).equals("a");
-        assert "1:a=>4:d=>3:c=>2:b".equals(hot.toString());
+        assertEquals(hot.size(), 4);
+        assertEquals(hot.get(1), "a");
+        assertEquals("1:a=>4:d=>3:c=>2:b", hot.toString());
         assertNotEquals(hot.get(2), "B");
-        assert "2:b=>1:a=>4:d=>3:c".equals(hot.toString());
+        assertEquals("2:b=>1:a=>4:d=>3:c", hot.toString());
 
         hot.remove();
 
-        assert "2:b=>1:a=>4:d".equals(hot.toString());
-        assert hot.size() == 3;
-        assert hot.get(1).equals("a");
-        assert "1:a=>2:b=>4:d".equals(hot.toString());
+        assertEquals("2:b=>1:a=>4:d", hot.toString());
+        assertEquals(hot.size(), 3);
+        assertEquals(hot.get(1), "a");
+        assertEquals("1:a=>2:b=>4:d", hot.toString());
 
         hot.remove();
-        assert "1:a=>2:b".equals(hot.toString());
-        assert hot.size() == 2;
-        assert hot.get(2).equals("b");
-        assert "2:b=>1:a".equals(hot.toString());
+        assertEquals("1:a=>2:b", hot.toString());
+        assertEquals(hot.size(), 2);
+        assertEquals(hot.get(2), "b");
+        assertEquals("2:b=>1:a", hot.toString());
         hot.remove();
-        assert "2:b".equals(hot.toString());
-        assert hot.size() == 1;
+        assertEquals("2:b", hot.toString());
+        assertEquals(hot.size(), 1);
         assertNull(hot.get(3));
         hot.remove();
-        assert "".equals(hot.toString());
-        assert hot.size() == 0;
+        assertEquals("", hot.toString());
+        assertEquals(hot.size(), 0);
         assertNull(hot.get(4));
         hot.remove();
         hot.remove();
         hot.remove();
         hot.remove();
-        assert hot.size() == 0;
+        assertEquals(hot.size(), 0);
     }
 
     @Test public void testRemove() {
@@ -118,21 +119,21 @@ public class CacheTest {
         hot.put(3, "c");
         hot.put(4, "d");
 
-        assert "b".equals(hot.remove(2));
-        assert "4:d=>3:c=>1:a".equals(hot.toString());
+        assertEquals("b", hot.remove(2));
+        assertEquals("4:d=>3:c=>1:a", hot.toString());
 
-        assert "a".equals(hot.remove(1));
-        assert "4:d=>3:c".equals(hot.toString());
+        assertEquals("a", hot.remove(1));
+        assertEquals("4:d=>3:c", hot.toString());
 
-        assert "d".equals(hot.remove(4));
-        assert "3:c".equals(hot.toString());
+        assertEquals("d", hot.remove(4));
+        assertEquals("3:c", hot.toString());
 
         assertNull(hot.remove(4));
-        assert "3:c".equals(hot.toString());
+        assertEquals("3:c", hot.toString());
 
-        assert "c".equals(hot.remove(3));
-        assert hot.size() == 0;
-        assert "".equals(hot.toString());
+        assertEquals("c", hot.remove(3));
+        assertEquals(hot.size(), 0);
+        assertEquals("", hot.toString());
     }
 
     @Test public void testClear() {
@@ -142,10 +143,10 @@ public class CacheTest {
         hot.put(3, "c");
         hot.put(4, "d");
 
-        assert hot.size() == 4;
+        assertEquals(hot.size(), 4);
         hot.clear();
 
-        assert hot.size() == 0;
+        assertEquals(hot.size(), 0);
     }
 
     @Test public void testRemoveAndAdd() {
@@ -153,14 +154,14 @@ public class CacheTest {
         cache.put("a", 1);
         cache.put("b", 2);
 
-        assert cache.size() == 2;
-        assert cache.get("a") == 1;
-        assert cache.get("b") == 2;
+        assertEquals(cache.size(), 2);
+        assertEquals((int) cache.get("a"), 1);
+        assertEquals((int) cache.get("b"), 2);
 
         cache.remove("a");
-        assert cache.size() == 1;
+        assertEquals(cache.size(), 1);
         cache.put("a", 5);
-        assert cache.size() == 2;
-        assert cache.get("a") == 5;
+        assertEquals(cache.size(), 2);
+        assertEquals((int) cache.get("a"), 5);
     }
 }

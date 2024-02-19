@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
@@ -46,10 +49,10 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 public class CustomerNumFmtTest extends WorkbookTest {
 
     @Test public void testStringSize() {
-        assert 4 == stringSize(1234);
-        assert 5 == stringSize(-1234);
-        assert 16 == stringSize(1231234354837485L);
-        assert 17 == stringSize(-1231234354837485L);
+        assertEquals(4, stringSize(1234));
+        assertEquals(5, stringSize(-1234));
+        assertEquals(16, stringSize(1231234354837485L));
+        assertEquals(17, stringSize(-1231234354837485L));
     }
 
     @Test public void testFmtInAnnotation() throws IOException {
@@ -60,14 +63,15 @@ public class CustomerNumFmtTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(Item.class).iterator();
             for (Item expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.get());
+                assertEquals(expect, row.get());
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "yyyy\\-mm\\-dd".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("yyyy\\-mm\\-dd", numFmt.getCode());
             }
         }
     }
@@ -80,14 +84,15 @@ public class CustomerNumFmtTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(ItemFull.class).iterator();
             for (ItemFull expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.get());
+                assertEquals(expect, row.get());
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(3);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt.getCode());
             }
         }
     }
@@ -107,21 +112,22 @@ public class CustomerNumFmtTest extends WorkbookTest {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator();
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "编码".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "日期".equals(header.get(2));
+            assertEquals("编码", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("日期", header.get(2));
 
             for (ItemFull expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.code.equals(row.getString("编码"));
-                assert expect.name.equals(row.getString("姓名"));
-                assert expect.date.getTime() / 1000 == row.getTimestamp("日期").getTime() / 1000;
+                assertEquals(expect.code, row.getString("编码"));
+                assertEquals(expect.name, row.getString("姓名"));
+                assertEquals(expect.date.getTime() / 1000, row.getTimestamp("日期").getTime() / 1000);
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "yyyy年mm月dd日\\ hh日mm分ss秒".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("yyyy年mm月dd日\\ hh日mm分ss秒", numFmt.getCode());
             }
         }
     }
@@ -142,26 +148,28 @@ public class CustomerNumFmtTest extends WorkbookTest {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(1).iterator();
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "编码".equals(header.get(0));
-            assert "姓名".equals(header.get(1));
-            assert "日期".equals(header.get(2));
-            assert "数字".equals(header.get(3));
+            assertEquals("编码", header.get(0));
+            assertEquals("姓名", header.get(1));
+            assertEquals("日期", header.get(2));
+            assertEquals("数字", header.get(3));
 
             for (ItemFull expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.code.equals(row.getString("编码"));
-                assert expect.name.equals(row.getString("姓名"));
-                assert expect.date.getTime() / 1000 == row.getTimestamp("日期").getTime() / 1000;
-                assert expect.num == row.getLong("数字");
+                assertEquals(expect.code, row.getString("编码"));
+                assertEquals(expect.name, row.getString("姓名"));
+                assertEquals(expect.date.getTime() / 1000, row.getTimestamp("日期").getTime() / 1000);
+                assertEquals((Long) expect.num, row.getLong("数字"));
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(2);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "上午/下午hh\"时\"mm\"分\"".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("上午/下午hh\"时\"mm\"分\"", numFmt.getCode());
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
-                assert numFmt3 != null && "#,##0\\ ;[Red]\\-#,##0\\ ".equals(numFmt3.getCode());
+                assertNotNull(numFmt3);
+                assertEquals("#,##0\\ ;[Red]\\-#,##0\\ ", numFmt3.getCode());
             }
         }
     }
@@ -177,14 +185,15 @@ public class CustomerNumFmtTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(Num.class).iterator();
             for (Num expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.get());
+                assertEquals(expect, row.get());
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(0);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "[Blue]#,##0.00_);[Red]\\-#,##0.00_);0_)".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("[Blue]#,##0.00_);[Red]\\-#,##0.00_);0_)", numFmt.getCode());
             }
         }
     }
@@ -199,58 +208,58 @@ public class CustomerNumFmtTest extends WorkbookTest {
         double width;
 
         width = fmt.calcNumWidth(nf.format(12345654352365434.36D).length(), song11);
-        assert width >= 20.86D && width <= 25.63D;
+        assertTrue(width >= 20.86D && width <= 25.63D);
 
         width = fmt.calcNumWidth(nf.format(-12345654352365434.36D).length(), song11);
-        assert width >= 21.5D && width <= 26.63D;
+        assertTrue(width >= 21.5D && width <= 26.63D);
 
         width = fmt.calcNumWidth(stringSize(1234565), song11);
-        assert width >= 11.5D && width <= 13.63D;
+        assertTrue(width >= 11.5D && width <= 13.63D);
 
         width = fmt.calcNumWidth(stringSize(-1234565), song11);
-        assert width >= 12.5D && width <= 14.63D;
+        assertTrue(width >= 12.5D && width <= 14.63D);
 
         fmt = new NumFmt("[Blue]#,##0.00_);[Red]-#,##0.00_);0_)");
         width = fmt.calcNumWidth(stringSize(1234565435236543436L), song11);
-        assert width >= 29.0D && width <= 34.63D;
+        assertTrue(width >= 29.0D && width <= 34.63D);
 
         width = fmt.calcNumWidth(stringSize(-1234565435236543436L), song11);
-        assert width >= 30.D && width <= 35.63D;
+        assertTrue(width >= 30.D && width <= 35.63D);
 
         width = fmt.calcNumWidth(stringSize(1234565), song11);
-        assert width >= 13.0D && width <= 15.63D;
+        assertTrue(width >= 13.0D && width <= 15.63D);
 
         width = fmt.calcNumWidth(stringSize(-1234565), song11);
-        assert width >= 14.D && width <= 16.63D;
+        assertTrue(width >= 14.D && width <= 16.63D);
 
         fmt = new NumFmt("[Blue]#,##0;[Red]-#,##0;0");
         width = fmt.calcNumWidth(stringSize(1234565435236543436L), song11);
-        assert width >= 25.D && width <= 29.63D;
+        assertTrue(width >= 25.D && width <= 29.63D);
 
         width = fmt.calcNumWidth(stringSize(-1234565435236543436L), song11);
-        assert width >= 26.D && width <= 30.63D;
+        assertTrue(width >= 26.D && width <= 30.63D);
 
         width = fmt.calcNumWidth(stringSize(1234565), song11);
-        assert width >= 9.D && width <= 12.63D;
+        assertTrue(width >= 9.D && width <= 12.63D);
 
         width = fmt.calcNumWidth(stringSize(-1234565), song11);
-        assert width >= 10.D && width <= 13.63D;
+        assertTrue(width >= 10.D && width <= 13.63D);
 
         fmt = new NumFmt("yyyy-mm-dd");
         width = fmt.calcNumWidth(0, song11);
-        assert width >= 10.D && width <= 12.63D;
+        assertTrue(width >= 10.D && width <= 12.63D);
 
         fmt = new NumFmt("yyyy-mm-dd hh:mm:ss");
         width = fmt.calcNumWidth(0, song11);
-        assert width >= 19.D && width <= 23.63D;
+        assertTrue(width >= 19.D && width <= 23.63D);
 
         fmt = new NumFmt("hh:mm:ss");
         width = fmt.calcNumWidth(0, song11);
-        assert width >= 8.D && width <= 10.63D;
+        assertTrue(width >= 8.D && width <= 10.63D);
 
         fmt = new NumFmt("yyyy年mm月dd日 hh日mm分ss秒");
         width = fmt.calcNumWidth(0, song11);
-        assert width >= 26.D && width <= 30.63D;
+        assertTrue(width >= 26.D && width <= 30.63D);
     }
 
     @Test public void testAutoWidth() throws IOException {
@@ -264,17 +273,19 @@ public class CustomerNumFmtTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(WidthTestItem.class).iterator();
             for (WidthTestItem expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.get());
+                assertEquals(expect, row.get());
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(0);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "#,##0_);[Red]\\-#,##0_);0_)".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("#,##0_);[Red]\\-#,##0_);0_)", numFmt.getCode());
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
-                assert numFmt3 != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt3.getCode());
+                assertNotNull(numFmt3);
+                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt3.getCode());
             }
         }
     }
@@ -290,17 +301,19 @@ public class CustomerNumFmtTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).bind(MaxWidthTestItem.class).iterator();
             for (WidthTestItem expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                assert expect.equals(row.get());
+                assertEquals(expect, row.get());
 
                 Styles styles = row.getStyles();
                 int styleIndex = row.getCellStyle(0);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
-                assert numFmt != null && "#,##0_);[Red]\\-#,##0_);0_)".equals(numFmt.getCode());
+                assertNotNull(numFmt);
+                assertEquals("#,##0_);[Red]\\-#,##0_);0_)", numFmt.getCode());
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
-                assert numFmt3 != null && "yyyy\\-mm\\-dd\\ hh:mm:ss".equals(numFmt3.getCode());
+                assertNotNull(numFmt3);
+                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt3.getCode());
             }
         }
     }

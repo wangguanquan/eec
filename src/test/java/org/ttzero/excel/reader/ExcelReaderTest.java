@@ -45,7 +45,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.Print.println;
@@ -100,8 +103,7 @@ public class ExcelReaderTest {
             int rn = 1;
             for (Iterator<Row> it = sheet.iterator(); it.hasNext();) {
                 Row row = it.next();
-                assert row.getRowNum() == rn;
-                rn++;
+                assertEquals(row.getRowNum(), rn++);
             }
         }
     }
@@ -115,7 +117,7 @@ public class ExcelReaderTest {
 
             Iterator<Row> it = sheet.iterator();
             for (String[] expect : expectList) {
-                assert it.hasNext();
+                assertTrue(it.hasNext());
                 Row row = it.next();
 
                 for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
@@ -128,7 +130,7 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
+                    assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
                 }
             }
 
@@ -136,7 +138,7 @@ public class ExcelReaderTest {
 
             it = sheet.iterator();
             for (String[] expect : expectList) {
-                assert it.hasNext();
+                assertTrue(it.hasNext());
                 Row row = it.next();
 
                 for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
@@ -149,7 +151,7 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
+                    assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
                 }
             }
         }
@@ -158,7 +160,7 @@ public class ExcelReaderTest {
     @Test public void testForEach() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             Sheet sheet = reader.sheet(0);
-            assert "Object测试".equals(sheet.getName());
+            assertEquals("Object测试", sheet.getName());
 
             Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
             if (Files.exists(expectPath)) {
@@ -166,7 +168,7 @@ public class ExcelReaderTest {
 
                 Iterator<Row> it = sheet.iterator();
                 for (String[] expect : expectList) {
-                    assert it.hasNext();
+                    assertTrue(it.hasNext());
                     Row row = it.next();
 
                     for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
@@ -179,13 +181,13 @@ public class ExcelReaderTest {
                             case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
-                        assert e.isEmpty() ? o == null || o.isEmpty() : e.equals(o);
+                        assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
                     }
                 }
             } else {
                 for (Iterator<Row> iter = sheet.iterator(); iter.hasNext(); ) {
                     Row row = iter.next();
-                    assert  StringUtil.isNotEmpty(row.toString());
+                    assertTrue(StringUtil.isNotEmpty(row.toString()));
                 }
             }
         }
@@ -194,14 +196,14 @@ public class ExcelReaderTest {
     @Test public void testToStandardObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             reader.sheets().flatMap(Sheet::dataRows).map(row -> row.too(StandardEntry.class)).forEach(o -> {
-                assert o.account == null;
-                assert o.address == null;
-                assert o.channelId == null;
-                assert o.registered == null;
-                assert o.pro == null;
-                assert o.id == 0;
-                assert !o.up30;
-                assert o.c == 0;
+                assertNull(o.account);
+                assertNull(o.address);
+                assertNull(o.channelId);
+                assertNull(o.registered);
+                assertNull(o.pro);
+                assertEquals(o.id, 0);
+                assertFalse(o.up30);
+                assertEquals(o.c, 0);
             });
         }
     }
@@ -211,16 +213,16 @@ public class ExcelReaderTest {
             List<Entry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Entry.class)).collect(Collectors.toList());
             Path expectPath = testResourceRoot().resolve("expect/1$Object测试.txt");
             List<String[]> expectList = CSVUtil.read(expectPath);
-            assert expectList.size() - 1 == list.size();
+            assertEquals(expectList.size() - 1, list.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 String[] o = expectList.get(i + 1);
                 Entry e = list.get(i);
-                assert o[0].equals(e.channelId.toString());
-                assert o[1].equals(CustomAnnoReaderTest.GameConverter.names[Integer.parseInt(e.pro)]);
-                assert o[2].equals(e.account);
-                assert o[3].equals(DateUtil.toString(e.registered));
-                assert o[4].equals(e.up30 ? "TRUE" : "FALSE");
-                assert o[5].equals(new String(new char[] {e.c}, 0, 1));
+                assertEquals(o[0], e.channelId.toString());
+                assertEquals(o[1], CustomAnnoReaderTest.GameConverter.names[Integer.parseInt(e.pro)]);
+                assertEquals(o[2], e.account);
+                assertEquals(o[3], DateUtil.toString(e.registered));
+                assertEquals(o[4], e.up30 ? "TRUE" : "FALSE");
+                assertEquals(o[5], new String(new char[] {e.c}, 0, 1));
             }
         }
     }
@@ -229,16 +231,16 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             List<AnnotationEntry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(AnnotationEntry.class)).collect(Collectors.toList());
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/1$Object测试.txt"));
-            assert expectList.size() - 1 == list.size();
+            assertEquals(expectList.size() - 1, list.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 String[] o = expectList.get(i + 1);
                 AnnotationEntry e = list.get(i);
-                assert o[0].equals(e.channelId.toString());
-                assert o[1].equals(e.pro);
-                assert e.account == null;
-                assert o[3].equals(DateUtil.toString(e.registered));
-                assert o[4].equals(e.up30 ? "TRUE" : "FALSE");
-                assert o[5].equals(new String(new char[] {e.c}, 0, 1));
+                assertEquals(o[0], e.channelId.toString());
+                assertEquals(o[1], e.pro);
+                assertNull(e.account);
+                assertEquals(o[3], DateUtil.toString(e.registered));
+                assertEquals(o[4], e.up30 ? "TRUE" : "FALSE");
+                assertEquals(o[5], new String(new char[] {e.c}, 0, 1));
             }
         }
     }
@@ -249,15 +251,15 @@ public class ExcelReaderTest {
 
             Iterator<Row> iter = reader.sheet(0).dataIterator();
             for (int i = 1; i < expectList.size(); i++) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 Row row = iter.next();
                 String[] o = expectList.get(i);
-                assert o[0].equals(row.getString("渠道ID"));
-                assert o[1].equals(row.getString("游戏"));
-                assert o[2].equals(row.getString("account"));
-                assert o[3].equals(DateUtil.toString(row.getDate("注册时间")));
-                assert o[4].equals(row.getBoolean("是否满30级") ? "TRUE" : "FALSE");
-                assert o[5].equals(row.getString("VIP"));
+                assertEquals(o[0], row.getString("渠道ID"));
+                assertEquals(o[1], row.getString("游戏"));
+                assertEquals(o[2], row.getString("account"));
+                assertEquals(o[3], DateUtil.toString(row.getDate("注册时间")));
+                assertEquals(o[4], row.getBoolean("是否满30级") ? "TRUE" : "FALSE");
+                assertEquals(o[5], row.getString("VIP"));
             }
         }
     }
@@ -271,7 +273,7 @@ public class ExcelReaderTest {
                 .sorted()
                 .toArray(String[]::new);
             String[] expect = { "LOL", "WOW", "守望先锋", "怪物世界", "极品飞车" };
-            assert Arrays.equals(games, expect);
+            assertArrayEquals(games, expect);
         }
     }
 
@@ -281,13 +283,13 @@ public class ExcelReaderTest {
 
             List<String[]> list = CSVUtil.read(getOutputTestPath().resolve("Object测试.csv"));
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/1$Object测试.txt"));
-            assert list.size() == expectList.size();
+            assertEquals(list.size(), expectList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 String[] o = list.get(i), e = expectList.get(i);
-                assert o.length == e.length;
+                assertEquals(o.length, e.length);
                 for (int j = 0; j < o.length; j++) {
-                    if (i > 0 && j == 3) assert o[j].equals(e[j].substring(0, 10));
-                    else assert o[j].equals(e[j]);
+                    if (i > 0 && j == 3) assertEquals(o[j], e[j].substring(0, 10));
+                    else assertEquals(o[j], e[j]);
                 }
             }
         }
@@ -297,12 +299,12 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             List<Customer> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Customer.class)).collect(Collectors.toList());
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/#81$Sheet1.txt"));
-            assert expectList.size() - 1 == list.size();
+            assertEquals(expectList.size() - 1, list.size());
             int i = 1;
             for (Customer c : list) {
                 String[] expect = expectList.get(i++);
-                assert StringUtil.isEmpty(expect[0]) && StringUtil.isEmpty(c.code) || expect[0].equals(c.code);
-                assert StringUtil.isEmpty(expect[1]) && StringUtil.isEmpty(c.name) || expect[1].equals(c.name);
+                assertTrue(StringUtil.isEmpty(expect[0]) && StringUtil.isEmpty(c.code) || expect[0].equals(c.code));
+                assertTrue(StringUtil.isEmpty(expect[1]) && StringUtil.isEmpty(c.name) || expect[1].equals(c.name));
             }
         }
     }
@@ -311,21 +313,21 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
             Dimension dimension = reader.sheet(0).getDimension();
 
-            assert dimension.firstRow == 1;
-            assert dimension.lastRow == 6;
-            assert dimension.firstColumn == 1;
-            assert dimension.lastColumn == 2;
+            assertEquals(dimension.firstRow, 1);
+            assertEquals(dimension.lastRow, 6);
+            assertEquals(dimension.firstColumn, 1);
+            assertEquals(dimension.lastColumn, 2);
         }
     }
 
     @Test public void testDimensionConstructor() {
         Dimension dimension = Dimension.of("A1:C5");
-        assert "A1:C5".equals(dimension.toString());
+        assertEquals("A1:C5", dimension.toString());
 
-        assert dimension.firstRow == 1;
-        assert dimension.firstColumn == 1;
-        assert dimension.lastRow == 5;
-        assert dimension.lastColumn == 3;
+        assertEquals(dimension.firstRow, 1);
+        assertEquals(dimension.firstColumn, 1);
+        assertEquals(dimension.lastRow, 5);
+        assertEquals(dimension.lastColumn, 3);
     }
 
     @Test public void testFormula() throws IOException {
@@ -338,7 +340,7 @@ public class ExcelReaderTest {
 
                     for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
                         String formula = formulasMap.get(((long) row.getRowNum()) << 16 | (start + 1));
-                        assert formula == null || formula.equals(row.getFormula(start));
+                        assertTrue(formula == null || formula.equals(row.getFormula(start)));
                     }
                 }
             });
@@ -396,7 +398,7 @@ public class ExcelReaderTest {
                 chars[i++] = chars[j];
         }
         String version = i > 0 ? new String(chars, 0, chars[i - 1] != '.' ? i : i - 1) : "1.0.0";
-        assert "0.3.7".equals(version);
+        assertEquals("0.3.7", version);
     }
 
     @Test public void testSort() {
@@ -415,12 +417,12 @@ public class ExcelReaderTest {
             swap(values, (_n << 1) + 1, _i + 1);
         }
 
-        assert "t".equals(values[0]);
-        assert "shared".equals(values[1]);
-        assert "si".equals(values[2]);
-        assert "0".equals(values[3]);
-        assert "ref".equals(values[4]);
-        assert "B2:B8".equals(values[5]);
+        assertEquals("t", values[0]);
+        assertEquals("shared", values[1]);
+        assertEquals("si", values[2]);
+        assertEquals("0", values[3]);
+        assertEquals("ref", values[4]);
+        assertEquals("B2:B8", values[5]);
     }
 
     @Test public void testMergeFunc() throws IOException {
@@ -500,7 +502,7 @@ public class ExcelReaderTest {
                     List<String[]> expectList = CSVUtil.read(expectPath);
                     Iterator<Row> it = sheet.iterator();
                     for (String[] expect : expectList) {
-                        assert it.hasNext();
+                        assertTrue(it.hasNext());
                         Row row = it.next();
 
                         for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
@@ -515,13 +517,13 @@ public class ExcelReaderTest {
                                 case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                                 default      : o = row.getString(start);
                             }
-                            assert StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o);
+                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o));
                         }
                     }
                 } else {
                     for (Iterator<Row> iter = sheet.iterator(); iter.hasNext(); ) {
                         Row row = iter.next();
-                        assert row.toString() != null;
+                        assertNotNull(row.toString());
                     }
                 }
             }
@@ -542,7 +544,7 @@ public class ExcelReaderTest {
 
                     for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
                         String formula = formulasMap.get(((long) row.getRowNum()) << 16 | (start + 1));
-                        assert formula == null || formula.equals(row.getFormula(start));
+                        assertTrue(formula == null || formula.equals(row.getFormula(start)));
                     }
                 }
             });
@@ -553,9 +555,9 @@ public class ExcelReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("test-fixed-row.xlsx"))) {
             reader.sheet(0).rows().forEach(row -> {
                 if (row.getRowNum() == 1) {
-                    assert "我是固定表头".equals(row.getString(0));
+                    assertEquals("我是固定表头", row.getString(0));
                 } else if (row.getRowNum() == 2) {
-                    assert "我是内容".equals(row.getString(0));
+                    assertEquals("我是内容", row.getString(0));
                 }
             });
         }
@@ -564,58 +566,58 @@ public class ExcelReaderTest {
     @Test public void testReadEmptyCell() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#169.xlsx"))) {
             long count = reader.sheets().peek(sheet -> println(sheet.getName() + ": " + sheet.getDimension())).flatMap(Sheet::rows).count();
-            assert count == 1L;
+            assertEquals(count, 1L);
             count = reader.sheets().peek(sheet -> {
                 sheet.reset();
                 println(sheet.getName() + ": " + sheet.getDimension());
             }).flatMap(Sheet::rows).count();
-            assert count == 1L;
+            assertEquals(count, 1L);
         }
     }
 
     @Test public void testReadDrawings() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("drawing.xlsx"))) {
             List<Map<String, Object>> list = reader.sheet(0).header(75).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == 4;
+            assertEquals(list.size(), 4);
             Map<String, Object> r = list.get(0);
-            assert "A".equals(r.get("列1"));
-            assert "1".equals(r.get("HEAD1").toString());
-            assert "2".equals(r.get("HEAD2").toString());
-            assert "3".equals(r.get("HEAD3").toString());
+            assertEquals("A", r.get("列1"));
+            assertEquals("1", r.get("HEAD1").toString());
+            assertEquals("2", r.get("HEAD2").toString());
+            assertEquals("3", r.get("HEAD3").toString());
             r = list.get(1);
-            assert "B".equals(r.get("列1"));
-            assert "5".equals(r.get("HEAD1").toString());
-            assert "3".equals(r.get("HEAD2").toString());
-            assert "1".equals(r.get("HEAD3").toString());
+            assertEquals("B", r.get("列1"));
+            assertEquals("5", r.get("HEAD1").toString());
+            assertEquals("3", r.get("HEAD2").toString());
+            assertEquals("1", r.get("HEAD3").toString());
             r = list.get(2);
-            assert "C".equals(r.get("列1"));
-            assert "3".equals(r.get("HEAD1").toString());
-            assert "2".equals(r.get("HEAD2").toString());
-            assert "2".equals(r.get("HEAD3").toString());
+            assertEquals("C", r.get("列1"));
+            assertEquals("3", r.get("HEAD1").toString());
+            assertEquals("2", r.get("HEAD2").toString());
+            assertEquals("2", r.get("HEAD3").toString());
             r = list.get(3);
-            assert "D".equals(r.get("列1"));
-            assert "1".equals(r.get("HEAD1").toString());
-            assert "1".equals(r.get("HEAD2").toString());
-            assert "9".equals(r.get("HEAD3").toString());
+            assertEquals("D", r.get("列1"));
+            assertEquals("1", r.get("HEAD1").toString());
+            assertEquals("1", r.get("HEAD2").toString());
+            assertEquals("9", r.get("HEAD3").toString());
 
             // From workbook`
             List<Drawings.Picture> pictures = reader.listPictures();
-            assert pictures.size() == 5;
+            assertEquals(pictures.size(), 5);
 
             // Copy images
             for (Drawings.Picture pic : pictures) {
                 Path dest = Paths.get("target/excel/drawing/", pic.sheet.getName(), pic.localPath.getFileName().toString());
                 if (!Files.exists(dest.getParent())) FileUtil.mkdir(dest.getParent());
                 Files.copy(pic.localPath, dest, StandardCopyOption.REPLACE_EXISTING);
-                assert Files.size(pic.localPath) == Files.size(dest);
+                assertEquals(Files.size(pic.localPath), Files.size(dest));
             }
 
             // From worksheet
             reader.sheets().forEach(sheet -> {
                 List<Drawings.Picture> pictures1 = sheet.listPictures();
                 if (sheet.getName().equals("Sheet1")) {
-                    assert pictures1.size() == 4;
-                } else assert !sheet.getName().equals("Sheet2") || pictures1.size() == 1;
+                    assertEquals(pictures1.size(), 4);
+                } else assertTrue(!sheet.getName().equals("Sheet2") || pictures1.size() == 1);
             });
         }
     }
@@ -623,14 +625,14 @@ public class ExcelReaderTest {
     @Test public void test175() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
             double[] v = reader.sheet(0).rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).mapToDouble(row -> row.getDouble(4)).toArray();
-            assert v.length == 2;
-            assert v[0] == 0.07D;
-            assert v[1] == 0.07D;
+            assertEquals(v.length, 2);
+            assertTrue(v[0] - 0.07D < 0.0001D);
+            assertTrue(v[1] - 0.07D < 0.0001D);
 
             BigDecimal[] d = reader.sheet(0).reset().rows().filter(row -> row.getRowNum() > 7 && !row.isEmpty()).map(row -> row.getDecimal(4)).toArray(BigDecimal[]::new);
-            assert d.length == 2;
-            assert new BigDecimal("0.070000000000000007").equals(d[0]);
-            assert new BigDecimal("0.070000000000000007").equals(d[1]);
+            assertEquals(d.length, 2);
+            assertEquals(new BigDecimal("0.070000000000000007"), d[0]);
+            assertEquals(new BigDecimal("0.070000000000000007"), d[1]);
 
             List<O> expectList = Arrays.asList(new O("FBA15DRV4JP4U000001", "2Z91JHMR", new BigDecimal("0.08"), new BigDecimal("0.070000000000000007"))
                 , new O("FBA15DRV4JP4U000002", "2Z91JHMR", new BigDecimal("0.08"), new BigDecimal("0.070000000000000007")));
@@ -651,7 +653,7 @@ public class ExcelReaderTest {
         final String[] arr = {"ab", "", "r", "y", "", "6", "nrge"};
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#226.xlsx"))) {
             String[] array = reader.sheet(0).rows().map(row -> row.getString(0)).toArray(String[]::new);
-            assert Arrays.equals(arr, array);
+            assertArrayEquals(arr, array);
         }
     }
 
@@ -663,18 +665,18 @@ public class ExcelReaderTest {
                     .filter(Objects::nonNull)
                     .toArray(OO[]::new);
 
-            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
-            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+            assertEquals("rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[0].toString());
+            assertEquals("rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[1].toString());
 
             // Specify header rows
             list = reader.sheet(0).reset().header(7).rows().map(row -> row.to(OO.class)).toArray(OO[]::new);
-            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
-            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+            assertEquals("rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[0].toString());
+            assertEquals("rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[1].toString());
 
             // Bind Java bean
             list = reader.sheet(0).reset().bind(OO.class, 7).rows().map(row -> (OO) row.get()).toArray(OO[]::new);
-            assert "rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[0].toString());
-            assert "rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头".equals(list[1].toString());
+            assertEquals("rowNum: 8 => fbaNo: FBA15DRV4JP4U000001, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[0].toString());
+            assertEquals("rowNum: 9 => fbaNo: FBA15DRV4JP4U000002, refId: 2Z91JHMR, price: 0.08, weight: 0.070000000000000007, brand: TEYASI, productName: 手机充电头", list[1].toString());
         }
     }
 
@@ -686,16 +688,16 @@ public class ExcelReaderTest {
                 Row row = it.next();
                 if (row.getRowNum() == 1) {
                     assertNull(row.getFormula(1));
-                    assert 4 == row.getInt(1);
-                    assert "D".equals(row.getString(3));
+                    assertEquals(4, (int) row.getInt(1));
+                    assertEquals("D", row.getString(3));
                     assertNull(row.getFormula(5));
-                    assert 4 == row.getInt(5);
+                    assertEquals(4, (int) row.getInt(5));
                 }
                 else if (row.getRowNum() == 2) {
                     assertNull(row.getFormula(1));
-                    assert 6 == row.getInt(1);
+                    assertEquals(6, (int) row.getInt(1));
                     assertNull(row.getFormula(2));
-                    assert StringUtil.isEmpty(row.getString(3));
+                    assertTrue(StringUtil.isEmpty(row.getString(3)));
                 }
 
                 if (row.getRowNum() == 2) break;
@@ -706,15 +708,15 @@ public class ExcelReaderTest {
             for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
                 if (row.getRowNum() == 3) {
-//                    assert "(A3+A4)+1".equals(row.getFormula(1));
-                    assert 8 == row.getInt(1);
-                    assert "SUM(A1:A10)".equals(row.getFormula(2));
-                    assert 55 == row.getInt(2);
+//                    assertEquals("(A3+A4)+1", row.getFormula(1));
+                    assertEquals(8, (int) row.getInt(1));
+                    assertEquals("SUM(A1:A10)", row.getFormula(2));
+                    assertEquals(55, (int) row.getInt(2));
                 }
-                if (row.getRowNum() == 11) assert "G11+1".equals(row.getFormula(7));
-                if (row.getRowNum() == 66) assert "A66+1".equals(row.getFormula(1));
-                if (row.getRowNum() == 11) assert row.getInt(4) == 15;
-                if (row.getRowNum() == 16) assert StringUtil.isEmpty(row.getString(4));
+                if (row.getRowNum() == 11) assertEquals("G11+1", row.getFormula(7));
+                if (row.getRowNum() == 66) assertEquals("A66+1", row.getFormula(1));
+                if (row.getRowNum() == 11) assertEquals((int) row.getInt(4), 15);
+                if (row.getRowNum() == 16) assertTrue(StringUtil.isEmpty(row.getString(4)));
                 if (row.getRowNum() == 50) break;
             }
 
@@ -722,25 +724,25 @@ public class ExcelReaderTest {
             MergeSheet mergeSheet = sheet.asMergeSheet();
             List<Dimension> mergeCells = mergeSheet.getMergeCells();
             assertEquals(6, mergeCells.size());
-            assert mergeCells.contains(Dimension.of("D1:D2"));
-            assert mergeCells.contains(Dimension.of("E1:E2"));
-            assert mergeCells.contains(Dimension.of("F1:F2"));
-            assert mergeCells.contains(Dimension.of("E11:E18"));
-            assert mergeCells.contains(Dimension.of("B56:D56"));
-            assert mergeCells.contains(Dimension.of("A59:A64"));
+            assertTrue(mergeCells.contains(Dimension.of("D1:D2")));
+            assertTrue(mergeCells.contains(Dimension.of("E1:E2")));
+            assertTrue(mergeCells.contains(Dimension.of("F1:F2")));
+            assertTrue(mergeCells.contains(Dimension.of("E11:E18")));
+            assertTrue(mergeCells.contains(Dimension.of("B56:D56")));
+            assertTrue(mergeCells.contains(Dimension.of("A59:A64")));
             for (Iterator<Row> it = mergeSheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
 
                 // Copy on merged
                 if (row.getRowNum() == 56) {
-                    assert row.getInt(1) == 57;
-                    assert row.getInt(2) == 57;
-                    assert row.getInt(3) == 57;
+                    assertEquals((int) row.getInt(1), 57);
+                    assertEquals((int) row.getInt(2), 57);
+                    assertEquals((int) row.getInt(3), 57);
                 }
                 if (row.getRowNum() >= 59 && row.getRowNum() <= 64) {
-                    assert row.getInt(0) == 59;
-                    if (row.getRowNum() > 59) assert row.getInt(1) == 1; // formula=A60+1
-                    else assert row.getInt(1) == 60; // formula=A59+1
+                    assertEquals((int) row.getInt(0), 59);
+                    if (row.getRowNum() > 59) assertEquals((int) row.getInt(1), 1); // formula=A60+1
+                    else assertEquals((int) row.getInt(1), 60); // formula=A59+1
                 }
             }
         }
@@ -749,13 +751,13 @@ public class ExcelReaderTest {
     @Test public void testRowToMap() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
             List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == 94;
-            assert list.get(0).toString().equals("{渠道ID=4, 游戏=极品飞车, account=XuSu2gFg32, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=F}");
+            assertEquals(list.size(), 94);
+            assertEquals(list.get(0).toString(), "{渠道ID=4, 游戏=极品飞车, account=XuSu2gFg32, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=F}");
             Map<String, Object> row9 = list.get(8); // Include header row
-            assert "LOL".equals(row9.get("游戏"));
-            assert "1WRQMx".equals(row9.get("account"));
-            assert (Boolean) row9.get("是否满30级");
-            assert list.get(93).toString().equals("{渠道ID=3, 游戏=WOW, account=Ae9CNO6eTu, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=B}");
+            assertEquals("LOL", row9.get("游戏"));
+            assertEquals("1WRQMx", row9.get("account"));
+            assertTrue((Boolean) row9.get("是否满30级"));
+            assertEquals(list.get(93).toString(), "{渠道ID=3, 游戏=WOW, account=Ae9CNO6eTu, 注册时间=2018-11-21 00:00:00.0, 是否满30级=true, VIP=B}");
         }
     }
 

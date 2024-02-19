@@ -43,6 +43,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2022-07-15 23:31
  */
@@ -60,27 +63,27 @@ public class StyleDesignTest extends WorkbookTest {
                 int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1), c2 = row.getCellStyle(2);
                 Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1), f2 = styles.getFill(c2);
                 if (o.getScore() < 60) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.orange);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.orange);
-                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.orange);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.orange));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.orange));
+                    assertTrue(f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.orange));
                 } else if (o.getScore() < 70) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
-                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green));
+                    assertTrue(f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green));
                 } else if (o.getScore() > 90) {
                     Font ft0 = styles.getFont(c0), ft1 = styles.getFont(c1), ft2 = styles.getFont(c2);
-                    assert ft0.isUnderLine() && ft0.isBold();
-                    assert ft1.isUnderLine() && ft0.isBold();
-                    assert ft2.isUnderLine() && ft0.isBold();
+                    assertTrue(ft0.isUnderLine() && ft0.isBold());
+                    assertTrue(ft1.isUnderLine() && ft0.isBold());
+                    assertTrue(ft2.isUnderLine() && ft0.isBold());
                 } else {
-                    assert f0 == null || f0.getPatternType() == PatternType.none;
-                    assert f1 == null || f1.getPatternType() == PatternType.none;
-                    assert f2 == null || f2.getPatternType() == PatternType.none;
+                    assertTrue(f0 == null || f0.getPatternType() == PatternType.none);
+                    assertTrue(f1 == null || f1.getPatternType() == PatternType.none);
+                    assertTrue(f2 == null || f2.getPatternType() == PatternType.none);
                 }
 
                 if (VIP_SET.contains(o.getName())) {
                     Font font = styles.getFont(c0);
-                    assert font.isBold();
+                    assertTrue(font.isBold());
                 }
             });
         }
@@ -98,17 +101,17 @@ public class StyleDesignTest extends WorkbookTest {
                 int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1);
                 Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1);
                 if (item.getId() % 3 == 0) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green));
                 } else if (item.getId() % 3 == 1) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.blue);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.blue);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.blue));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.blue));
                 } else if (item.getId() % 3 == 2) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.pink);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.pink);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.pink));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.pink));
                 } else {
-                    assert f0 == null || f0.getPatternType() == PatternType.none;
-                    assert f1 == null || f1.getPatternType() == PatternType.none;
+                    assertTrue(f0 == null || f0.getPatternType() == PatternType.none);
+                    assertTrue(f1 == null || f1.getPatternType() == PatternType.none);
                 }
             });
         }
@@ -131,18 +134,18 @@ public class StyleDesignTest extends WorkbookTest {
                 int c0 = row.getCellStyle(0), c1 = row.getCellStyle(1), c2 = row.getCellStyle(2);
                 Fill f0 = styles.getFill(c0), f1 = styles.getFill(c1), f2 = styles.getFill(c2);
                 if (item.getId() < 10) {
-                    assert f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green);
-                    assert f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green);
-                    assert f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green);
+                    assertTrue(f0 != null && f0.getPatternType() == PatternType.solid && f0.getFgColor().equals(Color.green));
+                    assertTrue(f1 != null && f1.getPatternType() == PatternType.solid && f1.getFgColor().equals(Color.green));
+                    assertTrue(f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green));
                 } else {
-                    assert f0 == null || f0.getPatternType() == PatternType.none;
-                    assert f1 == null || f1.getPatternType() == PatternType.none;
-                    assert f2 == null || f2.getPatternType() == PatternType.none;
+                    assertTrue(f0 == null || f0.getPatternType() == PatternType.none);
+                    assertTrue(f1 == null || f1.getPatternType() == PatternType.none);
+                    assertTrue(f2 == null || f2.getPatternType() == PatternType.none);
                 }
 
                 if (VIP_SET.contains(item.getName())) {
                     Font font = styles.getFont(c0);
-                    assert font.isBold();
+                    assertTrue(font.isBold());
                 }
             });
         }
@@ -160,9 +163,9 @@ public class StyleDesignTest extends WorkbookTest {
             reader.sheet(0).header(1).rows().forEach(row -> {
                 Styles styles = row.getStyles();
                 int c0 = row.getCellStyle(0), c2 = row.getCellStyle(2);
-                assert styles.getWrapText(c0) == 1;
-                assert styles.getHorizontal(c0) == Horizontals.CENTER;
-                assert styles.getWrapText(c2) == 1;
+                assertEquals(styles.getWrapText(c0), 1);
+                assertEquals(styles.getHorizontal(c0), Horizontals.CENTER);
+                assertEquals(styles.getWrapText(c2), 1);
             });
         }
     }
@@ -229,9 +232,9 @@ public class StyleDesignTest extends WorkbookTest {
                 "{姓名=王五, 性别=男, 证书:编号=1, 证书:类型=高数, 证书:等级=2, 年龄=28, 教育:教育1=教育c, 教育:教育2=教育a}",
                 "{姓名=, 性别=, 证书:编号=2, 证书:类型=JAvA, 证书:等级=3, 年龄=, 教育:教育1=教育b, 教育:教育2=教育c}");
 
-            assert readList.size() == expected.size();
+            assertEquals(readList.size(), expected.size());
             for (int i = 0; i < expected.size(); i++) {
-                assert expected.get(i).equals(readList.get(i).toString());
+                assertEquals(expected.get(i), readList.get(i).toString());
             }
 
             // Copy on merged reader
@@ -246,9 +249,9 @@ public class StyleDesignTest extends WorkbookTest {
                 "{姓名=王五, 性别=男, 证书:编号=1, 证书:类型=高数, 证书:等级=2, 年龄=28, 教育:教育1=教育c, 教育:教育2=教育a}",
                 "{姓名=王五, 性别=男, 证书:编号=2, 证书:类型=JAvA, 证书:等级=3, 年龄=28, 教育:教育1=教育b, 教育:教育2=教育c}");
 
-            assert readList2.size() == expected2.size();
+            assertEquals(readList2.size(), expected2.size());
             for (int i = 0; i < expected2.size(); i++) {
-                assert expected2.get(i).equals(readList2.get(i).toString());
+                assertEquals(expected2.get(i), readList2.get(i).toString());
             }
         }
     }
