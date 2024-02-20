@@ -279,6 +279,17 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.13 (2024-02-20)
+-------------
+- logback安全更新
+- 新增全属性工作表FullSheet以读取更多属性，它集合了MergeSheet和CalcSheet的功能
+- 新增扩展属性AutoFilter用于添加列筛选功能
+- 修复继承自ListSheet的工作表初始无法获取对象类型导致单元格空白的问题
+- 修复部分场景下边框颜色无法设置的问题
+- 修复部分Excel的indexed颜色与标准有所不同导致获取颜色不正确的问题
+- 修复部分场景读取Excel发生IndexOutOfBound异常
+- 修复HeaderStyle注解设置样式时，字段样式被全局样式替换的问题
+
 Version 0.5.12 (2023-11-26)
 -------------
 - 移除watch改用slf4j输出日志
@@ -302,14 +313,10 @@ Version 0.5.10 (2023-08-10)
 - 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
 - 支持导出图片
 
-Version 0.5.9 (2023-05-10)
--------------
-- 修复dom4j默认构造器容易造成XXE安全漏洞
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.12-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.13-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
