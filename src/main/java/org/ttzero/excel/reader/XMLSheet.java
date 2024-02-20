@@ -592,7 +592,7 @@ public class XMLSheet implements Sheet {
                 XMLRow row = nextRow();
                 if (row != null) firstRow = createHeader(row.cb, row.from, row.to - row.from);
             }
-            this.reader.close();
+            if (this.reader != null) this.reader.close();
         } catch (IOException e) {
             LOGGER.error("Read header row error.");
         }
