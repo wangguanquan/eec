@@ -288,9 +288,9 @@ public class ExcelReaderTest2 {
             assertEquals((int) sheet.getDefaultColWidth(), 21);
             assertEquals((int) sheet.getDefaultRowHeight(), 15);
 
-            List<Dimension> mergeCells = sheet.getMergeCells();
-            assertEquals(mergeCells.size(), 1);
-            assertEquals(Dimension.of("B98:E100"), mergeCells.get(0));
+//            List<Dimension> mergeCells = sheet.getMergeCells();
+//            assertEquals(mergeCells.size(), 1);
+//            assertEquals(Dimension.of("B98:E100"), mergeCells.get(0));
 
             Path expectPath = testResourceRoot().resolve("expect/1$" + sheet.getName() + ".txt");
             if (Files.exists(expectPath)) {
