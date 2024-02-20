@@ -297,7 +297,11 @@ public class DateUtil {
         try {
             return LocalTime.parse(s);
         } catch (DateTimeParseException | NullPointerException e) {
-            return null;
+            try {
+                return toTimestamp(s).toLocalDateTime().toLocalTime();
+            } catch (Exception ex) {
+                throw new NumberFormatException(s);
+            }
         }
     }
 
