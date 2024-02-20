@@ -845,7 +845,7 @@ public class Styles implements Storable {
         int n = style >>> INDEX_NUMBER_FORMAT;
         if (n <= 0) return null;
         NumFmt fmt = null;
-        // 优选从自定义队列中查找
+        // 优先从自定义队列中查找
         for (NumFmt e : numFmts) {
             if (e.id == n) {
                 fmt = e;
