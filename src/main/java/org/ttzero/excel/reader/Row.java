@@ -1166,7 +1166,7 @@ public class Row {
     }
 
     /**
-     * 使用{@link Sheet#bind)}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;
+     * 使用{@link Sheet#bind}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;
      *
      * @param <T> 绑定的对象类型
      * @return T
@@ -1188,7 +1188,7 @@ public class Row {
     }
 
     /**
-     * 使用{@link Sheet#bind)}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;，与{@link #get}的区别在于
+     * 使用{@link Sheet#bind}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;，与{@link #get}的区别在于
      * 本方法返回的对象是内存共享的（只有一个对象副本）
      *
      * @param <T> 绑定的对象类型
