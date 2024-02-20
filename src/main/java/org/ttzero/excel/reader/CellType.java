@@ -17,6 +17,8 @@
 package org.ttzero.excel.reader;
 
 /**
+ * 单元格数据类型
+ *
  * @author guanquan.wang at 2019-06-06 21:17
  */
 public enum CellType {

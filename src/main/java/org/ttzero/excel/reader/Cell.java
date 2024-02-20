@@ -22,6 +22,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 /**
+ * 单元格，读取或写入时最小处理单元，它与上层的数据源无关
+ *
  * @author guanquan.wang on 2018-09-22
  */
 public class Cell {

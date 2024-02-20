@@ -312,14 +312,33 @@ public class Styles implements Storable {
         // Parse Number format
         self.numFmts = NumFmt.domToNumFmt(root);
 
-        // Parse Fonts
-        self.fonts = Font.domToFont(root);
+        // Indexed Colors（部分Excel的indexed颜色与标准有所不同，这部分颜色会定义在<colors>标签下）
+        Element colors = root.element("colors");
+        if (colors != null) colors = colors.element("indexedColors");
+        if (colors != null && colors.nodeCount() > 0) {
+            List<Element> sub = colors.elements();
+            Color[] indexedColors = new Color[sub.size()];
+            int i = 0;
+            for (Element e : sub) indexedColors[i++] = parseColor(e);
 
-        // Parse Fills
-        self.fills = Fill.domToFill(root);
+            // Parse Fonts
+            self.fonts = Font.domToFont(root, indexedColors);
 
-        // Parse Borders
-        self.borders = Border.domToBorder(root);
+            // Parse Fills
+            self.fills = Fill.domToFill(root, indexedColors);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root, indexedColors);
+        } else {
+            // Parse Fonts
+            self.fonts = Font.domToFont(root);
+
+            // Parse Fills
+            self.fills = Fill.domToFill(root);
+
+            // Parse Borders
+            self.borders = Border.domToBorder(root);
+        }
 
         // Cell xf
         Element cellXfs = root.element("cellXfs");
@@ -387,21 +406,20 @@ public class Styles implements Storable {
      * @return 样式值中“格式化”部分的2进制值
      */
     public final int addNumFmt(NumFmt numFmt) {
-        // All indexes from 0 to 175 are reserved for built-in formats.
-        // The first user-defined format starts at 176.
-        if (numFmt.getId() < 0 || numFmt.getId() >= 176) {
+        if (numFmt.getId() < 0 || numFmt.getId() > 58) {
             if (isEmpty(numFmt.getCode())) {
                 throw new NullPointerException("NumFmt code");
             }
             int index = BuiltInNumFmt.indexOf(numFmt.getCode());
-            if (index > -1) { // default code
+            // Build-in NumFmt
+            if (index > -1) {
                 numFmt.setId(index);
             } else {
                 int i = numFmts.indexOf(numFmt);
                 if (i <= -1) {
                     int id;
                     if (numFmts.isEmpty()) {
-                        id = 176; // customer id
+                        id = 164; // customer id
                     } else {
                         id = numFmts.get(numFmts.size() - 1).getId() + 1;
                     }
@@ -522,28 +540,28 @@ public class Styles implements Storable {
         if (!numFmts.isEmpty()) {
             Element element = document.getRootElement().element("numFmts");
             element.attribute("count").setValue(String.valueOf(numFmts.size()));
-            for (NumFmt numFmt : numFmts) numFmt.toDom4j(element);
+            for (NumFmt numFmt : numFmts) numFmt.toDom(element);
         }
 
         // Font
         if (!fonts.isEmpty()) {
             Element element = document.getRootElement().element("fonts");
             element.attribute("count").setValue(String.valueOf(fonts.size()));
-            for (Font font : fonts) font.toDom4j(element);
+            for (Font font : fonts) font.toDom(element);
         }
 
         // Fill
         if (!fills.isEmpty()) {
             Element element = document.getRootElement().element("fills");
             element.attribute("count").setValue(String.valueOf(fills.size()));
-            for (Fill fill : fills) fill.toDom4j(element);
+            for (Fill fill : fills) fill.toDom(element);
         }
 
         // Border
         if (!borders.isEmpty()) {
             Element element = document.getRootElement().element("borders");
             element.attribute("count").setValue(String.valueOf(borders.size()));
-            for (Border border : borders) border.toDom4j(element);
+            for (Border border : borders) border.toDom(element);
         }
 
         Element cellXfs = root.element("cellXfs").addAttribute("count", String.valueOf(map.size()));
@@ -826,11 +844,21 @@ public class Styles implements Storable {
     public NumFmt getNumFmt(int style) {
         int n = style >>> INDEX_NUMBER_FORMAT;
         if (n <= 0) return null;
-        if (n < 176) return BuiltInNumFmt.get(n);
+        NumFmt fmt = null;
+        // 优先从自定义队列中查找
         for (NumFmt e : numFmts) {
-            if (e.id == n) return e;
+            if (e.id == n) {
+                fmt = e;
+                break;
+            }
         }
-        return null;
+        // 不在内置队列中则从内置格式化队列中查找
+        if (fmt == null) {
+            // 内置格式化不全可能返回null
+            fmt = BuiltInNumFmt.get(n);
+            if (fmt == null && n <= 58) fmt = new NumFmt().setId(n);
+        }
+        return fmt;
     }
 
     /**
@@ -917,7 +945,7 @@ public class Styles implements Storable {
         Color c = null;
         // Standard Alpha Red Green Blue color value (ARGB).
         if (StringUtil.isNotEmpty(rgb)) {
-            c = ColorIndex.toColor(rgb);
+            c = toColor(rgb);
         }
         // Indexed color value. Only used for backwards compatibility.
         // References a color in indexedColors.
@@ -1141,19 +1169,22 @@ public class Styles implements Storable {
      * @throws IllegalArgumentException if convert failed.
      */
     public static Color toColor(String v) {
-        Color color;
-        if (v.charAt(0) == '#') {
-            try {
-                color = Color.decode(v);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
-            }
-        } else {
+        Color color = null;
+        final String source = v;
+        if (v.charAt(0) != '#') {
             try {
                 Field field = Color.class.getDeclaredField(v);
                 color = (Color) field.get(null);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new IllegalArgumentException("Color \"" + v + "\" not support.");
+                if (v.length() > 6) v = v.substring(v.length() - 6);
+                v = '#' + v;
+            }
+        }
+        if (color == null) {
+            try {
+                color = Color.decode(v);
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException("Color \"" + source + "\" not support.");
             }
         }
         return color;

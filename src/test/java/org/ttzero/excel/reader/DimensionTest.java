@@ -18,6 +18,8 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author guanquan.wang at 2021-03-25 00:54
  */
@@ -25,41 +27,41 @@ public class DimensionTest {
 
     @Test public void testFirstDim() {
         Dimension d = Dimension.of("A1");
-        assert d.firstColumn == 1;
-        assert d.firstRow == 1;
-        assert d.lastColumn == 0;
-        assert d.lastRow == 0;
-        assert d.width == 1;
-        assert d.height == 1;
+        assertEquals(d.firstColumn, 1);
+        assertEquals(d.firstRow, 1);
+        assertEquals(d.lastColumn, 1);
+        assertEquals(d.lastRow, 1);
+        assertEquals(d.width, 1);
+        assertEquals(d.height, 1);
     }
 
     @Test public void testFirstDim2() {
         Dimension d = Dimension.of("B3:");
-        assert d.firstColumn == 2;
-        assert d.firstRow == 3;
-        assert d.lastColumn == 0;
-        assert d.lastRow == 0;
-        assert d.width == 1;
-        assert d.height == 1;
+        assertEquals(d.firstColumn, 2);
+        assertEquals(d.firstRow, 3);
+        assertEquals(d.lastColumn, 2);
+        assertEquals(d.lastRow, 3);
+        assertEquals(d.width, 1);
+        assertEquals(d.height, 1);
     }
 
     @Test public void testLastDim() {
         Dimension d = Dimension.of(":C2");
-        assert d.firstColumn == 0;
-        assert d.firstRow == 0;
-        assert d.lastColumn == 3;
-        assert d.lastRow == 2;
-        assert d.width == 3;
-        assert d.height == 2;
+        assertEquals(d.firstColumn, 1);
+        assertEquals(d.firstRow, 1);
+        assertEquals(d.lastColumn, 3);
+        assertEquals(d.lastRow, 2);
+        assertEquals(d.width, 3);
+        assertEquals(d.height, 2);
     }
 
     @Test public void testFullDim() {
         Dimension d = Dimension.of("A1:C2");
-        assert d.firstColumn == 1;
-        assert d.firstRow == 1;
-        assert d.lastColumn == 3;
-        assert d.lastRow == 2;
-        assert d.width == 3;
-        assert d.height == 2;
+        assertEquals(d.firstColumn, 1);
+        assertEquals(d.firstRow, 1);
+        assertEquals(d.lastColumn, 3);
+        assertEquals(d.lastRow, 2);
+        assertEquals(d.width, 3);
+        assertEquals(d.height, 2);
     }
 }

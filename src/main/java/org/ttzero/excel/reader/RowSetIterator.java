@@ -21,6 +21,8 @@ import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 /**
+ * 行迭代器
+ *
  * @author guanquan.wang at 2019-04-17 19:03
  */
 public class RowSetIterator implements Iterator<Row> {

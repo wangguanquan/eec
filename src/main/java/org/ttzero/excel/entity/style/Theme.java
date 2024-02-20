@@ -99,14 +99,14 @@ public class Theme {
             if (v == null) v = getAttr(sub, "val");
             else {
                 try {
-                    color = ColorIndex.toColor(v);
+                    color = Styles.toColor(v);
                 } catch (Exception ex) {
                     v = getAttr(sub, "val");
                 }
             }
             if (color == null) {
                 try {
-                    color = ColorIndex.toColor(v);
+                    color = Styles.toColor(v);
                 } catch (Exception ex) {
                     color = new BuildInColor(64); // auto if exception
                 }

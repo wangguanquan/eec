@@ -620,6 +620,9 @@ public class Font implements Cloneable {
         hash += size << 16;
         hash += name.hashCode() << 8;
         hash += color != null ? color.hashCode() : 0;
+        hash += charset;
+        hash += family;
+        if (StringUtil.isNotEmpty(scheme)) hash += scheme.hashCode();
         return hash;
     }
 
@@ -627,11 +630,13 @@ public class Font implements Cloneable {
     public boolean equals(Object o) {
         if (o instanceof Font) {
             Font other = (Font) o;
-            return other.family == family
-                && other.style == style
-                && other.size == size
-                && (Objects.equals(other.color, color))
+            return other.size == size
                 && (Objects.equals(other.name, name))
+                && (Objects.equals(other.color, color))
+                && other.charset == charset
+                && other.family == family
+                && other.style == style
+                && (Objects.equals(other.scheme, scheme))
                 ;
         }
         return false;
@@ -643,7 +648,7 @@ public class Font implements Cloneable {
      * @param root 父节点
      * @return dom树
      */
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         element.addElement("sz").addAttribute("val", ((size & 1) == 0) ? String.valueOf(size / 10) : String.valueOf(size / 10.0D));
         element.addElement("name").addAttribute("val", name);
@@ -711,6 +716,25 @@ public class Font implements Cloneable {
      */
     public static java.awt.FontMetrics getFontMetrics(java.awt.Font font) {
         return new javax.swing.JLabel().getFontMetrics(font);
+    }
+
+    /**
+     * 解析字体
+     *
+     * @param root styles树root
+     * @param indexedColors 特殊indexed颜色（大部分情况下为null）
+     * @return styles字体
+     */
+    public static List<Font> domToFont(Element root, Color[] indexedColors) {
+        List<Font> fonts = domToFont(root);
+        // 替换特殊的indexed颜色
+        int indexed;
+        for (Font font : fonts) {
+            if ((font.color instanceof BuildInColor) && (indexed = ((BuildInColor) font.color).getIndexed()) < indexedColors.length) {
+                font.color = indexedColors[indexed];
+            }
+        }
+        return fonts;
     }
 
     /**

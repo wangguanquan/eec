@@ -200,19 +200,19 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据
      *
-     * @param data the worksheet's body data
+     * @param data 初始数据
      */
     public ListSheet(List<T> data) {
         this(null, data);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和初始数据
      *
-     * @param name the worksheet name
-     * @param data the worksheet's body data
+     * @param name 工作表名称
+     * @param data 初始数据
      */
     public ListSheet(String name, List<T> data) {
         super(name);
@@ -220,44 +220,44 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据和表头
      *
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param data    初始数据
+     * @param columns 表头信息
      */
     public ListSheet(List<T> data, final Column... columns) {
         this(null, data, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称、初始数据和表头
      *
-     * @param name    the worksheet name
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param data    初始数据
+     * @param columns 表头信息
      */
     public ListSheet(String name, List<T> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据、水印和表头
      *
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称、初始数据、水印和表头
      *
-     * @param name      the worksheet name
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -268,7 +268,7 @@ public class ListSheet<T> extends Sheet {
      * 指定泛型{@code T}的实际类型，不指定时默认由反射或数组中第一个对象类型而定
      *
      * @param tClazz 泛型{@code T}的实际类型
-     * @return current sheet
+     * @return 当前工作表
      */
     public Sheet setClass(Class<?> tClazz) {
         this.tClazz = tClazz;
@@ -276,17 +276,14 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Setting the worksheet data
+     * 设置初始数据，导出的时候依然会调用{@link #more()} 方法以获取更多数据
      *
-     * @param data the body data
+     * @param data 初始数据
      * @return 当前工作表
      */
     public ListSheet<T> setData(final List<T> data) {
         if (data == null) return this;
         this.data = new ArrayList<>(data);
-        if (!headerReady && workbook != null) {
-            getAndSortHeaderColumns();
-        }
         // Has data and worksheet can write
         // Paging in advance
         if (sheetWriter != null) {
@@ -296,12 +293,17 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the first not null object
+     * 获取队列中第一个非{@code null}对象用于解析
      *
-     * @return the object
+     * @return 第一个非 {@code null}对象
      */
     protected T getFirst() {
-        if (data == null || data.isEmpty()) return null;
+        // 初始没有数据时调用一次more方法获取数据
+        if (data == null || data.isEmpty()) {
+            List<T> more = more();
+            if (more != null && !more.isEmpty()) data = new ArrayList<>(more);
+            else return null;
+        }
         T first = data.get(start);
         if (first != null) return first;
         int i = start + 1;
@@ -803,7 +805,8 @@ public class ListSheet<T> extends Sheet {
             style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
         }
         for (Column column : columns) {
-            if (style > 0 && column.getHeaderStyleIndex() == -1)
+            // 如果字段未独立设置样式则使用方法上的样式
+            if (style > 0 && column.getHeaderStyleIndex() == -1 && column.headerStyle == null)
                 column.setHeaderStyle(style);
         }
 

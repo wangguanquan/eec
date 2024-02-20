@@ -101,9 +101,9 @@ public interface Grid {
 
         FastGrid(Dimension dim) {
             fr = dim.firstRow;
-            lr = dim.lastRow;
+            lr = Math.max(dim.firstRow, dim.lastRow);
             fc = dim.firstColumn;
-            lc = dim.lastColumn;
+            lc = Math.max(dim.firstColumn, dim.lastColumn);
 
             // Power of two minus 1
             int nc = lc - fc + 1, nr = lr - fr + 1, b = powerOneBit(nc);
@@ -221,9 +221,9 @@ public interface Grid {
         private long[] topCells;
         IndexGrid(Dimension dim, int n) {
             fr = dim.firstRow;
-            lr = dim.lastRow;
+            lr = Math.max(dim.firstRow, dim.lastRow);
             fc = dim.firstColumn;
-            lc = dim.lastColumn;
+            lc = Math.max(dim.firstColumn, dim.lastColumn);
 
             index = new HashMap<>(n);
             topCells = new long[1 << 6];
@@ -302,9 +302,9 @@ public interface Grid {
 
         FractureGrid(Dimension dim) {
             fr = dim.firstRow;
-            lr = dim.lastRow;
+            lr = Math.max(dim.firstRow, dim.lastRow);
             fc = dim.firstColumn;
-            lc = dim.lastColumn;
+            lc = Math.max(dim.firstColumn, dim.lastColumn);
 
             scanner = new LinkedScanner();
         }

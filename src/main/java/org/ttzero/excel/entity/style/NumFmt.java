@@ -52,6 +52,7 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  * <li><a href="https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4">Create a custom number format</a></li>
  * <li><a href="https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US">Number format codes</a></li>
  * <li><a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)">NumberingFormat Class</a></li>
+ * <li><a href="https://support.microsoft.com/zh-cn/office/%E6%95%B0%E5%AD%97%E6%A0%BC%E5%BC%8F%E4%BB%A3%E7%A0%81-5026bbd6-04bc-48cd-bf33-80f18b4eae68">数字格式代码</a></li>
  * </ul>
  *
  * @author guanquan.wang at 2018-02-06 08:51
@@ -309,7 +310,7 @@ public class NumFmt implements Comparable<NumFmt> {
         return "id: " + id + ", code: " + code;
     }
 
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         if (StringUtil.isEmpty(code)) return root; // Build in style
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
@@ -336,6 +337,6 @@ public class NumFmt implements Comparable<NumFmt> {
 
     @Override
     public int compareTo(NumFmt o) {
-        return id - o.id;
+        return Integer.compare(id, o.id);
     }
 }

@@ -21,31 +21,31 @@ import java.io.Closeable;
 import java.io.IOException;
 
 /**
- * Drawings writer
+ * 多媒体类型输出协议（目前只支持图片）
  *
  * @author guanquan.wang at 2023-03-07 09:09
  */
 public interface IDrawingsWriter extends Closeable, Storable {
     /**
-     * Direct drawing picture
+     * 添加图片
      *
-     * @param picture {@link Picture} info
+     * @param picture 图片信息{@link Picture}
      * @throws IOException if I/O error occur.
      */
     void drawing(Picture picture) throws IOException;
 
     /**
-     * Asynchronous addition of picture
+     * 异步添加图片
      *
-     * @param picture {@link Picture} info
+     * @param picture 图片信息{@link Picture}
      * @throws IOException if I/O error occur.
      */
     void asyncDrawing(Picture picture) throws IOException;
 
     /**
-     * Complete
+     * 通知图片忆准备好，与{@link #asyncDrawing}搭配使用
      *
-     * @param picture {@link Picture} info
+     * @param picture 已完成的图片{@link Picture}
      */
     void complete(Picture picture);
 }

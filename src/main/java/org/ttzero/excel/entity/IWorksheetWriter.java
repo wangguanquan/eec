@@ -25,46 +25,57 @@ import java.time.LocalDateTime;
 import java.util.function.Supplier;
 
 /**
+ * 工作表输出协议，负责将工作表{@link Sheet}格式化输出，它会循环调用{@link Sheet#nextBlock}
+ * 方法获取数据并写入磁盘直到{@link RowBlock#isEOF}返回EOF标记为止，整个过程只有一个
+ * RowBlock行块常驻内存，一个{@code RowBlock}行块默认包含32个{@code Row}行，这样可以保证
+ * 较小的内存开销。
+ *
+ * <p>通过{@link #getRowLimit}和{@link #getColumnLimit}可以限制行列数，xlsx格式默认的行列限制分别是
+ * {@code 1048576}和{@code 65536}，可以重置行限制以提前触发分页，例：{@code getRowLimit}返回{@code 10000}，
+ * 则工作表Worksheet每1万行进行一次分页</p>
+ *
  * @author guanquan.wang at 2019-04-22 17:23
+ * @see org.ttzero.excel.entity.e7.XMLWorksheetWriter
+ * @see org.ttzero.excel.entity.csv.CSVWorksheetWriter
  */
 public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
 
     /**
-     * The Worksheet row limit
+     * 获取最大行上限，随输出格式而定
      *
-     * @return the limit
+     * @return 行最大上限值
      */
     int getRowLimit();
 
     /**
-     * The Worksheet column limit
+     * 获取最大列上限，随输出格式而定
      *
-     * @return the limit
+     * @return 列最大上限值
      */
     int getColumnLimit();
 
     /**
-     * Write a row block
+     * 数据输出到指定位置
      *
-     * @param path     the storage path
-     * @param supplier a row-block supplier
-     * @throws IOException if io error occur
+     * @param path     保存位置
+     * @param supplier 数据提供方
+     * @throws IOException if I/O error occur
      */
     void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException;
 
     /**
-     * Return a copy worksheet writer
+     * 设置工作表
      *
-     * @param sheet the {@link Sheet}
-     * @return the copy worksheet writer
+     * @param sheet 工作表{@link Sheet}
+     * @return 当前输出协议
      */
     IWorksheetWriter setWorksheet(Sheet sheet);
 
     /**
-     * Write a empty worksheet
+     * 写空工作表
      *
-     * @param path the path to storage
-     * @throws IOException if io error occur
+     * @param path 保存路径
+     * @throws IOException if I/O error occur
      */
     default void writeEmptySheet(Path path) throws IOException {
         try {
@@ -75,31 +86,33 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * TO check rows out of worksheet
+     * 检查数据行是否超出限制
      *
      * @param row row number
      * @return true if rows large than limit
+     * @deprecated 即将删除
      */
+    @Deprecated
     default boolean isOutOfSheet(int row) {
         return row >= getRowLimit();
     }
 
     /**
-     * Clone
+     * 复制工作表输出协议
      *
      * @return IWorksheetWriter
      */
     IWorksheetWriter clone();
 
     /**
-     * Returns the worksheet name
+     * 获取扩展名，随输出协议而定
      *
-     * @return name of worksheet
+     * @return 扩展名
      */
     String getFileSuffix();
 
     /**
-     * Test if it is a {@link java.util.Date} type
+     * 判断是否为{@link java.util.Date}类型
      *
      * @param clazz the type
      * @return bool
@@ -110,7 +123,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link java.sql.Timestamp} type
+     * 判断是否为{@link java.sql.Timestamp}类型
      *
      * @param clazz the type
      * @return bool
@@ -120,7 +133,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@code int, char, byte or short} or boxing type
+     * 判断是否为{@code int, char, byte or short}或包装类型
      *
      * @param clazz the type
      * @return bool
@@ -133,7 +146,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@code short} or {@link Short} type
+     * 判断是否为{@code short}或{@link Short}类型
      *
      * @param clazz the class
      * @return boolean value
@@ -143,7 +156,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@code long} or {@link Long} type
+     * 判断是否为{@code long}或{@link Long}类型
      *
      * @param clazz the type
      * @return bool
@@ -153,7 +166,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a single-precision floating-point type
+     * 判断是否为单精度浮点类型
      *
      * @param clazz the type
      * @return bool
@@ -163,7 +176,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a double-precision floating-point type
+     * 判断是否为双精度浮点类型
      *
      * @param clazz the type
      * @return boolean value
@@ -173,7 +186,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@code boolean} or {@link Boolean} type
+     * 判断是否为{@code boolean}或{@link Boolean}类型
      *
      * @param clazz the type
      * @return bool
@@ -183,7 +196,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link String} type
+     * 判断是否为{@link String}类型
      *
      * @param clazz the type
      * @return bool
@@ -193,7 +206,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@code char} or {@link Character} type
+     * 判断是否为{@code char} 或 {@link Character}类型
      *
      * @param clazz the type
      * @return bool
@@ -203,7 +216,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link BigDecimal} type
+     * 判断是否为{@link BigDecimal}类型
      *
      * @param clazz the type
      * @return bool
@@ -213,7 +226,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link LocalDate} type
+     * 判断是否为{@link LocalDate}类型
      *
      * @param clazz the type
      * @return bool
@@ -223,7 +236,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link LocalDateTime} type
+     * 判断是否为{@link LocalDateTime}类型
      *
      * @param clazz the type
      * @return bool
@@ -233,7 +246,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link java.sql.Time} type
+     * 判断是否为{@link java.sql.Time}类型
      *
      * @param clazz the type
      * @return bool
@@ -243,10 +256,10 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * Test if it is a {@link java.time.LocalTime} type
+     * 判断是否为{@link java.time.LocalTime}类型
      *
      * @param clazz the type
-     * @return bool
+     * @return 御前
      */
     static boolean isLocalTime(Class<?> clazz) {
         return clazz == java.time.LocalTime.class;

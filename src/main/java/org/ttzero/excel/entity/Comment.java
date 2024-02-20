@@ -18,11 +18,22 @@
 package org.ttzero.excel.entity;
 
 /**
+ * 批注，包含标题和内容且两者且少有一个不为空
+ *
  * @author guanquan.wang at 2020-05-22 09:32
  */
 public class Comment {
+    /**
+     * 标题，加粗显示
+     */
     private String title;
+    /**
+     * 内容
+     */
     private String value;
+    /**
+     * 指定批注框显示的宽和高
+     */
     private Double width, height;
 
     public Comment() { }

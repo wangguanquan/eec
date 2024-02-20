@@ -377,33 +377,18 @@ public class XMLRow extends Row {
         return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
     }
 
+    XMLFullRow asFullRow() {
+        return this.getClass() != XMLFullRow.class ? new XMLFullRow(this) : (XMLFullRow) this;
+    }
 }
 
 /**
  * Cell with Calc
  */
-class XMLCalcRow extends XMLRow {
-    private MergeCalcFunc calcFun;
-    private boolean hasCalcFunc;
-
-    XMLCalcRow(SharedStrings sst, Styles styles, int startRow, MergeCalcFunc calcFun) {
-        this.sst = sst;
-        this.styles = styles;
-        this.startRow = startRow;
-        this.calcFun = calcFun;
-        this.hasCalcFunc = calcFun != null;
-    }
+class XMLCalcRow extends XMLFullRow {
 
     XMLCalcRow(XMLRow row) {
-        this.sst = row.sst;
-        this.styles = row.styles;
-        this.startRow = row.startRow;
-    }
-
-    XMLCalcRow setCalcFun(MergeCalcFunc calcFun) {
-        this.calcFun = calcFun;
-        hasCalcFunc = calcFun != null;
-        return this;
+        super(row);
     }
 
     /**
@@ -421,7 +406,7 @@ class XMLCalcRow extends XMLRow {
         }
 
         // Parse cell value
-        for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
+        for (Cell cell; (cell = nextCell()) != null; subParseCellValue(cell)) ;
     }
 
     /**
@@ -430,15 +415,161 @@ class XMLCalcRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     @Override
-    protected void parseCellValue(Cell cell) {
-        // If cell has formula
-        if (cell.f || !hasCalcFunc) {
-            // Parse calc
-            parseCalcFunc(cell);
-        }
+    protected void subParseCellValue(Cell cell) {
+        // Parse calc
+        parseCalcFunc(cell);
 
         // Parse value
         super.parseCellValue(cell);
+    }
+
+}
+
+/**
+ * Copy value on merge cells
+ */
+class XMLMergeRow extends XMLFullRow {
+
+    XMLMergeRow(XMLRow row) {
+        super(row);
+    }
+
+    /**
+     * Loop parse cell
+     */
+    @Override
+    protected void parseCells() {
+        cursor = searchSpan();
+        for (; cb[cursor++] != '>'; ) ;
+        unknownLength = lc < 0;
+
+        // Parse cell value
+        int i = 1, r = getRowNum();
+        for (Cell cell; (cell = nextCell()) != null; ) {
+            if (cell.i > i) for (; i < cell.i; i++) subParseCellValue(cells[i - 1]);
+            subParseCellValue(cell);
+            i++;
+        }
+
+        /*
+         Some tools handle merged cells that ignore all cells
+          in the merged range except for the first one,
+          so compatibility is required here for cells that are outside the spans range
+         */
+        for (; mergeCells.test(r, i); i++) {
+            if (lc < i) {
+                // Give a new cells
+                if (cells.length < i) cells = copyCells(i);
+                lc = i;
+            }
+            subParseCellValue(cells[i - 1]);
+        }
+    }
+
+
+    /**
+     * Parse cell value
+     *
+     * @param cell current {@link Cell}
+     */
+    @Override
+    protected void subParseCellValue(Cell cell) {
+
+        // Parse value
+        super.parseCellValue(cell);
+
+        // Setting/copy value if merged
+        mergedFunc.accept(getRowNum(), cell);
+    }
+}
+
+/**
+ * Copy value on merge cells
+ */
+class XMLFullRow extends XMLRow {
+    MergeCalcFunc calcFun;
+    boolean hasCalcFunc;
+    // InterfaceFunction
+    MergeValueFunc mergedFunc;
+    // A merge cells grid
+    Grid mergeCells;
+    // height，只有当customHeight为1时height才会有值
+    Double height;
+    // 是否隐藏
+    boolean hidden;
+
+    XMLFullRow(XMLRow row) {
+        this.sst = row.sst;
+        this.styles = row.styles;
+        this.startRow = row.startRow;
+    }
+
+    @Override
+    protected XMLFullRow empty(char[] cb, int from, int size) {
+        super.empty(cb, from, size);
+        searchSpan0(); // 解析行高
+        return this;
+    }
+
+    XMLFullRow setCalcFun(MergeCalcFunc calcFun) {
+        this.calcFun = calcFun;
+        hasCalcFunc = calcFun != null;
+        return this;
+    }
+
+    /**
+     * Loop parse cell
+     */
+    @Override
+    protected void parseCells() {
+        height = null; // 重置行高
+        hidden = false; // 重置隐藏
+        cursor = searchSpan0();
+        for (; cb[cursor++] != '>'; ) ;
+        unknownLength = lc < 0;
+
+        // Parse formula if exists and can parse
+        if (hasCalcFunc) {
+            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
+        }
+
+        // Parse cell value
+        int i = 1, r = getRowNum();
+        for (Cell cell; (cell = nextCell()) != null; ) {
+            if (cell.i > i) for (; i < cell.i; i++) subParseCellValue(cells[i - 1]);
+            subParseCellValue(cell);
+            i++;
+        }
+
+        /*
+         Some tools handle merged cells that ignore all cells
+          in the merged range except for the first one,
+          so compatibility is required here for cells that are outside the spans range
+         */
+        for (; mergeCells.test(r, i); i++) {
+            if (lc < i) {
+                // Give a new cells
+                if (cells.length < i) cells = copyCells(i);
+                lc = i;
+            }
+            subParseCellValue(cells[i - 1]);
+        }
+    }
+
+    /**
+     * Parse cell value
+     *
+     * @param cell current {@link Cell}
+     */
+    protected void subParseCellValue(Cell cell) {
+        // Parse calc
+        parseCalcFunc(cell);
+
+        // Parse value
+        super.parseCellValue(cell);
+
+        // Setting/copy value if merged
+        mergedFunc.accept(getRowNum(), cell);
     }
 
     /**
@@ -446,15 +577,15 @@ class XMLCalcRow extends XMLRow {
      *
      * @param cell current {@link Cell}
      */
-    private void parseCalcFunc(Cell cell) {
-        int a = getF(cell); // _cursor = cursor,
+    void parseCalcFunc(Cell cell) {
+        int _cursor = cursor, a = getF(cell);
         // Reset the formula flag
         cell.f = a < cursor || cell.si >= 0;
-//        // Tag <f> Not Found
-//        if (a == cursor) {
-//            cursor = _cursor;
-//            return;
-//        }
+        // Tag <f> Not Found
+        if (a == e) {
+            cursor = _cursor;
+            return;
+        }
         // Inner text
         if (a < cursor) {
             cell.fv = escape(cb, a, cursor);
@@ -475,7 +606,7 @@ class XMLCalcRow extends XMLRow {
      * @param cell current {@link Cell}
      * @return the end index of function value
      */
-    private int getF(Cell cell) {
+    int getF(Cell cell) {
         for (; cursor < e && (cb[cursor] != '<' || cb[cursor + 1] != 'f'
             || cb[cursor + 2] != '>' && cb[cursor + 2] > ' ' && cb[cursor + 2] != '/'); cursor++) ;
         if (cursor == e) return cursor;
@@ -508,7 +639,7 @@ class XMLCalcRow extends XMLRow {
     }
 
     /* Parse function tag's attribute */
-    private void parseFunAttr(Cell cell, char[] cb, int a, int b) {
+    void parseFunAttr(Cell cell, char[] cb, int a, int b) {
         // t="shared" ref="B2:B3" si="0"
         String[] values = new String[10];
         int index = 0;
@@ -565,75 +696,53 @@ class XMLCalcRow extends XMLRow {
         // Storage formula shared id
         cell.si = si;
     }
-}
 
-/**
- * Copy value on merge cells
- */
-class XMLMergeRow extends XMLRow {
-    // InterfaceFunction
-    protected MergeValueFunc func;
-    // A merge cells grid
-    protected Grid mergeCells;
-
-    XMLMergeRow(XMLRow row) {
-        this.sst = row.sst;
-        this.styles = row.styles;
-        this.startRow = row.startRow;
-    }
-
-    XMLMergeRow setCopyValueFunc(Grid mergeCells, MergeValueFunc func) {
+    XMLFullRow setCopyValueFunc(Grid mergeCells, MergeValueFunc mergedFunc) {
         this.mergeCells = mergeCells;
-        this.func = func;
+        this.mergedFunc = mergedFunc;
         return this;
     }
 
-
     /**
-     * Loop parse cell
+     * 解析spans和行高
+     *
+     * @return 游标
      */
-    @Override
-    protected void parseCells() {
-        cursor = searchSpan();
-        for (; cb[cursor++] != '>'; ) ;
-        unknownLength = lc < 0;
-
-        // Parse cell value
-        int i = 1, r = getRowNum();
-        for (Cell cell; (cell = nextCell()) != null; ) {
-            if (cell.i > i) for (; i < cell.i; i++) parseCellValue(cells[i - 1]);
-            parseCellValue(cell);
-            i++;
-        }
-
-        /*
-         Some tools handle merged cells that ignore all cells
-          in the merged range except for the first one,
-          so compatibility is required here for cells that are outside the spans range
-         */
-        for (; mergeCells.test(r, i); i++) {
-            if (lc < i) {
-                // Give a new cells
-                if (cells.length < i) cells = copyCells(i);
-                lc = i;
+    int searchSpan0() {
+        int idx = super.searchSpan(), i = from + 4, cht = 0;
+        Double ht = null;
+        for (; cb[i] != '>'; i++) {
+            // 查找ht属性
+            if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 't' && (cb[i + 3] == '=' || cb[i + 3] <= ' ')) {
+                i += 5;
+                int j = i;
+                for (; cb[i] != '"' && cb[i] != '>'; i++) ;
+                if (i > j && cb[i] == '"') ht = Double.valueOf(new String(cb, j, i - j).trim());
+            } else if (cb[i] <= ' ' && cb[i + 1] == 'c' && cb[i + 2] == 'u' && cb[i + 3] == 's'
+                && cb[i + 4] == 't' && cb[i + 5] == 'o' && cb[i + 6] == 'm' && cb[i + 7] == 'H'
+                && cb[i + 8] == 'e' && cb[i + 9] == 'i' && cb[i + 10] == 'g' && cb[i + 11] == 'h'
+                && cb[i + 12] == 't' && (cb[i + 13] == '=' || cb[i + 13] <= ' ')) {
+                i += 15;
+                if (cb[i] == '1') cht = 1;
             }
-            parseCellValue(cells[i - 1]);
+            // 查找hidden属性
+            else if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 'i' && cb[i + 3] == 'd'
+                && cb[i + 4] == 'd' && cb[i + 5] == 'e' && cb[i + 6] == 'n' && (cb[i + 7] == '=' || cb[i + 7] <= ' ')) {
+                i += 9;
+                if (cb[i] == '1') hidden = true;
+            }
         }
+        if (cht == 1 && ht != null) height = ht;
+        return Math.max(i, idx);
     }
 
-
-    /**
-     * Parse cell value
-     *
-     * @param cell current {@link Cell}
-     */
     @Override
-    protected void parseCellValue(Cell cell) {
+    public Double getHeight() {
+        return height;
+    }
 
-        // Parse value
-        super.parseCellValue(cell);
-
-        // Setting/copy value if merged
-        func.accept(getRowNum(), cell);
+    @Override
+    public boolean isHidden() {
+        return hidden;
     }
 }

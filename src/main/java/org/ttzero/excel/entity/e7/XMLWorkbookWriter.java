@@ -43,6 +43,7 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +62,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
     , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
-public class XMLWorkbookWriter implements IWorkbookWriter {
+public class XMLWorkbookWriter implements IWorkbookWriter, Closeable {
     /**
      * LOGGER
      */
@@ -184,13 +185,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         int size = workbook.getSize();
         for (int i = 0; i < size; i++) {
-            WaterMark wm = workbook.getSheetAt(i).getWaterMark();
-            if (wm != null && wm.canWrite()) {
-                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
-            }
-        }
-
-        for (int i = 0; i < size; i++) {
             Sheet sheet = workbook.getSheetAt(i);
             contentType.add(new ContentType.Override(Const.ContentType.SHEET
                 , "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
@@ -226,7 +220,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         workbook.getStyles().writeTo(root.resolve("styles.xml"));
 
         // share string
-        try (SharedStrings sst = workbook.getSst()) {
+        try (SharedStrings sst = workbook.getSharedStrings()) {
             sst.writeTo(root);
         }
     }
@@ -277,38 +271,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         core.writeTo(root.getParent().resolve("docProps/core.xml"));
         workbook.addContentType(new ContentType.Override(Const.ContentType.CORE, "/docProps/core.xml"))
             .addContentTypeRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
-    }
-
-    private void madeMark(Path parent) throws IOException {
-        Relationship supRel = null;
-        int n = 1;
-        WaterMark waterMark = workbook.getWaterMark();
-        if (waterMark != null && waterMark.canWrite()) {
-            Path media = parent.resolve("media");
-            if (!exists(media)) {
-                Files.createDirectory(media);
-            }
-            Path image = media.resolve("image" + n++ + waterMark.getSuffix());
-
-            Files.copy(waterMark.get(), image);
-            supRel = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
-        }
-        WaterMark wm;
-        for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheet = workbook.getSheetAt(i);
-            if ((wm = sheet.getWaterMark()) != null && wm.canWrite()) {
-                Path media = parent.resolve("media");
-                if (!exists(media)) {
-                    Files.createDirectory(media);
-                }
-                Path image = media.resolve("image" + n++ + wm.getSuffix());
-                Files.copy(wm.get(), image);
-                sheet.addRel(new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE));
-            } else if (waterMark != null && waterMark.canWrite()) {
-                sheet.setWaterMark(waterMark);
-                sheet.addRel(supRel);
-            }
-        }
     }
 
     private void writeSelf(Path root) throws IOException {
@@ -419,22 +381,16 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             LOGGER.debug("Create temporary folder {}", root);
 
             Path xl = Files.createDirectory(root.resolve("xl"));
-            // Create  watermark first, it need to use when writing each sheet
-            madeMark(xl);
 
             // Write worksheet data one by one
             for (int i = 0; i < workbook.getSize(); i++) {
                 Sheet e = workbook.getSheetAt(i);
                 e.writeTo(xl);
-                if (e.getWaterMark() != null)
-                    e.getWaterMark().delete(); // Delete template image
                 e.close();
             }
 
             // Write SharedString, Styles and workbook.xml
             writeGlobalAttribute(xl);
-            if (workbook.getWaterMark() != null)
-                workbook.getWaterMark().delete() ; // Delete template image
             LOGGER.debug("All sheets have completed writing, starting to compression ...");
 
             // Zip compress
@@ -448,7 +404,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (Exception e) {
             // Remove temp path
             if (root != null) FileUtil.rm_rf(root);
-            workbook.getSst().close();
+            workbook.getSharedStrings().close();
             throw e;
         }
     }
@@ -487,7 +443,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         LOGGER.debug("Clean up temporary files");
 
         // Close shared string table
-        workbook.getSst().close();
+        workbook.getSharedStrings().close();
 
         return zipFile;
     }
@@ -496,5 +452,14 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
         return new XMLWorksheetWriter(sheet);
+    }
+
+    @Override
+    public void close() throws IOException {
+        for (Sheet sheet : workbook.getSheets()) {
+            if (sheet != null && sheet.getWaterMark() != null)
+                sheet.getWaterMark().delete();
+        }
+        if (workbook.getWaterMark() != null) workbook.getWaterMark().delete() ; // Delete template image
     }
 }

@@ -244,18 +244,6 @@ public class StatementSheet extends ResultSetSheet {
      *
      * @param ps 数据源{@code PreparedStatement}
      * @return 当前工作表
-     * @deprecated 使用 {@link #setStatement(PreparedStatement)}替代
-     */
-    @Deprecated
-    public StatementSheet setPs(PreparedStatement ps) {
-        return setStatement(ps);
-    }
-
-    /**
-     * 设置数据源{@code PreparedStatement}
-     *
-     * @param ps 数据源{@code PreparedStatement}
-     * @return 当前工作表
      */
     public StatementSheet setStatement(PreparedStatement ps) {
         this.ps = ps;

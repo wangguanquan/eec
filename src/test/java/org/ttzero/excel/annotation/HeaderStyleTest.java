@@ -4,44 +4,147 @@ import org.junit.Test;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.PatternType;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.Row;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * 自定义导出Excel表头样式
+ *
+ * @author carljia
  */
 public class HeaderStyleTest extends WorkbookTest {
 
     @Test
     public void testOriginal() throws IOException {
+        String fileName = "customize_header_style_original.xlsx";
         Head itemFull = new Head();
-        new Workbook("customize_header_style_original").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath.resolve(fileName));
 
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
+            for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(row.getString(cell), titles[i]);
+                int style = row.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor("#E9EAEC"));
+            }
+        }
     }
 
     @Test
     public void testFillBgColor() throws IOException {
+        String fileName = "customize_header_style_bgc.xlsx";
         Head1 itemFull = new Head1();
-        new Workbook("customize_header_style_bgc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath.resolve(fileName));
 
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            String[] titles = {"column4", "column1", "column2", "column3", "code", "错误信息"};
+            for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(row.getString(cell), titles[i]);
+                int style = row.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor(i < row.getLastColumnIndex() - 1 ? "#E9EAEC" : "#ff0000"));
+            }
+        }
     }
 
     @Test
     public void testFontColor() throws IOException {
+        String fileName = "customize_header_style_fc.xlsx";
         Head2 itemFull = new Head2();
-        new Workbook("customize_header_style_fc").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath.resolve(fileName));
 
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            String[] titles = {"column4", "column5", "column1", "column2", "column3", "code", "错误信息"};
+            for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(row.getString(cell), titles[i]);
+                int style = row.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor(i != 1 ? "#E9EAEC" : "#cccccc"));
+
+                if (i == row.getLastColumnIndex() - 1)
+                    assertEquals(styles.getFont(style).getColor(), Styles.toColor("#ff0000"));
+            }
+        }
     }
 
     @Test public void testAnnoOnClassTest() throws IOException {
+        String fileName = "annotation on class.xlsx";
         Head3 itemFull = new Head3();
-        new Workbook("annotation on class").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
+            for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(row.getString(cell), titles[i]);
+                int style = row.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                assertEquals(fill.getFgColor(), Styles.toColor("#ffff00"));
+                assertEquals(styles.getFont(style).getColor(), Styles.toColor("red"));
+            }
+        }
     }
 
     @Test public void testAnnoOnClassAndMethodTest() throws IOException {
+        String fileName = "annotation on class and method.xlsx";
         Head4 itemFull = new Head4();
-        new Workbook("annotation on class and method").setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath);
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(Collections.singletonList(itemFull))).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            String[] titles = {"column1", "column2", "column3", "code", "错误信息"};
+            for (int i = row.getFirstColumnIndex(); i < row.getLastColumnIndex(); i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(row.getString(cell), titles[i]);
+                int style = row.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getPatternType(), PatternType.solid);
+                if (i < row.getLastColumnIndex() - 1) {
+                    assertEquals(fill.getFgColor(), Styles.toColor("#ffff00"));
+                } else {
+                    assertEquals(styles.getFont(style).getColor(), Styles.toColor("blue"));
+                    assertEquals(fill.getFgColor(), Styles.toColor("#E9EAEC"));
+                }
+            }
+        }
     }
 
     private static class Head {

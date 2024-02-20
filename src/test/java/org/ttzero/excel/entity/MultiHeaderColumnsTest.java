@@ -49,6 +49,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * @author guanquan.wang at 2022-06-27 23:24
@@ -65,24 +68,24 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             List<RepeatableEntry> readList = reader.sheet(0).header(1, 4).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
 
             // Row to Map
             List<Map<String, Object>> mapList = reader.sheet(0).header(1, 4).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == mapList.size();
+            assertEquals(list.size(), mapList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, Object> sub = mapList.get(i);
                 RepeatableEntry src = list.get(i);
 
-                assert sub.get("TOP:K:订单号").equals(src.orderNo);
-                assert sub.get("TOP:K:A:收件人").equals(src.recipient);
-                assert sub.get("TOP:收件地址:A:省").equals(src.province);
-                assert sub.get("TOP:收件地址:A:市").equals(src.city);
-                assert sub.get("TOP:收件地址:B:区").equals(src.area);
-                assert sub.get("TOP:收件地址:B:详细地址").equals(src.detail);
+                assertEquals(sub.get("TOP:K:订单号"), src.orderNo);
+                assertEquals(sub.get("TOP:K:A:收件人"), src.recipient);
+                assertEquals(sub.get("TOP:收件地址:A:省"), src.province);
+                assertEquals(sub.get("TOP:收件地址:A:市"), src.city);
+                assertEquals(sub.get("TOP:收件地址:B:区"), src.area);
+                assertEquals(sub.get("TOP:收件地址:B:详细地址"), src.detail);
             }
         }
     }
@@ -100,15 +103,15 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"))) {
-            assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+            assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<RepeatableEntry> list = reader.sheet(i).header(1, 4).bind(RepeatableEntry.class).rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
-                if (i < len - 1) assert list.size() == rowLimit;
-                else assert expectList.size() - rowLimit * (len - 1) == list.size();
-                for (int j = 0; j < list.size(); j++) {
-                    RepeatableEntry expect = expectList.get(a++), o = list.get(j);
-                    assert expect.equals(o);
+                if (i < len - 1) assertEquals(list.size(), rowLimit);
+                else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                for (RepeatableEntry o : list) {
+                    RepeatableEntry expect = expectList.get(a++);
+                    assertEquals(expect, o);
                 }
             }
         }
@@ -134,15 +137,15 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 2.xlsx"))) {
             Sheet sheet = reader.sheet(0);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.Student expect = expectList.get(i);
                 Map<String, Object> o = list.get(i);
-                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
-                assert expect.getName().equals(o.get("共用表头:姓名").toString());
-                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+                assertEquals(expect.getId(), Integer.parseInt(o.get("共用表头:学号").toString()));
+                assertEquals(expect.getName(), o.get("共用表头:姓名").toString());
+                assertEquals(expect.getScore(), Integer.parseInt(o.get("成绩").toString()));
             }
 
             Iterator<Row> iterator =  sheet.reset().iterator();
@@ -151,10 +154,10 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             int style = firstRow.getCellStyle(2);
             Font font = styles.getFont(style);
 
-            assert font.isBold();
-            assert "宋体".equals(font.getName());
-            assert Color.RED.equals(font.getColor());
-            assert 12 == font.getSize();
+            assertTrue(font.isBold());
+            assertEquals("宋体", font.getName());
+            assertEquals(Color.RED, font.getColor());
+            assertEquals(12, font.getSize());
         }
     }
 
@@ -169,15 +172,15 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 3.xlsx"))) {
             Sheet sheet = reader.sheet(0);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.Student expect = expectList.get(i);
                 Map<String, Object> o = list.get(i);
-                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
-                assert expect.getName().equals(o.get("共用表头:姓名").toString());
-                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+                assertEquals(expect.getId(), Integer.parseInt(o.get("共用表头:学号").toString()));
+                assertEquals(expect.getName(), o.get("共用表头:姓名").toString());
+                assertEquals(expect.getScore(), Integer.parseInt(o.get("成绩").toString()));
             }
         }
     }
@@ -204,23 +207,23 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
                 // Header row
                 String[] headerNames = ((HeaderRow) sheet.header(1, 2).getHeader()).getNames();
-                assert "通用:学号".equals(headerNames[0]);
-                assert "更新时间".equals(headerNames[1]);
-                assert "通用:姓名".equals(headerNames[2]);
-                assert "通用:年龄".equals(headerNames[3]);
-                assert "创建时间".equals(headerNames[4]);
+                assertEquals("通用:学号", headerNames[0]);
+                assertEquals("更新时间", headerNames[1]);
+                assertEquals("通用:姓名", headerNames[2]);
+                assertEquals("通用:年龄", headerNames[3]);
+                assertEquals("创建时间", headerNames[4]);
 
                 Iterator<org.ttzero.excel.reader.Row> iter = sheet.rows().iterator();
                 // Body rows
                 while (rs.next()) {
-                    assert iter.hasNext();
+                    assertTrue(iter.hasNext());
                     org.ttzero.excel.reader.Row row = iter.next();
 
-                    assert rs.getInt(1) == row.getInt(0);
-                    assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(1).getTime() / 1000 : row.getTimestamp(1) == null;
-                    assert rs.getString(2).equals(row.getString(2));
-                    assert rs.getInt(3) == row.getInt(3);
-                    assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                    assertEquals(rs.getInt(1), (int) row.getInt(0));
+                    assertTrue(rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(1).getTime() / 1000 : row.getTimestamp(1) == null);
+                    assertEquals(rs.getString(2), row.getString(2));
+                    assertEquals(rs.getInt(3), (int) row.getInt(3));
+                    assertTrue(rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null);
                 }
             }
             rs.close();
@@ -249,23 +252,23 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
                 // Header row
                 String[] headerNames = ((HeaderRow) sheet.header(1, 2).getHeader()).getNames();
-                assert "通用:学号".equals(headerNames[0]);
-                assert "通用:姓名".equals(headerNames[13]);
-                assert "通用:年龄".equals(headerNames[14]);
-                assert "创建时间".equals(headerNames[15]);
-                assert "更新时间".equals(headerNames[16]);
+                assertEquals("通用:学号", headerNames[0]);
+                assertEquals("通用:姓名", headerNames[13]);
+                assertEquals("通用:年龄", headerNames[14]);
+                assertEquals("创建时间", headerNames[15]);
+                assertEquals("更新时间", headerNames[16]);
 
                 Iterator<org.ttzero.excel.reader.Row> iter = sheet.rows().iterator();
                 // Body rows
                 while (rs.next()) {
-                    assert iter.hasNext();
+                    assertTrue(iter.hasNext());
                     org.ttzero.excel.reader.Row row = iter.next();
 
-                    assert rs.getInt(1) == row.getInt(0);
-                    assert rs.getString(2).equals(row.getString(13));
-                    assert rs.getInt(3) == row.getInt(14);
-                    assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(15).getTime() / 1000 : row.getTimestamp(15) == null;
-                    assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(16).getTime() / 1000 : row.getTimestamp(16) == null;
+                    assertEquals(rs.getInt(1), (int) row.getInt(0));
+                    assertEquals(rs.getString(2), row.getString(13));
+                    assertEquals(rs.getInt(3), (int) row.getInt(14));
+                    assertTrue(rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(15).getTime() / 1000 : row.getTimestamp(15) == null);
+                    assertTrue(rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(16).getTime() / 1000 : row.getTimestamp(16) == null);
                 }
             }
             rs.close();
@@ -283,9 +286,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             List<RepeatableEntry> readList = reader.sheet(0).header(2, 4).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
             // Specify single header row
             org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
@@ -299,9 +302,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             headerRow.setCells(cells);
             readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(headerRow))
                 .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
             // Specify 2 header rows
             org.ttzero.excel.reader.Row headerRow2 = new org.ttzero.excel.reader.Row() {};
@@ -315,9 +318,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             headerRow2.setCells(cells2);
             readList = reader.sheet(0).reset().header(4).bind(RepeatableEntry.class, new HeaderRow().with(2, headerRow2))
                 .rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
         }
     }
 
@@ -334,33 +337,33 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 //            readList = reader.sheet(0).header(4).bind(RepeatableEntry3.class).rows()
 //                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
 //
-//            assert list.size() == readList.size();
+//            assertEquals(list.size(), readList.size());
 //            for (int i = 0, len = list.size(); i < len; i++)
-//                assert list.get(i).equals(readList.get(i));
+//                assertEquals(list.get(i), readList.get(i));
 //
 //            // header rows 3-4
 //            readList = reader.sheet(0).reset().header(3, 4).bind(RepeatableEntry3.class).rows()
 //                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
 //
-//            assert list.size() == readList.size();
+//            assertEquals(list.size(), readList.size());
 //            for (int i = 0, len = list.size(); i < len; i++)
-//                assert list.get(i).equals(readList.get(i));
+//                assertEquals(list.get(i), readList.get(i));
 //
 //            // header rows 2-4
 //            readList = reader.sheet(0).reset().header(2, 4).bind(RepeatableEntry3.class).rows()
 //                .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
 //
-//            assert list.size() == readList.size();
+//            assertEquals(list.size(), readList.size());
 //            for (int i = 0, len = list.size(); i < len; i++)
-//                assert list.get(i).equals(readList.get(i));
+//                assertEquals(list.get(i), readList.get(i));
 
             // header rows 1-4
             readList = reader.sheet(0).reset().header(1, 4).bind(RepeatableEntry3.class).rows()
                 .map(row -> (RepeatableEntry3) row.get()).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
         }
     }
 
@@ -375,15 +378,15 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column.xlsx"))) {
             Sheet sheet = reader.sheet(0);
-            assert "期末成绩".equals(sheet.getName());
+            assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.Student expect = expectList.get(i);
                 Map<String, Object> o = list.get(i);
-                assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
-                assert expect.getName().equals(o.get("共用表头:姓名").toString());
-                assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+                assertEquals(expect.getId(), Integer.parseInt(o.get("共用表头:学号").toString()));
+                assertEquals(expect.getName(), o.get("共用表头:姓名").toString());
+                assertEquals(expect.getScore(), Integer.parseInt(o.get("成绩").toString()));
             }
         }
     }
@@ -405,18 +408,17 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"))) {
-            assert reader.getSize() == (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
-            for (int i = 0, len = reader.getSize(), a = 0; i < len; i++) {
+            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<Map<String, Object>> list = reader.sheet(i).header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
-                if (i < len - 1) assert list.size() == rowLimit;
-                else assert expectList.size() - rowLimit * (len - 1) == list.size();
-                for (int j = 0; j < list.size(); j++) {
+                if (i < len - 1) assertEquals(list.size(), rowLimit);
+                else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                for (Map<String, Object> o : list) {
                     ListObjectSheetTest.Student expect = expectList.get(a++);
-                    Map<String, Object> o = list.get(j);
-                    assert expect.getId() == Integer.parseInt(o.get("共用表头:学号").toString());
-                    assert expect.getName().equals(o.get("共用表头:姓名").toString());
-                    assert expect.getScore() == Integer.parseInt(o.get("成绩").toString());
+                    assertEquals(expect.getId(), Integer.parseInt(o.get("共用表头:学号").toString()));
+                    assertEquals(expect.getName(), o.get("共用表头:姓名").toString());
+                    assertEquals(expect.getScore(), Integer.parseInt(o.get("成绩").toString()));
                 }
             }
         }
@@ -457,22 +459,22 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Map Repeat Header.xlsx"))) {
             Sheet sheet = reader.sheet(0);
-            assert "Map".equals(sheet.getName());
+            assertEquals("Map", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, Object> expect = expectList.get(i), o = list.get(i);
-                assert expect.get("bv").equals(o.get("aaa:boolean"));
-                assert expect.get("cv").equals(o.get("aaa:char"));
-                assert expect.get("sv").equals(o.get("short"));
-                assert expect.get("nv").equals(o.get("int"));
-                assert expect.get("lv").equals(o.get("long"));
-                assert Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000 == ((Timestamp) o.get("LocalDateTime")).getTime() / 1000;
+                assertEquals(expect.get("bv"), o.get("aaa:boolean"));
+                assertEquals(expect.get("cv"), o.get("aaa:char"));
+                assertEquals(expect.get("sv"), o.get("short"));
+                assertEquals(expect.get("nv"), o.get("int"));
+                assertEquals(expect.get("lv"), o.get("long"));
+                assertTrue(Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000 == ((Timestamp) o.get("LocalDateTime")).getTime() / 1000);
                 LocalTime t0 = (LocalTime) expect.get("ltv");
                 Time t1 = (Time) o.get("LocalTime");
-                assert t0.getHour() == t1.getHours();
-                assert t0.getMinute() == t1.getMinutes();
-                assert t0.getSecond() == t1.getSeconds();
+                assertEquals(t0.getHour(), t1.getHours());
+                assertEquals(t0.getMinute(), t1.getMinutes());
+                assertEquals(t0.getSecond(), t1.getSeconds());
             }
         }
     }
@@ -488,23 +490,23 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
                 .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
             // Row to Map
             List<Map<String, Object>> mapList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == mapList.size();
+            assertEquals(list.size(), mapList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, Object> sub = mapList.get(i);
                 RepeatableEntry4 src = list.get(i);
 
-                assert sub.get("订单号").equals(src.orderNo);
-                assert sub.get("收件人").equals(src.recipient);
-                assert sub.get("收件地址:省").equals(src.province);
-                assert sub.get("收件地址:市").equals(src.city);
-                assert sub.get("收件地址:区").equals(src.area);
-                assert sub.get("收件地址:详细地址").equals(src.detail);
+                assertEquals(sub.get("订单号"), src.orderNo);
+                assertEquals(sub.get("收件人"), src.recipient);
+                assertEquals(sub.get("收件地址:省"), src.province);
+                assertEquals(sub.get("收件地址:市"), src.city);
+                assertEquals(sub.get("收件地址:区"), src.area);
+                assertEquals(sub.get("收件地址:详细地址"), src.detail);
             }
         }
     }
@@ -520,23 +522,23 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
                 .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
             // Row to Map
             List<Map<String, Object>> mapList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == mapList.size();
+            assertEquals(list.size(), mapList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, Object> sub = mapList.get(i);
                 RepeatableEntry4 src = list.get(i);
 
-                assert sub.get("订单号").equals(src.orderNo);
-                assert sub.get("收件人").equals(src.recipient);
-                assert sub.get("收件地址:省").equals(src.province);
-                assert sub.get("收件地址:市").equals(src.city);
-                assert sub.get("收件地址:区").equals(src.area);
-                assert sub.get("收件地址:详细地址").equals(src.detail);
+                assertEquals(sub.get("订单号"), src.orderNo);
+                assertEquals(sub.get("收件人"), src.recipient);
+                assertEquals(sub.get("收件地址:省"), src.province);
+                assertEquals(sub.get("收件地址:市"), src.city);
+                assertEquals(sub.get("收件地址:区"), src.area);
+                assertEquals(sub.get("收件地址:详细地址"), src.detail);
             }
         }
     }
@@ -550,26 +552,26 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"))) {
             List<RepeatableEntry5> readList = reader.sheet(0).header(1, 2).rows().map(row -> row.to(RepeatableEntry5.class)).collect(Collectors.toList());
 
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
-                assert list.get(i).equals(readList.get(i));
+                assertEquals(list.get(i), readList.get(i));
 
             // Row to Map
             List<Map<String, Object>> mapList = reader.sheet(0).header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == mapList.size();
+            assertEquals(list.size(), mapList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, Object> sub = mapList.get(i);
                 RepeatableEntry5 src = list.get(i);
 
-                assert sub.get("运单号").equals(src.orderNo);
-                assert sub.get("收件地址:省").equals(src.rProvince);
-                assert sub.get("收件地址:市").equals(src.rCity);
-                assert sub.get("收件地址:详细地址").equals(src.rDetail);
-                assert sub.get("收件人").equals(src.recipient);
-                assert sub.get("寄件地址:省").equals(src.sProvince);
-                assert sub.get("寄件地址:市").equals(src.sCity);
-                assert sub.get("寄件地址:详细地址").equals(src.sDetail);
-                assert sub.get("寄件人").equals(src.sender);
+                assertEquals(sub.get("运单号"), src.orderNo);
+                assertEquals(sub.get("收件地址:省"), src.rProvince);
+                assertEquals(sub.get("收件地址:市"), src.rCity);
+                assertEquals(sub.get("收件地址:详细地址"), src.rDetail);
+                assertEquals(sub.get("收件人"), src.recipient);
+                assertEquals(sub.get("寄件地址:省"), src.sProvince);
+                assertEquals(sub.get("寄件地址:市"), src.sCity);
+                assertEquals(sub.get("寄件地址:详细地址"), src.sDetail);
+                assertEquals(sub.get("寄件人"), src.sender);
             }
         }
     }

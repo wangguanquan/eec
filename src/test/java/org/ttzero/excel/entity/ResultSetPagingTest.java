@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
-import org.ttzero.excel.reader.CellType;
-import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
 
@@ -32,7 +32,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Iterator;
-import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author guanquan.wang at 2019-04-29 15:16
@@ -69,27 +71,27 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+                assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
-                for (int i = 0, len = reader.getSize(); i < len; i++) {
+                for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                     Iterator<Row> iter = reader.sheet(i).iterator();
-                    assert iter.hasNext();
+                    assertTrue(iter.hasNext());
                     org.ttzero.excel.reader.Row header = iter.next();
-                    assert "学号".equals(header.getString(0));
-                    assert "姓名".equals(header.getString(1));
-                    assert "年龄".equals(header.getString(2));
-                    assert "创建时间".equals(header.getString(3));
-                    assert "更新".equals(header.getString(4));
+                    assertEquals("学号", header.getString(0));
+                    assertEquals("姓名", header.getString(1));
+                    assertEquals("年龄", header.getString(2));
+                    assertEquals("创建时间", header.getString(3));
+                    assertEquals("更新", header.getString(4));
                     int x = 1;
                     while (rs.next()) {
-                        assert iter.hasNext();
+                        assertTrue(iter.hasNext());
                         org.ttzero.excel.reader.Row row = iter.next();
 
-                        assert rs.getInt(1) == row.getInt(0);
-                        assert rs.getString(2).equals(row.getString(1));
-                        assert rs.getInt(3) == row.getInt(2);
-                        assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null;
-                        assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                        assertEquals(rs.getInt(1), (int) row.getInt(0));
+                        assertEquals(rs.getString(2), row.getString(1));
+                        assertEquals(rs.getInt(3), (int) row.getInt(2));
+                        assertTrue(rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null);
+                        assertTrue(rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null);
 
                         if (++x >= rowLimit) break;
                     }
@@ -135,34 +137,34 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             ps = con.prepareStatement(sql);
             rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                assert reader.getSize() == (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1)); // Include header row
+                assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
-                for (int i = 0, len = reader.getSize(); i < len; i++) {
+                for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                     Iterator<Row> iter = reader.sheet(i).iterator();
-                    assert iter.hasNext();
+                    assertTrue(iter.hasNext());
                     org.ttzero.excel.reader.Row header = iter.next();
-                    assert "id".equals(header.getString(0));
-                    assert "name".equals(header.getString(1));
-                    assert "age".equals(header.getString(2));
-                    assert "create_date".equals(header.getString(3));
-                    assert "update_date".equals(header.getString(4));
+                    assertEquals("id", header.getString(0));
+                    assertEquals("name", header.getString(1));
+                    assertEquals("age", header.getString(2));
+                    assertEquals("create_date", header.getString(3));
+                    assertEquals("update_date", header.getString(4));
                     int x = 1;
                     while (rs.next()) {
-                        assert iter.hasNext();
+                        assertTrue(iter.hasNext());
                         org.ttzero.excel.reader.Row row = iter.next();
 
-                        assert rs.getInt(1) == row.getInt(0);
-                        assert rs.getString(2).equals(row.getString(1));
-                        assert rs.getInt(3) == row.getInt(2);
-                        assert rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null;
-                        assert rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null;
+                        assertEquals(rs.getInt(1), (int) row.getInt(0));
+                        assertEquals(rs.getString(2), row.getString(1));
+                        assertEquals(rs.getInt(3), (int) row.getInt(2));
+                        assertTrue(rs.getTimestamp(4) != null ? rs.getTimestamp(4).getTime() / 1000 == row.getTimestamp(3).getTime() / 1000 : row.getTimestamp(0) == null);
+                        assertTrue(rs.getTimestamp(5) != null ? rs.getTimestamp(5).getTime() / 1000 == row.getTimestamp(4).getTime() / 1000 : row.getTimestamp(4) == null);
 
                         Styles styles = row.getStyles();
                         int style = row.getCellStyle(2);
                         Fill fill = styles.getFill(style);
                         if (rs.getInt(3) > 14) {
-                            assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.yellow);
-                        } else assert  fill == null || fill.getPatternType() == PatternType.none;
+                            assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.yellow));
+                        } else assertTrue(fill == null || fill.getPatternType() == PatternType.none);
 
                         if (++x >= rowLimit) break;
                     }

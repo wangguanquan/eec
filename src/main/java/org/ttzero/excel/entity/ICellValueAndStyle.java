@@ -46,16 +46,18 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
 
 /**
+ * 数据转换并设置样式，将数据写到工作表输出协议之前统一处理数据和样式
+ *
  * @author guanquan.wang at 2019-09-25 11:24
  */
 public interface ICellValueAndStyle {
     /**
-     * Setting cell value and cell styles
+     * 重置单元格的值和样式，Row和Cell都是内存共享的，所以每个单元格均需要重置值和样式
      *
-     * @param row  the row number
-     * @param cell the cell
-     * @param e    the cell value
-     * @param hc   the header column
+     * @param row  行信息
+     * @param cell 单元格
+     * @param e    单元格的值
+     * @param hc   当前列的表头
      */
     default void reset(Row row, Cell cell, Object e, Column hc) {
         // 将值转输出需要的统一格式
@@ -65,15 +67,17 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Returns the cell style index
+     * 获取单元格样式值，先通过{@code Column}获取基础样式，如果有动态样式转换则将基础样式做为参数进行二次制作
      *
-     * @param row the row data
-     * @param hc    the header column
-     * @param o     the cell value
-     * @return the style index in xf
+     * @param row 行信息
+     * @param hc  当前列的表头
+     * @param o   单元格的值
+     * @return 样式值
      */
     default int getStyleIndex(Row row, Column hc, Object o) {
+        // 获取基础样式
         int style = hc.getCellStyle();
+        // 如果有动态样式转换则将基础样式做为参数进行二次制作
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
         }
@@ -81,13 +85,13 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Setting all cell style of the specified row
+     * 行级样式转换器，它的优先级最高
      *
-     * @param <T> the row's class
-     * @param o the row data
-     * @param cell the cell of row
-     * @param hc the header column
-     * @param styleProcessor a customize {@link StyleProcessor}
+     * @param <T>            the row's class
+     * @param o              行值，可能是{@code Map}，Java实体或{@code ResultSet}
+     * @param cell           单元格
+     * @param hc             当前列的表头
+     * @param styleProcessor 样式转换器{@link StyleProcessor}
      */
     default <T> void setStyleDesign(T o, Cell cell, Column hc, StyleProcessor<T> styleProcessor) {
         if (styleProcessor != null && hc.styles != null) {
@@ -96,13 +100,13 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Setting cell value
+     * 设置单元格的值，如果有动态转换器则调用转换器
      *
-     * @param row the row number
-     * @param cell  the cell
-     * @param e     the cell value
-     * @param hc    the header column
-     * @param clazz the cell value type
+     * @param row           行信息
+     * @param cell          单元格
+     * @param e             单元格的值
+     * @param hc            当前列的表头
+     * @param clazz         单元格值的数据类型
      * @param hasConversion 是否有输出转换器
      */
     default void setCellValue(Row row, Cell cell, Object e, Column hc, Class<?> clazz, boolean hasConversion) {
@@ -160,7 +164,7 @@ public interface ICellValueAndStyle {
             if (Path.class.isAssignableFrom(clazz)) {
                 cell.setPath((Path) e);
             } else if (File.class.isAssignableFrom(clazz)) {
-                 cell.setPath(((File) e).toPath());
+                cell.setPath(((File) e).toPath());
             } else if (InputStream.class.isAssignableFrom(clazz)) {
                 cell.setInputStream((InputStream) e);
             } else if (clazz == byte[].class) {
@@ -176,11 +180,11 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Setting cell value as null
+     * 写{@code null}值到单元格
      *
-     * @param row the row number
-     * @param cell  the cell
-     * @param hc    the header column
+     * @param row  行信息
+     * @param cell 单元格
+     * @param hc   当前列的表头
      */
     default void setNullValue(Row row, Cell cell, Column hc) {
         boolean hasProcessor = hc.getConversion() != null;
@@ -191,12 +195,12 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Int value conversion to others
+     * 动态转换单元格的值
      *
-     * @param row the row number
-     * @param cell the cell
-     * @param o    the cell value
-     * @param hc   the header column
+     * @param row  行信息
+     * @param cell 单元格
+     * @param o    单元格的值
+     * @param hc   当前列的表头
      */
     default void conversion(Row row, Cell cell, Object o, Column hc) {
         Object e = hc.getConversion().conversion(o);
@@ -208,26 +212,27 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * unknown cell type converter
+     * 未知类型转换，可覆写本方法以支持扩展类型
      *
-     * @param row the row number
-     * @param cell  the cell
-     * @param e     the cell value
-     * @param hc    the header column
-     * @param clazz the cell value type
+     * @param row   行信息
+     * @param cell  单元格
+     * @param e     单元格的值
+     * @param hc    当前列的表头
+     * @param clazz 单元格值的数据类型
      */
     default void unknownType(Row row, Cell cell, Object e, Column hc, Class<?> clazz) {
         cell.setSv(e.toString());
     }
 
     /**
-     * Convert string to binary
+     * 将字符串转为{@code Media}类型，仅当以{@code Media}类型导出时才会被执行，
+     * 支持Base64图片和图片url，
      *
-     * @param row   the row number
-     * @param cell  the cell
-     * @param e     the cell value
-     * @param hc    the header column
-     * @param clazz the cell value type
+     * @param row   行信息
+     * @param cell  单元格
+     * @param e     单元格的值
+     * @param hc    当前列的表头
+     * @param clazz 单元格值的数据类型
      */
     default void writeAsMedia(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
         int b, len = e.length();
@@ -246,18 +251,18 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Download resource from remote server
+     * 下载远程资源
      *
-     * NOTE：By default, only marking the cell type as {@code REMOTE_URL} does not actually download resources.
-     * Asynchronous download in {@code IWorksheetWriter#writeRemoteMedia} in the future.
-     * Of course, you can also download and then call {@link Cell#setInputStream(InputStream)}
-     * or {@link Cell#setBinary(byte[])} to save the stream or binary results to the cell.
+     * <p>注意：默认情况下仅将单元格类型标记为{@code REMOTE_URL}并不会去下载资源。
+     * 下载动作延迟在{@code IWorksheetWriter#writeRemoteMedia}中进行。
+     * 当然，也可以在本方法下载并调用{@link Cell#setInputStream}或{@link Cell#setBinary}
+     * 将流或二进制结果保存到单元格中</p>
      *
-     * @param row   the row number
-     * @param cell  the cell
-     * @param e     the cell value
-     * @param hc    the header column
-     * @param clazz the cell value type
+     * @param row   行信息
+     * @param cell  单元格
+     * @param e     单元格的值
+     * @param hc    当前列的表头
+     * @param clazz 单元格值的数据类型
      */
     default void downloadRemoteResource(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
         cell.setSv(e);
@@ -265,10 +270,10 @@ public interface ICellValueAndStyle {
     }
 
     /**
-     * Mark whitelist types that can be easily exported
+     * 检查数据类型是否可简单导出，简单导出的类型是相对于实体而言，它们一定是Java内置类型且被其它实体组合使用
      *
-     * @param clazz cell value class
-     * @return true if can be easily exported
+     * @param clazz 数据类型
+     * @return {@code true}如果是简单类型
      */
     default boolean isAllowDirectOutput(Class<?> clazz) {
         return clazz == null || isString(clazz) || isDate(clazz) || isDateTime(clazz) || isChar(clazz) || isShort(clazz)

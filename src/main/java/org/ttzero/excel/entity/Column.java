@@ -57,6 +57,10 @@ import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
  */
 public class Column {
     /**
+     * 未实例化的列，可用于在写超出预知范围外的列
+     */
+    public static final Column UNALLOCATED_COLUMN = new Column();
+    /**
      * Java对象中的字段、Map的Key或者SQL语句中的select字段，具体值由工作表类型决定
      */
     public String key;
@@ -611,163 +615,6 @@ public class Column {
             horizontal = Horizontals.LEFT;
         }
         return horizontal;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font 字体
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font       字体
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param border 边框
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Border border) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font       字体
-     * @param border     边框
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Border border, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param vertical   垂直对齐,参考值{@link Verticals}
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | vertical
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param numFmt     格式化
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param vertical   垂直对齐,参考值{@link Verticals}
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-        this.cellStyle = styles.of(
-                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-                        | (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | vertical
-                        | horizontal);
-        return this;
     }
 
     /**

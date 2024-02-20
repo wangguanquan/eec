@@ -205,7 +205,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor10")
                 .addSheet(new StatementSheet()
-                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                    .setStatement(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -215,7 +215,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor11")
                 .addSheet(new StatementSheet("Student")
-                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                    .setStatement(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -225,7 +225,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
         try (Connection con = getConnection()) {
             new Workbook("test statement sheet Constructor12")
                 .addSheet(new StatementSheet("Student")
-                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                    .setStatement(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }
@@ -238,7 +238,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class))
-                    .setPs(con.prepareStatement("select id, name, age from student limit 10")))
+                    .setStatement(con.prepareStatement("select id, name, age from student limit 10")))
                 .saveAsCSV()
                 .writeTo(getOutputTestPath());
         }

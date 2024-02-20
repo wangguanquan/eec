@@ -45,7 +45,7 @@ public class FormulasLoader {
             String line;
             while ((line = reader.readLine()) != null) {
                 int i = line.indexOf('=');
-                if (i > 0) map.put(ExcelReader.cellRangeToLong(line.substring(0, i)), line.substring(i + 1));
+                if (i > 0) map.put(ExcelReader.coordinateToLong(line.substring(0, i)), line.substring(i + 1));
             }
         } catch (IOException ex) {
             ex.printStackTrace();

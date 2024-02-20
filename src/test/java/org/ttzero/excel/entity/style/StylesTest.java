@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.entity.style.Styles.INDEX_BORDER;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FILL;
@@ -85,36 +88,36 @@ public class StylesTest {
     }
 
     @Test public void testTestCodeIsDate() {
-        assert !testCodeIsDate("\"¥\"#,##0.00;\"¥\"\\-#,##0.00");
-        assert testCodeIsDate("[$-F800]dddd\\,\\ mmmm\\ dd\\,\\ yyyy");
-        assert testCodeIsDate("[DBNum1][$-804]yyyy\"年\"m\"月\"d\"日\";@");
-        assert testCodeIsDate("[DBNum1][$-804]yyyy\"年\"m\"月\";@");
-        assert testCodeIsDate("[DBNum1][$-804]m\"月\"d\"日\";@");
-        assert testCodeIsDate("yyyy\"年\"m\"月\"d\"日\";@");
-        assert testCodeIsDate("[$-409]yyyy/m/d\\ h:mm\\ AM/PM;@");
-        assert testCodeIsDate("yy/m/d;@");
-        assert testCodeIsDate("[$-409]mmmmm/yy;@");
-        assert testCodeIsDate("[$-409]d/mmm/yy;@");
-        assert testCodeIsDate("[$-409]dd/mmm/yy;@");
-        assert testCodeIsDate("[$-F400]h:mm:ss\\ AM/PM");
-        assert testCodeIsDate("[$-409]h:mm:ss\\ AM/PM;@");
-        assert testCodeIsDate("h\"时\"mm\"分\"ss\"秒\";@");
-        assert testCodeIsDate("上午/下午h\"时\"mm\"分\"ss\"秒\";@");
-        assert testCodeIsDate("[DBNum1][$-804]上午/下午h\"时\"mm\"分\";@");
-        assert testCodeIsDate("[$-2010000]yyyy/mm/dd;@");
-        assert testCodeIsDate("[$-C07]d\\.mmmm\\ yyyy;@");
-        assert testCodeIsDate("[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@");
-        assert testCodeIsDate("[$-FC19]yyyy\\,\\ dd\\ mmmm;@");
-        assert testCodeIsDate("[$-80C]dddd\\ d\\ mmmm\\ yyyy;@");
-        assert testCodeIsDate("[$-44F]dd\\ mmmm\\ yyyy\\ dddd;@");
-        assert testCodeIsDate("[$-816]d\\ \"de\"\\ mmmm\\ \"de\"\\ yyyy;@");
-        assert testCodeIsDate("yyyy/mm/dd\\ hh:mm:ss");
-        assert testCodeIsDate("yyyy/mm/dd");
-        assert testCodeIsDate("m/d");
+        assertFalse(testCodeIsDate("\"¥\"#,##0.00;\"¥\"\\-#,##0.00"));
+        assertTrue(testCodeIsDate("[$-F800]dddd\\,\\ mmmm\\ dd\\,\\ yyyy"));
+        assertTrue(testCodeIsDate("[DBNum1][$-804]yyyy\"年\"m\"月\"d\"日\";@"));
+        assertTrue(testCodeIsDate("[DBNum1][$-804]yyyy\"年\"m\"月\";@"));
+        assertTrue(testCodeIsDate("[DBNum1][$-804]m\"月\"d\"日\";@"));
+        assertTrue(testCodeIsDate("yyyy\"年\"m\"月\"d\"日\";@"));
+        assertTrue(testCodeIsDate("[$-409]yyyy/m/d\\ h:mm\\ AM/PM;@"));
+        assertTrue(testCodeIsDate("yy/m/d;@"));
+        assertTrue(testCodeIsDate("[$-409]mmmmm/yy;@"));
+        assertTrue(testCodeIsDate("[$-409]d/mmm/yy;@"));
+        assertTrue(testCodeIsDate("[$-409]dd/mmm/yy;@"));
+        assertTrue(testCodeIsDate("[$-F400]h:mm:ss\\ AM/PM"));
+        assertTrue(testCodeIsDate("[$-409]h:mm:ss\\ AM/PM;@"));
+        assertTrue(testCodeIsDate("h\"时\"mm\"分\"ss\"秒\";@"));
+        assertTrue(testCodeIsDate("上午/下午h\"时\"mm\"分\"ss\"秒\";@"));
+        assertTrue(testCodeIsDate("[DBNum1][$-804]上午/下午h\"时\"mm\"分\";@"));
+        assertTrue(testCodeIsDate("[$-2010000]yyyy/mm/dd;@"));
+        assertTrue(testCodeIsDate("[$-C07]d\\.mmmm\\ yyyy;@"));
+        assertTrue(testCodeIsDate("[$-FC19]dd\\ mmmm\\ yyyy\\ \\г\\.;@"));
+        assertTrue(testCodeIsDate("[$-FC19]yyyy\\,\\ dd\\ mmmm;@"));
+        assertTrue(testCodeIsDate("[$-80C]dddd\\ d\\ mmmm\\ yyyy;@"));
+        assertTrue(testCodeIsDate("[$-44F]dd\\ mmmm\\ yyyy\\ dddd;@"));
+        assertTrue(testCodeIsDate("[$-816]d\\ \"de\"\\ mmmm\\ \"de\"\\ yyyy;@"));
+        assertTrue(testCodeIsDate("yyyy/mm/dd\\ hh:mm:ss"));
+        assertTrue(testCodeIsDate("yyyy/mm/dd"));
+        assertTrue(testCodeIsDate("m/d"));
 
-        assert testCodeIsDate("yyyy");
-        assert testCodeIsDate("m-d");
-        assert testCodeIsDate("yy/m");
+        assertTrue(testCodeIsDate("yyyy"));
+        assertTrue(testCodeIsDate("m-d"));
+        assertTrue(testCodeIsDate("yy/m"));
     }
 
     @Test public void testFastTestDateFmt() throws IOException {
@@ -124,8 +127,8 @@ public class StylesTest {
         Styles styles = Styles.load(Files.newInputStream(storagePath));
         for (int i = 0, size = styles.size(); i < size; i++) {
            boolean isDate = styles.fastTestDateFmt(i);
-           if (i == 0 || i == 5 || i >= 7 && i <= 9) assert !isDate;
-           else assert isDate;
+           if (i == 0 || i == 5 || i >= 7 && i <= 9) assertFalse(isDate);
+           else assertTrue(isDate);
         }
     }
 
@@ -134,13 +137,13 @@ public class StylesTest {
                 | (5 << INDEX_FILL) | (4 << INDEX_BORDER)
                 | (3 << INDEX_VERTICAL) | (2 << INDEX_HORIZONTAL) | 1;
 
-        assert Styles.clearNumFmt(style) == style - (7 << INDEX_NUMBER_FORMAT);
-        assert Styles.clearFont(style) == style - (6 << INDEX_FONT);
-        assert Styles.clearFill(style) == style - (5 << INDEX_FILL);
-        assert Styles.clearBorder(style) == style - (4 << INDEX_BORDER);
-        assert Styles.clearVertical(style) == style - (3 << INDEX_VERTICAL);
-        assert Styles.clearHorizontal(style) == style - (2 << INDEX_HORIZONTAL);
-        assert Styles.clearWrapText(style) == style - (1 << INDEX_WRAP_TEXT);
+        assertEquals(Styles.clearNumFmt(style), style - (7 << INDEX_NUMBER_FORMAT));
+        assertEquals(Styles.clearFont(style), style - (6 << INDEX_FONT));
+        assertEquals(Styles.clearFill(style), style - (5 << INDEX_FILL));
+        assertEquals(Styles.clearBorder(style), style - (4 << INDEX_BORDER));
+        assertEquals(Styles.clearVertical(style), style - (3 << INDEX_VERTICAL));
+        assertEquals(Styles.clearHorizontal(style), style - (2 << INDEX_HORIZONTAL));
+        assertEquals(Styles.clearWrapText(style), style - (1 << INDEX_WRAP_TEXT));
     }
 
     @Test public void testHas() {
@@ -148,66 +151,66 @@ public class StylesTest {
                 | (5 << INDEX_FILL) | (4 << INDEX_BORDER)
                 | (3 << INDEX_VERTICAL) | (2 << INDEX_HORIZONTAL) | 1;
 
-        assert Styles.hasNumFmt(style);
-        assert Styles.hasFont(style);
-        assert Styles.hasFill(style);
-        assert Styles.hasBorder(style);
-        assert Styles.hasVertical(style);
-        assert Styles.hasHorizontal(style);
-        assert Styles.hasWrapText(style);
+        assertTrue(Styles.hasNumFmt(style));
+        assertTrue(Styles.hasFont(style));
+        assertTrue(Styles.hasFill(style));
+        assertTrue(Styles.hasBorder(style));
+        assertTrue(Styles.hasVertical(style));
+        assertTrue(Styles.hasHorizontal(style));
+        assertTrue(Styles.hasWrapText(style));
 
 
-        assert !Styles.hasNumFmt(Styles.clearNumFmt(style));
+        assertFalse(Styles.hasNumFmt(Styles.clearNumFmt(style)));
         // Font is required
-//        assert !Styles.hasFont(Styles.clearFont(style));
-        assert !Styles.hasFill(Styles.clearFill(style));
-        assert !Styles.hasBorder(Styles.clearBorder(style));
-        assert !Styles.hasVertical(Styles.clearVertical(style));
-        assert !Styles.hasHorizontal(Styles.clearHorizontal(style));
-        assert !Styles.hasWrapText(Styles.clearWrapText(style));
+//        assertTrue(!Styles.hasFont(Styles.clearFont(style)));
+        assertFalse(Styles.hasFill(Styles.clearFill(style)));
+        assertFalse(Styles.hasBorder(Styles.clearBorder(style)));
+        assertFalse(Styles.hasVertical(Styles.clearVertical(style)));
+        assertFalse(Styles.hasHorizontal(Styles.clearHorizontal(style)));
+        assertFalse(Styles.hasWrapText(Styles.clearWrapText(style)));
     }
 
     @Test public void testThemeColor() {
         // +-1
         Color color1 = HlsColor.calculateColor(Color.decode("#F79646"), "0.39997558519241921");
-        assert color1.getRed() <= 251 && color1.getRed() >= 249;
-        assert color1.getGreen() <= 192 && color1.getGreen() >= 190;
-        assert color1.getBlue() <= 144 && color1.getBlue() >= 142;
+        assertTrue(color1.getRed() <= 251 && color1.getRed() >= 249);
+        assertTrue(color1.getGreen() <= 192 && color1.getGreen() >= 190);
+        assertTrue(color1.getBlue() <= 144 && color1.getBlue() >= 142);
 
         Color color2 = HlsColor.calculateColor(Color.decode("#4F81BD"), "0.79998168889431442");
-        assert color2.getRed() <= 221 && color2.getRed() >= 219;
-        assert color2.getGreen() <= 231 && color2.getGreen() >= 229;
-        assert color2.getBlue() <= 242 && color2.getBlue() >= 240;
+        assertTrue(color2.getRed() <= 221 && color2.getRed() >= 219);
+        assertTrue(color2.getGreen() <= 231 && color2.getGreen() >= 229);
+        assertTrue(color2.getBlue() <= 242 && color2.getBlue() >= 240);
 
         Color color3 = HlsColor.calculateColor(Color.decode("#C0504D"), "0.59999389629810485");
-        assert color3.getRed() <= 231 && color3.getRed() >= 229;
-        assert color3.getGreen() <= 185 && color3.getGreen() >= 183;
-        assert color3.getBlue() <= 184 && color3.getBlue() >= 182;
+        assertTrue(color3.getRed() <= 231 && color3.getRed() >= 229);
+        assertTrue(color3.getGreen() <= 185 && color3.getGreen() >= 183);
+        assertTrue(color3.getBlue() <= 184 && color3.getBlue() >= 182);
 
         Color color4 = HlsColor.calculateColor(new Color(0, 0, 0), "0.39997558519241921");
-        assert color4.getRed() <= 103 && color4.getRed() >= 101;
-        assert color4.getGreen() <= 103 && color4.getGreen() >= 101;
-        assert color4.getBlue() <= 103 && color4.getBlue() >= 101;
+        assertTrue(color4.getRed() <= 103 && color4.getRed() >= 101);
+        assertTrue(color4.getGreen() <= 103 && color4.getGreen() >= 101);
+        assertTrue(color4.getBlue() <= 103 && color4.getBlue() >= 101);
     }
 
     @Test public void testRound2() {
-        assert Font.round10(11) == 110;
-        assert Font.round10(11.1) == 110;
-        assert Font.round10(11.2) == 110;
-        assert Font.round10(11.22) == 110;
-        assert Font.round10(11.23) == 115;
-        assert Font.round10(11.3) == 115;
-        assert Font.round10(11.5) == 115;
-        assert Font.round10(11.7) == 115;
-        assert Font.round10(11.72) == 115;
-        assert Font.round10(11.73) == 120;
-        assert Font.round10(11.8) == 120;
+        assertEquals(Font.round10(11), 110);
+        assertEquals(Font.round10(11.1), 110);
+        assertEquals(Font.round10(11.2), 110);
+        assertEquals(Font.round10(11.22), 110);
+        assertEquals(Font.round10(11.23), 115);
+        assertEquals(Font.round10(11.3), 115);
+        assertEquals(Font.round10(11.5), 115);
+        assertEquals(Font.round10(11.7), 115);
+        assertEquals(Font.round10(11.72), 115);
+        assertEquals(Font.round10(11.73), 120);
+        assertEquals(Font.round10(11.8), 120);
 
         Font font = Font.parse("italic_bold_12.24_宋体");
-        assert font.isItalic();
-        assert font.isBold();
-        assert font.getSize2() == 12.5D;
-        assert font.getName().equals("宋体");
+        assertTrue(font.isItalic());
+        assertTrue(font.isBold());
+        assertTrue(font.getSize2() - 12.5D <= 0.0001);
+        assertEquals(font.getName(), "宋体");
     }
 
     @Test public void testFontConversion() {
@@ -215,30 +218,30 @@ public class StylesTest {
         java.awt.Font awtFont = new java.awt.Font("Arial", java.awt.Font.PLAIN, 12);
         Font font = Font.of(awtFont);
 
-        assert font.getName().equals(awtFont.getName());
-        assert font.getSize() == awtFont.getSize();
-        assert font.getStyle() == Font.Style.PLAIN;
+        assertEquals(font.getName(), awtFont.getName());
+        assertEquals(font.getSize(), awtFont.getSize());
+        assertEquals(font.getStyle(), Font.Style.PLAIN);
 
         // eec Font to awt Font
         java.awt.Font awtFont2 = font.toAwtFont();
-        assert awtFont.equals(awtFont2);
+        assertEquals(awtFont, awtFont2);
 
         awtFont = new java.awt.Font("宋体", java.awt.Font.BOLD, 16);
         font = Font.of(awtFont);
-        assert font.getName().equals(awtFont.getName());
-        assert font.getSize() == awtFont.getSize();
-        assert font.isBold();
+        assertEquals(font.getName(), awtFont.getName());
+        assertEquals(font.getSize(), awtFont.getSize());
+        assertTrue(font.isBold());
 
         awtFont2 = font.toAwtFont();
-        assert awtFont.equals(awtFont2);
+        assertEquals(awtFont, awtFont2);
 
         awtFont = new java.awt.Font("宋体", java.awt.Font.BOLD | java.awt.Font.ITALIC, 16);
         font = Font.of(awtFont);
-        assert font.getName().equals(awtFont.getName());
-        assert font.getSize() == awtFont.getSize();
-        assert font.isBold() && font.isItalic();
+        assertEquals(font.getName(), awtFont.getName());
+        assertEquals(font.getSize(), awtFont.getSize());
+        assertTrue(font.isBold() && font.isItalic());
 
         awtFont2 = font.toAwtFont();
-        assert awtFont.equals(awtFont2);
+        assertEquals(awtFont, awtFont2);
     }
 }

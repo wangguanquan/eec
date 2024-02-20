@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
-import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -214,9 +213,13 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Boolean showGridLines;
     /**
-     * 指定表头行高和数据行高
+     * 指定表头行高
      */
-    protected double headerRowHeight = 20.5D, rowHeight = -1D;
+    protected double headerRowHeight = 20.5D;
+    /**
+     * 指定数据行高
+     */
+    protected Double rowHeight;
     /**
      * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
      */
@@ -377,7 +380,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     @Deprecated
     public SharedStrings getSst() {
-        return workbook.getSst();
+        return workbook.getSharedStrings();
     }
 
     /**
@@ -619,9 +622,9 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 获取数据行高
      *
-     * @return 数据行高
+     * @return 数据行高，返回{@code null}时使用默认行高
      */
-    public double getRowHeight() {
+    public Double getRowHeight() {
         return rowHeight;
     }
 
@@ -1119,9 +1122,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
-        Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, ColorIndex.toColor(fontColor));
-        return styles.addFont(font)
+        return styles.addFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(fontColor)))
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER
@@ -1444,6 +1445,8 @@ public abstract class Sheet implements Cloneable, Storable {
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
         // Mark global merged cells
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS) != null ? 1 << 2 : 0;
+        // Mark autoFilter
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER) != null ? 1 << 3 : 0;
     }
 
     /**

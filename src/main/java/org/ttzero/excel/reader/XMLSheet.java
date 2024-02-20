@@ -16,9 +16,15 @@
 
 package org.ttzero.excel.reader;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,10 +34,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -67,7 +73,7 @@ public class XMLSheet implements Sheet {
         this.eof = sheet.eof;
         this.heof = sheet.heof;
         this.mark = sheet.mark;
-        this.sRow = (sheet.sRow instanceof XMLMergeRow) || (sheet.sRow instanceof XMLCalcRow) ? createRow().init(sst, styles, startRow) : sheet.sRow;
+        this.sRow = sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class ? createRow().init(sst, styles, startRow) : sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
@@ -147,7 +153,7 @@ public class XMLSheet implements Sheet {
      *
      * @param sst the {@link SharedStrings}
      */
-    protected void setSst(SharedStrings sst) {
+    protected void setSharedStrings(SharedStrings sst) {
         this.sst = sst;
     }
 
@@ -211,20 +217,6 @@ public class XMLSheet implements Sheet {
      */
     protected void setDrawings(Drawings drawings) {
         this.drawings = drawings;
-    }
-
-    /**
-     * size of rows.
-     *
-     * @return size of rows
-     *      -1: unknown size
-     * @deprecated use {@link #getDimension()} to getting full range address
-     */
-    @Deprecated
-    @Override
-    public int getSize() {
-        Dimension d = getDimension();
-        return d != null ? d.lastRow - d.firstRow + 1 : -1;
     }
 
     /**
@@ -298,14 +290,14 @@ public class XMLSheet implements Sheet {
     @Override
     public Row getHeader() {
         if (header == null && !heof) {
-            Row row = hrf == 0 ? findRow0(this::createHeader) : getHeader(hrf, hrl);
+            Row row = hrf == 0 ? findRow0() : getHeader(hrf, hrl);
             if (row != null) {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 header.setOptions(option << 16 >>> 16);
                 sRow.setHr(header);
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
-            Row row0 = findRow0(this::createHeader);
+            Row row0 = findRow0();
             if (row0 != null && row0.getRowNum() < hrl) {
                 for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
             }
@@ -354,7 +346,8 @@ public class XMLSheet implements Sheet {
                     // Parse merged cells
                     XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
                     tmp.reader = null; // Prevent streams from being consumed by mistake
-                    mergeCells = tmp.parseMerge();
+                    Map<String, Object> tags = tmp.parseTails();
+                    mergeCells = (List<Dimension>) tags.get("mergeCells");
                 } else mergeCells = ((MergeSheet) this).getMergeCells();
 
                 if (mergeCells != null) {
@@ -434,7 +427,7 @@ public class XMLSheet implements Sheet {
     protected long lastRowMark;
 
     /**
-     * Load sheet.xml as BufferedReader
+     * 加载sheet.xml并解析头信息，如果已加载则直接跳到标记位
      *
      * @return Sheet
      * @throws IOException if io error occur
@@ -449,65 +442,80 @@ public class XMLSheet implements Sheet {
         LOGGER.debug("Load {}", path);
         reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
         cb = new char[8192];
-        nChar = 0;
-        int left = 0;
-        loopA: for (; ; ) {
-            length = reader.read(cb, left, cb.length - left);
-            if (length < 11) break;
-            // read size
-            if (nChar == 0 && startRow < 1) {
-                String line = new String(cb, 56, 1024);
-                String size = "<dimension ref=\"";
-                int index = line.indexOf(size), end = index > 0 ? line.indexOf('"', index += size.length()) : -1;
-                if (end > 0) {
-                    String l_ = line.substring(index, end);
-                    Pattern pat = Pattern.compile("([A-Z]+)(\\d+):([A-Z]+)(\\d+)");
-                    Matcher mat = pat.matcher(l_);
-                    if (mat.matches()) {
-                        dimension = Dimension.of(l_);
-                        this.startRow = dimension.firstRow;
-                    } else {
-                        pat = Pattern.compile("([A-Z]+)(\\d+)");
-                        mat = pat.matcher(l_);
-                        if (mat.matches()) {
-                            this.startRow = Integer.parseInt(mat.group(2));
-                        }
-                    }
-                    nChar += end;
-                }
-            }
-            // find index of <sheetData>
-            for (int len = length - 12; nChar < len; nChar++) {
-                if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                    && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                    && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                    && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                    nChar += 11;
-                    break loopA;
-                }
-            }
+        nChar = 0; mark = 0;
 
-            // Find the last tag '>'
-            for (left = nChar; left > 0 && cb[left--] != '>'; );
-            if (left > 0) {
-                System.arraycopy(cb, left, cb, 0, length - left);
-                mark += nChar;
-                nChar = 0;
-            }
-        }
+        // 解析头信息
+        parseBOF();
+
         // Empty sheet
-        if (cb[nChar] == '>') {
-            mark += length;
-            eof = true;
-            if (dimension == null) dimension = new Dimension(1, (short) 1);
-        } else {
-            eof = false;
-            mark += nChar;
-            sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
-        }
+        if (length <= 0) eof = true;
+        if (!eof) sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
+
+        LOGGER.debug("eof: {}, mark: {}", eof, mark);
         if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
 
         return this;
+    }
+
+    // 解析工作表头信息，注意reader的position必须从0开始
+    protected void parseBOF() throws IOException {
+        int left = 0;
+        loopA: while ((length = reader.read(cb, left, cb.length - left)) > 0) {
+            if ((length += left) < 11) {
+                left = length;
+                continue;
+            }
+            left = 0;
+
+            for (; ;) {
+                // 查找起始标签
+                for (; nChar < length && cb[nChar] != '<'; nChar++) ;
+
+                if (nChar == length) {
+                    mark += nChar;
+                    nChar = 0;
+                    break;
+                }
+                int offset = nChar;
+                // 跳过结束标签
+                if (++nChar < length && cb[nChar] == '/') continue;
+
+                for (; nChar < length && cb[nChar] != '>'; nChar++) ;
+
+                if (nChar == length) {
+                    if (offset != 0) {
+                        left = nChar - offset;
+                        System.arraycopy(cb, offset, cb, 0, left);
+                        mark += offset;
+                    } else {
+                        cb = Arrays.copyOf(cb, cb.length << 1);
+                        left = length;
+                    }
+                    nChar = 0;
+                    break;
+                }
+
+                int n = ++nChar - offset;
+                if (n >= 11 && cb[offset + 1] == 's' && cb[offset + 2] == 'h'
+                    && cb[offset + 3] == 'e' && cb[offset + 4] == 'e' && cb[offset + 5] == 't'
+                    && cb[offset + 6] == 'D' && cb[offset + 7] == 'a' && cb[offset + 8] == 't'
+                    && cb[offset + 9] == 'a' && (cb[offset + 10] == '>' || cb[offset + 10] == '/')) {
+                    mark += offset + 11;
+                    eof = cb[offset + 10] == '/';
+                    break loopA;
+                }
+                // 如果reader的position不从0开始则遇到<row>就停止否则会一直读取末尾
+                if (n >= 5 && cb[offset + 1] == 'r' && cb[offset + 2] == 'o' && cb[offset + 3] == 'w'
+                    && (cb[offset + 4] == '>' || cb[offset + 4] == '/')) {
+                    mark += offset;
+                    eof = false;
+                    break loopA;
+                }
+
+                // 解析每个子节点
+                subElement(cb, offset, n);
+            }
+        }
     }
 
     /**
@@ -522,7 +530,7 @@ public class XMLSheet implements Sheet {
         // find end of row tag
         for (; ++nChar < length && cb[nChar] != '>'; ) ;
         // Empty Row
-        if (cb[nChar++ - 1] == '/') {
+        if (nChar < length && cb[nChar - 1] == '/') {
             return sRow.empty(cb, start, nChar - start);
         }
         // Not empty
@@ -558,6 +566,10 @@ public class XMLSheet implements Sheet {
                     return null;
                 }
             } catch (IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("Stream closed")) {
+                    eof = true;
+                    return null;
+                }
                 throw new ExcelReadException("Parse row data error", e);
             }
             nChar = 0;
@@ -569,73 +581,28 @@ public class XMLSheet implements Sheet {
         return sRow.with(cb, start, nChar - start);
     }
 
-    protected Row findRow0(HeaderRowFunc func) {
-        char[] cb = new char[8192];
-        int nChar = 0, length;
-        // reload file
-        try (Reader reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8)) {
-            if (mark > 0) {
-                reader.skip(mark);
-                length = reader.read(cb);
-            } else {
-                loopA: for (; ; ) {
-                    length = reader.read(cb);
-                    // find index of <sheetData>
-                    for (; nChar < length - 12; nChar++) {
-                        if (cb[nChar] == '<' && cb[nChar + 1] == 's' && cb[nChar + 2] == 'h'
-                            && cb[nChar + 3] == 'e' && cb[nChar + 4] == 'e' && cb[nChar + 5] == 't'
-                            && cb[nChar + 6] == 'D' && cb[nChar + 7] == 'a' && cb[nChar + 8] == 't'
-                            && cb[nChar + 9] == 'a' && (cb[nChar + 10] == '>' || cb[nChar + 10] == '/' && cb[nChar + 11] == '>')) {
-                            nChar += 11;
-                            break loopA;
-                        }
-                    }
-                }
+    protected Row findRow0() {
+        // 临时保存工作表现有状态
+        Marker marker = Marker.of(this);
+
+        Row firstRow = null;
+        try {
+            load();
+            if (!this.eof) {
+                XMLRow row = nextRow();
+                if (row != null) firstRow = createHeader(row.cb, row.from, row.to - row.from);
             }
-
-            boolean eof = length <= 0 || cb[nChar] == '>';
-            if (eof) {
-                this.heof = true;
-                return null;
-            }
-
-            int start = nChar;
-            A: for (; ;) {
-                // Not empty
-                for (; nChar < length - 6; nChar++) {
-                    if (cb[nChar] == '<' && cb[nChar + 1] == '/' && cb[nChar + 2] == 'r'
-                        && cb[nChar + 3] == 'o' && cb[nChar + 4] == 'w' && cb[nChar + 5] == '>') {
-                        nChar += 6;
-                        break A;
-                    }
-                }
-
-                /* Load more when not found end of row tag */
-                int n;
-                char[] _cb = new char[cb.length << 1];
-                System.arraycopy(cb, start, _cb, 0, n = length - start);
-                cb = _cb;
-
-                try {
-                    length = reader.read(cb, n, cb.length - n);
-                    // end of file
-                    if (length < 0) {
-                        reader.close(); // close reader
-                        return null;
-                    }
-                } catch (IOException e) {
-                    throw new ExcelReadException("Parse row data error", e);
-                }
-                start = 0;
-                length += n;
-            }
-
-            return func != null ? func.accept(cb, start, nChar - start) : createHeader(cb, start, nChar - start);
+            if (this.reader != null) this.reader.close();
         } catch (IOException e) {
             LOGGER.error("Read header row error.");
-            return null;
         }
 
+        this.heof = firstRow == null;
+
+        // 还原工作表状态
+        marker.reset();
+
+        return firstRow;
     }
 
     /**
@@ -757,7 +724,6 @@ public class XMLSheet implements Sheet {
         return this;
     }
 
-    @Override
     public XMLRow createRow() {
         return new XMLRow();
     }
@@ -774,8 +740,8 @@ public class XMLSheet implements Sheet {
 
             // Mark
             long mark = 0L, mark0 = 0L;
-            int n, offset = 0, limit = 1 << 14, i, len, f, size = 0;
-            byte[] buf = new byte[limit], bytes = new byte[10];
+            int n, offset = 0, limit = 1 << 14, i, len, f, row = 1, col = 1;
+            byte[] buf = new byte[limit];
             while ((n = is.read(buf, offset, limit - offset)) > 0) {
                 mark += n;
                 if ((len = n + offset) < 11) {
@@ -797,7 +763,11 @@ public class XMLSheet implements Sheet {
                         f = i += 3;
                         for (; i < len && buf[i] != '"'; i++);
                         if (i < len) {
-                            System.arraycopy(buf, f, bytes, 0, size = i - f);
+                            long v = coordinateToLong(buf, f, i - f);
+                            row = (int) (v >>> 16);
+                            int c = (int) (v & 0x7FFF);
+                            // 取列较大的值
+                            if (c > col) col = c;
                             if (buf[len - 1] == '<') {
                                 buf[0] = '<';
                                 offset = 1;
@@ -811,16 +781,51 @@ public class XMLSheet implements Sheet {
                 if (i < len) System.arraycopy(buf, i, buf, 0, offset = len - i);
             }
             if (lastRowMark < mark0) lastRowMark = mark0;
-            if (size > 0) {
-                long cr = ExcelReader.cellRangeToLong(new String(bytes, 0, size, StandardCharsets.US_ASCII));
-                return new Dimension(1, (short) 1, (int) (cr >> 16), (short) (cr & 0x7FFF));
-            }
+            return new Dimension(1, (short) 1, row, (short) col);
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
         }
 
         return Dimension.of("A1");
+    }
+
+    // 高48位保存Row，低16位保存Col
+    static long coordinateToLong(byte[] buf, int from, int len) {
+        long v = 0L;
+        int n = 0;
+        for (int i = 0; i < len; i++) {
+            byte value = buf[i + from];
+            if (value >= 'A' && value <= 'Z') {
+                v = v * 26 + value - 'A' + 1;
+            }
+            else if (value >= '0' && value <= '9') {
+                n = n * 10 + value - '0';
+            }
+            else if (value >= 'a' && value <= 'z') {
+                v = v * 26 + value - 'a' + 1;
+            }
+            else break;
+        }
+        return (v & 0x7FFF) | ((long) n) << 16;
+    }
+
+    // 解析感兴趣的子节点
+    protected void subElement(char[] cb, int offset, int n) {
+        // 这里只处理dimension节点
+        if (n < 20) return;
+        if (cb[offset + 1] == 'd' && cb[offset + 2] == 'i' && cb[offset + 3] == 'm' && cb[offset + 4] == 'e' && cb[offset + 5] == 'n'
+            && cb[offset + 6] == 's' && cb[offset + 7] == 'i' && cb[offset + 8] == 'o' && cb[offset + 9] == 'n') {
+            offset += 10;
+            int end = offset + n + 1;
+            for (; offset < end && cb[offset] != '"'; offset++);
+            int i = ++offset;
+            for (; offset < end && cb[offset] != '"'; offset++);
+            if (offset < end && offset > i) {
+                Dimension dim = Dimension.of(new String(cb, i, offset - i));
+                if (dim.width > 1 || dim.height > 1) this.dimension = dim;
+            }
+        }
     }
 
     Row createHeader(char[] cb, int start, int n) {
@@ -842,74 +847,74 @@ public class XMLSheet implements Sheet {
         return !(this instanceof XMLMergeSheet) ? new XMLMergeSheet(this) : (XMLMergeSheet) this;
     }
 
-//    public FullSheet asFullSheet() {
-//        throw new IllegalArgumentException();
-//    }
-
-
-    interface HeaderRowFunc {
-        Row accept(char[] cb, int start, int n);
+    @Override
+    public XMLFullSheet asFullSheet() {
+        // XMLCalcSheet 和 XMLMergeSheet 继承至 XMLFullSheet 所以这里没办法使用instanceof判断
+        return this.getClass() != XMLFullSheet.class ? new XMLFullSheet(this) : (XMLFullSheet) this;
     }
 
+    /**
+     * 保存工作表当前状态并担任reset方法还原
+     */
+    protected static class Marker {
+        private final Reader reader;
+        private final char[] cb;
+        private final int nChar,length;
+        private final boolean eof, heof;
+        private final long mark, lastRowMark;
+        private final XMLRow sRow;
+        private final XMLSheet sheet;
+
+        public Marker(XMLSheet sheet) {
+            this.sheet = sheet;
+            this.reader = sheet.reader;
+            this.cb = sheet.cb;
+            this.nChar = sheet.nChar;
+            this.length = sheet.length;
+            this.eof = sheet.eof;
+            this.heof = sheet.heof;
+            this.mark = sheet.mark;
+            this.lastRowMark = sheet.lastRowMark;
+            this.sRow = sheet.sRow;
+            sheet.reader = null; // 为了保护工作表的reader不被读取
+            sheet.sRow = null;
+        }
+
+        public static Marker of(XMLSheet sheet) {
+            return new Marker(sheet);
+        }
+
+        public void reset() {
+            // 关闭流，非必要操作zip流被关闭的时候所有打开的资源都会被一并清除
+            if (sheet.reader != null) {
+                try {
+                    sheet.reader.close();
+                } catch (IOException e) { }
+            }
+            sheet.reader = this.reader;
+            sheet.cb = this.cb;
+            sheet.nChar = this.nChar;
+            sheet.length = this.length;
+            sheet.eof = this.eof;
+            sheet.heof = this.heof;
+            sheet.mark = this.mark;
+            sheet.lastRowMark = this.lastRowMark;
+            sheet.sRow = this.sRow;
+        }
+    }
 }
 
 /**
  * A sub {@link XMLSheet} to parse cell calc
  */
-class XMLCalcSheet extends XMLSheet implements CalcSheet {
-    private long[] calc; // Array of formula
-    boolean ready;
-
+class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
     XMLCalcSheet(XMLSheet sheet) {
-        this.name = sheet.name;
-        this.index = sheet.index;
-        this.path = sheet.path;
-        this.sst = sheet.sst;
-        this.styles = sheet.styles;
-        this.id = sheet.id;
-        this.startRow = sheet.startRow;
-        this.header = sheet.header;
-        this.hidden = sheet.hidden;
-        this.dimension = sheet.dimension;
-        this.drawings = sheet.drawings;
-        this.reader = sheet.reader;
-        this.cb = sheet.cb;
-        this.nChar = sheet.nChar;
-        this.length = sheet.length;
-        this.eof = sheet.eof;
-        this.heof = sheet.heof;
-        this.mark = sheet.mark;
-        this.sRow = sheet.sRow;
-        this.lastRowMark = sheet.lastRowMark;
-        this.zipFile = sheet.zipFile;
-        this.entry = sheet.entry;
-        this.hrf = sheet.hrf;
-        this.hrl = sheet.hrl;
-        this.option = sheet.option;
-
-        if (this.path != null) {
-
-            if (reader != null && !ready) this.load0();
-        }
+        super(sheet);
     }
 
-    /**
-     * Load sheet.xml as BufferedReader
-     *
-     * @return Sheet
-     * @throws IOException if io error occur
-     */
     @Override
-    public XMLCalcSheet load() throws IOException {
-        super.load();
-
-        load0();
-
-        return this;
-    }
-
     void load0() {
-        if (ready) return;
+        if (ready || eof) return;
 
         // Parse calcChain.xml
         ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
@@ -921,11 +926,124 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         }
         if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
 
-        if (!eof && !(sRow instanceof XMLCalcRow)) {
-            sRow = sRow.asCalcRow();
-            if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
-        }
+        if (!(sRow instanceof XMLCalcRow)) sRow = sRow.asCalcRow();
+        if (calc != null) ((XMLCalcRow) sRow).setCalcFun(this::findCalc);
         ready = true;
+    }
+
+    @Override
+    Row createHeader(char[] cb, int start, int n) {
+        return createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n).asCalcRow().setCalcFun(this::findCalc);
+    }
+}
+
+/**
+ * A sub {@link XMLSheet} to copy value on merge cells
+ */
+class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
+
+    XMLMergeSheet(XMLSheet sheet) {
+        super(sheet);
+    }
+
+    // Parse merge tag
+    @Override
+    void load0() {
+        if (ready || eof) return;
+        if (mergeCells == null) {
+            Map<String, Object> tags = parseTails();
+            @SuppressWarnings("unchecked")
+            List<Dimension> mergeCells = (List<Dimension>) tags.get("mergeCells");
+
+            if (mergeCells != null && !mergeCells.isEmpty()) {
+                this.mergeGrid = GridFactory.create(mergeCells);
+                this.mergeCells = mergeCells;
+                LOGGER.debug("Grid: {} ===> Size: {}", mergeCells.getClass(), mergeCells.size());
+            } else {
+                this.mergeGrid = new Grid.FastGrid(Dimension.of("A1"));
+                this.mergeCells = Collections.emptyList();
+            }
+        }
+
+        if (!(sRow instanceof XMLMergeRow)) sRow = sRow.asMergeRow();
+        ((XMLMergeRow) sRow).setCopyValueFunc(mergeGrid,  mergeGrid::merge);
+        ready = true;
+    }
+
+    @Override
+    Row createHeader(char[] cb, int start, int n) {
+        return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n).asMergeRow();
+    }
+}
+
+/**
+ * A sub {@link XMLSheet} to parse all attributes
+ */
+class XMLFullSheet extends XMLSheet implements FullSheet {
+    long[] calc; // Array of formula
+    boolean ready;
+    // A merge cells grid
+    Grid mergeGrid;
+    List<Dimension> mergeCells;
+    int showGridLines = 1; // 默认显示
+    Panes panes; // 冻结
+    double defaultColWidth = -1D, defaultRowHeight = -1D;
+    List<Col> cols; // 列宽
+    Dimension filter; // 过滤
+
+    XMLFullSheet(XMLSheet sheet) {
+        super(sheet);
+
+        if (this.path != null && reader != null && !ready) {
+            this.load0();
+        }
+    }
+
+    /**
+     * Load sheet.xml as BufferedReader
+     *
+     * @return Sheet
+     * @throws IOException if io error occur
+     */
+    @Override
+    public XMLFullSheet load() throws IOException {
+        super.load();
+
+        load0();
+
+        return this;
+    }
+
+    void load0() {
+        if (ready || eof) return;
+
+        // 解析公式
+        ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
+        long[][] calcArray = null;
+        try {
+            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+        } catch (IOException e) {
+            LOGGER.warn("Parse calcChain failed, formula will be ignored");
+        }
+        if (calcArray != null && calcArray.length >= id) setCalc(calcArray[id - 1]);
+
+        if (!(sRow instanceof XMLFullRow)) sRow = sRow.asFullRow();
+        if (calc != null) ((XMLFullRow) sRow).setCalcFun(this::findCalc);
+
+        // 默认不复制合并单元格的值
+        if (((option >> 17) & 1) == 1 && getMergeGrid() != null) ((XMLFullRow) sRow).setCopyValueFunc(getMergeGrid(), mergeGrid::merge);
+        else ((XMLFullRow) sRow).setCopyValueFunc(new Grid.FastGrid(Dimension.of("A1")), (row, cells) -> { });
+
+        ready = true;
+
+        // 再次解析头部（需要解析完整的头部覆写subElement方法
+        if (cols == null && defaultRowHeight < 0D && defaultColWidth < 0D && panes == null && showGridLines == 1) {
+            Marker marker = Marker.of(this);
+            try {
+                super.load(); // 这里再次解析不会出现异常
+            } catch (IOException e) { }
+            marker.reset();
+        }
     }
 
     /**
@@ -933,18 +1051,18 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
      *
      * @param calc array of formula
      */
-    XMLCalcSheet setCalc(long[] calc) {
+    XMLFullSheet setCalc(long[] calc) {
         this.calc = calc;
         return this;
     }
 
     @Override
     Row createHeader(char[] cb, int start, int n) {
-        return new XMLCalcRow(sst, styles, this.startRow > 0 ? this.startRow : 1, this::findCalc).with(cb, start, n);
+        return ((XMLRow) super.createHeader(cb, start, n)).asFullRow().setCalcFun(this::findCalc);
     }
 
     /* Found calc */
-    private void findCalc(int row, Cell[] cells, int n) {
+    void findCalc(int row, Cell[] cells, int n) {
         long r = ((long) row) << 16;
         int i = Arrays.binarySearch(calc, r);
         if (i < 0) {
@@ -965,89 +1083,14 @@ class XMLCalcSheet extends XMLSheet implements CalcSheet {
         }
     }
 
-}
-
-/**
- * A sub {@link XMLSheet} to copy value on merge cells
- */
-class XMLMergeSheet extends XMLSheet implements MergeSheet {
-
-    // A merge cells grid
-    private Grid mergeCells;
-    boolean ready;
-    List<Dimension> dimensions;
-
-    XMLMergeSheet(XMLSheet sheet) {
-        this.name = sheet.name;
-        this.index = sheet.index;
-        this.path = sheet.path;
-        this.sst = sheet.sst;
-        this.styles = sheet.styles;
-        this.id = sheet.id;
-        this.startRow = sheet.startRow;
-        this.header = sheet.header;
-        this.hidden = sheet.hidden;
-        this.dimension = sheet.dimension;
-        this.drawings = sheet.drawings;
-        this.reader = sheet.reader;
-        this.cb = sheet.cb;
-        this.nChar = sheet.nChar;
-        this.length = sheet.length;
-        this.eof = sheet.eof;
-        this.heof = sheet.heof;
-        this.mark = sheet.mark;
-        this.sRow = sheet.sRow;
-        this.lastRowMark = sheet.lastRowMark;
-        this.zipFile = sheet.zipFile;
-        this.entry = sheet.entry;
-        this.hrf = sheet.hrf;
-        this.hrl = sheet.hrl;
-        this.option = sheet.option;
-
-        if (path != null) {
-            if (reader != null && !ready) this.load0();
-        }
-    }
-
-    /**
-     * Load sheet.xml as BufferedReader
-     *
-     * @return Sheet
-     * @throws IOException if io error occur
-     */
-    @Override
-    public XMLMergeSheet load() throws IOException {
-        super.load();
-
-        load0();
-
-        return this;
-    }
-
-    // Parse merge tag
-    void load0() {
-        if (ready) return;
-        if (mergeCells == null && !eof) {
-            List<Dimension> mergeCells = parseMerge();
-
-            if (mergeCells != null && !mergeCells.isEmpty()) {
-                this.mergeCells = GridFactory.create(mergeCells);
-                LOGGER.debug("Grid: {} ===> Size: {}", this.mergeCells.getClass(), this.mergeCells.size());
-                this.dimensions = mergeCells;
-            } else this.dimensions = Collections.emptyList();
-        }
-
-        if (!eof && !(sRow instanceof XMLMergeRow) && mergeCells != null) {
-            sRow = sRow.asMergeRow().setCopyValueFunc(mergeCells, this::mergeCell);
-        }
-        ready = true;
-    }
-
     /*
     Parse `mergeCells` tag
+    TODO parse autoFilter and dataValidation
      */
-    List<Dimension> parseMerge() {
-        List<Dimension> list = null;
+    Map<String, Object> parseTails() {
+        Map<String, Object> tags = new HashMap<>();
+        List<Dimension> mergeCells = new ArrayList<>();
+        tags.put("mergeCells", mergeCells);
         try (InputStream is = zipFile.getInputStream(entry)) {
             // Skips specified number of bytes of uncompressed data.
             if (lastRowMark > 0L) is.skip(lastRowMark);
@@ -1059,22 +1102,16 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                     offset = len;
                     continue;
                 }
-                i = 0; len--;
-                for (; i < len && (buf[i++] != '<' || buf[i] != 'm'); ) ;
+                i = 0; n = len - 11;
+                for (; i < n && (buf[i] != '<' || ((buf[i + 1] != 'm' || buf[i + 5] != 'e') && (buf[i + 1] != 'a' || buf[i + 5] != 'F') && (buf[i + 1] != 'd' || buf[i + 5] != 'V'))); i++) ;
                 // Compact
-                if (i >= len) {
+                if (i >= n) {
                     if (buf[i] == '<') {
-                        buf[0] = '<';
-                        offset = 1;
-                    } else if (buf[i - 1] == '<' && buf[i] == 'm') {
-                        buf[0] = '<';
-                        buf[1] = 'm';
-                        offset = 2;
+                        System.arraycopy(buf, i, buf, 0, offset = len - i);
                     } else offset = 0;
                     continue;
                 }
                 // Get it
-                len++;
                 if (len - i < 11) {
                     System.arraycopy(buf, i, buf, 0, offset = len - i);
                     if ((n = is.read(buf, offset, limit - offset)) <= 0)
@@ -1088,74 +1125,191 @@ class XMLMergeSheet extends XMLSheet implements MergeSheet {
                     }
                     i = 0;
                 }
-                if (len < 11 || buf[i] != 'm' || buf[i + 1] != 'e' || buf[i + 2] != 'r'
-                    || buf[i + 3] != 'g' || buf[i + 4] != 'e' || buf[i + 5] != 'C' || buf[i + 6] != 'e'
-                    || buf[i + 7] != 'l' || buf[i + 8] != 'l' || buf[i + 9] != 's' || buf[i + 10] > ' ')
-                    return null;
-                i += 11;
-                n = len;
-                list = new ArrayList<>();
-                int f, t;
+
+                if (len < 11) return null;
                 do {
-                    if (n < 11) {
-                        offset += n;
-                        continue;
-                    }
                     for (; ;) {
-                        for (; i < n - 11 && (buf[i] != '<' || buf[i + 1] != 'm'
-                            || buf[i + 2] != 'e' || buf[i + 3] != 'r'
-                            || buf[i + 4] != 'g' || buf[i + 5] != 'e'
-                            || buf[i + 6] != 'C' || buf[i + 7] != 'e'
-                            || buf[i + 8] != 'l' || buf[i + 9] != 'l'
-                            || buf[i + 10] > ' '); i++) ;
-
-                        if (i >= n - 11) {
-                            System.arraycopy(buf, i, buf, 0, offset = n - i);
+                        for (; i < len && buf[i] != '<'; i++) ;
+                        if (i == len) {
+                            offset = i = 0;
                             break;
                         }
-
-                        t = i;
-                        i += 11;
-
-                        for (; i < n - 5 && (buf[i] != 'r' || buf[i + 1] != 'e' || buf[i + 2] != 'f'
-                            || buf[i + 3] != '=' || buf[i + 4] != '"'); i++) ;
-
-                        if (i >= n - 5) {
-                            System.arraycopy(buf, t, buf, 0, offset = n - t);
+                        int nChar = ++i;
+                        for (; nChar < len && buf[nChar] != '>'; nChar++) ;
+                        if (nChar == len) {
+                            System.arraycopy(buf, i - 1, buf, 0, offset = len - i + 1);
+                            i = 0;
                             break;
                         }
+                        int length = nChar - i;
 
-                        f = i += 5;
-                        for (; i < n && buf[i] != '"'; i++) ;
-
-                        if (i >= n) {
-                            System.arraycopy(buf, t, buf, 0, offset = n - t);
-                            break;
+                        switch (buf[i]) {
+                            // autoFilter
+                            case 'a':
+                                if (length >= 20 && buf[i + 1] == 'u' && buf[i + 2] == 't' && buf[i + 3] == 'o'
+                                    && buf[i + 4] == 'F' && buf[i + 5] == 'i' && buf[i + 6] == 'l' && buf[i + 7] == 't'
+                                    && buf[i + 8] == 'e' && buf[i + 9] == 'r' && buf[i + 10] <= ' ') {
+                                    i += 11;
+                                    for (int k = nChar - 8; i < k && buf[i] != 'r' && buf[i + 1] != 'e'
+                                        && buf[i + 2] != 'f' && buf[i + 3] != '=' && buf[i + 4] != '"'; i++) ;
+                                    int a = i += 5;
+                                    for (; i < nChar && buf[i] != '"'; i++) ;
+                                    if (i > a) tags.put("filter", Dimension.of(new String(buf, a, i - a, StandardCharsets.US_ASCII)));
+                                }
+                                break;
+                            // mergeCells
+                            case 'm':
+                                if (length >= 20 && buf[i + 1] == 'e' && buf[i + 2] == 'r' && buf[i + 3] == 'g'
+                                    && buf[i + 4] == 'e' && buf[i + 5] == 'C' && buf[i + 6] == 'e' && buf[i + 7] == 'l'
+                                    && buf[i + 8] == 'l' && buf[i + 9] <= ' ') {
+                                    i += 10;
+                                    for (int k = nChar - 8; i < k && buf[i] != 'r' && buf[i + 1] != 'e'
+                                        && buf[i + 2] != 'f' && buf[i + 3] != '=' && buf[i + 4] != '"'; i++) ;
+                                    int a = i += 5;
+                                    for (; i < nChar && buf[i] != '"'; i++) ;
+                                    if (i > a) mergeCells.add(Dimension.of(new String(buf, a, i - a, StandardCharsets.US_ASCII)));
+                                }
+                                break;
+                            // dataValidations
+                            case 'd':
+                                if (len >= 35 && buf[i + 1] == 'a' && buf[i + 2] == 't' && buf[i + 3] == 'a'
+                                    && buf[i + 4] == 'V' && buf[i + 5] == 'a' && buf[i + 6] == 'l' && buf[i + 7] == 'i'
+                                    && buf[i + 8] == 'd' && buf[i + 9] == 'a' && buf[i + 10] == 't' && buf[i + 11] == 'i'
+                                    && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] <= ' ') {
+                                    // TODO
+                                }
                         }
-
-                        list.add(Dimension.of(new String(buf, f, i - f, StandardCharsets.US_ASCII)));
                     }
-                    i = 0;
-                } while ((n = is.read(buf, offset, limit - offset)) > 0 && (n += offset) > 0);
+                } while ((len = is.read(buf, offset, limit - offset)) > 0 && (len += offset) > 0);
             }
         } catch (IOException e) {
             // Ignore error
             LOGGER.warn("", e);
         }
-        return list;
-    }
-
-    private void mergeCell(int row, Cell cell) {
-        mergeCells.merge(row, cell);
+        return tags;
     }
 
     @Override
     public Grid getMergeGrid() {
-        return mergeCells;
+        if (mergeGrid != null) return mergeGrid;
+        List<Dimension> dims = getMergeCells();
+        if (dims != null) {
+            mergeGrid = GridFactory.create(dims);
+            LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass(), mergeGrid.size());
+        }
+        return mergeGrid;
     }
 
     @Override
     public List<Dimension> getMergeCells() {
-        return dimensions != null ? dimensions : (dimensions = parseMerge());
+        List<Dimension> dims = mergeCells;
+        if (dims == null) {
+            Map<String, Object> tags = parseTails();
+            dims = (List<Dimension>) tags.get("mergeCells");
+            filter = (Dimension) tags.get("filter");
+            mergeCells = dims != null ? dims : (dims = Collections.emptyList());
+        }
+        return dims.isEmpty() ? null : dims;
+    }
+
+    @Override
+    protected void subElement(char[] cb, int offset, int n) {
+        String v = new String(cb, offset, n);
+        // 去掉不必要的命名空间
+        v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
+        if (cb[offset + n - 2] == '/') {
+            try {
+                Document doc = DocumentHelper.parseText(v);
+                Element e = doc.getRootElement();
+                switch (e.getName()) {
+                    case "dimension":
+                        String ref = e.attributeValue("ref");
+                        Dimension dim;
+                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).width > 1 || dim.height > 1)) {
+                            dimension = dim;
+                        }
+                        break;
+                    case "col":
+                        String min = e.attributeValue("min"), max = e.attributeValue("max"), width = e.attributeValue("width"), hidden = e.attributeValue("hidden");
+                        if (cols == null) cols = new ArrayList<>();
+                        cols.add(new Col(Integer.parseInt(min), Integer.parseInt(max), Double.parseDouble(width), "1".equals(hidden)));
+                        break;
+                    case "pane":
+                        String xSplit = e.attributeValue("xSplit"), ySplit = e.attributeValue("ySplit");
+                        if (StringUtil.isNotEmpty(ySplit) && Row.testNumberType(ySplit.toCharArray(), 0, ySplit.length()) == 1) panes = Panes.row(Integer.parseInt(ySplit));
+                        if (StringUtil.isNotEmpty(xSplit) && Row.testNumberType(xSplit.toCharArray(), 0, xSplit.length()) == 1) {
+                            int col = Integer.parseInt(xSplit);
+                            if (panes != null) panes.col = col;
+                            else panes = Panes.col(col);
+                        }
+                        break;
+                    case "sheetFormatPr":
+                        String defaultColWidth = e.attributeValue("defaultColWidth"), defaultRowHeight = e.attributeValue("defaultRowHeight");
+                        if (StringUtil.isNotEmpty(defaultColWidth) && Row.testNumberType(defaultColWidth.toCharArray(), 0, defaultColWidth.length()) > 0)
+                            this.defaultColWidth = Double.parseDouble(defaultColWidth);
+                        if (StringUtil.isNotEmpty(defaultRowHeight) && Row.testNumberType(defaultRowHeight.toCharArray(), 0, defaultRowHeight.length()) > 0)
+                            this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
+                        break;
+                }
+            } catch (DocumentException e) {
+                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+            }
+        } else if (v.startsWith("<sheetView")) {
+            char[] ncb = new char[n + 1];
+            System.arraycopy(cb, offset, ncb, 0, n);
+            ncb[n - 1] = '/'; ncb[n] = '>';
+            try {
+                Document doc = DocumentHelper.parseText(new String(ncb, 0, n + 1));
+                Element e = doc.getRootElement();
+                String showGridLines = e.attributeValue("showGridLines");
+                if ("0".equals(showGridLines)) this.showGridLines = 0;
+            } catch (DocumentException e) {
+                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+            }
+        }
+    }
+
+    @Override
+    public FullSheet copyOnMerged() {
+        if (sRow != null && getMergeGrid() != null) ((XMLFullRow) sRow).setCopyValueFunc(getMergeGrid(), mergeGrid::merge);
+        else option |= 1 << 17;
+        return this;
+    }
+
+    @Override
+    public Panes getFreezePanes() {
+        return panes;
+    }
+
+    @Override
+    public List<Col> getCols() {
+        return cols;
+    }
+
+    @Override
+    public Dimension getFilter() {
+        Dimension filter = this.filter;
+        // 如果filter为则且未解析则重新解析
+        if (filter == null && mergeCells == null) {
+            // merge-cells 和 filter在一起解析
+            getMergeCells();
+            filter = this.filter;
+        }
+        return filter;
+    }
+
+    @Override
+    public boolean showGridLines() {
+        return showGridLines == 1;
+    }
+
+    @Override
+    public double getDefaultColWidth() {
+        return defaultColWidth;
+    }
+
+    @Override
+    public double getDefaultRowHeight() {
+        return defaultRowHeight;
     }
 }

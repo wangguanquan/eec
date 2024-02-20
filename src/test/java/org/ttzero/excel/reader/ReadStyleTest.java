@@ -30,6 +30,8 @@ import org.ttzero.excel.entity.style.Styles;
 import java.awt.Color;
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -46,49 +48,76 @@ public class ReadStyleTest {
                     int style = row.getCellStyle(cell);
                     if ("A1".equals(rc)) {
                         Font font = styles.getFont(style);
-                        assert font.isBold();
-                        assert font.getSize() == 11;
-                        assert font.getName().equals("微软雅黑");
+                        assertTrue(font.isBold());
+                        assertEquals(font.getSize(), 11);
+                        assertEquals(font.getName(), "微软雅黑");
 
                         Fill fill = styles.getFill(style);
-                        assert fill.getFgColor().equals(new Color(102, 102, 153));
+                        assertEquals(fill.getFgColor(), new Color(102, 102, 153));
 
-                        assert "center".equals(Horizontals.of(styles.getHorizontal(style)));
+                        assertEquals("center", Horizontals.of(styles.getHorizontal(style)));
                     } else if ("B4".equals(rc)) {
                         Font font = styles.getFont(style);
-                        assert font.getName().equals("Cascadia Mono");
-                        assert font.getSize() == 24;
-                        assert "right".equals(Horizontals.of(styles.getHorizontal(style)));
+                        assertEquals(font.getName(), "Cascadia Mono");
+                        assertEquals(font.getSize(), 24);
+                        assertEquals("right", Horizontals.of(styles.getHorizontal(style)));
 
                         Border border = styles.getBorder(style);
                         Border.SubBorder leftBorder = border.getBorderLeft();
-                        assert leftBorder.getStyle() == BorderStyle.HAIR;
-                        assert leftBorder.getColor().equals(Color.RED);
+                        assertEquals(leftBorder.getStyle(), BorderStyle.HAIR);
+                        assertEquals(leftBorder.getColor(), Color.RED);
 
                         Border.SubBorder bottomBorder = border.getBorderBottom();
-                        assert bottomBorder.getStyle() == BorderStyle.DOUBLE;
-                        assert bottomBorder.getColor().equals(Color.BLACK);
+                        assertEquals(bottomBorder.getStyle(), BorderStyle.DOUBLE);
+                        assertEquals(bottomBorder.getColor(), Color.BLACK);
                     } else if ("E7".equals(rc)) {
                         Font font = styles.getFont(style);
-                        assert font.isBold();
-                        assert font.isItalic();
-                        assert font.getSize() == 36;
-                        assert font.getName().equals("Consolas");
+                        assertTrue(font.isBold());
+                        assertTrue(font.isItalic());
+                        assertEquals(font.getSize(), 36);
+                        assertEquals(font.getName(), "Consolas");
 
-                        assert "left".equals(Horizontals.of(styles.getHorizontal(style)));
+                        assertEquals("left", Horizontals.of(styles.getHorizontal(style)));
 
                         Fill fill = styles.getFill(style);
-                        assert fill.getPatternType() == PatternType.gray125;
-                        assert fill.getBgColor().equals(new Color(123, 193, 203));
+                        assertEquals(fill.getPatternType(), PatternType.gray125);
+                        assertEquals(fill.getBgColor(), new Color(123, 193, 203));
                     } else if ("F10".equals(rc)) {
                         NumFmt fmt = styles.getNumFmt(style);
-                        assert fmt.getCode().equals("d-mmm-yy");
+                        assertEquals(fmt.getCode(), "d-mmm-yy");
 
                         Font font = styles.getFont(style);
-                        assert font.isStrikeThru();
+                        assertTrue(font.isStrikeThru());
                     }
                 }
             });
         }
     }
+
+    @Test public void testSpecialIndexedColor() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#145.xlsx"))) {
+            Styles styles = reader.getStyles();
+            Border border = styles.getBorder(styles.getStyleByIndex(2));
+
+            // indexed color = 10 (255, 0, 0)
+            // 实际颜色 (170, 170, 170)
+
+            Border.SubBorder borderLeft = border.getBorderLeft();
+            assertEquals(borderLeft.style, BorderStyle.THIN);
+            assertEquals(borderLeft.color, new Color(170, 170, 170));
+
+            Border.SubBorder borderTop = border.getBorderTop();
+            assertEquals(borderTop.style, BorderStyle.THIN);
+            assertEquals(borderTop.color, new Color(170, 170, 170));
+
+            Border.SubBorder borderRight = border.getBorderRight();
+            assertEquals(borderRight.style, BorderStyle.THIN);
+            assertEquals(borderRight.color, new Color(170, 170, 170));
+
+            Border.SubBorder borderBottom = border.getBorderBottom();
+            assertEquals(borderBottom.style, BorderStyle.THIN);
+            assertEquals(borderBottom.color, new Color(170, 170, 170));
+        }
+    }
+
 }

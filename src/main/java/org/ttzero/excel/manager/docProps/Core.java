@@ -17,11 +17,16 @@
 package org.ttzero.excel.manager.docProps;
 
 
-import org.ttzero.excel.manager.Attr;
+import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.ttzero.excel.manager.NS;
 import org.ttzero.excel.manager.TopNS;
+import org.ttzero.excel.util.DateUtil;
 
+import java.lang.reflect.Field;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * 文档属性，指定主题，作者和关键词等信息，可以通过鼠标右建-&gt;详细属性查看这些内容
@@ -82,17 +87,12 @@ public class Core extends XmlEntity {
      * 创建时间
      */
     @NS("dcterms")
-    @Attr(name = "type", value = "dcterms:W3CDTF"
-            , namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date created;
     /**
      * 修改时间
      */
     @NS("dcterms")
-    @Attr(name = "type", value = "dcterms:W3CDTF"
-            , namespace = @NS(value = "xsi", uri = "http://www.w3.org/2001/XMLSchema-instance"))
     private Date modified;
-
 
     public void setTitle(String title) {
         this.title = title;
@@ -180,5 +180,25 @@ public class Core extends XmlEntity {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Override
+    void toDom(Element rootElement, Map<String, Namespace> namespaceMap) {
+        Field[] fields = getClass().getDeclaredFields();
+        for (Field field : fields) {
+            NS ns = field.getDeclaredAnnotation(NS.class);
+            if (ns == null) continue;
+            Object o;
+            try {
+                o = field.get(this);
+            } catch (IllegalAccessException e) {
+                continue;
+            }
+            if (o == null) continue;
+            if ("dcterms".equals(ns.value()) && (o instanceof java.util.Date)) {
+                Element e = rootElement.addElement(QName.get(field.getName(), namespaceMap.get(ns.value()))).addText(DateUtil.toTString((Date) o));
+                e.addAttribute(QName.get("type", Namespace.get("xsi", "http://www.w3.org/2001/XMLSchema-instance")), "dcterms:W3CDTF");
+            } else rootElement.addElement(QName.get(field.getName(), namespaceMap.get(ns.value()))).addText(o.toString());
+        }
     }
 }
