@@ -464,6 +464,21 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testAllNullObject() throws IOException {
+        final String fileName = "all null object.xlsx";
+        List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
+        expectList.add(null);
+        expectList.add(null);
+        expectList.add(null);
+        expectList.add(null);
+        expectList.add(null);
+        new Workbook().addSheet(new ListSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.sheet(0).rows().count(), 0);
+        }
+    }
+
     public static class TemplateStyleProcessor implements StyleProcessor<Template> {
         String k;
         int c = 0;
