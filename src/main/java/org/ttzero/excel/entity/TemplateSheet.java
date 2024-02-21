@@ -58,7 +58,7 @@ import java.util.Map;
  * <blockquote><pre>
  * new Workbook("模板测试")
  *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx")).setData(data)) // &lt;- 模板工作表
- *     .addSheet(new ListSheet<>()) // &lt;- 普通对象数组工作表
+ *     .addSheet(new ListSheet&lt;&gt;()) // &lt;- 普通对象数组工作表
  *     .writeTo("/tmp/");</pre></blockquote>
  *
  * @author guanquan.wang at 2023-12-01 15:10
@@ -76,7 +76,9 @@ public class TemplateSheet extends Sheet {
      * 行数据迭代器
      */
     protected Iterator<org.ttzero.excel.reader.Row> rowIterator;
-
+    /**
+     * 样式映射，缓存源样式索引映射到目标样式索引
+     */
     protected Map<Integer, Integer> styleMap;
 
     /**
@@ -169,6 +171,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
+     * @param name           设置工作表名
      * @param templateStream 模板输入流
      * @throws IOException 读取模板异常
      */
@@ -201,6 +204,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 实例化模板工作表并指定模板工作表索引，如果指定索引超过模板Excel中包含的工作表数量则抛异常
      *
+     * @param name               设置工作表名
      * @param templateStream     模板输入流
      * @param originalSheetIndex 指定源工作表索引
      * @throws IOException 读取模板异常
@@ -215,6 +219,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 实例化模板工作表并指定模板工作表名，如果指定源工作表不存在则抛异常
      *
+     * @param name              设置工作表名
      * @param templateStream    模板输入流
      * @param originalSheetName 指定源工作表名
      * @throws IOException 读取模板异常
