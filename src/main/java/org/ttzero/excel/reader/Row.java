@@ -124,10 +124,9 @@ public class Row {
     }
 
     /**
-     * Returns the index of the last column (zero base, exclude).
-     * The last index of column is increment the max available index
+     * 获取尾列下标 (zero base)
      *
-     * @return the last column index
+     * @return 尾列下标
      */
     public int getLastColumnIndex() {
         return lc;
@@ -143,24 +142,18 @@ public class Row {
     }
 
     /**
-     * Test unused row (not contains any filled, formatted, border, value or other styles)
+     * 判断单行无有效单元格，仅空Tag&lt;row /&gt;时返回{@code true}
      *
-     * @return true if unused
+     * @return 未实例化行时返回{@code true}
      */
     public boolean isEmpty() {
         return lc - fc <= 0;
     }
 
     /**
-     * Returns {@code true} if any cell in row contains filled, formatted, border, value or other styles
-     * otherwise returns {@code false}.
+     * 判断单行是否包含有效单元格，包含任意实例化单元格时返回{@code true}
      *
-     * This method exists to be used as a
-     * {@link java.util.function.Predicate}, {@code filter(Row::nonEmpty)}
-     *
-     * @return {@code true} if any cell in row contains style and value
-     * otherwise {@code false}
-     *
+     * @return 包含任意实例化单元格时返回{@code true}
      * @see java.util.function.Predicate
      * @see #isEmpty()
      */
@@ -169,9 +162,9 @@ public class Row {
     }
 
     /**
-     * Tests the value of all cells is null or whitespace
+     * 判断单行的所有单元格是否为空，所有单元格无值或空字符串时返回{@code true}
      *
-     * @return true if all cell value is null
+     * @return 所有单元格无值或空字符串时返回{@code true}
      */
     public boolean isBlank() {
         if (lc > fc) {
@@ -184,15 +177,9 @@ public class Row {
     }
 
     /**
-     * Returns {@code true} if any cell in row contains values
-     * otherwise returns {@code false}.
+     * 判断单行是否包含值，任意单元格有值且不为空字符串时返回{@code true}
      *
-     * This method exists to be used as a
-     * {@link java.util.function.Predicate}, {@code filter(Row::nonBlank)}
-     *
-     * @return {@code true} if any cell in row contains values
-     * otherwise {@code false}
-     *
+     * @return 任意单元格有值且不为空字符串时返回{@code true}
      * @see java.util.function.Predicate
      * @see #isBlank()
      */
@@ -569,7 +556,7 @@ public class Row {
      * 获取单元格的值并转为{@code String}类型
      *
      * @param columnIndex 单元格索引
-     * @return string
+     * @return 单元格有值时强转为字符串否则返回{@code null}
      */
     public String getString(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -580,7 +567,7 @@ public class Row {
      * 获取单元格的值并转为{@code String}类型
      *
      * @param columnName 列名
-     * @return string
+     * @return 单元格有值时强转为字符串否则返回{@code null}
      */
     public String getString(String columnName) {
         Cell c = getCell(columnName);
@@ -590,8 +577,8 @@ public class Row {
     /**
      * 获取单元格的值并转为{@code String}类型
      *
-     * @param c the {@link Cell}
-     * @return string
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为字符串否则返回{@code null}
      */
     public String getString(Cell c) {
         String s;
@@ -612,10 +599,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Float} value by column index
+     * 获取单元格的值并转为{@code Float}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Float}
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code Float}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Float getFloat(int columnIndex) {
         Double d = getDouble(columnIndex);
@@ -623,10 +610,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Float} value by column index
+     * 获取单元格的值并转为{@code Float}类型
      *
-     * @param columnName the cell index
-     * @return {@code Float}
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code Float}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Float getFloat(String columnName) {
         Double d = getDouble(columnName);
@@ -634,10 +621,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Float} value by cell
+     * 获取单元格的值并转为{@code Float}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Float}
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code Float}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Float getFloat(Cell c) {
         Double d = getDouble(c);
@@ -645,10 +632,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Double} value by column index
+     * 获取单元格的值并转为{@code Double}类型
      *
-     * @param columnIndex the cell index
-     * @return {@code Double}
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code Double}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Double getDouble(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -656,10 +643,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Double} value by column name
+     * 获取单元格的值并转为{@code Double}类型
      *
-     * @param columnName the cell name
-     * @return {@code Double}
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code Double}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Double getDouble(String columnName) {
         Cell c = getCell(columnName);
@@ -667,10 +654,10 @@ public class Row {
     }
 
     /**
-     * Get {@code Double} value
+     * 获取单元格的值并转为{@code Double}类型
      *
-     * @param c the {@link Cell}
-     * @return {@code Double}
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code Double}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Double getDouble(Cell c) {
         double d;
@@ -689,10 +676,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.math.BigDecimal} value by column index
+     * 获取单元格的值并转为{@code java.math.BigDecimal}类型
      *
-     * @param columnIndex the cell index
-     * @return BigDecimal
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code java.math.BigDecimal}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public BigDecimal getDecimal(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -700,10 +687,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.math.BigDecimal} value by column name
+     * 获取单元格的值并转为{@code java.math.BigDecimal}类型
      *
-     * @param columnName the cell name
-     * @return BigDecimal
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code java.math.BigDecimal}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public BigDecimal getDecimal(String columnName) {
         Cell c = getCell(columnName);
@@ -711,10 +698,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.math.BigDecimal} value
+     * 获取单元格的值并转为{@code java.math.BigDecimal}类型
      *
-     * @param c the {@link Cell}
-     * @return BigDecimal
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code java.math.BigDecimal}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public BigDecimal getDecimal(Cell c) {
         BigDecimal bd;
@@ -731,10 +718,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.util.Date} value by column index
+     * 获取单元格的值并转为{@code java.util.Date}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return Date
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code java.util.Date}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Date getDate(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -742,10 +729,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.util.Date} value by column name
+     * 获取单元格的值并转为{@code java.util.Date}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return Date
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code java.util.Date}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Date getDate(String columnName) {
         Cell c = getCell(columnName);
@@ -753,10 +740,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.util.Date} value
+     * 获取单元格的值并转为{@code java.util.Date}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return BigDecimal
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code java.util.Date}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Date getDate(Cell c) {
         Date date;
@@ -772,10 +759,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.sql.Timestamp} value by column index
+     * 获取单元格的值并转为{@code java.sql.Timestamp}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return java.sql.Timestamp
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code java.sql.Timestamp}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Timestamp getTimestamp(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -783,10 +770,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.sql.Timestamp} value by column name
+     * 获取单元格的值并转为{@code java.sql.Timestamp}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return java.sql.Timestamp
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code java.sql.Timestamp}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Timestamp getTimestamp(String columnName) {
         Cell c = getCell(columnName);
@@ -794,10 +781,10 @@ public class Row {
     }
 
     /**
-     * Get {@link java.sql.Timestamp} value
+     * 获取单元格的值并转为{@code java.sql.Timestamp}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return java.sql.Timestamp
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code java.sql.Timestamp}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Timestamp getTimestamp(Cell c) {
         Timestamp ts;
@@ -813,30 +800,30 @@ public class Row {
     }
 
     /**
-     * Get {@link java.sql.Time} value by column index
+     * 获取单元格的值并转为{@code java.sql.Time}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return java.sql.Time
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code java.sql.Time}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public java.sql.Time getTime(int columnIndex) {
         return getTime(getCell(columnIndex));
     }
 
     /**
-     * Get {@link java.sql.Time} value by column name
+     * 获取单元格的值并转为{@code java.sql.Time}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return java.sql.Time
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code java.sql.Time}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public java.sql.Time getTime(String columnName) {
         return getTime(getCell(columnName));
     }
 
     /**
-     * Get {@link java.sql.Time} value by column name
+     * 获取单元格的值并转为{@code java.sql.Time}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return java.sql.Time
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code java.sql.Time}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public java.sql.Time getTime(Cell c) {
         java.sql.Time t;
@@ -851,10 +838,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDateTime} value by column index
+     * 获取单元格的值并转为{@code LocalDateTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return java.time.LocalDateTime
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code LocalDateTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDateTime getLocalDateTime(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -862,10 +849,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDateTime} value by column name
+     * 获取单元格的值并转为{@code LocalDateTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return java.time.LocalDateTime
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code LocalDateTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDateTime getLocalDateTime(String columnName) {
         Cell c = getCell(columnName);
@@ -873,10 +860,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDateTime} value
+     * 获取单元格的值并转为{@code LocalDateTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return java.time.LocalDateTime
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code LocalDateTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDateTime getLocalDateTime(Cell c) {
         LocalDateTime ldt;
@@ -892,10 +879,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDate} value by column index
+     * 获取单元格的值并转为{@code LocalDate}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return java.time.LocalDate
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code LocalDate}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDate getLocalDate(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -903,10 +890,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDate} value by column name
+     * 获取单元格的值并转为{@code LocalDate}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return java.time.LocalDate
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code LocalDate}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDate getLocalDate(String columnName) {
         Cell c = getCell(columnName);
@@ -914,10 +901,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalDate} value
+     * 获取单元格的值并转为{@code LocalDate}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return java.time.LocalDate
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code LocalDate}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDate getLocalDate(Cell c) {
         LocalDate ld;
@@ -933,10 +920,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalTime} value by column index
+     * 获取单元格的值并转为{@code LocalTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnIndex the cell index
-     * @return java.time.LocalTime
+     * @param columnIndex 单元格索引
+     * @return 单元格有值时强转为{@code LocalTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalTime getLocalTime(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -944,10 +931,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalTime} value by column name
+     * 获取单元格的值并转为{@code LocalTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param columnName the cell name
-     * @return java.time.LocalTime
+     * @param columnName 列名
+     * @return 单元格有值时强转为{@code LocalTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalTime getLocalTime(String columnName) {
         Cell c = getCell(columnName);
@@ -955,10 +942,10 @@ public class Row {
     }
 
     /**
-     * Get {@link LocalTime} value
+     * 获取单元格的值并转为{@code LocalTime}类型，整数和小数类型将以{@code 1900-1-1}为基础进行计算，字符串将进行格式化处理
      *
-     * @param c the {@link Cell}
-     * @return java.time.LocalTime
+     * @param c 单元格{@link Cell}
+     * @return 单元格有值时强转为{@code LocalTime}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalTime getLocalTime(Cell c) {
         LocalTime lt;
@@ -981,45 +968,63 @@ public class Row {
     }
 
     /**
-     * Returns formula if exists
+     * 获取单元格的公式
      *
-     * @param columnIndex the cell index
-     * @return the formula string if exists, otherwise return null
+     * @param columnIndex 列索引
+     * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
      */
     public String getFormula(int columnIndex) {
-        Cell c = getCell(columnIndex);
-        return c.fv;
+        return getCell(columnIndex).fv;
     }
 
     /**
-     * Returns formula if exists
+     * 获取单元格的公式
      *
-     * @param columnName the cell name
-     * @return the formula string if exists, otherwise return null
+     * @param columnName 列名
+     * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
      */
     public String getFormula(String columnName) {
-        Cell c = getCell(columnName);
-        return c.fv;
+        return getCell(columnName).fv;
     }
 
     /**
-     * Check cell has formula
+     * 获取单元格的公式
      *
-     * @param columnIndex the cell index
-     * @return the formula string if exists, otherwise return null
+     * @param cell 单元格
+     * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
+     */
+    public String getFormula(Cell cell) {
+        return cell.fv;
+    }
+
+    /**
+     * 检查单元格是否包含公式
+     *
+     * @param columnIndex 单元格索引
+     * @return 单元格含有公式时返回{@code true}否则返回{@code false}
      */
     public boolean hasFormula(int columnIndex) {
         return getCell(columnIndex).f;
     }
 
     /**
-     * Check cell has formula
+     * 检查单元格是否包含公式
      *
-     * @param columnName the cell name
-     * @return the formula string if exists, otherwise return null
+     * @param columnName 列名
+     * @return 单元格含有公式时返回{@code true}否则返回{@code false}
      */
     public boolean hasFormula(String columnName) {
         return getCell(columnName).f;
+    }
+
+    /**
+     * 检查单元格是否包含公式
+     *
+     * @param cell 单元格
+     * @return 单元格含有公式时返回{@code true}否则返回{@code false}
+     */
+    public boolean hasFormula(Cell cell) {
+        return cell.f;
     }
 
     /**
@@ -1027,11 +1032,11 @@ public class Row {
      *
      * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
      * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
-     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 比如小于{@code 0x7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
      * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
      *
      * @param columnIndex 列索引
-     * @return the {@link CellType}
+     * @return 单元格的数据类型 {@link CellType}
      */
     public CellType getCellType(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -1043,11 +1048,11 @@ public class Row {
      *
      * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
      * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
-     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 比如小于{@code 0x7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
      * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
      *
      * @param columnName 列名
-     * @return the {@link CellType}
+     * @return 单元格的数据类型 {@link CellType}
      */
     public CellType getCellType(String columnName) {
         Cell c = getCell(columnName);
@@ -1059,11 +1064,11 @@ public class Row {
      *
      * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
      * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
-     * 比如小于{@code 7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
+     * 比如小于{@code 0x7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
      * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
      *
-     * @param c the {@link Cell}
-     * @return the {@link CellType}
+     * @param c 单元格{@link Cell}
+     * @return 单元格的数据类型 {@link CellType}
      */
     public CellType getCellType(Cell c) {
         CellType type;
@@ -1088,10 +1093,10 @@ public class Row {
     }
 
     /**
-     * Returns the cell styles
+     * 获取单元格样式值，可以拿此返回值调用{@link Styles#getBorder(int)}等方法获取具体的样式
      *
-     * @param columnIndex the cell index from zero
-     * @return the style value
+     * @param columnIndex 列索引
+     * @return 样式值
      */
     public int getCellStyle(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -1099,10 +1104,10 @@ public class Row {
     }
 
     /**
-     * Returns the cell styles
+     * 获取单元格样式值，可以拿此返回值调用{@link Styles#getBorder(int)}等方法获取具体的样式
      *
-     * @param columnName the cell name
-     * @return the style value
+     * @param columnName 列名
+     * @return 样式值
      */
     public int getCellStyle(String columnName) {
         Cell c = getCell(columnName);
@@ -1110,20 +1115,20 @@ public class Row {
     }
 
     /**
-     * Returns the cell styles
+     * 获取单元格样式值，可以拿此返回值调用{@link Styles#getBorder(int)}等方法获取具体的样式
      *
-     * @param c the {@link Cell}
-     * @return the style value
+     * @param c 单元格{@link Cell}
+     * @return 样式值
      */
     public int getCellStyle(Cell c) {
         return styles.getStyleByIndex(c.xf);
     }
 
     /**
-     * Tests the specify cell value is blank
+     * 判断单元格是否为空值
      *
-     * @param columnIndex the cell index
-     * @return true if cell value is blank
+     * @param columnIndex 列索引
+     * @return 单元格无值或空字符串时返回{@code true}
      */
     public boolean isBlank(int columnIndex) {
         Cell c = getCell(columnIndex);
@@ -1131,10 +1136,10 @@ public class Row {
     }
 
     /**
-     * Tests the specify cell value is blank
+     * 判断单元格是否为空值
      *
-     * @param columnName the cell name
-     * @return true if cell value is blank
+     * @param columnName 列名
+     * @return 单元格无值或空字符串时返回{@code true}
      */
     public boolean isBlank(String columnName) {
         Cell c = getCell(columnName);
@@ -1142,10 +1147,10 @@ public class Row {
     }
 
     /**
-     * 判断单元格的值是否为空值（未实例化或空字符串）
+     * 判断单元格是否为空值
      *
-     * @param c the {@link Cell}
-     * @return true if cell value is blank
+     * @param c 单元格{@link Cell}
+     * @return 单元格无值或空字符串时返回{@code true}
      */
     public boolean isBlank(Cell c) {
         boolean blank;
@@ -1161,9 +1166,9 @@ public class Row {
     }
 
     /**
-     * Returns the binding type if is bound, otherwise returns Row
+     * 使用{@link Sheet#bind}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;
      *
-     * @param <T> the type of binding
+     * @param <T> 绑定的对象类型
      * @return T
      */
     @SuppressWarnings("unchecked")
@@ -1183,9 +1188,10 @@ public class Row {
     }
 
     /**
-     * Returns the binding type if is bound, otherwise returns Row
+     * 使用{@link Sheet#bind}方法绑定类型后，使用此方法将整行数据转为指定类型&lt;T&gt;，与{@link #get}的区别在于
+     * 本方法返回的对象是内存共享的（只有一个对象副本）
      *
-     * @param <T> the type of binding
+     * @param <T> 绑定的对象类型
      * @return T
      */
     public <T> T geet() {

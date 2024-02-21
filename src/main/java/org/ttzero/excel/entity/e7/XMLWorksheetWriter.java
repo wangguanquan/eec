@@ -1296,7 +1296,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @throws IOException 无权限或磁盘空间不足
      */
-    private void writeWaterMark() throws IOException {
+    protected void writeWaterMark() throws IOException {
         WaterMark waterMark = sheet.getWaterMark();
         if (waterMark == null || !waterMark.canWrite()) {
             waterMark = sheet.getWorkbook().getWaterMark();
