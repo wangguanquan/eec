@@ -517,7 +517,7 @@ public class ExcelReaderTest {
                                 case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                                 default      : o = row.getString(start);
                             }
-                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o));
+                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.replace("\r\n", "\n").equals(o.replace("\r\n", "\n")));
                         }
                     }
                 } else {
