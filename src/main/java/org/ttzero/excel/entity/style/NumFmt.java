@@ -62,7 +62,7 @@ public class NumFmt implements Cloneable, Comparable<NumFmt> {
     /**
      * Format as {@code yyyy-mm-dd hh:mm:ss}
      */
-    public static final NumFmt DATETIME_FORMAT = new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"),
+    public static final NumFmt DATETIME_FORMAT = new NumFmt("yyyy\\-mm\\-dd hh:mm:ss"),
     /**
      * Format as {@code yyyy-mm-dd}
      */
@@ -131,7 +131,7 @@ public class NumFmt implements Cloneable, Comparable<NumFmt> {
         // Replace '-' to '\-'
         code = escape(code, '-');
         // Replace ' ' to '\ '
-        code = escape(code, ' ');
+//        code = escape(code, ' ');
 
         return code;
     }

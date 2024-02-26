@@ -92,7 +92,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 int styleIndex = row.getCellStyle(3);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
                 assertNotNull(numFmt);
-                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt.getCode());
+                assertEquals("yyyy\\-mm\\-dd hh:mm:ss", numFmt.getCode());
             }
         }
     }
@@ -127,7 +127,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 int styleIndex = row.getCellStyle(2);
                 NumFmt numFmt = styles.getNumFmt(styleIndex);
                 assertNotNull(numFmt);
-                assertEquals("yyyy年mm月dd日\\ hh日mm分ss秒", numFmt.getCode());
+                assertEquals("yyyy年mm月dd日 hh日mm分ss秒", numFmt.getCode());
             }
         }
     }
@@ -169,7 +169,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
                 assertNotNull(numFmt3);
-                assertEquals("#,##0\\ ;[Red]\\-#,##0\\ ", numFmt3.getCode());
+                assertEquals("#,##0 ;[Red]\\-#,##0 ", numFmt3.getCode());
             }
         }
     }
@@ -285,7 +285,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
                 assertNotNull(numFmt3);
-                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt3.getCode());
+                assertEquals("yyyy\\-mm\\-dd hh:mm:ss", numFmt3.getCode());
             }
         }
     }
@@ -313,7 +313,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 int styleIndex3 = row.getCellStyle(3);
                 NumFmt numFmt3 = styles.getNumFmt(styleIndex3);
                 assertNotNull(numFmt3);
-                assertEquals("yyyy\\-mm\\-dd\\ hh:mm:ss", numFmt3.getCode());
+                assertEquals("yyyy\\-mm\\-dd hh:mm:ss", numFmt3.getCode());
             }
         }
     }
