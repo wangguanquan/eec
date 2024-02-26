@@ -716,21 +716,18 @@ public class ListObjectSheetTest2 extends WorkbookTest {
 
         List<TreeNode> children;
     }
+
     @Target({ ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Documented
-    public static @interface TreeStyle {
-
-    }
+    public @interface TreeStyle { }
 
     @Target({ ElementType.FIELD, ElementType.METHOD })
     @Retention(RetentionPolicy.RUNTIME)
     @Inherited
     @Documented
-    public static @interface TreeLevel {
-
-    }
+    public @interface TreeLevel { }
 
     public static class TileEntity {
         @ExcelColumn("{date} 拣货单")
