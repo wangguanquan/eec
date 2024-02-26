@@ -34,15 +34,25 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
+import org.ttzero.excel.reader.Grid;
+import org.ttzero.excel.reader.GridFactory;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Sheet;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -52,18 +62,26 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
+import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
 import static org.ttzero.excel.reader.Cell.DATE;
 import static org.ttzero.excel.reader.Cell.DATETIME;
 import static org.ttzero.excel.reader.Cell.DECIMAL;
 import static org.ttzero.excel.reader.Cell.DOUBLE;
+import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
+import static org.ttzero.excel.reader.Cell.FILE;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
+import static org.ttzero.excel.reader.Cell.REMOTE_URL;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * @author guanquan.wang at 2023-04-04 22:38
@@ -505,6 +523,213 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             c++;
             return style;
         }
+    }
+
+    @Test public void testTreeStyle() throws IOException {
+        List<TreeNode> root = new ArrayList<>();
+        TreeNode class1 = new TreeNode("一年级", (94 + 97) / 2.0D);
+        root.add(class1);
+        class1.children = (Arrays.asList(new TreeNode("张一", 94), new TreeNode("李一", 97)));
+        TreeNode class2 = new TreeNode("二年级", (75 + 100 + 90) / 3.0D);
+        root.add(class2);
+        class2.children = (Arrays.asList(new TreeNode("张二", 75), new TreeNode("李二", 100), new TreeNode("王二", 90)));
+
+        new Workbook().addSheet(new ListSheet<TreeNode>(root) {
+            @Override
+            protected EntryColumn createColumn(AccessibleObject ao) {
+                EntryColumn column = super.createColumn(ao);
+                if (column == null && ao.isAnnotationPresent(TreeLevel.class)) {
+                    column = new EntryColumn();
+                    column.setColIndex(99); // <- 设置一个不存在特殊列
+                }
+                return column;
+            }
+
+            @Override
+            protected void mergeGlobalSetting(Class<?> clazz) {
+                super.mergeGlobalSetting(clazz);
+                if (clazz.isAnnotationPresent(TreeStyle.class)) {
+                    putExtProp("tree_style", "1");
+                }
+            }
+
+            @Override
+            protected void calculateRealColIndex() {
+                super.calculateRealColIndex();
+                // 将上面设置的特殊列号改到尾列
+                columns[columns.length - 1].getTail().colIndex = columns[columns.length - 2].getTail().colIndex + 1;
+                columns[columns.length - 1].getTail().realColIndex = columns[columns.length - 2].getTail().realColIndex + 1;
+            }
+
+            // 将树结构降维，如果由level区分等级则不需要这一步
+            @Override
+            public void resetBlockData() {
+                if (!eof && left() < rowBlock.capacity()) {
+                    append();
+                }
+                // EOF
+                int left = left();
+                if (left == 0) return;
+                List<TreeNode> nodes = new ArrayList<>(left);
+                for (TreeNode e : data) {
+                    nodes.add(e);
+                    e.level = 0;
+                    List<TreeNode> sub = e.children;
+                    e.children = null;
+                    for (TreeNode o : sub) {
+                        nodes.add(o);
+                        o.level = 1;
+                        o.children = null;
+                    }
+                }
+                this.data = nodes; // <- 替换原有数据
+                this.start = 0;
+                this.end += nodes.size() - left; // <- 重置尾下标
+
+                super.resetBlockData();
+            }
+        }.setSheetWriter(new XMLWorksheetWriter() {
+            boolean isTreeStyle;
+            @Override
+            protected void writeBefore() throws IOException {
+                super.writeBefore();
+
+                isTreeStyle = "1".equals(sheet.getExtPropValue("tree_style"));
+            }
+
+            protected int startRow(int rows, int columns, Double rowHeight, int level) throws IOException {
+                // Row number
+                int r = rows + startRow;
+
+                bw.write("<row r=\"");
+                bw.writeInt(r);
+                // default data row height 16.5
+                if (rowHeight != null && rowHeight >= 0D) {
+                    bw.write("\" customHeight=\"1\" ht=\"");
+                    bw.write(rowHeight);
+                }
+                if (this.columns.length > 0) {
+                    bw.write("\" spans=\"");
+                    bw.writeInt(this.columns[0].realColIndex);
+                    bw.write(':');
+                    bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+                } else {
+                    bw.write("\" spans=\"1:");
+                    bw.writeInt(columns);
+                }
+                if (level > 0) {
+                    bw.write("\" outlineLevel=\"");
+                    bw.writeInt(level);
+                }
+                bw.write("\">");
+                return r;
+            }
+
+            @Override
+            protected int writeHeaderRow() throws IOException {
+                // Write header
+                int rowIndex = 0, subColumnSize = columns[0].subColumnSize(), defaultStyleIndex = sheet.defaultHeadStyleIndex();
+                int realColumnLen = isTreeStyle ? columns.length - 1 : columns.length;
+                Column[][] columnsArray = new Column[realColumnLen][];
+                for (int i = 0; i < realColumnLen; i++) {
+                    columnsArray[i] = columns[i].toArray();
+                }
+                // Merge cells if exists
+                @SuppressWarnings("unchecked")
+                List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
+                Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
+                for (int i = subColumnSize - 1; i >= 0; i--) {
+                    // Custom row height
+                    double ht = getHeaderHeight(columnsArray, i);
+                    if (ht < 0) ht = sheet.getHeaderRowHeight();
+                    int row = startRow(rowIndex++, realColumnLen, ht);
+
+                    String name;
+                    for (int j = 0, c = 0; j < realColumnLen; j++) {
+                        Column hc = columnsArray[j][i];
+                        name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
+                        writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                    }
+
+                    // Write header comments
+                    for (int j = 0; j < realColumnLen; j++) {
+                        Column hc = columnsArray[j][i];
+                        if (hc.headerComment != null) {
+                            if (comments == null) comments = sheet.createComments();
+                            comments.addComment(new String(int2Col(hc.getRealColIndex())) + row, hc.headerComment);
+                        }
+                    }
+                    bw.write("</row>");
+                }
+                return subColumnSize;
+            }
+
+            @Override
+            protected void writeRow(Row row) throws IOException {
+                Cell[] cells = row.getCells();
+                int len = isTreeStyle ? cells.length - 1 : cells.length;
+                int r = isTreeStyle ? startRow(row.getIndex(), len, row.getHeight(), cells[columns.length - 1].intVal) : startRow(row.getIndex(), len, row.getHeight());
+
+                for (int i = 0; i < len; i++) {
+                    Cell cell = cells[i];
+                    int xf = cell.xf;
+                    switch (cell.t) {
+                        case INLINESTR:
+                        case SST:          writeString(cell.stringVal, r, i, xf);      break;
+                        case NUMERIC:      writeNumeric(cell.intVal, r, i, xf);        break;
+                        case LONG:         writeNumeric(cell.longVal, r, i, xf);       break;
+                        case DATE:
+                        case DATETIME:
+                        case DOUBLE:
+                        case TIME:         writeDouble(cell.doubleVal, r, i, xf);      break;
+                        case BOOL:         writeBool(cell.boolVal, r, i, xf);          break;
+                        case DECIMAL:      writeDecimal(cell.decimal, r, i, xf);       break;
+                        case CHARACTER:    writeChar(cell.charVal, r, i, xf);          break;
+                        case REMOTE_URL:   writeRemoteMedia(cell.stringVal, r, i, xf); break;
+                        case BINARY:       writeBinary(cell.binary, r, i, xf);         break;
+                        case FILE:         writeFile(cell.path, r, i, xf);             break;
+                        case INPUT_STREAM: writeStream(cell.isv, r, i, xf);            break;
+                        case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);     break;
+                        case BLANK:
+                        case EMPTY_TAG:    writeNull(r, i, xf);                        break;
+                        default:
+                    }
+                }
+                bw.write("</row>");
+            }
+        })).writeTo(defaultTestPath.resolve("tree style.xlsx"));
+    }
+
+    @TreeStyle
+    public static class TreeNode {
+        @ExcelColumn
+        String name;
+        @ExcelColumn
+        double score; // <- root节点表示平均成绩
+        @TreeLevel
+        int level; // <- 层级
+        public TreeNode() { }
+        public TreeNode(String name, double score) {
+            this.name = name;
+            this.score = score;
+        }
+
+        List<TreeNode> children;
+    }
+    @Target({ ElementType.TYPE })
+    @Retention(RetentionPolicy.RUNTIME)
+    @Inherited
+    @Documented
+    public static @interface TreeStyle {
+
+    }
+
+    @Target({ ElementType.FIELD, ElementType.METHOD })
+    @Retention(RetentionPolicy.RUNTIME)
+    @Inherited
+    @Documented
+    public static @interface TreeLevel {
+
     }
 
     public static class TileEntity {
