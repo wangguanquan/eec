@@ -791,6 +791,8 @@ public class Font implements Cloneable {
             other.charset = charset;
             other.name = name;
             other.scheme = scheme;
+            other.size = size;
+            other.style = style;
         }
         if (color != null) {
             other.color = new Color(color.getRGB());
