@@ -57,7 +57,7 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  *
  * @author guanquan.wang at 2018-02-06 08:51
  */
-public class NumFmt implements Comparable<NumFmt> {
+public class NumFmt implements Cloneable, Comparable<NumFmt> {
 
     /**
      * Format as {@code yyyy-mm-dd hh:mm:ss}
@@ -338,5 +338,18 @@ public class NumFmt implements Comparable<NumFmt> {
     @Override
     public int compareTo(NumFmt o) {
         return Integer.compare(id, o.id);
+    }
+
+    @Override
+    public NumFmt clone() {
+        NumFmt other;
+        try {
+            other = (NumFmt) super.clone();
+        } catch (CloneNotSupportedException e) {
+            other = new NumFmt();
+            other.id = id;
+            other.code = code;
+        }
+        return other;
     }
 }
