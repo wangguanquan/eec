@@ -548,6 +548,44 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * 写行的起始属性
+     *
+     * @param row 行对象{@link Row}
+     * @return 行号
+     * @throws IOException 出现输出异常
+     */
+    protected int startRow(Row row) throws IOException {
+        // Row number
+        int r = row.getIndex() + startRow, c;
+
+        bw.write("<row r=\"");
+        bw.writeInt(r);
+        Double rowHeight = row.getHeight();
+        // default data row height 16.5
+        if (rowHeight != null && rowHeight >= 0D) {
+            bw.write("\" customHeight=\"1\" ht=\"");
+            bw.write(rowHeight);
+        }
+        if (this.columns.length > 0) {
+            bw.write("\" spans=\"");
+            bw.writeInt(this.columns[0].realColIndex);
+            bw.write(':');
+            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        } else if ((c = row.getCells().length) >= 1) {
+            bw.write("\" spans=\"1:");
+            bw.writeInt(c);
+        }
+        // 隐藏行
+        if (row.isHidden()) bw.write("\" hidden=\"1");
+        // 层级
+        if (row.getOutlineLevel() != null && row.getOutlineLevel().compareTo(0) > 0) {
+            bw.write("\" outlineLevel=\"");
+            bw.writeInt(row.getOutlineLevel());
+        }
+        return r;
+    }
+
+    /**
      * Write a row data
      *
      * @param row a row data
@@ -555,34 +593,50 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
+        int len = cells.length, r = startRow(row);
+        bw.write("\">");
 
-        for (int i = 0; i < len; i++) {
+        // 循环写单元格
+        writeCells(cells, 0, len, r);
+
+        bw.write("</row>");
+    }
+
+    /**
+     * 写单元格
+     *
+     * @param cells 单元格数组
+     * @param fromIndex 起始下标（包含）
+     * @param toIndex 结束下标（不包含）
+     * @param rowNum 行号（one base）
+     * @throws IOException 出现输出异常
+     */
+    protected void writeCells(Cell[] cells, int fromIndex, int toIndex, int rowNum) throws IOException {
+        for (int i = fromIndex; i < toIndex; i++) {
             Cell cell = cells[i];
             int xf = cell.xf;
             switch (cell.t) {
                 case INLINESTR:
-                case SST:          writeString(cell.stringVal, r, i, xf);      break;
-                case NUMERIC:      writeNumeric(cell.intVal, r, i, xf);        break;
-                case LONG:         writeNumeric(cell.longVal, r, i, xf);       break;
+                case SST:          writeString(cell.stringVal, rowNum, i, xf);      break;
+                case NUMERIC:      writeNumeric(cell.intVal, rowNum, i, xf);        break;
+                case LONG:         writeNumeric(cell.longVal, rowNum, i, xf);       break;
                 case DATE:
                 case DATETIME:
                 case DOUBLE:
-                case TIME:         writeDouble(cell.doubleVal, r, i, xf);      break;
-                case BOOL:         writeBool(cell.boolVal, r, i, xf);          break;
-                case DECIMAL:      writeDecimal(cell.decimal, r, i, xf);       break;
-                case CHARACTER:    writeChar(cell.charVal, r, i, xf);          break;
-                case REMOTE_URL:   writeRemoteMedia(cell.stringVal, r, i, xf); break;
-                case BINARY:       writeBinary(cell.binary, r, i, xf);         break;
-                case FILE:         writeFile(cell.path, r, i, xf);             break;
-                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);            break;
-                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);     break;
+                case TIME:         writeDouble(cell.doubleVal, rowNum, i, xf);      break;
+                case BOOL:         writeBool(cell.boolVal, rowNum, i, xf);          break;
+                case DECIMAL:      writeDecimal(cell.decimal, rowNum, i, xf);       break;
+                case CHARACTER:    writeChar(cell.charVal, rowNum, i, xf);          break;
+                case REMOTE_URL:   writeRemoteMedia(cell.stringVal, rowNum, i, xf); break;
+                case BINARY:       writeBinary(cell.binary, rowNum, i, xf);         break;
+                case FILE:         writeFile(cell.path, rowNum, i, xf);             break;
+                case INPUT_STREAM: writeStream(cell.isv, rowNum, i, xf);            break;
+                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, rowNum, i, xf);     break;
                 case BLANK:
-                case EMPTY_TAG:    writeNull(r, i, xf);                        break;
+                case EMPTY_TAG:    writeNull(rowNum, i, xf);                        break;
                 default:
             }
         }
-        bw.write("</row>");
     }
 
     /**

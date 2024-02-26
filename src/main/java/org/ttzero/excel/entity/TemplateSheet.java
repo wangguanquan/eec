@@ -361,7 +361,9 @@ public class TemplateSheet extends Sheet {
             // 设置行号
             row.index = rows = row0.getRowNum() - 1;
             // 设置行高
-            if (row0.getHeight() != null) row.height = row0.getHeight();
+            row.height = row0.getHeight();
+            // 设置行是否隐藏
+            row.hidden = row0.isHidden();
             // 空行特殊处理（lc-fc=-1)
             len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
             Cell[] cells = row.realloc(len);
@@ -391,16 +393,16 @@ public class TemplateSheet extends Sheet {
                     xf = 0;
                     // 字体
                     Font font = styles0.getFont(style);
-                    if (font != null) xf |= styles.addFont(font);
+                    if (font != null) xf |= styles.addFont(font.clone());
                     // 填充
                     Fill fill = styles0.getFill(style);
-                    if (fill != null) xf |= styles.addFill(fill);
+                    if (fill != null) xf |= styles.addFill(fill.clone());
                     // 边框
                     Border border = styles0.getBorder(style);
-                    if (border != null) xf |= styles.addBorder(border);
+                    if (border != null) xf |= styles.addBorder(border.clone());
                     // 格式化
                     NumFmt numFmt = styles0.getNumFmt(style);
-                    if (numFmt != null) xf |= styles.addNumFmt(numFmt);
+                    if (numFmt != null) xf |= styles.addNumFmt(numFmt.clone());
                     // 水平对齐、垂直对齐、自动折行
                     int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
 

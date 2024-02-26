@@ -37,6 +37,10 @@ public class Row {
     Cell[] cells;
     // height
     public Double height;
+    // Is row hidden
+    public boolean hidden;
+    // Outline level
+    public Integer outlineLevel;
 
     public int getIndex() {
         return index;
@@ -110,5 +114,41 @@ public class Row {
     public Row setHeight(Double height) {
         this.height = height;
         return this;
+    }
+
+    /**
+     * 判断当前行是否隐藏
+     *
+     * @return true: 隐藏
+     */
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    /**
+     * 设置当前行显示或隐藏
+     *
+     * @param hidden true：隐藏当前行 false: 显示
+     */
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    /**
+     * 获取行层级
+     *
+     * @return 层级
+     */
+    public Integer getOutlineLevel() {
+        return outlineLevel;
+    }
+
+    /**
+     * 设置行层级
+     *
+     * @param outlineLevel 层级（不能为负数）
+     */
+    public void setOutlineLevel(Integer outlineLevel) {
+        this.outlineLevel = outlineLevel;
     }
 }

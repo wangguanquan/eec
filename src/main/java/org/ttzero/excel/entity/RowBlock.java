@@ -96,8 +96,12 @@ public class RowBlock implements Iterator<Row> {
      */
     public final RowBlock clear() {
         i = n = 0;
-        // 清除行高
-        for (Row row : rows) row.height = null;
+        // 清除行属性
+        for (Row row : rows) {
+            row.height = null;
+            row.hidden = false;
+            row.outlineLevel = null;
+        }
         return this;
     }
 
