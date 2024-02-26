@@ -90,7 +90,8 @@ public class ExcelReaderTest2 {
                             String e = expect[start], o;
                             if (type == CellType.INTEGER) o = row.getInt(cell).toString();
                             else o = row.getString(start);
-                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.equals(o));
+                            if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                            else assertEquals(o, e);
                         }
                     }
                 } else {
@@ -314,7 +315,8 @@ public class ExcelReaderTest2 {
                             case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
-                        assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
+                        if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                        else assertEquals(o, e);
                     }
                 }
             }

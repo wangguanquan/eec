@@ -130,7 +130,8 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
+                    if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                    else assertEquals(o, e);
                 }
             }
 
@@ -151,7 +152,8 @@ public class ExcelReaderTest {
                         case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                         default      : o = row.getString(start);
                     }
-                    assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
+                    if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                    else assertEquals(o, e);
                 }
             }
         }
@@ -181,7 +183,8 @@ public class ExcelReaderTest {
                             case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
-                        assertTrue(e.isEmpty() ? o == null || o.isEmpty() : e.equals(o));
+                        if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                        else assertEquals(o, e);
                     }
                 }
             } else {
@@ -517,7 +520,8 @@ public class ExcelReaderTest {
                                 case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
                                 default      : o = row.getString(start);
                             }
-                            assertTrue(StringUtil.isEmpty(e) && StringUtil.isEmpty(o) || e.replace("\r\n", "\n").equals(o.replace("\r\n", "\n")));
+                            if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
+                            else assertEquals(o, e);
                         }
                     }
                 } else {
