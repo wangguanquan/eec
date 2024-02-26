@@ -1250,11 +1250,15 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                         if (StringUtil.isNotEmpty(defaultRowHeight) && Row.testNumberType(defaultRowHeight.toCharArray(), 0, defaultRowHeight.length()) > 0)
                             this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
                         break;
+                    case "sheetView":
+                        String showGridLines = e.attributeValue("showGridLines");
+                        if ("0".equals(showGridLines)) this.showGridLines = 0;
+                        break;
                 }
             } catch (DocumentException e) {
                 LOGGER.warn("Parse header tag [" + v + "] failed.", e);
             }
-        } else if (v.startsWith("<sheetView")) {
+        } else if (v.startsWith("<sheetView") && v.charAt(10) <= ' ') {
             char[] ncb = new char[n + 1];
             System.arraycopy(cb, offset, ncb, 0, n);
             ncb[n - 1] = '/'; ncb[n] = '>';
