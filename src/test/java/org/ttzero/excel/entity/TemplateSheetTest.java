@@ -52,7 +52,12 @@ public class TemplateSheetTest extends WorkbookTest {
         if (files != null) {
             for (File file : files) {
                 if (file.getName().endsWith(".xlsx")) {
-                    workbook.addSheet(new TemplateSheet(file.getName(), file.toPath()));
+                    try (ExcelReader reader = ExcelReader.read(file.toPath())) {
+                        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
+                        for (org.ttzero.excel.reader.Sheet sheet : sheets) {
+                            workbook.addSheet(new TemplateSheet(file.getName() + "$" + sheet.getName(), file.toPath(), sheet.getName()));
+                        }
+                    }
                 }
             }
         }
