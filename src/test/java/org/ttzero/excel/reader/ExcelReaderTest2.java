@@ -280,7 +280,7 @@ public class ExcelReaderTest2 {
             Panes panes = sheet.getFreezePanes();
             assertEquals(panes.row, 1);
             assertEquals(panes.col, 0);
-            assertTrue(sheet.showGridLines());
+            assertTrue(sheet.isShowGridLines());
             assertEquals(Dimension.of("A1:F1"), sheet.getFilter());
             List<Col> list = sheet.getCols();
             assertEquals(list.size(), 6);

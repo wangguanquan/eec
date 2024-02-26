@@ -1299,7 +1299,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     }
 
     @Override
-    public boolean showGridLines() {
+    public boolean isShowGridLines() {
         return showGridLines == 1;
     }
 

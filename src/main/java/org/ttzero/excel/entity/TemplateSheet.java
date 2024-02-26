@@ -296,7 +296,7 @@ public class TemplateSheet extends Sheet {
         if (autoFilter != null) putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
 
         // 是否显示网格线
-        this.showGridLines = sheet.showGridLines();
+        this.showGridLines = sheet.isShowGridLines();
 
         // 获取列属性
         int len = 0;
