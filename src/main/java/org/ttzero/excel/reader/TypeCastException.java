@@ -5,7 +5,7 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
 /**
  * 读取时类型转换异常
  *
- * @author nasoda at 2024-02-23
+ * @author nasoda on 2024-02-23
  */
 public class TypeCastException extends IllegalArgumentException {
 
