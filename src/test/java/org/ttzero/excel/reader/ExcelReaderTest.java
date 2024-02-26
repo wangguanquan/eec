@@ -759,7 +759,7 @@ public class ExcelReaderTest {
     @Test
     public void testReadCastException() {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#81.xlsx"))) {
-            assertThrows(ReadCastException.class, () -> {
+            assertThrows(TypeCastException.class, () -> {
                 Sheet sheet = reader.sheet(0);
                 sheet.getHeader();
                 sheet.header(1).dataRows().forEach(row -> {

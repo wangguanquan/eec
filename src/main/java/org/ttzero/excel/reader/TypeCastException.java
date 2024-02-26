@@ -7,24 +7,30 @@ import static org.ttzero.excel.entity.Sheet.int2Col;
  *
  * @author nasoda at 2024-02-23
  */
-public class ReadCastException extends RuntimeException {
+public class TypeCastException extends IllegalArgumentException {
 
+    /**
+     * 行号，从1开始
+     */
     int row;
 
+    /**
+     * 列号，从1开始，可通过{@link #toColumnLetter()}转为字母
+     */
     int col;
 
     CellType from;
 
     Class<?> to;
 
-    public ReadCastException(int row, int col, CellType from, Class<?> to) {
+    public TypeCastException(int row, int col, CellType from, Class<?> to) {
         this.row = row;
         this.col = col;
         this.from = from;
         this.to = to;
     }
 
-    public ReadCastException(int row, int col, CellType from, Class<?> to, String message) {
+    public TypeCastException(int row, int col, CellType from, Class<?> to, String message) {
         super(message);
         this.row = row;
         this.col = col;
@@ -32,7 +38,7 @@ public class ReadCastException extends RuntimeException {
         this.to = to;
     }
 
-    public ReadCastException(int row, int col, CellType from, Class<?> to, String message, Throwable cause) {
+    public TypeCastException(int row, int col, CellType from, Class<?> to, String message, Throwable cause) {
         super(message, cause);
         this.row = row;
         this.col = col;
@@ -40,7 +46,7 @@ public class ReadCastException extends RuntimeException {
         this.to = to;
     }
 
-    public ReadCastException(int row, int col, CellType from, Class<?> to, Throwable cause) {
+    public TypeCastException(int row, int col, CellType from, Class<?> to, Throwable cause) {
         super(cause);
         this.row = row;
         this.col = col;

@@ -89,8 +89,6 @@ public class HeaderRow extends Row {
     /* Storage header column */
     protected ListSheet.EntryColumn[] columns;
 
-    // `detailMessage` field declare in Throwable
-    protected static final Field detailMessageField;
     // Specify total rows of header
     protected int headRows;
     /**
@@ -105,17 +103,6 @@ public class HeaderRow extends Row {
      * </pre></blockquote>
      */
     protected int option;
-
-    static {
-        Field field = null;
-        try {
-            field = Throwable.class.getDeclaredField("detailMessage");
-            field.setAccessible(true);
-        } catch (Exception e) {
-            // Ignore
-        }
-        detailMessageField = field;
-    }
 
     public HeaderRow with(Row ... rows) {
         return with(null, rows.length, rows);
@@ -500,7 +487,7 @@ public class HeaderRow extends Row {
                     row.getString(colIndex),
                     excelType,
                     javaType);
-            throw new ReadCastException(rowNum, colNum, excelType, javaType, msg, ex);
+            throw new TypeCastException(rowNum, colNum, excelType, javaType, msg, ex);
         }
     }
 
