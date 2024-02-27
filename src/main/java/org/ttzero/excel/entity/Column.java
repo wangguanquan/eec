@@ -741,7 +741,7 @@ public class Column {
             if (numFmt == null) numFmt = TIME_FORMAT;
             style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
-            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
+            style = 1 << INDEX_BORDER; // Auto-style
         }
 
         return style;
