@@ -481,12 +481,7 @@ public class HeaderRow extends Row {
             int colNum = colIndex + 1;
             CellType excelType = row.getCellType(colIndex);
             Class<?> javaType = c.clazz;
-            String msg = String.format("The value in cell '%s%d' is \"%s\"(%s), cannot cast to %s",
-                    new String(int2Col(colNum)),
-                    rowNum,
-                    row.getString(colIndex),
-                    excelType,
-                    javaType);
+            String msg = "The value in cell '" + new String(int2Col(colNum)) + rowNum + "' is \"" + row.getString(colIndex) + "\"(" + excelType + "), cannot cast to " + javaType.getTypeName();
             throw new TypeCastException(rowNum, colNum, excelType, javaType, msg, ex);
         }
     }
