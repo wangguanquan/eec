@@ -1529,6 +1529,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Create drawing writer and add relationship
      *
      * @return {@link IDrawingsWriter}
+     * @throws IOException if I/O error occur.
      */
     protected IDrawingsWriter createDrawingsWriter() throws IOException {
         if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));

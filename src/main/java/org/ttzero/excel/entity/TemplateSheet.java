@@ -282,6 +282,7 @@ public class TemplateSheet extends Sheet {
      * 读取模板头信息并复杂到当前工作表
      *
      * @return 列的个数
+     * @throws IOException 读取模板异常
      */
     protected int init() throws IOException {
         // 实例化ExcelReader
@@ -398,7 +399,7 @@ public class TemplateSheet extends Sheet {
 
                 // 复制数据
                 switch (row0.getCellType(cell0)) {
-                    // 字符串特殊处理，
+                    // 字符串特殊处理(掩码只存在于字符串中)
                     case STRING:  cell.setString(row0.getString(cell0));                                break;
                     case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
                     case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
