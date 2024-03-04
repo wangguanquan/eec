@@ -229,6 +229,12 @@ public class Cell {
         return this;
     }
 
+    public Cell setFormula(String formula) {
+        this.f = true;
+        this.fv = formula;
+        return this;
+    }
+
     public Cell clear() {
         this.t  = UNALLOCATED;
         this.stringVal = null;
