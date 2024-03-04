@@ -184,6 +184,11 @@ public class FileUtil {
 
     /**
      * Reads all bytes from an input stream and writes them to an output stream.
+     *
+     * @param source source inputStream
+     * @param sink dist outputStream
+     * @return number of copied bytes
+     * @throws IOException if I/O error occur.
      */
     public static long cp(InputStream source, OutputStream sink) throws IOException {
         long nread = 0L;

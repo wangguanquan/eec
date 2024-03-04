@@ -330,6 +330,7 @@ public class TemplateSheet extends Sheet {
             }
         }
 
+        // xlsx格式输出才进行以下格式复制
         if (writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass())) {
             // 冻结,直接复制不需要计算移动
             Panes panes = sheet.getFreezePanes();
@@ -397,6 +398,7 @@ public class TemplateSheet extends Sheet {
 
                 // 复制数据
                 switch (row0.getCellType(cell0)) {
+                    // 字符串特殊处理，
                     case STRING:  cell.setString(row0.getString(cell0));                                break;
                     case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
                     case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
