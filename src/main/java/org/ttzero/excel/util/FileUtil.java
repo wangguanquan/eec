@@ -28,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -179,6 +180,20 @@ public class FileUtil {
         } catch (IOException e) {
             LOGGER.error("Copy file to [{}] failed...", descFile);
         }
+    }
+
+    /**
+     * Reads all bytes from an input stream and writes them to an output stream.
+     */
+    public static long cp(InputStream source, OutputStream sink) throws IOException {
+        long nread = 0L;
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = source.read(buf)) > 0) {
+            sink.write(buf, 0, n);
+            nread += n;
+        }
+        return nread;
     }
 
     /**

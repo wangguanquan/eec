@@ -44,6 +44,7 @@ import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -277,11 +278,20 @@ public class ExcelReader implements Closeable {
      */
     @Deprecated
     public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
-        Path temp = FileUtil.mktmp("eec-");
-        if (temp == null) {
-            throw new IOException("Create temp directory error. Please check your permission");
-        }
-        FileUtil.cp(stream, temp);
+        // 提前检查格式是否支持
+        byte[] bytes = new byte[8];
+        int n = stream.read(bytes);
+        ExcelType type = typeOfStream(bytes, n);
+        // 不是xls或xlsx格式
+        if (type == ExcelType.UNKNOWN) throw new ExcelReadException("Unknown file type.");
+
+        Path temp = Files.createTempFile("eec-", null);
+        if (temp == null) throw new IOException("Create temp directory error. Please check your permission");
+        OutputStream os = Files.newOutputStream(temp);
+        os.write(bytes, 0, n);
+        FileUtil.cp(stream, os);
+        os.close();
+
         ExcelReader reader;
         try {
             reader = read(temp, bufferSize, cacheSize, option);
@@ -600,12 +610,20 @@ public class ExcelReader implements Closeable {
      */
     @Deprecated
     public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
-        Path temp = FileUtil.mktmp("eec-");
-        if (temp == null) {
-            throw new IOException("Create temp directory error. Please check permission");
-        }
-        FileUtil.cp(stream, temp);
+        // 提前检查格式是否支持
+        byte[] bytes = new byte[8];
+        int n = stream.read(bytes);
+        ExcelType type = typeOfStream(bytes, n);
+        // 不是xlsx格式
+        if (type != ExcelType.XLSX) throw new ExcelReadException("Not a xlsx file.");
+
+        Path temp = Files.createTempFile("eec-", null);
+        if (temp == null) throw new IOException("Create temp directory error. Please check permission");
+        OutputStream os = Files.newOutputStream(temp);
+        os.write(bytes, 0, n);
+        FileUtil.cp(stream, os);
         this.temp = temp;
+        os.close();
 
         init(temp, bufferSize, cacheSize, option);
     }
