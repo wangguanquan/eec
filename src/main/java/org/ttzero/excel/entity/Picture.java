@@ -19,6 +19,8 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.drawing.Effect;
 
+import java.nio.file.Path;
+
 /**
  * Picture
  *
@@ -34,13 +36,13 @@ public class Picture {
      */
     public String picName;
     /**
-     * Axis
+     * Axis (one base)
      */
-    public int col, row;
+    public int col, row, toCol, toRow;
     /**
      * Padding top | right | bottom | left
      */
-    public int padding;
+    public short[] padding;
     /**
      * Record image position, internal parameters, please do not use
      */
@@ -66,60 +68,68 @@ public class Picture {
 
     public Effect effect;
 
+    // ================ Picture Local Path ================
+    /**
+     * 图片临时路径
+     */
+    public Path localPath;
 
     /**
      * Padding
      *
-     * @param padding int (0 - 255)
+     * @param padding int
      * @return current {@code Picture}
      */
     public Picture setPadding(int padding) {
-        padding = padding & 0xFF;
-        this.padding = padding << 24 | padding << 16 | padding << 8 | padding;
+        this.padding = new short[] { (short) padding, (short) padding, (short) padding, (short) padding };
         return this;
     }
 
     /**
      * Padding Top
      *
-     * @param paddingTop int (0 - 255)
+     * @param paddingTop int
      * @return current {@code Picture}
      */
     public Picture setPaddingTop(int paddingTop) {
-        this.padding = (paddingTop & 0xFF) << 24;
+        if (padding == null) padding = new short[] { (short) paddingTop, 0, 0, 0 };
+        else padding[0] = (short) paddingTop;
         return this;
     }
 
     /**
      * Padding Right
      *
-     * @param paddingRight int (0 - 255)
+     * @param paddingRight int
      * @return current {@code Picture}
      */
     public Picture setPaddingRight(int paddingRight) {
-        this.padding = (paddingRight & 0xFF) << 16;
+        if (padding == null) padding = new short[] { 0, (short) paddingRight, 0, 0 };
+        else padding[1] = (short) paddingRight;
         return this;
     }
 
     /**
      * Padding Bottom
      *
-     * @param paddingBottom int (0 - 255)
+     * @param paddingBottom int
      * @return current {@code Picture}
      */
     public Picture setPaddingBottom(int paddingBottom) {
-        this.padding = (paddingBottom & 0xFF) << 8;
+        if (padding == null) padding = new short[] { 0, 0, (short) paddingBottom, 0 };
+        else padding[2] = (short) paddingBottom;
         return this;
     }
 
     /**
      * Padding Left
      *
-     * @param paddingLeft int (0 - 255)
+     * @param paddingLeft int
      * @return current {@code Picture}
      */
     public Picture setPaddingLeft(int paddingLeft) {
-        this.padding = paddingLeft & 0xFF;
+        if (padding == null) padding = new short[] { 0, 0, 0, (short) paddingLeft };
+        else padding[3] = (short) paddingLeft;
         return this;
     }
 }

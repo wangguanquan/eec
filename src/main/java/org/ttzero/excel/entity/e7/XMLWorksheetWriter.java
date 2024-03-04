@@ -1594,8 +1594,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Picture createPicture(int column, int row) {
         Picture picture = new Picture();
         picture.col = column;
-        picture.row = row;
-        picture.setPadding(1);
+        picture.row = row - 1;
+        // 默认位置和大小随单元格一起变动
+        picture.toCol = column + 1;
+        picture.toRow = row;
+//        picture.setPadding(1);
+        picture.setPaddingTop(1).setPaddingRight(-1).setPaddingBottom(-1).setPaddingLeft(1);
         picture.effect = getColumn(column).effect;
 
         return picture;

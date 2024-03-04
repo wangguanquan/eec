@@ -370,7 +370,7 @@ public class PictureTest extends WorkbookTest {
                 @Override
                 protected Picture createPicture(int column, int row) {
                     Picture picture = super.createPicture(column, row);
-                    picture.padding = 15 << 24 | 15 << 16 | 35 << 8 | 15;
+                    picture.setPaddingTop(15).setPaddingRight(-15).setPaddingBottom(-35).setPaddingLeft(15);
                     PresetPictureEffect[] effects = PresetPictureEffect.values();
                     picture.effect = effects[row - 2].getEffect();
                     return picture;

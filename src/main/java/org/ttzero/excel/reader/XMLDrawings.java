@@ -29,6 +29,7 @@ import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -253,7 +254,35 @@ public class XMLDrawings implements Drawings {
                         ioException.printStackTrace();
                     }
                 }
-                picture.dimension = dimension(e, xdr);
+
+                int[][] ft = parseDimension(e, xdr);
+                picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1), ft[1][2] + 1, (short) (ft[1][0] + 1));
+                picture.padding = new short[] { (short) ft[0][3], (short) ft[1][1], (short) ft[1][3], (short) ft[0][1] };
+                String editAs = e.attributeValue("editAs");
+                int property = -1;
+                if (StringUtil.isNotEmpty(editAs)) {
+                    switch (editAs) {
+                        case "twoCell" : property = 0; break;
+                        case "oneCell" : property = 1; break;
+                        case "absolute": property = 2; break;
+                        default:
+                    }
+                }
+                picture.property = property;
+                Element spPr = pic.element(QName.get("spPr", xdr));
+                if (spPr != null) {
+                    Element xfrm = spPr.element(QName.get("xfrm", a));
+                    String rot;
+                    if (xfrm != null && StringUtil.isNotBlank(rot = xfrm.attributeValue("rot"))) {
+                        try {
+                            picture.revolve = Integer.parseInt(rot) / 60000;
+                        } catch (Exception ex) {
+                            // Ignore
+                        }
+                    }
+
+                    // TODO Attach picture effects
+                }
 
                 Element extLst = blip.element(QName.get("extLst", a));
                 if (extLst == null) continue;
@@ -273,23 +302,28 @@ public class XMLDrawings implements Drawings {
         return !pictures.isEmpty() ? pictures : null;
     }
 
-    protected static Dimension dimension(Element e, Namespace xdr) {
+    protected static int[][] parseDimension(Element e, Namespace xdr) {
         Element fromEle = e.element(QName.get("from", xdr));
         int[] f = dimEle(fromEle, xdr);
         Element toEle = e.element(QName.get("to", xdr));
         int[] t = dimEle(toEle, xdr);
 
-        return new Dimension(f[0] + 1, (short) (f[1] + 1), t[0] + 1, (short) (t[1] + 1));
+        return new int[][] { f, t };
     }
 
     protected static int[] dimEle(Element e, Namespace xdr) {
-        int c = 0, r = 0;
+        int c = 0, r = 0, co = 0, ro = 0;
         if (e != null) {
-            String col = e.element(QName.get("col", xdr)).getText(), row = e.element(QName.get("row", xdr)).getText();
+            String col = e.element(QName.get("col", xdr)).getText()
+                , colOff = e.element(QName.get("colOff", xdr)).getText()
+                , row = e.element(QName.get("row", xdr)).getText()
+                , rowOff = e.element(QName.get("rowOff", xdr)).getText();
             c = Integer.parseInt(col);
             r = Integer.parseInt(row);
+            co = (int) (Integer.parseInt(colOff) / 12700.0D + 0.5);
+            ro = (int) (Integer.parseInt(rowOff) / 12700.0D + 0.5);
         }
-        return new int[] { r, c };
+        return new int[] { c, co, r, ro };
     }
 
     /**
@@ -369,8 +403,8 @@ public class XMLDrawings implements Drawings {
                         }
                         Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
                         localPath = targetPath;
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
+                    } catch (IOException ex) {
+                        LOGGER.warn("Copy picture error.", ex);
                     }
                     cellImageMapper.put(name, localPath);
                 }
@@ -402,7 +436,8 @@ public class XMLDrawings implements Drawings {
                         Picture pic = new Picture();
                         pic.sheet = sheet;
                         pic.localPath = path;
-                        pic.dimension = new Dimension(row.getRowNum(), (short) (i + 1), row.getRowNum(), (short) (i + 1));
+                        pic.dimension = new Dimension(row.getRowNum(), (short) (i + 1), row.getRowNum() + 1, (short) (i + 2));
+                        pic.padding = new short[] {1, -1, -1, 1};
                         pictures.add(pic);
                     }
                 }
