@@ -462,6 +462,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // End target --sheetData
         bw.write("</sheetData>");
 
+        // 写完数据后调用工作表处理全局属性
+        sheet.afterSheetDataWriter(total);
+
         // Auto Filter
         Dimension autoFilter = (Dimension) sheet.getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
         if (autoFilter != null) {
@@ -1007,6 +1010,39 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * 写{@link Picture}
+     *
+     * @param picture 图像对象
+     * @throws IOException 输出异常
+     */
+    @Override
+    public void writePicture(Picture picture) throws IOException {
+        if (picture.localPath == null) return;
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(picture.localPath);
+        if (!signature.isTrusted()) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        picture.id = id;
+        String name = "image" + id + "." + signature.extension;
+        picture.picName = name;
+        picture.size = signature.width << 16 | signature.height;
+        // Store
+        Files.copy(picture.localPath, mediaPath.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+
+        // Write picture
+        // Drawing
+        drawingsWriter.drawing(picture);
+
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
+    }
+
+    /**
      * Resize column width
      *
      * @param path the sheet temp path
@@ -1330,9 +1366,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\"/>");
         }
 
-        // Background image
-        writeWaterMark();
-
         // Drawings
         if (drawingsWriter != null) {
             RelManager relManager = sheet.getRelManager();
@@ -1343,6 +1376,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 bw.write("\"/>");
             }
         }
+
+        // Background image
+        writeWaterMark();
     }
 
     /**
@@ -1485,10 +1521,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void initDrawingsWriter() throws IOException {
         if (hasMedia()) {
-            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
-            if (drawingsWriter == null) {
-                drawingsWriter = createDrawingsWriter();
-            }
+            createDrawingsWriter();
         }
     }
 
@@ -1497,11 +1530,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @return {@link IDrawingsWriter}
      */
-    public IDrawingsWriter createDrawingsWriter() {
-        int id = sheet.getWorkbook().incrementDrawingCounter();
-        sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
-        sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
-        return new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+    protected IDrawingsWriter createDrawingsWriter() throws IOException {
+        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+        if (drawingsWriter == null) {
+            int id = sheet.getWorkbook().incrementDrawingCounter();
+            sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
+            sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
+            drawingsWriter = new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+        }
+        return drawingsWriter;
     }
 
     /**

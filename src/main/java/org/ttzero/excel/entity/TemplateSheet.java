@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -29,11 +30,14 @@ import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
+import org.ttzero.excel.reader.RowSetIterator;
 import org.ttzero.excel.util.DateUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -65,6 +69,14 @@ import java.util.Map;
  */
 public class TemplateSheet extends Sheet {
     /**
+     * 模板路径
+     */
+    protected Path templatePath;
+    /**
+     * 模板流
+     */
+    protected InputStream templateStream;
+    /**
      * 读取模板用
      */
     protected ExcelReader reader;
@@ -73,21 +85,31 @@ public class TemplateSheet extends Sheet {
      */
     protected int originalSheetIndex;
     /**
+     * 源工作表名
+     */
+    protected String originalSheetName;
+    /**
      * 行数据迭代器
      */
-    protected Iterator<org.ttzero.excel.reader.Row> rowIterator;
+    protected CommitRowSetIterator rowIterator;
     /**
      * 样式映射，缓存源样式索引映射到目标样式索引
      */
     protected Map<Integer, Integer> styleMap;
-
+    /**
+     * 图片
+     */
+    protected List<Drawings.Picture> pictures;
+    /**
+     * 以Excel格式输出
+     */
+    protected boolean writeAsExcel;
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
      * @param templatePath 模板路径
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(Path templatePath) throws IOException {
+    public TemplateSheet(Path templatePath) {
         this(templatePath, 0);
     }
 
@@ -96,9 +118,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param name         指定工作表名称
      * @param templatePath 模板路径
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(String name, Path templatePath) throws IOException {
+    public TemplateSheet(String name, Path templatePath) {
         this(name, templatePath, 0);
     }
 
@@ -107,9 +128,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param templatePath       模板路径
      * @param originalSheetIndex 指定源工作表索引（从0开始）
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(Path templatePath, int originalSheetIndex) throws IOException {
+    public TemplateSheet(Path templatePath, int originalSheetIndex) {
         this(null, templatePath, originalSheetIndex);
     }
 
@@ -119,13 +139,11 @@ public class TemplateSheet extends Sheet {
      * @param name               指定工作表名称
      * @param templatePath       模板路径
      * @param originalSheetIndex 指定源工作表索引（从0开始）
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(String name, Path templatePath, int originalSheetIndex) throws IOException {
+    public TemplateSheet(String name, Path templatePath, int originalSheetIndex) {
         this.name = name;
-        this.reader = ExcelReader.read(templatePath);
-        if (reader.getSheetCount() < originalSheetIndex)
-            throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
+        this.templatePath = templatePath;
+        this.originalSheetIndex = originalSheetIndex;
     }
 
     /**
@@ -133,9 +151,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param templatePath      模板路径
      * @param originalSheetName 指定源工作表名
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(Path templatePath, String originalSheetName) throws IOException {
+    public TemplateSheet(Path templatePath, String originalSheetName) {
         this(null, templatePath, originalSheetName);
     }
 
@@ -145,26 +162,19 @@ public class TemplateSheet extends Sheet {
      * @param name              指定工作表名称
      * @param templatePath      模板路径
      * @param originalSheetName 指定源工作表名
-     * @throws IOException 文件不存在或读取模板异常
      */
-    public TemplateSheet(String name, Path templatePath, String originalSheetName) throws IOException {
+    public TemplateSheet(String name, Path templatePath, String originalSheetName) {
         this.name = name;
-        this.reader = ExcelReader.read(templatePath);
-        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
-        int index = 0;
-        for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++) ;
-        if (index >= sheets.length)
-            throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
-        originalSheetIndex = index;
+        this.templatePath = templatePath;
+        this.originalSheetName = originalSheetName;
     }
 
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
      * @param templateStream 模板输入流
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(InputStream templateStream) throws IOException {
+    public TemplateSheet(InputStream templateStream) {
         this(templateStream, 0);
     }
 
@@ -173,9 +183,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param name           设置工作表名
      * @param templateStream 模板输入流
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(String name, InputStream templateStream) throws IOException {
+    public TemplateSheet(String name, InputStream templateStream) {
         this(name, templateStream, 0);
     }
 
@@ -184,9 +193,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param templateStream     模板输入流
      * @param originalSheetIndex 指定源工作表索引
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(InputStream templateStream, int originalSheetIndex) throws IOException {
+    public TemplateSheet(InputStream templateStream, int originalSheetIndex) {
         this(null, templateStream, originalSheetIndex);
     }
 
@@ -195,9 +203,8 @@ public class TemplateSheet extends Sheet {
      *
      * @param templateStream    模板输入流
      * @param originalSheetName 指定源工作表名
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(InputStream templateStream, String originalSheetName) throws IOException {
+    public TemplateSheet(InputStream templateStream, String originalSheetName) {
         this(null, templateStream, originalSheetName);
     }
 
@@ -207,13 +214,11 @@ public class TemplateSheet extends Sheet {
      * @param name               设置工作表名
      * @param templateStream     模板输入流
      * @param originalSheetIndex 指定源工作表索引
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(String name, InputStream templateStream, int originalSheetIndex) throws IOException {
+    public TemplateSheet(String name, InputStream templateStream, int originalSheetIndex) {
         this.name = name;
-        this.reader = ExcelReader.read(templateStream);
-        if (reader.getSheetCount() < originalSheetIndex)
-            throw new IOException("Original sheet index [" + originalSheetIndex + "] does not exist in template file.");
+        this.templateStream = templateStream;
+        this.originalSheetIndex = originalSheetIndex;
     }
 
     /**
@@ -222,17 +227,11 @@ public class TemplateSheet extends Sheet {
      * @param name              设置工作表名
      * @param templateStream    模板输入流
      * @param originalSheetName 指定源工作表名
-     * @throws IOException 读取模板异常
      */
-    public TemplateSheet(String name, InputStream templateStream, String originalSheetName) throws IOException {
+    public TemplateSheet(String name, InputStream templateStream, String originalSheetName) {
         this.name = name;
-        this.reader = ExcelReader.read(templateStream);
-        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
-        int index = 0;
-        for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); ) ;
-        if (index >= sheets.length)
-            throw new IOException("The specified sheet [" + originalSheetName + "] does not exist in template file.");
-        originalSheetIndex = index;
+        this.templateStream = templateStream;
+        this.originalSheetName = originalSheetName;
     }
 
     /**
@@ -256,7 +255,12 @@ public class TemplateSheet extends Sheet {
     public Column[] getAndSortHeaderColumns() {
         if (!headerReady) {
             // 解析模板工作表并复制信息到当前工作表中
-            int size = init();
+            int size;
+            try {
+                size = init();
+            } catch (IOException e) {
+                throw new ExcelWriteException(e);
+            }
             if (size <= 0) columns = new Column[0];
             else {
                 // 排序
@@ -279,24 +283,25 @@ public class TemplateSheet extends Sheet {
      *
      * @return 列的个数
      */
-    protected int init() {
+    protected int init() throws IOException {
+        // 实例化ExcelReader
+        if (templatePath != null) reader = ExcelReader.read(templatePath);
+        else if (templateStream != null) reader = ExcelReader.read(templateStream);
+
+        // 查找源工作表
+        org.ttzero.excel.reader.Sheet[] sheets = reader.all();
+        if (StringUtil.isNotBlank(originalSheetName)) {
+            int index = 0;
+            for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); ) ;
+            if (index > sheets.length)
+                throw new IOException("The original sheet [" + originalSheetName + "] does not exist in template file.");
+            originalSheetIndex = index - 1;
+        }
+        else if (originalSheetIndex < 0 || originalSheetIndex >= sheets.length)
+            throw new IOException("The original sheet index [" + originalSheetIndex + "] is out of range in template file[0-" + sheets.length + "].");
+
         // 加载模板工作表
         FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
-
-        // 冻结,直接复制不需要计算移动
-        Panes panes = sheet.getFreezePanes();
-        if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
-
-        // TODO 合并（较为复杂不能简单复制，需要计算中间插入或扣除的行）
-        List<Dimension> mergeCells = sheet.getMergeCells();
-        if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
-
-        // 过滤
-        Dimension autoFilter = sheet.getFilter();
-        if (autoFilter != null) putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
-
-        // 是否显示网格线
-        this.showGridLines = sheet.isShowGridLines();
 
         // 获取列属性
         int len = 0;
@@ -324,26 +329,45 @@ public class TemplateSheet extends Sheet {
                 }
             }
         }
-        // 忽略表头输出
-        super.ignoreHeader();
 
-        // 预置列宽
-        double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
-        if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
-        if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
+        if (writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass())) {
+            // 冻结,直接复制不需要计算移动
+            Panes panes = sheet.getFreezePanes();
+            if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
 
-        // 图片
-        List<Drawings.Picture> pictures = sheet.listPictures();
-        // FIXME 其它图片支持
-        if (pictures != null && !pictures.isEmpty()) {
-            for (Drawings.Picture p : pictures) {
-                if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+            // TODO 合并（较为复杂不能简单复制，需要计算中间插入或扣除的行）
+            List<Dimension> mergeCells = sheet.getMergeCells();
+            if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+
+            // 过滤
+            Dimension autoFilter = sheet.getFilter();
+            if (autoFilter != null) putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+
+            // 是否显示网格线
+            this.showGridLines = sheet.isShowGridLines();
+
+            // 预置列宽
+            double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
+            if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
+            if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
+
+            // 图片
+            List<Drawings.Picture> pictures = sheet.listPictures();
+            if (pictures != null && !pictures.isEmpty()) {
+                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
+                for (Drawings.Picture p : pictures) {
+                    // 背景
+                    if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+                    else this.pictures.add(p);
+                }
             }
         }
 
+        // 忽略表头输出
+        super.ignoreHeader();
         // 初始化行迭代器
-        rowIterator = sheet.iterator();
-
+        rowIterator = new CommitRowSetIterator((RowSetIterator) sheet.iterator());
+        // 样式缓存
         styleMap = new HashMap<>();
 
         return len;
@@ -351,10 +375,9 @@ public class TemplateSheet extends Sheet {
 
     @Override
     protected void resetBlockData() {
-        int len, n = 0, limit = getRowLimit();
+        int len, n = 0, limit = sheetWriter.getRowLimit(); // 这里直接从writer中获取
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
-
         for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
@@ -368,8 +391,8 @@ public class TemplateSheet extends Sheet {
             len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
             Cell[] cells = row.realloc(len);
             for (int i = 0; i < len; i++) {
-                // clear cells
                 Cell cell = cells[i], cell0 = row0.getCell(i);
+                // Clear cells
                 cell.clear();
 
                 // 复制数据
@@ -384,6 +407,11 @@ public class TemplateSheet extends Sheet {
                     case BLANK:   cell.emptyTag();                                                      break;
                     default:
                 }
+
+                if (!writeAsExcel) continue;
+
+                // 复制公式
+                if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
 
                 // 复制样式
                 Integer xf = styleMap.get(cell0.xf);
@@ -411,6 +439,25 @@ public class TemplateSheet extends Sheet {
                     styleMap.put(cell0.xf, cell.xf);
                 }
             }
+            // FIXME 循环替换掩码时不要ark
+            rowIterator.commit();
+        }
+    }
+
+    @Override
+    public void afterSheetDataWriter(int total) {
+        super.afterSheetDataWriter(total);
+
+        // 如果有图片则添加图片
+        if (pictures != null) {
+            try {
+                for (Drawings.Picture p : pictures) {
+                    if (p == null || p.isBackground()) continue;
+                    sheetWriter.writePicture(toWritablePicture(p));
+                }
+            } catch (IOException e) {
+                LOGGER.warn("Copy pictures failed.", e);
+            }
         }
     }
 
@@ -419,5 +466,54 @@ public class TemplateSheet extends Sheet {
         super.close();
         // 释放模板流
         if (reader != null) reader.close();
+    }
+
+    /**
+     * 将图片转为导出格式
+     *
+     * @param pic 图片
+     * @return 可导出图片
+     */
+    public static Picture toWritablePicture(Drawings.Picture pic) {
+        Picture p = new Picture();
+        p.localPath = pic.getLocalPath();
+        p.row = pic.getDimension().firstRow - 1;
+        p.col = pic.getDimension().firstColumn - 1;
+        p.toRow = pic.getDimension().lastRow - 1;
+        p.toCol = pic.getDimension().lastColumn - 1;
+        p.padding = pic.getPadding();
+        p.revolve = pic.getRevolve();
+        p.property = pic.getProperty();
+        p.effect = pic.getEffect();
+        return p;
+    }
+
+    /**
+     * 需要手动调用{@link #commit()}方法才会移动游标
+     */
+    public static class CommitRowSetIterator implements Iterator<org.ttzero.excel.reader.Row> {
+        private final RowSetIterator iterator;
+        private org.ttzero.excel.reader.Row current;
+
+        public CommitRowSetIterator(RowSetIterator iterator) {
+            this.iterator = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public org.ttzero.excel.reader.Row next() {
+            return current != null ? current : (current = iterator.next());
+        }
+
+        /**
+         * 提交后才将移动到下一行，否则一直停留在当前行
+         */
+        public void commit() {
+            current = null;
+        }
     }
 }

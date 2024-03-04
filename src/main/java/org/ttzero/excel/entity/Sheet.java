@@ -1191,6 +1191,13 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
+     * 当输出协议写完sheetData时调用
+     *
+     * @param total 已写数据行
+     */
+    public void afterSheetDataWriter(int total) { }
+
+    /**
      * 当输出协议输出完成时调用此方法输出关联
      *
      * @param workSheetPath 当前工作表保存路径
