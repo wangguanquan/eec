@@ -49,6 +49,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -754,6 +755,104 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 list.add(e);
             }
             return list;
+        }
+    }
+
+    public static class IndexSheet<T> extends ListSheet<T> {
+        // 0: empty 1: List 2： Array
+        int type = 0;
+
+        @Override
+        public Column[] getHeaderColumns() {
+            if (!headerReady) {
+                // 将第一行做为头表
+                if (data == null || data.isEmpty()) append();
+                Object o = getFirst();
+                // 无数据输出空
+                if (o == null) columns = new Column[0];
+                    // List
+                else if (List.class.isAssignableFrom(o.getClass())) {
+                    type = 1;
+                    List row0 = (List) o;
+                    columns = new Column[row0.size()];
+                    int i = 0;
+                    for (Object e : row0) columns[i++] = new Column(e.toString());
+                    // 这里取了第一行所以将start向前移动
+                    start++;
+                }
+                // 数组
+                else if (o.getClass().isArray()) {
+                    type = 2;
+                    int len = Array.getLength(o);
+                    columns = new Column[len];
+                    for (int i = 0; i < len; i++) columns[i] = new Column(Array.get(o, i).toString());
+                    // 这里取了第一行所以将start向前移动
+                    start++;
+                }
+            }
+            return columns;
+        }
+
+        @Override
+        protected void resetBlockData() {
+            if (!eof && left() < rowBlock.capacity()) append();
+
+            // Find the end index of row-block
+            int end = getEndIndex(), len = columns.length;
+            for (; start < end; rows++, start++) {
+                Row row = rowBlock.next();
+                row.index = rows;
+                Cell[] cells = row.realloc(len);
+                T o = data.get(start);
+                boolean isNull = o == null;
+                List sub = !isNull && type == 1 ? (List) o : null;
+                for (int i = 0; i < len; i++) {
+                    // Clear cells
+                    Cell cell = cells[i];
+                    cell.clear();
+
+                    Object e;
+                    Column column = columns[i];
+                    if (column.isIgnoreValue() || isNull) e = null;
+                        // 根据下标取数
+                    else {
+                        switch (type) {
+                            case 1: e = sub.get(i);      break;
+                            case 2: e = Array.get(o, i); break;
+                            default: e = null;
+                        }
+                    }
+
+                    cellValueAndStyle.reset(row, cell, e, column);
+                }
+                row.height = getRowHeight();
+            }
+        }
+    }
+
+    @Test public void testByIndex() throws IOException {
+        List<Object> rows = new ArrayList<>();
+        rows.add(Arrays.asList("列1", "列2", "列3"));
+        rows.add(Arrays.asList(1, 2, 3));
+        rows.add(Arrays.asList(4, 5, 6));
+        final String fileName = "by index.xlsx";
+        new Workbook().addSheet(new IndexSheet<>().setData(rows)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row = iter.next();
+            assertEquals(row.toString(), "列1 | 列2 | 列3");
+
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.toString(), "1 | 2 | 3");
+
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.toString(), "4 | 5 | 6");
         }
     }
 
