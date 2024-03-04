@@ -172,8 +172,10 @@ public class Styles implements Storable {
         // Add chinese font
         Font font2 = new Font(i18N.get("local-font-family"), 11); // cn
         if ("zh-CN".equals(lang)) {
+            if (StringUtil.isBlank(font2.getName())) font2.setName("宋体");
             font2.setCharset(Charset.GB2312);
         } else if ("zh-TW".equals(lang)) {
+            if (StringUtil.isBlank(font2.getName())) font2.setName("新細明體");
             font2.setCharset(Charset.CHINESEBIG5);
         }
         // Other charset
