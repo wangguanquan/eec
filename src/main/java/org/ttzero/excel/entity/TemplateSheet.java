@@ -69,6 +69,14 @@ import java.util.Map;
  */
 public class TemplateSheet extends Sheet {
     /**
+     * 掩码前缀
+     */
+    protected String prefix = "${";
+    /**
+     * 掩码后缀
+     */
+    protected String suffix = "}";
+    /**
      * 模板路径
      */
     protected Path templatePath;
@@ -232,6 +240,32 @@ public class TemplateSheet extends Sheet {
         this.name = name;
         this.templateStream = templateStream;
         this.originalSheetName = originalSheetName;
+    }
+
+    /**
+     * 设置掩码前缀，默认前缀为{@code $&#x123;}
+     *
+     * @param prefix 掩码前缀
+     * @return 当前工作表
+     */
+    public TemplateSheet setPrefix(String prefix) {
+        if (StringUtil.isBlank(prefix))
+            throw new IllegalArgumentException("Illegal prefix value");
+        this.prefix = prefix;
+        return this;
+    }
+
+    /**
+     * 设置掩码后缀，默认后缀为{@code &#x125;}
+     *
+     * @param suffix 掩码后缀
+     * @return 当前工作表
+     */
+    public TemplateSheet setSuffix(String suffix) {
+        if (StringUtil.isBlank(suffix))
+            throw new IllegalArgumentException("Illegal suffix value");
+        this.suffix = suffix;
+        return this;
     }
 
     /**
