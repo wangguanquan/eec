@@ -25,6 +25,7 @@ import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.CellType;
 import org.ttzero.excel.reader.Col;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
@@ -399,21 +400,22 @@ public class TemplateSheet extends Sheet {
             }
         }
 
+        // 预处理样式和掩码
+        prepare();
+
         // 忽略表头输出
         super.ignoreHeader();
         // 初始化行迭代器
         rowIterator = new CommitRowSetIterator((RowSetIterator) sheet.iterator());
-        // 样式缓存
-        styleMap = new HashMap<>();
 
         return len;
     }
 
     @Override
     protected void resetBlockData() {
+        // 样式
+        Integer xf;
         int len, n = 0, limit = sheetWriter.getRowLimit(); // 这里直接从writer中获取
-        // 模板文件样式
-        Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
@@ -451,30 +453,7 @@ public class TemplateSheet extends Sheet {
                 if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
 
                 // 复制样式
-                Integer xf = styleMap.get(cell0.xf);
-                if (xf != null) cell.xf = xf;
-                else {
-                    int style = row0.getCellStyle(cell0);
-                    xf = 0;
-                    // 字体
-                    Font font = styles0.getFont(style);
-                    if (font != null) xf |= styles.addFont(font.clone());
-                    // 填充
-                    Fill fill = styles0.getFill(style);
-                    if (fill != null) xf |= styles.addFill(fill.clone());
-                    // 边框
-                    Border border = styles0.getBorder(style);
-                    if (border != null) xf |= styles.addBorder(border.clone());
-                    // 格式化
-                    NumFmt numFmt = styles0.getNumFmt(style);
-                    if (numFmt != null) xf |= styles.addNumFmt(numFmt.clone());
-                    // 水平对齐、垂直对齐、自动折行
-                    int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
-
-                    // 添加进样式表
-                    cell.xf = styles.of(xf | h | v | w);
-                    styleMap.put(cell0.xf, cell.xf);
-                }
+                cell.xf = (xf = styleMap.get(cell0.xf)) != null ? xf : 0;
             }
             // FIXME 循环替换掩码时不要ark
             rowIterator.commit();
@@ -523,6 +502,59 @@ public class TemplateSheet extends Sheet {
         p.property = pic.getProperty();
         p.effect = pic.getEffect();
         return p;
+    }
+
+    /**
+     * 预处理样式和掩码
+     */
+    protected void prepare() {
+        // 模板文件样式
+        Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
+        // 样式缓存
+        styleMap = new HashMap<>();
+        int prefixLen = prefix.length(), suffixLen = suffix.length(), markLen = prefixLen + suffixLen;
+        for (Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(originalSheetIndex).iterator(); iter.hasNext(); ) {
+            org.ttzero.excel.reader.Row row = iter.next();
+            for (int i = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); i < end; i++) {
+                Cell cell = row.getCell(i);
+
+                // 复制样式
+                if (!styleMap.containsKey(cell.xf)) {
+                    int style = row.getCellStyle(cell), xf = 0;
+                    // 字体
+                    Font font = styles0.getFont(style);
+                    if (font != null) xf |= styles.addFont(font.clone());
+                    // 填充
+                    Fill fill = styles0.getFill(style);
+                    if (fill != null) xf |= styles.addFill(fill.clone());
+                    // 边框
+                    Border border = styles0.getBorder(style);
+                    if (border != null) xf |= styles.addBorder(border.clone());
+                    // 格式化
+                    NumFmt numFmt = styles0.getNumFmt(style);
+                    if (numFmt != null) xf |= styles.addNumFmt(numFmt.clone());
+                    // 水平对齐、垂直对齐、自动折行
+                    int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
+
+                    // 添加进样式表
+                    cell.xf = styles.of(xf | h | v | w);
+                    styleMap.put(cell.xf, cell.xf);
+                }
+
+                // 字符串才会包含掩码
+                if (row.getCellType(cell) == CellType.STRING) {
+                    String v = row.getString(cell);
+                    int len = v.length();
+                    // 一定不包含掩码
+                    if (len < markLen) continue;
+                    int fi = v.indexOf(prefix);
+                    if (fi < 0) continue;
+                    int fn, li = v.indexOf(suffix, fn = fi + prefixLen);
+                    if (li <= fn) continue;
+
+                }
+            }
+        }
     }
 
     /**
