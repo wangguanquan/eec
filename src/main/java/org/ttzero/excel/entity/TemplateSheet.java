@@ -656,7 +656,7 @@ public class TemplateSheet extends Sheet {
                 for (String vwKey : consumerValueKeys) {
                     ValueWrapper vw = namespaceMapper.get(vwKey);
                     // 如果为数组时需要移动游标
-                    if (vw.option == 3 || vw.option == 4) {
+                    if (vw != null && (vw.option == 3 || vw.option == 4)) {
                         if (++vw.i < vw.list.size()) consumerEnd = false;
                             // 加载更多数据
                         else if (vw.supplier != null) {
