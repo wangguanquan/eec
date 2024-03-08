@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
-import org.ttzero.excel.reader.ExcelReaderTest;
 import org.ttzero.excel.reader.FullSheet;
 
 import java.io.File;
@@ -49,13 +48,14 @@ public class TemplateSheetTest extends WorkbookTest {
     @Test public void testSimpleTemplate() throws IOException {
         String fileName = "simple template sheets.xlsx";
         new Workbook()
-            .addSheet(new TemplateSheet("模板 1.xlsx", ExcelReaderTest.testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
+            .addSheet(new TemplateSheet("模板 1.xlsx", testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
             .addSheet(new ListSheet<>("普通工作表", ListObjectSheetTest.Item.randomTestData())) // <- 普通工作表
-            .addSheet(new TemplateSheet("模板 fracture merged.xlsx", ExcelReaderTest.testResourceRoot().resolve("fracture merged.xlsx"))) // <- 模板工作表
+            .addSheet(new TemplateSheet("模板 fracture merged.xlsx", testResourceRoot().resolve("fracture merged.xlsx"))) // <- 模板工作表
+            .addSheet(new TemplateSheet("复制空白工作表", testResourceRoot().resolve("#81.xlsx"), "Sheet2")) // 空白工作表模板
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assertEquals(reader.getSheetCount(), 3);
+            assertEquals(reader.getSheetCount(), 4);
             // TODO 判断每个工作表的内容和样式
         }
     }
@@ -63,7 +63,7 @@ public class TemplateSheetTest extends WorkbookTest {
     @Test public void testAllTemplateSheets() throws IOException {
         String fileName = "all template sheets.xlsx";
         Workbook workbook = new Workbook();
-        File[] files = ExcelReaderTest.testResourceRoot().toFile().listFiles();
+        File[] files = testResourceRoot().toFile().listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.getName().endsWith(".xlsx")) {
