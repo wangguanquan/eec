@@ -18,13 +18,28 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.ExcelReaderTest;
+import org.ttzero.excel.reader.FullSheet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
  * @author guanquan.wang at 2024-01-25 09:57
@@ -63,4 +78,283 @@ public class TemplateSheetTest extends WorkbookTest {
         }
         workbook.writeTo(getOutputTestPath().resolve(fileName));
     }
+
+    @Test public void testFillObject() throws IOException {
+        final String fileName = "fill object.xlsx";
+        YzEntity yzEntity = YzEntity.mock();
+        YzOrderEntity yzOrderEntity = YzOrderEntity.mock();
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                .setData(yzEntity)
+                .setData("YzEntity", yzOrderEntity)
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            Styles styles = reader.getStyles();
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            // 第一行
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row = iter.next();
+            assertEquals(row.getString(0), yzEntity.gsName + "精品采购订单");
+            Font font = styles.getFont(row.getCellStyle(0));
+            assertEquals(font.getName(), "Calibri");
+            assertEquals(font.getSize(), 20);
+            assertTrue(font.isBold());
+
+            // 第二行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(yzEntity.gysName, row.getString(3));
+            assertEquals(yzEntity.orderNo, row.getString(11));
+
+            // 第三行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(yzEntity.gsName, row.getString(3));
+            assertEquals(yzEntity.orderStatus, row.getString(11));
+
+            // 第四行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(yzEntity.jsName, row.getString(3));
+            assertTrue(yzEntity.cgDate.getTime() - row.getDate(11).getTime() < 1000); // 导出时Excel的日期丢失了毫秒值
+
+            // 第五行
+            assertTrue(iter.hasNext());
+            assertTrue(iter.next().isBlank()); // 空行
+
+            // 第六行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.getFirstColumnIndex(), 0);
+            final String[] titles = {"序号", "精品代码", null, "精品名称", null, null, "数量", "不含税单价", "不含税金额", "税率", "含税单价", "含税金额", "备注"};
+            for (int i = 0, len = Math.min(row.getLastColumnIndex(), titles.length); i < len; i++) {
+                Cell cell = row.getCell(i);
+                assertEquals(titles[i], row.getString(cell));
+                int style = row.getCellStyle(cell);
+                font = styles.getFont(style);
+                assertTrue(font.isBold());
+                assertEquals(font.getName(), "Calibri");
+                assertEquals(font.getSize(), 11);
+                assertEquals(styles.getHorizontal(style), Horizontals.CENTER);
+            }
+
+            // 第七行
+            assertTrue(iter.hasNext());
+            assertTrue(iter.next().isBlank()); // 空行
+
+            // 第八行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.getFirstColumnIndex(), 0);
+            assertEquals(row.getInt(0).intValue(), 1);
+            assertEquals(row.getString(1), yzOrderEntity.jpCode);
+            assertEquals(row.getString(3), yzOrderEntity.jpName);
+            assertEquals(row.getInt(6).intValue(), yzOrderEntity.num);
+            assertTrue(Math.abs(row.getDouble(7) - yzOrderEntity.price) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(8) - yzOrderEntity.amount) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(9) - yzOrderEntity.tax) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(10) - yzOrderEntity.taxPrice) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(11) - yzOrderEntity.taxAmount) <= 0.00001);
+            assertEquals(row.getString(12), yzOrderEntity.remark);
+
+            // 第九行
+            assertTrue(iter.hasNext());
+            assertTrue(iter.next().isBlank()); // 空行
+            // 第十行
+            assertTrue(iter.hasNext());
+            assertTrue(iter.next().isBlank()); // 空行
+
+            // 第十一行
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.getString(0), "合计");
+            assertEquals(row.getInt(6).intValue(), yzEntity.nums);
+            assertTrue(Math.abs(row.getDouble(7) - yzEntity.priceTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(8) - yzEntity.amountTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(9) - yzEntity.taxTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(10) - yzEntity.taxPriceTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(11) - yzEntity.taxAmountTotal) <= 0.00001);
+        }
+    }
+
+    @Test public void testFillMap() throws IOException {
+        final String fileName = "fill map.xlsx";
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                    .setData(YzEntity.mock())
+                    // 单Map测试
+                    .setData("YzEntity", new HashMap<String, Object>() {{
+                        put("xh", 1);
+                        put("jpCode", "code1");
+                        put("jpName", "name1");
+                        put("num", 10);
+                        put("price", 10);
+                        put("amount", 100);
+                        put("tax", 0.6);
+                        put("taxPrice", 11.6);
+                        put("taxAmount", 116);
+                        put("remark", "很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长");
+                    }})
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            // 跳过前7行
+            iter.next();iter.next(); iter.next();iter.next();iter.next();iter.next();iter.next();
+
+            org.ttzero.excel.reader.Row row = iter.next();
+            assertEquals(row.getString(12), "很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长");
+        }
+    }
+
+    @Test public void testFillListObject() throws IOException {
+        final String fileName = "fill list object.xlsx";
+        List<YzOrderEntity> expectList = YzOrderEntity.randomData();
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                    .setData(YzEntity.mock())
+                    .setData("YzEntity", expectList)
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+            // 跳过前7行
+            iter.next();iter.next(); iter.next();iter.next();iter.next();iter.next();iter.next();
+
+            List<Dimension> mergeCells = sheet.getMergeCells();
+            assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+            Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
+            for (Dimension dim : mergeCells) {
+                mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+            }
+            for (YzOrderEntity expect : expectList) {
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row row = iter.next();
+                assertEquals(row.getFirstColumnIndex(), 0);
+                assertEquals(row.getInt(0).intValue(), expect.xh);
+                assertEquals(row.getString(1), expect.jpCode);
+                assertEquals(row.getString(3), expect.jpName);
+                assertEquals(row.getInt(6).intValue(), expect.num);
+                assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
+                assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
+                assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
+                assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
+                assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
+                assertEquals(row.getString(12), expect.remark);
+
+                // 判断是否带合并
+                Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
+                assertNotNull(mergeCell);
+                assertEquals(mergeCell.width, 2);
+                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
+                assertNotNull(mergeCell);
+                assertEquals(mergeCell.width, 3);
+                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+                assertNotNull(mergeCell);
+                assertEquals(mergeCell.width, 5);
+            }
+        }
+    }
+
+    public static class YzEntity {
+        private String gysName;
+        private String gsName;
+        private String jsName;
+        private String orderNo;
+        private String orderStatus, ymd;
+        private Date cgDate;
+        private int nums;
+        private double priceTotal;
+        private double amountTotal;
+        private double taxTotal;
+        private double taxPriceTotal;
+        private double taxAmountTotal;
+
+        private static YzEntity mock() {
+            YzEntity e = new YzEntity();
+            e.gysName =" 供应商";
+            e.gsName = "ABC公司";
+            e.jsName = "亚瑟";
+            e.cgDate = new Date();
+            e.orderNo = "JD-0001";
+            e.orderStatus = "OK";
+            e.ymd = "2024-03-07";
+            e.nums = 10;
+            e.priceTotal = 10;
+            e.amountTotal = 10;
+            e.taxTotal = 10;
+            e.taxPriceTotal = 10;
+            e.taxAmountTotal = 10;
+            return e;
+        }
+    }
+
+    public static class YzOrderEntity {
+        private int xh;
+        private String jpCode;
+        private String jpName;
+        private int num;
+        private double price;
+        private double amount;
+        private double tax;
+        private double taxPrice;
+        private double taxAmount;
+        private String remark;
+
+        private static YzOrderEntity mock() {
+            YzOrderEntity e = new YzOrderEntity();
+            e.xh = 1;
+            e.jpCode = "code1";
+            e.jpName = "name1";
+            e.num = e.xh;
+            e.price = 3.5D * e.xh;
+            e.amount = e.price * e.num;
+            e.tax = 0.006;
+            e.taxPrice = e.price * (e.tax + 1);
+            e.taxAmount = e.amount * e.tax;
+            e.remark = "备注";
+            return e;
+        }
+
+        private static List<YzOrderEntity> randomData() {
+            List<YzOrderEntity> list = new ArrayList<>(10);
+            for (int i = 0; i < 10; i++) {
+                YzOrderEntity e = new YzOrderEntity();
+                e.xh = i + 1;
+                e.jpCode = "code" + e.xh;
+                e.jpName = "name" + e.xh;
+                e.num = e.xh;
+                e.price = 3.5D * e.xh;
+                e.amount = e.price * e.num;
+                e.tax = 0.006;
+                e.taxPrice = e.price * (e.tax + 1);
+                e.taxAmount = e.amount * e.tax;
+                e.remark = "备注" + e.xh;
+                list.add(e);
+            }
+            return list;
+        }
+        private static List<Map<String, Object>> randomMap() {
+            List<Map<String, Object>> list = new ArrayList<>(10);
+            for (int i = 0, j; i < 10; i++) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("xh", (j = i + 1));
+                map.put("jpCode", "code" + j);
+                map.put("jpName", "name" + j);
+                map.put("num", j);
+                map.put("price", 3.5D * j);
+                map.put("amount", 3.5D * j * j);
+                map.put("tax", 0.006);
+                map.put("taxPrice", 3.5D * j * 1.006);
+                map.put("taxAmount", 3.5D * j * 1.006 * j);
+                map.put("remark", "备注" + j);
+                list.add(map);
+            }
+            return list;
+        }
+    }
+
 }
