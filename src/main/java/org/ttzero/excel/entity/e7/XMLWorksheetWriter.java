@@ -559,7 +559,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected int startRow(Row row) throws IOException {
         // Row number
-        int r = row.getIndex() + startRow, c;
+        int r = row.getIndex() + startRow;
 
         bw.write("<row r=\"");
         bw.writeInt(r);
@@ -569,14 +569,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\" customHeight=\"1\" ht=\"");
             bw.write(rowHeight);
         }
-        if (this.columns.length > 0) {
+        if (row.lc - row.fc >= 1) {
+            bw.write("\" spans=\"");
+            bw.writeInt(row.fc + 1);
+            bw.write(':');
+            bw.writeInt(row.lc);
+        }
+        else if (this.columns.length > 0) {
             bw.write("\" spans=\"");
             bw.writeInt(this.columns[0].realColIndex);
             bw.write(':');
             bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
-        } else if ((c = row.getCells().length) >= 1) {
-            bw.write("\" spans=\"1:");
-            bw.writeInt(c);
         }
         // 隐藏行
         if (row.isHidden()) bw.write("\" hidden=\"1");
@@ -596,13 +599,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row);
-        bw.write("\">");
+        int r = startRow(row);
+        if (row.lc > row.fc) {
+            bw.write("\">");
 
-        // 循环写单元格
-        writeCells(cells, 0, len, r);
+            // 循环写单元格
+            writeCells(cells, row.fc, row.lc, r);
 
-        bw.write("</row>");
+            bw.write("</row>");
+        } else bw.write("\"/>");
     }
 
     /**
