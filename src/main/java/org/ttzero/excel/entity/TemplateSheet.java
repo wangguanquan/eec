@@ -534,7 +534,6 @@ public class TemplateSheet extends Sheet {
             if (pictures != null && !pictures.isEmpty()) {
                 this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
                 for (Drawings.Picture p : pictures) {
-                    // 背景
                     if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
                     else this.pictures.add(p);
                 }
@@ -644,7 +643,7 @@ public class TemplateSheet extends Sheet {
                 cell.xf = (xf = styleMap.get(cell0.xf)) != null ? xf : 0;
 
                 // 合并单元格重新计算位置
-                if (!fillCell && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
+                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
                     if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
                     else {
                         int r = rows - row0.getRowNum() + 1;
