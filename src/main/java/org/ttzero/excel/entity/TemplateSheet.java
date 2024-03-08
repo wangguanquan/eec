@@ -35,15 +35,29 @@ import org.ttzero.excel.reader.RowSetIterator;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制
@@ -113,6 +127,27 @@ public class TemplateSheet extends Sheet {
      * 以Excel格式输出
      */
     protected boolean writeAsExcel;
+    /**
+     * 包含掩码的单元格预处理后的结果
+     */
+    protected PreCell[][] preCells;
+    /**
+     * 掩码位置标记 pf: 当前掩码的行号 pi: 当前掩码在preNodes的下标
+     */
+    protected int pf, pi;
+    /**
+     * 合并单元格（输出时需特殊处理）
+     */
+    protected List<Dimension> mergeCells;
+    /**
+     * 缓存源文件合并单元格
+     * Key: 首坐标 Value：单元格范围
+     */
+    protected Map<Long, Dimension> mergeCells0;
+    /**
+     * 填充数据缓存
+     */
+    protected Map<String, ValueWrapper> namespaceMapper = new HashMap<>();
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
@@ -270,6 +305,107 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
+     * 绑定数据到默认命名空间，默认命名空间为{@code null}
+     *
+     * @param o 任意对象，可以为Java Bean，Map，或者数组
+     * @return 当前工作表
+     */
+    public TemplateSheet setData(Object o) {
+        return setData(null, o);
+    }
+
+    /**
+     * 绑定数据到指定命名空间上
+     *
+     * @param o 任意对象，可以为Java Bean，Map，或者数组
+     * @return 当前工作表
+     */
+    public TemplateSheet setData(String namespace, Object o) {
+        if ("this".equals(namespace)) namespace = null;
+        ValueWrapper vw = namespaceMapper.get(namespace);
+        if (vw == null) {
+            vw = new ValueWrapper();
+            namespaceMapper.put(namespace, vw);
+        }
+        else LOGGER.warn("The namespace[{}] already exists.", namespace);
+        if (o == null) vw.option = 0;
+        else {
+            Class<?> clazz = o.getClass();
+            if (Map.class.isAssignableFrom(clazz)) {
+                vw.option = 2;
+                Map map = (Map) o;
+                if (vw.map == null) vw.map = map;
+                else vw.map.putAll(map);
+            }
+            else if (List.class.isAssignableFrom(clazz)) {
+                List list = (List) o;
+                Object oo = getFirstObject(list);
+                if (oo != null) {
+                    vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
+                    if (vw.list == null) vw.list = list; else vw.list.addAll(list);
+                    if (vw.option == 4) vw.accessibleObjectMap = parseClass(oo.getClass());
+                } else vw.option = 0;
+            }
+            else if (clazz.isArray()) {
+                int len = Array.getLength(o);
+                if (vw.list == null) vw.list = new ArrayList<>(len);
+                for (int i = 0; i < len; i++) {
+                    Object oo = Array.get(o, i);
+                    vw.list.add(oo);
+                    if (oo != null && vw.option == 0) vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
+                }
+            }
+            else {
+                vw.o = o;
+                vw.option = 1;
+                vw.accessibleObjectMap = parseClass(clazz);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 绑定一个{@code Supplier}到默认命名空间，适用于未知长度或数量最大的数组
+     *
+     * @param supplier 数据产生者
+     * @return 当前工作表
+     */
+    public TemplateSheet setData(Supplier<List<?>> supplier) {
+        return setData(null, supplier);
+    }
+
+    /**
+     * 绑定一个{@code Supplier}到指定命名空间，适用于未知长度或数量最大的数组
+     *
+     * @param supplier 数据产生者
+     * @return 当前工作表
+     */
+    public TemplateSheet setData(String namespace, Supplier<List<?>> supplier) {
+        if ("this".equals(namespace)) namespace = null;
+        ValueWrapper vw = namespaceMapper.get(namespace);
+        if (vw != null) {
+            LOGGER.warn("The namespace[{}] already exists.", namespace);
+        } else {
+            vw = new ValueWrapper();
+            namespaceMapper.put(namespace, vw);;
+        }
+        vw.supplier = supplier;
+
+        // 加载第一批数据预处理数据类型
+        if (supplier != null) {
+            List list = supplier.get();
+            Object oo = getFirstObject(list);
+            if (oo != null) {
+                if (vw.list == null) vw.list = list;
+                else vw.list.addAll(list);
+                vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
+                if (vw.option == 4) vw.accessibleObjectMap = parseClass(oo.getClass());
+            } else vw.option = 0;
+        }
+        return this;
+    }
+
+    /**
      * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
      * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
      *
@@ -279,7 +415,7 @@ public class TemplateSheet extends Sheet {
         // 清除数据（仅重置下标）
         rowBlock.clear();
 
-        // 装载数据（这里不需要判断是否有表头，模板是没有表头的）
+        // 装载数据（这里不需要判断是否有表头，模板不需要表头）
         resetBlockData();
 
         // 使其可读
@@ -372,9 +508,14 @@ public class TemplateSheet extends Sheet {
             Panes panes = sheet.getFreezePanes();
             if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
 
-            // TODO 合并（较为复杂不能简单复制，需要计算中间插入或扣除的行）
-            List<Dimension> mergeCells = sheet.getMergeCells();
-            if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+            // 合并
+            List<Dimension> mergeCells0 = sheet.getMergeCells();
+            if (mergeCells0 != null) {
+                mergeCells = new ArrayList<>(mergeCells0.size());
+                this.mergeCells0 = new HashMap<>(mergeCells0.size());
+                // 这里将坐标切换到 base 0，方便后续取值
+                for (Dimension dim : mergeCells0) this.mergeCells0.put(dimensionKey(dim), dim);
+            }
 
             // 过滤
             Dimension autoFilter = sheet.getFilter();
@@ -388,7 +529,7 @@ public class TemplateSheet extends Sheet {
             if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
             if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
 
-            // 图片
+            // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
             List<Drawings.Picture> pictures = sheet.listPictures();
             if (pictures != null && !pictures.isEmpty()) {
                 this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
@@ -406,21 +547,25 @@ public class TemplateSheet extends Sheet {
         // 忽略表头输出
         super.ignoreHeader();
         // 初始化行迭代器
-        rowIterator = new CommitRowSetIterator((RowSetIterator) sheet.iterator());
+        rowIterator = new CommitRowSetIterator((RowSetIterator) sheet.reset().iterator());
+        pf = preCells == null ? -1 : preCells[0][0].row;
 
         return len;
     }
 
     @Override
     protected void resetBlockData() {
-        // 样式
         Integer xf;
         int len, n = 0, limit = sheetWriter.getRowLimit(); // 这里直接从writer中获取
-        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); rows++) {
+        Dimension mergeCell;
+        PreCell pn;
+        Object e;
+        Set<String> consumerValueKeys = null;
+        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
             // 设置行号
-            row.index = rows = row0.getRowNum() - 1;
+            row.index = rows = rowIterator.rows - 1;
             // 设置行高
             row.height = row0.getHeight();
             // 设置行是否隐藏
@@ -428,15 +573,58 @@ public class TemplateSheet extends Sheet {
             // 空行特殊处理（lc-fc=-1)
             len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
             Cell[] cells = row.realloc(len);
+            // 预处理
+            if (row0.getRowNum() == pf || rowIterator.hasFillCell) {
+                if (!rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi]);
+                if (consumerValueKeys == null ) consumerValueKeys = new HashSet<>();
+                else consumerValueKeys.clear();
+            } else consumerValueKeys = null;
+
+            // 掩码是否已消费结束
+            boolean consumerEnd = true;
+
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i], cell0 = row0.getCell(i);
                 // Clear cells
                 cell.clear();
 
+                boolean fillCell = false;
                 // 复制数据
                 switch (row0.getCellType(cell0)) {
-                    // 字符串特殊处理(掩码只存在于字符串中)
-                    case STRING:  cell.setString(row0.getString(cell0));                                break;
+                    case STRING:
+                        if (rowIterator.hasFillCell && (pn = rowIterator.preNodes[i]) != null) {
+                            fillCell = true;
+                            if (pn.nodes.length == 1) {
+                                e = getNodeValue(pn.nodes[0]);
+                                if (e != null) cellValueAndStyle.setCellValue(row, cell, e, new Column(), e.getClass(), false);
+                                else cell.emptyTag();
+                                consumerValueKeys.add(pn.nodes[0].namespace);
+                            }
+                            else {
+                                int k = 0;
+                                for (Node node : pn.nodes) {
+                                    e = getNodeValue(node);
+                                    if (e != null) {
+                                        String s = e.toString();
+                                        int vn = s.length();
+                                        if (vn + k > pn.cb.length) pn.cb = Arrays.copyOf(pn.cb, vn + k + 128);
+                                        s.getChars(0, vn, pn.cb, k);
+                                        k += vn;
+                                    }
+                                    consumerValueKeys.add(node.namespace);
+                                }
+                                cell.setString(new String(pn.cb, 0, k));
+                            }
+
+                            // 处理单行合并单元格
+                            if (pn.m != null) {
+                                // 正数为行合并 负数为列合并
+                                if (pn.m > 0) mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + 1, (short) (i + pn.m + 1)));
+                                else mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + ~pn.m, (short) (i + 1)));
+                            }
+                        } else cell.setString(row0.getString(cell0));
+                        break;
+                        // FIXME 范围外的数据不需要复制，要继续向后走
                     case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
                     case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
                     case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
@@ -449,22 +637,103 @@ public class TemplateSheet extends Sheet {
 
                 if (!writeAsExcel) continue;
 
-                // 复制公式
+                // TODO 复制公式（不是简单的复制，需重新计算位置）
                 if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
 
                 // 复制样式
                 cell.xf = (xf = styleMap.get(cell0.xf)) != null ? xf : 0;
+
+                // 合并单元格重新计算位置
+                if (!fillCell && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
+                    if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
+                    else {
+                        int r = rows - row0.getRowNum() + 1;
+                        mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
+                    }
+                }
             }
-            // FIXME 循环替换掩码时不要ark
-            rowIterator.commit();
+
+            if (consumerValueKeys != null) {
+                for (String vwKey : consumerValueKeys) {
+                    ValueWrapper vw = namespaceMapper.get(vwKey);
+                    // 如果为数组时需要移动游标
+                    if (vw.option == 3 || vw.option == 4) {
+                        if (++vw.i < vw.list.size()) consumerEnd = false;
+                            // 加载更多数据
+                        else if (vw.supplier != null) {
+                            List list = vw.supplier.get();
+                            if (list != null && !list.isEmpty()) {
+                                vw.list = list;
+                                vw.i = 0;
+                                consumerEnd = false;
+                            } else vw.option = -1; // EOF
+                        } else vw.option = -1; // EOF
+                    }
+                }
+            }
+
+            // 循环替换掩码时不要ark
+            if (consumerEnd) {
+                if (rowIterator.hasFillCell) {
+                    pi++;
+                    pf = preCells.length > pi && preCells[pi] != null &&  preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
+                }
+                rowIterator.commit();
+            }
         }
+    }
+
+    /**
+     * 获取掩码的实际值
+     *
+     * @param node 掩码节点信息
+     * @return 值
+     */
+    protected Object getNodeValue(Node node) {
+        // 纯文本
+        if ((node.option & 1) == 0) return node.val;
+        ValueWrapper vw = namespaceMapper.get(node.namespace);
+        Object e = null;
+        if (vw != null) {
+            switch (vw.option) {
+                // Object
+                case 1:
+                    AccessibleObject ao = vw.accessibleObjectMap.get(node.val);
+                    try {
+                        if (ao instanceof Method) e = ((Method) ao).invoke(vw.o);
+                        else if (ao instanceof Field) e = ((Field) ao).get(vw.o);
+                        else e = vw.o;
+                    } catch (IllegalAccessException | InvocationTargetException ex) {
+                        LOGGER.warn("Invoke " + node.val + " value error", ex);
+                    }
+                    break;
+                // Map
+                case 2: e = vw.map.get(node.val); break;
+                // List Map
+                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val); break;
+                // List Object
+                case 4:
+                    ao = vw.accessibleObjectMap.get(node.val);
+                    Object oo = vw.list.get(vw.i);
+                    try {
+                        if (ao instanceof Method) e = ((Method) ao).invoke(oo);
+                        else if (ao instanceof Field) e = ((Field) ao).get(oo);
+                        else e = oo;
+                    } catch (IllegalAccessException | InvocationTargetException ex) {
+                        LOGGER.warn("Invoke " + node.val + " value error", ex);
+                    }
+                    break;
+                default:
+            }
+        }
+        return e;
     }
 
     @Override
     public void afterSheetDataWriter(int total) {
         super.afterSheetDataWriter(total);
 
-        // 如果有图片则添加图片
+        // 添加图片
         if (pictures != null) {
             try {
                 for (Drawings.Picture p : pictures) {
@@ -475,6 +744,9 @@ public class TemplateSheet extends Sheet {
                 LOGGER.warn("Copy pictures failed.", e);
             }
         }
+
+        // 添加合并
+        if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
     }
 
     @Override
@@ -512,9 +784,10 @@ public class TemplateSheet extends Sheet {
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         // 样式缓存
         styleMap = new HashMap<>();
-        int prefixLen = prefix.length(), suffixLen = suffix.length(), markLen = prefixLen + suffixLen;
+        int prefixLen = prefix.length(), suffixLen = suffix.length();
         for (Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(originalSheetIndex).iterator(); iter.hasNext(); ) {
             org.ttzero.excel.reader.Row row = iter.next();
+            int index = 0;
             for (int i = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); i < end; i++) {
                 Cell cell = row.getCell(i);
 
@@ -533,36 +806,189 @@ public class TemplateSheet extends Sheet {
                     // 格式化
                     NumFmt numFmt = styles0.getNumFmt(style);
                     if (numFmt != null) xf |= styles.addNumFmt(numFmt.clone());
-                    // 水平对齐、垂直对齐、自动折行
-                    int h = styles0.getHorizontal(style), v = styles0.getVertical(style), w = styles0.getWrapText(style);
+                    // 水平对齐
+                    xf |= styles0.getHorizontal(style);
+                    // 垂直对齐
+                    xf |= styles0.getVertical(style);
+                    // 自动折行
+                    xf |= styles0.getWrapText(style);
 
                     // 添加进样式表
-                    cell.xf = styles.of(xf | h | v | w);
-                    styleMap.put(cell.xf, cell.xf);
+                    styleMap.put(cell.xf, styles.of(xf));
                 }
 
-                // 字符串才会包含掩码
+                // 判断字符串是否包含掩码，可以是一个或多个
                 if (row.getCellType(cell) == CellType.STRING) {
                     String v = row.getString(cell);
-                    int len = v.length();
-                    // 一定不包含掩码
-                    if (len < markLen) continue;
-                    int fi = v.indexOf(prefix);
-                    if (fi < 0) continue;
-                    int fn, li = v.indexOf(suffix, fn = fi + prefixLen);
-                    if (li <= fn) continue;
+                    // 预处理单元格的值
+                    PreCell preCell = prepareCellValue(v, prefixLen, suffixLen);
+                    if (preCell != null) {
+                        preCell.row = row.getRowNum();
+                        preCell.col = i;
 
+                        if (preCells == null) preCells = new PreCell[10][];
+                        PreCell[] pns;
+                        if (index == 0) {
+                            if (pf >= preCells.length) preCells = Arrays.copyOf(preCells, preCells.length + 10);
+                            preCells[pf++] = pns = new PreCell[Math.min(end - i, 10)];
+                        } else if (index >= (pns = preCells[pf - 1]).length)
+                            preCells[pf - 1] = pns = Arrays.copyOf(pns, pns.length + 10);
+                        pns[index++] = preCell;
+
+                        // 检测是否包含单行合并单元格
+                        if (mergeCells0 != null) {
+                            Dimension mc = mergeCells0.get(dimensionKey(row.getRowNum() - 1, i));
+                            // FIXME 目前只支持单行合并
+                            if (mc != null && mc.height == 1) preCell.m = mc.width - 1;
+                        }
+                    }
                 }
             }
+
+            if (index > 0 && preCells[pf - 1].length > index) preCells[pf - 1] = Arrays.copyOf(preCells[pf - 1], index);
         }
+    }
+
+    /**
+     * 单元格字符串预处理，检测是否包含掩码以及掩码预处理
+     *
+     * @param v 单元格原始值
+     * @param prefixLen 掩码前缀长度
+     * @param suffixLen 掩码后缀长度
+     * @return 预处理结果
+     */
+    protected PreCell prepareCellValue(String v, int prefixLen, int suffixLen) {
+        int len = v.length();
+        if (len <= prefixLen + suffixLen) return null;
+        int pi = 0, fi = v.indexOf(prefix);
+        if (fi < 0) return null;
+        int fn, li = v.indexOf(suffix, fn = fi + prefixLen);
+        if (li <= fn) return null;
+
+        PreCell pn = new PreCell();
+        do {
+            if (fi > pi) {
+                Node node = new Node();
+                if (pn.nodes == null) pn.nodes = new Node[] { node };
+                else {
+                    pn.nodes = Arrays.copyOf(pn.nodes, pn.nodes.length + 1);
+                    pn.nodes[pn.nodes.length - 1] = node;
+                }
+                node.val = v.substring(pi, fi);
+            }
+
+            int j = fn;
+            for (; j < li && v.charAt(j) != '.'; j++) ;
+
+            Node node = new Node();
+            node.option = 1;
+            if (pn.nodes == null) pn.nodes = new Node[] { node };
+            else {
+                pn.nodes = Arrays.copyOf(pn.nodes, pn.nodes.length + 1);
+                pn.nodes[pn.nodes.length - 1] = node;
+            }
+            // 包含namespace，可能为数组或多级对象
+            if (j < li) {
+                node.namespace = v.substring(fn, j);
+                node.val = v.substring(j + 1, li);
+            } else node.val = v.substring(fn, li);
+
+            pi = li + suffixLen;
+            fi = v.indexOf(prefix, pi);
+            if (fi < 0) break;
+            li = v.indexOf(suffix, fn = fi + prefixLen);
+            if (li <= fn) break;
+        } while (fi < len);
+
+        // 尾部字符
+        if (pi < len) {
+            Node node = new Node();
+            pn.nodes = Arrays.copyOf(pn.nodes, pn.nodes.length + 1);
+            pn.nodes[pn.nodes.length - 1] = node;
+            node.val = v.substring(pi);
+        }
+
+        // 分配临时空间后续共享使用
+        if (pn.nodes.length > 1) pn.cb = new char[Math.max(len + (len >> 1), 128)];
+        return pn;
+    }
+
+    /**
+     * 解析对象的方法和字段，方便后续取数
+     *
+     * @param clazz 待解析的对象
+     * @return Key：字段名 Value: Method/Field
+     */
+    protected Map<String, AccessibleObject> parseClass(Class<?> clazz) {
+        Map<String, AccessibleObject> tmp = new HashMap<>();
+        try {
+            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
+                .getPropertyDescriptors();
+            for (PropertyDescriptor pd : propertyDescriptors) {
+                Method method = pd.getReadMethod();
+                if (method != null) tmp.put(pd.getName(), method);
+            }
+
+            Field[] declaredFields = listDeclaredFields(clazz);
+            for (Field f : declaredFields) {
+                if (!tmp.containsKey(f.getName())) {
+                    f.setAccessible(true);
+                    tmp.put(f.getName(), f);
+                }
+            }
+        } catch (IntrospectionException e) {
+            LOGGER.warn("Get class {} methods failed.", clazz);
+        }
+        return tmp;
+    }
+
+    /**
+     * 将范围首行首列进行计算后转为缓存的Key
+     *
+     * @param dim 范围{@link Dimension}
+     * @return 缓存Key
+     */
+    public static long dimensionKey(Dimension dim) {
+        return ((dim.firstColumn - 1) & 0x7FFF) | ((long) dim.firstRow - 1) << 16;
+    }
+
+    /**
+     * 首行首列进行计算后转为缓存的Key
+     *
+     * @param row 行号(zero base)
+     * @param col 列号(zero base)
+     * @return 缓存Key
+     */
+    public static long dimensionKey(int row, int col) {
+        return col & 0x7FFF | ((long) row) << 16;
+    }
+
+    /**
+     * 获取数组中第一个非{@code null}值
+     *
+     * @param list 数组
+     * @return 第一个非{@code null}值
+     */
+    protected static Object getFirstObject(List<?> list) {
+        if (list == null || list.isEmpty()) return null;
+        Object first = list.get(0);
+        if (first != null) return first;
+        int i = 1, len = list.size();
+        do {
+            first = list.get(i++);
+        } while (first == null && i < len);
+        return first;
     }
 
     /**
      * 需要手动调用{@link #commit()}方法才会移动游标
      */
     public static class CommitRowSetIterator implements Iterator<org.ttzero.excel.reader.Row> {
-        private final RowSetIterator iterator;
-        private org.ttzero.excel.reader.Row current;
+        public final RowSetIterator iterator;
+        public org.ttzero.excel.reader.Row current;
+        public int rows;
+        public PreCell[] preNodes;
+        public boolean hasFillCell;
 
         public CommitRowSetIterator(RowSetIterator iterator) {
             this.iterator = iterator;
@@ -570,12 +996,21 @@ public class TemplateSheet extends Sheet {
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            return current != null || iterator.hasNext();
         }
 
         @Override
         public org.ttzero.excel.reader.Row next() {
-            return current != null ? current : (current = iterator.next());
+            org.ttzero.excel.reader.Row row = current != null ? current : (current = iterator.next());
+            rows = Math.max(row.getRowNum(), rows + 1);
+            return row;
+        }
+
+        public void withPreNodes(PreCell[] preNodes) {
+            int len = current.getLastColumnIndex(), len0 = preNodes[preNodes.length - 1].col + 1;
+            this.preNodes = new PreCell[Math.max(len, len0)];
+            for (PreCell p : preNodes) this.preNodes[p.col] = p;
+            hasFillCell = true;
         }
 
         /**
@@ -583,6 +1018,98 @@ public class TemplateSheet extends Sheet {
          */
         public void commit() {
             current = null;
+            preNodes = null;
+            hasFillCell = false;
         }
+    }
+
+    /**
+     * 预处理单元格
+     */
+    public static class PreCell {
+        /**
+         * 单元格行列值，行从1开始 列从0开始
+         */
+        public int row, col;
+        /**
+         * 节点信息
+         */
+        public Node[] nodes;
+        /**
+         * 共享空间
+         */
+        public char[] cb;
+        /**
+         * 合并范围 正数为行合并 负数为列合并
+         */
+        public Integer m;
+    }
+
+    /**
+     * 单元格预处理节点
+     */
+    public static class Node {
+        /**
+         * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
+         *
+         * <blockquote><pre>
+         *  Bit  | Contents
+         * ------+---------
+         * 0, 1 | 是否为掩码 0: 普通文本 1: 掩码
+         * </pre></blockquote>
+         */
+        public byte option;
+        /**
+         * 命令空间
+         */
+        public String namespace;
+        /**
+         * 原始文本或掩码
+         */
+        public String val;
+
+        @Override
+        public String toString() {
+            return (option & 1) == 0 ? val : ("$" + (namespace != null ? namespace + "::" : "") + val);
+        }
+    }
+
+    /**
+     * 填充对象
+     */
+    public static class ValueWrapper {
+        /**
+         * -1: EOF
+         * 0: Null
+         * 1: Object
+         * 2: Map
+         * 3: List map
+         * 4: List Object
+         */
+        public int option;
+        /**
+         * 当{@code option}为3/4的时候，{@code i}表示list的消费下标
+         */
+        public int i;
+        /**
+         * 当{@code option=1}时，填充的数据保存到{@code o}中
+         */
+        public Object o;
+        /**
+         * 当{@code option=2}时，填充的数据保存到{@code map}中
+         */
+        public Map<String, Object> map;
+        /**
+         * 数据生产者，适用于数据量较大或长度未知的场景，效果等同于{@link ListSheet#more}方法
+         */
+        public Supplier<List<?>> supplier;
+        /**
+         * 当{@code option}为3/4的时候，填充的数据保存到{@code list}中
+         */
+        public List<Object> list;
+        /**
+         * 当{@code option}为1/4时，缓存对象的Field和Method方便后续取值
+         */
+        public Map<String, AccessibleObject> accessibleObjectMap;
     }
 }
