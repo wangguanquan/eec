@@ -62,33 +62,38 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制
  * 模板工作表的样式并替换占位符，同时{@code TemplateSheet}也可以和其它{@code Sheet}共用，
- * 意味着可以添加多个模板工作表和普通工作表。需要注意的是多个模板可能产生重复的工作表名称，所以需要外部指定不同的名称以免
+ * 这意味着可以添加多个模板工作表和普通工作表。需要注意的是多个模板可能产生重复的工作表名称，所以需要外部指定不同的名称以免
  * 打开文件异常
  *
  * <p>创建模板工作表需要指定模板文件，它可以是本地文件也可是输入流{@code InputStream}，支持的类型包含{@code xls}
- * 和{@code xlsx}两种格式，除模板文件外还需要指定Excel中的某个{@code Worksheet}，
+ * 和{@code xlsx}两种格式，除模板文件外还需要指定Excel中的某个{@code Worksheet}工作表，
  * 未指定工作表时默认以第一个工作表做为模板，{@code TemplateSheet}工作表导出时不受{@code ExcelColumn}注解限制，
  * 导出的数据范围由模板内占位符决定</p>
  *
- * <p>默认占位符为一对关闭的大括号{@code ‘${key}’}，</p>
+ * <p>默认占位符为一对关闭的大括号{@code ${key}}，可以使用{@link #setPrefix}和{@link #setSuffix}来重新指定占位符的前缀和后缀字符，
+ * 建议不要设置太长的前后缀。占位符可以有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间</p>
  *
- * <p>考虑到模板工作表的复杂性暂时不支持数据切片，数据必须在初始化时设置，换句话说模板工作表只适用于少量数据</p>
+ * <p>使用{@link #setData}方法为占位符绑定值，如果指定了命名空间则绑定值时必须指定对应的命名空间，默认的命名空间为{@code null}，
+ * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}，如果数据量较大时可绑定一个数据生产者{@link Supplier}
+ * 来分片获取数据，它的作用与{@link ListSheet#more}方法一致。</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
- *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx")).setData(data)) // &lt;- 模板工作表
- *     .addSheet(new ListSheet&lt;&gt;()) // &lt;- 普通对象数组工作表
+ *      // 模板工作表
+ *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx")).setData(data))
+ *     // 普通对象数组工作表
+ *     .addSheet(new ListSheet&lt;&gt;())
  *     .writeTo("/tmp/");</pre></blockquote>
  *
  * @author guanquan.wang at 2023-12-01 15:10
  */
 public class TemplateSheet extends Sheet {
     /**
-     * 掩码前缀
+     * 占位符前缀
      */
     protected String prefix = "${";
     /**
-     * 掩码后缀
+     * 占位符后缀
      */
     protected String suffix = "}";
     /**
@@ -128,11 +133,11 @@ public class TemplateSheet extends Sheet {
      */
     protected boolean writeAsExcel;
     /**
-     * 包含掩码的单元格预处理后的结果
+     * 包含占位符的单元格预处理后的结果
      */
     protected PreCell[][] preCells;
     /**
-     * 掩码位置标记 pf: 当前掩码的行号 pi: 当前掩码在preNodes的下标
+     * 占位符位置标记 pf: 当前占位符的行号 pi: 当前占位符在preNodes的下标
      */
     protected int pf, pi;
     /**
@@ -279,9 +284,9 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 设置掩码前缀，默认前缀为{@code $&#x123;}
+     * 设置占位符前缀，默认前缀为{@code $&#x123;}
      *
-     * @param prefix 掩码前缀
+     * @param prefix 占位符前缀
      * @return 当前工作表
      */
     public TemplateSheet setPrefix(String prefix) {
@@ -292,9 +297,9 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 设置掩码后缀，默认后缀为{@code &#x125;}
+     * 设置占位符后缀，默认后缀为{@code &#x125;}
      *
-     * @param suffix 掩码后缀
+     * @param suffix 占位符后缀
      * @return 当前工作表
      */
     public TemplateSheet setSuffix(String suffix) {
@@ -317,6 +322,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 绑定数据到指定命名空间上
      *
+     * @param namespace 命名空间
      * @param o 任意对象，可以为Java Bean，Map，或者数组
      * @return 当前工作表
      */
@@ -377,6 +383,7 @@ public class TemplateSheet extends Sheet {
     /**
      * 绑定一个{@code Supplier}到指定命名空间，适用于未知长度或数量最大的数组
      *
+     * @param namespace 命名空间
      * @param supplier 数据产生者
      * @return 当前工作表
      */
@@ -540,7 +547,7 @@ public class TemplateSheet extends Sheet {
             }
         }
 
-        // 预处理样式和掩码
+        // 预处理样式和占位符
         prepare();
 
         // 忽略表头输出
@@ -579,7 +586,7 @@ public class TemplateSheet extends Sheet {
                 else consumerValueKeys.clear();
             } else consumerValueKeys = null;
 
-            // 掩码是否已消费结束
+            // 占位符是否已消费结束
             boolean consumerEnd = true;
 
             for (int i = 0; i < len; i++) {
@@ -671,7 +678,7 @@ public class TemplateSheet extends Sheet {
                 }
             }
 
-            // 循环替换掩码时不要ark
+            // 循环替换占位符时不要ark
             if (consumerEnd) {
                 if (rowIterator.hasFillCell) {
                     pi++;
@@ -683,9 +690,9 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 获取掩码的实际值
+     * 获取占位符的实际值
      *
-     * @param node 掩码节点信息
+     * @param node 占位符节点信息
      * @return 值
      */
     protected Object getNodeValue(Node node) {
@@ -776,7 +783,7 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 预处理样式和掩码
+     * 预处理样式和占位符
      */
     protected void prepare() {
         // 模板文件样式
@@ -816,7 +823,7 @@ public class TemplateSheet extends Sheet {
                     styleMap.put(cell.xf, styles.of(xf));
                 }
 
-                // 判断字符串是否包含掩码，可以是一个或多个
+                // 判断字符串是否包含占位符，可以是一个或多个
                 if (row.getCellType(cell) == CellType.STRING) {
                     String v = row.getString(cell);
                     // 预处理单元格的值
@@ -849,11 +856,11 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
-     * 单元格字符串预处理，检测是否包含掩码以及掩码预处理
+     * 单元格字符串预处理，检测是否包含占位符以及占位符预处理
      *
      * @param v 单元格原始值
-     * @param prefixLen 掩码前缀长度
-     * @param suffixLen 掩码后缀长度
+     * @param prefixLen 占位符前缀长度
+     * @param suffixLen 占位符后缀长度
      * @return 预处理结果
      */
     protected PreCell prepareCellValue(String v, int prefixLen, int suffixLen) {
@@ -1054,7 +1061,7 @@ public class TemplateSheet extends Sheet {
          * <blockquote><pre>
          *  Bit  | Contents
          * ------+---------
-         * 0, 1 | 是否为掩码 0: 普通文本 1: 掩码
+         * 0, 1 | 是否为占位符 0: 普通文本 1: 占位符
          * </pre></blockquote>
          */
         public byte option;
@@ -1063,7 +1070,7 @@ public class TemplateSheet extends Sheet {
          */
         public String namespace;
         /**
-         * 原始文本或掩码
+         * 原始文本或占位符
          */
         public String val;
 
