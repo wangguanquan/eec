@@ -219,44 +219,174 @@ public class TemplateSheetTest extends WorkbookTest {
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            FullSheet sheet = reader.sheet(0).asFullSheet();
-            Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
-            // 跳过前7行
-            iter.next();iter.next(); iter.next();iter.next();iter.next();iter.next();iter.next();
-
-            List<Dimension> mergeCells = sheet.getMergeCells();
-            assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
-            Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
-            for (Dimension dim : mergeCells) {
-                mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
-            }
-            for (YzOrderEntity expect : expectList) {
-                assertTrue(iter.hasNext());
-                org.ttzero.excel.reader.Row row = iter.next();
-                assertEquals(row.getFirstColumnIndex(), 0);
-                assertEquals(row.getInt(0).intValue(), expect.xh);
-                assertEquals(row.getString(1), expect.jpCode);
-                assertEquals(row.getString(3), expect.jpName);
-                assertEquals(row.getInt(6).intValue(), expect.num);
-                assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
-                assertEquals(row.getString(12), expect.remark);
-
-                // 判断是否带合并
-                Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 2);
-                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 3);
-                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 5);
-            }
+            assertListObject(reader.sheet(0).asFullSheet(), expectList);
         }
+    }
+
+    @Test public void testFillListMap() throws IOException {
+        final String fileName = "fill list map.xlsx";
+        List<Map<String, Object>> expectList = YzOrderEntity.randomMap();
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                .setData(YzEntity.mock())
+                .setData("YzEntity", expectList)
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertListMap(reader.sheet(0).asFullSheet(), expectList);
+        }
+    }
+
+    @Test public void testFillSupplierListObject() throws IOException {
+        final String fileName = "fill supplier list object.xlsx";
+        List<YzOrderEntity> expectList = new ArrayList<>();
+        int[] page = { 0 };
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                .setData(YzEntity.mock())
+                .setData("YzEntity", () -> {
+                    List<YzOrderEntity> sub = null;
+                    // 拉取10页数据
+                    if (page[0]++ <= 10) {
+                        sub = YzOrderEntity.randomData();
+                        expectList.addAll(sub);
+                    }
+                    return sub;
+                })
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertListObject(reader.sheet(0).asFullSheet(), expectList);
+        }
+    }
+
+    @Test public void testFillSupplierListMap() throws IOException {
+        final String fileName = "fill supplier list map.xlsx";
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        int[] page = { 0 };
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+                .setData(YzEntity.mock())
+                .setData("YzEntity", () -> {
+                    List<Map<String, Object>> sub = null;
+                    // 拉取10页数据
+                    if (page[0]++ <= 10) {
+                        sub = YzOrderEntity.randomMap();
+                        expectList.addAll(sub);
+                    }
+                    return sub;
+                })
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertListMap(reader.sheet(0).asFullSheet(), expectList);
+        }
+    }
+
+    static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {
+        Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+        // 跳过前7行
+        iter.next();iter.next(); iter.next();iter.next();iter.next();iter.next();iter.next();
+
+        List<Dimension> mergeCells = sheet.getMergeCells();
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
+        for (Dimension dim : mergeCells) {
+            mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+        }
+        org.ttzero.excel.reader.Row row;
+        for (YzOrderEntity expect : expectList) {
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.getFirstColumnIndex(), 0);
+            assertEquals(row.getInt(0).intValue(), expect.xh);
+            assertEquals(row.getString(1), expect.jpCode);
+            assertEquals(row.getString(3), expect.jpName);
+            assertEquals(row.getInt(6).intValue(), expect.num);
+            assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
+            assertEquals(row.getString(12), expect.remark);
+
+            // 判断是否带合并
+            Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 2);
+            mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 3);
+            mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 5);
+        }
+        // 跳过2行
+        assertTrue(iter.next().isBlank());
+        assertTrue(iter.next().isBlank());
+
+        // 合计行
+        row = iter.next();
+        assertEquals(row.getString(0), "合计");
+        Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
+        assertNotNull(mergeCell);
+        assertEquals(mergeCell.width, 6);
+        mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+        assertNotNull(mergeCell);
+        assertEquals(mergeCell.width, 5);
+    }
+
+    static void assertListMap(FullSheet sheet, List<Map<String, Object>> expectList) {
+        Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+        // 跳过前7行
+        iter.next();iter.next(); iter.next();iter.next();iter.next();iter.next();iter.next();
+
+        List<Dimension> mergeCells = sheet.getMergeCells();
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
+        for (Dimension dim : mergeCells) {
+            mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+        }
+        org.ttzero.excel.reader.Row row;
+        for (Map<String, Object> expect : expectList) {
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals(row.getFirstColumnIndex(), 0);
+            assertEquals(row.getInt(0), expect.get("xh"));
+            assertEquals(row.getString(1), expect.get("jpCode"));
+            assertEquals(row.getString(3), expect.get("jpName"));
+            assertEquals(row.getInt(6), expect.get("num"));
+            assertTrue(Math.abs(row.getDouble(7) - (double) expect.get("price")) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(8) - (double) expect.get("amount")) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(9) - (double) expect.get("tax")) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(10) - (double) expect.get("taxPrice")) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(11) - (double) expect.get("taxAmount")) <= 0.00001);
+            assertEquals(row.getString(12), expect.get("remark"));
+
+            // 判断是否带合并
+            Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 2);
+            mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 3);
+            mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+            assertNotNull(mergeCell);
+            assertEquals(mergeCell.width, 5);
+        }
+        // 跳过2行
+        assertTrue(iter.next().isBlank());
+        assertTrue(iter.next().isBlank());
+
+        // 合计行
+        row = iter.next();
+        assertEquals(row.getString(0), "合计");
+        Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
+        assertNotNull(mergeCell);
+        assertEquals(mergeCell.width, 6);
+        mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+        assertNotNull(mergeCell);
+        assertEquals(mergeCell.width, 5);
     }
 
     public static class YzEntity {
@@ -264,7 +394,7 @@ public class TemplateSheetTest extends WorkbookTest {
         private String gsName;
         private String jsName;
         private String orderNo;
-        private String orderStatus, ymd;
+        private String orderStatus;
         private Date cgDate;
         private int nums;
         private double priceTotal;
@@ -281,7 +411,6 @@ public class TemplateSheetTest extends WorkbookTest {
             e.cgDate = new Date();
             e.orderNo = "JD-0001";
             e.orderStatus = "OK";
-            e.ymd = "2024-03-07";
             e.nums = 10;
             e.priceTotal = 10;
             e.amountTotal = 10;
