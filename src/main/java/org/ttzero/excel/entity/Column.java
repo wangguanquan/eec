@@ -727,7 +727,7 @@ public class Column {
             style = Styles.defaultStringBorderStyle();
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
             if (numFmt == null) numFmt = DATETIME_FORMAT;
-            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
@@ -736,12 +736,12 @@ public class Column {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
             if (numFmt == null) numFmt = DATE_FORMAT;
-            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
             if (numFmt == null) numFmt = TIME_FORMAT;
-            style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
-            style = 1 << INDEX_BORDER; // Auto-style
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
 
         return style;

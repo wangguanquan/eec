@@ -167,6 +167,10 @@ public class Styles implements Storable {
         self.numFmts = new ArrayList<>();
 
         self.fonts = new ArrayList<>();
+        Font font1 = new Font("Calibri", 11);
+        font1.setScheme("minor");
+        font1.setCharset(Charset.GB2312);
+        self.addFont(font1);
 
         String lang = Locale.getDefault().toLanguageTag();
         // Add chinese font
@@ -717,36 +721,36 @@ public class Styles implements Storable {
 
     ////////////////////////default border style/////////////////////////////
     public static int defaultCharBorderStyle() {
-        return (1 << INDEX_BORDER) | Horizontals.CENTER;
+        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.CENTER;
     }
 
     public static int defaultStringBorderStyle() {
-        return  (1 << INDEX_BORDER) | Horizontals.LEFT;
+        return  (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.LEFT;
     }
 
     public static int defaultIntBorderStyle() {
-        return (1 << INDEX_BORDER) | Horizontals.RIGHT;
+        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
     public static int defaultDoubleBorderStyle() {
-        return (1 << INDEX_BORDER) | Horizontals.RIGHT;
+        return (1 << INDEX_BORDER) | (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
     ////////////////////////default style/////////////////////////////
     public static int defaultCharStyle() {
-        return Horizontals.CENTER;
+        return (1 << INDEX_FONT) | Horizontals.CENTER;
     }
 
     public static int defaultStringStyle() {
-        return Horizontals.LEFT;
+        return (1 << INDEX_FONT) | Horizontals.LEFT;
     }
 
     public static int defaultIntStyle() {
-        return Horizontals.RIGHT;
+        return (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
     public static int defaultDoubleStyle() {
-        return  Horizontals.RIGHT;
+        return (1 << INDEX_FONT) | Horizontals.RIGHT;
     }
 
     ////////////////////////////////Check style////////////////////////////////
