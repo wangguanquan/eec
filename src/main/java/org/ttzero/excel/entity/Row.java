@@ -26,15 +26,13 @@ import org.ttzero.excel.reader.Cell;
  */
 public class Row {
     // Index to row
-    int index = -1;
+    public int index = -1;
     // Index to first column (zero base)
-    int fc = 0;
+    public int fc = 0;
     // Index to last column (zero base)
-    int lc = -1;
-    // Index to XF record
-    int xf;
+    public int lc = -1;
     // Share cell
-    Cell[] cells;
+    public Cell[] cells;
     // height
     public Double height;
     // Is row hidden
@@ -93,6 +91,7 @@ public class Row {
         if (cells == null || cells.length < n) {
             calloc(n);
         }
+        lc = n;
         return cells;
     }
 
