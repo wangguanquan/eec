@@ -73,7 +73,7 @@ public class XMLSheet implements Sheet {
         this.eof = sheet.eof;
         this.heof = sheet.heof;
         this.mark = sheet.mark;
-        this.sRow = sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class ? createRow().init(sst, styles, startRow) : sheet.sRow;
+        this.sRow = (sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class) && !eof ? createRow().init(sst, styles, startRow) : sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
