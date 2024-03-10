@@ -894,9 +894,9 @@ public class TemplateSheet extends Sheet {
             }
             // 包含namespace，可能为数组或多级对象
             if (j < li) {
-                node.namespace = v.substring(fn, j);
-                node.val = v.substring(j + 1, li);
-            } else node.val = v.substring(fn, li);
+                node.namespace = v.substring(fn, j).trim();
+                node.val = v.substring(j + 1, li).trim();
+            } else node.val = v.substring(fn, li).trim();
 
             pi = li + suffixLen;
             fi = v.indexOf(prefix, pi);
