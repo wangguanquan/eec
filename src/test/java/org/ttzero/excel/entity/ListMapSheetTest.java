@@ -17,20 +17,38 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Row;
+import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -42,10 +60,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -813,6 +833,184 @@ public class ListMapSheetTest extends WorkbookTest {
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, ?> r = readList.get(i), w = list.get(i);
                 assertEquals(r, w);
+            }
+        }
+    }
+
+    @Test public void testAppendKeyMap() throws IOException {
+        final String fileName = "append key map.xlsx";
+        new Workbook().addSheet(new AppendKeyMapSheet() { // <- 使用自定义数据源
+            int page = 1;
+
+            @Override
+            protected List<Map<String, ?>> more() {
+                return getRows(page++);
+            }
+        }.setSheetWriter(new AppendHeaderWorksheetWriter())) // <- 使用自定义输出协议
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row = iter.next();
+
+        }
+    }
+
+    static List<Map<String, ?>> getRows(int page) {
+        if (page > 127 - 67) return null;
+        List<Map<String, ?>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
+        Map<String, Object> map = new HashMap<>();
+        map.put("A", "a" + page);
+        map.put("B", "b" + page);
+        String key = new String(new char[]{(char) ('B' + page)});
+        map.put(key, key + page);
+        rows.add(map);
+        return rows;
+    }
+
+    public static class AppendKeyMapSheet extends ListMapSheet {
+        // 保存已存在中列
+        Set<String> existsKeys = new HashSet<>();
+
+        @Override
+        public Column[] getHeaderColumns() {
+            Column[] columns = super.getHeaderColumns();
+            for (Column col : columns) existsKeys.add(col.name);
+            return columns;
+        }
+
+        @Override
+        protected void resetBlockData() {
+            if (!eof && left() < rowBlock.capacity()) append();
+            int end = getEndIndex(), len;
+            for (; start < end; rows++, start++) {
+                org.ttzero.excel.entity.Row row = rowBlock.next();
+                row.index = rows;
+                row.height = getRowHeight();
+                Map<String, ?> rowDate = data.get(start);
+                boolean isNull = rowDate == null;
+
+                if (!isNull) {
+                    // 检查是否有不存在的key
+                    for (String k : rowDate.keySet()) {
+                        if (!existsKeys.contains(k)) {
+                            Column col = new Column(k, k), pre = columns[columns.length - 1].getTail(); // <- 需要判断NPE
+                            col.colIndex = pre.colIndex + 1;
+                            col.realColIndex = pre.realColIndex + 1;
+                            col.styles = getWorkbook().getStyles();
+                            // 扩容并追加到末尾
+                            columns = Arrays.copyOf(columns, columns.length + 1);
+                            columns[columns.length - 1] = col;
+                            existsKeys.add(k);
+                        }
+                    }
+                }
+                len = columns.length;
+
+                Cell[] cells = row.realloc(len);
+                for (int i = 0; i < len; i++) {
+                    Column hc = columns[i];
+                    Object e = !isNull ? rowDate.get(hc.key) : null;
+                    // Clear cells
+                    Cell cell = cells[i];
+                    cell.clear();
+
+                    cellValueAndStyle.reset(row, cell, e, hc);
+                }
+            }
+        }
+    }
+
+    public static class AppendHeaderWorksheetWriter extends XMLWorksheetWriter {
+        // 记录body的位置
+        long position = 0L;
+
+        @Override
+        protected void beforeSheetData(boolean nonHeader) throws IOException {
+            super.beforeSheetData(nonHeader);
+            bw.flush(); // 刷新流
+
+            // 获取当前position，从position以后开始写实际的body
+            position = Files.size(workSheetPath.resolve(sheet.getFileName()));
+        }
+
+        @Override
+        public void close() {
+            super.close();
+
+            XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
+                @Override
+                protected boolean hasMedia() {
+                    return false;
+                }
+            };
+            Class<XMLWorksheetWriter> clazz = XMLWorksheetWriter.class;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                Field totalRowsField = clazz.getDeclaredField("totalRows");
+                totalRowsField.setAccessible(true);
+                totalRowsField.set(_writer, totalRows);
+                Field startRowField = clazz.getDeclaredField("startRow");
+                startRowField.setAccessible(true);
+                startRowField.set(_writer, startRow - columns[0].subColumnSize());
+                Field startHeaderRowField = clazz.getDeclaredField("startHeaderRow");
+                startHeaderRowField.setAccessible(true);
+                startHeaderRowField.set(_writer, startHeaderRow);
+                Field includeAutoWidthField = clazz.getDeclaredField("includeAutoWidth");
+                includeAutoWidthField.setAccessible(true);
+                includeAutoWidthField.set(_writer, includeAutoWidth);
+                Field stylesField = clazz.getDeclaredField("styles");
+                stylesField.setAccessible(true);
+                stylesField.set(_writer, styles);
+                Field bwField = clazz.getDeclaredField("bw");
+                bwField.setAccessible(true);
+                BufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
+                bwField.set(_writer, bw);
+                // 重写col
+                Method writeBeforeMethod = clazz.getDeclaredMethod("writeBefore");
+                writeBeforeMethod.setAccessible(true);
+                writeBeforeMethod.invoke(_writer);
+
+                // 重写表头
+                Method beforeSheetDataMethod = clazz.getDeclaredMethod("beforeSheetData", boolean.class);
+                beforeSheetDataMethod.setAccessible(true);
+                beforeSheetDataMethod.invoke(_writer, sheet.getNonHeader() == 1);
+
+                bw.close();
+            } catch (NoSuchFieldException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                Path currentPath = workSheetPath.resolve(sheet.getFileName());
+                String fileName = currentPath.getFileName().toString();
+                // 创建临时文件
+                Path tmpPath = Files.createFile(workSheetPath.resolve(fileName + "_cp"));
+                // 将新表头复制到临时文件中
+                try (SeekableByteChannel channel = Files.newByteChannel(tmpPath, StandardOpenOption.WRITE, StandardOpenOption.READ)) {
+                    ByteBuffer buffer = ByteBuffer.wrap(baos.toByteArray());
+                    buffer.order(ByteOrder.LITTLE_ENDIAN);
+                    channel.write(buffer);
+                }
+
+                // 将Body复制到临时文件中
+                try (InputStream is = Files.newInputStream(currentPath);
+                     OutputStream os = Files.newOutputStream(tmpPath, StandardOpenOption.APPEND)) {
+                    is.skip(position); // <- 跳到body处
+
+                    byte[] bytes = new byte[4096];
+                    int n;
+                    while ((n = is.read(bytes)) > 0) {
+                        os.write(bytes, 0, n);
+                    }
+                }
+
+                // 替换现有文件
+                Files.delete(currentPath);
+                tmpPath.toFile().renameTo(currentPath.toFile());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

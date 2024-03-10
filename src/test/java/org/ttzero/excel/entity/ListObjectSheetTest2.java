@@ -22,6 +22,7 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -55,6 +56,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1102,4 +1104,100 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             return v != null ? statusDesc[(int) v] : null;
         }
     }
+
+@Test public void hyperlinkTest() throws IOException {
+    List<Item> list = new ArrayList<>();
+    list.add(new Item("京东", "https://www.jd.com"));
+    list.add(new Item("天猫", "https://www.tmall.com"));
+    list.add(new Item("淘宝", "https://www.taobao.com"));
+
+    new Workbook().addSheet(new MyListSheet<>(list).setSheetWriter(new MyXMLWorksheetWriter())).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
+}
+
+    public static class Item {
+        @ExcelColumn
+        public String name;
+        @Hyperlink
+        @ExcelColumn(share = true)
+        public String url;
+
+        public Item(String name, String url) {
+            this.name = name;
+            this.url = url;
+        }
+    }
+
+@Target({ ElementType.FIELD, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Hyperlink { }
+
+public static class MyListSheet<T> extends ListSheet<T> {
+    public MyListSheet(List<T> data) {
+        super(data);
+    }
+
+    @Override
+    protected EntryColumn createColumn(AccessibleObject ao) {
+        EntryColumn column = super.createColumn(ao);
+        Hyperlink Hyperlink = ao.getAnnotation(Hyperlink.class);
+        if (Hyperlink != null) column.getTail().option |= 1 << 16;
+        return column;
+    }
+}
+
+public static class MyXMLWorksheetWriter extends XMLWorksheetWriter {
+    Map<String, List<String>> hyperlinkMap;
+
+    @Override
+    protected void writeString(String s, int row, int column, int xf) throws IOException {
+        // 超链接
+        // 这里只适应只有一行表头，如果有多行需要改为row > startHeaderRow + 表头行数
+        if (row > startHeaderRow && (columns[column].option >> 16) == 1) {
+            Relationship myRelationship = new Relationship(s, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink", "External");
+            org.ttzero.excel.entity.Relationship relationship = sheet.getRelManager().add(myRelationship);
+            myRelationship.id = relationship.getId();
+            if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
+            List<String> dim = hyperlinkMap.computeIfAbsent(relationship.getId(), k -> new ArrayList<>());
+            dim.add(new String(int2Col(column + 1)) + row);
+
+            // 添加超链接的样式
+            int style = styles.getStyleByIndex(xf);
+            Font font = styles.getFont(style).clone();
+            font.setStyle(0).underLine(); // 先清除样式的其它附加属性
+            font.setColor(ColorIndex.themeColors[10]); // 设置超链接颜色
+            xf = styles.of(styles.modifyFont(style, font));
+        }
+        super.writeString(s, row, column, xf);
+    }
+
+    @Override
+    protected void afterSheetData() throws IOException {
+        super.afterSheetData();
+        // 添加超链接
+        if (hyperlinkMap != null) {
+            bw.write("<hyperlinks>");
+            for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
+                for (String dim : entry.getValue()) {
+                    bw.write("<hyperlink ref=\"");
+                    bw.write(dim);
+                    bw.write("\" r:id=\"");
+                    bw.write(entry.getKey());
+                    bw.write("\"/>");
+                }
+            }
+            bw.write("</hyperlinks>");
+        }
+    }
+}
+
+public static class Relationship extends org.ttzero.excel.entity.Relationship {
+    private String targetMode,target,type,id;
+
+    public Relationship(String target, String type, String targetMode) {
+        super(target, type);
+        this.target = target;
+        this.type = type;
+        this.targetMode = targetMode;
+    }
+}
 }
