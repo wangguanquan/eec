@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.slf4j.Logger;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
@@ -702,35 +703,33 @@ public class TemplateSheet extends Sheet {
         Object e = null;
         if (vw != null) {
             switch (vw.option) {
-                // Object
-                case 1:
-                    AccessibleObject ao = vw.accessibleObjectMap.get(node.val);
-                    try {
-                        if (ao instanceof Method) e = ((Method) ao).invoke(vw.o);
-                        else if (ao instanceof Field) e = ((Field) ao).get(vw.o);
-                        else e = vw.o;
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        LOGGER.warn("Invoke " + node.val + " value error", ex);
-                    }
-                    break;
-                // Map
-                case 2: e = vw.map.get(node.val); break;
-                // List Map
-                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val); break;
-                // List Object
-                case 4:
-                    ao = vw.accessibleObjectMap.get(node.val);
-                    Object oo = vw.list.get(vw.i);
-                    try {
-                        if (ao instanceof Method) e = ((Method) ao).invoke(oo);
-                        else if (ao instanceof Field) e = ((Field) ao).get(oo);
-                        else e = oo;
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        LOGGER.warn("Invoke " + node.val + " value error", ex);
-                    }
-                    break;
+                case 1: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.o, LOGGER, node.val);              break;
+                case 2: e = vw.map.get(node.val);                                                                      break;
+                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val);                                   break;
+                case 4: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.list.get(vw.i), LOGGER, node.val); break;
                 default:
             }
+        }
+        return e;
+    }
+
+    /**
+     * 反射获取对象的值
+     *
+     * @param ao Method 或 Field
+     * @param o 对象
+     * @param logger 日志
+     * @param key 占位符
+     * @return 值
+     */
+    protected static Object getObjectValue(AccessibleObject ao, Object o, Logger logger, String key) {
+        Object e = null;
+        try {
+            if (ao instanceof Method) e = ((Method) ao).invoke(o);
+            else if (ao instanceof Field) e = ((Field) ao).get(o);
+            else e = o;
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            logger.warn("Invoke " + key + " value error", ex);
         }
         return e;
     }
