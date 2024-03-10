@@ -25,9 +25,12 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
+import org.ttzero.excel.reader.Row;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,6 +80,41 @@ public class TemplateSheetTest extends WorkbookTest {
             }
         }
         workbook.writeTo(getOutputTestPath().resolve(fileName));
+    }
+
+    @Test public void testTemplate() throws IOException {
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", author);
+        map.put("score", random.nextInt(90) + 10);
+        map.put("date", LocalDate.now().toString());
+        map.put("desc", "暑假");
+
+        new Workbook()
+            .addSheet(new TemplateSheet(Files.newInputStream(testResourceRoot().resolve("template.xlsx")))
+                .setData(map))
+            .writeTo(defaultTestPath.resolve("fill inputstream template with map.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("fill inputstream template with map.xlsx"))) {
+            for (Iterator<Row> it = reader.sheet(0).iterator(); it.hasNext(); ) {
+                Row row = it.next();
+                switch (row.getRowNum()) {
+                    case 1:
+                        assertEquals("通知书", row.getString(0).trim());
+                        break;
+                    case 3:
+                        assertEquals((map.get("name") + " 同学，在本次期末考试的成绩是 " + map.get("score")+ "，希望"), row.getString(1).trim());
+                        break;
+                    case 4:
+                        assertEquals(("下学期继续努力，祝你有一个愉快的" + map.get("desc") + "。"), row.getString(0).trim());
+                        break;
+                    case 23:
+                        assertEquals(map.get("date"), row.getString(0).trim());
+                        break;
+                    default:
+                        assertTrue(row.isBlank());
+                }
+            }
+        }
     }
 
     @Test public void testFillObject() throws IOException {
