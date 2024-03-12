@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.util.FileSignatures;
+import org.ttzero.excel.util.FileUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -179,13 +180,7 @@ public class WaterMark {
      * @return 出异常时返回false
      */
     public boolean delete() {
-        if (imagePath != null && temp) {
-            try {
-                Files.deleteIfExists(imagePath);
-            } catch (IOException e) {
-                return false;
-            }
-        }
+        if (imagePath != null && temp) FileUtil.rm(imagePath);
         return true;
     }
 
