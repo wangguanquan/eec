@@ -20,8 +20,9 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
 - [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
-- [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
+- [TemplateSheet](./src/main/java/org/ttzero/excel/entity/TemplateSheet.java) // 模板工作表
+- [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 
 ## 主要功能
 
@@ -99,7 +100,22 @@ new Workbook("2021小五班期未考试成绩")
 
 ![期未成绩](images/dynamic_style.png)
 
-#### 3. 自适应列宽更精准
+#### 3. 支持模板导出
+
+EEC支持xls和xlsx模板，模板工作表可以与其它工作表一起工作，同一Excel可以包含多个模板工作表
+
+```java
+new Workbook()
+    // 复制[企业名片.xls]文件的[封面]工作表
+    .addSheet(new TemplateSheet(Paths.get("./template/企业名片.xls", "封面"))
+    .addSheet(new TemplateSheet(Paths.get("./template/商品导入模板.xlsx"))
+        .setData(YzEntity.mock()) // 设置对象 对应占位符${x}
+        // 分片拉取数据 对应占位符${yzEntity.x}
+        .setData("yzEntity", () -> page[0]++ <= 10 ? randomData() : null)
+    ).writeTo(Paths.get("f:/excel"));
+```
+
+#### 4. 自适应列宽更精准
 
 ```java
 // 测试类
@@ -121,7 +137,7 @@ new Workbook("Auto Width Test")
 ```
 ![自动列宽](./images/auto_width.png)
 
-#### 4. 支持多行表头
+#### 5. 支持多行表头
 
 EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列将自动合并
 
@@ -155,7 +171,7 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 ```
 ![多行表头](./images/multi-headers.png)
 
-#### 5. 报表轻松制作
+#### 6. 报表轻松制作
 
 现在使用普通的ListSheet就可以导出漂亮的报表。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
@@ -167,7 +183,7 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 
 ![报表2](images/report3.png)
 
-#### 6. 支持28种预设图片样式
+#### 7. 支持28种预设图片样式
 
 导出图片时可以设置图片样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
