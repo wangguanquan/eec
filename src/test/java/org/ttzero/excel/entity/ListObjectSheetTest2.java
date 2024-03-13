@@ -641,6 +641,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 @SuppressWarnings("unchecked")
                 List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
                 Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
+                Cell cell = new Cell();
                 for (int i = subColumnSize - 1; i >= 0; i--) {
                     // Custom row height
                     double ht = getHeaderHeight(columnsArray, i);
@@ -650,8 +651,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     String name;
                     for (int j = 0, c = 0; j < realColumnLen; j++) {
                         Column hc = columnsArray[j][i];
-                        name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
-                        writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                        cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key);
+                        cell.xf = hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex();
+                        writeString(cell, row, c++);
                     }
 
                     // Write header comments
@@ -673,31 +675,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 int len = isTreeStyle ? cells.length - 1 : cells.length;
                 int r = isTreeStyle ? startRow(row.getIndex(), len, row.getHeight(), cells[columns.length - 1].intVal) : startRow(row.getIndex(), len, row.getHeight());
 
-                for (int i = 0; i < len; i++) {
-                    Cell cell = cells[i];
-                    int xf = cell.xf;
-                    switch (cell.t) {
-                        case INLINESTR:
-                        case SST:          writeString(cell.stringVal, r, i, xf);      break;
-                        case NUMERIC:      writeNumeric(cell.intVal, r, i, xf);        break;
-                        case LONG:         writeNumeric(cell.longVal, r, i, xf);       break;
-                        case DATE:
-                        case DATETIME:
-                        case DOUBLE:
-                        case TIME:         writeDouble(cell.doubleVal, r, i, xf);      break;
-                        case BOOL:         writeBool(cell.boolVal, r, i, xf);          break;
-                        case DECIMAL:      writeDecimal(cell.decimal, r, i, xf);       break;
-                        case CHARACTER:    writeChar(cell.charVal, r, i, xf);          break;
-                        case REMOTE_URL:   writeRemoteMedia(cell.stringVal, r, i, xf); break;
-                        case BINARY:       writeBinary(cell.binary, r, i, xf);         break;
-                        case FILE:         writeFile(cell.path, r, i, xf);             break;
-                        case INPUT_STREAM: writeStream(cell.isv, r, i, xf);            break;
-                        case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf);     break;
-                        case BLANK:
-                        case EMPTY_TAG:    writeNull(r, i, xf);                        break;
-                        default:
-                    }
-                }
+                for (int i = row.fc; i < row.lc; i++) writeCell(cells[i], r, i);
+
                 bw.write("</row>");
             }
         })).writeTo(defaultTestPath.resolve("tree style.xlsx"));
@@ -958,41 +937,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
             if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
 
-            for (int i = 0; i < len; i++) {
-                Cell cell = cells[i];
-                int xf = cell.xf, col = i + c * y;
-                switch (cell.t) {
-                    case INLINESTR:
-                    case SST:
-                        writeString(cell.stringVal, r, col, xf);
-                        break;
-                    case NUMERIC:
-                        writeNumeric(cell.intVal, r, col, xf);
-                        break;
-                    case LONG:
-                        writeNumeric(cell.longVal, r, col, xf);
-                        break;
-                    case DATE:
-                    case DATETIME:
-                    case DOUBLE:
-                    case TIME:
-                        writeDouble(cell.doubleVal, r, col, xf);
-                        break;
-                    case BOOL:
-                        writeBool(cell.boolVal, r, col, xf);
-                        break;
-                    case DECIMAL:
-                        writeDecimal(cell.decimal, r, col, xf);
-                        break;
-                    case CHARACTER:
-                        writeChar(cell.charVal, r, col, xf);
-                        break;
-                    case BLANK:
-                        writeNull(r, col, xf);
-                        break;
-                    default:
-                }
-            }
+            // 循环写单元格
+            for (int i = row.fc; i < row.lc; i++) writeCell(cells[i], r, i + c * y);
+
             // 注意这里可能不会关闭row需要在writeAfter进行二次处理
             if (y == tile - 1)
                 bw.write("</row>");
@@ -1111,14 +1058,14 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         list.add(new Item("天猫", "https://www.tmall.com"));
         list.add(new Item("淘宝", "https://www.taobao.com"));
 
-        new Workbook().addSheet(new MyListSheet<>(list).setSheetWriter(new MyXMLWorksheetWriter())).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
+        new Workbook().setAutoSize(true).addSheet(new MyListSheet<>(list).setSheetWriter(new XMLWorksheetWriter())).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
     }
 
     public static class Item {
         @ExcelColumn
         public String name;
         @Hyperlink
-        @ExcelColumn(share = true)
+        @ExcelColumn
         public String url;
 
         public Item(String name, String url) {
@@ -1140,53 +1087,53 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         protected EntryColumn createColumn(AccessibleObject ao) {
             EntryColumn column = super.createColumn(ao);
             Hyperlink Hyperlink = ao.getAnnotation(Hyperlink.class);
-            if (Hyperlink != null) column.getTail().option |= 1 << 16;
+            if (Hyperlink != null) column.getTail().writeAsHyperlink();
             return column;
         }
     }
 
-    public static class MyXMLWorksheetWriter extends XMLWorksheetWriter {
-        Map<String, List<String>> hyperlinkMap;
-
-        @Override
-        protected void writeString(String s, int row, int column, int xf) throws IOException {
-            // 超链接
-            // 这里只适应只有一行表头，如果有多行需要改为row > startHeaderRow + 表头行数
-            if (row > startHeaderRow && (columns[column].option >> 16) == 1) {
-                Relationship rel = new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External");
-                sheet.getRelManager().add(rel);
-                if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
-                List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
-                dim.add(new String(int2Col(column + 1)) + row);
-
-                // 添加超链接的样式
-                int style = styles.getStyleByIndex(xf);
-                Font font = styles.getFont(style).clone();
-                font.setStyle(0).underLine(); // 先清除样式的其它附加属性
-                font.setColor(ColorIndex.themeColors[10]); // 设置超链接颜色
-                xf = styles.of(styles.modifyFont(style, font));
-            }
-            super.writeString(s, row, column, xf);
-        }
-
-        @Override
-        protected void afterSheetData() throws IOException {
-            super.afterSheetData();
-            // 添加超链接
-            if (hyperlinkMap != null) {
-                bw.write("<hyperlinks>");
-                for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
-                    for (String dim : entry.getValue()) {
-                        bw.write("<hyperlink ref=\"");
-                        bw.write(dim);
-                        bw.write("\" r:id=\"");
-                        bw.write(entry.getKey());
-                        bw.write("\"/>");
-                    }
-                }
-                bw.write("</hyperlinks>");
-            }
-        }
-    }
+//    public static class MyXMLWorksheetWriter extends XMLWorksheetWriter {
+//        Map<String, List<String>> hyperlinkMap;
+//
+//        @Override
+//        protected void writeString(String s, int row, int column, int xf) throws IOException {
+//            // 超链接
+//            // 这里只适应只有一行表头，如果有多行需要改为row > startHeaderRow + 表头行数
+//            if (row > startHeaderRow && (columns[column].option >> 16) == 1) {
+//                Relationship rel = new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External");
+//                sheet.getRelManager().add(rel);
+//                if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
+//                List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
+//                dim.add(new String(int2Col(column + 1)) + row);
+//
+//                // 添加超链接的样式
+//                int style = styles.getStyleByIndex(xf);
+//                Font font = styles.getFont(style).clone();
+//                font.setStyle(0).underLine(); // 先清除样式的其它附加属性
+//                font.setColor(ColorIndex.themeColors[10]); // 设置超链接颜色
+//                xf = styles.of(styles.modifyFont(style, font));
+//            }
+//            super.writeString(s, row, column, xf);
+//        }
+//
+//        @Override
+//        protected void afterSheetData() throws IOException {
+//            super.afterSheetData();
+//            // 添加超链接
+//            if (hyperlinkMap != null) {
+//                bw.write("<hyperlinks>");
+//                for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
+//                    for (String dim : entry.getValue()) {
+//                        bw.write("<hyperlink ref=\"");
+//                        bw.write(dim);
+//                        bw.write("\" r:id=\"");
+//                        bw.write(entry.getKey());
+//                        bw.write("\"/>");
+//                    }
+//                }
+//                bw.write("</hyperlinks>");
+//            }
+//        }
+//    }
 
 }

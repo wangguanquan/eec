@@ -100,7 +100,7 @@ public class Cell {
     /**
      * Formula string
      */
-    public String fv;
+    public String formula;
     /**
      * Shared calc id
      */
@@ -125,6 +125,14 @@ public class Cell {
      * InputStream value (picture stream), auto-close after writen
      */
     public InputStream isv;
+    /**
+     * 是否为超链接
+     */
+    public boolean h;
+    /**
+     * 图片源类型
+     */
+    public char mediaType;
     /**
      * x-axis of cell in row
      */
@@ -206,34 +214,42 @@ public class Cell {
     }
 
     public Cell setBinary(byte[] bytes) {
-        this.t = BINARY;
+        this.mediaType = BINARY;
         this.binary = bytes;
         return this;
     }
 
     public Cell setPath(Path path) {
-        this.t = FILE;
+        this.mediaType = FILE;
         this.path = path;
         return this;
     }
 
     public Cell setInputStream(InputStream stream) {
-        this.t = INPUT_STREAM;
+        this.mediaType = INPUT_STREAM;
         this.isv = stream;
         return this;
     }
 
     public Cell setByteBuffer(ByteBuffer byteBuffer) {
-        this.t = BYTE_BUFFER;
+        this.mediaType = BYTE_BUFFER;
         this.byteBuffer = byteBuffer;
         return this;
     }
 
     public Cell setFormula(String formula) {
         this.f = true;
-        this.fv = formula;
+        this.formula = formula;
         return this;
     }
+
+    public Cell setHyperlink(String hyperlink) {
+        this.t = INLINESTR;
+        this.stringVal = hyperlink;
+        this.h = true;
+        return this;
+    }
+
 
     public Cell clear() {
         this.t  = UNALLOCATED;
@@ -242,16 +258,18 @@ public class Cell {
         this.doubleVal = 0.0;
         this.boolVal = false;
         this.longVal = 0L;
-        this.charVal = '\0';
+        this.charVal = UNALLOCATED;
         this.decimal = null;
         this.xf = 0;
-        this.fv = null;
-        this.f  = false;
+        this.formula = null;
+        this.f = false;
         this.si = -1;
         this.binary = null;
         this.path = null;
         this.isv = null;
         this.byteBuffer = null;
+        this.mediaType = UNALLOCATED;
+        this.h = false;
         return this;
     }
 
@@ -265,14 +283,15 @@ public class Cell {
         this.charVal = cell.charVal;
         this.decimal = cell.decimal;
         this.xf = cell.xf;
-        this.fv = cell.fv;
-        this.f  = cell.f;
+        this.formula = cell.formula;
+        this.f = cell.f;
         this.si = cell.si;
         this.binary = cell.binary;
         this.path = cell.path;
         this.isv = cell.isv;
         this.byteBuffer = cell.byteBuffer;
-
+        this.mediaType = cell.mediaType;
+        this.h = cell.h;
         return this;
     }
 }

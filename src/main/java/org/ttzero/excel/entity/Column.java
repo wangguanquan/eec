@@ -160,7 +160,7 @@ public class Column {
      * 28, 1 | 忽略导出值 1位, 仅导出表头
      * 27, 1 | 隐藏列 1位
      * 26, 1 | 共享字符串 1位
-     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片
+     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片 2: 超链接
      * 23, 2 | 垂直对齐
      * 21, 3 | 水平对齐
      * </pre></blockquote>
@@ -980,7 +980,7 @@ public class Column {
     /**
      * 获取列属性
      *
-     * @return 0: 默认 1: 媒体（图片）
+     * @return 0: 默认 1: 媒体（图片） 2: 超链接
      */
     public int getColumnType() {
         return (this.option >> 6) & 3;
@@ -1004,5 +1004,15 @@ public class Column {
      */
     public Effect getEffect() {
         return effect;
+    }
+
+    /**
+     * 指定当前列以“超链接”类型导出
+     *
+     * @return 当前列
+     */
+    public Column writeAsHyperlink() {
+        this.option = this.option & ~(3 << 6) | (2 << 6);
+        return this;
     }
 }

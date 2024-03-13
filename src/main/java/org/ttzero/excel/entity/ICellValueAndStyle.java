@@ -128,6 +128,8 @@ public interface ICellValueAndStyle {
                 case 0: cell.setString(e.toString()); break;
                 // Write as media (base64 image, remote url)
                 case 1: writeAsMedia(row, cell, e.toString(), hc, clazz); break;
+                // Write as Hyperlink
+                case 2: cell.setHyperlink(e.toString()); break;
                 default: cell.setString(e.toString());
             }
         } else if (isDate(clazz)) {
@@ -266,7 +268,7 @@ public interface ICellValueAndStyle {
      */
     default void downloadRemoteResource(Row row, Cell cell, String e, Column hc, Class<?> clazz) {
         cell.setString(e);
-        cell.t = Cell.REMOTE_URL;
+        cell.mediaType = Cell.REMOTE_URL;
     }
 
     /**

@@ -588,13 +588,13 @@ class XMLFullRow extends XMLRow {
         }
         // Inner text
         if (a < cursor) {
-            cell.fv = escape(cb, a, cursor);
-            if (cell.si > -1) setCalc(cell.si, cell.fv);
+            cell.formula = escape(cb, a, cursor);
+            if (cell.si > -1) setCalc(cell.si, cell.formula);
         }
         // Function string is shared
         else if (cell.si > -1) {
             // Get from ref
-            cell.fv = getCalc(cell.si, (getRowNum() << 14) | cell.i);
+            cell.formula = getCalc(cell.si, (getRowNum() << 14) | cell.i);
         }
     }
 

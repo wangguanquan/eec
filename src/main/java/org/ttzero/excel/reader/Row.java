@@ -974,7 +974,7 @@ public class Row {
      * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
      */
     public String getFormula(int columnIndex) {
-        return getCell(columnIndex).fv;
+        return getCell(columnIndex).formula;
     }
 
     /**
@@ -984,7 +984,7 @@ public class Row {
      * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
      */
     public String getFormula(String columnName) {
-        return getCell(columnName).fv;
+        return getCell(columnName).formula;
     }
 
     /**
@@ -994,7 +994,7 @@ public class Row {
      * @return 单元格含有公式时返回公式字符串，否则返回{@code null}
      */
     public String getFormula(Cell cell) {
-        return cell.fv;
+        return cell.formula;
     }
 
     /**

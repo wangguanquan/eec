@@ -377,8 +377,7 @@ public class PictureTest extends WorkbookTest {
                 }
 
                 @Override
-                protected void writeFile(Path path, int row, int column, int xf) throws IOException {
-                    writeNull(row, column, xf);
+                protected void writeFile(Path path, int row, int column) throws IOException {
                     // Caching duplicate paths
                     String picName = picCache.get(path.toString());
                     if (picName != null) {
