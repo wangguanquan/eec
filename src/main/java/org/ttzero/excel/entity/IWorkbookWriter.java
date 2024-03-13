@@ -23,6 +23,7 @@ import org.dom4j.io.SAXReader;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +45,7 @@ import static org.ttzero.excel.util.StringUtil.indexOf;
  * @see org.ttzero.excel.entity.e7.XMLWorkbookWriter
  * @see org.ttzero.excel.entity.csv.CSVWorkbookWriter
  */
-public interface IWorkbookWriter extends Storable {
+public interface IWorkbookWriter extends Storable, Closeable {
 
     /**
      * 设置工作薄

@@ -43,7 +43,6 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +61,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  */
 @TopNS(prefix = {"", "r"}, value = "workbook"
     , uri = {Const.SCHEMA_MAIN, Const.Relationship.RELATIONSHIP})
-public class XMLWorkbookWriter implements IWorkbookWriter, Closeable {
+public class XMLWorkbookWriter implements IWorkbookWriter {
     /**
      * LOGGER
      */
@@ -448,12 +447,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter, Closeable {
         return zipFile;
     }
 
-    // --- Customize worksheet writer
-
-    public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
-        return new XMLWorksheetWriter(sheet);
-    }
-
     @Override
     public void close() throws IOException {
         for (Sheet sheet : workbook.getSheets()) {
@@ -461,5 +454,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter, Closeable {
                 sheet.getWaterMark().delete();
         }
         if (workbook.getWaterMark() != null) workbook.getWaterMark().delete() ; // Delete template image
+    }
+
+    // --- Customize worksheet writer
+
+    public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+        return new XMLWorksheetWriter(sheet);
     }
 }

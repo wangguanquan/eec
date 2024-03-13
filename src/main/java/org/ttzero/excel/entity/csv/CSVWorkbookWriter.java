@@ -194,6 +194,9 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         }
     }
 
+    @Override
+    public void close() throws IOException { }
+
     // --- Customize worksheet writer
 
     public IWorksheetWriter getWorksheetWriter(Sheet sheet) {

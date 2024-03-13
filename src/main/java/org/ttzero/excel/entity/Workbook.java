@@ -658,7 +658,11 @@ public class Workbook implements Storable {
             writeTo(path.toFile());
             return;
         }
-        workbookWriter.writeTo(path);
+        try {
+            workbookWriter.writeTo(path);
+        } finally {
+            workbookWriter.close();
+        }
     }
 
     /**
@@ -667,7 +671,8 @@ public class Workbook implements Storable {
      * <blockquote><pre>
      * public void export(HttpServletResponse response) throws IOException {
      *     String fileName = java.net.URLEncoder.encode("abc.xlsx", "UTF-8");
-     *     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"; filename*=utf-8''" + fileName);
+     *     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
+     *         + fileName + "\"; filename*=utf-8''" + fileName);
      *     new Workbook()
      *         .addSheet(new ListSheet&lt;Item&gt;("总销量排行", new ArrayList&lt;&gt;()))
      *         // 直接写到Response
@@ -680,7 +685,11 @@ public class Workbook implements Storable {
      */
     public void writeTo(OutputStream os) throws IOException, ExcelWriteException {
         checkAndInitWriter();
-        workbookWriter.writeTo(os);
+        try {
+            workbookWriter.writeTo(os);
+        } finally {
+            workbookWriter.close();
+        }
     }
 
     /**
@@ -700,7 +709,11 @@ public class Workbook implements Storable {
         if (!file.getParentFile().exists()) {
             FileUtil.mkdir(file.toPath().getParent());
         }
-        workbookWriter.writeTo(file);
+        try {
+            workbookWriter.writeTo(file);
+        } finally {
+            workbookWriter.close();
+        }
     }
 
     /////////////////////////////////模板，目前只实现简单模板///////////////////////////////////
