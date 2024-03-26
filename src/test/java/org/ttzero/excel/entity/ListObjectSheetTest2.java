@@ -19,10 +19,10 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.annotation.Hyperlink;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
-import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -56,7 +56,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,24 +65,6 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.Sheet.int2Col;
-import static org.ttzero.excel.reader.Cell.BINARY;
-import static org.ttzero.excel.reader.Cell.BLANK;
-import static org.ttzero.excel.reader.Cell.BOOL;
-import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
-import static org.ttzero.excel.reader.Cell.CHARACTER;
-import static org.ttzero.excel.reader.Cell.DATE;
-import static org.ttzero.excel.reader.Cell.DATETIME;
-import static org.ttzero.excel.reader.Cell.DECIMAL;
-import static org.ttzero.excel.reader.Cell.DOUBLE;
-import static org.ttzero.excel.reader.Cell.EMPTY_TAG;
-import static org.ttzero.excel.reader.Cell.FILE;
-import static org.ttzero.excel.reader.Cell.INLINESTR;
-import static org.ttzero.excel.reader.Cell.INPUT_STREAM;
-import static org.ttzero.excel.reader.Cell.LONG;
-import static org.ttzero.excel.reader.Cell.NUMERIC;
-import static org.ttzero.excel.reader.Cell.REMOTE_URL;
-import static org.ttzero.excel.reader.Cell.SST;
-import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -1058,7 +1039,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         list.add(new Item("天猫", "https://www.tmall.com"));
         list.add(new Item("淘宝", "https://www.taobao.com"));
 
-        new Workbook().setAutoSize(true).addSheet(new MyListSheet<>(list).setSheetWriter(new XMLWorksheetWriter())).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
     }
 
     public static class Item {
@@ -1074,66 +1055,5 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
-    @Target({ElementType.FIELD, ElementType.METHOD})
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Hyperlink { }
-
-    public static class MyListSheet<T> extends ListSheet<T> {
-        public MyListSheet(List<T> data) {
-            super(data);
-        }
-
-        @Override
-        protected EntryColumn createColumn(AccessibleObject ao) {
-            EntryColumn column = super.createColumn(ao);
-            Hyperlink Hyperlink = ao.getAnnotation(Hyperlink.class);
-            if (Hyperlink != null) column.getTail().writeAsHyperlink();
-            return column;
-        }
-    }
-
-//    public static class MyXMLWorksheetWriter extends XMLWorksheetWriter {
-//        Map<String, List<String>> hyperlinkMap;
-//
-//        @Override
-//        protected void writeString(String s, int row, int column, int xf) throws IOException {
-//            // 超链接
-//            // 这里只适应只有一行表头，如果有多行需要改为row > startHeaderRow + 表头行数
-//            if (row > startHeaderRow && (columns[column].option >> 16) == 1) {
-//                Relationship rel = new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External");
-//                sheet.getRelManager().add(rel);
-//                if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
-//                List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
-//                dim.add(new String(int2Col(column + 1)) + row);
-//
-//                // 添加超链接的样式
-//                int style = styles.getStyleByIndex(xf);
-//                Font font = styles.getFont(style).clone();
-//                font.setStyle(0).underLine(); // 先清除样式的其它附加属性
-//                font.setColor(ColorIndex.themeColors[10]); // 设置超链接颜色
-//                xf = styles.of(styles.modifyFont(style, font));
-//            }
-//            super.writeString(s, row, column, xf);
-//        }
-//
-//        @Override
-//        protected void afterSheetData() throws IOException {
-//            super.afterSheetData();
-//            // 添加超链接
-//            if (hyperlinkMap != null) {
-//                bw.write("<hyperlinks>");
-//                for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
-//                    for (String dim : entry.getValue()) {
-//                        bw.write("<hyperlink ref=\"");
-//                        bw.write(dim);
-//                        bw.write("\" r:id=\"");
-//                        bw.write(entry.getKey());
-//                        bw.write("\"/>");
-//                    }
-//                }
-//                bw.write("</hyperlinks>");
-//            }
-//        }
-//    }
 
 }

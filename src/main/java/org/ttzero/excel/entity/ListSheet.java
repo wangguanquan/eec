@@ -21,6 +21,7 @@ import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.annotation.Hyperlink;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.annotation.StyleDesign;
@@ -702,6 +703,11 @@ public class ListSheet<T> extends Sheet {
             if (mediaColumn.presetEffect() != PresetPictureEffect.None) {
                 tail.setEffect(mediaColumn.presetEffect().getEffect());
             }
+        }
+        // Hyperlink
+        else if (root != null) {
+            Hyperlink Hyperlink = ao.getAnnotation(Hyperlink.class);
+            if (Hyperlink != null) root.getTail().writeAsHyperlink();
         }
         return root;
     }
