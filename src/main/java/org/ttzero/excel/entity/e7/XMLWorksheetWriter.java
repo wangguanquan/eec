@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.entity.WaterMark;
-import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
@@ -76,7 +75,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
-import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
@@ -667,8 +665,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
     }
 
-    int[] fontIndices = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-
     /**
      * 写字符串
      *
@@ -690,20 +686,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // 超链接
         if (notEmpty && cell.h) {
-            int style = styles.getStyleByIndex(cell.xf);
-            int fontIndex = Math.max(0, style << 8 >>> (INDEX_FONT + 8)), fi;
-            if (fontIndex > fontIndices.length) {
-                int n = fontIndices.length;
-                fontIndices = Arrays.copyOf(fontIndices, Math.min(n + 16, fontIndex));
-                Arrays.fill(fontIndices, n, fontIndices.length, -1);
-            }
-            if ((fi = fontIndices[fontIndex]) == -1) {
-                Font font = styles.getFont(style).clone();
-                font.setStyle(0).underLine();
-                font.setColor(ColorIndex.themeColors[10]);
-                fontIndices[fontIndex] = fi = styles.addFont(font);
-            }
-            xf = styles.of(Styles.clearFont(cell.xf) | fi);
             Relationship rel = relManager.add(new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External"));
             List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
             dim.add(new String(int2Col(col + 1)) + row);

@@ -760,6 +760,13 @@ public class Column {
 
         // 重置"字体"
         if (font != null) style = styles.modifyFont(style, font);
+        // 超连接字体特殊处理
+        if (getColumnType() == 2) {
+            Font font = styles.getFont(style).clone();
+            font.setStyle(Font.Style.PLAIN).underLine();
+            font.setColor(ColorIndex.themeColors[10]);
+            style = styles.modifyFont(style, font);
+        }
         // 重置“格式化”
         if (numFmt != null) style = styles.modifyNumFmt(style, numFmt);
         // 重置“边框”
