@@ -235,26 +235,4 @@ public class CSVSheet extends Sheet {
     @Override
     protected void mergeHeaderCellsIfEquals() { }
 
-//    /**
-//     * Check empty header row
-//     *
-//     * @return true if none header row
-//     */
-//    @Override
-//    public boolean hasNonHeader() {
-//        if (!hasHeader) {
-//            hasHeader = !super.hasNonHeader();
-//        }
-//        return !hasHeader;
-//    }
-//
-//    /**
-//     * The Worksheet row limit
-//     *
-//     * @return the limit
-//     */
-//    @Override
-//    protected int getRowLimit() {
-//        return Integer.MAX_VALUE;
-//    }
 }
