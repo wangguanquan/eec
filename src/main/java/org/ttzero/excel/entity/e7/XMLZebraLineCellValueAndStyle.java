@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.entity.Column;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
@@ -24,7 +25,7 @@ import org.ttzero.excel.entity.style.Styles;
 /**
  * @author guanquan.wang at 2023-02-24 11:12
  */
-public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
+public class XMLZebraLineCellValueAndStyle implements ICellValueAndStyle {
 
     /**
      * The zebra-line fill style value
