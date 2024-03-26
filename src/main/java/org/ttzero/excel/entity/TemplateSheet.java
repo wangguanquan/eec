@@ -71,20 +71,53 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  * 未指定工作表时默认以第一个工作表做为模板，{@code TemplateSheet}工作表导出时不受{@code ExcelColumn}注解限制，
  * 导出的数据范围由模板内占位符决定</p>
  *
- * <p>默认占位符为一对关闭的大括号{@code ${key}}，可以使用{@link #setPrefix}和{@link #setSuffix}来重新指定占位符的前缀和后缀字符，
- * 建议不要设置太长的前后缀。占位符可以有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间</p>
+ * <p>默认占位符由一对关闭的大括号{@code ${key}}组成，可以使用{@link #setPrefix}和{@link #setSuffix}方法来重新指定占位符的前缀和后缀字符，
+ * 建议不要设置太长的前后缀。每个占位符都有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间，默认命名空间为{@code null}</p>
  *
- * <p>使用{@link #setData}方法为占位符绑定值，如果指定了命名空间则绑定值时必须指定对应的命名空间，默认的命名空间为{@code null}，
+ * <p>使用{@link #setData}方法为占位符绑定值时，如果指定了命名空间则绑定值时必须指定对应的命名空间，
  * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}，如果数据量较大时可绑定一个数据生产者{@link Supplier}
  * 来分片获取数据，它的作用与{@link ListSheet#more}方法一致。</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
  *      // 模板工作表
- *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx")).setData(data))
+ *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
+ *         .setData(this::queryUsers)) // &lt;- 指定获取数据的{@link Supplier}
  *     // 普通对象数组工作表
  *     .addSheet(new ListSheet&lt;&gt;())
- *     .writeTo("/tmp/");</pre></blockquote>
+ *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
+ *
+ * <p>占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code filter:}]和[&#x40;{@code media:}]，
+ * 作用分别是设置单元格的值为超链接、下拉选择框以及图片，其中下拉框的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置，
+ * 内置函数格式固定且只识别这三个内置函数，任意其它命令将被识别为普通命令空间</p>
+ *
+ * <blockquote><pre>
+ * 有template.xlsx模板如下：
+ * +--------+--------+----------------+---------------+------------------+
+ * |  姓名  |  年龄  |      性别      |      头像     |      简历原件    |
+ * +--------+--------+----------------+---------------+------------------+
+ * |${name} | ${age} | ${&#x40;filter:sex} | ${&#x40;media:pic} | ${&#x40;link:jumpUrl} |
+ * +--------+--------+----------------+---------------+------------------+
+ *
+ * // 读取模板并导出
+ * public void downloadStudents() {
+ *     List&lt;Map&lt;String, Object&gt;&gt; data = new ArrayList&lt;&gt;();
+ *     Map&lt;String, Object&gt; row1 = new HashMap&lt;&gt;();
+ *     row1.put("name", "张三");
+ *     row1.put("age", 26);
+ *     row1.put("sex", "男");
+ *     row1.put("pic", "https://zhangsan.png");
+ *     row1.put("jumpUrl", "https://abc.com/about");
+ *     data.add(row1);
+ *
+ *     new Workbook("内置函数测试")
+ *         // 模板工作表
+ *         .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
+ *             .setData(data)
+ *             // 替换模板中"@filter:sex"值为性别下拉框
+ *             .setData("@filter:sex", Arrays.asList("未知", "男", "女")))
+ *         .writeTo(Paths.get("/tmp/"));
+ * }</pre></blockquote>
  *
  * @author guanquan.wang at 2023-12-01 15:10
  */
