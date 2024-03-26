@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
