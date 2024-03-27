@@ -20,9 +20,7 @@ import org.ttzero.excel.entity.ICellValueAndStyle;
 
 /**
  * @author guanquan.wang at 2019-09-25 11:25
- * @deprecated 即将删除，直接实现 {@link ICellValueAndStyle}即可
  */
-@Deprecated
 public class XMLCellValueAndStyle implements ICellValueAndStyle {
 
 //    /**
