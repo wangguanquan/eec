@@ -18,10 +18,10 @@ EEC支持大多数日常应用场景，最擅长的是表格处理，比如转�
 
 - [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
+- [TemplateSheet](./src/main/java/org/ttzero/excel/entity/TemplateSheet.java) // 模板工作表
 - [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
-- [TemplateSheet](./src/main/java/org/ttzero/excel/entity/TemplateSheet.java) // 模板工作表
 - [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 
 ## 主要功能
@@ -102,7 +102,7 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 3. 支持模板导出
 
-EEC支持xls和xlsx模板，模板工作表可以与其它工作表一起工作，同一Excel可以包含多个模板工作表
+EEC支持xls和xlsx模板，模板工作表可以与其它工作表可以混用也可以包含多个模板工作表
 
 ```java
 new Workbook()

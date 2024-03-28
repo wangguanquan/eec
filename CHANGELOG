@@ -1,3 +1,9 @@
+Version 0.5.14
+-------------
+- 新增数据验证Validation
+- 新增模板导出工作表TemplateSheet
+- 新增TypeCastException异常用于读取文件转对象时类型转换异常
+
 Version 0.5.13 (2024-02-20)
 -------------
 - logback安全更新
