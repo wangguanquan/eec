@@ -184,5 +184,9 @@ public interface Const {
          * AutoFilter(3-position)
          */
         String AUTO_FILTER = "auto_filter";
+        /**
+         * DataValidation(4-position)
+         */
+        String DATA_VALIDATION = "data_validation";
     }
 }

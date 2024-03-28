@@ -36,6 +36,7 @@ import org.ttzero.excel.entity.RowBlock;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Grid;
@@ -1353,6 +1354,34 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void afterSheetData() throws IOException {
+        // 数据验证
+        @SuppressWarnings("unchecked")
+        List<Validation> validations = (List<Validation>) sheet.getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
+        if (validations != null && !validations.isEmpty()) {
+            bw.write("<dataValidations count=\"");
+            bw.writeInt(validations.size());
+            bw.write("\">");
+            for (Validation e : validations) {
+                bw.write(e.toString());
+            }
+            bw.write("</dataValidations>");
+        }
+
+        // 超链接
+        if (!hyperlinkMap.isEmpty()) {
+            bw.write("<hyperlinks>");
+            for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
+                for (String dim : entry.getValue()) {
+                    bw.write("<hyperlink ref=\"");
+                    bw.write(dim);
+                    bw.write("\" r:id=\"");
+                    bw.write(entry.getKey());
+                    bw.write("\"/>");
+                }
+            }
+            bw.write("</hyperlinks>");
+        }
+
         // vmlDrawing
         Relationship r = sheet.findRel("vmlDrawing");
         if (r != null) {
@@ -1383,21 +1412,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // 背景图片
         writeWaterMark();
-
-        // 超链接
-        if (!hyperlinkMap.isEmpty()) {
-            bw.write("<hyperlinks>");
-            for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
-                for (String dim : entry.getValue()) {
-                    bw.write("<hyperlink ref=\"");
-                    bw.write(dim);
-                    bw.write("\" r:id=\"");
-                    bw.write(entry.getKey());
-                    bw.write("\"/>");
-                }
-            }
-            bw.write("</hyperlinks>");
-        }
     }
 
     /**
