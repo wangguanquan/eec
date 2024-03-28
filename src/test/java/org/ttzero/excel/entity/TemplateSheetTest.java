@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -361,6 +362,34 @@ public class TemplateSheetTest extends WorkbookTest {
                 assertEquals(mergeCell.width, 5);
             }
         }
+    }
+
+    @Test public void testInnerFormula() throws IOException {
+        final String fileName = "内置函数测试.xlsx";
+        List<Map<String, Object>> list = new ArrayList<>();
+        Map<String, Object> row1 = new HashMap<>();
+        row1.put("name", "张三");
+        row1.put("age", 6);
+        row1.put("sex", "男");
+        row1.put("pic", "https://gw.alicdn.com/bao/uploaded/i3/1081542738/O1CN01ZBcPlR1W63BQXG5yO_!!0-item_pic.jpg_300x300q90.jpg");
+        row1.put("jumpUrl", "https://zhangsan.com/about");
+        list.add(row1);
+
+        Map<String, Object> row2 = new HashMap<>();
+        row2.put("name", "李四");
+        row2.put("age", 8);
+        row2.put("sex", "女");
+        row2.put("pic", "https://gw.alicdn.com/bao/uploaded/i3/2200754440203/O1CN01k8sRgC1DN1GGtuNT9_!!0-item_pic.jpg_300x300q90.jpg");
+        row2.put("jumpUrl", "https://lisi.com/about");
+        list.add(row2);
+
+        new Workbook()
+            // 模板工作表
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "Sheet3")
+                .setData(list)
+                // 替换模板中"@list:sex"值为性别序列
+                .setData("@list:sex", Arrays.asList("未知", "男", "女")))
+            .writeTo(defaultTestPath.resolve(fileName));
     }
 
     static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {

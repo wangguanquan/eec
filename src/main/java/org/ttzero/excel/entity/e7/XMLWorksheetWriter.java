@@ -638,10 +638,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException 出现输出异常
      */
     protected void writeCell(Cell cell, int row, int col) throws IOException {
+        boolean valueOnly = cell.mediaType <= UNALLOCATED;
         // 写值
         switch (cell.t) {
             case INLINESTR:
-            case SST:       writeString(cell, row, col);         break;
+            case SST:
+                if (valueOnly) writeString(cell, row, col);      break;
             case NUMERIC:
             case LONG:
             case DATE:
@@ -655,7 +657,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // 图片
-        if (cell.mediaType > UNALLOCATED) {
+        if (!valueOnly) {
+            writeNull(cell, row, col);
             switch (cell.mediaType) {
                 case REMOTE_URL  : writeRemoteMedia(cell.stringVal, row, col); break;
                 case FILE        : writeFile(cell.path, row, col);             break;
@@ -1008,6 +1011,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Picture picture = createPicture(column, row);
         picture.id = sheet.getWorkbook().incrementMediaCounter();
 
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         // Async Drawing
         drawingsWriter.asyncDrawing(picture);
 
@@ -1647,6 +1652,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.picName = name;
         picture.size = signature.width << 16 | signature.height;
 
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         // Drawing
         drawingsWriter.drawing(picture);
 

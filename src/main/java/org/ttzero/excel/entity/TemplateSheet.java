@@ -20,11 +20,14 @@ package org.ttzero.excel.entity;
 import org.slf4j.Logger;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.validation.ListValidation;
+import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.CellType;
 import org.ttzero.excel.reader.Col;
@@ -58,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 
 /**
@@ -87,19 +91,21 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  *     .addSheet(new ListSheet&lt;&gt;())
  *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
  *
- * <p>占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code filter:}]和[&#x40;{@code media:}]，
- * 作用分别是设置单元格的值为超链接、下拉选择框以及图片，其中下拉框的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置，
- * 内置函数格式固定且只识别这三个内置函数，任意其它命令将被识别为普通命令空间</p>
+ * <p>占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code list:}]和[&#x40;{@code media:}]，
+ * 作用分别是设置单元格的值为超链接、序列以及图片，其中序列的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置，
+ * 内置函数必须独占一个单元格且仅识别这三个内置函数，任意其它命令将被识别为普通命令空间</p>
+ *
+ * <p>占位符整体样式：[&#x40;内置函数:][命名空间][.]&lt;占位符&gt;</p>
  *
  * <blockquote><pre>
- * 有template.xlsx模板如下：
- * +--------+--------+----------------+---------------+------------------+
- * |  姓名  |  年龄  |      性别      |      头像     |      简历原件    |
- * +--------+--------+----------------+---------------+------------------+
- * |${name} | ${age} | ${&#x40;filter:sex} | ${&#x40;media:pic} | ${&#x40;link:jumpUrl} |
- * +--------+--------+----------------+---------------+------------------+
+ * template.xlsx模板如下：
+ * +--------+--------+--------------+---------------+------------------+
+ * |  姓名  |  年龄  |     性别     |      头像     |     简历原件     |
+ * +--------+--------+--------------+---------------+------------------+
+ * |${name} | ${age} | ${&#x40;list:sex} | ${&#x40;media:pic} | ${&#x40;link:jumpUrl} |
+ * +--------+--------+--------------+---------------+------------------+
  *
- * // 读取模板并导出
+ * // 读取模板示例
  * public void downloadStudents() {
  *     List&lt;Map&lt;String, Object&gt;&gt; data = new ArrayList&lt;&gt;();
  *     Map&lt;String, Object&gt; row1 = new HashMap&lt;&gt;();
@@ -107,15 +113,15 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  *     row1.put("age", 26);
  *     row1.put("sex", "男");
  *     row1.put("pic", "https://zhangsan.png");
- *     row1.put("jumpUrl", "https://abc.com/about");
+ *     row1.put("jumpUrl", "https://zhangsan.com/about");
  *     data.add(row1);
  *
  *     new Workbook("内置函数测试")
  *         // 模板工作表
  *         .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
  *             .setData(data)
- *             // 替换模板中"@filter:sex"值为性别下拉框
- *             .setData("@filter:sex", Arrays.asList("未知", "男", "女")))
+ *             // 替换模板中"@list:sex"值为性别序列
+ *             .setData("@list:sex", Arrays.asList("未知", "男", "女")))
  *         .writeTo(Paths.get("/tmp/"));
  * }</pre></blockquote>
  *
@@ -123,13 +129,21 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  */
 public class TemplateSheet extends Sheet {
     /**
-     * 占位符前缀
+     * 内置单元格类型-超链接样式
      */
-    protected String prefix = "${";
+    public static final String HYPERLINK_KEY = "@link:";
     /**
-     * 占位符后缀
+     * 内置单元格类型-图片
      */
-    protected String suffix = "}";
+    public static final String MEDIA_KEY = "@media:";
+    /**
+     * 内置单元格类型-序列
+     */
+    public static final String LIST_KEY = "@list:";
+    /**
+     * 占位符前缀和后缀
+     */
+    protected String prefix = "${", suffix = "}";
     /**
      * 模板路径
      */
@@ -187,6 +201,10 @@ public class TemplateSheet extends Sheet {
      * 填充数据缓存
      */
     protected Map<String, ValueWrapper> namespaceMapper = new HashMap<>();
+    /**
+     * 数据验证
+     */
+    protected List<Validation> validations;
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
@@ -357,7 +375,7 @@ public class TemplateSheet extends Sheet {
      * 绑定数据到指定命名空间上
      *
      * @param namespace 命名空间
-     * @param o 任意对象，可以为Java Bean，Map，或者数组
+     * @param o         任意对象，可以为Java Bean，Map，或者数组
      * @return 当前工作表
      */
     public TemplateSheet setData(String namespace, Object o) {
@@ -366,8 +384,7 @@ public class TemplateSheet extends Sheet {
         if (vw == null) {
             vw = new ValueWrapper();
             namespaceMapper.put(namespace, vw);
-        }
-        else LOGGER.warn("The namespace[{}] already exists.", namespace);
+        } else LOGGER.warn("The namespace[{}] already exists.", namespace);
         if (o == null) vw.option = 0;
         else {
             Class<?> clazz = o.getClass();
@@ -418,7 +435,7 @@ public class TemplateSheet extends Sheet {
      * 绑定一个{@code Supplier}到指定命名空间，适用于未知长度或数量最大的数组
      *
      * @param namespace 命名空间
-     * @param supplier 数据产生者
+     * @param supplier  数据产生者
      * @return 当前工作表
      */
     public TemplateSheet setData(String namespace, Supplier<List<?>> supplier) {
@@ -428,7 +445,7 @@ public class TemplateSheet extends Sheet {
             LOGGER.warn("The namespace[{}] already exists.", namespace);
         } else {
             vw = new ValueWrapper();
-            namespaceMapper.put(namespace, vw);;
+            namespaceMapper.put(namespace, vw);
         }
         vw.supplier = supplier;
 
@@ -509,8 +526,7 @@ public class TemplateSheet extends Sheet {
             if (index > sheets.length)
                 throw new IOException("The original sheet [" + originalSheetName + "] does not exist in template file.");
             originalSheetIndex = index - 1;
-        }
-        else if (originalSheetIndex < 0 || originalSheetIndex >= sheets.length)
+        } else if (originalSheetIndex < 0 || originalSheetIndex >= sheets.length)
             throw new IOException("The original sheet index [" + originalSheetIndex + "] is out of range in template file[0-" + sheets.length + "].");
 
         // 加载模板工作表
@@ -601,6 +617,7 @@ public class TemplateSheet extends Sheet {
         PreCell pn;
         Object e;
         Set<String> consumerValueKeys = null;
+        Column emptyColumn = new Column();
         for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
@@ -616,7 +633,7 @@ public class TemplateSheet extends Sheet {
             // 预处理
             if (row0.getRowNum() == pf || rowIterator.hasFillCell) {
                 if (!rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi]);
-                if (consumerValueKeys == null ) consumerValueKeys = new HashSet<>();
+                if (consumerValueKeys == null) consumerValueKeys = new HashSet<>();
                 else consumerValueKeys.clear();
             } else consumerValueKeys = null;
 
@@ -636,11 +653,24 @@ public class TemplateSheet extends Sheet {
                             fillCell = true;
                             if (pn.nodes.length == 1) {
                                 e = getNodeValue(pn.nodes[0]);
-                                if (e != null) cellValueAndStyle.setCellValue(row, cell, e, new Column(), e.getClass(), false);
-                                else cell.emptyTag();
+                                if (e != null) {
+                                    if (String.class == e.getClass()) {
+                                        switch (pn.nodes[0].getType()) {
+                                            // Hyperlink
+                                            case 1: cell.setHyperlink(e.toString()); break;
+                                            // Media
+                                            case 2: cellValueAndStyle.writeAsMedia(row, cell, e.toString(), emptyColumn, String.class); break;
+                                            default: cell.setString(e.toString());
+                                        }
+                                    } else {
+                                        emptyColumn.setClazz(e.getClass());
+                                        cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, e.getClass(), false);
+                                    }
+                                } else cell.emptyTag();
+                                // 序列的dimension纵向+1
+                                if (pn.nodes[0].getType() == 3) pn.v++;
                                 consumerValueKeys.add(pn.nodes[0].namespace);
-                            }
-                            else {
+                            } else {
                                 int k = 0;
                                 for (Node node : pn.nodes) {
                                     e = getNodeValue(node);
@@ -682,6 +712,7 @@ public class TemplateSheet extends Sheet {
 
                 // 复制样式
                 cell.xf = (xf = styleMap.get(cell0.xf)) != null ? xf : 0;
+                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
                 // 合并单元格重新计算位置
                 if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
@@ -715,8 +746,14 @@ public class TemplateSheet extends Sheet {
             // 循环替换占位符时不要ark
             if (consumerEnd) {
                 if (rowIterator.hasFillCell) {
+                    for (int i = row0.getFirstColumnIndex(); i < len; i++) {
+                        if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
+                            Dimension sqref = pn.validation.sqref;
+                            pn.validation.sqref = new Dimension(sqref.firstRow, sqref.firstColumn, sqref.lastRow + pn.v, sqref.firstColumn);
+                        }
+                    }
                     pi++;
-                    pf = preCells.length > pi && preCells[pi] != null &&  preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
+                    pf = preCells.length > pi && preCells[pi] != null && preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
                 }
                 rowIterator.commit();
             }
@@ -749,10 +786,10 @@ public class TemplateSheet extends Sheet {
     /**
      * 反射获取对象的值
      *
-     * @param ao Method 或 Field
-     * @param o 对象
+     * @param ao     Method 或 Field
+     * @param o      对象
      * @param logger 日志
-     * @param key 占位符
+     * @param key    占位符
      * @return 值
      */
     protected static Object getObjectValue(AccessibleObject ao, Object o, Logger logger, String key) {
@@ -785,6 +822,8 @@ public class TemplateSheet extends Sheet {
 
         // 添加合并
         if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
+        // 数据校验
+        if (validations != null) putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations);
     }
 
     @Override
@@ -859,11 +898,8 @@ public class TemplateSheet extends Sheet {
                 if (row.getCellType(cell) == CellType.STRING) {
                     String v = row.getString(cell);
                     // 预处理单元格的值
-                    PreCell preCell = prepareCellValue(v, prefixLen, suffixLen);
+                    PreCell preCell = prepareCellValue(row.getRowNum(), i, v, prefixLen, suffixLen);
                     if (preCell != null) {
-                        preCell.row = row.getRowNum();
-                        preCell.col = i;
-
                         if (preCells == null) preCells = new PreCell[10][];
                         PreCell[] pns;
                         if (index == 0) {
@@ -872,13 +908,6 @@ public class TemplateSheet extends Sheet {
                         } else if (index >= (pns = preCells[pf - 1]).length)
                             preCells[pf - 1] = pns = Arrays.copyOf(pns, pns.length + 10);
                         pns[index++] = preCell;
-
-                        // 检测是否包含单行合并单元格
-                        if (mergeCells0 != null) {
-                            Dimension mc = mergeCells0.get(dimensionKey(row.getRowNum() - 1, i));
-                            // FIXME 目前只支持单行合并
-                            if (mc != null && mc.height == 1) preCell.m = mc.width - 1;
-                        }
                     }
                 }
             }
@@ -890,12 +919,14 @@ public class TemplateSheet extends Sheet {
     /**
      * 单元格字符串预处理，检测是否包含占位符以及占位符预处理
      *
-     * @param v 单元格原始值
+     * @param row       单元格行坐标(one base)
+     * @param col       单元格列坐标(zero base)
+     * @param v         单元格原始值
      * @param prefixLen 占位符前缀长度
      * @param suffixLen 占位符后缀长度
      * @return 预处理结果
      */
-    protected PreCell prepareCellValue(String v, int prefixLen, int suffixLen) {
+    protected PreCell prepareCellValue(int row, int col, String v, int prefixLen, int suffixLen) {
         int len = v.length();
         if (len <= prefixLen + suffixLen) return null;
         int pi = 0, fi = v.indexOf(prefix);
@@ -904,6 +935,7 @@ public class TemplateSheet extends Sheet {
         if (li <= fn) return null;
 
         PreCell pn = new PreCell();
+        pn.row = row; pn.col = col;
         do {
             if (fi > pi) {
                 Node node = new Node();
@@ -948,7 +980,67 @@ public class TemplateSheet extends Sheet {
 
         // 分配临时空间后续共享使用
         if (pn.nodes.length > 1) pn.cb = new char[Math.max(len + (len >> 1), 128)];
+        return afterParseCell(pn);
+    }
+
+    /**
+     * 解析完占位符后调用此方法，可以处理内置函数
+     *
+     * @param pn 原始占位符预处理
+     * @return 占位符预处理
+     */
+    protected PreCell afterParseCell(PreCell pn) {
+        // 检测是否包含单行合并单元格
+        if (mergeCells0 != null) {
+            Dimension mc = mergeCells0.get(dimensionKey(pn.row, pn.col));
+            // FIXME 目前只支持单行合并
+            if (mc != null && mc.height == 1) pn.m = mc.width - 1;
+        }
+
+        // 处理内置函数
+        if (pn.nodes.length == 1 && (pn.nodes[0].option & 1) == 1) {
+            Node node = pn.nodes[0];
+            boolean useNamespace = StringUtil.isNotEmpty(node.namespace);
+            String k = useNamespace ? node.namespace : node.val;
+            if (k.length() < 7 || k.charAt(0) != '@') return pn;
+            String[] keys = {HYPERLINK_KEY, MEDIA_KEY, LIST_KEY};
+            int p = prefixMatch(keys, k);
+            if (p >= 0) {
+                node.option |= (p + 1) << 1;
+                String innerFormulaStr = useNamespace ? node.namespace + '.' + node.val : node.val;
+                int pLen = keys[p].length();
+                if (useNamespace) node.namespace = node.namespace.substring(pLen);
+                else node.val = node.val.substring(pLen);
+                ValueWrapper vw = namespaceMapper.get(innerFormulaStr);
+                if (vw != null && vw.option == 4) {
+                    // TODO 读取源文件中的数据验证
+                    pn.validation = new ListValidation<>().in(vw.list).dimension(new Dimension(pn.row, (short) (pn.col + 1)));
+                    pn.v = 0;
+                    if (validations == null) validations = new ArrayList<>();
+                    validations.add(pn.validation);
+                }
+            }
+        }
         return pn;
+    }
+
+    int[] fontIndices = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    // FIXME 临时逻辑，后期将样式直接放到模板Cell上即可
+    int hyperlinkStyle(Styles styles, int xf) {
+        int style = styles.getStyleByIndex(xf);
+        int fontIndex = Math.max(0, style << 8 >>> (INDEX_FONT + 8)), fi;
+        if (fontIndex > fontIndices.length) {
+            int n = fontIndices.length;
+            fontIndices = Arrays.copyOf(fontIndices, Math.min(n + 16, fontIndex));
+            Arrays.fill(fontIndices, n, fontIndices.length, -1);
+        }
+        if ((fi = fontIndices[fontIndex]) == -1) {
+            Font font = styles.getFont(style).clone();
+            font.setStyle(0).underLine();
+            font.setColor(ColorIndex.themeColors[10]);
+            fontIndices[fontIndex] = fi = workbook.getStyles().addFont(font);
+        }
+        return workbook.getStyles().of(Styles.clearFont(style) | fi);
     }
 
     /**
@@ -1019,6 +1111,19 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
+     * 前缀匹配，数组中的词为前缀词
+     *
+     * @param array 前缀词
+     * @param v     匹配词
+     * @return 匹配词在前缀词
+     */
+    public static int prefixMatch(String[] array, String v) {
+        int i = 0, len = array.length;
+        for (; i < len && !v.startsWith(array[i]); i++) ;
+        return i < len ? i : -1;
+    }
+
+    /**
      * 需要手动调用{@link #commit()}方法才会移动游标
      */
     public static class CommitRowSetIterator implements Iterator<org.ttzero.excel.reader.Row> {
@@ -1078,9 +1183,14 @@ public class TemplateSheet extends Sheet {
          */
         public char[] cb;
         /**
-         * 合并范围 正数为行合并 负数为列合并
+         * m: 合并范围 正数为行合并 负数为列合并
+         * v: 数据验证范围
          */
-        public Integer m;
+        public Integer m, v;
+        /**
+         * 数据验证
+         */
+        public Validation validation;
     }
 
     /**
@@ -1091,9 +1201,10 @@ public class TemplateSheet extends Sheet {
          * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
          *
          * <blockquote><pre>
-         *  Bit  | Contents
-         * ------+---------
-         * 0, 1 | 是否为占位符 0: 普通文本 1: 占位符
+         *  Bit | Contents
+         * --- -+---------
+         * 7, 1 | 是否为占位符 0: 普通文本 1: 占位符
+         * 6, 3 | 1: 超链接 2: 图片 3: 序列
          * </pre></blockquote>
          */
         public byte option;
@@ -1106,9 +1217,18 @@ public class TemplateSheet extends Sheet {
          */
         public String val;
 
+        /**
+         * 返回单元格的值类型
+         *
+         * @return 0: 文本 1: 超链接 2: 图片 3: 序列
+         */
+        public int getType() {
+            return (option >>> 1) & 7;
+        }
+
         @Override
         public String toString() {
-            return (option & 1) == 0 ? val : ("$" + (namespace != null ? namespace + "::" : "") + val);
+            return (option & 1) == 0 ? val : ('$' + (namespace != null ? namespace + "::" : "") + val);
         }
     }
 
