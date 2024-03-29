@@ -700,7 +700,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (cell.f) {
             bw.write("\" t=\"str\"><f>");
             bw.escapeWrite(cell.formula);
-            bw.write("<f>");
+            bw.write("</f>");
             if (notEmpty) {
                 bw.write("<v>");
                 bw.escapeWrite(s);
