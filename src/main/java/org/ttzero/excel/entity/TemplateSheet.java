@@ -992,7 +992,7 @@ public class TemplateSheet extends Sheet {
     protected PreCell afterParseCell(PreCell pn) {
         // 检测是否包含单行合并单元格
         if (mergeCells0 != null) {
-            Dimension mc = mergeCells0.get(dimensionKey(pn.row, pn.col));
+            Dimension mc = mergeCells0.get(dimensionKey(pn.row - 1, pn.col));
             // FIXME 目前只支持单行合并
             if (mc != null && mc.height == 1) pn.m = mc.width - 1;
         }
@@ -1007,6 +1007,7 @@ public class TemplateSheet extends Sheet {
             int p = prefixMatch(keys, k);
             if (p >= 0) {
                 node.option |= (p + 1) << 1;
+                pn.v = 0;
                 String innerFormulaStr = useNamespace ? node.namespace + '.' + node.val : node.val;
                 int pLen = keys[p].length();
                 if (useNamespace) node.namespace = node.namespace.substring(pLen);
@@ -1015,7 +1016,6 @@ public class TemplateSheet extends Sheet {
                 if (vw != null && vw.option == 4) {
                     // TODO 读取源文件中的数据验证
                     pn.validation = new ListValidation<>().in(vw.list).dimension(new Dimension(pn.row, (short) (pn.col + 1)));
-                    pn.v = 0;
                     if (validations == null) validations = new ArrayList<>();
                     validations.add(pn.validation);
                 }
