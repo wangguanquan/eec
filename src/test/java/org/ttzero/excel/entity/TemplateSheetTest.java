@@ -322,13 +322,17 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testEmptyNamespace() throws IOException {
-        final String fileName = "fill empty namespace.xlsx";
+    @Test public void testMixNamespace() throws IOException {
+        final String fileName = "fill mix namespace.xlsx";
         List<YzOrderEntity> yzOrderEntity = YzOrderEntity.randomData();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "Sheet2").setPrefix("{")
-                .setData("", yzOrderEntity))
-            .writeTo(defaultTestPath.resolve(fileName));
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间").setPrefix("{")
+                .setData("", yzOrderEntity)
+                .setData(new HashMap<String, String>(){{
+                    put("cName", "精品一店");
+                    put("cCode", "JP");
+                }})
+            ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
@@ -340,8 +344,8 @@ public class TemplateSheetTest extends WorkbookTest {
                 Row row = iter.next();
                 YzOrderEntity expect = yzOrderEntity.get(i);
                 assertEquals(row.getInt(0).intValue(), expect.xh);
-                assertEquals(row.getString(1), "中文" + expect.jpCode + "No." + expect.xh + "追加内容" + expect.num);
-                assertEquals(row.getString(3), expect.jpName);
+                assertEquals(row.getString(1), "JP-" + expect.jpCode + "追加" + expect.num);
+                assertEquals(row.getString(3), "精品一店-" + expect.jpName);
                 assertEquals(row.getInt(6).intValue(), expect.num);
                 assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
                 assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
@@ -385,7 +389,7 @@ public class TemplateSheetTest extends WorkbookTest {
 
         new Workbook()
             // 模板工作表
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "Sheet3")
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "内置函数")
                 .setData(list)
                 // 替换模板中"@list:sex"值为性别序列
                 .setData("@list:sex", Arrays.asList("未知", "男", "女")))
