@@ -51,6 +51,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
@@ -94,6 +95,13 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 你可以在任何无参且仅有一个返回值的方法上添加&#x40;ExcelColumn注解进行导出，你还可以在子类定义相同的方法来替换父类上的&#x40;ExcelColumn注解，
  * 解析注解时会从子类往上逐级解析至到父级为{@code Object}为止</p>
  *
+ * <p>除子类覆写{@link #more}方法外还可以通过{@link #setData(Supplier)}设置一个数据生产者，它可以减化数据分片的代码</p>
+ * <blockquote><pre>
+ * new Workbook()
+ *     .addSheet(new ListSheet&lt;Customer&gt;()
+ *         .setData(customerService::pagingQuery)) &lt;- 分片查询
+ *     .writeTo(Paths.get("f://abc.xlsx"));</pre></blockquote>
+ *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/wiki/%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3">自定义注解</a></p>
  *
@@ -129,6 +137,10 @@ public class ListSheet<T> extends Sheet {
      * 强制导出，忽略安全限制全字段导出，确认需求后谨慎使用
      */
     protected int forceExport;
+    /**
+     * 数据产生者，简化分片查询
+     */
+    protected Supplier<List<T>> dataSupplier;
 
     /**
      * 设置行级动态样式处理器，作用于整行优先级高于单元格动态样式处理器
@@ -290,6 +302,16 @@ public class ListSheet<T> extends Sheet {
         if (sheetWriter != null) {
             paging();
         }
+        return this;
+    }
+
+    /**
+     * 设置数据生产者，如果设置了此值{@link #more}方法将从此生产者中获取数据
+     *
+     * @param dataSupplier 数据生产者
+     */
+    public ListSheet<T> setData(Supplier<List<T>> dataSupplier) {
+        this.dataSupplier = dataSupplier;
         return this;
     }
 
@@ -1011,7 +1033,7 @@ public class ListSheet<T> extends Sheet {
      * @return 数组，{@code null}和空数组表示结束
      */
     protected List<T> more() {
-        return null;
+        return dataSupplier != null ? dataSupplier.get() : null;
     }
 
     /**
