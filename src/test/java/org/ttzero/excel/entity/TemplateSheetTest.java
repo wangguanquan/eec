@@ -73,8 +73,9 @@ public class TemplateSheetTest extends WorkbookTest {
                 if (file.getName().endsWith(".xlsx")) {
                     try (ExcelReader reader = ExcelReader.read(file.toPath())) {
                         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
+                        // 这里设置占位符前缀为[#@^!]是为了全量复制数据用
                         for (org.ttzero.excel.reader.Sheet sheet : sheets) {
-                            workbook.addSheet(new TemplateSheet(file.getName() + "$" + sheet.getName(), file.toPath(), sheet.getName()));
+                            workbook.addSheet(new TemplateSheet(file.getName() + "$" + sheet.getName(), file.toPath(), sheet.getName()).setPrefix("#@^!"));
                         }
                     }
                 }

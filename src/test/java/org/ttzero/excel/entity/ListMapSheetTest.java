@@ -857,6 +857,28 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testDataSupplier() throws IOException {
+        final String fileName = "list map data supplier.xlsx";
+        List<Map<String, ?>> expectList = new ArrayList<>(100);
+        new Workbook()
+            .addSheet(new ListMapSheet().setData(() -> {
+                if (expectList.size() >= 100) return null;
+                List<Map<String, ?>> sub = createTestData(10);
+                expectList.addAll(sub);
+                return sub;
+            }))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Map<String, ?>> list =  reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
     static List<Map<String, ?>> getRows(int page) {
         if (page > 127 - 67) return null;
         List<Map<String, ?>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase

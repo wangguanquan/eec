@@ -509,6 +509,29 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testDataSupplier() throws IOException {
+        final String fileName = "list data supplier.xlsx";
+        List<ListObjectSheetTest.Student> expectList = new ArrayList<>(100);
+        new Workbook()
+            .addSheet(new ListSheet<ListObjectSheetTest.Student>().setData(() -> {
+                if (expectList.size() >= 100) return null;
+                List<ListObjectSheetTest.Student> sub = ListObjectSheetTest.Student.randomTestData();
+                expectList.addAll(sub);
+                return sub;
+            }))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Student> list =  reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i), e = list.get(i);
+                expect.setId(0); // ID not exported
+                assertEquals(expect, e);
+            }
+        }
+    }
+
     @Test public void testTreeStyle() throws IOException {
         List<TreeNode> root = new ArrayList<>();
         TreeNode class1 = new TreeNode("一年级", (94 + 97) / 2.0D);
