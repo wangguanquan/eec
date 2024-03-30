@@ -44,6 +44,7 @@ public class TimeValidation extends Tuple2Validation<Double, Double> {
     /**
      * @param from time in format "hh:mm:ss"
      * @param to   time in format "hh:mm:ss"
+     * @return DateValidation
      */
     public TimeValidation between(String from, String to) {
         if (StringUtil.isNotEmpty(from)) v1 = DateUtil.toTimeValue(Time.valueOf(from));

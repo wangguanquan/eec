@@ -38,6 +38,7 @@ public class DateValidation extends Tuple2Validation<Integer, Integer> {
     /**
      * @param from time in format "yyyy-MM-dd"
      * @param to   time in format "yyyy-MM-dd"
+     * @return DateValidation
      */
     public DateValidation between(String from, String to) {
         if (StringUtil.isNotEmpty(from))

@@ -48,6 +48,8 @@ public abstract class Validation {
 
     /**
      * 数据校验类型
+     *
+     * @return 数据验类型，包含 {@code list}序列, {@code whole}整数, {@code date}日期, {@code time}时间, {@code textLength}文本长度
      */
     public abstract String getType();
 
