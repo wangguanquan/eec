@@ -76,14 +76,15 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  * 导出的数据范围由模板内占位符决定</p>
  *
  * <p>默认占位符由一对关闭的大括号{@code ${key}}组成，可以使用{@link #setPrefix}和{@link #setSuffix}方法来重新指定占位符的前缀和后缀字符，
- * 建议不要设置太长的前后缀。每个占位符都有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间，默认命名空间为{@code null}</p>
+ * 所以你可以很轻松的适配现有模板，但建议不要设置太长的前后缀。每个占位符都有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间，
+ * 默认命名空间为{@code null}</p>
  *
  * <p>使用{@link #setData}方法为占位符绑定值时，如果指定了命名空间则绑定值时必须指定对应的命名空间，
- * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}，如果数据量较大时可绑定一个数据生产者{@code dataSupplier}它被定义为
- * {@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
+ * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}。数据量较大时可绑定一个数据生产者{@code dataSupplier}来分片拉取数据，
+ * 它被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
  * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这个两个参数来计算下一批数据应该从哪个节点开始拉取，
  * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
- * {@code limit ... offset ... }分页查询，从页大大提升取数性能来分片获取数据，它的作用与{@link ListSheet#more}方法一致。</p>
+ * {@code limit ... offset ... }分页查询，从页大大提升取数性能来分片获取数据。</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
@@ -110,7 +111,7 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  * +--------+--------+--------------+---------------+------------------+
  *
  * // 读取模板示例
- * public void downloadStudents() {
+ * public void downloadWithTemplate() {
  *     List&lt;Map&lt;String, Object&gt;&gt; data = new ArrayList&lt;&gt;();
  *     Map&lt;String, Object&gt; row1 = new HashMap&lt;&gt;();
  *     row1.put("name", "张三");
