@@ -280,19 +280,20 @@ public class TemplateSheetTest extends WorkbookTest {
     @Test public void testFillSupplierListObject() throws IOException {
         final String fileName = "fill supplier list object.xlsx";
         List<YzOrderEntity> expectList = new ArrayList<>();
-        int[] page = { 0 };
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
                 .setData(YzEntity.mock())
-                .setData("YzEntity", () -> {
+                .setData("YzEntity", (i, o) -> {
                     List<YzOrderEntity> sub = null;
-                    // 拉取10页数据
-                    if (page[0]++ <= 10) {
-                        sub = YzOrderEntity.randomData();
+                    // 拉取100条数据
+                    if (i < 100) {
+                        YzOrderEntity lastOne = (YzOrderEntity) o;
+                        sub = YzOrderEntity.randomData(lastOne != null ? lastOne.xh : 0);
                         expectList.addAll(sub);
                     }
                     return sub;
                 })
+                .setData((i, lastOne) -> scrollQuery(lastOne != null ? ((YzOrderEntity) lastOne).xh : 0))
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -300,18 +301,23 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
+    List<YzOrderEntity> scrollQuery(int lastId) {
+        return null;
+    }
+
     @Test public void testFillSupplierListMap() throws IOException {
         final String fileName = "fill supplier list map.xlsx";
         List<Map<String, Object>> expectList = new ArrayList<>();
-        int[] page = { 0 };
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
                 .setData(YzEntity.mock())
-                .setData("YzEntity", () -> {
+                .setData("YzEntity", (i, o) -> {
                     List<Map<String, Object>> sub = null;
-                    // 拉取10页数据
-                    if (page[0]++ <= 10) {
-                        sub = YzOrderEntity.randomMap();
+                    // 拉取100条数据
+                    if (i < 100) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> lastOne = (Map<String, Object>) o;
+                        sub = YzOrderEntity.randomMap(lastOne != null ? Integer.parseInt(lastOne.get("xh").toString()) : 0);
                         expectList.addAll(sub);
                     }
                     return sub;
@@ -559,8 +565,12 @@ public class TemplateSheetTest extends WorkbookTest {
         }
 
         private static List<YzOrderEntity> randomData() {
+            return randomData(0);
+        }
+
+        private static List<YzOrderEntity> randomData(int startIndex) {
             List<YzOrderEntity> list = new ArrayList<>(10);
-            for (int i = 0; i < 10; i++) {
+            for (int i = Math.max(startIndex, 0), len = i + 10; i < len; i++) {
                 YzOrderEntity e = new YzOrderEntity();
                 e.xh = i + 1;
                 e.jpCode = "code" + e.xh;
@@ -576,9 +586,14 @@ public class TemplateSheetTest extends WorkbookTest {
             }
             return list;
         }
+
         private static List<Map<String, Object>> randomMap() {
+            return randomMap(0);
+        }
+
+        private static List<Map<String, Object>> randomMap(int startIndex) {
             List<Map<String, Object>> list = new ArrayList<>(10);
-            for (int i = 0, j; i < 10; i++) {
+            for (int i = Math.max(startIndex, 0), len = i + 10, j; i < len; i++) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("xh", (j = i + 1));
                 map.put("jpCode", "code" + j);

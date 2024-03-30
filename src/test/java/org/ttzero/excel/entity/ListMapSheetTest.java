@@ -861,8 +861,8 @@ public class ListMapSheetTest extends WorkbookTest {
         final String fileName = "list map data supplier.xlsx";
         List<Map<String, ?>> expectList = new ArrayList<>(100);
         new Workbook()
-            .addSheet(new ListMapSheet().setData(() -> {
-                if (expectList.size() >= 100) return null;
+            .addSheet(new ListMapSheet().setData((i, lastOne) -> {
+                if (i >= 100) return null;
                 List<Map<String, ?>> sub = createTestData(10);
                 expectList.addAll(sub);
                 return sub;

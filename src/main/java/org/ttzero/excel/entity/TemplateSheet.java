@@ -59,7 +59,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
@@ -79,14 +79,18 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  * 建议不要设置太长的前后缀。每个占位符都有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间，默认命名空间为{@code null}</p>
  *
  * <p>使用{@link #setData}方法为占位符绑定值时，如果指定了命名空间则绑定值时必须指定对应的命名空间，
- * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}，如果数据量较大时可绑定一个数据生产者{@link Supplier}
- * 来分片获取数据，它的作用与{@link ListSheet#more}方法一致。</p>
+ * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}，如果数据量较大时可绑定一个数据生产者{@code dataSupplier}它被定义为
+ * {@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
+ * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这个两个参数来计算下一批数据应该从哪个节点开始拉取，
+ * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
+ * {@code limit ... offset ... }分页查询，从页大大提升取数性能来分片获取数据，它的作用与{@link ListSheet#more}方法一致。</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
  *      // 模板工作表
  *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
- *         .setData(this::queryUsers)) // &lt;- 指定获取数据的{@link Supplier}
+ *          // 设置一个数据生产者{@code dataSupplier}分片查询数据
+ *         .setData((i, lastOne) -> queryUser(i > 0 ? ((User)lastOne).getId() : 0))
  *     // 普通对象数组工作表
  *     .addSheet(new ListSheet&lt;&gt;())
  *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
@@ -119,6 +123,7 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  *     new Workbook("内置函数测试")
  *         // 模板工作表
  *         .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
+ *             // 替换模板中占位符
  *             .setData(data)
  *             // 替换模板中"@list:sex"值为性别序列
  *             .setData("@list:sex", Arrays.asList("未知", "男", "女")))
@@ -424,21 +429,21 @@ public class TemplateSheet extends Sheet {
     /**
      * 绑定一个{@code Supplier}到默认命名空间，适用于未知长度或数量最大的数组
      *
-     * @param supplier 数据产生者
+     * @param dataSupplier 数据产生者
      * @return 当前工作表
      */
-    public TemplateSheet setData(Supplier<List<?>> supplier) {
-        return setData(null, supplier);
+    public TemplateSheet setData(BiFunction<Integer, Object, List<?>> dataSupplier) {
+        return setData(null, dataSupplier);
     }
 
     /**
      * 绑定一个{@code Supplier}到指定命名空间，适用于未知长度或数量最大的数组
      *
      * @param namespace 命名空间
-     * @param supplier  数据产生者
+     * @param dataSupplier  数据产生者
      * @return 当前工作表
      */
-    public TemplateSheet setData(String namespace, Supplier<List<?>> supplier) {
+    public TemplateSheet setData(String namespace, BiFunction<Integer, Object, List<?>> dataSupplier) {
         if ("this".equals(namespace)) namespace = null;
         ValueWrapper vw = namespaceMapper.get(namespace);
         if (vw != null) {
@@ -447,13 +452,14 @@ public class TemplateSheet extends Sheet {
             vw = new ValueWrapper();
             namespaceMapper.put(namespace, vw);
         }
-        vw.supplier = supplier;
+        vw.supplier = dataSupplier;
 
         // 加载第一批数据预处理数据类型
-        if (supplier != null) {
-            List list = supplier.get();
+        if (dataSupplier != null) {
+            List list = dataSupplier.apply(0, null);
             Object oo = getFirstObject(list);
             if (oo != null) {
+                vw.size += list.size();
                 if (vw.list == null) vw.list = list;
                 else vw.list.addAll(list);
                 vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
@@ -732,10 +738,11 @@ public class TemplateSheet extends Sheet {
                         if (++vw.i < vw.list.size()) consumerEnd = false;
                             // 加载更多数据
                         else if (vw.supplier != null) {
-                            List list = vw.supplier.get();
+                            List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
                             if (list != null && !list.isEmpty()) {
                                 vw.list = list;
                                 vw.i = 0;
+                                vw.size += list.size();
                                 consumerEnd = false;
                             } else vw.option = -1; // EOF
                         } else vw.option = -1; // EOF
@@ -1250,6 +1257,10 @@ public class TemplateSheet extends Sheet {
          */
         public int i;
         /**
+         * 当{@code option}为3/4的时候，{@code size}表示已拉取数据大小
+         */
+        public int size;
+        /**
          * 当{@code option=1}时，填充的数据保存到{@code o}中
          */
         public Object o;
@@ -1260,7 +1271,7 @@ public class TemplateSheet extends Sheet {
         /**
          * 数据生产者，适用于数据量较大或长度未知的场景，效果等同于{@link ListSheet#more}方法
          */
-        public Supplier<List<?>> supplier;
+        public BiFunction<Integer, Object, List<?>> supplier;
         /**
          * 当{@code option}为3/4的时候，填充的数据保存到{@code list}中
          */

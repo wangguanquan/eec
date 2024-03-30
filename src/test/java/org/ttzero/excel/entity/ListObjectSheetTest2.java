@@ -513,8 +513,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         final String fileName = "list data supplier.xlsx";
         List<ListObjectSheetTest.Student> expectList = new ArrayList<>(100);
         new Workbook()
-            .addSheet(new ListSheet<ListObjectSheetTest.Student>().setData(() -> {
-                if (expectList.size() >= 100) return null;
+            .addSheet(new ListSheet<ListObjectSheetTest.Student>().setData((i, lastOne) -> {
+                if (i >= 100) return null;
                 List<ListObjectSheetTest.Student> sub = ListObjectSheetTest.Student.randomTestData();
                 expectList.addAll(sub);
                 return sub;
