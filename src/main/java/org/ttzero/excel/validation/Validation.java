@@ -55,6 +55,8 @@ public abstract class Validation {
 
     /**
      * 校验内容
+     *
+     * @return 验证对象转xml文本
      */
     public abstract String validationFormula();
 
