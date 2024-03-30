@@ -1612,7 +1612,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             downloadCompleted(picture, null);
         } catch (IOException e) {
             LOGGER.error("Download remote resource [{}] error", url, e);
-            throw e;
+            downloadCompleted(picture, null);
         }
     }
 
