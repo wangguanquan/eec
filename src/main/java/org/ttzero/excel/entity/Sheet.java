@@ -1453,8 +1453,10 @@ public abstract class Sheet implements Cloneable, Storable {
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
         // Mark global merged cells
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS) != null ? 1 << 2 : 0;
-        // Mark autoFilter
+        // Mark auto-filter
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER) != null ? 1 << 3 : 0;
+        // Mark data-validation
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION) != null ? 1 << 4 : 0;
     }
 
     /**
