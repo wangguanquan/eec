@@ -643,7 +643,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         switch (cell.t) {
             case INLINESTR:
             case SST:
-                if (valueOnly) writeString(cell, row, col);      break;
+                if (valueOnly) writeString(cell, row, col);
+                else writeNull(cell, row, col);                  break;
             case NUMERIC:
             case LONG:
             case DATE:
@@ -658,7 +659,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // 图片
         if (!valueOnly) {
-            writeNull(cell, row, col);
             switch (cell.mediaType) {
                 case REMOTE_URL  : writeRemoteMedia(cell.stringVal, row, col); break;
                 case FILE        : writeFile(cell.path, row, col);             break;
