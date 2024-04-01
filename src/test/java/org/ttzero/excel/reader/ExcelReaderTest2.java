@@ -251,7 +251,7 @@ public class ExcelReaderTest2 {
     }
 
     @Ignore
-    @Test public void testFullSheet() throws IOException {
+    @Test public void test200w() throws IOException {
         final int loop = 2000;
         new Workbook("200w").addSheet(new ListSheet<E>() {
             int n = 0; // 页码
@@ -260,6 +260,10 @@ public class ExcelReaderTest2 {
                 return n++ < loop ? E.data() : null;
             }
         }).writeTo(defaultTestPath);
+
+//        new Workbook()
+//            .addSheet(new ListSheet<E>().setData((i, lastOne) -> i < 2_000_000 ? E.data() : null))
+//            .writeTo(defaultTestPath.resolve("200w.xlsx"));
     }
 
     @Test public void testEntryMissKey() throws IOException {
