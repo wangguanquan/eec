@@ -105,7 +105,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * new Workbook()
  *     .addSheet(new ListSheet&lt;Customer&gt;()
  *         // 分页查询，每页查询100条数据，可以通过已拉取记录数计算当前页面
- *         .setData((i, lastOne) -> customerService.pagingQuery(i/100, 100))
+ *         .setData((i, lastOne) -&gt; customerService.pagingQuery(i/100, 100))
  *     ).writeTo(Paths.get("f://abc.xlsx"));</pre></blockquote>
  *
  * <p>参考文档:</p>
@@ -1040,7 +1040,12 @@ public class ListSheet<T> extends Sheet {
      * @return 数组，{@code null}和空数组表示结束
      */
     protected List<T> more() {
-        return dataSupplier != null ? dataSupplier.apply(size, data != null && !data.isEmpty() ? data.get(data.size() - 1) : null) : null;
+        if (dataSupplier != null) {
+            int offset = size;
+            if (copySheet) offset += copyCount * workbook.getSheetAt(id - 2).size();
+            return dataSupplier.apply(offset, data != null && !data.isEmpty() ? data.get(data.size() - 1) : null);
+        }
+        return null;
     }
 
     /**
