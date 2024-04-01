@@ -1169,8 +1169,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            size = includeAutoWidth || sheet.getNonHeader() == 1 ? (size + startRow - 1) % getRowLimit() : size + startRow + columns[0].subColumnSize() - 1;
-            bw.writeInt(size);
+            size = includeAutoWidth || sheet.getNonHeader() == 1 ? size + startRow - 1 : size + startRow + columns[0].subColumnSize() - 1;
+            bw.writeInt(size > getRowLimit() ? getRowLimit() : size);
             n -= stringSize(size);
         }
         bw.write('"');
