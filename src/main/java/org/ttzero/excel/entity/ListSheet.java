@@ -97,7 +97,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *
  * <p>除子类覆写{@link #more}方法外还可以通过{@link #setData(BiFunction)}设置一个数据生产者，它可以减化数据分片的代码。
  * {@code dataSupplier}被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
- * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这个两个参数来计算下一批数据应该从哪个节点开始拉取，
+ * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这两个参数来计算下一批数据应该从哪个节点开始拉取，
  * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
  * {@code limit ... offset ... }分页查询，从而极大提升取数性能</p>
  *

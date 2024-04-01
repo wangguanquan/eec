@@ -65,40 +65,36 @@ import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 
 /**
- * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制
- * 模板工作表的样式并替换占位符，同时{@code TemplateSheet}也可以和其它{@code Sheet}共用，
- * 这意味着可以添加多个模板工作表和普通工作表。需要注意的是多个模板可能产生重复的工作表名称，所以需要外部指定不同的名称以免
- * 打开文件异常
+ * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制模板工作表的样式并替换占位符，
+ * 同时{@code TemplateSheet}也可以和其它{@code Sheet}混用，这意味着可以添加多个模板工作表和普通工作表。
  *
  * <p>创建模板工作表需要指定模板文件，它可以是本地文件也可是输入流{@code InputStream}，支持的类型包含{@code xls}
- * 和{@code xlsx}两种格式，除模板文件外还需要指定Excel中的某个{@code Worksheet}工作表，
- * 未指定工作表时默认以第一个工作表做为模板，{@code TemplateSheet}工作表导出时不受{@code ExcelColumn}注解限制，
- * 导出的数据范围由模板内占位符决定</p>
+ * 和{@code xlsx}两种格式，除模板文件外还需要指定工作表，未指定工作表时默认以第一个工作表做为模板。</p>
  *
- * <p>默认占位符由一对关闭的大括号{@code ${key}}组成，可以使用{@link #setPrefix}和{@link #setSuffix}方法来重新指定占位符的前缀和后缀字符，
- * 所以你可以很轻松的适配现有模板，但建议不要设置太长的前后缀。每个占位符都有一个命名空间，使用{@code ${namespace.key}}这种格式来添加命名空间，
- * 默认命名空间为{@code null}</p>
+ * <p>TemplateSheet工作表导出时不受ExcelColumn注解限制，导出的数据范围由模板内占位符决定,
+ * 默认占位符由一对关闭的大括号{@code ${key}}组成，可以使用{@link #setPrefix}和{@link #setSuffix}
+ * 方法来重新指定占位符的前缀和后缀字符，所以你可以很轻松的适配现有模板，建议不要设置太长的前后缀。</p>
  *
- * <p>使用{@link #setData}方法为占位符绑定值时，如果指定了命名空间则绑定值时必须指定对应的命名空间，
- * 如果指定命名空间为 {@code this} 将被视为默认命名空间{@code null}。数据量较大时可绑定一个数据生产者{@code dataSupplier}来分片拉取数据，
+ * <p>使用{@link #setData}方法为占位符绑定值时，数据量较大时可绑定一个数据生产者{@code data-supplier}来分片拉取数据，
  * 它被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
- * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这个两个参数来计算下一批数据应该从哪个节点开始拉取，
+ * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这两个参数来计算下一批数据应该从哪个节点开始拉取，
  * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
- * {@code limit ... offset ... }分页查询，从页大大提升取数性能来分片获取数据。</p>
+ * {@code limit ... offset ... }分页查询从而大大提升取数性能来分片获取数据。</p>
  *
  * <blockquote><pre>
  * new Workbook("模板测试")
  *      // 模板工作表
  *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
- *          // 设置一个数据生产者{@code dataSupplier}分片查询数据
- *         .setData((i, lastOne) -> queryUser(i > 0 ? ((User)lastOne).getId() : 0))
+ *          // 设置一个数据生产者{@code data-supplier}分片查询数据
+ *         .setData((i, lastOne) -&gt; queryUser(i &gt; 0 ? ((User)lastOne).getId() : 0))
  *     // 普通对象数组工作表
- *     .addSheet(new ListSheet&lt;&gt;())
+ *     .addSheet(new ListSheet&lt;&gt;().setData(list))
  *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
  *
- * <p>占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code list:}]和[&#x40;{@code media:}]，
- * 作用分别是设置单元格的值为超链接、序列以及图片，其中序列的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置，
- * 内置函数必须独占一个单元格且仅识别这三个内置函数，任意其它命令将被识别为普通命令空间</p>
+ * <p>每个占位符都有一个命名空间，使用${namespace.key}这种格式来添加命名空间，默认命名空间为null。
+ * 占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code list:}]和[&#x40;{@code media:}]，
+ * 分别是设置单元格的值为超链接、序列和图片，其中序列的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置。
+ * 注意：内置函数必须独占一个单元格且仅识别固定的三个内置函数，任意其它命令将被识别为普通命令空间</p>
  *
  * <p>占位符整体样式：[&#x40;内置函数:][命名空间][.]&lt;占位符&gt;</p>
  *
@@ -118,7 +114,7 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  *     row1.put("age", 26);
  *     row1.put("sex", "男");
  *     row1.put("pic", "https://zhangsan.png");
- *     row1.put("jumpUrl", "https://zhangsan.com/about");
+ *     row1.put("jumpUrl", "https://jianli.com/zhangsan");
  *     data.add(row1);
  *
  *     new Workbook("内置函数测试")
