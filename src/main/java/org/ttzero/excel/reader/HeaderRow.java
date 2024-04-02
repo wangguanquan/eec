@@ -27,8 +27,6 @@ import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -59,6 +57,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
+import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.lowFirstKey;
 import static org.ttzero.excel.util.StringUtil.toCamelCase;
@@ -201,12 +200,7 @@ public class HeaderRow extends Row {
         // Parse Method
         Map<String, Method> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                    .getPropertyDescriptors();
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                Method method = pd.getWriteMethod();
-                if (method != null) tmp.put(pd.getName(), method);
-            }
+            tmp.putAll(readMethodsMap(clazz, Object.class));
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }

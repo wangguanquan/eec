@@ -40,8 +40,6 @@ import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.AccessibleObject;
@@ -63,6 +61,7 @@ import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制模板工作表的样式并替换占位符，
@@ -878,7 +877,7 @@ public class TemplateSheet extends Sheet {
                 Cell cell = row.getCell(i);
 
                 // 复制样式
-                if (!styleMap.containsKey(cell.xf)) {
+                if (styles != null && !styleMap.containsKey(cell.xf)) {
                     int style = row.getCellStyle(cell), xf = 0;
                     // 字体
                     Font font = styles0.getFont(style);
@@ -1061,12 +1060,7 @@ public class TemplateSheet extends Sheet {
     protected Map<String, AccessibleObject> parseClass(Class<?> clazz) {
         Map<String, AccessibleObject> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                .getPropertyDescriptors();
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                Method method = pd.getReadMethod();
-                if (method != null) tmp.put(pd.getName(), method);
-            }
+            tmp.putAll(readMethodsMap(clazz, Object.class));
 
             Field[] declaredFields = listDeclaredFields(clazz);
             for (Field f : declaredFields) {

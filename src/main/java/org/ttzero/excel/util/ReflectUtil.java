@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -243,6 +244,28 @@ public class ReflectUtil {
         Method[] methods = listReadMethods(beanClass, stopClass);
 
         return filter != null ? methodFilter(methods, filter) : methods;
+    }
+
+    /**
+     * List all declared read methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @return all declared method
+     * @throws IntrospectionException happens during introspection error
+     */
+    public static Map<String, Method> readMethodsMap(Class<?> beanClass, Class<?> stopClass)
+        throws IntrospectionException {
+        Map<String, Method> tmp = new HashMap<>();
+        PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(beanClass, stopClass)
+            .getPropertyDescriptors();
+        for (PropertyDescriptor pd : propertyDescriptors) {
+            Method method = pd.getWriteMethod();
+            if (method != null) tmp.put(pd.getName(), method);
+        }
+        return tmp;
     }
 
     /**

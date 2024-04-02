@@ -34,8 +34,6 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -55,6 +53,7 @@ import java.util.function.BiFunction;
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
+import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -509,12 +508,7 @@ public class ListSheet<T> extends Sheet {
 
         Map<String, Method> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                .getPropertyDescriptors();
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                Method method = pd.getReadMethod();
-                if (method != null) tmp.put(pd.getName(), method);
-            }
+            tmp.putAll(readMethodsMap(clazz, Object.class));
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
