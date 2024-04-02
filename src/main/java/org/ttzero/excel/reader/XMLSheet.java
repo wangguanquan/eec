@@ -992,6 +992,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     double defaultColWidth = -1D, defaultRowHeight = -1D;
     List<Col> cols; // 列宽
     Dimension filter; // 过滤
+    Integer zoomScale; // 缩放比例
 
     XMLFullSheet(XMLSheet sheet) {
         super(sheet);
@@ -1253,8 +1254,13 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                             this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
                         break;
                     case "sheetView":
-                        String showGridLines = e.attributeValue("showGridLines");
+                        String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
                         if ("0".equals(showGridLines)) this.showGridLines = 0;
+                        if (StringUtil.isNotEmpty(zoomScale)) {
+                            try {
+                                this.zoomScale = Integer.parseInt(zoomScale.trim());
+                            } catch (NumberFormatException ex) { }
+                        }
                         break;
                 }
             } catch (DocumentException e) {
@@ -1317,5 +1323,10 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     @Override
     public double getDefaultRowHeight() {
         return defaultRowHeight;
+    }
+
+    @Override
+    public Integer getZoomScale() {
+        return zoomScale;
     }
 }

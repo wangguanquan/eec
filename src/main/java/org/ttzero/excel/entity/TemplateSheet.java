@@ -590,6 +590,10 @@ public class TemplateSheet extends Sheet {
             if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
             if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
 
+            // 是否有缩放
+            Integer zoomScale = sheet.getZoomScale();
+            if (zoomScale != null) putExtProp("zoomScale", zoomScale);
+
             // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
             List<Drawings.Picture> pictures = sheet.listPictures();
             if (pictures != null && !pictures.isEmpty()) {

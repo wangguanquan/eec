@@ -85,4 +85,11 @@ public interface FullSheet extends MergeSheet, CalcSheet {
      * @return true: 显示网络线
      */
     boolean isShowGridLines();
+
+    /**
+     * 获取工作表缩放比例，取值{@code 10-400}
+     *
+     * @return 百分比整数化，{@code null}表示未设置
+     */
+    Integer getZoomScale();
 }
