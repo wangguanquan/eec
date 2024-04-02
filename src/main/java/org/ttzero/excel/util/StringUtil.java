@@ -112,7 +112,7 @@ public class StringUtil {
      * 将字符串转为驼峰风格，仅支持将下划线{@code '_'}风格转驼峰风格，内部不检查参数是否为{@code null}请谨慎使用
      * <blockquote><pre>
      * 转换前       | 转换后
-     * ------------|------------
+     * ------------+------------
      * GOODS_NAME  | goodsName
      * NAME        | name
      * goods__name | goodsName

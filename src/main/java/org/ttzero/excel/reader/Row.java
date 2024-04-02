@@ -1369,12 +1369,13 @@ public class Row {
     /**
      * Add function shared ref
      * <blockquote><pre>
-     * 63   : Not used
-     * 42-62: First row number
-     * 28-41: First column number
-     * 8-27/14-27: Size, if axis is zero the size used 20 bits, otherwise used 14 bits
-     * 2-7/2-13: Not used
-     * 0-1    : Axis, 00: range 01: y-axis 10: x-axis
+     * 63        | Not used
+     * ----------+------------
+     * 42-62     | First row number
+     * 28-41     | First column number
+     * 8-27/14-27| Size, if axis is zero the size used 20 bits, otherwise used 14 bits
+     * 2-7/2-13  | Not used
+     * 0-1       | Axis, 00: range 01: y-axis 10: x-axis
      * </pre></blockquote>
      *
      * @param i the ref id

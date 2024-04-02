@@ -33,7 +33,7 @@ import java.sql.SQLException;
  * <p>这是一个比较小众的工作表，最好只在比较简单的场景下使用，比如一次性导出的场景。因为{@code StatementSheet}
  * 并不支持数据切片，所以当查询结果较大时可能出现OOM。如果不确认数据量时最好使用{@link ListSheet}分片获取数据</p>
  *
- * <blockquote><pre>
+ * <pre>
  * try (Connection con = getConnection()) {
  *     String sql = "select name,age,create_date,update_date " +
  *               "from student where id between ? and ?";
@@ -43,7 +43,7 @@ import java.sql.SQLException;
  *             ps.setInt(2, 20);
  *         }))
  *         .writeTo(Paths.get("/tmp/student.xlsx"));
- * }</pre></blockquote>
+ * }</pre>
  *
  * @author guanquan.wang on 2017/9/26.
  * @see ResultSetSheet

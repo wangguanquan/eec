@@ -148,8 +148,8 @@ public interface Sheet extends Closeable {
      * |       |   省  |  市  |   区  |
      * +-------+-------+------+------+
      * </pre></blockquote>
-     * <p>
-     * 以上表头将返回 "订单号", "收件人:省", "收件人:市", "收件人:区"
+     *
+     * <p>以上表头将返回 "订单号", "收件人:省", "收件人:市", "收件人:区"</p>
      *
      * @return 表头行
      */
@@ -408,9 +408,7 @@ public interface Sheet extends Closeable {
      *     <li>HeaderRow.IGNORE_CASE: 忽略大小写匹配</li>
      *     <li>HeaderRow.CAMEL_CASE: 驼峰风格匹配</li>
      * </ul>
-     * <blockquote><pre>
-     *     reader.sheet(0).setHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)
-     * </pre></blockquote>
+     * <pre>reader.sheet(0).setHeaderColumnReadOption(HeaderRow.FORCE_IMPORT | HeaderRow.IGNORE_CASE)</pre>
      *
      * @param option 额外属性
      * @return 当前工作表

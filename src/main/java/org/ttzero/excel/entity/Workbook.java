@@ -65,7 +65,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * 工作薄Workbook对应的输出协议为{@link IWorkbookWriter}，它负责协调所有部件输出并将所有零散的文件组装为OpenXml格式。</p>
  *
  * <p>一个典型的导出示例：
- * <blockquote><pre>
+ * <pre>
  * new Workbook("双11销量统计")
  *     // 设置作者
  *     .setCreator("作者")
@@ -78,7 +78,8 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *     .addSheet(new ListMapSheet("单品销量排行")
  *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
  *     // 指定输出路径 '/tmp/"双11销量统计".xlsx'
- *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
+ *     .writeTo(Paths.get("/tmp/"));</pre>
+ *
  * <p>参考文档:</p>
  * <p><a href="https://poi.apache.org">POI</a></p>
  * <p><a href="https://msdn.microsoft.com/library">Office 365</a></p>
@@ -567,10 +568,10 @@ public class Workbook implements Storable {
     /**
      * 添加一个进度监听器，可以在较大导出时展示进度
      *
-     * <blockquote><pre>
+     * <pre>
      * new Workbook().onProgress((sheet, row) -&gt; {
      *     System.out.println(sheet + " write " + row + " rows");
-     * })</pre></blockquote>
+     * })</pre>
      *
      * @param progressConsumer 进度监听器
      * @return 当前工作薄
@@ -668,7 +669,7 @@ public class Workbook implements Storable {
     /**
      * 导出到{@link OutputStream}流，适用于小文件Excel直接导出的场景
      *
-     * <blockquote><pre>
+     * <pre>
      * public void export(HttpServletResponse response) throws IOException {
      *     String fileName = java.net.URLEncoder.encode("abc.xlsx", "UTF-8");
      *     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
@@ -677,7 +678,7 @@ public class Workbook implements Storable {
      *         .addSheet(new ListSheet&lt;Item&gt;("总销量排行", new ArrayList&lt;&gt;()))
      *         // 直接写到Response
      *         .writeTo(response.getOutputStream());
-     * }</pre></blockquote>
+     * }</pre>
      *
      * @param os 输出流
      * @throws IOException         I/O操作异常

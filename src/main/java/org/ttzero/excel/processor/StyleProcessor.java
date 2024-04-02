@@ -40,11 +40,10 @@ public interface StyleProcessor<T> {
     /**
      * 动态样式处理，修改样式请使用{@code Styles.modifyXX}方法
      *
-     * <blockquote><pre>
+     * <pre>
      * StyleProcessor sp = (o, style, sst)
      *     // 库存小于100时高亮显示 - 填充黄色
-     *     -&gt; o &lt; 100 ? style |= sst.modifyFill(new Fill(Color.yellow)) : style;
-     * </pre></blockquote>
+     *     -&gt; o &lt; 100 ? style |= sst.modifyFill(style, new Fill(Color.yellow)) : style;</pre>
      *
      * @param o     单元格的值
      * @param style 当前单元格样式值

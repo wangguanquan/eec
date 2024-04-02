@@ -702,10 +702,10 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 添加进度观察者，在数据较大的导出过程中添加观察者打印进度可避免被误解为程序假死
      *
-     * <blockquote><pre>
+     * <pre>
      * new ListSheet&lt;&gt;().onProgress((sheet, row) -&gt; {
      *     System.out.println(sheet + " write " + row + " rows");
-     * })</pre></blockquote>
+     * })</pre>
      *
      * @param progressConsumer 进度消费窗口
      * @return 当前工作表
@@ -1310,8 +1310,8 @@ public abstract class Sheet implements Cloneable, Storable {
      * 列下标转为Excel列标识，Excel列标识由大写字母{@code A-Z}组合，{@code Z}后为{@code AA}如此循环，最大下标{@code XFD}
      *
      * <blockquote><pre>
-     * 数字   | Excel列
-     * -------|---------
+     * 数字    | Excel列
+     * -------+---------
      * 1      | A
      * 10     | J
      * 26     | Z

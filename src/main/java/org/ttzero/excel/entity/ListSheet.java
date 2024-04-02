@@ -63,7 +63,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 对象数组工作表，内部使用{@code List<T>}做数据源，所以它是应用最广泛的一种工作表。
  * {@code ListSheet}默认支持数据切片，少量数据可以在实例化时一次性传入，数据量较大时建议切片获取数据
  *
- * <blockquote><pre>
+ * <pre>
  * new Workbook("11月待拜访客户")
  *     .addSheet(new ListSheet&lt;Customer&gt;() {
  *         &#x40;Override
@@ -74,7 +74,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *             queryVo.setPageNum(queryVo.getPageNum() + 1);
  *             return list;
  *         }
- *     }).writeTo(response.getOutputStream());</pre></blockquote>
+ *     }).writeTo(response.getOutputStream());</pre>
  *
  * <p>如上示例覆写{@link #more}方法获取切片数据，直到返回空数据或{@code null}为止,这样不至少将大量数据堆积到内存，
  * 输出协议使用{@link RowBlock}进行装填数据并落盘。{@code more}方法在{@code ListSheet}工作表是一定会被
@@ -98,15 +98,15 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <p>除子类覆写{@link #more}方法外还可以通过{@link #setData(BiFunction)}设置一个数据生产者，它可以减化数据分片的代码。
  * {@code dataSupplier}被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
  * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这两个参数来计算下一批数据应该从哪个节点开始拉取，
- * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
- * {@code limit ... offset ... }分页查询，从而极大提升取数性能</p>
+ * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据已排序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
+ * {@code limit ... offset ... }分页查询从而极大提升取数性能</p>
  *
- * <blockquote><pre>
+ * <pre>
  * new Workbook()
  *     .addSheet(new ListSheet&lt;Customer&gt;()
  *         // 分页查询，每页查询100条数据，可以通过已拉取记录数计算当前页面
  *         .setData((i, lastOne) -&gt; customerService.pagingQuery(i/100, 100))
- *     ).writeTo(Paths.get("f://abc.xlsx"));</pre></blockquote>
+ *     ).writeTo(Paths.get("f://abc.xlsx"));</pre>
  *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/wiki/%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3">自定义注解</a></p>

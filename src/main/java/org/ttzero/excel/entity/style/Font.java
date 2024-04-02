@@ -71,7 +71,7 @@ public class Font implements Cloneable {
      * <blockquote><pre>
      * 示例
      *  Value| Font Family
-     * ----- |------------
+     * ----- +------------
      *     0 | Not applicable.
      *     1 | Roman
      *     2 | Swiss

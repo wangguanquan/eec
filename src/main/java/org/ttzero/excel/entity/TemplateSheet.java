@@ -66,39 +66,40 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 
 /**
  * 模板工作表，它支持指定一个已有的Excel文件作为模板导出，{@code TemplateSheet}将复制模板工作表的样式并替换占位符，
- * 同时{@code TemplateSheet}也可以和其它{@code Sheet}混用，这意味着可以添加多个模板工作表和普通工作表。
+ * 同时{@code TemplateSheet}也可以和其它{@code Worksheet}混用，这意味着可以添加多个模板工作表和普通工作表。
  *
  * <p>创建模板工作表需要指定模板文件，它可以是本地文件也可是输入流{@code InputStream}，支持的类型包含{@code xls}
  * 和{@code xlsx}两种格式，除模板文件外还需要指定工作表，未指定工作表时默认以第一个工作表做为模板。</p>
  *
- * <p>TemplateSheet工作表导出时不受ExcelColumn注解限制，导出的数据范围由模板内占位符决定,
- * 默认占位符由一对关闭的大括号{@code ${key}}组成，可以使用{@link #setPrefix}和{@link #setSuffix}
- * 方法来重新指定占位符的前缀和后缀字符，所以你可以很轻松的适配现有模板，建议不要设置太长的前后缀。</p>
+ * <p>TemplateSheet工作表导出时不受ExcelColumn注解限制，导出的数据范围由模板中的占位符决定，
+ * 默认占位符由一对关闭的大括号{@code ${key}}组成，虽然占位符与EL表达式写法相似但模板占位符并不具备EL的能力，
+ * 所以无法使用{@code ${1 + 2}}或{@code ${System.getProperty("user.name")}}这类语句来做运算，
+ * 与EL不同的是占位符<b>仅做替换不做运算</b>所以不需要担心安全漏洞问题。</p>
  *
- * <p>使用{@link #setData}方法为占位符绑定值时，数据量较大时可绑定一个数据生产者{@code data-supplier}来分片拉取数据，
+ * <p>{@link #setData}方法为占位符绑定值，支持对象、Map、Array和List，数据量较大时也可以绑定一个数据生产者{@code data-supplier}来分片拉取数据，
  * 它被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
  * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这两个参数来计算下一批数据应该从哪个节点开始拉取，
- * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据有序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
- * {@code limit ... offset ... }分页查询从而大大提升取数性能来分片获取数据。</p>
+ * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据已排序则可以使用{@code T}对象的排序字段来计算下一批数据的游标以跳过
+ * {@code limit ... offset ... }分页查询从而极大提升取数性能。</p>
  *
- * <blockquote><pre>
+ * <pre>
  * new Workbook("模板测试")
  *      // 模板工作表
  *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
- *          // 设置一个数据生产者{@code data-supplier}分片查询数据
- *         .setData((i, lastOne) -&gt; queryUser(i &gt; 0 ? ((User)lastOne).getId() : 0))
+ *          // 免分页查询用户，根据ID排序并游标拉取
+ *         .setData((i,lastOne) -&gt; queryUser(i &gt; 0 ? ((User)lastOne).getId():0))
  *     // 普通对象数组工作表
  *     .addSheet(new ListSheet&lt;&gt;().setData(list))
- *     .writeTo(Paths.get("/tmp/"));</pre></blockquote>
+ *     .writeTo(Paths.get("/tmp/"));</pre>
  *
- * <p>每个占位符都有一个命名空间，使用${namespace.key}这种格式来添加命名空间，默认命名空间为null。
+ * <p>每个占位符都有一个命名空间，使用${namespace.key}这种格式来添加命名空间，默认命名空间为{@code null}。
  * 占位符中还包含三个内置函数它们分别为[&#x40;{@code link:}]、[&#x40;{@code list:}]和[&#x40;{@code media:}]，
- * 分别是设置单元格的值为超链接、序列和图片，其中序列的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置。
- * 注意：内置函数必须独占一个单元格且仅识别固定的三个内置函数，任意其它命令将被识别为普通命令空间</p>
+ * 分别用于设置单元格的值为超链接、序列和图片，其中序列的值可以从源工作表中获取也可以使用{@link #setData(String, Object)}来设置。
+ * <b>注意：内置函数必须独占一个单元格且仅识别固定的三个内置函数，任意其它命令将被识别为普通命令空间</b></p>
  *
  * <p>占位符整体样式：[&#x40;内置函数:][命名空间][.]&lt;占位符&gt;</p>
  *
- * <blockquote><pre>
+ * <pre>
  * template.xlsx模板如下：
  * +--------+--------+--------------+---------------+------------------+
  * |  姓名  |  年龄  |     性别     |      头像     |     简历原件     |
@@ -107,26 +108,26 @@ import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
  * +--------+--------+--------------+---------------+------------------+
  *
  * // 读取模板示例
- * public void downloadWithTemplate() {
- *     List&lt;Map&lt;String, Object&gt;&gt; data = new ArrayList&lt;&gt;();
- *     Map&lt;String, Object&gt; row1 = new HashMap&lt;&gt;();
- *     row1.put("name", "张三");
- *     row1.put("age", 26);
- *     row1.put("sex", "男");
- *     row1.put("pic", "https://zhangsan.png");
- *     row1.put("jumpUrl", "https://jianli.com/zhangsan");
- *     data.add(row1);
+ * List&lt;Map&lt;String, Object&gt;&gt; data = new ArrayList&lt;&gt;();
+ * Map&lt;String, Object&gt; row1 = new HashMap&lt;&gt;();
+ * row1.put("name", "张三");
+ * row1.put("age", 26);
+ * row1.put("sex", "男");
+ * row1.put("pic", "https://zhangsan.png");
+ * row1.put("jumpUrl", "https://jianli.com/zhangsan");
+ * data.add(row1);
  *
- *     new Workbook("内置函数测试")
- *         // 模板工作表
- *         .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
- *             // 替换模板中占位符
- *             .setData(data)
- *             // 替换模板中"@list:sex"值为性别序列
- *             .setData("@list:sex", Arrays.asList("未知", "男", "女")))
- *         .writeTo(Paths.get("/tmp/"));
- * }</pre></blockquote>
+ *  new Workbook("内置函数测试")
+ *     // 模板工作表
+ *     .addSheet(new TemplateSheet(Paths.get("./template.xlsx"))
+ *         // 替换模板中占位符
+ *         .setData(data)
+ *         // 替换模板中"@list:sex"值为性别序列
+ *         .setData("@list:sex", Arrays.asList("未知", "男", "女")))
+ *     .writeTo(Paths.get("/tmp/"));</pre>
  *
+ * <p>参考文档:</p>
+ * <p><a href="https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA">模板导出</a></p>
  * @author guanquan.wang at 2023-12-01 15:10
  */
 public class TemplateSheet extends Sheet {

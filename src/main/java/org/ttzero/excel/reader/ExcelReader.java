@@ -90,12 +90,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 建议使用{@code try...with...resource}块</p>
  *
  * <p>一个典型的读取示例如下：</p>
- * <blockquote><pre>
+ * <pre>
  * try (ExcelReader reader = ExcelReader.read(path)) {
  *     // 读取所有工作表并打印
  *     reader.sheets().flatMap(Sheet::rows)
  *         .forEach(System.out::println);
- * } catch (IOException e) { }</pre></blockquote>
+ * } catch (IOException e) { }</pre>
  *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/wiki/2-%E8%AF%BB%E5%8F%96Excel">读取Excel</a></p>
@@ -1058,7 +1058,7 @@ public class ExcelReader implements Closeable {
      *
      * <blockquote><pre>
      * 单元格坐标    | 转换后long值
-     * ------------|------------
+     * ------------+------------
      * A1          | 65537
      * AA10        | 655387
      * </pre></blockquote>
