@@ -4,6 +4,8 @@ Version 0.5.14
 - 新增超链接样式
 - 新增模板导出工作表TemplateSheet
 - 新增TypeCastException异常用于读取文件转对象时类型转换异常
+- ListSheet新增data-supplier减化分片开发难度
+- 修复初始数据超过单页上限时打开问题异常的问题
 
 Version 0.5.13 (2024-02-20)
 -------------
