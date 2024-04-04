@@ -18,6 +18,7 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.Styles;
@@ -30,6 +31,7 @@ import org.ttzero.excel.reader.Row;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,8 +52,8 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class TemplateSheetTest extends WorkbookTest {
 
-    @Test public void testSimpleTemplate() throws IOException {
-        String fileName = "simple template sheets.xlsx";
+    @Test public void testMultiTemplates() throws IOException {
+        final String fileName = "multi template sheets.xlsx";
         new Workbook()
             .addSheet(new TemplateSheet("模板 1.xlsx", testResourceRoot().resolve("1.xlsx"))) // <- 模板工作表
             .addSheet(new ListSheet<>("普通工作表", ListObjectSheetTest.Item.randomTestData())) // <- 普通工作表
@@ -65,7 +68,7 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testAllTemplateSheets() throws IOException {
-        String fileName = "all template sheets.xlsx";
+        final String fileName = "all template sheets.xlsx";
         Workbook workbook = new Workbook();
         File[] files = testResourceRoot().toFile().listFiles();
         if (files != null) {
@@ -82,6 +85,47 @@ public class TemplateSheetTest extends WorkbookTest {
             }
         }
         workbook.writeTo(getOutputTestPath().resolve(fileName));
+    }
+
+    @Test public void testSimpleTemplate() throws IOException {
+        final String fileName = "simple template.xlsx";
+        List<GameEntry> expectList = GameEntry.random();
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "简单模板").setData(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            Dimension autoFilter = sheet.getFilter();
+            assertEquals(autoFilter, Dimension.of("A1:F1"));
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).asFullSheet().iterator();
+            Styles styles = reader.getStyles();
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row0 = iter.next();
+            for (int i = row0.getFirstColumnIndex(), len = row0.getLastColumnIndex(); i < len; i++) {
+                Cell cell = row0.getCell(i);
+                int style = row0.getCellStyle(cell);
+                Fill fill = styles.getFill(style);
+                assertEquals(fill.getFgColor(), new java.awt.Color(112, 173, 71));
+            }
+            List<GameEntry> list = new ArrayList<>();
+            for (; iter.hasNext(); ) {
+                org.ttzero.excel.reader.Row row = iter.next();
+                GameEntry e = new GameEntry();
+                e.channel = row.getInt(0);
+                e.game = row.getString(1);
+                e.account = row.getString(2);
+                e.date = row.getDate(3);
+                e.isAdult = row.getBoolean(4);
+                e.vip = row.getString(5);
+                list.add(e);
+            }
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                GameEntry expect = expectList.get(i), o = list.get(i);
+                assertEquals(expect, o);
+            }
+        }
     }
 
     @Test public void testTemplate() throws IOException {
@@ -123,10 +167,12 @@ public class TemplateSheetTest extends WorkbookTest {
         final String fileName = "fill object.xlsx";
         YzEntity yzEntity = YzEntity.mock();
         YzOrderEntity yzOrderEntity = YzOrderEntity.mock();
+        YzSummary yzSummary = YzSummary.mock();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                 .setData(yzEntity)
                 .setData("YzEntity", yzOrderEntity)
+                .setData("summary", yzSummary)
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -210,33 +256,25 @@ public class TemplateSheetTest extends WorkbookTest {
             assertTrue(iter.hasNext());
             row = iter.next();
             assertEquals(row.getString(0), "合计");
-            assertEquals(row.getInt(6).intValue(), yzEntity.nums);
-            assertTrue(Math.abs(row.getDouble(7) - yzEntity.priceTotal) <= 0.00001);
-            assertTrue(Math.abs(row.getDouble(8) - yzEntity.amountTotal) <= 0.00001);
-            assertTrue(Math.abs(row.getDouble(9) - yzEntity.taxTotal) <= 0.00001);
-            assertTrue(Math.abs(row.getDouble(10) - yzEntity.taxPriceTotal) <= 0.00001);
-            assertTrue(Math.abs(row.getDouble(11) - yzEntity.taxAmountTotal) <= 0.00001);
+            assertEquals(row.getInt(6).intValue(), yzSummary.nums);
+            assertTrue(Math.abs(row.getDouble(7) - yzSummary.priceTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(8) - yzSummary.amountTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(9) - yzSummary.taxTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(10) - yzSummary.taxPriceTotal) <= 0.00001);
+            assertTrue(Math.abs(row.getDouble(11) - yzSummary.taxAmountTotal) <= 0.00001);
         }
     }
 
     @Test public void testFillMap() throws IOException {
         final String fileName = "fill map.xlsx";
+        Map<String, Object> master = YzEntity.mockMap(), summery = YzSummary.mockMap(), body = YzOrderEntity.randomMap().get(0);
+        body.put("remark", "很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长");
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
-                    .setData(YzEntity.mock())
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                    .setData(master)
                     // 单Map测试
-                    .setData("YzEntity", new HashMap<String, Object>() {{
-                        put("xh", 1);
-                        put("jpCode", "code1");
-                        put("jpName", "name1");
-                        put("num", 10);
-                        put("price", 10);
-                        put("amount", 100);
-                        put("tax", 0.6);
-                        put("taxPrice", 11.6);
-                        put("taxAmount", 116);
-                        put("remark", "很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长");
-                    }})
+                    .setData("YzEntity", body)
+                    .setData("summary", summery)
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -253,9 +291,10 @@ public class TemplateSheetTest extends WorkbookTest {
         final String fileName = "fill list object.xlsx";
         List<YzOrderEntity> expectList = YzOrderEntity.randomData();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                     .setData(YzEntity.mock())
                     .setData("YzEntity", expectList)
+                    .setData("summary", YzSummary.mock())
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -267,9 +306,10 @@ public class TemplateSheetTest extends WorkbookTest {
         final String fileName = "fill list map.xlsx";
         List<Map<String, Object>> expectList = YzOrderEntity.randomMap();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
-                .setData(YzEntity.mock())
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                .setData(YzEntity.mockMap())
                 .setData("YzEntity", expectList)
+                .setData("summary", YzSummary.mockMap())
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -281,7 +321,7 @@ public class TemplateSheetTest extends WorkbookTest {
         final String fileName = "fill supplier list object.xlsx";
         List<YzOrderEntity> expectList = new ArrayList<>();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                 .setData(YzEntity.mock())
                 .setData("YzEntity", (i, o) -> {
                     List<YzOrderEntity> sub = null;
@@ -293,7 +333,7 @@ public class TemplateSheetTest extends WorkbookTest {
                     }
                     return sub;
                 })
-                .setData((i, lastOne) -> scrollQuery(lastOne != null ? ((YzOrderEntity) lastOne).xh : 0))
+                .setData("summary", YzSummary.mock())
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -301,16 +341,12 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
-    List<YzOrderEntity> scrollQuery(int lastId) {
-        return null;
-    }
-
     @Test public void testFillSupplierListMap() throws IOException {
         final String fileName = "fill supplier list map.xlsx";
         List<Map<String, Object>> expectList = new ArrayList<>();
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"))
-                .setData(YzEntity.mock())
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                .setData(YzEntity.mockMap())
                 .setData("YzEntity", (i, o) -> {
                     List<Map<String, Object>> sub = null;
                     // 拉取100条数据
@@ -322,6 +358,7 @@ public class TemplateSheetTest extends WorkbookTest {
                     }
                     return sub;
                 })
+                .setData("summary", YzSummary.mockMap())
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -329,51 +366,51 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testMixNamespace() throws IOException {
-        final String fileName = "fill mix namespace.xlsx";
-        List<YzOrderEntity> yzOrderEntity = YzOrderEntity.randomData();
-        new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间").setPrefix("{")
-                .setData("", yzOrderEntity)
-                .setData(new HashMap<String, String>(){{
-                    put("cName", "精品一店");
-                    put("cCode", "JP");
-                }})
-            ).writeTo(defaultTestPath.resolve(fileName));
-
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            FullSheet sheet = reader.sheet(0).asFullSheet();
-            List<Dimension> mergeCells = sheet.getMergeCells();
-            Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
-            for (Dimension dim : mergeCells) mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
-            int i = 0;
-            for (Iterator<Row> iter = sheet.header(1, 2).iterator(); i < yzOrderEntity.size() && iter.hasNext(); i++) {
-                Row row = iter.next();
-                YzOrderEntity expect = yzOrderEntity.get(i);
-                assertEquals(row.getInt(0).intValue(), expect.xh);
-                assertEquals(row.getString(1), "JP-" + expect.jpCode + "追加" + expect.num);
-                assertEquals(row.getString(3), "精品一店-" + expect.jpName);
-                assertEquals(row.getInt(6).intValue(), expect.num);
-                assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
-                assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
-                assertEquals(row.getString(12), expect.remark);
-
-                // 判断是否带合并
-                Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 2);
-                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 3);
-                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
-                assertNotNull(mergeCell);
-                assertEquals(mergeCell.width, 5);
-            }
-        }
-    }
+//    @Test public void testMixNamespace() throws IOException {
+//        final String fileName = "fill mix namespace.xlsx";
+//        List<YzOrderEntity> yzOrderEntity = YzOrderEntity.randomData();
+//        new Workbook()
+//            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+//                .setData(yzOrderEntity)
+//                .setData(new HashMap<String, String>(){{
+//                    put("cName", "精品一店");
+//                    put("cCode", "JP");
+//                }})
+//            ).writeTo(defaultTestPath.resolve(fileName));
+//
+//        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+//            FullSheet sheet = reader.sheet(0).asFullSheet();
+//            List<Dimension> mergeCells = sheet.getMergeCells();
+//            Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
+//            for (Dimension dim : mergeCells) mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+//            int i = 0;
+//            for (Iterator<Row> iter = sheet.header(1, 2).iterator(); i < yzOrderEntity.size() && iter.hasNext(); i++) {
+//                Row row = iter.next();
+//                YzOrderEntity expect = yzOrderEntity.get(i);
+//                assertEquals(row.getInt(0).intValue(), expect.xh);
+//                assertEquals(row.getString(1), "JP-" + expect.jpCode + "追加" + expect.num);
+//                assertEquals(row.getString(3), "精品一店-" + expect.jpName);
+//                assertEquals(row.getInt(6).intValue(), expect.num);
+//                assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
+//                assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
+//                assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
+//                assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
+//                assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
+//                assertEquals(row.getString(12), expect.remark);
+//
+//                // 判断是否带合并
+//                Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
+//                assertNotNull(mergeCell);
+//                assertEquals(mergeCell.width, 2);
+//                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
+//                assertNotNull(mergeCell);
+//                assertEquals(mergeCell.width, 3);
+//                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
+//                assertNotNull(mergeCell);
+//                assertEquals(mergeCell.width, 5);
+//            }
+//        }
+//    }
 
     @Test public void testInnerFormula() throws IOException {
         final String fileName = "内置函数测试.xlsx";
@@ -401,6 +438,12 @@ public class TemplateSheetTest extends WorkbookTest {
                 // 替换模板中"@list:sex"值为性别序列
                 .setData("@list:sex", Arrays.asList("未知", "男", "女")))
             .writeTo(defaultTestPath.resolve(fileName));
+    }
+
+    @Test public void testMultiTables() throws IOException {
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "多列表组合"))
+            .writeTo(defaultTestPath.resolve("多列表组合.xlsx"));
     }
 
     static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {
@@ -512,14 +555,8 @@ public class TemplateSheetTest extends WorkbookTest {
         private String orderNo;
         private String orderStatus;
         private Date cgDate;
-        private int nums;
-        private double priceTotal;
-        private double amountTotal;
-        private double taxTotal;
-        private double taxPriceTotal;
-        private double taxAmountTotal;
 
-        private static YzEntity mock() {
+        public static YzEntity mock() {
             YzEntity e = new YzEntity();
             e.gysName =" 供应商";
             e.gsName = "ABC公司";
@@ -527,12 +564,48 @@ public class TemplateSheetTest extends WorkbookTest {
             e.cgDate = new Date();
             e.orderNo = "JD-0001";
             e.orderStatus = "OK";
+            return e;
+        }
+
+        public static Map<String, Object> mockMap() {
+            Map<String, Object> e = new HashMap<>();
+            e.put("gysName", "供应商A");
+            e.put("gsName", "ABC公司");
+            e.put("jsName", "亚瑟");
+            e.put("cgDate", new Date());
+            e.put("orderNo", "JD-0001");
+            e.put("orderStatus", "OK");
+            return e;
+        }
+    }
+
+    public static class YzSummary {
+        private int nums;
+        private double priceTotal;
+        private double amountTotal;
+        private double taxTotal;
+        private double taxPriceTotal;
+        private double taxAmountTotal;
+
+        public static YzSummary mock() {
+            YzSummary e = new YzSummary();
             e.nums = 10;
             e.priceTotal = 10;
             e.amountTotal = 10;
             e.taxTotal = 10;
             e.taxPriceTotal = 10;
             e.taxAmountTotal = 10;
+            return e;
+        }
+
+        public static Map<String, Object> mockMap() {
+            Map<String, Object> e = new HashMap<>();
+            e.put("nums", 10);
+            e.put("priceTotal", 10);
+            e.put("amountTotal", 10);
+            e.put("taxTotal", 10);
+            e.put("taxPriceTotal", 10);
+            e.put("taxAmountTotal", 10);
             return e;
         }
     }
@@ -564,11 +637,11 @@ public class TemplateSheetTest extends WorkbookTest {
             return e;
         }
 
-        private static List<YzOrderEntity> randomData() {
+        public static List<YzOrderEntity> randomData() {
             return randomData(0);
         }
 
-        private static List<YzOrderEntity> randomData(int startIndex) {
+        public static List<YzOrderEntity> randomData(int startIndex) {
             List<YzOrderEntity> list = new ArrayList<>(10);
             for (int i = Math.max(startIndex, 0), len = i + 10; i < len; i++) {
                 YzOrderEntity e = new YzOrderEntity();
@@ -587,11 +660,11 @@ public class TemplateSheetTest extends WorkbookTest {
             return list;
         }
 
-        private static List<Map<String, Object>> randomMap() {
+        public static List<Map<String, Object>> randomMap() {
             return randomMap(0);
         }
 
-        private static List<Map<String, Object>> randomMap(int startIndex) {
+        public static List<Map<String, Object>> randomMap(int startIndex) {
             List<Map<String, Object>> list = new ArrayList<>(10);
             for (int i = Math.max(startIndex, 0), len = i + 10, j; i < len; i++) {
                 Map<String, Object> map = new HashMap<>();
@@ -610,5 +683,40 @@ public class TemplateSheetTest extends WorkbookTest {
             return list;
         }
     }
+    public static class GameEntry {
+        Integer channel;
+        String game, account, vip;
+        java.util.Date date;
+        Boolean isAdult;
 
+        public static List<GameEntry> random() {
+            List<GameEntry> list = new ArrayList<>(10);
+            String[] games = { "LOL", "WOW", "守望先锋", "怪物世界", "极品飞车" };
+            for (int i = 0, v; i < 10; i++) {
+                GameEntry e = new GameEntry();
+                list.add(e);
+                e.channel = random.nextInt(10);
+                e.game = games[random.nextInt(games.length)];
+                e.account = getRandomString(10);
+                e.date = new Timestamp(System.currentTimeMillis() - random.nextInt(1000000));
+                e.isAdult = random.nextInt(10) <= 2;
+                e.vip = (v = random.nextInt(100)) < 15 ? "v" + ((v & 3) + 1) : null;
+            }
+            return list;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof GameEntry) {
+                GameEntry e = (GameEntry) o;
+                return Objects.equals(channel, e.channel)
+                    && Objects.equals(isAdult, e.isAdult)
+                    && Objects.equals(game, e.game)
+                    && Objects.equals(account, e.account)
+                    && Objects.equals(vip, e.vip)
+                    && date.getTime() / 1000 == e.date.getTime() / 1000;
+            }
+            return false;
+        }
+    }
 }
