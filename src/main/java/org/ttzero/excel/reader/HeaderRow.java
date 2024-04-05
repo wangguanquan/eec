@@ -57,7 +57,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
-import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
+import static org.ttzero.excel.util.ReflectUtil.writeMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.lowFirstKey;
 import static org.ttzero.excel.util.StringUtil.toCamelCase;
@@ -200,7 +200,7 @@ public class HeaderRow extends Row {
         // Parse Method
         Map<String, Method> tmp = new HashMap<>();
         try {
-            tmp.putAll(readMethodsMap(clazz, Object.class));
+            tmp.putAll(writeMethodsMap(clazz, Object.class));
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }

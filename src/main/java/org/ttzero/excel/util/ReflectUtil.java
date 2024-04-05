@@ -262,7 +262,7 @@ public class ReflectUtil {
         PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(beanClass, stopClass)
             .getPropertyDescriptors();
         for (PropertyDescriptor pd : propertyDescriptors) {
-            Method method = pd.getWriteMethod();
+            Method method = pd.getReadMethod();
             if (method != null) tmp.put(pd.getName(), method);
         }
         return tmp;
@@ -344,6 +344,28 @@ public class ReflectUtil {
     }
 
     /**
+     * List all declared write methods that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @return all declared method
+     * @throws IntrospectionException happens during introspection error
+     */
+    public static Map<String, Method> writeMethodsMap(Class<?> beanClass, Class<?> stopClass)
+        throws IntrospectionException {
+        Map<String, Method> tmp = new HashMap<>();
+        PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(beanClass, stopClass)
+            .getPropertyDescriptors();
+        for (PropertyDescriptor pd : propertyDescriptors) {
+            Method method = pd.getWriteMethod();
+            if (method != null) tmp.put(pd.getName(), method);
+        }
+        return tmp;
+    }
+
+    /**
      * Found source method in methods array witch the source method
      * equals it or the has a same method name and return-type and same parameters
      *
@@ -369,35 +391,6 @@ public class ReflectUtil {
             i++;
         }
         return -1;
-    }
-
-    public static int mapping(Method[] writeMethods, Map<String, Method> tmp
-        , PropertyDescriptor[] propertyDescriptors, Method[] mergedMethods) {
-        if (writeMethods == null) {
-            for (int i = 1; i < propertyDescriptors.length; i++) {
-                PropertyDescriptor pd = propertyDescriptors[i];
-                if (i < mergedMethods.length && mergedMethods[i] != null) {
-                    tmp.put(pd.getName(), mergedMethods[i]);
-                }
-            }
-        } else {
-            int i;
-            for (int j = 0; j < mergedMethods.length; j++) {
-                i = mergedMethods[j] != null ? indexOf(writeMethods, mergedMethods[j]) : -1;
-                if (i >= 0) writeMethods[i] = null;
-                if (mergedMethods[j] != null)
-                    tmp.put(propertyDescriptors[j].getName(), mergedMethods[j]);
-            }
-
-            i = 0;
-            for (int j = 0; j < writeMethods.length; j++) {
-                if (writeMethods[j] != null) {
-                    writeMethods[i++] = writeMethods[j];
-                }
-            }
-            return i;
-        }
-        return 0;
     }
 
     // Do Filter
