@@ -98,7 +98,7 @@ public class Row {
     protected boolean unknownLength;
 
     // Cache formulas
-    private PreCalc[] sharedCalc;
+    protected PreCalc[] sharedCalc;
 
     /**
      * The global styles
@@ -258,6 +258,24 @@ public class Row {
     public Row setHr(HeaderRow hr) {
         this.hr = hr;
         return this;
+    }
+
+    /**
+     * 获取表头
+     *
+     * @return {@link HeaderRow}表头
+     */
+    public HeaderRow getHeader() {
+        return hr;
+    }
+
+    /**
+     * 获取Shared String Table
+     *
+     * @return Shared String Table
+     */
+    public SharedStrings getSharedStrings() {
+        return sst;
     }
 
     /**

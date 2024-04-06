@@ -863,6 +863,15 @@ public class ExcelReader implements Closeable {
     }
 
     /**
+     * 获取Shared String Table
+     *
+     * @return Shared String Table
+     */
+    public SharedStrings getSharedStrings() {
+        return sst;
+    }
+
+    /**
      * 判断文件格式，读取少量文件头字节来判断是否为BIFF和ZIP的文件签名
      *
      * @param path 临时文件路径
