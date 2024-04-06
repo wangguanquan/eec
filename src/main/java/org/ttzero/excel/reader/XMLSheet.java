@@ -294,14 +294,14 @@ public class XMLSheet implements Sheet {
             if (row != null) {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 header.setOptions(option << 16 >>> 16);
-                sRow.setHr(header);
+                sRow.setHeader(header);
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
             Row row0 = findRow0();
             if (row0 != null && row0.getRowNum() < hrl) {
                 for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
             }
-            if (sRow != null && sRow.hr != header) sRow.setHr(header);
+            if (sRow != null && sRow.hr != header) sRow.setHeader(header);
         }
         return header;
     }
@@ -400,7 +400,7 @@ public class XMLSheet implements Sheet {
         if (!row.equals(header)) {
             header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
             header.setOptions(option << 16 >>> 16);
-            sRow.setHr(header);
+            sRow.setHeader(header);
         }
         try {
             header.setClassOnce(clazz);
@@ -635,7 +635,7 @@ public class XMLSheet implements Sheet {
         if (hrf == 0 && nIter.hasNext()) {
             Row row = nIter.next();
             if (header == null) header = row.asHeader().setOptions(option << 16 >>> 16);
-            row.setHr(header);
+            row.setHeader(header);
         }
         return nIter;
     }

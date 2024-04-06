@@ -255,7 +255,7 @@ public class Row {
      * @param hr {@link HeaderRow}表头
      * @return 当前行
      */
-    public Row setHr(HeaderRow hr) {
+    public Row setHeader(HeaderRow hr) {
         this.hr = hr;
         return this;
     }
