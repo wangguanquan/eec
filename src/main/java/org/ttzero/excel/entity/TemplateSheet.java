@@ -525,10 +525,10 @@ public class TemplateSheet extends Sheet {
         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
         if (StringUtil.isNotBlank(originalSheetName)) {
             int index = 0;
-            for (; index < sheets.length && !originalSheetName.equals(sheets[index++].getName()); ) ;
-            if (index > sheets.length)
+            for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++) ;
+            if (index >= sheets.length)
                 throw new IOException("The original sheet [" + originalSheetName + "] does not exist in template file.");
-            originalSheetIndex = index - 1;
+            originalSheetIndex = index;
         } else if (originalSheetIndex < 0 || originalSheetIndex >= sheets.length)
             throw new IOException("The original sheet index [" + originalSheetIndex + "] is out of range in template file[0-" + sheets.length + "].");
 
