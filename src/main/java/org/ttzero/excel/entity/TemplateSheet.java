@@ -634,11 +634,7 @@ public class TemplateSheet extends Sheet {
             len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
             Cell[] cells = row.realloc(len);
             // 预处理
-            if (row0.getRowNum() == pf || rowIterator.hasFillCell) {
-                if (!rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi]);
-                if (consumerValueKeys == null) consumerValueKeys = new HashSet<>();
-                else consumerValueKeys.clear();
-            } else consumerValueKeys = null;
+            if (row0.getRowNum() == pf && !rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi], namespaceMapper);
 
             // 占位符是否已消费结束
             boolean consumerEnd = true;
@@ -672,7 +668,6 @@ public class TemplateSheet extends Sheet {
                                 } else cell.emptyTag();
                                 // 序列的dimension纵向+1
                                 if (pn.nodes[0].getType() == 3) pn.v++;
-                                consumerValueKeys.add(pn.nodes[0].namespace);
                             } else {
                                 int k = 0;
                                 for (Node node : pn.nodes) {
@@ -684,7 +679,6 @@ public class TemplateSheet extends Sheet {
                                         s.getChars(0, vn, pn.cb, k);
                                         k += vn;
                                     }
-                                    consumerValueKeys.add(node.namespace);
                                 }
                                 cell.setString(new String(pn.cb, 0, k));
                             }
@@ -727,23 +721,21 @@ public class TemplateSheet extends Sheet {
                 }
             }
 
-            if (consumerValueKeys != null) {
-                for (String vwKey : consumerValueKeys) {
+            // 如果为数组时需要移动游标
+            if (!rowIterator.consumerNamespaces.isEmpty()) {
+                for (String vwKey : rowIterator.consumerNamespaces) {
                     ValueWrapper vw = namespaceMapper.get(vwKey);
-                    // 如果为数组时需要移动游标
-                    if (vw != null && (vw.option == 3 || vw.option == 4)) {
-                        if (++vw.i < vw.list.size()) consumerEnd = false;
-                            // 加载更多数据
-                        else if (vw.supplier != null) {
-                            List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
-                            if (list != null && !list.isEmpty()) {
-                                vw.list = list;
-                                vw.i = 0;
-                                vw.size += list.size();
-                                consumerEnd = false;
-                            } else vw.option = -1; // EOF
-                        } else vw.option = -1; // EOF
-                    }
+                    if (++vw.i < vw.list.size()) consumerEnd = false;
+                    // 加载更多数据
+                    else if (vw.supplier != null) {
+                        List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
+                        if (list != null && !list.isEmpty()) {
+                            vw.list = list;
+                            vw.i = 0;
+                            vw.size += list.size();
+                            consumerEnd = false;
+                        } else vw.option = -1;
+                    } else vw.option = -1;
                 }
             }
 
@@ -1130,6 +1122,7 @@ public class TemplateSheet extends Sheet {
         public int rows;
         public PreCell[] preNodes;
         public boolean hasFillCell;
+        public Set<String> consumerNamespaces = new HashSet<>();
 
         public CommitRowSetIterator(RowSetIterator iterator) {
             this.iterator = iterator;
@@ -1147,11 +1140,21 @@ public class TemplateSheet extends Sheet {
             return row;
         }
 
-        public void withPreNodes(PreCell[] preNodes) {
+        public void withPreNodes(PreCell[] preNodes, Map<String, ValueWrapper> namespaceMapper) {
             int len = current.getLastColumnIndex(), len0 = preNodes[preNodes.length - 1].col + 1;
             this.preNodes = new PreCell[Math.max(len, len0)];
             for (PreCell p : preNodes) this.preNodes[p.col] = p;
             hasFillCell = true;
+
+            if (!namespaceMapper.isEmpty()) {
+                ValueWrapper vw;
+                for (PreCell pn : preNodes) {
+                    for (Node node : pn.nodes) {
+                        if ((node.option & 1) == 1 && (vw = namespaceMapper.get(node.namespace)) != null && (vw.option == 3 || vw.option == 4))
+                            consumerNamespaces.add(node.namespace);
+                    }
+                }
+            }
         }
 
         /**
@@ -1161,6 +1164,7 @@ public class TemplateSheet extends Sheet {
             current = null;
             preNodes = null;
             hasFillCell = false;
+            consumerNamespaces.clear();
         }
     }
 
