@@ -366,52 +366,6 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
-//    @Test public void testMixNamespace() throws IOException {
-//        final String fileName = "fill mix namespace.xlsx";
-//        List<YzOrderEntity> yzOrderEntity = YzOrderEntity.randomData();
-//        new Workbook()
-//            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
-//                .setData(yzOrderEntity)
-//                .setData(new HashMap<String, String>(){{
-//                    put("cName", "精品一店");
-//                    put("cCode", "JP");
-//                }})
-//            ).writeTo(defaultTestPath.resolve(fileName));
-//
-//        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-//            FullSheet sheet = reader.sheet(0).asFullSheet();
-//            List<Dimension> mergeCells = sheet.getMergeCells();
-//            Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
-//            for (Dimension dim : mergeCells) mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
-//            int i = 0;
-//            for (Iterator<Row> iter = sheet.header(1, 2).iterator(); i < yzOrderEntity.size() && iter.hasNext(); i++) {
-//                Row row = iter.next();
-//                YzOrderEntity expect = yzOrderEntity.get(i);
-//                assertEquals(row.getInt(0).intValue(), expect.xh);
-//                assertEquals(row.getString(1), "JP-" + expect.jpCode + "追加" + expect.num);
-//                assertEquals(row.getString(3), "精品一店-" + expect.jpName);
-//                assertEquals(row.getInt(6).intValue(), expect.num);
-//                assertTrue(Math.abs(row.getDouble(7) - expect.price) <= 0.00001);
-//                assertTrue(Math.abs(row.getDouble(8) - expect.amount) <= 0.00001);
-//                assertTrue(Math.abs(row.getDouble(9) - expect.tax) <= 0.00001);
-//                assertTrue(Math.abs(row.getDouble(10) - expect.taxPrice) <= 0.00001);
-//                assertTrue(Math.abs(row.getDouble(11) - expect.taxAmount) <= 0.00001);
-//                assertEquals(row.getString(12), expect.remark);
-//
-//                // 判断是否带合并
-//                Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
-//                assertNotNull(mergeCell);
-//                assertEquals(mergeCell.width, 2);
-//                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
-//                assertNotNull(mergeCell);
-//                assertEquals(mergeCell.width, 3);
-//                mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
-//                assertNotNull(mergeCell);
-//                assertEquals(mergeCell.width, 5);
-//            }
-//        }
-//    }
-
     @Test public void testInnerFormula() throws IOException {
         final String fileName = "内置函数测试.xlsx";
         List<Map<String, Object>> list = new ArrayList<>();
