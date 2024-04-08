@@ -239,7 +239,7 @@ public class Fill implements Cloneable {
                 fill.bgColor = Styles.parseColor(bgColor);
             }
         }
-        // 双色背景目前仅简单支持（取双色中的起始色）
+        // FIXME 双色背景目前仅简单支持（取双色中的起始色）
         else if ((e = tag.element("gradientFill")) != null) {
             List<Element> sub = e.elements("stop");
             if (sub != null && !sub.isEmpty()) {
