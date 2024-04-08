@@ -441,9 +441,36 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testMultiTables() throws IOException {
+        List<Map<String, String>> table1 = new ArrayList<>();
+        table1.add(new HashMap<String, String>(){{ put("game", "G1"); put("level", "43"); }});
+        table1.add(new HashMap<String, String>(){{ put("game", "G2"); put("level", "23"); }});
+        table1.add(new HashMap<String, String>(){{ put("game", "G3"); put("level", "42"); }});
+        table1.add(new HashMap<String, String>(){{ put("game", "G3"); put("level", "41"); }});
+        table1.add(new HashMap<String, String>(){{ put("game", "G1"); put("level", "76"); }});
+
+        List<Map<String, String>> table2 = new ArrayList<>();
+        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G2"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
+        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
+
         new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "多列表组合"))
-            .writeTo(defaultTestPath.resolve("多列表组合.xlsx"));
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "多Table组合")
+                .setPrefix("{") // <- 修改占位符前缀
+                .setData("t1", table1)
+                .setData("t2", table2)
+                .setData("t3", GameEntry.random())
+                .setData(new HashMap<String, Object>(){{
+                    put("avgLevel", 40);
+                }})
+            ).writeTo(defaultTestPath.resolve("多Table组合.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("多Table组合.xlsx"))) {
+
+        }
     }
 
     static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {
@@ -453,7 +480,7 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
-            mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+            mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
         }
         org.ttzero.excel.reader.Row row;
         for (YzOrderEntity expect : expectList) {
@@ -504,7 +531,7 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
-            mergeCellMap.put(TemplateSheet.dimensionKey(dim), dim);
+            mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
         }
         org.ttzero.excel.reader.Row row;
         for (Map<String, Object> expect : expectList) {
@@ -697,7 +724,7 @@ public class TemplateSheetTest extends WorkbookTest {
                 list.add(e);
                 e.channel = random.nextInt(10);
                 e.game = games[random.nextInt(games.length)];
-                e.account = getRandomString(10);
+                e.account = getRandomAssicString(10);
                 e.date = new Timestamp(System.currentTimeMillis() - random.nextInt(1000000));
                 e.isAdult = random.nextInt(10) <= 2;
                 e.vip = (v = random.nextInt(100)) < 15 ? "v" + ((v & 3) + 1) : null;

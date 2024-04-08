@@ -50,6 +50,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -574,7 +575,7 @@ public class TemplateSheet extends Sheet {
                 mergeCells = new ArrayList<>(mergeCells0.size());
                 this.mergeCells0 = new HashMap<>(mergeCells0.size());
                 // 这里将坐标切换到 base 0，方便后续取值
-                for (Dimension dim : mergeCells0) this.mergeCells0.put(dimensionKey(dim), dim);
+                for (Dimension dim : mergeCells0) this.mergeCells0.put(dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
             }
 
             // 过滤
@@ -605,13 +606,11 @@ public class TemplateSheet extends Sheet {
         }
 
         // 预处理样式和占位符
-        prepare();
+        rowIterator = prepare();
+        pf = preCells == null ? -1 : preCells[0][0].row;
 
         // 忽略表头输出
         super.ignoreHeader();
-        // 初始化行迭代器
-        rowIterator = new CommitRowSetIterator((RowSetIterator) sheet.reset().iterator());
-        pf = preCells == null ? -1 : preCells[0][0].row;
 
         return len;
     }
@@ -832,6 +831,12 @@ public class TemplateSheet extends Sheet {
         if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
         // 数据校验
         if (validations != null) putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations);
+        // TODO 重置过滤位置
+        Object o = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
+        if (o instanceof Dimension) {
+            Dimension autoFilter = (Dimension) o;
+            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+        }
     }
 
     @Override
@@ -864,20 +869,24 @@ public class TemplateSheet extends Sheet {
     /**
      * 预处理样式和占位符
      */
-    protected void prepare() {
+    protected CommitRowSetIterator prepare() {
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         // 样式缓存
-        styleMap = new HashMap<>();
-        int prefixLen = prefix.length(), suffixLen = suffix.length();
-        for (Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(originalSheetIndex).iterator(); iter.hasNext(); ) {
+        styleMap = writeAsExcel ? new HashMap<>() : Collections.emptyMap();
+        long[] tableSet = new long[5];
+        boolean shouldCopy = false;
+        int prefixLen = prefix.length(), suffixLen = suffix.length(), pf = 0, tIndex = 0;
+        List<org.ttzero.excel.reader.Row> copyRows = null;
+        org.ttzero.excel.reader.Sheet originalSheet = reader.sheet(originalSheetIndex).asFullSheet();
+        for (Iterator<org.ttzero.excel.reader.Row> iter = originalSheet.iterator(); iter.hasNext(); ) {
             org.ttzero.excel.reader.Row row = iter.next();
             int index = 0;
             for (int i = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); i < end; i++) {
                 Cell cell = row.getCell(i);
 
                 // 复制样式
-                if (styles != null && !styleMap.containsKey(cell.xf)) {
+                if (writeAsExcel && !styleMap.containsKey(cell.xf)) {
                     int style = row.getCellStyle(cell), xf = 0;
                     // 字体
                     Font font = styles0.getFont(style);
@@ -920,8 +929,44 @@ public class TemplateSheet extends Sheet {
                 }
             }
 
-            if (index > 0 && preCells[pf - 1].length > index) preCells[pf - 1] = Arrays.copyOf(preCells[pf - 1], index);
+            if (index == 0) {
+                if (shouldCopy) copyRows.add(CopyRow.of(row));
+                continue;
+            }
+            if (preCells[pf - 1].length > index) preCells[pf - 1] = Arrays.copyOf(preCells[pf - 1], index);
+            if (shouldCopy) copyRows.add(CopyRow.of(row));
+            else {
+                PreCell[] pCells = preCells[pf - 1];
+                int idx = 0, i = row.getFirstColumnIndex(), j = pCells[idx].col;
+                while (i < row.getLastColumnIndex()) {
+                    if (i < j && (shouldCopy = hasValue(row, i, j))) break;
+                    i = j + 1;
+                    if (++idx < index) {
+                        if (shouldCopy = hasValue(row, pCells[idx - 1].col + 1, pCells[idx].col)) break;
+                        j = pCells[idx].col;
+                    } else j = row.getLastColumnIndex();
+                }
+
+                if (shouldCopy) {
+                    copyRows = new ArrayList<>();
+                    copyRows.add(CopyRow.of(row));
+                }
+            }
+
+            // TODO 切割列
         }
+
+        CommitRowSetIterator iter = new CommitRowSetIterator((RowSetIterator) originalSheet.reset().iterator());
+        if (shouldCopy) {
+            int i = copyRows.size() - 1;
+            for (; i > 0 && copyRows.get(i).isBlank(); i--);
+            if (i < copyRows.size() - 1) copyRows = new ArrayList<>(copyRows.subList(0, i + 1));
+            org.ttzero.excel.reader.Row[] rows1 = new org.ttzero.excel.reader.Row[copyRows.size()];
+            copyRows.toArray(rows1);
+            iter.setCopyRows(rows1);
+        }
+
+        return iter;
     }
 
     /**
@@ -1032,6 +1077,24 @@ public class TemplateSheet extends Sheet {
         return pn;
     }
 
+    // 0: Not placeholder
+    // 1: single cell
+    // 2: loop rows
+    // 3: loop rows + single cell
+    protected int testPlaceholderType(PreCell preCell) {
+        int n = 0;
+        for (Node node : preCell.nodes) {
+            ValueWrapper vw;
+            if ((node.option & 1) == 1) n |= (vw = namespaceMapper.get(node.namespace)) != null && (vw.option == 3 || vw.option == 4) ? 2 : 1;
+        }
+        return n;
+    }
+
+    protected static boolean hasValue(org.ttzero.excel.reader.Row row, int i, int j) {
+        for (; i < j && row.isBlank(row.getCell(i)); i++);
+        return i < j;
+    }
+
     int[] fontIndices = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     // FIXME 临时逻辑，后期将样式直接放到模板Cell上即可
     int hyperlinkStyle(Styles styles, int xf) {
@@ -1073,16 +1136,6 @@ public class TemplateSheet extends Sheet {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
         return tmp;
-    }
-
-    /**
-     * 将范围首行首列进行计算后转为缓存的Key
-     *
-     * @param dim 范围{@link Dimension}
-     * @return 缓存Key
-     */
-    public static long dimensionKey(Dimension dim) {
-        return ((dim.firstColumn - 1) & 0x7FFF) | ((long) dim.firstRow - 1) << 16;
     }
 
     /**
@@ -1132,12 +1185,18 @@ public class TemplateSheet extends Sheet {
     public static class CommitRowSetIterator implements Iterator<org.ttzero.excel.reader.Row> {
         public final RowSetIterator iterator;
         public org.ttzero.excel.reader.Row current;
-        public int rows;
+        public int rows, copyRowIndex, copyRowOriginal;
         public PreCell[] preNodes;
         public boolean hasFillCell;
+        public org.ttzero.excel.reader.Row[] copyRows;
 
         public CommitRowSetIterator(RowSetIterator iterator) {
             this.iterator = iterator;
+        }
+
+        public void setCopyRows(org.ttzero.excel.reader.Row[] copyRows) {
+            this.copyRows = copyRows;
+            copyRowOriginal = copyRows[0].getRowNum();
         }
 
         @Override
@@ -1166,6 +1225,22 @@ public class TemplateSheet extends Sheet {
             current = null;
             preNodes = null;
             hasFillCell = false;
+        }
+    }
+
+    public static class CopyRow extends org.ttzero.excel.reader.Row {
+        public Double height;
+        public static CopyRow of(org.ttzero.excel.reader.Row row) {
+            CopyRow cr = new CopyRow();
+            cr.index = row.getRowNum();
+            cr.fc = row.getFirstColumnIndex();
+            cr.lc = row.getLastColumnIndex();
+            cr.cells = row.copyCells();
+            cr.height = row.getHeight();
+            cr.styles = row.getStyles();
+            cr.hr = row.getHeader();
+            cr.sst = row.getSharedStrings();
+            return cr;
         }
     }
 
