@@ -597,7 +597,7 @@ public class TemplateSheet extends Sheet {
         }
 
         // 预处理样式和占位符
-        rowIterator = prepare();
+        rowIterator = prepare(sheet);
         pf = preCells == null ? -1 : preCells[0][0].row;
 
         // 忽略表头输出
@@ -852,13 +852,12 @@ public class TemplateSheet extends Sheet {
     /**
      * 预处理样式和占位符
      */
-    protected CommitRowSetIterator prepare() {
+    protected CommitRowSetIterator prepare(org.ttzero.excel.reader.Sheet originalSheet) {
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         // 样式缓存
         styleMap = writeAsExcel ? new HashMap<>() : Collections.emptyMap();
         int prefixLen = prefix.length(), suffixLen = suffix.length(), pf = 0;
-        org.ttzero.excel.reader.Sheet originalSheet = reader.sheet(originalSheetIndex).asFullSheet();
         for (Iterator<org.ttzero.excel.reader.Row> iter = originalSheet.iterator(); iter.hasNext(); ) {
             org.ttzero.excel.reader.Row row = iter.next();
             int index = 0;
