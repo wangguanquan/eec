@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
- * 填充，在样式中位于第{@code 18-24}位
+ * 填充，在样式中位于第{@code 18-24}位，目前只支持单色填充
  *
  * @author guanquan.wang at 2018-02-06 08:55
  */
@@ -221,20 +221,32 @@ public class Fill implements Cloneable {
     }
 
     static Fill parseFillTag(Element tag) {
-        Element e = tag.element("patternFill");
         Fill fill = new Fill();
-        try {
-            fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
-        } catch (IllegalArgumentException ex) {
-            // Ignore
+        // 单色背景
+        Element e = tag.element("patternFill");
+        if (e != null) {
+            try {
+                fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
+            } catch (IllegalArgumentException ex) {
+                // Ignore
+            }
+            Element fgColor = e.element("fgColor");
+            if (fgColor != null) {
+                fill.fgColor = Styles.parseColor(fgColor);
+            }
+            Element bgColor = e.element("bgColor");
+            if (bgColor != null) {
+                fill.bgColor = Styles.parseColor(bgColor);
+            }
         }
-        Element fgColor = e.element("fgColor");
-        if (fgColor != null) {
-            fill.fgColor = Styles.parseColor(fgColor);
-        }
-        Element bgColor = e.element("bgColor");
-        if (bgColor != null) {
-            fill.bgColor = Styles.parseColor(bgColor);
+        // 双色背景目前仅简单支持（取双色中的起始色）
+        else if ((e = tag.element("gradientFill")) != null) {
+            List<Element> sub = e.elements("stop");
+            if (sub != null && !sub.isEmpty()) {
+                Element sub0 = sub.get(0).element("color");
+                fill.fgColor = Styles.parseColor(sub0);
+                fill.patternType = PatternType.solid;
+            }
         }
         return fill;
     }
