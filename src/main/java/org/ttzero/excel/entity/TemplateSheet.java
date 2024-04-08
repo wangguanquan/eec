@@ -608,14 +608,11 @@ public class TemplateSheet extends Sheet {
 
     @Override
     protected void resetBlockData() {
-        Integer xf;
-        int len, n = 0, limit = sheetWriter.getRowLimit(); // 这里直接从writer中获取
         Dimension mergeCell;
         PreCell pn;
         Object e;
-        Set<String> consumerValueKeys = null;
         Column emptyColumn = new Column();
-        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
+        for (int rbs = rowBlock.capacity(), n = 0, limit = sheetWriter.getRowLimit(), len; n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
             row.index = rows = rowIterator.rows - 1;
@@ -699,7 +696,7 @@ public class TemplateSheet extends Sheet {
                 if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
 
                 // 复制样式
-                cell.xf = (xf = styleMap.get(cell0.xf)) != null ? xf : 0;
+                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
                 if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
                 // 合并单元格重新计算位置
