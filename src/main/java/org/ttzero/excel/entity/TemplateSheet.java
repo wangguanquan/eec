@@ -471,13 +471,9 @@ public class TemplateSheet extends Sheet {
      * @return 行块
      */
     public RowBlock nextBlock() {
-        // 清除数据（仅重置下标）
         rowBlock.clear();
-
         // 装载数据（这里不需要判断是否有表头，模板不需要表头）
         resetBlockData();
-
-        // 使其可读
         return rowBlock.flip();
     }
 
@@ -493,16 +489,11 @@ public class TemplateSheet extends Sheet {
             }
             if (size <= 0) columns = new Column[0];
             else {
-                // 排序
                 sortColumns(columns);
-                // 计算每列在Excel中的列下标
                 calculateRealColIndex();
-                // 重置通用属性
                 resetCommonProperties(columns);
             }
-            // Mark ext-properties
             markExtProp();
-
             headerReady = true;
         }
         return columns;
@@ -525,10 +516,10 @@ public class TemplateSheet extends Sheet {
             int index = 0;
             for (; index < sheets.length && !originalSheetName.equals(sheets[index].getName()); index++) ;
             if (index >= sheets.length)
-                throw new IOException("The original sheet [" + originalSheetName + "] does not exist in template file.");
+                throw new IOException("The original worksheet [" + originalSheetName + "] does not exist in template file.");
             originalSheetIndex = index;
         } else if (originalSheetIndex < 0 || originalSheetIndex >= sheets.length)
-            throw new IOException("The original sheet index [" + originalSheetIndex + "] is out of range in template file[0-" + sheets.length + "].");
+            throw new IOException("The original worksheet index [" + originalSheetIndex + "] is out of range in template file[0-" + sheets.length + "].");
 
         // 加载模板工作表
         FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
@@ -538,7 +529,6 @@ public class TemplateSheet extends Sheet {
         List<Col> cols = sheet.getCols();
         if (cols != null && !cols.isEmpty()) {
             cols.sort(Comparator.comparingInt(a -> a.max));
-            // 创建列
             len = cols.get(cols.size() - 1).max;
             int i = 0;
             columns = new Column[len];
@@ -624,11 +614,8 @@ public class TemplateSheet extends Sheet {
         for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
-            // 设置行号
             row.index = rows = rowIterator.rows - 1;
-            // 设置行高
             row.height = row0.getHeight();
-            // 设置行是否隐藏
             row.hidden = row0.isHidden();
             // 空行特殊处理（lc-fc=-1)
             len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
@@ -829,7 +816,6 @@ public class TemplateSheet extends Sheet {
     @Override
     public void close() throws IOException {
         super.close();
-        // 释放模板流
         if (reader != null) reader.close();
     }
 
