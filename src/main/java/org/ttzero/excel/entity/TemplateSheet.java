@@ -190,8 +190,9 @@ public class TemplateSheet extends Sheet {
     protected PreCell[][] preCells;
     /**
      * 占位符位置标记 pf: 当前占位符的行号 pi: 当前占位符在preNodes的下标
+     * afr：auto-filter row
      */
-    protected int pf, pi;
+    protected int pf, pi, afr = -1;
     /**
      * 合并单元格（输出时需特殊处理）
      */
@@ -567,7 +568,10 @@ public class TemplateSheet extends Sheet {
 
             // 过滤
             Dimension autoFilter = sheet.getFilter();
-            if (autoFilter != null) putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+            if (autoFilter != null) {
+                afr = autoFilter.getFirstRow();
+                putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+            }
 
             // 是否显示网格线
             this.showGridLines = sheet.isShowGridLines();
@@ -737,6 +741,12 @@ public class TemplateSheet extends Sheet {
                     }
                     pi++;
                     pf = preCells.length > pi && preCells[pi] != null && preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
+                }
+                // 过滤行列重算
+                if (afr == row0.getRowNum() && (e = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER)) instanceof Dimension) {
+                    Dimension autoFilter = (Dimension) e;
+                    putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, new Dimension(autoFilter.firstRow + row.getIndex() - afr + 1, autoFilter.firstColumn, autoFilter.getLastRow() + row.getIndex() - afr + 1, autoFilter.lastColumn));
+                    afr = -1;
                 }
                 rowIterator.commit();
             }
