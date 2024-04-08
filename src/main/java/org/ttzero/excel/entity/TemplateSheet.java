@@ -128,6 +128,7 @@ import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
  *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA">模板导出</a></p>
+ *
  * @author guanquan.wang at 2023-12-01 15:10
  */
 public class TemplateSheet extends Sheet {
@@ -204,10 +205,6 @@ public class TemplateSheet extends Sheet {
      * 填充数据缓存
      */
     protected Map<String, ValueWrapper> namespaceMapper = new HashMap<>();
-    /**
-     * 数据验证
-     */
-    protected List<Validation> validations;
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
@@ -829,8 +826,6 @@ public class TemplateSheet extends Sheet {
 
         // 添加合并
         if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
-        // 数据校验
-        if (validations != null) putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations);
         // TODO 重置过滤位置
         Object o = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
         if (o instanceof Dimension) {
@@ -874,10 +869,7 @@ public class TemplateSheet extends Sheet {
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         // 样式缓存
         styleMap = writeAsExcel ? new HashMap<>() : Collections.emptyMap();
-        long[] tableSet = new long[5];
-        boolean shouldCopy = false;
-        int prefixLen = prefix.length(), suffixLen = suffix.length(), pf = 0, tIndex = 0;
-        List<org.ttzero.excel.reader.Row> copyRows = null;
+        int prefixLen = prefix.length(), suffixLen = suffix.length(), pf = 0;
         org.ttzero.excel.reader.Sheet originalSheet = reader.sheet(originalSheetIndex).asFullSheet();
         for (Iterator<org.ttzero.excel.reader.Row> iter = originalSheet.iterator(); iter.hasNext(); ) {
             org.ttzero.excel.reader.Row row = iter.next();
@@ -928,45 +920,10 @@ public class TemplateSheet extends Sheet {
                     }
                 }
             }
-
-            if (index == 0) {
-                if (shouldCopy) copyRows.add(CopyRow.of(row));
-                continue;
-            }
-            if (preCells[pf - 1].length > index) preCells[pf - 1] = Arrays.copyOf(preCells[pf - 1], index);
-            if (shouldCopy) copyRows.add(CopyRow.of(row));
-            else {
-                PreCell[] pCells = preCells[pf - 1];
-                int idx = 0, i = row.getFirstColumnIndex(), j = pCells[idx].col;
-                while (i < row.getLastColumnIndex()) {
-                    if (i < j && (shouldCopy = hasValue(row, i, j))) break;
-                    i = j + 1;
-                    if (++idx < index) {
-                        if (shouldCopy = hasValue(row, pCells[idx - 1].col + 1, pCells[idx].col)) break;
-                        j = pCells[idx].col;
-                    } else j = row.getLastColumnIndex();
-                }
-
-                if (shouldCopy) {
-                    copyRows = new ArrayList<>();
-                    copyRows.add(CopyRow.of(row));
-                }
-            }
-
-            // TODO 切割列
+            if (index > 0 && preCells[pf - 1].length > index) preCells[pf - 1] = Arrays.copyOf(preCells[pf - 1], index);
         }
 
-        CommitRowSetIterator iter = new CommitRowSetIterator((RowSetIterator) originalSheet.reset().iterator());
-        if (shouldCopy) {
-            int i = copyRows.size() - 1;
-            for (; i > 0 && copyRows.get(i).isBlank(); i--);
-            if (i < copyRows.size() - 1) copyRows = new ArrayList<>(copyRows.subList(0, i + 1));
-            org.ttzero.excel.reader.Row[] rows1 = new org.ttzero.excel.reader.Row[copyRows.size()];
-            copyRows.toArray(rows1);
-            iter.setCopyRows(rows1);
-        }
-
-        return iter;
+        return new CommitRowSetIterator((RowSetIterator) originalSheet.reset().iterator());
     }
 
     /**
@@ -1069,7 +1026,11 @@ public class TemplateSheet extends Sheet {
                 if (vw != null && vw.option == 4) {
                     // TODO 读取源文件中的数据验证
                     pn.validation = new ListValidation<>().in(vw.list).dimension(new Dimension(pn.row, (short) (pn.col + 1)));
-                    if (validations == null) validations = new ArrayList<>();
+                    Object o = getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
+                    List<Validation> validations;
+                    if (o instanceof List) validations = (List) o;
+                    else putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations = new ArrayList<>());
+                    // 数据校验
                     validations.add(pn.validation);
                 }
             }
@@ -1077,27 +1038,8 @@ public class TemplateSheet extends Sheet {
         return pn;
     }
 
-    // 0: Not placeholder
-    // 1: single cell
-    // 2: loop rows
-    // 3: loop rows + single cell
-    protected int testPlaceholderType(PreCell preCell) {
-        int n = 0;
-        for (Node node : preCell.nodes) {
-            ValueWrapper vw;
-            if ((node.option & 1) == 1) n |= (vw = namespaceMapper.get(node.namespace)) != null && (vw.option == 3 || vw.option == 4) ? 2 : 1;
-        }
-        return n;
-    }
-
-    protected static boolean hasValue(org.ttzero.excel.reader.Row row, int i, int j) {
-        for (; i < j && row.isBlank(row.getCell(i)); i++);
-        return i < j;
-    }
-
-    int[] fontIndices = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-    // FIXME 临时逻辑，后期将样式直接放到模板Cell上即可
-    int hyperlinkStyle(Styles styles, int xf) {
+    protected int[] fontIndices = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    protected int hyperlinkStyle(Styles styles, int xf) {
         int style = styles.getStyleByIndex(xf);
         int fontIndex = Math.max(0, style << 8 >>> (INDEX_FONT + 8)), fi;
         if (fontIndex > fontIndices.length) {
@@ -1185,18 +1127,12 @@ public class TemplateSheet extends Sheet {
     public static class CommitRowSetIterator implements Iterator<org.ttzero.excel.reader.Row> {
         public final RowSetIterator iterator;
         public org.ttzero.excel.reader.Row current;
-        public int rows, copyRowIndex, copyRowOriginal;
+        public int rows;
         public PreCell[] preNodes;
         public boolean hasFillCell;
-        public org.ttzero.excel.reader.Row[] copyRows;
 
         public CommitRowSetIterator(RowSetIterator iterator) {
             this.iterator = iterator;
-        }
-
-        public void setCopyRows(org.ttzero.excel.reader.Row[] copyRows) {
-            this.copyRows = copyRows;
-            copyRowOriginal = copyRows[0].getRowNum();
         }
 
         @Override
@@ -1225,22 +1161,6 @@ public class TemplateSheet extends Sheet {
             current = null;
             preNodes = null;
             hasFillCell = false;
-        }
-    }
-
-    public static class CopyRow extends org.ttzero.excel.reader.Row {
-        public Double height;
-        public static CopyRow of(org.ttzero.excel.reader.Row row) {
-            CopyRow cr = new CopyRow();
-            cr.index = row.getRowNum();
-            cr.fc = row.getFirstColumnIndex();
-            cr.lc = row.getLastColumnIndex();
-            cr.cells = row.copyCells();
-            cr.height = row.getHeight();
-            cr.styles = row.getStyles();
-            cr.hr = row.getHeader();
-            cr.sst = row.getSharedStrings();
-            return cr;
         }
     }
 

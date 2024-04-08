@@ -440,39 +440,6 @@ public class TemplateSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
     }
 
-    @Test public void testMultiTables() throws IOException {
-        List<Map<String, String>> table1 = new ArrayList<>();
-        table1.add(new HashMap<String, String>(){{ put("game", "G1"); put("level", "43"); }});
-        table1.add(new HashMap<String, String>(){{ put("game", "G2"); put("level", "23"); }});
-        table1.add(new HashMap<String, String>(){{ put("game", "G3"); put("level", "42"); }});
-        table1.add(new HashMap<String, String>(){{ put("game", "G3"); put("level", "41"); }});
-        table1.add(new HashMap<String, String>(){{ put("game", "G1"); put("level", "76"); }});
-
-        List<Map<String, String>> table2 = new ArrayList<>();
-        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G2"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G1"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
-        table2.add(new HashMap<String, String>(){{ put("game", "G3"); put("account", getRandomAssicString(6)); }});
-
-        new Workbook()
-            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "多Table组合")
-                .setPrefix("{") // <- 修改占位符前缀
-                .setData("t1", table1)
-                .setData("t2", table2)
-                .setData("t3", GameEntry.random())
-                .setData(new HashMap<String, Object>(){{
-                    put("avgLevel", 40);
-                }})
-            ).writeTo(defaultTestPath.resolve("多Table组合.xlsx"));
-
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("多Table组合.xlsx"))) {
-
-        }
-    }
-
     static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
