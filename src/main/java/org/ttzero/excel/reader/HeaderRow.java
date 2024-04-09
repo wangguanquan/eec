@@ -33,7 +33,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -89,8 +88,6 @@ public class HeaderRow extends Row {
     /* Storage header column */
     protected ListSheet.EntryColumn[] columns;
 
-    // `detailMessage` field declare in Throwable
-    protected static final Field detailMessageField;
     // Specify total rows of header
     protected int headRows;
     /**
@@ -105,17 +102,6 @@ public class HeaderRow extends Row {
      * </pre></blockquote>
      */
     protected int option;
-
-    static {
-        Field field = null;
-        try {
-            field = Throwable.class.getDeclaredField("detailMessage");
-            field.setAccessible(true);
-        } catch (Exception e) {
-            // Ignore
-        }
-        detailMessageField = field;
-    }
 
     public HeaderRow with(Row ... rows) {
         return with(null, rows.length, rows);
@@ -482,42 +468,15 @@ public class HeaderRow extends Row {
         catch (IllegalAccessException | InvocationTargetException ex) {
             throw ex;
         }
-        catch (NumberFormatException | DateTimeException ex) {
-            ListSheet.EntryColumn c = columns[i];
-            String msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else
-                throw ex instanceof DateTimeException ? new DateTimeException(msg, ex) : new NumberFormatException(msg);
-        }
-        catch (NullPointerException ex) {
-            String msg = "Null value in cell '" + new String(int2Col(columns[i].colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + ')';
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new ExcelReadException(msg, ex);
-        }
-        catch (UncheckedTypeException ex) {
-            ListSheet.EntryColumn c = columns[i];
-            String msg;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + "). " + ex.getMessage();
-            else msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new UncheckedTypeException(msg, ex);
-        }
         catch (Exception ex) {
             ListSheet.EntryColumn c = columns[i];
-            String msg = "Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' value is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + ')';
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new ExcelReadException(msg, ex);
+            int rowNum = row.getRowNum();
+            int colIndex = c.colIndex;
+            int colNum = colIndex + 1;
+            CellType excelType = row.getCellType(colIndex);
+            Class<?> javaType = c.clazz;
+            String msg = "The value in cell '" + new String(int2Col(colNum)) + rowNum + "' is \"" + row.getString(colIndex) + "\"(" + excelType + "), cannot cast to " + javaType.getTypeName();
+            throw new TypeCastException(rowNum, colNum, excelType, javaType, msg, ex);
         }
     }
 
