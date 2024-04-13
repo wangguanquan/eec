@@ -848,6 +848,9 @@ public class TemplateSheet extends Sheet {
 
     /**
      * 预处理样式和占位符
+     *
+     * @param originalSheet 模板工作表
+     * @return 模板工作表行迭代器
      */
     protected CommitRowSetIterator prepare(org.ttzero.excel.reader.Sheet originalSheet) {
         // 模板文件样式
