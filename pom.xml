@@ -5,13 +5,13 @@
 
   <groupId>org.ttzero</groupId>
   <artifactId>eec</artifactId>
-  <version>0.5.13</version>
+  <version>0.5.14-SNAPSHOT</version>
   <name>Excel Write/Read Framework</name>
   <packaging>jar</packaging>
   <url>https://www.ttzero.org</url>
   <description>
     A fast and lower memory excel write/read tool
-    一个非POI底层，支持流式处理的高效且超低内存的Excel读写工具
+    一个非POI底层支持流式处理的高效且超低内存的Excel读写工具
   </description>
 
   <properties>
