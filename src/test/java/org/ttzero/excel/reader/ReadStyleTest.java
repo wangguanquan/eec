@@ -46,48 +46,57 @@ public class ReadStyleTest {
                     Cell cell = row.getCell(i);
                     Styles styles = row.getStyles();
                     int style = row.getCellStyle(cell);
-                    if ("A1".equals(rc)) {
-                        Font font = styles.getFont(style);
-                        assertTrue(font.isBold());
-                        assertEquals(font.getSize(), 11);
-                        assertEquals(font.getName(), "微软雅黑");
+                    switch (rc) {
+                        case "A1": {
+                            Font font = styles.getFont(style);
+                            assertTrue(font.isBold());
+                            assertEquals(font.getSize(), 11);
+                            assertEquals(font.getName(), "微软雅黑");
 
-                        Fill fill = styles.getFill(style);
-                        assertEquals(fill.getFgColor(), new Color(102, 102, 153));
+                            Fill fill = styles.getFill(style);
+                            assertEquals(fill.getFgColor(), new Color(102, 102, 153));
 
-                        assertEquals("center", Horizontals.of(styles.getHorizontal(style)));
-                    } else if ("B4".equals(rc)) {
-                        Font font = styles.getFont(style);
-                        assertEquals(font.getName(), "Cascadia Mono");
-                        assertEquals(font.getSize(), 24);
-                        assertEquals("right", Horizontals.of(styles.getHorizontal(style)));
+                            assertEquals("center", Horizontals.of(styles.getHorizontal(style)));
+                            break;
+                        }
+                        case "B4": {
+                            Font font = styles.getFont(style);
+                            assertEquals(font.getName(), "Cascadia Mono");
+                            assertEquals(font.getSize(), 24);
+                            assertEquals("right", Horizontals.of(styles.getHorizontal(style)));
 
-                        Border border = styles.getBorder(style);
-                        Border.SubBorder leftBorder = border.getBorderLeft();
-                        assertEquals(leftBorder.getStyle(), BorderStyle.HAIR);
-                        assertEquals(leftBorder.getColor(), Color.RED);
+                            Border border = styles.getBorder(style);
+                            Border.SubBorder leftBorder = border.getBorderLeft();
+                            assertEquals(leftBorder.getStyle(), BorderStyle.HAIR);
+                            assertEquals(leftBorder.getColor(), Color.RED);
 
-                        Border.SubBorder bottomBorder = border.getBorderBottom();
-                        assertEquals(bottomBorder.getStyle(), BorderStyle.DOUBLE);
-                        assertEquals(bottomBorder.getColor(), Color.BLACK);
-                    } else if ("E7".equals(rc)) {
-                        Font font = styles.getFont(style);
-                        assertTrue(font.isBold());
-                        assertTrue(font.isItalic());
-                        assertEquals(font.getSize(), 36);
-                        assertEquals(font.getName(), "Consolas");
+                            Border.SubBorder bottomBorder = border.getBorderBottom();
+                            assertEquals(bottomBorder.getStyle(), BorderStyle.DOUBLE);
+                            assertEquals(bottomBorder.getColor(), Color.BLACK);
+                            break;
+                        }
+                        case "E7": {
+                            Font font = styles.getFont(style);
+                            assertTrue(font.isBold());
+                            assertTrue(font.isItalic());
+                            assertEquals(font.getSize(), 36);
+                            assertEquals(font.getName(), "Consolas");
 
-                        assertEquals("left", Horizontals.of(styles.getHorizontal(style)));
+                            assertEquals("left", Horizontals.of(styles.getHorizontal(style)));
 
-                        Fill fill = styles.getFill(style);
-                        assertEquals(fill.getPatternType(), PatternType.gray125);
-                        assertEquals(fill.getBgColor(), new Color(123, 193, 203));
-                    } else if ("F10".equals(rc)) {
-                        NumFmt fmt = styles.getNumFmt(style);
-                        assertEquals(fmt.getCode(), "d-mmm-yy");
+                            Fill fill = styles.getFill(style);
+                            assertEquals(fill.getPatternType(), PatternType.gray125);
+                            assertEquals(fill.getBgColor(), new Color(123, 193, 203));
+                            break;
+                        }
+                        case "F10": {
+                            NumFmt fmt = styles.getNumFmt(style);
+                            assertEquals(fmt.getCode(), "d-mmm-yy");
 
-                        Font font = styles.getFont(style);
-                        assertTrue(font.isStrikeThru());
+                            Font font = styles.getFont(style);
+                            assertTrue(font.isStrikeThru());
+                            break;
+                        }
                     }
                 }
             });
