@@ -441,7 +441,7 @@ public class Font implements Cloneable {
      */
     @Deprecated
     public Font deleteLine() {
-        style |= Style.DELETE;
+        style |= Style.STRIKE;
         return this;
     }
 
@@ -453,7 +453,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font strikeThru() {
-        style |= Style.DELETE;
+        style |= Style.STRIKE;
         return this;
     }
 
@@ -492,7 +492,7 @@ public class Font implements Cloneable {
      */
     @Deprecated
     public boolean isDeleteLine() {
-        return (style & Style.DELETE) == Style.DELETE;
+        return (style & Style.STRIKE) == Style.STRIKE;
     }
 
     /**
@@ -501,7 +501,7 @@ public class Font implements Cloneable {
      * @return true: 是
      */
     public boolean isStrikeThru() {
-        return (style & Style.DELETE) == Style.DELETE;
+        return (style & Style.STRIKE) == Style.STRIKE;
     }
 
     /**
@@ -512,7 +512,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delItalic() {
-        style &= (Style.UNDERLINE | Style.BOLD | Style.DELETE);
+        style &= (Style.UNDERLINE | Style.BOLD | Style.STRIKE);
         return this;
     }
 
@@ -524,7 +524,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delBold() {
-        style &= (Style.UNDERLINE | Style.ITALIC | Style.DELETE);
+        style &= (Style.UNDERLINE | Style.ITALIC | Style.STRIKE);
         return this;
     }
 
@@ -536,7 +536,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delUnderLine() {
-        style &= (Style.BOLD | Style.ITALIC | Style.DELETE);
+        style &= (Style.BOLD | Style.ITALIC | Style.STRIKE);
         return this;
     }
 
