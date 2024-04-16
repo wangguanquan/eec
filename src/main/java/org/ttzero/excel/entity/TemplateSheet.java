@@ -583,7 +583,7 @@ public class TemplateSheet extends Sheet {
 
             // 是否有缩放
             Integer zoomScale = sheet.getZoomScale();
-            if (zoomScale != null) putExtProp("zoomScale", zoomScale);
+            if (zoomScale != null) putExtProp(Const.ExtendPropertyKey.ZOOM_SCALE, zoomScale);
 
             // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
             List<Drawings.Picture> pictures = sheet.listPictures();

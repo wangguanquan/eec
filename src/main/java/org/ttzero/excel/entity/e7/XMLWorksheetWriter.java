@@ -1189,7 +1189,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetView workbookViewId=\"0\"");
         // Default show grid lines
         if (!sheet.isShowGridLines()) bw.write(" showGridLines=\"0\"");
-        Object o = sheet.getExtPropValue("zoomScale");
+        Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.ZOOM_SCALE);
         if (o instanceof Integer) {
             int scale = (Integer) o;
             bw.write(" zoomScale=\"");

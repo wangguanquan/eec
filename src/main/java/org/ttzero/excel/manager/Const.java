@@ -188,5 +188,9 @@ public interface Const {
          * DataValidation(4-position)
          */
         String DATA_VALIDATION = "data_validation";
+        /**
+         * Zoom Scale(5-position)
+         */
+        String ZOOM_SCALE = "zoom_scale";
     }
 }

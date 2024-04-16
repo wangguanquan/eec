@@ -1444,7 +1444,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 标记扩展参数
+     * 标记扩展参数（非必要操作）
      */
     protected void markExtProp() {
         // Mark Freeze Panes
@@ -1457,6 +1457,8 @@ public abstract class Sheet implements Cloneable, Storable {
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER) != null ? 1 << 3 : 0;
         // Mark data-validation
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION) != null ? 1 << 4 : 0;
+        // Mark Zoom-Scale
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.ZOOM_SCALE) != null ? 1 << 5 : 0;
     }
 
     /**
