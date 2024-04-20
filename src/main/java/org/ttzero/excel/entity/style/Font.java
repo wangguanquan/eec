@@ -125,11 +125,11 @@ public class Font implements Cloneable {
     /**
      * 解析字符串为字体
      * <p>
-     * italic_bold_underLine_size_family_color or italic bold underLine size family color
+     * italic_bold_underline_size_family_color or italic bold underline size family color
      * eq: italic_bold_12_宋体 // 斜体 加粗 12号字 宋体
-     * eq: bold underLine 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
+     * eq: bold underline 12 'Times New Roman' red  // 加粗 12号字 Times New Roman字体 红字
      *
-     * @param fontString italic_bold_underLine_size_family_color or italic bold underLine size family color
+     * @param fontString italic_bold_underline_size_family_color or italic bold underline size family color
      * @return the {@link Font}
      * @throws IllegalArgumentException if convert failed.
      */
@@ -327,7 +327,7 @@ public class Font implements Cloneable {
 
     /**
      * 获取字体样式，样式定义在{@link Font.Style}类中，建议直接调用专用方法{@link #isBold},
-     * {@link #isUnderLine}, {@link #isStrikeThru}和{@link #isItalic}方法，
+     * {@link #isUnderline}, {@link #isStrikeThru}和{@link #isItalic}方法，
      * 它们直接返回{@code boolean}类型的值方便后续判断
      *
      * @return {@link Font.Style}定义的样式
@@ -338,7 +338,7 @@ public class Font implements Cloneable {
 
     /**
      * 设置字体样式，样式定义在{@link Font.Style}类中，建议直接调用专用方法{@link #bold},
-     * {@link #underLine}, {@link #strikeThru}和{@link #italic}方法设置，
+     * {@link #underline}, {@link #strikeThru}和{@link #italic}方法设置，
      * 这几个方法可以组合调用最终效果为组合效果
      *
      * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
@@ -420,14 +420,34 @@ public class Font implements Cloneable {
     }
 
     /**
+     * @deprecated 使用{{@link #underline}替换
+     */
+    @Deprecated
+    public Font underLine() {
+        return underline();
+    }
+
+    /**
      * 添加“下划线”样式
      *
      * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
      *
      * @return 当前字体
      */
-    public Font underLine() {
+    public Font underline() {
         style |= Style.UNDERLINE;
+        return this;
+    }
+
+    /**
+     * 添加“双下划线”样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
+    public Font doubleUnderline() {
+        style |= Style.DOUBLE_UNDERLINE;
         return this;
     }
 
@@ -441,8 +461,7 @@ public class Font implements Cloneable {
      */
     @Deprecated
     public Font deleteLine() {
-        style |= Style.STRIKE;
-        return this;
+        return strikeThru();
     }
 
     /**
@@ -476,11 +495,19 @@ public class Font implements Cloneable {
     }
 
     /**
+     * @deprecated 使用 {@link #isUnderline()}替换
+     */
+    @Deprecated
+    public boolean isUnderLine() {
+        return isUnderline();
+    }
+
+    /**
      * 检查是否有“下划线”样式
      *
      * @return true: 是
      */
-    public boolean isUnderLine() {
+    public boolean isUnderline() {
         return (style & Style.UNDERLINE) == Style.UNDERLINE;
     }
 
@@ -492,7 +519,7 @@ public class Font implements Cloneable {
      */
     @Deprecated
     public boolean isDeleteLine() {
-        return (style & Style.STRIKE) == Style.STRIKE;
+        return isStrikeThru();
     }
 
     /**
@@ -505,6 +532,15 @@ public class Font implements Cloneable {
     }
 
     /**
+     * 检查是否有“双下划线”样式
+     *
+     * @return true: 是
+     */
+    public boolean isDoubleUnderline() {
+        return (style & Style.DOUBLE_UNDERLINE) == Style.DOUBLE_UNDERLINE;
+    }
+
+    /**
      * 删除"斜体"样式
      *
      * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
@@ -512,7 +548,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delItalic() {
-        style &= (Style.UNDERLINE | Style.BOLD | Style.STRIKE);
+        style &= (Style.UNDERLINE | Style.BOLD | Style.STRIKE | Style.DOUBLE_UNDERLINE);
         return this;
     }
 
@@ -524,7 +560,27 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delBold() {
-        style &= (Style.UNDERLINE | Style.ITALIC | Style.STRIKE);
+        style &= (Style.UNDERLINE | Style.ITALIC | Style.STRIKE | Style.DOUBLE_UNDERLINE);
+        return this;
+    }
+
+    /**
+     * @deprecated 使用 {@link #delUnderline()}替换
+     */
+    @Deprecated
+    public Font delUnderLine() {
+        return deleteLine();
+    }
+
+    /**
+     * 删除"下划线"样式
+     *
+     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
+     *
+     * @return 当前字体
+     */
+    public Font delUnderline() {
+        style &= (Style.BOLD | Style.ITALIC | Style.STRIKE | Style.DOUBLE_UNDERLINE);
         return this;
     }
 
@@ -535,8 +591,8 @@ public class Font implements Cloneable {
      *
      * @return 当前字体
      */
-    public Font delUnderLine() {
-        style &= (Style.BOLD | Style.ITALIC | Style.STRIKE);
+    public Font delDoubleUnderline() {
+        style &= (Style.BOLD | Style.ITALIC | Style.STRIKE | Style.UNDERLINE);
         return this;
     }
 
@@ -550,8 +606,7 @@ public class Font implements Cloneable {
      */
     @Deprecated
     public Font delDeleteLine() {
-        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
-        return this;
+        return delStrikeThru();
     }
 
     /**
@@ -562,7 +617,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font delStrikeThru() {
-        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC);
+        style &= (Style.UNDERLINE | Style.BOLD | Style.ITALIC | Style.DOUBLE_UNDERLINE);
         return this;
     }
 
@@ -576,7 +631,10 @@ public class Font implements Cloneable {
         StringBuilder buf = new StringBuilder("<font>");
         // Font style
         for (int n = style, i = 0; n > 0; n >>= 1, i++) {
-            if ((n & 1) == 1) buf.append("<").append(NODE_NAME[i]).append("/>");
+            if ((n & 1) == 1) {
+                if (i < NODE_NAME.length) buf.append('<').append(NODE_NAME[i]).append("/>");
+                else if (i == 4) buf.append("<u val=\"double\"/>");
+            }
         }
         // size
         buf.append("<sz val=\"");
@@ -665,7 +723,10 @@ public class Font implements Cloneable {
             }
         }
         for (int n = style, i = 0; n > 0; n >>= 1, i++) {
-            if ((n & 1) == 1) element.addElement(NODE_NAME[i]);
+            if ((n & 1) == 1) {
+                if (i < NODE_NAME.length) element.addElement(NODE_NAME[i]);
+                else if (i == 4) element.addElement(NODE_NAME[0]).addAttribute("val", "double");
+            }
         }
 
         if (family > 0) {
@@ -770,10 +831,11 @@ public class Font implements Cloneable {
                 case "charset": font.charset = Integer.parseInt(getAttr(e, "val"));         break;
                 case "scheme" : font.scheme = getAttr(e, "val");                            break;
                 case "family" : font.family = Integer.parseInt(getAttr(e, "val"));          break;
-                case "u"      : font.style |= Style.UNDERLINE;                              break;
                 case "b"      : font.style |= Style.BOLD;                                   break;
                 case "i"      : font.style |= Style.ITALIC;                                 break;
                 case "strike" : font.style |= Style.STRIKE;                                 break;
+                case "u"      : font.style |= "double".equalsIgnoreCase(e.attributeValue("val")) ? Style.DOUBLE_UNDERLINE : Style.UNDERLINE;
+                    break;
             }
         }
 
@@ -856,6 +918,10 @@ public class Font implements Cloneable {
          * 删除线
          */
         public static final int STRIKE = 1 << 3;
+        /**
+         * 双下划线
+         */
+        public static final int DOUBLE_UNDERLINE = 1 << 4;
 
         public static int valueOf(String name) throws NoSuchFieldException, IllegalAccessException {
             Field field = Style.class.getDeclaredField(name.toUpperCase());
