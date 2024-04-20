@@ -26,6 +26,7 @@ import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
@@ -586,13 +587,19 @@ public class TemplateSheet extends Sheet {
             if (zoomScale != null) putExtProp(Const.ExtendPropertyKey.ZOOM_SCALE, zoomScale);
 
             // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
-            List<Drawings.Picture> pictures = sheet.listPictures();
-            if (pictures != null && !pictures.isEmpty()) {
-                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
-                for (Drawings.Picture p : pictures) {
-                    if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
-                    else this.pictures.add(p);
+            try {
+                List<Drawings.Picture> pictures = sheet.listPictures();
+                if (pictures != null && !pictures.isEmpty()) {
+                    this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
+                    for (Drawings.Picture p : pictures) {
+                        if (FileUtil.exists(p.getLocalPath())) {
+                            if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+                            else this.pictures.add(p);
+                        }
+                    }
                 }
+            } catch (Exception ex) {
+                // Ignore
             }
         }
 
