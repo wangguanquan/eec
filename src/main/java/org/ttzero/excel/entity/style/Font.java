@@ -347,7 +347,7 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font setStyle(int style) {
-        this.style = style & 15;
+        this.style = style & 31;
         return this;
     }
 
