@@ -343,6 +343,20 @@ public class Border implements Cloneable {
         return this;
     }
 
+    /**
+     * 检查边框是否有效（样式不为NONE)
+     *
+     * @return true有效
+     */
+    public boolean isEffectiveBorder() {
+        int i = 0;
+        for (; i < borders.length; i++) {
+            SubBorder sub = borders[i];
+            if (sub != null && sub.style != BorderStyle.NONE) break;
+        }
+        return i < borders.length;
+    }
+
     @Override
     public int hashCode() {
         int down = borders[4] != null ? 1 : 0

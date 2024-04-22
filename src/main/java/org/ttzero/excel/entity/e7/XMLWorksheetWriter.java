@@ -21,7 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
@@ -862,16 +865,23 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void writeNull(Cell cell, int row, int col) throws IOException {
-        bw.write("<c r=\"");
-        bw.write(int2Col(getColumn(col).getRealColIndex()));
-        bw.writeInt(row);
-        bw.write("\" s=\"");
-        bw.writeInt(cell.xf);
-        if (cell.f) {
-            bw.write("\"><f>");
-            bw.escapeWrite(cell.formula);
-            bw.write("</f></c>");
-        } else bw.write("\"/>");
+        // 有公式、边框或填充时写空单元格
+        if (cell.xf == 0 && !cell.f) return;
+        int style = styles.getStyleByIndex(cell.xf);
+        Fill fill = styles.getFill(style);
+        Border border = styles.getBorder(style);
+        if (fill != null && fill.getPatternType() != PatternType.none || border != null && border.isEffectiveBorder() || cell.f) {
+            bw.write("<c r=\"");
+            bw.write(int2Col(getColumn(col).getRealColIndex()));
+            bw.writeInt(row);
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+            if (cell.f) {
+                bw.write("\"><f>");
+                bw.escapeWrite(cell.formula);
+                bw.write("</f></c>");
+            } else bw.write("\"/>");
+        }
     }
 
     /**
