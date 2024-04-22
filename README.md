@@ -102,7 +102,7 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 3. 支持模板导出
 
-EEC支持xls和xlsx模板，模板工作表可以与其它工作表可以混用也可以包含多个模板工作表
+EEC支持xls和xlsx模板，模板工作表可以与其它工作表可以混用也可以包含多个模板工作表，关于模板导出请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
@@ -295,6 +295,16 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.14 (2024-04-22)
+-------------
+- 新增数据验证Validation
+- 新增超链接注解Hyperlink
+- 新增模板工作表TemplateSheet
+- 新增TypeCastException用于Row转对象时如果出现类型转换异常时携带行列等信息
+- ListSheet新增data-supplier减化分片开发难度
+- 新增zoomScale扩展属性支持设置工作表缩放比例
+- 修复读取双色填充样式时抛异常
+
 Version 0.5.13 (2024-02-20)
 -------------
 - logback安全更新
@@ -324,15 +334,10 @@ Version 0.5.11 (2023-10-08)
 - 无数据且能获取表头信息时正常写表头([#361](https://github.com/wangguanquan/eec/issues/361))
 - 屏蔽JDK17以上版本使用ExcelReader抛异常的问题
 
-Version 0.5.10 (2023-08-10)
--------------
-- 修复单元格长度过长导致内容错位的异常([#354](https://github.com/wangguanquan/eec/issues/354))
-- 支持导出图片
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.13-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.14-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

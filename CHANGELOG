@@ -8,6 +8,16 @@ Version 0.5.14
 - 新增zoomScale扩展属性支持设置工作表缩放比例
 - 修复读取双色填充样式时抛异常
 
+Version 0.5.14 (2024-04-22)
+-------------
+- 新增数据验证Validation
+- 新增超链接注解Hyperlink
+- 新增模板工作表TemplateSheet
+- 新增TypeCastException用于Row转对象时如果出现类型转换异常时携带行列等信息
+- ListSheet新增data-supplier减化分片开发难度
+- 新增zoomScale扩展属性支持设置工作表缩放比例
+- 修复读取双色填充样式时抛异常
+
 Version 0.5.13 (2024-02-20)
 -------------
 - logback安全更新
