@@ -25,7 +25,7 @@ package org.ttzero.excel.reader;
  */
 public class Col {
     /**
-     * 列索引范围
+     * 列索引范围(one base)
      */
     public int min, max;
     /**
