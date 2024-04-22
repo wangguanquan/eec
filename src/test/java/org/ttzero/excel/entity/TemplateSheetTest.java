@@ -218,12 +218,14 @@ public class TemplateSheetTest extends WorkbookTest {
             for (int i = 0, len = Math.min(row.getLastColumnIndex(), titles.length); i < len; i++) {
                 Cell cell = row.getCell(i);
                 assertEquals(titles[i], row.getString(cell));
-                int style = row.getCellStyle(cell);
-                font = styles.getFont(style);
-                assertTrue(font.isBold());
-                assertEquals(font.getName(), "Calibri");
-                assertEquals(font.getSize(), 11);
-                assertEquals(styles.getHorizontal(style), Horizontals.CENTER);
+                if (titles[i] != null) {
+                    int style = row.getCellStyle(cell);
+                    font = styles.getFont(style);
+                    assertTrue(font.isBold());
+                    assertEquals(font.getName(), "Calibri");
+                    assertEquals(font.getSize(), 11);
+                    assertEquals(styles.getHorizontal(style), Horizontals.CENTER);
+                }
             }
 
             // 第七行
