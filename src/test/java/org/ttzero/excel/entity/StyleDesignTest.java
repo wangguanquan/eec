@@ -344,7 +344,7 @@ public class StyleDesignTest extends WorkbookTest {
                 style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
             } else if (o.getScore() > 90) {
                 Font newFont = sst.getFont(style).clone();
-                style = sst.modifyFont(style, newFont.underLine().bold());
+                style = sst.modifyFont(style, newFont.underline().bold());
             }
             return style;
         }

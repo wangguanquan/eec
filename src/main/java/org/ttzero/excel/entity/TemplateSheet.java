@@ -1043,7 +1043,7 @@ public class TemplateSheet extends Sheet {
         }
         if ((fi = fontIndices[fontIndex]) == -1) {
             Font font = styles.getFont(style).clone();
-            font.setStyle(0).underLine();
+            font.setStyle(0).underline();
             font.setColor(ColorIndex.themeColors[10]);
             fontIndices[fontIndex] = fi = workbook.getStyles().addFont(font);
         }

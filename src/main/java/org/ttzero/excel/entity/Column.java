@@ -764,7 +764,7 @@ public class Column {
         // 超连接字体特殊处理
         if (getColumnType() == 2) {
             Font font = styles.getFont(style).clone();
-            font.setStyle(Font.Style.PLAIN).underLine();
+            font.setStyle(Font.Style.PLAIN).underline();
             font.setColor(ColorIndex.themeColors[10]);
             style = styles.modifyFont(style, font);
         }
