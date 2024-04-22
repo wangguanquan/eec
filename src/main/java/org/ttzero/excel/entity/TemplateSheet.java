@@ -411,7 +411,10 @@ public class TemplateSheet extends Sheet {
                 for (int i = 0; i < len; i++) {
                     Object oo = Array.get(o, i);
                     vw.list.add(oo);
-                    if (oo != null && vw.option == 0) vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
+                    if (oo != null && vw.option == 0) {
+                        vw.option = Map.class.isAssignableFrom(oo.getClass()) ? 3 : 4;
+                        if (vw.option == 4) vw.accessibleObjectMap = parseClass(oo.getClass());
+                    }
                 }
             }
             else {
