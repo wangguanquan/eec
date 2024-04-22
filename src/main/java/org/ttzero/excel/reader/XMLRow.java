@@ -709,7 +709,7 @@ class XMLFullRow extends XMLRow {
      * @return 游标
      */
     int searchSpan0() {
-        int idx = super.searchSpan(), i = from + 4, cht = 0;
+        int idx = super.searchSpan(), i = from + 4;
         Double ht = null;
         for (; cb[i] != '>'; i++) {
             // 查找ht属性
@@ -718,13 +718,14 @@ class XMLFullRow extends XMLRow {
                 int j = i;
                 for (; cb[i] != '"' && cb[i] != '>'; i++) ;
                 if (i > j && cb[i] == '"') ht = Double.valueOf(new String(cb, j, i - j).trim());
-            } else if (cb[i] <= ' ' && cb[i + 1] == 'c' && cb[i + 2] == 'u' && cb[i + 3] == 's'
-                && cb[i + 4] == 't' && cb[i + 5] == 'o' && cb[i + 6] == 'm' && cb[i + 7] == 'H'
-                && cb[i + 8] == 'e' && cb[i + 9] == 'i' && cb[i + 10] == 'g' && cb[i + 11] == 'h'
-                && cb[i + 12] == 't' && (cb[i + 13] == '=' || cb[i + 13] <= ' ')) {
-                i += 15;
-                if (cb[i] == '1') cht = 1;
             }
+//            else if (cb[i] <= ' ' && cb[i + 1] == 'c' && cb[i + 2] == 'u' && cb[i + 3] == 's'
+//                && cb[i + 4] == 't' && cb[i + 5] == 'o' && cb[i + 6] == 'm' && cb[i + 7] == 'H'
+//                && cb[i + 8] == 'e' && cb[i + 9] == 'i' && cb[i + 10] == 'g' && cb[i + 11] == 'h'
+//                && cb[i + 12] == 't' && (cb[i + 13] == '=' || cb[i + 13] <= ' ')) {
+//                i += 15;
+//                if (cb[i] == '1') cht = 1;
+//            }
             // 查找hidden属性
             else if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 'i' && cb[i + 3] == 'd'
                 && cb[i + 4] == 'd' && cb[i + 5] == 'e' && cb[i + 6] == 'n' && (cb[i + 7] == '=' || cb[i + 7] <= ' ')) {
@@ -732,7 +733,8 @@ class XMLFullRow extends XMLRow {
                 if (cb[i] == '1') hidden = true;
             }
         }
-        if (cht == 1 && ht != null) height = ht;
+//        if (cht == 1 && ht != null) height = ht;
+        if (ht != null) height = ht;
         return Math.max(i, idx);
     }
 
