@@ -851,7 +851,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             Font font = getFont(cell.xf);
-            double n = (c > 0x4E00 ? font.getSize() : font.getFontMetrics().charWidth(c)) / 6.0 * 1.02;
+            double n = (c > 0x4E00 ? font.getSize() : font.getFontMetrics().charWidth(c)) / 6.0D * 1.16D;
             if (columnWidths[col] < n) columnWidths[col] = n;
         }
     }
@@ -1524,7 +1524,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // 非“自动折行”将显示为一行，宽度直接相加
             else for (; i < len && w < 1500; w += (c = s.charAt(i++)) > 0x4E00 ? fs : fm.charWidth(c));
         }
-        return w / 6.0D * 1.02D;
+        return w / 6.0D * 1.16D;
     }
 
     /**
