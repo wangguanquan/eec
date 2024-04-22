@@ -420,6 +420,7 @@ public class Font implements Cloneable {
     }
 
     /**
+     * @return 当前字体
      * @deprecated 使用{{@link #underline}替换
      */
     @Deprecated
@@ -495,6 +496,7 @@ public class Font implements Cloneable {
     }
 
     /**
+     * @return 当前字体
      * @deprecated 使用 {@link #isUnderline()}替换
      */
     @Deprecated
@@ -565,6 +567,7 @@ public class Font implements Cloneable {
     }
 
     /**
+     * @return 当前字体
      * @deprecated 使用 {@link #delUnderline()}替换
      */
     @Deprecated
