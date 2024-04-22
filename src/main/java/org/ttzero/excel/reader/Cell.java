@@ -238,8 +238,10 @@ public class Cell {
     }
 
     public Cell setFormula(String formula) {
-        this.f = true;
-        this.formula = formula;
+        if (formula != null && !formula.isEmpty()) {
+            this.f = true;
+            this.formula = formula;
+        }
         return this;
     }
 
