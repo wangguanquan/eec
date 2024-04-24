@@ -528,83 +528,7 @@ public class TemplateSheet extends Sheet {
 
         // 加载模板工作表
         FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
-
-        // 获取列属性
-        int len = 0;
-        List<Col> cols = sheet.getCols();
-        if (cols != null && !cols.isEmpty()) {
-            cols.sort(Comparator.comparingInt(a -> a.max));
-            len = cols.get(cols.size() - 1).max;
-            int i = 0;
-            columns = new Column[len];
-            for (Col col : cols) {
-                if (i + 1 < col.min) {
-                    for (int a = i + 1; a < col.min; a++) {
-                        Column c = new Column();
-                        c.colIndex = a - 1;
-                        columns[i++] = c;
-                    }
-                }
-                for (int a = col.min; a <= col.max; a++) {
-                    Column c = new Column();
-                    c.width = col.width;
-                    c.colIndex = a - 1;
-                    if (col.hidden) c.hide();
-                    columns[i++] = c;
-                }
-            }
-        }
-
-        // xlsx格式输出才进行以下格式复制
-        if (writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass())) {
-            // 冻结,直接复制不需要计算移动
-            Panes panes = sheet.getFreezePanes();
-            if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
-
-            // 合并
-            List<Dimension> mergeCells0 = sheet.getMergeCells();
-            if (mergeCells0 != null) {
-                mergeCells = new ArrayList<>(mergeCells0.size());
-                this.mergeCells0 = new HashMap<>(mergeCells0.size());
-                // 这里将坐标切换到 base 0，方便后续取值
-                for (Dimension dim : mergeCells0) this.mergeCells0.put(dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
-            }
-
-            // 过滤
-            Dimension autoFilter = sheet.getFilter();
-            if (autoFilter != null) {
-                afr = autoFilter.getFirstRow();
-                putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
-            }
-
-            // 是否显示网格线
-            this.showGridLines = sheet.isShowGridLines();
-
-            // 预置列宽
-            double defaultColWidth = sheet.getDefaultColWidth(), defaultRowHeight = sheet.getDefaultRowHeight();
-            if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
-            if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
-
-            // 是否有缩放
-            Integer zoomScale = sheet.getZoomScale();
-            if (zoomScale != null) putExtProp(Const.ExtendPropertyKey.ZOOM_SCALE, zoomScale);
-
-            // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
-            try {
-                List<Drawings.Picture> pictures = sheet.listPictures();
-                if (pictures != null && !pictures.isEmpty()) {
-                    this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
-                    for (Drawings.Picture p : pictures) {
-                        if (FileUtil.exists(p.getLocalPath())) {
-                            if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
-                            else this.pictures.add(p);
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                // Ignore
-            }
-        }
+        writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass());
 
         // 预处理样式和占位符
         rowIterator = prepare(sheet);
@@ -613,7 +537,8 @@ public class TemplateSheet extends Sheet {
         // 忽略表头输出
         super.ignoreHeader();
 
-        return len;
+        // 解析公共信息
+        return prepareCommonData(sheet);
     }
 
     @Override
@@ -648,38 +573,7 @@ public class TemplateSheet extends Sheet {
                     case STRING:
                         if (rowIterator.hasFillCell && (pn = rowIterator.preNodes[i]) != null) {
                             fillCell = true;
-                            if (pn.nodes.length == 1) {
-                                e = getNodeValue(pn.nodes[0]);
-                                if (e != null) {
-                                    if (String.class == e.getClass()) {
-                                        switch (pn.nodes[0].getType()) {
-                                            // Hyperlink
-                                            case 1: cell.setHyperlink(e.toString()); break;
-                                            // Media
-                                            case 2: cellValueAndStyle.writeAsMedia(row, cell, e.toString(), emptyColumn, String.class); break;
-                                            default: cell.setString(e.toString());
-                                        }
-                                    } else {
-                                        emptyColumn.setClazz(e.getClass());
-                                        cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, e.getClass(), false);
-                                    }
-                                } else cell.emptyTag();
-                                // 序列的dimension纵向+1
-                                if (pn.nodes[0].getType() == 3) pn.v++;
-                            } else {
-                                int k = 0;
-                                for (Node node : pn.nodes) {
-                                    e = getNodeValue(node);
-                                    if (e != null) {
-                                        String s = e.toString();
-                                        int vn = s.length();
-                                        if (vn + k > pn.cb.length) pn.cb = Arrays.copyOf(pn.cb, vn + k + 128);
-                                        s.getChars(0, vn, pn.cb, k);
-                                        k += vn;
-                                    }
-                                }
-                                cell.setString(new String(pn.cb, 0, k));
-                            }
+                            fillValue(row, cell, pn, emptyColumn);
 
                             // 处理单行合并单元格
                             if (pn.m != null) {
@@ -804,6 +698,42 @@ public class TemplateSheet extends Sheet {
         return e;
     }
 
+    protected void fillValue(Row row, Cell cell, PreCell pn, Column emptyColumn) {
+        Object e;
+        if (pn.nodes.length == 1) {
+            e = getNodeValue(pn.nodes[0]);
+            if (e != null) {
+                if (String.class == e.getClass()) {
+                    switch (pn.nodes[0].getType()) {
+                        // Hyperlink
+                        case 1: cell.setHyperlink(e.toString()); break;
+                        // Media
+                        case 2: cellValueAndStyle.writeAsMedia(row, cell, e.toString(), emptyColumn, String.class); break;
+                        default: cell.setString(e.toString());
+                    }
+                } else {
+                    emptyColumn.setClazz(e.getClass());
+                    cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, e.getClass(), false);
+                }
+            } else cell.emptyTag();
+            // 序列的dimension纵向+1
+            if (pn.nodes[0].getType() == 3) pn.v++;
+        } else {
+            int k = 0;
+            for (Node node : pn.nodes) {
+                e = getNodeValue(node);
+                if (e != null) {
+                    String s = e.toString();
+                    int vn = s.length();
+                    if (vn + k > pn.cb.length) pn.cb = Arrays.copyOf(pn.cb, vn + k + 128);
+                    s.getChars(0, vn, pn.cb, k);
+                    k += vn;
+                }
+            }
+            cell.setString(new String(pn.cb, 0, k));
+        }
+    }
+
     @Override
     public void afterSheetDataWriter(int total) {
         super.afterSheetDataWriter(total);
@@ -921,6 +851,92 @@ public class TemplateSheet extends Sheet {
         }
 
         return new CommitRowSetIterator((RowSetIterator) originalSheet.reset().iterator());
+    }
+
+    /**
+     * 解析公共数据
+     *
+     * @param originalSheet 源模板工作表
+     */
+    protected int prepareCommonData(org.ttzero.excel.reader.FullSheet originalSheet) {
+        // 获取列属性
+        int len = 0;
+        List<Col> cols = originalSheet.getCols();
+        if (cols != null && !cols.isEmpty()) {
+            cols.sort(Comparator.comparingInt(a -> a.max));
+            len = cols.get(cols.size() - 1).max;
+            int i = 0;
+            columns = new Column[len];
+            for (Col col : cols) {
+                if (i + 1 < col.min) {
+                    for (int a = i + 1; a < col.min; a++) {
+                        Column c = new Column();
+                        c.colIndex = a - 1;
+                        columns[i++] = c;
+                    }
+                }
+                for (int a = col.min; a <= col.max; a++) {
+                    Column c = new Column();
+                    c.width = col.width;
+                    c.colIndex = a - 1;
+                    if (col.hidden) c.hide();
+                    columns[i++] = c;
+                }
+            }
+        }
+
+        // xlsx格式输出才进行以下格式复制
+        if (!writeAsExcel) return len;
+
+        // 冻结,直接复制不需要计算移动
+        Panes panes = originalSheet.getFreezePanes();
+        if (panes != null) putExtProp(Const.ExtendPropertyKey.FREEZE, panes);
+
+        // 合并
+        List<Dimension> mergeCells0 = originalSheet.getMergeCells();
+        if (mergeCells0 != null) {
+            mergeCells = new ArrayList<>(mergeCells0.size());
+            this.mergeCells0 = new HashMap<>(mergeCells0.size());
+            // 这里将坐标切换到 base 0，方便后续取值
+            for (Dimension dim : mergeCells0) this.mergeCells0.put(dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
+        }
+
+        // 过滤
+        Dimension autoFilter = originalSheet.getFilter();
+        if (autoFilter != null) {
+            afr = autoFilter.getFirstRow();
+            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+        }
+
+        // 是否显示网格线
+        this.showGridLines = originalSheet.isShowGridLines();
+
+        // 预置列宽
+        double defaultColWidth = originalSheet.getDefaultColWidth(), defaultRowHeight = originalSheet.getDefaultRowHeight();
+        if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
+        if (defaultRowHeight >= 0) putExtProp("defaultRowHeight", defaultRowHeight);
+
+        // 是否有缩放
+        Integer zoomScale = originalSheet.getZoomScale();
+        if (zoomScale != null) putExtProp(Const.ExtendPropertyKey.ZOOM_SCALE, zoomScale);
+
+        // FIXME 图片（较为复杂不能简单复制，需要计算中间插入或扣除的行）
+        try {
+            List<Drawings.Picture> pictures = originalSheet.listPictures();
+            if (pictures != null && !pictures.isEmpty()) {
+                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
+                for (Drawings.Picture p : pictures) {
+                    if (FileUtil.exists(p.getLocalPath())) {
+                        if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+                        else this.pictures.add(p);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            // Ignore
+        }
+
+        return len;
     }
 
     /**
