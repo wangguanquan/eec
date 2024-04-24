@@ -10,11 +10,11 @@ EEC在JVM参数`-Xmx10m -Xms10m`下读写100w行x29列内存使用截图，下�
 
 ![write_read 100w](./images/write_read_100w.jpg)
 
-## 现状
+## 使用场景
 
-EEC支持大多数日常应用场景，最擅长的是表格处理，比如转对象数组、转Map数组、内容检查等导入/导出常见功能。
+EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计且只能顺序向后，这意味着不能通过指定行列坐标来随机读写，通常可以使用EEC来做一些日常的导入／导出功能，推荐在*大数据量*或对*性能／内存要求*较高的场景或者没有随机读写的场景下使用。
 
-目前已实现worksheet类型有六种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
+目前已实现worksheet类型有七种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
 
 - [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
@@ -102,16 +102,16 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 3. 支持模板导出
 
-EEC支持xls和xlsx模板，模板工作表可以与其它工作表可以混用也可以包含多个模板工作表，关于模板导出请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
+EEC支持xls和xlsx模板格式，模板工作表TemplateSheet与其它工作表一样是一种数据源，只是样式由源工作表决定且不受ExcelColumn注解限制，导出的数据范围由模板中的占位符决定，关于模板导出请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
     // 复制[企业名片.xls]文件的[封面]工作表
     .addSheet(new TemplateSheet(Paths.get("./template/企业名片.xls", "封面"))
     .addSheet(new TemplateSheet(Paths.get("./template/商品导入模板.xlsx"))
-        .setData(YzEntity.mock()) // 设置对象 对应占位符${x}
-        // 分片拉取数据 对应占位符${yzEntity.x}
-        .setData("yzEntity", () -> page[0]++ <= 10 ? randomData() : null)
+        .setData(YzEntity.mock()) // 设置对象 对应占位符${*}
+        // 分片拉取数据 对应占位符${list.*}
+        .setData("list", (i,lastOne) -> scrollQuery(i > 0 ? ((User)lastOne).getId() : 0))
     ).writeTo(Paths.get("f:/excel"));
 ```
 
@@ -137,7 +137,7 @@ new Workbook("Auto Width Test")
 ```
 ![自动列宽](./images/auto_width.png)
 
-#### 5. 支持多行表头
+#### 5. 支持多级表头
 
 EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列将自动合并
 
@@ -185,18 +185,18 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 
 #### 7. 支持28种预设图片样式
 
-导出图片时可以设置图片样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
+导出图片时可以添加内置样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
 ![effect](./images/preset_effect.jpg)
 
 ### 读取示例
 
-EEC使用`ExcelReader#read`静态方法读文件，因其支持标准Stream所以可以直接使用`map`、`filter`和`collect`等JDK内置函数，读取Excel就像操作集合类一样简单，极大降低学习成本。
+EEC使用`ExcelReader#read`静态方法读文件，其支持标准Stream所以可以直接使用`map`、`filter`和`collect`等JDK内置函数，读取Excel就像操作集合类一样简单，极大降低学习成本。
 
 #### 1. 使用Stream
 
 ```java
-try (ExcelReader reader = ExcelReader.read(Paths.get("./用户注册.xlsx"))) {
+try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
     // 读取所有worksheet并输出
     reader.sheets().flatMap(Sheet::rows).forEach(System.out::println);
 } catch (IOException e) {
@@ -208,16 +208,11 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("./用户注册.xlsx"))) {
 
 ```java
 try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
-    // 读取第1个Sheet页
-    List<User> users = reader.sheet(0)
-        // 指定第6行为表头，前5行为概要信息
-        .header(6)
-        // 读取数据行
-        .rows()
-        // 将每行数据转换为User象
-        .map(row -> row.to(User.class))
-        // 收集为List或数组进行后续处理
-        .collect(Collectors.toList());
+    List<User> users = reader.sheet(0) // 读取第1个Sheet页
+        .header(6)                     // 指定第6行为表头
+        .rows()                        // 读取数据行
+        .map(row -> row.to(User.class))// 将每行数据转换为User对象
+        .collect(Collectors.toList()); // 收集数据进行后续处理
 } catch (IOException e) {
     e.printStackTrace();
 }
@@ -230,8 +225,9 @@ EEC支持Stream的大部分功能，以下代码展示过滤平台为"iOS"的注
 ```java
 reader.sheet(0).header(6)
     .rows()
-    .filter(row -> "iOS".equals(row.getString("platform"))) // 过滤平台为"iOS"的用户
-    .map(row -> row.to(Regist.class))
+    // 过滤平台为"iOS"的用户
+    .filter(row -> "iOS".equals(row.getString("platform")))
+    .map(row -> row.to(User.class))
     .collect(Collectors.toList());
 ```
 
@@ -241,7 +237,7 @@ reader.sheet(0).header(6)
 
 ```java
 reader.sheet(0)
-    .header(1, 2) // <- 指定第1、2行均为表头
+    .header(1, 2)    // <- 指定第1、2行均为表头
     .map(Row::toMap) // <- Row 转 Map
     .forEach(System.out::println)
 ```
