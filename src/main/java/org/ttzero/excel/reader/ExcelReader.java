@@ -69,10 +69,8 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static org.ttzero.excel.reader.SharedStrings.toInt;
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
-import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * Excel读取工具
@@ -107,25 +105,6 @@ public class ExcelReader implements Closeable {
      */
     protected static final Logger LOGGER = LoggerFactory.getLogger(ExcelReader.class);
 
-    /**
-     * 解析模式-只解析值（默认）
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static final int VALUE_ONLY = 0;
-    /**
-     * 解析模式-解析公式
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static final int VALUE_AND_CALC = 1 << 1;
-    /**
-     * 解析模式-复制合并单元格的值
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static final int COPY_ON_MERGED = 1 << 2;
-
     protected ExcelReader() { }
 
     /**
@@ -151,20 +130,7 @@ public class ExcelReader implements Closeable {
     /**
      * 共享字符区
      */
-    private SharedStrings sst;
-
-    /**
-     * 解析模式
-     *
-     * <ul>
-     * <li>0: {@code VALUE_ONLY}</li>
-     * <li>2: {@code VALUE_AND_CALC}</li>
-     * <li>4: {@code COPY_ON_MERGED}</li>
-     * </ul>
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    protected int option;
+    private SharedStrings sharedStringTable;
 
     /**
      * 是否包含公式标记，此标记不可信，因为它只检查是否包含{@code calcChain.xml}文件，
@@ -186,98 +152,59 @@ public class ExcelReader implements Closeable {
     protected ZipFile zipFile;
 
     /**
-     * 以只读"值"的方式读取指定路径的Excel文件
+     * 以只读"值"的方式读取Excel文件，如果文件为{@code xls}格式则需要将{@code eec-e3-support}添加进classpath，未识别到文件类型则抛{@link ExcelReadException}
      *
-     * @param path excel绝对路径
+     * @param path       excel文件路径
      * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
+     * @throws FileNotFoundException 文件不存在
+     * @throws IOException           读取异常
      */
     public static ExcelReader read(Path path) throws IOException {
-        return read(path, 0, 0, VALUE_ONLY);
+        if (!exists(path)) {
+            throw new FileNotFoundException(path.toString());
+        }
+        // Check document type
+        ExcelType type = getType(path);
+        LOGGER.debug("File type: {}", type);
+        ExcelReader reader;
+        switch (type) {
+            case XLSX:
+                reader = new ExcelReader(path);
+                break;
+            case XLS:
+                try {
+                    Class<?> clazz = Class.forName("org.ttzero.excel.reader.BIFF8Reader");
+                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class);
+                    reader = (ExcelReader) constructor.newInstance(path);
+                } catch (ClassNotFoundException e) {
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("Can not load 'org.ttzero.excel.reader.BIFF8Reader'."
+                        + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                        + ":" + pom.getProperty("version") + "] to parse excel 97~2003.", e);
+                } catch (NoSuchMethodException | InstantiationException e) {
+                    Properties pom = IWorkbookWriter.pom();
+                    throw new ExcelReadException("It may be an exception caused by eec-e3-support version error."
+                        + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
+                        + ":" + pom.getProperty("version") + "]", e);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new ExcelReadException("Read excel failed.", e);
+                }
+                break;
+            default:
+                throw new ExcelReadException("Unknown file type.");
+        }
+        reader.type = type;
+        return reader;
     }
 
     /**
      * 以只读"值"的方式读取Excel字节流
      *
-     * @param stream excel字节流
+     * @param stream     excel字节流
      * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException 读取异常
      */
     public static ExcelReader read(InputStream stream) throws IOException {
-        return read(stream, 0, 0, VALUE_ONLY);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param path   excel文件路径
-     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static ExcelReader read(Path path, int option) throws IOException {
-        return read(path, 0, 0, option);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param stream excel字节流
-     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static ExcelReader read(InputStream stream, int option) throws IOException {
-        return read(stream, 0, 0, option);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param path       excel文件路径
-     * @param bufferSize 共享字符区的大小，默认{@code 64}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static ExcelReader read(Path path, int bufferSize, int option) throws IOException {
-        return read(path, bufferSize, 0, option);
-    }
-
-    /**
-     * 指定解析模式读取Excel字节流
-     *
-     * @param stream     excel字节流
-     * @param bufferSize 共享字符区的大小，默认{@code 64}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static ExcelReader read(InputStream stream, int bufferSize, int option) throws IOException {
-        return read(stream, bufferSize, 0, option);
-    }
-
-    /**
-     * 指定解析模式读取Excel字节流
-     *
-     * @param stream     excel字节流
-     * @param bufferSize 共享字符区的大小，默认{@code 16}
-     * @param cacheSize  共享字符区的缓存大小，默认{@code 512}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public static ExcelReader read(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
         // 提前检查格式是否支持
         byte[] bytes = new byte[8];
         int n = stream.read(bytes);
@@ -294,7 +221,7 @@ public class ExcelReader implements Closeable {
 
         ExcelReader reader;
         try {
-            reader = read(temp, bufferSize, cacheSize, option);
+            reader = read(temp);
         } catch (IOException ex) {
             FileUtil.rm(temp);
             throw ex;
@@ -408,7 +335,7 @@ public class ExcelReader implements Closeable {
         }
 
         // Close Shared String Table
-        if (sst != null) sst.close();
+        if (sharedStringTable != null) sharedStringTable.close();
 
         // Close source file
         if (zipFile != null) zipFile.close();
@@ -440,76 +367,6 @@ public class ExcelReader implements Closeable {
     @Deprecated
     public boolean hasFormula() {
         return this.hasFormula;
-    }
-
-    /**
-     * 强制解析公式，将所有工作表转换为{@link CalcSheet}，也可以在单个工作表中使用{@link Sheet#asCalcSheet()}转换单个工作表
-     *
-     * @return 当前 {@code ExcelReader}
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public ExcelReader parseFormula() {
-        if (hasFormula) {
-            ZipEntry entry = getEntry("xl/calcChain.xml");
-            if (entry == null) return this;
-            long[][] calcArray = null;
-            try (InputStream is = zipFile.getInputStream(entry)) {
-                // Formula string if exists
-                calcArray = parseCalcChain(is);
-            } catch (IOException ex) {
-                LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.", ex);
-            }
-
-            if (calcArray == null) return this;
-            int i = 0;
-            for (int n; i < sheets.length; i++) {
-                n = sheets[i].getId();
-                if (calcArray[n - 1] == null) continue;
-                if (!(sheets[i] instanceof CalcSheet)) {
-                    sheets[i] = sheets[i].asCalcSheet();
-                }
-                if (sheets[i] instanceof XMLCalcSheet) {
-                    ((XMLCalcSheet) sheets[i]).setCalc(calcArray[n - 1]);
-                }
-            }
-        } else {
-            for (Sheet sheet : sheets) {
-                sheet.asCalcSheet();
-            }
-        }
-        return this;
-    }
-
-    /**
-     * 复制合并单元格，默认情况下合并单元格的值仅存储在第一个单元格中其他单元格没有值。读取到这部分单元格时将直接返回{@code null}值，
-     * 需要在业务代码里特殊处理合并单元格，本工具内置处理合并单格，调用此方法可将值复制到合并中的其他单元格中。
-     *
-     * <p>本方法将当前所有工作表都转换为{@link MergeSheet}，也可以在单个工作表中使用{@link Sheet#asMergeSheet()} ()}转换单个工作表，
-     * <b>注意：</b>{@code MergeSheet}性能不佳，建议读完合并单元格后使用{@link Sheet#asSheet()}将其转换为普通工作表，
-     * 它们之间可以无缝切换无需担心漏读或重复读的问题</p>
-     * <blockquote><pre>
-     * |---------|     |---------|     |---------|
-     * |         |     |  1 |    |     |  1 |  1 |
-     * |    1    |  =&gt; |----|----|  =&gt; |----|----|
-     * |         |     |    |    |     |  1 |  1 |
-     * |---------|     |---------|     |---------|
-     * Merged(A1:B2)     Default           Copy
-     *                  Value in A1
-     *                  others are
-     *                  `null`
-     * </pre></blockquote>
-     *
-     * @return 当前 {@code ExcelReader}
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public ExcelReader copyOnMergeCells() {
-        for (int i = 0; i < sheets.length; i++) {
-            if (sheets[i] instanceof MergeSheet) continue;
-            sheets[i] = sheets[i].asMergeSheet();
-        }
-        return this;
     }
 
     // --- PROTECTED FUNCTIONS
@@ -565,40 +422,12 @@ public class ExcelReader implements Closeable {
     }
 
     /**
-     * 以只读"值"的方式读取Excel字节流
-     *
-     * @param stream excel字节流
-     * @throws IOException 读取异常
-     */
-    public ExcelReader(InputStream stream) throws IOException {
-        this(stream, 0, 0, VALUE_ONLY);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param stream excel字节流
-     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public ExcelReader(InputStream stream, int option) throws IOException {
-        this(stream, 0, 0, option);
-    }
-
-    /**
      * 指定解析模式读取Excel文件
      *
      * @param stream     excel字节流
-     * @param bufferSize 共享字符区的大小，默认{@code 64}
-     * @param cacheSize  共享字符区缓存大小，默认{@code 512}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
      */
-    @Deprecated
-    public ExcelReader(InputStream stream, int bufferSize, int cacheSize, int option) throws IOException {
+    public ExcelReader(InputStream stream) throws IOException {
         // 提前检查格式是否支持
         byte[] bytes = new byte[8];
         int n = stream.read(bytes);
@@ -614,7 +443,7 @@ public class ExcelReader implements Closeable {
         this.temp = temp;
         os.close();
 
-        init(temp, bufferSize, cacheSize, option);
+        init(temp);
     }
 
     /**
@@ -624,48 +453,17 @@ public class ExcelReader implements Closeable {
      * @throws IOException 读取异常
      */
     public ExcelReader(Path path) throws IOException {
-        init(path, 0, 0, VALUE_ONLY);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param path   excel文件路径
-     * @param option 解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException 读取异常
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public ExcelReader(Path path, int option) throws IOException {
-        init(path, 0, 0, option);
-    }
-
-    /**
-     * 指定解析模式读取Excel文件
-     *
-     * @param path       excel文件路径
-     * @param bufferSize 共享字符区的大小，默认{@code 64}
-     * @param cacheSize  共享字符区缓存大小，默认{@code 512}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @throws IOException if path not exists or I/O error occur
-     * @deprecated 建议直接使用as方法转换为对应类型的工作表
-     */
-    @Deprecated
-    public ExcelReader(Path path, int bufferSize, int cacheSize, int option) throws IOException {
-        init(path, bufferSize, cacheSize, option);
+        init(path);
     }
 
     /**
      * 初始化，初始化过程将进行内容检查，和创建全局属性（样式，字符共享区）以及工作表但不会实际读取工作表
      *
      * @param path       excel文件路径
-     * @param bufferSize 共享字符区的大小，默认{@code 64}
-     * @param cacheSize  共享字符区缓存大小，默认{@code 512}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
      * @return 一个Excel解析器 {@link ExcelReader}
      * @throws IOException 读取异常
      */
-    protected ExcelReader init(Path path, int bufferSize, int cacheSize, int option) throws IOException {
+    protected ExcelReader init(Path path) throws IOException {
         this.zipFile = new ZipFile(path.toFile());
         LOGGER.debug("Check file integrity.");
 
@@ -685,7 +483,7 @@ public class ExcelReader implements Closeable {
         // Load SharedString
         ZipEntry entry = getEntry("xl/sharedStrings.xml");
         if (entry != null) {
-            sst = new SharedStrings(zipFile.getInputStream(entry), bufferSize, cacheSize).load();
+            sharedStringTable = new SharedStrings(zipFile.getInputStream(entry), 0, 0).load();
         }
 
         // Load Styles
@@ -705,7 +503,6 @@ public class ExcelReader implements Closeable {
             styles = Styles.forReader();
         }
 
-        this.option = option;
         hasFormula = getEntry("xl/calcChain.xml") != null;
 
         entry = getEntry("xl/_rels/workbook.xml.rels");
@@ -739,9 +536,9 @@ public class ExcelReader implements Closeable {
         List<Sheet> sheets = new ArrayList<>();
         Iterator<Element> sheetIter = root.element("sheets").elementIterator();
         int index = 0;
-        for (; sheetIter.hasNext(); ) {
+        while (sheetIter.hasNext()) {
             Element e = sheetIter.next();
-            XMLSheet sheet = (XMLSheet) sheetFactory(option);
+            XMLSheet sheet = (XMLSheet) sheetFactory();
             sheet.setName(e.attributeValue("name"));
             sheet.setId(Integer.parseInt(e.attributeValue("sheetId")));
             String state = e.attributeValue("state");
@@ -760,7 +557,7 @@ public class ExcelReader implements Closeable {
             sheet.setZipFile(zipFile);
             sheet.setZipEntry(entry);
             // put shared string
-            sheet.setSharedStrings(sst);
+            sheet.setSharedStrings(sharedStringTable);
             // Setting styles
             sheet.setStyles(styles);
             // Drawings
@@ -777,78 +574,24 @@ public class ExcelReader implements Closeable {
 
         this.sheets = sheets1;
 
-        if ((option >> 1 & 1) == 1) {
-            parseFormula();
-        }
         return this;
-    }
-
-    /**
-     * 指定解析模式读取Excel文件，如果文件为{@code xls}格式将加载{@code org.ttzero.excel.reader.BIFF8Reader}
-     * 如果要支持{@code xls}格式需要将{@code eec-e3-support}添加进classpath，如果未识别到文件类型则抛{@link ExcelReadException}
-     *
-     * @param path       excel文件路径
-     * @param bufferSize 共享字符区的大小，默认{@code 16}
-     * @param cacheSize  共享字符区的缓存大小，默认{@code 512}
-     * @param option     解析模式，有{@code VALUE_ONLY}, {@code VALUE_AND_CALC}, {@code COPY_ON_MERGED}三种属性可选
-     * @return 一个Excel解析器 {@link ExcelReader}
-     * @throws FileNotFoundException 文件不存在
-     * @throws IOException           读取异常
-     */
-    public static ExcelReader read(Path path, int bufferSize, int cacheSize, int option) throws IOException {
-        if (!exists(path)) {
-            throw new FileNotFoundException(path.toString());
-        }
-        // Check document type
-        ExcelType type = getType(path);
-        LOGGER.debug("File type: {}", type);
-        ExcelReader er;
-        switch (type) {
-            case XLSX:
-                er = new ExcelReader(path, bufferSize, cacheSize, option);
-                break;
-            case XLS:
-                try {
-                    Class<?> clazz = Class.forName("org.ttzero.excel.reader.BIFF8Reader");
-                    Constructor<?> constructor = clazz.getDeclaredConstructor(Path.class, int.class, int.class, int.class);
-                    er = (ExcelReader) constructor.newInstance(path, bufferSize, cacheSize, option);
-                } catch (ClassNotFoundException e) {
-                    Properties pom = IWorkbookWriter.pom();
-                    throw new ExcelReadException("Can not load 'org.ttzero.excel.reader.BIFF8Reader'."
-                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
-                            + ":" + pom.getProperty("version") + "] to parse excel 97~2003.", e);
-                } catch (NoSuchMethodException | InstantiationException e) {
-                    Properties pom = IWorkbookWriter.pom();
-                    throw new ExcelReadException("It may be an exception caused by eec-e3-support version error."
-                            + " Please add dependency [" + pom.getProperty("groupId") + ":eec-e3-support"
-                            + ":" + pom.getProperty("version") + "]", e);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new ExcelReadException("Read excel failed.", e);
-                }
-                break;
-            default:
-                throw new ExcelReadException("Unknown file type.");
-        }
-        er.type = type;
-
-        return er;
     }
 
     /**
      * 通过OPTION创建相应工作表
      *
-     * @param option the reader option.
      * @return Sheet extends XMLSheet
      */
-    protected Sheet sheetFactory(int option) {
-        XMLSheet sheet;
-        switch (option) {
-            case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
-            case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
-            case VALUE_AND_CALC|COPY_ON_MERGED: sheet = new XMLSheet().asFullSheet(); break;
-            default            : sheet = new XMLSheet();
-        }
-        return sheet;
+    protected Sheet sheetFactory() {
+//        XMLSheet sheet;
+//        switch (option) {
+//            case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
+//            case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
+//            case VALUE_AND_CALC|COPY_ON_MERGED: sheet = new XMLSheet().asFullSheet(); break;
+//            default            : sheet = new XMLSheet();
+//        }
+//        return sheet;
+        return new XMLSheet();
     }
 
     /**
@@ -857,7 +600,7 @@ public class ExcelReader implements Closeable {
      * @return Shared String Table
      */
     public SharedStrings getSharedStrings() {
-        return sst;
+        return sharedStringTable;
     }
 
     /**
@@ -981,63 +724,6 @@ public class ExcelReader implements Closeable {
         } else LOGGER.warn("The file format is incorrect or corrupted. [docProps/core.xml]");
 
         return new AppInfo(app, core);
-    }
-
-    /* Parse `calcChain` */
-    static long[][] parseCalcChain(InputStream is) {
-        SAXReader reader = SAXReader.createDefault();
-        Element calcChain;
-        try {
-            calcChain = reader.read(is).getRootElement();
-        } catch (DocumentException e) {
-            LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
-            return null;
-        }
-
-        Iterator<Element> ite = calcChain.elementIterator();
-        int i = 1, n = 10;
-        long[][] array = new long[n][];
-        int[] indices = new int[n];
-        for (; ite.hasNext(); ) {
-            Element e = ite.next();
-            // i: index of sheets
-            // r: range
-            String si = e.attributeValue("i"), r = e.attributeValue("r");
-            if (isNotEmpty(si)) {
-                i = toInt(si.toCharArray(), 0, si.length());
-            }
-            if (isNotEmpty(r)) {
-                if (n < i) {
-                    n <<= 1;
-                    indices = Arrays.copyOf(indices, n);
-                    long[][] _array = new long[n][];
-                    for (int j = 0; j < n; j++) _array[j] = array[j]; // Do not copy hear.
-                    array = _array;
-                }
-                long[] sub = array[i - 1];
-                if (sub == null) {
-                    sub = new long[10];
-                    array[i - 1] = sub;
-                }
-
-                if (++indices[i - 1] > sub.length) {
-                    long[] _sub = new long[sub.length << 1];
-                    System.arraycopy(sub, 0, _sub, 0, sub.length);
-                    array[i - 1] = sub = _sub;
-                }
-                sub[indices[i - 1] - 1] = coordinateToLong(r);
-            }
-        }
-
-        i = 0;
-        for (; i < n; i++) {
-            if (indices[i] > 0) {
-                long[] a = Arrays.copyOf(array[i], indices[i]);
-                Arrays.sort(a);
-                array[i] = a;
-            } else array[i] = null;
-        }
-        return array;
     }
 
     /**

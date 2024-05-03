@@ -60,7 +60,7 @@ public class CustomAnnoReaderTest {
         }
 
         @Override
-        protected XMLSheet sheetFactory(int option) {
+        protected XMLSheet sheetFactory() {
             return new XMLSheet() {
                 @Override
                 public XMLRow createRow() {

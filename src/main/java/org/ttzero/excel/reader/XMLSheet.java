@@ -43,6 +43,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.ExcelReader.getEntry;
+import static org.ttzero.excel.reader.CalcSheet.parseCalcChain;
 
 /**
  * The open-xml format Worksheet
@@ -922,7 +923,7 @@ class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
         ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
         long[][] calcArray = null;
         try {
-            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+            calcArray = entry != null ? parseCalcChain(zipFile.getInputStream(entry)) : null;
         } catch (IOException e) {
             LOGGER.warn("Parse calcChain failed, formula will be ignored");
         }
@@ -1024,7 +1025,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
         ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
         long[][] calcArray = null;
         try {
-            calcArray = entry != null ? ExcelReader.parseCalcChain(zipFile.getInputStream(entry)) : null;
+            calcArray = entry != null ? parseCalcChain(zipFile.getInputStream(entry)) : null;
         } catch (IOException e) {
             LOGGER.warn("Parse calcChain failed, formula will be ignored");
         }
