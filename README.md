@@ -12,7 +12,7 @@ EEC在JVM参数`-Xmx10m -Xms10m`下读写100w行x29列内存使用截图，下�
 
 ## 使用场景
 
-EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计且只能顺序向后，这意味着不能通过指定行列坐标来随机读写，通常可以使用EEC来做一些日常的导入／导出功能，推荐在*大数据量*或对*性能／内存要求*较高的场景或者没有随机读写的场景下使用。
+EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计且只能顺序向后，这意味着不能通过指定行列坐标来随机读写，通常可以使用EEC来做一些日常的导入/导出功能，推荐在**大数据量**或**性能/内存要求**较高的场景或者没有随机读写的场景下使用。
 
 目前已实现worksheet类型有七种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
 
@@ -26,7 +26,7 @@ EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计
 
 ## 主要功能
 
-1. 支持**大数据量导出**，行数无上限，超过单个Sheet上限会自动分页
+1. 支持**大数据量导出**行数无上限，超过单个Sheet上限会自动分页
 2. **超低内存**，无论是xlsx还是xls格式，大部分情况下可以在10MB以内完成十万级甚至百万级行数据读写
 3. 支持动态样式，如导出库存时将低于预警阈值的行背景标黄显示
 4. 支持一键设置斑马线，利于阅读
@@ -109,9 +109,9 @@ new Workbook()
     // 复制[企业名片.xls]文件的[封面]工作表
     .addSheet(new TemplateSheet(Paths.get("./template/企业名片.xls", "封面"))
     .addSheet(new TemplateSheet(Paths.get("./template/商品导入模板.xlsx"))
-        .setData(YzEntity.mock()) // 设置对象 对应占位符${*}
+        .setData(Entity.mock()) // 设置对象 对应占位符${*}
         // 分片拉取数据 对应占位符${list.*}
-        .setData("list", (i,lastOne) -> scrollQuery(i > 0 ? ((User)lastOne).getId() : 0))
+        .setData("list", (i,lastOne) -> scrollQuery(i > 0 ? ((Product)lastOne).getId() : 0))
     ).writeTo(Paths.get("f:/excel"));
 ```
 
@@ -185,7 +185,7 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 
 #### 7. 支持28种预设图片样式
 
-导出图片时可以添加内置样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
+导出图片时添加内置样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
 ![effect](./images/preset_effect.jpg)
 
