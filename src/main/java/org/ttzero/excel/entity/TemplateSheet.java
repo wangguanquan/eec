@@ -530,6 +530,8 @@ public class TemplateSheet extends Sheet {
         FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
         writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass());
 
+        // 解析公共信息
+        int n = prepareCommonData(sheet);
         // 预处理样式和占位符
         rowIterator = prepare(sheet);
         pf = preCells == null ? -1 : preCells[0][0].row;
@@ -538,7 +540,7 @@ public class TemplateSheet extends Sheet {
         super.ignoreHeader();
 
         // 解析公共信息
-        return prepareCommonData(sheet);
+        return n;
     }
 
     @Override
