@@ -859,6 +859,7 @@ public class TemplateSheet extends Sheet {
      * 解析公共数据
      *
      * @param originalSheet 源模板工作表
+     * @return 列数
      */
     protected int prepareCommonData(org.ttzero.excel.reader.FullSheet originalSheet) {
         // 获取列属性
