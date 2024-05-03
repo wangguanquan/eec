@@ -390,17 +390,6 @@ public class ExcelReader implements Closeable {
      * 获取当前excel包含的工作表数量
      *
      * @return 当前excel包含的工作表数量
-     * @deprecated 使用 {@link #getSheetCount()} 代替
-     */
-    @Deprecated
-    public int getSize() {
-        return getSheetCount();
-    }
-
-    /**
-     * 获取当前excel包含的工作表数量
-     *
-     * @return 当前excel包含的工作表数量
      */
     public int getSheetCount() {
         return sheets != null ? sheets.length : 0;
@@ -1049,16 +1038,6 @@ public class ExcelReader implements Closeable {
             } else array[i] = null;
         }
         return array;
-    }
-
-    /**
-     * @param r 单元格坐标
-     * @return 转换后的值 高48位保存Row，低16位保存Col
-     * @deprecated 使用 {@link #coordinateToLong(String)}代替
-     */
-    @Deprecated
-    public static long cellRangeToLong(String r) {
-        return coordinateToLong(r);
     }
 
     /**

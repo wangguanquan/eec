@@ -269,15 +269,6 @@ public class Workbook implements Storable {
     }
 
     /**
-     * @return 全局字符串共享区{@link SharedStrings}
-     * @deprecated 使用 {@link #getSharedStrings}代替
-     */
-    @Deprecated
-    public SharedStrings getSst() {
-        return getSharedStrings();
-    }
-
-    /**
      * 获取全局字符串共享区，此共享区独立于Worksheet，所有worksheet共享
      *
      * @return 全局字符串共享区{@link SharedStrings}

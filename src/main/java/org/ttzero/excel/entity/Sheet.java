@@ -374,17 +374,6 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 获取字符串共享区{@link SharedStrings}
-     *
-     * @return 字符串共享区
-     * @deprecated 直接从workbook获取
-     */
-    @Deprecated
-    public SharedStrings getSst() {
-        return workbook.getSharedStrings();
-    }
-
-    /**
      * 获取默认列宽，如果未在Column上特殊指定宽度时该宽度将应用于每一列
      *
      * @return 默认列宽20

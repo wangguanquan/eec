@@ -86,18 +86,6 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     }
 
     /**
-     * 检查数据行是否超出限制
-     *
-     * @param row row number
-     * @return true if rows large than limit
-     * @deprecated 即将删除
-     */
-    @Deprecated
-    default boolean isOutOfSheet(int row) {
-        return row >= getRowLimit();
-    }
-
-    /**
      * 复制工作表输出协议
      *
      * @return IWorksheetWriter
