@@ -420,15 +420,6 @@ public class Font implements Cloneable {
     }
 
     /**
-     * @return 当前字体
-     * @deprecated 使用{{@link #underline}替换
-     */
-    @Deprecated
-    public Font underLine() {
-        return underline();
-    }
-
-    /**
      * 添加“下划线”样式
      *
      * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
@@ -450,19 +441,6 @@ public class Font implements Cloneable {
     public Font doubleUnderline() {
         style |= Style.DOUBLE_UNDERLINE;
         return this;
-    }
-
-    /**
-     * 添加“删除线”样式
-     *
-     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
-     *
-     * @return 当前字体
-     * @deprecated 使用 {@link #strikeThru()}替换
-     */
-    @Deprecated
-    public Font deleteLine() {
-        return strikeThru();
     }
 
     /**
@@ -496,32 +474,12 @@ public class Font implements Cloneable {
     }
 
     /**
-     * @return 当前字体
-     * @deprecated 使用 {@link #isUnderline()}替换
-     */
-    @Deprecated
-    public boolean isUnderLine() {
-        return isUnderline();
-    }
-
-    /**
      * 检查是否有“下划线”样式
      *
      * @return true: 是
      */
     public boolean isUnderline() {
         return (style & Style.UNDERLINE) == Style.UNDERLINE;
-    }
-
-    /**
-     * 检查是否有“删除线”样式
-     *
-     * @return true: 是
-     * @deprecated 使用 {@link #isStrikeThru()}替换
-     */
-    @Deprecated
-    public boolean isDeleteLine() {
-        return isStrikeThru();
     }
 
     /**
@@ -567,15 +525,6 @@ public class Font implements Cloneable {
     }
 
     /**
-     * @return 当前字体
-     * @deprecated 使用 {@link #delUnderline()}替换
-     */
-    @Deprecated
-    public Font delUnderLine() {
-        return deleteLine();
-    }
-
-    /**
      * 删除"下划线"样式
      *
      * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
@@ -597,19 +546,6 @@ public class Font implements Cloneable {
     public Font delDoubleUnderline() {
         style &= (Style.BOLD | Style.ITALIC | Style.STRIKE | Style.UNDERLINE);
         return this;
-    }
-
-    /**
-     * 删除“删除线”样式
-     *
-     * <p>注意：字体是全局共享的所以修改属性前需要先复制字体</p>
-     *
-     * @return 当前字体
-     * @deprecated 使用 {@link #delStrikeThru()}替换
-     */
-    @Deprecated
-    public Font delDeleteLine() {
-        return delStrikeThru();
     }
 
     /**
@@ -910,13 +846,6 @@ public class Font implements Cloneable {
          * 斜体
          */
         public static final int ITALIC = 1 << 2;
-        /**
-         * 删除线
-         *
-         * @deprecated 使用 {@code STRIKE}替换
-         */
-        @Deprecated
-        public static final int DELETE = 1 << 3;
         /**
          * 删除线
          */
