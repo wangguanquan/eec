@@ -825,13 +825,6 @@ public class Font implements Cloneable {
     public static class Style {
         /**
          * 默认文本
-         *
-         * @deprecated 使用 {@code PLAIN}替换
-         */
-        @Deprecated
-        public static final int NORMAL = 0;
-        /**
-         * 默认文本
          */
         public static final int PLAIN = 0;
         /**
