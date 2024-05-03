@@ -156,22 +156,6 @@ public class NumFmt implements Cloneable, Comparable<NumFmt> {
     }
 
     /**
-     * 兼容之前版本，这里固定按默认字体 “宋体” 11字号处理，后续将删除
-     */
-    static final Font SONG = new Font("宋体", 11);
-    /**
-     * 粗略计算单元格长度
-     *
-     * @param base the cell value length
-     * @return cell length
-     * @deprecated 使用 {@link #calcNumWidth(double, Font)}替代，新方法会根据字体/字号进行计算
-     */
-    @Deprecated
-    public double calcNumWidth(double base) {
-        return calcNumWidth(base, SONG);
-    }
-
-    /**
      * 缓存code的宽度
      *
      * key: 字号+字体
