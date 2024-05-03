@@ -72,9 +72,9 @@ public class StyleDesignTest extends WorkbookTest {
                     assertTrue(f2 != null && f2.getPatternType() == PatternType.solid && f2.getFgColor().equals(Color.green));
                 } else if (o.getScore() > 90) {
                     Font ft0 = styles.getFont(c0), ft1 = styles.getFont(c1), ft2 = styles.getFont(c2);
-                    assertTrue(ft0.isUnderLine() && ft0.isBold());
-                    assertTrue(ft1.isUnderLine() && ft0.isBold());
-                    assertTrue(ft2.isUnderLine() && ft0.isBold());
+                    assertTrue(ft0.isUnderline() && ft0.isBold());
+                    assertTrue(ft1.isUnderline() && ft0.isBold());
+                    assertTrue(ft2.isUnderline() && ft0.isBold());
                 } else {
                     assertTrue(f0 == null || f0.getPatternType() == PatternType.none);
                     assertTrue(f1 == null || f1.getPatternType() == PatternType.none);
