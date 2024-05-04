@@ -596,29 +596,6 @@ public class Column {
     }
 
     /**
-     * 获取默认水平对齐，水平对齐可用值包含在{@link Horizontals}定义中，
-     * 默认的时间居中，数字居右其余居左
-     *
-     * @return 水平对齐
-     */
-    protected int defaultHorizontal() {
-        int horizontal;
-        if (isDate(clazz) || isDateTime(clazz)
-                || isLocalDate(clazz) || isLocalDateTime(clazz)
-                || isTime(clazz) || isLocalTime(clazz)
-                || isChar(clazz) || isBool(clazz)) {
-            horizontal = Horizontals.CENTER;
-        } else if (isInt(clazz) || isLong(clazz)
-                || isFloat(clazz) || isDouble(clazz)
-                || isBigDecimal(clazz)) {
-            horizontal = Horizontals.RIGHT;
-        } else {
-            horizontal = Horizontals.LEFT;
-        }
-        return horizontal;
-    }
-
-    /**
      * 设置当前列统一“字体”样式
      *
      * @param font 字体
