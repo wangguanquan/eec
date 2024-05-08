@@ -722,7 +722,9 @@ public class Workbook implements Storable {
      * 获取模板输入流
      *
      * @return 模板的输入流
+     * @deprecated 使用 {@link TemplateSheet}代替
      */
+    @Deprecated
     public InputStream getTemplate() {
         return is;
     }
@@ -731,7 +733,9 @@ public class Workbook implements Storable {
      * 获取绑定对象
      *
      * @return 绑定对象
+     * @deprecated 使用 {@link TemplateSheet}代替
      */
+    @Deprecated
     public Object getBind() {
         return o;
     }
@@ -742,15 +746,13 @@ public class Workbook implements Storable {
      * @param is 模板输入流
      * @param o  绑定替换对象
      * @return 当前工作薄
+     * @deprecated 使用 {@link TemplateSheet}代替
      */
+    @Deprecated
     public Workbook withTemplate(InputStream is, Object o) {
         this.is = is;
         this.o = o;
         return this;
-    }
-
-    protected Path template() throws IOException {
-        return workbookWriter.template();
     }
 
     /**

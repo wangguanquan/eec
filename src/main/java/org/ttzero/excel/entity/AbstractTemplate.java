@@ -42,7 +42,9 @@ import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * @author guanquan.wang at 2018-02-26 13:45
+ * @deprecated 使用 {@link TemplateSheet}代替
  */
+@Deprecated
 public abstract class AbstractTemplate {
     /**
      * LOGGER

@@ -82,7 +82,9 @@ public interface IWorkbookWriter extends Storable, Closeable {
      *
      * @return 文件临时路径
      * @throws IOException if I/O error occur
+     * @deprecated 使用 {@link TemplateSheet}代替
      */
+    @Deprecated
     Path template() throws IOException;
 
     /**
