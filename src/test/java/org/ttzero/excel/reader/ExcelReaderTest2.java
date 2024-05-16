@@ -252,18 +252,16 @@ public class ExcelReaderTest2 {
 
     @Ignore
     @Test public void test200w() throws IOException {
-        final int loop = 2000;
-        new Workbook("200w").addSheet(new ListSheet<E>() {
-            int n = 0; // 页码
-            @Override
-            public List<E> more() {
-                return n++ < loop ? E.data() : null;
-            }
-        }).writeTo(defaultTestPath);
+        final int row_len = 2_000_000;
+        new Workbook()
+            .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
+            .addSheet(new ListSheet<E>().setData((i, lastOne) -> i < row_len ? E.data() : null))
+            .writeTo(defaultTestPath.resolve("200w.xlsx"));
 
-//        new Workbook()
-//            .addSheet(new ListSheet<E>().setData((i, lastOne) -> i < 2_000_000 ? E.data() : null))
-//            .writeTo(defaultTestPath.resolve("200w.xlsx"));
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("200w.xlsx"))) {
+            long count = reader.sheets().flatMap(Sheet::dataRows).count();
+            assertEquals(count, row_len);
+        }
     }
 
     @Test public void testEntryMissKey() throws IOException {
