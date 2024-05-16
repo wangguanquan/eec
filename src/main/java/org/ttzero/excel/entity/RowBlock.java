@@ -189,7 +189,18 @@ public class RowBlock implements Iterator<Row> {
      * @return Row
      */
     public Row lastRow() {
-        return rows[n - 1];
+        Row row;
+        if (n >= 1) row = rows[n - 1];
+        else {
+            int i = 0;
+            for (int len = rows.length - 1; i < len; i++) {
+                if (rows[i] == null || rows[i].index >= rows[i + 1].index) {
+                    break;
+                }
+            }
+            row = rows[i];
+        }
+        return row;
     }
 
     /**
