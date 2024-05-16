@@ -76,7 +76,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      *
      * @param path 保存路径
      * @throws IOException if I/O error occur
+     * @deprecated 无用方法后续将删除
      */
+    @Deprecated
     default void writeEmptySheet(Path path) throws IOException {
         try {
             writeTo(path, () -> null);
