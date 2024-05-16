@@ -1035,7 +1035,7 @@ public class ListSheet<T> extends Sheet {
      */
     protected List<T> more() {
         if (dataSupplier != null) {
-            int offset = size;
+            int offset = left() + (rowBlock != null ? rowBlock.getTotal() : 0);
             if (copySheet) offset += copyCount * workbook.getSheetAt(id - 2).size();
             return dataSupplier.apply(offset, data != null && !data.isEmpty() ? data.get(data.size() - 1) : null);
         }
