@@ -127,10 +127,6 @@ public class ListSheet<T> extends Sheet {
      */
     protected boolean eof;
     /**
-     * 已写入数据大小
-     */
-    private int size;
-    /**
      * 泛型&lt;T&gt;的实际类型
      */
     protected Class<?> tClazz;
@@ -992,7 +988,6 @@ public class ListSheet<T> extends Sheet {
             end = limit - rows + start;
             shouldClose = false;
             eof = true;
-            size = limit;
 
             int n = id;
             for (int i = end; i < len; ) {
@@ -1000,15 +995,13 @@ public class ListSheet<T> extends Sheet {
                 ListSheet<T> copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = Math.min(i + limit, len));
-                copy.size = copy.end - copy.start;
-                copy.eof = copy.size == limit;
+                copy.eof = copy.end - copy.start == limit;
                 workbook.insertSheet(n++, copy);
             }
             // Close on the last copy worksheet
             workbook.getSheetAt(n - 1).shouldClose = true;
         } else {
             end = len;
-            size += len;
         }
     }
 
