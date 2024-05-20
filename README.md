@@ -14,7 +14,7 @@ EEC在JVM参数`-Xmx10m -Xms10m`下读写100w行x29列内存使用截图，下�
 
 EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计且只能顺序向后，这意味着不能通过指定行列坐标来随机读写，通常可以使用EEC来做一些日常的导入/导出功能，推荐在**大数据量**或**性能/内存要求**较高的场景或者没有随机读写的场景下使用。
 
-目前已实现worksheet类型有七种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
+目前已实现worksheet类型有以下七种，也可以继承已有[Worksheet](./src/main/java/org/ttzero/excel/entity/Sheet.java)来实现自定义数据源
 
 - [ListSheet](./src/main/java/org/ttzero/excel/entity/ListSheet.java) // 对象数组
 - [ListMapSheet](./src/main/java/org/ttzero/excel/entity/ListMapSheet.java) // Map数组
@@ -102,7 +102,7 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 3. 支持模板导出
 
-EEC支持xls和xlsx模板格式，模板工作表TemplateSheet与其它工作表一样是一种数据源，只是样式由源工作表决定且不受ExcelColumn注解限制，导出的数据范围由模板中的占位符决定，关于模板导出请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
+EEC支持xls和xlsx模板格式，模板工作表TemplateSheet与其它工作表一样是一种数据源，只是样式由源工作表决定且不受ExcelColumn注解限制，导出的数据范围由模板中的占位符决定，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
@@ -291,6 +291,12 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.15
+-------------
+- 修复onProgress出现越界问题
+- 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
+- 删除部分已标记为过时的方法
+
 Version 0.5.14 (2024-04-22)
 -------------
 - 新增数据验证Validation
@@ -321,19 +327,10 @@ Version 0.5.12 (2023-11-26)
 - 支持读取xlsx格式wps的内嵌图片([#363](https://github.com/wangguanquan/eec/issues/363))
 - 部分类的注释改为中文，后续会将全部注释改为中文
 
-Version 0.5.11 (2023-10-08)
--------------
-- 优化ExcelReader性能，性能提升100%~300%
-- 增加`setHeaderColumnReadOption`方法提高ExcelReader丰富性
-- 修复读取16进制转义字符时出现乱码问题
-- 修复非法UTF8字符导致写文件异常
-- 无数据且能获取表头信息时正常写表头([#361](https://github.com/wangguanquan/eec/issues/361))
-- 屏蔽JDK17以上版本使用ExcelReader抛异常的问题
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.14-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.15-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

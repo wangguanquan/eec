@@ -1,6 +1,6 @@
 Version 0.5.15
 -------------
-- 修复清除游标后获取lastRow出现越界问题
+- 修复onProgress出现越界问题
 - 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
 - 删除部分已标记为过时的方法
 
