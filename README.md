@@ -291,7 +291,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
-Version 0.5.15
+Version 0.5.15 (2024-05-21)
 -------------
 - 修复onProgress出现越界问题
 - 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
