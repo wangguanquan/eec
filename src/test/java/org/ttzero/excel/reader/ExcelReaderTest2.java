@@ -253,14 +253,27 @@ public class ExcelReaderTest2 {
     @Ignore
     @Test public void test200w() throws IOException {
         final int row_len = 2_000_000;
+        // 0: 写入数据总行数
+        // 1: nv大于1w的行数
+        final int[] expect = { 0, 0 };
         new Workbook()
             .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
-            .addSheet(new ListSheet<E>().setData((i, lastOne) -> i < row_len ? E.data() : null))
+            .addSheet(new ListSheet<E>().setData((i, lastOne) -> {
+                List<E> list = null;
+                if (i < row_len) {
+                    list = E.data();
+                    expect[0] += list.size();
+                    expect[1] += list.stream().filter(e -> e.nv > 10000).count();
+                }
+                return list;
+            }))
             .writeTo(defaultTestPath.resolve("200w.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("200w.xlsx"))) {
             long count = reader.sheets().flatMap(Sheet::dataRows).count();
-            assertEquals(count, row_len);
+            assertEquals(count, expect[0]);
+            long count1w = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.getInt(0)).filter(i -> i > 10000).count();
+            assertEquals(count1w, expect[1]);
         }
     }
 
