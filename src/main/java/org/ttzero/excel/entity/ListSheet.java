@@ -21,6 +21,7 @@ import org.ttzero.excel.annotation.ExcelColumns;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.HeaderStyle;
+import org.ttzero.excel.annotation.Hyperlink;
 import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.annotation.StyleDesign;
@@ -33,8 +34,6 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -50,9 +49,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
+import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -61,7 +62,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 对象数组工作表，内部使用{@code List<T>}做数据源，所以它是应用最广泛的一种工作表。
  * {@code ListSheet}默认支持数据切片，少量数据可以在实例化时一次性传入，数据量较大时建议切片获取数据
  *
- * <blockquote><pre>
+ * <pre>
  * new Workbook("11月待拜访客户")
  *     .addSheet(new ListSheet&lt;Customer&gt;() {
  *         &#x40;Override
@@ -72,7 +73,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  *             queryVo.setPageNum(queryVo.getPageNum() + 1);
  *             return list;
  *         }
- *     }).writeTo(response.getOutputStream());</pre></blockquote>
+ *     }).writeTo(response.getOutputStream());</pre>
  *
  * <p>如上示例覆写{@link #more}方法获取切片数据，直到返回空数据或{@code null}为止,这样不至少将大量数据堆积到内存，
  * 输出协议使用{@link RowBlock}进行装填数据并落盘。{@code more}方法在{@code ListSheet}工作表是一定会被
@@ -92,6 +93,19 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <p>对象取值会优先调用get方法获取，如果未发现get方法则直接从{@code field}取值。导出数据并不仅限于get方法，
  * 你可以在任何无参且仅有一个返回值的方法上添加&#x40;ExcelColumn注解进行导出，你还可以在子类定义相同的方法来替换父类上的&#x40;ExcelColumn注解，
  * 解析注解时会从子类往上逐级解析至到父级为{@code Object}为止</p>
+ *
+ * <p>除子类覆写{@link #more}方法外还可以通过{@link #setData(BiFunction)}设置一个数据生产者，它可以减化数据分片的代码。
+ * {@code dataSupplier}被定义为{@code BiFunction<Integer, T, List<T>>}，其中第一个入参{@code Integer}表示已拉取数据的记录数
+ * （并非已写入数据），第二个入参{@code T}表示上一批数据中最后一个对象，业务端可以通过这两个参数来计算下一批数据应该从哪个节点开始拉取，
+ * 通常你可以使用第一个参数除以每批拉取的数据大小来确定当前页码，如果数据已排序则可以使用{@code T}对象的排序字段来计算下一批数据的游标从而跳过
+ * {@code limit ... offset ... }分页查询从而极大提升取数性能</p>
+ *
+ * <pre>
+ * new Workbook()
+ *     .addSheet(new ListSheet&lt;Customer&gt;()
+ *         // 分页查询，每页查询100条数据，可以通过已拉取记录数计算当前页面
+ *         .setData((i, lastOne) -&gt; customerService.pagingQuery(i/100, 100))
+ *     ).writeTo(Paths.get("f://abc.xlsx"));</pre>
  *
  * <p>参考文档:</p>
  * <p><a href="https://github.com/wangguanquan/eec/wiki/%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3">自定义注解</a></p>
@@ -113,10 +127,6 @@ public class ListSheet<T> extends Sheet {
      */
     protected boolean eof;
     /**
-     * 已写入数据大小
-     */
-    private int size;
-    /**
      * 泛型&lt;T&gt;的实际类型
      */
     protected Class<?> tClazz;
@@ -128,6 +138,10 @@ public class ListSheet<T> extends Sheet {
      * 强制导出，忽略安全限制全字段导出，确认需求后谨慎使用
      */
     protected int forceExport;
+    /**
+     * 数据产生者，简化分片查询
+     */
+    protected BiFunction<Integer, T, List<T>> dataSupplier;
 
     /**
      * 设置行级动态样式处理器，作用于整行优先级高于单元格动态样式处理器
@@ -200,19 +214,19 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据
      *
-     * @param data the worksheet's body data
+     * @param data 初始数据
      */
     public ListSheet(List<T> data) {
         this(null, data);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称和初始数据
      *
-     * @param name the worksheet name
-     * @param data the worksheet's body data
+     * @param name 工作表名称
+     * @param data 初始数据
      */
     public ListSheet(String name, List<T> data) {
         super(name);
@@ -220,44 +234,44 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据和表头
      *
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param data    初始数据
+     * @param columns 表头信息
      */
     public ListSheet(List<T> data, final Column... columns) {
         this(null, data, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称、初始数据和表头
      *
-     * @param name    the worksheet name
-     * @param data    the worksheet's body data
-     * @param columns the header info
+     * @param name    工作表名称
+     * @param data    初始数据
+     * @param columns 表头信息
      */
     public ListSheet(String name, List<T> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定初始数据、水印和表头
      *
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
     /**
-     * Constructor worksheet
+     * 实例化工作表并指定工作表名称、初始数据、水印和表头
      *
-     * @param name      the worksheet name
-     * @param data      the worksheet's body data
-     * @param waterMark the water mark
-     * @param columns   the header info
+     * @param name      工作表名称
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
      */
     public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
@@ -268,7 +282,7 @@ public class ListSheet<T> extends Sheet {
      * 指定泛型{@code T}的实际类型，不指定时默认由反射或数组中第一个对象类型而定
      *
      * @param tClazz 泛型{@code T}的实际类型
-     * @return current sheet
+     * @return 当前工作表
      */
     public Sheet setClass(Class<?> tClazz) {
         this.tClazz = tClazz;
@@ -276,17 +290,14 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Setting the worksheet data
+     * 设置初始数据，导出的时候依然会调用{@link #more()} 方法以获取更多数据
      *
-     * @param data the body data
+     * @param data 初始数据
      * @return 当前工作表
      */
     public ListSheet<T> setData(final List<T> data) {
         if (data == null) return this;
         this.data = new ArrayList<>(data);
-        if (!headerReady && workbook != null) {
-            getAndSortHeaderColumns();
-        }
         // Has data and worksheet can write
         // Paging in advance
         if (sheetWriter != null) {
@@ -296,18 +307,34 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * Returns the first not null object
+     * 设置数据生产者，如果设置了此值{@link #more}方法将从此生产者中获取数据
      *
-     * @return the object
+     * @param dataSupplier 数据生产者其中{@code Integer}为已拉取数据的记录数，{@code T}为上一批数据中最后一个对象
+     * @return 当前工作表
+     */
+    public ListSheet<T> setData(BiFunction<Integer, T, List<T>> dataSupplier) {
+        this.dataSupplier = dataSupplier;
+        return this;
+    }
+
+    /**
+     * 获取队列中第一个非{@code null}对象用于解析
+     *
+     * @return 第一个非 {@code null}对象
      */
     protected T getFirst() {
-        if (data == null || data.isEmpty()) return null;
+        // 初始没有数据时调用一次more方法获取数据
+        if (data == null || data.isEmpty()) {
+            List<T> more = more();
+            if (more != null && !more.isEmpty()) data = new ArrayList<>(more);
+            else return null;
+        }
         T first = data.get(start);
         if (first != null) return first;
         int i = start + 1;
         do {
             first = data.get(i++);
-        } while (first == null && i <= data.size());
+        } while (first == null && i< this.data.size());
         return first;
     }
 
@@ -477,12 +504,7 @@ public class ListSheet<T> extends Sheet {
 
         Map<String, Method> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                .getPropertyDescriptors();
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                Method method = pd.getReadMethod();
-                if (method != null) tmp.put(pd.getName(), method);
-            }
+            tmp.putAll(readMethodsMap(clazz, Object.class));
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
@@ -701,6 +723,11 @@ public class ListSheet<T> extends Sheet {
                 tail.setEffect(mediaColumn.presetEffect().getEffect());
             }
         }
+        // Hyperlink
+        else if (root != null) {
+            Hyperlink Hyperlink = ao.getAnnotation(Hyperlink.class);
+            if (Hyperlink != null) root.getTail().writeAsHyperlink();
+        }
         return root;
     }
 
@@ -803,7 +830,8 @@ public class ListSheet<T> extends Sheet {
             style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
         }
         for (Column column : columns) {
-            if (style > 0 && column.getHeaderStyleIndex() == -1)
+            // 如果字段未独立设置样式则使用方法上的样式
+            if (style > 0 && column.getHeaderStyleIndex() == -1 && column.headerStyle == null)
                 column.setHeaderStyle(style);
         }
 
@@ -960,7 +988,6 @@ public class ListSheet<T> extends Sheet {
             end = limit - rows + start;
             shouldClose = false;
             eof = true;
-            size = limit;
 
             int n = id;
             for (int i = end; i < len; ) {
@@ -968,15 +995,13 @@ public class ListSheet<T> extends Sheet {
                 ListSheet<T> copy = getClass().cast(clone());
                 copy.start = i;
                 copy.end = (i = Math.min(i + limit, len));
-                copy.size = copy.end - copy.start;
-                copy.eof = copy.size == limit;
+                copy.eof = copy.end - copy.start == limit;
                 workbook.insertSheet(n++, copy);
             }
             // Close on the last copy worksheet
             workbook.getSheetAt(n - 1).shouldClose = true;
         } else {
             end = len;
-            size += len;
         }
     }
 
@@ -1002,6 +1027,11 @@ public class ListSheet<T> extends Sheet {
      * @return 数组，{@code null}和空数组表示结束
      */
     protected List<T> more() {
+        if (dataSupplier != null) {
+            int offset = left() + (rowBlock != null ? rowBlock.getTotal() : 0);
+            if (copySheet) offset += copyCount * workbook.getSheetAt(id - 2).size();
+            return dataSupplier.apply(offset, data != null && !data.isEmpty() ? data.get(data.size() - 1) : null);
+        }
         return null;
     }
 

@@ -421,7 +421,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
      *
      * @throws IOException if I/O error occur
      */
-    protected void commit() throws IOException {
+    public void commit() throws IOException {
         flush();
         buffer.putInt(count);
         buffer.flip();

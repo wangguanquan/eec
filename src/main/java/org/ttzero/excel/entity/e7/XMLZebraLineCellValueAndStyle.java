@@ -22,16 +22,19 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
 
 /**
+ * 斑马线样式，默认情况下从数据行开始计算，每隔一行添加指定填充色，默认填充色为 {@code #E9EAEC}，
+ * 如果该单元格已有填充样式则保持原填充样式
+ *
  * @author guanquan.wang at 2023-02-24 11:12
  */
 public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
 
     /**
-     * The zebra-line fill style value
+     * 斑马线填充样值
      */
     protected int zebraFillStyle = -1;
     /**
-     * The zebra-line fill style
+     * 斑马线填充样式
      */
     protected Fill zebraFill;
 
@@ -44,12 +47,13 @@ public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
     }
 
     /**
-     * Returns the cell style index
+     * 获取单元格样式值，先通过{@code Column}获取基础样式并在偶数行添加斑马线填充，
+     * 如果有动态样式转换则将基础样式做为参数进行二次制作
      *
-     * @param row   the row data
-     * @param hc    the header column
-     * @param o     the cell value
-     * @return the style index in xf
+     * @param row 行信息
+     * @param hc  当前列的表头
+     * @param o   单元格的值
+     * @return 样式值
      */
     @Override
     public int getStyleIndex(Row row, Column hc, Object o) {
@@ -57,9 +61,9 @@ public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
             zebraFillStyle = hc.styles.addFill(zebraFill);
         // Default style
         int style = hc.getCellStyle();
-        // Interlaced discoloration
+        // 偶数行且无特殊填充样式时添加斑马线填充
         if (isOdd(row.getIndex()) && !Styles.hasFill(style)) style |= zebraFillStyle;
-        // Dynamic style
+        // 处理动态样式
         if (hc.styleProcessor != null) {
             style = hc.styleProcessor.build(o, style, hc.styles);
         }
@@ -68,11 +72,12 @@ public class XMLZebraLineCellValueAndStyle extends XMLCellValueAndStyle {
 
 
     /**
-     * Check the odd rows
+     * 检查是否需要添加斑马线样式
      *
-     * @return true if odd rows
+     * @param rows 数据行的行号（zero base)
+     * @return 数据行的偶数行返回 {@code true}
      */
-    static boolean isOdd(int rows) {
+    public static boolean isOdd(int rows) {
         return (rows & 1) == 1;
     }
 

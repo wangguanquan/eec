@@ -85,7 +85,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      *
      * @throws IOException if I/O error occur.
      */
-    IndexSharedStringTable() throws IOException {
+    public IndexSharedStringTable() throws IOException {
         super();
 
         Path superPath = getTemp();
@@ -103,7 +103,7 @@ public class IndexSharedStringTable extends SharedStringTable {
      * @param path the index file path
      * @throws IOException if file not exists or I/O error occur.
      */
-    IndexSharedStringTable(Path path) throws IOException {
+    public IndexSharedStringTable(Path path) throws IOException {
         super(Paths.get(path.toString().substring(0, path.toString().length() - 4)));
         temp = path;
         channel = Files.newByteChannel(temp, StandardOpenOption.WRITE, StandardOpenOption.READ);

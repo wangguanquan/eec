@@ -190,7 +190,7 @@ public class CSVSheet extends Sheet {
                 Cell cell = cells[i];
                 cell.clear();
 
-                cell.setSv(csvRow[i]);
+                cell.setString(csvRow[i]);
                 cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
 //                cellValueAndStyle.reset(rows, cell, csvRow[i], hc);
             }
@@ -235,26 +235,4 @@ public class CSVSheet extends Sheet {
     @Override
     protected void mergeHeaderCellsIfEquals() { }
 
-//    /**
-//     * Check empty header row
-//     *
-//     * @return true if none header row
-//     */
-//    @Override
-//    public boolean hasNonHeader() {
-//        if (!hasHeader) {
-//            hasHeader = !super.hasNonHeader();
-//        }
-//        return !hasHeader;
-//    }
-//
-//    /**
-//     * The Worksheet row limit
-//     *
-//     * @return the limit
-//     */
-//    @Override
-//    protected int getRowLimit() {
-//        return Integer.MAX_VALUE;
-//    }
 }

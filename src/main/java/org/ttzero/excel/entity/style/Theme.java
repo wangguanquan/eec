@@ -23,6 +23,7 @@ import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.InputStream;
@@ -44,6 +45,8 @@ public class Theme {
     private static final Logger LOGGER = LoggerFactory.getLogger(Theme.class);
     // theme colors
     private ClrScheme[] clrs;
+    // minor/major font
+    private Font minorFont, majorFont;
 
     public static Theme load(InputStream is) {
         Theme self = new Theme();
@@ -52,8 +55,8 @@ public class Theme {
         Document document;
         try {
             document = reader.read(is);
-            Element root = document.getRootElement();
-            Element clrScheme = root.element("themeElements").element("clrScheme");
+            Element themeElements = document.getRootElement().element("themeElements");
+            Element clrScheme = themeElements.element("clrScheme");
             List<Element> clrSchemes;
             if (clrScheme != null && (clrSchemes = clrScheme.elements()) != null && !clrSchemes.isEmpty()) {
                 ClrScheme[] clrs = new ClrScheme[clrSchemes.size()];
@@ -79,6 +82,26 @@ public class Theme {
                 for (; i < len; i++) ColorIndex.themeColors[i] = clrs[i].color;
             }
 
+            // minor/major font
+            Element fontScheme = themeElements.element("fontScheme");
+            if (fontScheme != null) {
+                Element fontElement = fontScheme.element("majorFont");
+                String typeface;
+                if (fontElement != null) {
+                    Element latin = fontElement.element("latin");
+                    if (latin != null && StringUtil.isNotEmpty(typeface = latin.attributeValue("typeface"))) {
+                        self.majorFont = new Font(typeface, 11);
+                    }
+                }
+                fontElement = fontScheme.element("minorFont");
+                if (fontElement != null) {
+                    Element latin = fontElement.element("latin");
+                    if (latin != null && StringUtil.isNotEmpty(typeface = latin.attributeValue("typeface"))) {
+                        self.minorFont = new Font(typeface, 11);
+                    }
+                }
+            }
+
             // TODO others
 
         } catch (Exception e) {
@@ -99,14 +122,14 @@ public class Theme {
             if (v == null) v = getAttr(sub, "val");
             else {
                 try {
-                    color = ColorIndex.toColor(v);
+                    color = Styles.toColor(v);
                 } catch (Exception ex) {
                     v = getAttr(sub, "val");
                 }
             }
             if (color == null) {
                 try {
-                    color = ColorIndex.toColor(v);
+                    color = Styles.toColor(v);
                 } catch (Exception ex) {
                     color = new BuildInColor(64); // auto if exception
                 }
@@ -122,6 +145,14 @@ public class Theme {
             for (int i = 0; i < clrs.length; i++) colors[i] = clrs[i].color;
             return colors;
         } else return ColorIndex.themeColors;
+    }
+
+    public Font getMinorFont() {
+        return minorFont;
+    }
+
+    public Font getMajorFont() {
+        return majorFont;
     }
 
     public static class ClrScheme {

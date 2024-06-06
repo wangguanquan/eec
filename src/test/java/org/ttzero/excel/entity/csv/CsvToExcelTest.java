@@ -31,6 +31,8 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
@@ -94,13 +96,13 @@ public class CsvToExcelTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             for (String[] expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 for (int i = 0; i < expect.length; i++) {
                     if (expect[i] != null) {
-                        assert expect[i].equals(row.getString(i));
+                        assertEquals(expect[i], row.getString(i));
                     } else {
-                        assert StringUtil.isEmpty(row.getString(i));
+                        assertTrue(StringUtil.isEmpty(row.getString(i)));
                     }
                 }
             }
@@ -117,13 +119,13 @@ public class CsvToExcelTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             for (String[] expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 for (int i = 0; i < expect.length; i++) {
                     if (expect[i] != null) {
-                        assert expect[i].equals(row.getString(i));
+                        assertEquals(expect[i], row.getString(i));
                     } else {
-                        assert StringUtil.isEmpty(row.getString(i));
+                        assertTrue(StringUtil.isEmpty(row.getString(i)));
                     }
                 }
             }
@@ -140,13 +142,13 @@ public class CsvToExcelTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             for (String[] expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 for (int i = 0; i < expect.length; i++) {
                     if (expect[i] != null) {
-                        assert expect[i].equals(row.getString(i));
+                        assertEquals(expect[i], row.getString(i));
                     } else {
-                        assert StringUtil.isEmpty(row.getString(i));
+                        assertTrue(StringUtil.isEmpty(row.getString(i)));
                     }
                 }
             }
@@ -163,13 +165,13 @@ public class CsvToExcelTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             for (String[] expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 for (int i = 0; i < expect.length; i++) {
                     if (expect[i] != null) {
-                        assert expect[i].equals(row.getString(i));
+                        assertEquals(expect[i], row.getString(i));
                     } else {
-                        assert StringUtil.isEmpty(row.getString(i));
+                        assertTrue(StringUtil.isEmpty(row.getString(i)));
                     }
                 }
             }

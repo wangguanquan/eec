@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.entity.WorkbookTest.author;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
@@ -33,22 +34,22 @@ public class SharedStringsTest {
     @Test public void testGet() throws IOException {
         try (SharedStrings sst = new SharedStrings().init()) {
             int index = sst.get("abc");
-            assert index == 0;
+            assertEquals(index, 0);
 
             index = sst.get(author);
-            assert index == 1;
+            assertEquals(index, 1);
 
             index = sst.get("abc");
-            assert index == 0;
+            assertEquals(index, 0);
 
             index = sst.get(author);
-            assert index == 1;
+            assertEquals(index, 1);
 
             index = sst.get(author);
-            assert index == 1;
+            assertEquals(index, 1);
 
             index = sst.get("test");
-            assert index == 2;
+            assertEquals(index, 2);
         }
     }
 
@@ -61,7 +62,7 @@ public class SharedStringsTest {
             for (int i = 0; i < 0x7FFFFFFF; i++) {
                 char c = (char) (i & 0x7F);
                 int index = sst.get(c);
-                assert index == c;
+                assertEquals(index, c);
             }
         }
     }
@@ -78,7 +79,7 @@ public class SharedStringsTest {
             }
 
             for (Map.Entry<String, Integer> entry : indexMap.entrySet()) {
-                assert entry.getValue().equals(sst.get(entry.getKey()));
+                assertEquals((int) entry.getValue(), sst.get(entry.getKey()));
             }
         }
     }

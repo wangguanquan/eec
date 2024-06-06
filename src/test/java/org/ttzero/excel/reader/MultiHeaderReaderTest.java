@@ -24,6 +24,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -35,31 +39,31 @@ public class MultiHeaderReaderTest {
     @Test public void testMergeExcel() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
             List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
-            assert list.contains(Dimension.of("B2:C2"));
-            assert list.contains(Dimension.of("E5:F8"));
-            assert list.contains(Dimension.of("A13:A20"));
-            assert list.contains(Dimension.of("B16:E17"));
+            assertTrue(list.contains(Dimension.of("B2:C2")));
+            assertTrue(list.contains(Dimension.of("E5:F8")));
+            assertTrue(list.contains(Dimension.of("A13:A20")));
+            assertTrue(list.contains(Dimension.of("B16:E17")));
 
             list.addAll(reader.sheet(1).asMergeSheet().getMergeCells());
-            assert list.contains(Dimension.of("A1:B26"));
-            assert list.contains(Dimension.of("BM2:BQ11"));
+            assertTrue(list.contains(Dimension.of("A1:B26")));
+            assertTrue(list.contains(Dimension.of("BM2:BQ11")));
 
             list.addAll(reader.sheet(2).asMergeSheet().getMergeCells());
-            assert list.contains(Dimension.of("A1:K3"));
-            assert list.contains(Dimension.of("A16428:D16437"));
+            assertTrue(list.contains(Dimension.of("A1:K3")));
+            assertTrue(list.contains(Dimension.of("A16428:D16437")));
 
             list.addAll(reader.sheet(3).asMergeSheet().getMergeCells());
-            assert list.contains(Dimension.of("A1:CF1434"));
+            assertTrue(list.contains(Dimension.of("A1:CF1434")));
         }
     }
 
     @Test public void testMergeExcel2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
             List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
-            assert list.contains(Dimension.of("A2:A31"));
-            assert list.contains(Dimension.of("B8:B13"));
-            assert list.contains(Dimension.of("A48:A54"));
-            assert list.contains(Dimension.of("B52:B54"));
+            assertTrue(list.contains(Dimension.of("A2:A31")));
+            assertTrue(list.contains(Dimension.of("B8:B13")));
+            assertTrue(list.contains(Dimension.of("A48:A54")));
+            assertTrue(list.contains(Dimension.of("B52:B54")));
         }
     }
 
@@ -67,27 +71,27 @@ public class MultiHeaderReaderTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
             MergeSheet mergeSheet = reader.sheet(0).asMergeSheet();
             Grid grid = mergeSheet.getMergeGrid();
-            assert grid.size() == 2608;
-            assert grid.test(3, 1);
-            assert grid.test(382, 1);
-            assert grid.test(722, 2);
-            assert grid.test(1374, 2);
-            assert grid.test(2101, 10);
-            assert grid.test(2201, 6);
-            assert !grid.test(2113, 5);
+            assertEquals(grid.size(), 2608);
+            assertTrue(grid.test(3, 1));
+            assertTrue(grid.test(382, 1));
+            assertTrue(grid.test(722, 2));
+            assertTrue(grid.test(1374, 2));
+            assertTrue(grid.test(2101, 10));
+            assertTrue(grid.test(2201, 6));
+            assertFalse(grid.test(2113, 5));
             long count = mergeSheet.rows().count();
 
             Sheet sheet = mergeSheet.asCalcSheet();
-            assert sheet.getClass() == XMLCalcSheet.class;
-            assert sheet.reset().rows().count() == count;
+            assertEquals(sheet.getClass(), XMLCalcSheet.class);
+            assertEquals(sheet.reset().rows().count(), count);
 
             sheet = sheet.asSheet();
-            assert sheet.getClass() == XMLSheet.class;
-            assert sheet.reset().rows().count() == count;
+            assertEquals(sheet.getClass(), XMLSheet.class);
+            assertEquals(sheet.reset().rows().count(), count);
 
             sheet = sheet.asMergeSheet();
-            assert sheet.getClass() == XMLMergeSheet.class;
-            assert sheet.reset().rows().count() == count;
+            assertEquals(sheet.getClass(), XMLMergeSheet.class);
+            assertEquals(sheet.reset().rows().count(), count);
         }
     }
 
@@ -96,31 +100,31 @@ public class MultiHeaderReaderTest {
             Sheet sheet = reader.sheet(0);
             Row header = sheet.header(1, 2).getHeader();
             String headerString = header.toString();
-            assert "姓名 | 二级机构名称 | 三级机构名称 | 四级机构名称 | 参与次数 | 日均参与率(%) | 日均得分 | 2021-07-01:得分 | 2021-07-01:考试时长 | 2021-07-02:得分 | 2021-07-02:考试时长 | 2021-07-03:得分 | 2021-07-03:考试时长 | 2021-07-04:得分 | 2021-07-04:考试时长 | 2021-07-05:得分 | 2021-07-05:考试时长 | 2021-07-06:得分 | 2021-07-06:考试时长 | 2021-07-07:得分 | 2021-07-07:考试时长 | 2021-07-08:得分 | 2021-07-08:考试时长 | 2021-07-09:得分 | 2021-07-09:考试时长 | 2021-07-10:得分 | 2021-07-10:考试时长".equals(headerString.substring(0, headerString.indexOf(Const.lineSeparator)));
+            assertEquals("姓名 | 二级机构名称 | 三级机构名称 | 四级机构名称 | 参与次数 | 日均参与率(%) | 日均得分 | 2021-07-01:得分 | 2021-07-01:考试时长 | 2021-07-02:得分 | 2021-07-02:考试时长 | 2021-07-03:得分 | 2021-07-03:考试时长 | 2021-07-04:得分 | 2021-07-04:考试时长 | 2021-07-05:得分 | 2021-07-05:考试时长 | 2021-07-06:得分 | 2021-07-06:考试时长 | 2021-07-07:得分 | 2021-07-07:考试时长 | 2021-07-08:得分 | 2021-07-08:考试时长 | 2021-07-09:得分 | 2021-07-09:考试时长 | 2021-07-10:得分 | 2021-07-10:考试时长", headerString.substring(0, headerString.indexOf(Const.lineSeparator)));
 
             sheet.rows().forEach(row -> {
                 if (row.getRowNum() == 3) {
-                    assert row.getString("姓名").equals("张三1");
-                    assert row.getInt("参与次数").equals(7);
-                    assert row.getDecimal("日均得分").setScale(2, BigDecimal.ROUND_HALF_DOWN).toString().equals("41.43");
-                    assert row.getInt("2021-07-01:得分").equals(30);
-                    assert row.getInt("2021-07-01:考试时长").equals(19);
-                    assert Objects.isNull(row.getInt("2021-07-04:得分"));
-                    assert row.getInt("2021-07-09:得分").equals(70);
-                    assert row.getInt("2021-07-09:考试时长").equals(20);
-                    assert Objects.isNull(row.getInt("2021-07-10:得分"));
-                    assert Objects.isNull(row.getInt("2021-07-10:考试时长"));
+                    assertEquals(row.getString("姓名"), "张三1");
+                    assertEquals((int) row.getInt("参与次数"), 7);
+                    assertEquals(row.getDecimal("日均得分").setScale(2, BigDecimal.ROUND_HALF_DOWN).toString(), "41.43");
+                    assertEquals((int) row.getInt("2021-07-01:得分"), 30);
+                    assertEquals((int) row.getInt("2021-07-01:考试时长"), 19);
+                    assertNull(row.getInt("2021-07-04:得分"));
+                    assertEquals((int) row.getInt("2021-07-09:得分"), 70);
+                    assertEquals((int) row.getInt("2021-07-09:考试时长"), 20);
+                    assertNull(row.getInt("2021-07-10:得分"));
+                    assertNull(row.getInt("2021-07-10:考试时长"));
                 } else if (row.getRowNum() == 4) {
-                    assert row.getString("姓名").equals("张三2");
-                    assert row.getInt("参与次数").equals(0);
-                    assert Objects.isNull(row.getDecimal("日均得分"));
-                    assert Objects.isNull(row.getInt("2021-07-01:得分"));
-                    assert Objects.isNull(row.getInt("2021-07-01:考试时长"));
-                    assert Objects.isNull(row.getInt("2021-07-04:得分"));
-                    assert Objects.isNull(row.getInt("2021-07-09:得分"));
-                    assert Objects.isNull(row.getInt("2021-07-09:考试时长"));
-                    assert Objects.isNull(row.getInt("2021-07-10:得分"));
-                    assert Objects.isNull(row.getInt("2021-07-10:考试时长"));
+                    assertEquals(row.getString("姓名"), "张三2");
+                    assertEquals((int) row.getInt("参与次数"), 0);
+                    assertNull(row.getDecimal("日均得分"));
+                    assertNull(row.getInt("2021-07-01:得分"));
+                    assertNull(row.getInt("2021-07-01:考试时长"));
+                    assertNull(row.getInt("2021-07-04:得分"));
+                    assertNull(row.getInt("2021-07-09:得分"));
+                    assertNull(row.getInt("2021-07-09:考试时长"));
+                    assertNull(row.getInt("2021-07-10:得分"));
+                    assertNull(row.getInt("2021-07-10:考试时长"));
                 }
             });
         }

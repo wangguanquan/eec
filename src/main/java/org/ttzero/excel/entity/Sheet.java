@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
-import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -65,8 +64,8 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * RowBlock行块常驻内存，一个{@code RowBlock}行块默认包含32个{@code Row}行，这样可以保证
  * 较小的内存开销。</p>
  *
- * <p>当前支持的数据源有{@link ListSheet}, {@link ListMapSheet}, {@link StatementSheet}
- * 和{@link ResultSetSheet}4种，前两种较为常用，后两种可实现将数据库查询结果直接导出到Excel
+ * <p>当前支持的数据源有{@link ListSheet},{@link ListMapSheet},{@link TemplateSheet},{@link StatementSheet}
+ * 和{@link ResultSetSheet}5种，前三种较为常用，后两种可实现将数据库查询结果直接导出到Excel
  * 省掉转Java实体的中间环节。继承Sheet并实现抽象方法{@link Sheet#resetBlockData}可以扩展新的数据源，
  * 你需要在该方法中获取数据并使用{@link ICellValueAndStyle}转换器将数据转换为输出协议允许的结构。</p>
  *
@@ -92,6 +91,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang on 2017/9/26.
  * @see ListSheet
  * @see ListMapSheet
+ * @see TemplateSheet
  * @see ResultSetSheet
  * @see StatementSheet
  * @see CSVSheet
@@ -214,9 +214,13 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Boolean showGridLines;
     /**
-     * 指定表头行高和数据行高
+     * 指定表头行高
      */
-    protected double headerRowHeight = 20.5D, rowHeight = -1D;
+    protected double headerRowHeight = 20.5D;
+    /**
+     * 指定数据行高
+     */
+    protected Double rowHeight;
     /**
      * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
      */
@@ -367,17 +371,6 @@ public abstract class Sheet implements Cloneable, Storable {
             }
         }
         return this;
-    }
-
-    /**
-     * 获取字符串共享区{@link SharedStrings}
-     *
-     * @return 字符串共享区
-     * @deprecated 直接从workbook获取
-     */
-    @Deprecated
-    public SharedStrings getSst() {
-        return workbook.getSst();
     }
 
     /**
@@ -619,9 +612,9 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 获取数据行高
      *
-     * @return 数据行高
+     * @return 数据行高，返回{@code null}时使用默认行高
      */
-    public double getRowHeight() {
+    public Double getRowHeight() {
         return rowHeight;
     }
 
@@ -698,10 +691,10 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 添加进度观察者，在数据较大的导出过程中添加观察者打印进度可避免被误解为程序假死
      *
-     * <blockquote><pre>
+     * <pre>
      * new ListSheet&lt;&gt;().onProgress((sheet, row) -&gt; {
      *     System.out.println(sheet + " write " + row + " rows");
-     * })</pre></blockquote>
+     * })</pre>
      *
      * @param progressConsumer 进度消费窗口
      * @return 当前工作表
@@ -1119,9 +1112,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
-        Font font = new Font(workbook.getI18N().getOrElse("local-font-family", "Arial")
-                , 12, Font.Style.BOLD, ColorIndex.toColor(fontColor));
-        return styles.addFont(font)
+        return styles.addFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(fontColor)))
                 | styles.addFill(Fill.parse(fillBgColor))
                 | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
                 | Verticals.CENTER
@@ -1187,6 +1178,13 @@ public abstract class Sheet implements Cloneable, Storable {
     public int getRowBlockSize() {
         return ROW_BLOCK_SIZE;
     }
+
+    /**
+     * 当输出协议写完sheetData时调用
+     *
+     * @param total 已写数据行
+     */
+    public void afterSheetDataWriter(int total) { }
 
     /**
      * 当输出协议输出完成时调用此方法输出关联
@@ -1301,8 +1299,8 @@ public abstract class Sheet implements Cloneable, Storable {
      * 列下标转为Excel列标识，Excel列标识由大写字母{@code A-Z}组合，{@code Z}后为{@code AA}如此循环，最大下标{@code XFD}
      *
      * <blockquote><pre>
-     * 数字   | Excel列
-     * -------|---------
+     * 数字    | Excel列
+     * -------+---------
      * 1      | A
      * 10     | J
      * 26     | Z
@@ -1435,7 +1433,7 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 标记扩展参数
+     * 标记扩展参数（非必要操作）
      */
     protected void markExtProp() {
         // Mark Freeze Panes
@@ -1444,6 +1442,12 @@ public abstract class Sheet implements Cloneable, Storable {
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN) != null ? 1 << 1 : 0;
         // Mark global merged cells
         extPropMark |= getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS) != null ? 1 << 2 : 0;
+        // Mark auto-filter
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER) != null ? 1 << 3 : 0;
+        // Mark data-validation
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION) != null ? 1 << 4 : 0;
+        // Mark Zoom-Scale
+        extPropMark |= getExtPropValue(Const.ExtendPropertyKey.ZOOM_SCALE) != null ? 1 << 5 : 0;
     }
 
     /**

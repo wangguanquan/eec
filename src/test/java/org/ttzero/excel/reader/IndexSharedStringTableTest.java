@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 
 /**
@@ -34,16 +35,16 @@ public class IndexSharedStringTableTest {
 
             String value;
             value = sst.get(0);
-            assert value.equals("a");
+            assertEquals(value, "a");
 
             value = sst.get(1);
-            assert value.equals("b");
+            assertEquals(value, "b");
 
             String[] array = new String[2];
             int n = sst.get(0, array);
-            assert n == 2;
-            assert "a".equals(array[0]);
-            assert "b".equals(array[1]);
+            assertEquals(n, 2);
+            assertEquals("a", array[0]);
+            assertEquals("b", array[1]);
         }
     }
 
@@ -60,15 +61,15 @@ public class IndexSharedStringTableTest {
 
             for (int i = 0; i < length; i++) {
                 String s = sst.get(i);
-                assert s.equals(buf[i]);
+                assertEquals(s, buf[i]);
             }
 
             int fromIndex = 0, size = length;
             String[] _buf = new String[size];
             size = sst.get(fromIndex, _buf);
-            assert size == length - fromIndex;
+            assertEquals(size, length - fromIndex);
             for (int i = 0; i < size; i++) {
-                assert _buf[i].equals(buf[fromIndex + i]);
+                assertEquals(_buf[i], buf[fromIndex + i]);
             }
         }
     }

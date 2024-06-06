@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author guanquan.wang at 2020-05-21 16:52
@@ -42,10 +44,10 @@ public class CommentTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -66,10 +68,10 @@ public class CommentTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Student> list = reader.sheet(0).dataRows().map(row -> row.to(Student.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Student expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }

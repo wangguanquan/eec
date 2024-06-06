@@ -96,6 +96,12 @@ public class RowBlock implements Iterator<Row> {
      */
     public final RowBlock clear() {
         i = n = 0;
+        // 清除行属性
+        for (Row row : rows) {
+            row.height = null;
+            row.hidden = false;
+            row.outlineLevel = null;
+        }
         return this;
     }
 
@@ -183,7 +189,18 @@ public class RowBlock implements Iterator<Row> {
      * @return Row
      */
     public Row lastRow() {
-        return rows[n - 1];
+        Row row;
+        if (n >= 1) row = rows[n - 1];
+        else {
+            int i = 0;
+            for (int len = rows.length - 1; i < len; i++) {
+                if (rows[i] == null || rows[i].index >= rows[i + 1].index) {
+                    break;
+                }
+            }
+            row = rows[i];
+        }
+        return row;
     }
 
     /**

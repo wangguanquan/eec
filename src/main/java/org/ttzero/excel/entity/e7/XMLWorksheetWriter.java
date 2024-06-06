@@ -20,7 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
+import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
@@ -35,6 +39,7 @@ import org.ttzero.excel.entity.RowBlock;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Grid;
@@ -65,14 +70,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.reader.Cell.BINARY;
-import static org.ttzero.excel.reader.Cell.BLANK;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -88,6 +95,7 @@ import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.REMOTE_URL;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -136,11 +144,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     // 自适应列宽专用
     protected double[] columnWidths;
+    /**
+     * 关系管理器（worksheet的副本）
+     */
+    protected RelManager relManager;
+    /**
+     * 超链接管理
+     */
+    protected Map<String, List<String>> hyperlinkMap;
 
     public XMLWorksheetWriter() { }
 
     public XMLWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
+        this.relManager = sheet != null ? sheet.getRelManager() : null;
     }
 
     /**
@@ -261,7 +278,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
-        if (sst == null) this.sst = sheet.getWorkbook().getSst();
+        if (sst == null) this.sst = sheet.getWorkbook().getSharedStrings();
         if (styles == null) this.styles = sheet.getWorkbook().getStyles();
 
         // Check the first row index
@@ -278,6 +295,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Fire progress event
         if (progressConsumer != null) progressConsumer.accept(sheet, 0);
 
+        // Relationship
+        if (relManager == null) relManager = sheet.getRelManager();
+
+        if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
+
         LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
         return sheetPath;
     }
@@ -291,6 +313,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     @Override
     public IWorksheetWriter setWorksheet(Sheet sheet) {
         this.sheet = sheet;
+        this.relManager = sheet != null ? sheet.getRelManager() : null;
         return this;
     }
 
@@ -396,7 +419,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             width = new BigDecimal(Const.Limit.COLUMN_WIDTH);
         }
         String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
-//        writeSheetFormat(fillSpace, defaultWidth);
+
+        // SheetFormatPr
+        writeSheetFormat();
 
         // cols
         writeCols(fillSpace, defaultWidth);
@@ -422,17 +447,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         @SuppressWarnings("unchecked")
         List<Dimension> mergeCells = (List<Dimension>) sheet.getExtPropValue(Const.ExtendPropertyKey.MERGE_CELLS);
         Grid mergedGrid = mergeCells != null && !mergeCells.isEmpty() ? GridFactory.create(mergeCells) : null;
+        Cell cell = new Cell();
         for (int i = subColumnSize - 1; i >= 0; i--) {
             // Custom row height
             double ht = getHeaderHeight(columnsArray, i);
             if (ht < 0) ht = sheet.getHeaderRowHeight();
             int row = startRow(rowIndex++, columns.length, ht);
 
-            String name;
             for (int j = 0, c = 0; j < columns.length; j++) {
                 Column hc = columnsArray[j][i];
-                name = isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key;
-                writeString(name, row, c++, hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex());
+                cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key);
+                cell.xf = hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex();
+                writeString(cell, row, c++);
             }
 
             // Write header comments
@@ -457,6 +483,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeAfter(int total) throws IOException {
         // End target --sheetData
         bw.write("</sheetData>");
+
+        // 写完数据后调用工作表处理全局属性
+        sheet.afterSheetDataWriter(total);
+
+        // Auto Filter
+        Dimension autoFilter = (Dimension) sheet.getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
+        if (autoFilter != null) {
+            bw.write("<autoFilter ref=\"");
+            bw.write(autoFilter.toString());
+            bw.write("\"/>");
+        }
 
         // Merge cells
         writeMergeCells();
@@ -511,22 +548,68 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @return the row index (one base)
      * @throws IOException if I/O error occur
      */
-    protected int startRow(int rows, int columns, double rowHeight) throws IOException {
+    protected int startRow(int rows, int columns, Double rowHeight) throws IOException {
         // Row number
         int r = rows + startRow;
 
         bw.write("<row r=\"");
         bw.writeInt(r);
         // default data row height 16.5
-        if (rowHeight >= 0D) {
+        if (rowHeight != null && rowHeight >= 0D) {
             bw.write("\" customHeight=\"1\" ht=\"");
             bw.write(rowHeight);
         }
-        bw.write("\" spans=\"");
-        bw.writeInt(this.columns[0].realColIndex);
-        bw.write(':');
-        bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        if (this.columns.length > 0) {
+            bw.write("\" spans=\"");
+            bw.writeInt(this.columns[0].realColIndex);
+            bw.write(':');
+            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        } else {
+            bw.write("\" spans=\"1:");
+            bw.writeInt(columns);
+        }
         bw.write("\">");
+        return r;
+    }
+
+    /**
+     * 写行的起始属性
+     *
+     * @param row 行对象{@link Row}
+     * @return 行号
+     * @throws IOException 出现输出异常
+     */
+    protected int startRow(Row row) throws IOException {
+        // Row number
+        int r = row.getIndex() + startRow;
+
+        bw.write("<row r=\"");
+        bw.writeInt(r);
+        Double rowHeight = row.getHeight();
+        // default data row height 16.5
+        if (rowHeight != null && rowHeight >= 0D) {
+            bw.write("\" customHeight=\"1\" ht=\"");
+            bw.write(rowHeight);
+        }
+        if (row.lc - row.fc >= 1) {
+            bw.write("\" spans=\"");
+            bw.writeInt(row.fc + 1);
+            bw.write(':');
+            bw.writeInt(row.lc);
+        }
+        else if (this.columns.length > 0) {
+            bw.write("\" spans=\"");
+            bw.writeInt(this.columns[0].realColIndex);
+            bw.write(':');
+            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+        }
+        // 隐藏行
+        if (row.isHidden()) bw.write("\" hidden=\"1");
+        // 层级
+        if (row.getOutlineLevel() != null && row.getOutlineLevel().compareTo(0) > 0) {
+            bw.write("\" outlineLevel=\"");
+            bw.writeInt(row.getOutlineLevel());
+        }
         return r;
     }
 
@@ -538,244 +621,267 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeRow(Row row) throws IOException {
         Cell[] cells = row.getCells();
-        int len = cells.length, r = startRow(row.getIndex(), len, row.getHeight());
+        int r = startRow(row);
+        if (row.lc > row.fc) {
+            bw.write("\">");
 
-        for (int i = 0; i < len; i++) {
-            Cell cell = cells[i];
-            int xf = cell.xf;
-            switch (cell.t) {
-                case INLINESTR:
-                case SST:          writeString(cell.sv, r, i, xf);         break;
-                case NUMERIC:      writeNumeric(cell.nv, r, i, xf);        break;
-                case LONG:         writeNumeric(cell.lv, r, i, xf);        break;
-                case DATE:
-                case DATETIME:
-                case DOUBLE:
-                case TIME:         writeDouble(cell.dv, r, i, xf);         break;
-                case BOOL:         writeBool(cell.bv, r, i, xf);           break;
-                case DECIMAL:      writeDecimal(cell.mv, r, i, xf);        break;
-                case CHARACTER:    writeChar(cell.cv, r, i, xf);           break;
-                case REMOTE_URL:   writeRemoteMedia(cell.sv, r, i, xf);    break;
-                case BINARY:       writeBinary(cell.binary, r, i, xf);     break;
-                case FILE:         writeFile(cell.path, r, i, xf);         break;
-                case INPUT_STREAM: writeStream(cell.isv, r, i, xf);        break;
-                case BYTE_BUFFER:  writeBinary(cell.byteBuffer, r, i, xf); break;
-                case BLANK:        writeNull(r, i, xf);                    break;
-                default:
-            }
-        }
-        bw.write("</row>");
+            // 循环写单元格
+            for (int i = row.fc; i < row.lc; i++) writeCell(cells[i], r, i);
+
+            bw.write("</row>");
+        } else bw.write("\"/>");
     }
 
     /**
-     * Write string value
+     * 写单元格
      *
-     * @param s      the string value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
+     * @param cell 单元格
+     * @param row 行号
+     * @param col 列下标，不等同于列号，实际列号通过{@link Column#getRealColIndex}获取
+     * @throws IOException 出现输出异常
+     */
+    protected void writeCell(Cell cell, int row, int col) throws IOException {
+        boolean valueOnly = cell.mediaType <= UNALLOCATED;
+        // 写值
+        switch (cell.t) {
+            case INLINESTR:
+            case SST:
+                if (valueOnly) writeString(cell, row, col);
+                else writeNull(cell, row, col);                  break;
+            case NUMERIC:
+            case LONG:
+            case DATE:
+            case DATETIME:
+            case DOUBLE:
+            case TIME:
+            case DECIMAL:   writeNumeric(cell, row, col);        break;
+            case BOOL:      writeBool(cell, row, col);           break;
+            case CHARACTER: writeChar(cell, row, col);           break;
+            default:        writeNull(cell, row, col);
+        }
+
+        // 图片
+        if (!valueOnly) {
+            switch (cell.mediaType) {
+                case REMOTE_URL  : writeRemoteMedia(cell.stringVal, row, col); break;
+                case FILE        : writeFile(cell.path, row, col);             break;
+                case INPUT_STREAM: writeStream(cell.isv, row, col);            break;
+                case BINARY      : writeBinary(cell.binary, row, col);         break;
+                case BYTE_BUFFER : writeBinary(cell.byteBuffer, row, col);     break;
+            }
+        }
+    }
+
+    /**
+     * 写字符串
+     *
+     * @param cell   单元格信息
+     * @param row    行号
+     * @param col    列下标
      * @throws IOException if I/O error occur
      */
-    protected void writeString(String s, int row, int column, int xf) throws IOException {
-        // The limit characters per cell check
-        if (s != null && s.length() > Const.Limit.MAX_CHARACTERS_PER_CELL) {
-            throw new ExcelWriteException("Characters per cell out of limit. size=" + s.length()
-                + ", limit=" + Const.Limit.MAX_CHARACTERS_PER_CELL);
-        }
-        Column hc = columns[column];
+    protected void writeString(Cell cell, int row, int col) throws IOException {
+        Column hc = getColumn(col);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        int i;
-        if (StringUtil.isEmpty(s)) {
-            bw.write("\" s=\"");
-            bw.writeInt(xf);
-            bw.write("\"/>");
+        bw.write("\" s=\"");
+
+        int xf = cell.xf;
+        String s = cell.stringVal;
+        boolean notEmpty = s != null && s.length() > 0;
+
+        // 超链接
+        if (notEmpty && cell.h) {
+            Relationship rel = relManager.add(new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External"));
+            List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
+            dim.add(new String(int2Col(col + 1)) + row);
         }
-        else if (hc.isShare() && (i = sst.get(s)) >= 0) {
-            bw.write("\" t=\"s\" s=\"");
-            bw.writeInt(xf);
-            bw.write("\"><v>");
-            bw.writeInt(i);
-            bw.write("</v></c>");
-        } else {
-            bw.write("\" t=\"inlineStr\" s=\"");
-            bw.writeInt(xf);
-            bw.write("\"><is><t>");
-            bw.escapeWrite(s); // escape text
-            bw.write("</t></is></c>");
-        }
+
+        bw.writeInt(xf);
+
+        if (cell.f) {
+            bw.write("\" t=\"str\"><f>");
+            bw.escapeWrite(cell.formula);
+            bw.write("</f>");
+            if (notEmpty) {
+                bw.write("<v>");
+                bw.escapeWrite(s);
+                bw.write("</v>");
+            }
+            bw.write("</c>");
+        } else if (notEmpty) {
+            int i;
+            if (hc.isShare() && (i = sst.get(s)) >= 0) {
+                bw.write("\" t=\"s\"><v>");
+                bw.writeInt(i);
+                bw.write("</v></c>");
+            } else {
+                bw.write("\" t=\"inlineStr\"><is><t>");
+                bw.escapeWrite(s); // escape text
+                bw.write("</t></is></c>");
+            }
+        } else bw.write("\"/>");
 
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double ln;
-            if (columnWidths[column] < (ln = stringWidth(s, xf))) columnWidths[column] = ln;
+            if (columnWidths[col] < (ln = stringWidth(s, xf))) columnWidths[col] = ln;
         }
     }
 
     /**
-     * Write double value
+     * 写数字
      *
-     * @param d      the double value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
+     * @param cell   单元格信息
+     * @param row    行号
+     * @param col    列下标
      * @throws IOException if I/O error occur
      */
-    protected void writeDouble(double d, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+    protected void writeNumeric(Cell cell, int row, int col) throws IOException {
+        Column hc = getColumn(col);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"><v>");
-        bw.write(d);
+        bw.writeInt(cell.xf);
+        bw.write("\">");
+        if (cell.f) {
+            bw.write("<f>");
+            bw.escapeWrite(cell.formula);
+            bw.write("</f>");
+        }
+        bw.write("<v>");
+        boolean autoSize = hc.getAutoSize() == 1;
+        String s = null;
+        switch (cell.t) {
+            case NUMERIC:
+                bw.writeInt(cell.intVal);
+                if (autoSize) s = Integer.toString(cell.intVal);
+                break;
+            case LONG:
+                bw.write(cell.longVal);
+                if (autoSize) s = Long.toString(cell.longVal);
+                break;
+            case DATE:
+            case DATETIME:
+            case DOUBLE:
+            case TIME:
+                bw.write(cell.doubleVal);
+                if (autoSize) s = Double.toString(cell.doubleVal);
+                break;
+            case DECIMAL:
+                bw.write(s = cell.decimal.toString());
+                break;
+        }
         bw.write("</v></c>");
 
-        // TODO optimize If auto-width
-        if (hc.getAutoSize() == 1) {
+        if (autoSize && s != null) {
             double n;
             if (hc.getNumFmt() != null) {
-                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(Double.toString(d).length(), getFont(xf)))) columnWidths[column] = n;
+                if (columnWidths[col] < (n = hc.getNumFmt().calcNumWidth(s.length(), getFont(cell.xf)))) columnWidths[col] = n;
             }
-            else if (columnWidths[column] < (n = stringWidth(Double.toString(d), xf))) columnWidths[column] = n;
+            else if (columnWidths[col] < (n = stringWidth(s, cell.xf))) columnWidths[col] = n;
         }
     }
 
     /**
-     * Write decimal value
+     * 写布尔值
      *
-     * @param bd     the decimal value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
+     * @param cell   单元格信息
+     * @param row    行号
+     * @param col    列下标
      * @throws IOException if I/O error occur
      */
-    protected void writeDecimal(BigDecimal bd, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
+    protected void writeBool(Cell cell, int row, int col) throws IOException {
+        Column hc = getColumn(col);
+        bw.write("<c r=\"");
+        bw.write(int2Col(hc.getRealColIndex()));
+        bw.writeInt(row);
+        bw.write("\" t=\"b\" s=\"");
+        bw.writeInt(cell.xf);
+        bw.write("\">");
+        if (cell.f) {
+            bw.write("<f>");
+            bw.escapeWrite(cell.formula);
+            bw.write("</f>");
+        }
+        bw.write("<v>");
+        bw.writeInt(cell.boolVal ? 1 : 0);
+        bw.write("</v></c>");
+
+        // TODO optimize If auto-width
+        if (hc.getAutoSize() == 1) {
+            double ln;
+            if (columnWidths[col] < (ln = stringWidth(Boolean.toString(cell.boolVal), cell.xf))) columnWidths[col] = ln;
+        }
+    }
+
+    /**
+     * 写字符
+     *
+     * @param cell   单元格信息
+     * @param row    行号
+     * @param col    列下标
+     * @throws IOException if I/O error occur
+     */
+    protected void writeChar(Cell cell, int row, int col) throws IOException {
+        Column hc = getColumn(col);
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
         bw.write("\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"><v>");
-        bw.write(bd.toString());
-        bw.write("</v></c>");
-        // TODO optimize If auto-width
-        if (hc.getAutoSize() == 1) {
-            double n;
-            if (hc.getNumFmt() != null) {
-                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(bd.toString().length(), getFont(xf)))) columnWidths[column] = n;
-            }
-            else if (columnWidths[column] < (n = stringWidth(bd.toString(), xf))) columnWidths[column] = n;
-        }
-    }
-
-    /**
-     * Write char value
-     *
-     * @param c      the character value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    protected void writeChar(char c, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
-        bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
-        bw.writeInt(row);
-        if (hc.isShare()) {
-            bw.write("\" t=\"s\" s=\"");
-            bw.writeInt(xf);
-            bw.write("\"><v>");
+        bw.writeInt(cell.xf);
+        char c = cell.charVal;
+        if (cell.f) {
+            bw.write("\" t\"str\"><f>");
+            bw.escapeWrite(cell.formula);
+            bw.write("</f><v>");
+            bw.escapeWrite(c);
+            bw.write("</v></c>");
+        } else if (hc.isShare()) {
+            bw.write("\" t=\"s\"><v>");
             bw.writeInt(sst.get(c));
             bw.write("</v></c>");
         } else {
-            bw.write("\" t=\"inlineStr\" s=\"");
-            bw.writeInt(xf);
-            bw.write("\"><is><t>");
+            bw.write("\" t=\"inlineStr\"><is><t>");
             bw.escapeWrite(c);
             bw.write("</t></is></c>");
         }
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
-            Font font = getFont(xf);
-            double n = (c > 0x4E00 ? font.getSize() : font.getFontMetrics().charWidth(c)) / 6.0 * 1.02;
-            if (columnWidths[column] < n) columnWidths[column] = n;
+            Font font = getFont(cell.xf);
+            double n = (c > 0x4E00 ? font.getSize() : font.getFontMetrics().charWidth(c)) / 6.0D * 1.16D;
+            if (columnWidths[col] < n) columnWidths[col] = n;
         }
     }
 
     /**
-     * Write numeric value
+     * 写空值
      *
-     * @param l      the numeric value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
+     * @param cell   单元格信息
+     * @param row    行号
+     * @param col    列下标
      * @throws IOException if I/O error occur
      */
-    protected void writeNumeric(long l, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
-        bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
-        bw.writeInt(row);
-        bw.write("\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"><v>");
-        bw.write(l);
-        bw.write("</v></c>");
-        // TODO optimize If auto-width
-        if (hc.getAutoSize() == 1) {
-            double n;
-            if (hc.getNumFmt() != null) {
-                if (columnWidths[column] < (n = hc.getNumFmt().calcNumWidth(stringSize(l), getFont(xf)))) columnWidths[column] = n;
-            } else if (columnWidths[column] < (n = stringWidth(Long.toString(l), xf))) columnWidths[column] = n;
+    protected void writeNull(Cell cell, int row, int col) throws IOException {
+        // 有公式、边框或填充时写空单元格
+        if (cell.xf == 0 && !cell.f) return;
+        int style = styles.getStyleByIndex(cell.xf);
+        Fill fill = styles.getFill(style);
+        Border border = styles.getBorder(style);
+        if (fill != null && fill.getPatternType() != PatternType.none || border != null && border.isEffectiveBorder() || cell.f) {
+            bw.write("<c r=\"");
+            bw.write(int2Col(getColumn(col).getRealColIndex()));
+            bw.writeInt(row);
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+            if (cell.f) {
+                bw.write("\"><f>");
+                bw.escapeWrite(cell.formula);
+                bw.write("</f></c>");
+            } else bw.write("\"/>");
         }
-    }
-
-    /**
-     * Write boolean value
-     *
-     * @param bool   the boolean value
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    protected void writeBool(boolean bool, int row, int column, int xf) throws IOException {
-        Column hc = columns[column];
-        bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
-        bw.writeInt(row);
-        bw.write("\" t=\"b\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"><v>");
-        bw.writeInt(bool ? 1 : 0);
-        bw.write("</v></c>");
-        // TODO optimize If auto-width
-        if (hc.getAutoSize() == 1) {
-            double ln;
-            if (columnWidths[column] < (ln = stringWidth(Boolean.toString(bool), xf))) columnWidths[column] = ln;
-        }
-    }
-
-    /**
-     * Write blank value
-     *
-     * @param row    the row index
-     * @param column the column index
-     * @param xf     the style index
-     * @throws IOException if I/O error occur
-     */
-    protected void writeNull(int row, int column, int xf) throws IOException {
-        bw.write("<c r=\"");
-        bw.write(int2Col(columns[column].getRealColIndex()));
-        bw.writeInt(row);
-        bw.write("\" s=\"");
-        bw.writeInt(xf);
-        bw.write("\"/>");
     }
 
     /**
@@ -784,11 +890,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param bytes  the binary data
      * @param row    the row index
      * @param column the column index
-     * @param xf     the style index
      * @throws IOException if I/O error occur
      */
-    protected void writeBinary(byte[] bytes, int row, int column, int xf) throws IOException {
-        writeNull(row, column, xf);
+    protected void writeBinary(byte[] bytes, int row, int column) throws IOException {
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(ByteBuffer.wrap(bytes));
         if (signature == null || !signature.isTrusted()) {
@@ -810,11 +914,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param byteBuffer  the binary data
      * @param row    the row index
      * @param column the column index
-     * @param xf     the style index
      * @throws IOException if I/O error occur
      */
-    protected void writeBinary(ByteBuffer byteBuffer, int row, int column, int xf) throws IOException {
-        writeNull(row, column, xf);
+    protected void writeBinary(ByteBuffer byteBuffer, int row, int column) throws IOException {
         int position = byteBuffer.position();
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(byteBuffer);
@@ -841,11 +943,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param path   the picture file
      * @param row    the row index
      * @param column the column index
-     * @param xf     the style index
      * @throws IOException if I/O error occur
      */
-    protected void writeFile(Path path, int row, int column, int xf) throws IOException {
-        writeNull(row, column, xf);
+    protected void writeFile(Path path, int row, int column) throws IOException {
         // Test file signatures
         FileSignatures.Signature signature = FileSignatures.test(path);
         if (!signature.isTrusted()) {
@@ -867,12 +967,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param stream  the picture input-stream
      * @param row    the row index
      * @param column the column index
-     * @param xf     the style index
      * @throws IOException if I/O error occur
      */
-    protected void writeStream(InputStream stream, int row, int column, int xf) throws IOException {
-        writeNull(row, column, xf);
-
+    protected void writeStream(InputStream stream, int row, int column) throws IOException {
         byte[] bytes = new byte[1 << 13];
         int n;
 
@@ -918,20 +1015,52 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @param url  remote url
      * @param row    the row index
      * @param column the column index
-     * @param xf     the style index
      * @throws IOException if I/O error occur
      */
-    protected void writeRemoteMedia(String url, int row, int column, int xf) throws IOException {
-        writeNull(row, column, xf);
-
+    protected void writeRemoteMedia(String url, int row, int column) throws IOException {
         Picture picture = createPicture(column, row);
         picture.id = sheet.getWorkbook().incrementMediaCounter();
 
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         // Async Drawing
         drawingsWriter.asyncDrawing(picture);
 
         // Supports asynchronous download
         downloadRemoteResource(picture, url);
+    }
+
+    /**
+     * 写{@link Picture}
+     *
+     * @param picture 图像对象
+     * @throws IOException 输出异常
+     */
+    @Override
+    public void writePicture(Picture picture) throws IOException {
+        if (picture.localPath == null) return;
+        // Test file signatures
+        FileSignatures.Signature signature = FileSignatures.test(picture.localPath);
+        if (!signature.isTrusted()) {
+            LOGGER.warn("File types that are not allowed");
+            return;
+        }
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
+        int id = sheet.getWorkbook().incrementMediaCounter();
+        picture.id = id;
+        String name = "image" + id + "." + signature.extension;
+        picture.picName = name;
+        picture.size = signature.width << 16 | signature.height;
+        // Store
+        Files.copy(picture.localPath, mediaPath.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+
+        // Write picture
+        // Drawing
+        drawingsWriter.drawing(picture);
+
+        // Add global contentType
+        sheet.getWorkbook().addContentType(new ContentType.Default(signature.contentType, signature.extension));
     }
 
     /**
@@ -1050,8 +1179,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getRealColIndex());
             bw.write(col);
             n -= col.length;
-            size = includeAutoWidth || sheet.getNonHeader() == 1 ? (size + startRow - 1) % getRowLimit() : size + startRow + columns[0].subColumnSize() - 1;
-            bw.writeInt(size);
+            size = includeAutoWidth || sheet.getNonHeader() == 1 ? size + startRow - 1 : size + startRow + columns[0].subColumnSize() - 1;
+            bw.writeInt(size > getRowLimit() ? getRowLimit() : size);
             n -= stringSize(size);
         }
         bw.write('"');
@@ -1070,11 +1199,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<sheetView workbookViewId=\"0\"");
         // Default show grid lines
         if (!sheet.isShowGridLines()) bw.write(" showGridLines=\"0\"");
+        Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.ZOOM_SCALE);
+        if (o instanceof Integer) {
+            int scale = (Integer) o;
+            bw.write(" zoomScale=\"");
+            // Scale value between 10% to 400%
+            bw.writeInt(scale < 10 ? 10 : Math.min(scale, 400));
+            bw.write("\"");
+        }
         // Default select the first worksheet
         if (sheet.getId() == 1) bw.write(" tabSelected=\"1\"");
 
         // Freeze Panes
-        Object o = sheet.getExtPropValue(Const.ExtendPropertyKey.FREEZE);
+        o = sheet.getExtPropValue(Const.ExtendPropertyKey.FREEZE);
         if (o instanceof Panes) {
             Panes freezePanes = (Panes) o;
 
@@ -1133,16 +1270,38 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write the sheet format
      *
-     * @param fillSpace The number of characters to pad when recalculating the width.
-     * @param defaultWidth The default cell width, {@code 8.38} will be use if it not be setting.
      * @throws IOException if I/O error occur.
      */
-    protected void writeSheetFormat(int fillSpace, String defaultWidth) throws IOException {
-        bw.write("<sheetFormatPr defaultRowHeight=\"18.5\" defaultColWidth=\"");
-        bw.write(defaultWidth);
-        bw.write('"');
-        for (int i = fillSpace - defaultWidth.length(); i-->=0;) bw.write(32); // Fill space
-        bw.write("/>");
+    protected void writeSheetFormat() throws IOException {
+        int n = 0;
+        BigDecimal defaultColWidth = null, defaultRowHeight = null;
+        try {
+            Object o;
+            if ((o = sheet.getExtPropValue("defaultColWidth")) != null) {
+                defaultColWidth = new BigDecimal(o.toString());
+                n |= 1;
+            }
+            if ((o = sheet.getExtPropValue("defaultRowHeight")) != null) {
+                defaultRowHeight = new BigDecimal(o.toString());
+                n |= 2;
+            }
+        } catch (NumberFormatException e) {
+            // Ignore
+        }
+        if (n > 0) {
+            bw.write("<sheetFormatPr");
+            if ((n & 1) == 1) {
+                bw.write(" defaultColWidth=\"");
+                bw.writeInt(defaultColWidth.intValue());
+                bw.write("\"");
+            }
+            if ((n & 2) == 2) {
+                bw.write(" defaultRowHeight=\"");
+                bw.writeInt(defaultRowHeight.intValue());
+                bw.write("\"");
+            }
+            bw.write("/>");
+        }
     }
 
     /**
@@ -1155,26 +1314,41 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeCols(int fillSpace, String defaultWidth) throws IOException {
         if (columns.length > 0) {
             bw.write("<cols>");
-            for (int i = 0; i < columns.length; i++) {
-                Column col = columns[i];
-                String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
-                int w = width.length();
-                bw.write("<col customWidth=\"1\" width=\"");
-                bw.write(width);
-                if (col.isHide()) {
-                    bw.write("\" hidden=\"1");
-                    w += 11;
+            Column fCol = columns[0];
+            String fWidth = fCol.width >= 0.0000001D ? new BigDecimal(fCol.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+            // 多个col时将相同属性的col进行压缩
+            if (columns.length > 1) {
+                for (int i = 1; i < columns.length; i++) {
+                    Column col = columns[i], pCol = columns[i - 1];
+                    String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+                    boolean lastColumn = i == columns.length - 1;
+                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1) {
+                        writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.isHide());
+                        fWidth = width;
+                        fCol = col;
+                    }
+                    if (lastColumn) writeCol(width, fCol.getRealColIndex(), col.realColIndex, fillSpace, col.isHide());
                 }
-                bw.write('"');
-                for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
-                bw.write(" min=\"");
-                bw.writeInt(col.getRealColIndex());
-                bw.write("\" max=\"");
-                bw.writeInt(col.getRealColIndex());
-                bw.write("\" bestFit=\"1\"/>");
-            }
+            } else writeCol(fWidth, fCol.getRealColIndex(), fCol.getRealColIndex(), fillSpace, fCol.isHide());
             bw.write("</cols>");
         }
+    }
+
+    protected void writeCol(String width, int min, int max, int fillSpace, boolean isHide) throws IOException {
+        bw.write("<col customWidth=\"1\" width=\"");
+        bw.write(width);
+        int w = width.length();
+        if (isHide) {
+            bw.write("\" hidden=\"1");
+            w += 11;
+        }
+        bw.write('"');
+        for (int j = fillSpace - w; j-- > 0; ) bw.write(32); // Fill space
+        bw.write(" min=\"");
+        bw.writeInt(min);
+        bw.write("\" max=\"");
+        bw.writeInt(max);
+        bw.write("\" bestFit=\"1\"/>");
     }
 
     /**
@@ -1203,6 +1377,34 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur.
      */
     protected void afterSheetData() throws IOException {
+        // 数据验证
+        @SuppressWarnings("unchecked")
+        List<Validation> validations = (List<Validation>) sheet.getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
+        if (validations != null && !validations.isEmpty()) {
+            bw.write("<dataValidations count=\"");
+            bw.writeInt(validations.size());
+            bw.write("\">");
+            for (Validation e : validations) {
+                bw.write(e.toString());
+            }
+            bw.write("</dataValidations>");
+        }
+
+        // 超链接
+        if (!hyperlinkMap.isEmpty()) {
+            bw.write("<hyperlinks>");
+            for (Map.Entry<String, List<String>> entry : hyperlinkMap.entrySet()) {
+                for (String dim : entry.getValue()) {
+                    bw.write("<hyperlink ref=\"");
+                    bw.write(dim);
+                    bw.write("\" r:id=\"");
+                    bw.write(entry.getKey());
+                    bw.write("\"/>");
+                }
+            }
+            bw.write("</hyperlinks>");
+        }
+
         // vmlDrawing
         Relationship r = sheet.findRel("vmlDrawing");
         if (r != null) {
@@ -1221,26 +1423,43 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("\"/>");
         }
 
-        // Background image
-        if (sheet.getWaterMark() != null) {
-            RelManager relManager = sheet.getRelManager();
-            r = relManager.getByType(Const.Relationship.IMAGE);
-            if (r != null) {
-                bw.write("<picture r:id=\"");
-                bw.write(r.getId());
-                bw.write("\"/>");
-            }
-        }
-
         // Drawings
         if (drawingsWriter != null) {
-            RelManager relManager = sheet.getRelManager();
             r = relManager.getByType(Const.Relationship.DRAWINGS);
             if (r != null) {
                 bw.write("<drawing r:id=\"");
                 bw.write(r.getId());
                 bw.write("\"/>");
             }
+        }
+
+        // 背景图片
+        writeWaterMark();
+    }
+
+    /**
+     * 添加水印
+     *
+     * @throws IOException 无权限或磁盘空间不足
+     */
+    protected void writeWaterMark() throws IOException {
+        WaterMark waterMark = sheet.getWaterMark();
+        if (waterMark == null || !waterMark.canWrite()) {
+            waterMark = sheet.getWorkbook().getWaterMark();
+            sheet.setWaterMark(waterMark);
+        }
+        if (waterMark != null && waterMark.canWrite()) {
+            Path media = workSheetPath.getParent().resolve("media");
+            if (!exists(media)) Files.createDirectory(media);
+            Path image = media.resolve("image" + sheet.getWorkbook().incrementMediaCounter() + waterMark.getSuffix());
+
+            Files.copy(waterMark.get(), image);
+            Relationship r = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
+            sheet.addRel(r);
+
+            bw.write("<picture r:id=\"");
+            bw.write(r.getId());
+            bw.write("\"/>");
         }
     }
 
@@ -1305,7 +1524,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // 非“自动折行”将显示为一行，宽度直接相加
             else for (; i < len && w < 1500; w += (c = s.charAt(i++)) > 0x4E00 ? fs : fm.charWidth(c));
         }
-        return w / 6.0D * 1.02D;
+        return w / 6.0D * 1.16D;
     }
 
     /**
@@ -1358,10 +1577,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void initDrawingsWriter() throws IOException {
         if (hasMedia()) {
-            if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
-            if (drawingsWriter == null) {
-                drawingsWriter = createDrawingsWriter();
-            }
+            createDrawingsWriter();
         }
     }
 
@@ -1369,12 +1585,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Create drawing writer and add relationship
      *
      * @return {@link IDrawingsWriter}
+     * @throws IOException if I/O error occur.
      */
-    public IDrawingsWriter createDrawingsWriter() {
-        int id = sheet.getWorkbook().incrementDrawingCounter();
-        sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
-        sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
-        return new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+    protected IDrawingsWriter createDrawingsWriter() throws IOException {
+        if (mediaPath == null) mediaPath = Files.createDirectories(workSheetPath.getParent().resolve("media"));
+        if (drawingsWriter == null) {
+            int id = sheet.getWorkbook().incrementDrawingCounter();
+            sheet.getWorkbook().addContentType(new ContentType.Override(Const.ContentType.DRAWINGS, "/xl/drawings/drawing" + id + ".xml"));
+            sheet.addRel(new Relationship("../drawings/drawing" + id + ".xml", Const.Relationship.DRAWINGS));
+            drawingsWriter = new XMLDrawingsWriter(workSheetPath.getParent().resolve("drawings").resolve("drawing" + id + ".xml"));
+        }
+        return drawingsWriter;
     }
 
     /**
@@ -1409,7 +1630,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             downloadCompleted(picture, null);
         } catch (IOException e) {
             LOGGER.error("Download remote resource [{}] error", url, e);
-            throw e;
+            downloadCompleted(picture, null);
         }
     }
 
@@ -1449,6 +1670,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         picture.picName = name;
         picture.size = signature.width << 16 | signature.height;
 
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         // Drawing
         drawingsWriter.drawing(picture);
 
@@ -1467,9 +1690,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected Picture createPicture(int column, int row) {
         Picture picture = new Picture();
         picture.col = column;
-        picture.row = row;
-        picture.setPadding(1);
-        picture.effect = columns[column].effect;
+        picture.row = row - 1;
+        // 默认位置和大小随单元格一起变动
+        picture.toCol = column + 1;
+        picture.toRow = row;
+//        picture.setPadding(1);
+        picture.setPaddingTop(1).setPaddingRight(-1).setPaddingBottom(-1).setPaddingLeft(1);
+        picture.effect = getColumn(column).effect;
 
         return picture;
     }
@@ -1512,5 +1739,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             fs[xf] = f = styles.getFont(style);
         }
         return f;
+    }
+
+    /**
+     * 获取列属性
+     *
+     * @param index 列下标（从0开始）
+     * @return 列属性（不为{@code null}）
+     */
+    protected Column getColumn(int index) {
+        Column hc = index < columns.length ? columns[index] : null;
+        if (hc == null) {
+            hc = Column.UNALLOCATED_COLUMN;
+            hc.realColIndex = index + 1;
+        }
+        return hc;
     }
 }

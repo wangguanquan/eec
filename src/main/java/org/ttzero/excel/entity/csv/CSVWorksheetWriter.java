@@ -234,16 +234,16 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         for (Cell cell : cells) {
             switch (cell.t) {
                 case INLINESTR:
-                case SST      : writer.write(cell.sv);                                         break;
-                case NUMERIC  : writer.write(cell.nv);                                         break;
-                case LONG     : writer.write(cell.lv);                                         break;
-                case DOUBLE   : writer.write(cell.dv);                                         break;
-                case BOOL     : writer.write(cell.bv);                                         break;
-                case DECIMAL  : writer.write(cell.mv.toString());                              break;
-                case CHARACTER: writer.writeChar(cell.cv);                                     break;
-                case DATE     : writer.write(DateUtil.toDateString(DateUtil.toDate(cell.nv))); break;
-                case DATETIME : writer.write(DateUtil.toString(DateUtil.toDate(cell.dv)));     break;
-                case TIME     : writer.write(DateUtil.toDate(cell.dv).toString());             break;
+                case SST      : writer.write(cell.stringVal);                                      break;
+                case NUMERIC  : writer.write(cell.intVal);                                         break;
+                case LONG     : writer.write(cell.longVal);                                        break;
+                case DOUBLE   : writer.write(cell.doubleVal);                                      break;
+                case BOOL     : writer.write(cell.boolVal);                                        break;
+                case DECIMAL  : writer.write(cell.decimal.toString());                             break;
+                case CHARACTER: writer.writeChar(cell.charVal);                                    break;
+                case DATE     : writer.write(DateUtil.toDateString(DateUtil.toDate(cell.intVal))); break;
+                case DATETIME : writer.write(DateUtil.toString(DateUtil.toDate(cell.doubleVal)));  break;
+                case TIME     : writer.write(DateUtil.toDate(cell.doubleVal).toString());          break;
                 default       : writer.writeEmpty();
             }
         }

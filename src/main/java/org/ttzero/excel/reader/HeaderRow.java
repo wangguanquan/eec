@@ -27,15 +27,12 @@ import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -59,11 +56,14 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
+import static org.ttzero.excel.util.ReflectUtil.writeMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.lowFirstKey;
 import static org.ttzero.excel.util.StringUtil.toCamelCase;
 
 /**
+ * 表头行，包含列与对象的映射关系
+ *
  * @author guanquan.wang at 2019-04-17 11:55
  */
 public class HeaderRow extends Row {
@@ -88,8 +88,6 @@ public class HeaderRow extends Row {
     /* Storage header column */
     protected ListSheet.EntryColumn[] columns;
 
-    // `detailMessage` field declare in Throwable
-    protected static final Field detailMessageField;
     // Specify total rows of header
     protected int headRows;
     /**
@@ -104,17 +102,6 @@ public class HeaderRow extends Row {
      * </pre></blockquote>
      */
     protected int option;
-
-    static {
-        Field field = null;
-        try {
-            field = Throwable.class.getDeclaredField("detailMessage");
-            field.setAccessible(true);
-        } catch (Exception e) {
-            // Ignore
-        }
-        detailMessageField = field;
-    }
 
     public HeaderRow with(Row ... rows) {
         return with(null, rows.length, rows);
@@ -151,7 +138,7 @@ public class HeaderRow extends Row {
 
                 Cell cell = new Cell(hCell.i);
                 cell.xf = hCell.xf;
-                cell.setSv(this.names[i]);
+                cell.setString(this.names[i]);
                 this.cells[i] = cell;
             }
         } else {
@@ -174,7 +161,7 @@ public class HeaderRow extends Row {
                 Cell hCell = rows[rows.length - 1].getCell(i);
                 Cell cell = new Cell(hCell != null ? hCell.i : i);
                 cell.xf = hCell != null ? hCell.xf : 0;
-                cell.setSv(this.names[i]);
+                cell.setString(this.names[i]);
                 this.cells[i] = cell;
             }
         }
@@ -199,12 +186,7 @@ public class HeaderRow extends Row {
         // Parse Method
         Map<String, Method> tmp = new HashMap<>();
         try {
-            PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz, Object.class)
-                    .getPropertyDescriptors();
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                Method method = pd.getWriteMethod();
-                if (method != null) tmp.put(pd.getName(), method);
-            }
+            tmp.putAll(writeMethodsMap(clazz, Object.class));
         } catch (IntrospectionException e) {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
@@ -305,10 +287,10 @@ public class HeaderRow extends Row {
                 for (int j = sub.length - 1, t; j >= 0; j--) {
                     if (mergedGrid.test(t = sub.length - j, c.realColIndex) && isTopRow(mergeCells, t, c.realColIndex)) {
                         Cell cell = new Cell((short) c.realColIndex);
-                        if (StringUtil.isNotEmpty(sub[j].getName())) cell.setSv(sub[j].getName());
+                        if (StringUtil.isNotEmpty(sub[j].getName())) cell.setString(sub[j].getName());
                         else cell.t = Cell.EMPTY_TAG;
                         mergedGrid.merge(t, cell);
-                        sub[j].name = cell.sv;
+                        sub[j].name = cell.stringVal;
                     }
                 }
             }
@@ -486,42 +468,15 @@ public class HeaderRow extends Row {
         catch (IllegalAccessException | InvocationTargetException ex) {
             throw ex;
         }
-        catch (NumberFormatException | DateTimeException ex) {
-            ListSheet.EntryColumn c = columns[i];
-            String msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else
-                throw ex instanceof DateTimeException ? new DateTimeException(msg, ex) : new NumberFormatException(msg);
-        }
-        catch (NullPointerException ex) {
-            String msg = "Null value in cell '" + new String(int2Col(columns[i].colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + ')';
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new ExcelReadException(msg, ex);
-        }
-        catch (UncheckedTypeException ex) {
-            ListSheet.EntryColumn c = columns[i];
-            String msg;
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg ="Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "'(" + row.getCellType(i) + "). " + ex.getMessage();
-            else msg = "The undecorated value of cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + "), cannot cast to " + c.clazz;
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new UncheckedTypeException(msg, ex);
-        }
         catch (Exception ex) {
             ListSheet.EntryColumn c = columns[i];
-            String msg = "Error occur in cell '" + new String(int2Col(c.colIndex + 1)) + row.getRowNum() + "' value is \"" + row.getString(c.colIndex) + "\"(" + row.getCellType(c.colIndex) + ')';
-            if (StringUtil.isNotEmpty(ex.getMessage())) msg = msg + ". " + ex.getMessage();
-            if (detailMessageField != null) {
-                detailMessageField.set(ex, msg);
-                throw ex;
-            } else throw new ExcelReadException(msg, ex);
+            int rowNum = row.getRowNum();
+            int colIndex = c.colIndex;
+            int colNum = colIndex + 1;
+            CellType excelType = row.getCellType(colIndex);
+            Class<?> javaType = c.clazz;
+            String msg = "The value in cell '" + new String(int2Col(colNum)) + rowNum + "' is \"" + row.getString(colIndex) + "\"(" + excelType + "), cannot cast to " + javaType.getTypeName();
+            throw new TypeCastException(rowNum, colNum, excelType, javaType, msg, ex);
         }
     }
 
@@ -852,7 +807,7 @@ public class HeaderRow extends Row {
                     if (b > 0) {
                         for (int a = r; a < c; a++) {
                             Row t = rows[a];
-                            for (int j = d.firstColumn - 1; j < d.lastColumn; t.cells[j++].setSv(null));
+                            for (int j = d.firstColumn - 1; j < d.lastColumn; t.cells[j++].setString(null));
                         }
                     }
                     Row lastRow = rows[c];

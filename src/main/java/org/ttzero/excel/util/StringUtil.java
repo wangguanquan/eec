@@ -17,7 +17,7 @@
 package org.ttzero.excel.util;
 
 /**
- * string util
+ * 字符串工具类，提供一些简单的静态方法
  *
  * @author guanquan.wang on 2017/9/30.
  */
@@ -25,42 +25,37 @@ public class StringUtil {
     private StringUtil() { }
 
     /**
-     * Const `""` string
+     * 空字符串
      */
     public final static String EMPTY = "";
 
     /**
-     * Returns {@code true} if it is null or {@link String#length()} is {@code 0}.
+     * 检查字符串是否为空字符串，当字符串{@code s}为{@code null}或{@code String.isEmpty}则返回{@code true}
      *
-     * @param s string value to check
-     * @return {@code true} if null or {@link String#length()} is {@code 0}, otherwise
-     * {@code false}
+     * @param s 待检查字符串
+     * @return {@code true}当字符串为{@code null}或{@code String.isEmpty}
      */
     public static boolean isEmpty(String s) {
         return s == null || s.isEmpty();
     }
 
     /**
-     * Returns {@code true} if, and only if, {@link String#length()} greater than {@code 0}.
+     * 检查字符串不为空字符串，当字符串{@code s}不为{@code null}且长度大小{@code 0}则返回{@code true}
      *
-     * @param s string value to check
-     * @return {@code true} if {@link String#length()} greater than {@code 0}, otherwise
-     * {@code false}
+     * @param s 待检查字符串
+     * @return {@code true}当字符串不为{@code null}且长度大小{@code 0}
      */
     public static boolean isNotEmpty(String s) {
         return s != null && s.length() > 0;
     }
 
     /**
-     * Returns the index within this string array of the first occurrence of
-     * the specified string.
-     * <p>
-     * If no such string occurs in this array, then {@code -1} is returned.
+     * 查找字符串在数组中第一次出现的位置，查找是从数组头向尾逐一比较，时间复杂度{@code n}（n为数组长度），
+     * 建议只应用于小数组查找，待查找字符串{@code v}可以为{@code null}，但数组不能为{@code null}
      *
-     * @param array array to search
-     * @param v the specify string
-     * @return the index of the first occurrence of the string in array, or
-     *      {@code -1} if the string does not occur.
+     * @param array 查找源，不为{@code null}
+     * @param v     待查找字符串
+     * @return 如果存在则返回字符串在数组中第一次出现的下标否则返回 {@code -1}
      */
     public static int indexOf(String[] array, String v) {
         if (v != null) {
@@ -80,11 +75,12 @@ public class StringUtil {
     }
 
     /**
-     * Turn the first character into an upper case. It means if the first
-     * character is between 97 and 122, it will be minus {@code 32}.
+     * 首字母大写，转化是<b>强制</b>的它并不会检查空串以及第二个字符是否为大字，外部最好不要使用
      *
-     * @param key a string to processor
-     * @return a string witch the first character is upper case
+     * <p>注意：本方法只适用于范围为{@code [97, 122]}的{@code ASCII}值</p>
+     *
+     * @param key 待处理字符串
+     * @return 转为首字母大写后的字符串
      */
     public static String uppFirstKey(String key) {
         char first = key.charAt(0);
@@ -97,11 +93,10 @@ public class StringUtil {
     }
 
     /**
-     * Turn the first character into an lower case. It means if the first
-     * character is between 65 and 90, it will be plus {@code 32}.
+     * 首字母小写，转化是<b>强制</b>的它并不会检查空串，外部最好不要使用
      *
-     * @param key a string to processor
-     * @return a string witch the first character is lower case
+     * @param key 待处理字符串
+     * @return 转为首字母大写后的字符串
      */
     public static String lowFirstKey(String key) {
         char first = key.charAt(0);
@@ -114,21 +109,29 @@ public class StringUtil {
     }
 
     /**
-     * Convert to camel case string.
+     * 将字符串转为驼峰风格，仅支持将下划线{@code '_'}风格转驼峰风格，内部不检查参数是否为{@code null}请谨慎使用
+     * <blockquote><pre>
+     * 转换前       | 转换后
+     * ------------+------------
+     * GOODS_NAME  | goodsName
+     * NAME        | name
+     * goods__name | goodsName
+     * _goods__name| _goodsName
+     * </pre></blockquote>
      *
-     * @param name a string to processor
-     * @return a camel case string
+     * @param name 待转换字符串
+     * @return 驼峰风格字符串
      */
     public static String toCamelCase(String name) {
-        if (name.indexOf('_') < 0) return name;
+        if (name.indexOf('_') < 0) return name.toLowerCase();
         char[] oldValues = name.toLowerCase().toCharArray();
         final int len = oldValues.length;
         int i = 1, idx = i;
         for (int n = len - 1; i < n; i++) {
             char c = oldValues[i], cc = oldValues[i + 1];
             if (c == '_') {
-                i++;
                 if (cc == '_') continue;
+                i++;
                 oldValues[idx++] = cc >= 'a' && cc <= 'z' ? (char) (cc - 32) : cc;
             }
             else {
@@ -140,11 +143,11 @@ public class StringUtil {
     }
 
     /**
-     * Wrap value in string array
+     * 交换数组中的值，交换是<b>强制</b>的它并不会检查下标的范围，外部最好不要使用
      *
-     * @param values the array to warp
-     * @param a from index
-     * @param b to index
+     * @param values 数组
+     * @param a      指定交换下标
+     * @param b      指定交换下标
      */
     public static void swap(String[] values, int a, int b) {
         String t = values[a];
@@ -153,10 +156,10 @@ public class StringUtil {
     }
 
     /**
-     * Checks if a CharSequence is empty (""), null or whitespace only.
+     * 检查字符串是否为{@code null}或空白字符
      *
-     * @param cs  the CharSequence to check, may be null
-     * @return {@code true} if the CharSequence is null, empty or whitespace only
+     * @param cs 待检查的字符串
+     * @return {@code true} 字符串为{@code null}或空白字符
      */
     public static boolean isBlank(final CharSequence cs) {
         int strLen;
@@ -172,21 +175,20 @@ public class StringUtil {
     }
 
     /**
-     * Checks if a CharSequence is not empty (""), not null and not whitespace only.
+     * 检查字符串不为{@code null}或非空白字符
      *
-     * @param cs  the CharSequence to check, may be null
-     * @return {@code true} if the CharSequence is
-     *  not empty and not null and not whitespace only
+     * @param cs 待检查的字符串
+     * @return {@code true} 字符串不为{@code null}或非空白字符
      */
     public static boolean isNotBlank(final CharSequence cs) {
         return !isBlank(cs);
     }
 
     /**
-     * long size to string
+     * 格式化字节大小，将字节大小转为{@code kb,mb,gb}等格式
      *
-     * @param size file size in bytes
-     * @return String size
+     * @param size 字节大小
+     * @return 格式化字符串
      */
     public static String formatBinarySize(long size) {
         long kb = 1 << 10, mb = kb << 10, gb = mb << 10;
@@ -200,59 +202,29 @@ public class StringUtil {
 
 
     /**
-     * Time millis to String, like 1h:3s or 4m:1s
+     * 毫秒时间转字符串，通常用于格式化某段代码的耗时, 如：1h:3s or 4m:1s
      *
-     * @param t time millis
-     * @return string
+     * @param t 毫秒时间
+     * @return 格式化文本
      */
     public static String timeToString(long t) {
         int n = (int) t / 1000;
-        int h = n / 3600, m = (n - h * 3600) / 60, s = n - h * 3600 - m * 60;
-        return "" + (h > 0 ? h + "h" : "")
+        int h = n / 3600, m = (n - h * 3600) / 60, s = n - h * 3600 - m * 60, ms = (int) (t - n * 1000);
+        return (h > 0 ? h + "h" : "")
             + (m > 0 ? (h > 0 ? ":" : "") + m + "m" : "")
-            + ((h + m > 0 ? ":" : "") + s + "s");
+            + (s > 0 ? (h + m > 0 ? ":" : "") + s + "s" : "")
+            + (ms > 0 ? ((h + m + s > 0 ? ":" : "") + ms + "ms") : (h + m + s > 0 ? "" : "0ms"));
     }
 
     /**
-     * Returns the index within this string of the first occurrence of the
-     * specified character, starting the search at the specified range.
-     * <p>
-     * If a character with value {@code ch} occurs in the
-     * character sequence represented by this {@code String}
-     * object at an index no smaller than {@code fromIndex}, then
-     * the index of the first such occurrence is returned. For values
-     * of {@code ch} in the range from 0 to 0xFFFF (inclusive),
-     * this is the smallest value <i>k</i> such that:
-     * <blockquote><pre>
-     * (this.charAt(<i>k</i>) == ch) {@code &&} (<i>k</i> &gt;= fromIndex)
-     * </pre></blockquote>
-     * is true. For other values of {@code ch}, it is the
-     * smallest value <i>k</i> such that:
-     * <blockquote><pre>
-     * (this.codePointAt(<i>k</i>) == ch) {@code &&} (<i>k</i> &gt;= fromIndex)
-     * </pre></blockquote>
-     * is true. In either case, if no such character occurs in this
-     * string at or after position {@code fromIndex}, then
-     * {@code -1} is returned.
+     * 查找某个字符{@code ch}在字符串{@code str}的位置，与{@link String#indexOf(int, int)}不同之处在于
+     * 后者从开始位置查找到字符串结尾，而前者需要指定一个结束位置查找范围在{@code fromIndex}到{@code toIndex}之间
      *
-     * <p>
-     * There is no restriction on the value of {@code fromIndex}. If it
-     * is negative, it has the same effect as if it were zero: this entire
-     * string may be searched. If it is greater than the length of this
-     * string, it has the same effect as if it were equal to the length of
-     * this string: {@code -1} is returned.
-     *
-     * <p>All indices are specified in {@code char} values
-     * (Unicode code units).
-     *
-     * @param str not null
-     * @param   ch          a character (Unicode code point).
-     * @param   fromIndex   the index to start the search from.
-     * @param   toIndex   the high endpoint (exclusive) of the search end.
-     * @return  the index of the first occurrence of the character in the
-     *          character sequence represented by this object that is greater
-     *          than or equal to {@code fromIndex}, or {@code -1}
-     *          if the character does not occur.
+     * @param str       字符串源
+     * @param ch        待查找的字符
+     * @param fromIndex 起始位置（包含）
+     * @param toIndex   结束位置（不包含）
+     * @return 字符 {@code ch} 在字符串的位置，未找到时返回{@code -1}
      */
     public static int indexOf(String str, int ch, int fromIndex, int toIndex) {
         final int max = Math.min(str.length(), toIndex);
@@ -279,7 +251,8 @@ public class StringUtil {
     }
 
     /**
-     * Handles (rare) calls of indexOf with a supplementary character.
+     * UTF-8编码一个字符理论上最多占用3个字节，所以需要逐个比较每个字节，但目前为止UTF-8只使用了最多2个字节来表示世界上所有的文字，
+     * 所以这里比较最多2个字节
      */
     private static int indexOfSupplementary(char[] value, int ch, int fromIndex, int toIndex) {
         if (Character.isValidCodePoint(ch)) {

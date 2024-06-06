@@ -80,38 +80,38 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
             return;
         }
         if (isString(clazz)) {
-            cell.setSv(e.toString());
+            cell.setString(e.toString());
         } else if (isDate(clazz)) {
             // TODO hc.numFmt
-            cell.setSv(DateUtil.toDateString((java.util.Date) e));
+            cell.setString(DateUtil.toDateString((java.util.Date) e));
         } else if (isDateTime(clazz)) {
-            cell.setSv(DateUtil.toString((Timestamp) e));
+            cell.setString(DateUtil.toString((Timestamp) e));
         } else if (isChar(clazz)) {
-            cell.setCv((Character) e);
+            cell.setChar((Character) e);
         } else if (isShort(clazz)) {
-            cell.setNv((Short) e);
+            cell.setInt((Short) e);
         } else if (isInt(clazz)) {
-            cell.setNv((Integer) e);
+            cell.setInt((Integer) e);
         } else if (isLong(clazz)) {
-            cell.setLv((Long) e);
+            cell.setLong((Long) e);
         } else if (isFloat(clazz)) {
-            cell.setDv((Float) e);
+            cell.setDouble((Float) e);
         } else if (isDouble(clazz)) {
-            cell.setDv((Double) e);
+            cell.setDouble((Double) e);
         } else if (isBool(clazz)) {
-            cell.setBv((Boolean) e);
+            cell.setBool((Boolean) e);
         } else if (isBigDecimal(clazz)) {
-            cell.setMv((BigDecimal) e);
+            cell.setDecimal((BigDecimal) e);
         } else if (isLocalDate(clazz)) {
-            cell.setSv(((java.time.LocalDate) e).toString());
+            cell.setString(((java.time.LocalDate) e).toString());
         } else if (isLocalDateTime(clazz)) {
-            cell.setSv(DateUtil.LOCAL_DATE_TIME.format((java.time.LocalDateTime) e));
+            cell.setString(DateUtil.LOCAL_DATE_TIME.format((java.time.LocalDateTime) e));
         } else if (isTime(clazz)) {
-            cell.setSv(DateTimeFormatter.ISO_TIME.format(((java.sql.Time) e).toLocalTime()));
+            cell.setString(DateTimeFormatter.ISO_TIME.format(((java.sql.Time) e).toLocalTime()));
         } else if (isLocalTime(clazz)) {
-            cell.setSv(DateTimeFormatter.ISO_TIME.format((java.time.LocalTime) e));
+            cell.setString(DateTimeFormatter.ISO_TIME.format((java.time.LocalTime) e));
         } else {
-            cell.setSv(e.toString());
+            cell.setString(e.toString());
         }
     }
 

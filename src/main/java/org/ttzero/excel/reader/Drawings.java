@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.reader;
 
+import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.util.StringUtil;
 
 import java.nio.file.Path;
@@ -70,6 +71,24 @@ public interface Drawings {
          * 是否为背景图片，水印图片
          */
         boolean background;
+        /**
+         * 0: Move and size with cells
+         * 1: Move but don't size with cells
+         * 2: Don't move or size with cells
+         */
+        int property;
+        /**
+         * Revolve -360 ~ 360
+         */
+        int revolve;
+        /**
+         * Padding top | right | bottom | left
+         */
+        short[] padding;
+        /**
+         * Picture effects
+         */
+        Effect effect;
 
         public Sheet getSheet() {
             return sheet;
@@ -89,6 +108,22 @@ public interface Drawings {
 
         public boolean isBackground() {
             return background;
+        }
+
+        public int getProperty() {
+            return property;
+        }
+
+        public int getRevolve() {
+            return revolve;
+        }
+
+        public short[] getPadding() {
+            return padding;
+        }
+
+        public Effect getEffect() {
+            return effect;
         }
 
         @Override

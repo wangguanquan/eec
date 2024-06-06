@@ -17,20 +17,38 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
 import org.ttzero.excel.reader.Row;
+import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -42,12 +60,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author guanquan.wang at 2019-04-28 19:16
@@ -63,10 +86,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -99,10 +122,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
-            assert "Map".equals(sheet.getName());
+            assertEquals("Map", sheet.getName());
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Map<String, ?> expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 Map<String, ?> e = row.toMap();
                 assertAllType(expect, e);
@@ -113,9 +136,9 @@ public class ListMapSheetTest extends WorkbookTest {
                     int styleIndex = row.getCellStyle(i);
                     Fill fill = styles.getFill(styleIndex);
                     if (bv) {
-                        assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.green);
+                        assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.green));
                     } else {
-                        assert fill == null || fill.getPatternType() == PatternType.none;
+                        assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                     }
                 }
             }
@@ -143,32 +166,32 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
-            assert "Map".equals(sheet.getName());
+            assertEquals("Map", sheet.getName());
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "boolean".equals(header.get(0));
-            assert "char".equals(header.get(1));
-            assert "short".equals(header.get(2));
-            assert "int".equals(header.get(3));
-            assert "long".equals(header.get(4));
-            assert "LocalDateTime".equals(header.get(5));
-            assert "LocalTime".equals(header.get(6));
+            assertEquals("boolean", header.get(0));
+            assertEquals("char", header.get(1));
+            assertEquals("short", header.get(2));
+            assertEquals("int", header.get(3));
+            assertEquals("long", header.get(4));
+            assertEquals("LocalDateTime", header.get(5));
+            assertEquals("LocalTime", header.get(6));
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Map<String, ?> expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 Map<String, ?> e = row.toMap();
 
-                assert expect.get("bv").equals(e.get("boolean"));
-                assert expect.get("cv").toString().equals(e.get("char").toString());
-                assert expect.get("sv").toString().equals(e.get("short").toString());
-                assert expect.get("nv").toString().equals(e.get("int").toString());
-                assert expect.get("lv").toString().equals(e.get("long").toString());
+                assertEquals(expect.get("bv"), e.get("boolean"));
+                assertEquals(expect.get("cv").toString(), e.get("char").toString());
+                assertEquals(expect.get("sv").toString(), e.get("short").toString());
+                assertEquals(expect.get("nv").toString(), e.get("int").toString());
+                assertEquals(expect.get("lv").toString(), e.get("long").toString());
                 LocalDateTime ldtv1 = (LocalDateTime) expect.get("ldtv");
                 Timestamp ldtv2 = (Timestamp) e.get("LocalDateTime");
-                assert Timestamp.valueOf(ldtv1).getTime() / 1000 == ldtv2.getTime() / 1000;
+                assertEquals(Timestamp.valueOf(ldtv1).getTime() / 1000, ldtv2.getTime() / 1000);
                 LocalTime ltv1 = (LocalTime) expect.get("ltv");
                 Time ltv2 = (Time) e.get("LocalTime");
-                assert String.valueOf(Time.valueOf(ltv1)).equals(String.valueOf(ltv2));
+                assertEquals(String.valueOf(Time.valueOf(ltv1)), String.valueOf(ltv2));
 
                 boolean bv = (Boolean) expect.get("bv");
                 Styles styles = row.getStyles();
@@ -176,19 +199,19 @@ public class ListMapSheetTest extends WorkbookTest {
                     int styleIndex = row.getCellStyle(i);
                     Fill fill = styles.getFill(styleIndex);
                     if (bv) {
-                        assert fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.green);
+                        assertTrue(fill != null && fill.getPatternType() == PatternType.solid && fill.getFgColor().equals(Color.green));
                     } else {
-                        assert fill == null || fill.getPatternType() == PatternType.none;
+                        assertTrue(fill == null || fill.getPatternType() == PatternType.none);
                     }
                 }
 
                 int styleIndex3 = row.getCellStyle(3), horizontals = styles.getHorizontal(styleIndex3);
                 NumFmt numFmt = styles.getNumFmt(styleIndex3);
-                assert "¥0.00_);[Red]\\-¥0.00_);¥0_)".equals(numFmt.getCode());
+                assertEquals("¥0.00_);[Red]\\-¥0.00_);¥0_)", numFmt.getCode());
                 if ((Integer) expect.get("nv") < 0) {
-                    assert Horizontals.LEFT == horizontals;
+                    assertEquals(Horizontals.LEFT, horizontals);
                 } else {
-                    assert Horizontals.RIGHT == horizontals;
+                    assertEquals(Horizontals.RIGHT, horizontals);
                 }
             }
         }
@@ -219,7 +242,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
@@ -244,24 +267,24 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) sheet.getHeader();
-            assert "Character".equals(header.get(0));
-            assert "Short".equals(header.get(1));
-            assert "Integer".equals(header.get(2));
-            assert "Long".equals(header.get(3));
-            assert "Float".equals(header.get(4));
-            assert "Double".equals(header.get(5));
+            assertEquals("Character", header.get(0));
+            assertEquals("Short", header.get(1));
+            assertEquals("Integer", header.get(2));
+            assertEquals("Long", header.get(3));
+            assertEquals("Float", header.get(4));
+            assertEquals("Double", header.get(5));
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
             for (Map<String, ?> expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
                 Map<String, ?> e = row.toMap();
 
-                assert expect.get("cv").toString().equals(e.get("Character").toString());
-                assert expect.get("sv").toString().equals(e.get("Short").toString());
-                assert expect.get("nv").toString().equals(e.get("Integer").toString());
-                assert expect.get("lv").toString().equals(e.get("Long").toString());
-                assert Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("Float").toString())) == 0;
-                assert Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("Double").toString())) == 0;
+                assertEquals(expect.get("cv").toString(), e.get("Character").toString());
+                assertEquals(expect.get("sv").toString(), e.get("Short").toString());
+                assertEquals(expect.get("nv").toString(), e.get("Integer").toString());
+                assertEquals(expect.get("lv").toString(), e.get("Long").toString());
+                assertEquals(Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("Float").toString())), 0);
+                assertEquals(Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("Double").toString())), 0);
             }
         }
     }
@@ -274,7 +297,7 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
 
@@ -288,10 +311,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -322,7 +345,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
@@ -358,11 +381,11 @@ public class ListMapSheetTest extends WorkbookTest {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             // Water Mark
             List<Drawings.Picture> pictures = sheet.listPictures();
-            assert pictures.size() == 1;
-            assert pictures.get(0).isBackground();
+            assertEquals(pictures.size(), 1);
+            assertTrue(pictures.get(0).isBackground());
 
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
@@ -381,7 +404,7 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
                 assertAllType(expect, e);
@@ -399,9 +422,9 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "Map".equals(sheet.getName());
+            assertEquals("Map", sheet.getName());
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
                 assertAllType(expect, e);
@@ -421,13 +444,13 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "MAP".equals(sheet.getName());
+            assertEquals("MAP", sheet.getName());
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.get("id").equals(e.get("ID"));
-                assert expect.get("name").equals(e.get("NAME"));
+                assertEquals(expect.get("id"), e.get("ID"));
+                assertEquals(expect.get("name"), e.get("NAME"));
             }
         }
     }
@@ -448,15 +471,15 @@ public class ListMapSheetTest extends WorkbookTest {
 
             // Water Mark
             List<Drawings.Picture> pictures = sheet.listPictures();
-            assert pictures.size() == 1;
-            assert pictures.get(0).isBackground();
+            assertEquals(pictures.size(), 1);
+            assertTrue(pictures.get(0).isBackground());
 
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.get("id").equals(e.get("ID"));
-                assert expect.get("name").equals(e.get("NAME"));
+                assertEquals(expect.get("id"), e.get("ID"));
+                assertEquals(expect.get("name"), e.get("NAME"));
             }
         }
     }
@@ -475,19 +498,19 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "MAP".equals(sheet.getName());
+            assertEquals("MAP", sheet.getName());
 
             // Water Mark
             List<Drawings.Picture> pictures = sheet.listPictures();
-            assert pictures.size() == 1;
-            assert pictures.get(0).isBackground();
+            assertEquals(pictures.size(), 1);
+            assertTrue(pictures.get(0).isBackground());
 
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.get("id").equals(e.get("ID"));
-                assert expect.get("name").equals(e.get("NAME"));
+                assertEquals(expect.get("id"), e.get("ID"));
+                assertEquals(expect.get("name"), e.get("NAME"));
             }
         }
     }
@@ -509,10 +532,10 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -531,10 +554,10 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -549,11 +572,11 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.get("id").equals(e.get("id"));
-                assert e.get("name") == null || StringUtil.isEmpty(e.get("name").toString());
+                assertEquals(expect.get("id"), e.get("id"));
+                assertTrue(e.get("name") == null || StringUtil.isEmpty(e.get("name").toString()));
             }
         }
     }
@@ -611,16 +634,16 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == expectList.size();
+            assertEquals(list.size(), expectList.size());
             Map<String, ?> expect = expectList.get(0), e = list.get(0);
-            assert expect.get("uuid").equals(e.get("uuid"));
-            assert expect.get("hobbies").toString().equals(e.get("hobbies"));
-            assert expect.get("sex").equals(e.get("sex"));
-            assert expect.get("name").equals(e.get("name"));
-            assert expect.get("age").equals(e.get("age"));
+            assertEquals(expect.get("uuid"), e.get("uuid"));
+            assertEquals(expect.get("hobbies").toString(), e.get("hobbies"));
+            assertEquals(expect.get("sex"), e.get("sex"));
+            assertEquals(expect.get("name"), e.get("name"));
+            assertEquals(expect.get("age"), e.get("age"));
             LocalDateTime ldtv1 = (LocalDateTime) expect.get("createDate");
             Timestamp ldtv2 = (Timestamp) e.get("createDate");
-            assert Timestamp.valueOf(ldtv1).getTime() / 1000 == ldtv2.getTime() / 1000;
+            assertEquals(Timestamp.valueOf(ldtv1).getTime() / 1000, ldtv2.getTime() / 1000);
         }
     }
 
@@ -636,11 +659,11 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.get("id").equals(e.get("ID"));
-                assert expect.get("name").equals(e.get("NAME"));
+                assertEquals(expect.get("id"), e.get("ID"));
+                assertEquals(expect.get("name"), e.get("NAME"));
             }
         }
     }
@@ -674,26 +697,26 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.HeaderRow header = (HeaderRow) reader.sheet(0).header(1).getHeader();
-            assert "ID".equals(header.get(0));
-            assert "子表单".equals(header.get(1));
-            assert "模板2".equals(header.get(2));
-            assert "模板3".equals(header.get(3));
-            assert "abc".equals(header.get(4));
-            assert "模板2".equals(header.get(5));
-            assert "xx".equals(header.get(6));
-            assert "xyz".equals(header.get(7));
+            assertEquals("ID", header.get(0));
+            assertEquals("子表单", header.get(1));
+            assertEquals("模板2", header.get(2));
+            assertEquals("模板3", header.get(3));
+            assertEquals("abc", header.get(4));
+            assertEquals("模板2", header.get(5));
+            assertEquals("xx", header.get(6));
+            assertEquals("xyz", header.get(7));
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             Map<String, ?> expect = expectList.get(0), e = list.get(0);
-            assert expect.get("sub1").equals(e.get("子表单"));
+            assertEquals(expect.get("sub1"), e.get("子表单"));
             expect = expectList.get(1); e = list.get(1);
-            assert expect.get("sub2").equals(e.get("模板2"));
+            assertEquals(expect.get("sub2"), e.get("模板2"));
             expect = expectList.get(2); e = list.get(2);
-            assert expect.get("sub3").equals(e.get("模板3"));
-            assert e.get("ID") == null || StringUtil.isEmpty(e.get("ID").toString());
-            assert e.get("abc") == null || StringUtil.isEmpty(e.get("abc").toString());
-            assert e.get("xx") == null || StringUtil.isEmpty(e.get("xx").toString());
-            assert e.get("xyz") == null || StringUtil.isEmpty(e.get("xyz").toString());
+            assertEquals(expect.get("sub3"), e.get("模板3"));
+            assertTrue(e.get("ID") == null || StringUtil.isEmpty(e.get("ID").toString()));
+            assertTrue(e.get("abc") == null || StringUtil.isEmpty(e.get("abc").toString()));
+            assertTrue(e.get("xx") == null || StringUtil.isEmpty(e.get("xx").toString()));
+            assertTrue(e.get("xyz") == null || StringUtil.isEmpty(e.get("xyz").toString()));
         }
     }
 
@@ -708,12 +731,12 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).iterator();
             for (Map<String, ?> expect : expectList) {
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 Row row = iter.next();
                 if (expect == null || expect.isEmpty()) {
-                    assert row.isBlank();
+                    assertTrue(row.isBlank());
                 } else {
-                    assert expect.equals(row.toMap());
+                    assertEquals(expect, row.toMap());
                 }
             }
         }
@@ -734,10 +757,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large map.xlsx"))) {
             List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < len; i++) {
                 Map<String, ?> expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -750,10 +773,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"))) {
             List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, ?> r = readList.get(i), w = list.get(i);
-                assert r.equals(w);
+                assertEquals(r, w);
             }
         }
     }
@@ -766,10 +789,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"))) {
             List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, ?> r = readList.get(i), w = list.get(i);
-                assert r.equals(w);
+                assertEquals(r, w);
             }
         }
     }
@@ -785,12 +808,12 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"))) {
             List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, ?> r = readList.get(i), w = list.get(i);
-                assert r.size() == w.size();
-                assert r.get("id").equals(w.get("id"));
-                assert r.get("name").equals(w.get("name"));
+                assertEquals(r.size(), w.size());
+                assertEquals(r.get("id"), w.get("id"));
+                assertEquals(r.get("name"), w.get("name"));
             }
         }
     }
@@ -806,10 +829,210 @@ public class ListMapSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"))) {
             List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
-            assert list.size() == readList.size();
+            assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
                 Map<String, ?> r = readList.get(i), w = list.get(i);
-                assert r.equals(w);
+                assertEquals(r, w);
+            }
+        }
+    }
+
+    @Test public void testAppendKeyMap() throws IOException {
+        final String fileName = "append key map.xlsx";
+        new Workbook().addSheet(new AppendKeyMapSheet() { // <- 使用自定义数据源
+            int page = 1;
+
+            @Override
+            protected List<Map<String, ?>> more() {
+                return getRows(page++);
+            }
+        }.setSheetWriter(new AppendHeaderWorksheetWriter())) // <- 使用自定义输出协议
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row = iter.next();
+
+        }
+    }
+
+    @Test public void testDataSupplier() throws IOException {
+        final String fileName = "list map data supplier.xlsx";
+        List<Map<String, ?>> expectList = new ArrayList<>(100);
+        new Workbook()
+            .addSheet(new ListMapSheet().setData((i, lastOne) -> {
+                if (i >= 100) return null;
+                List<Map<String, ?>> sub = createTestData(10);
+                expectList.addAll(sub);
+                return sub;
+            }))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Map<String, ?>> list =  reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
+    static List<Map<String, ?>> getRows(int page) {
+        if (page > 127 - 67) return null;
+        List<Map<String, ?>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
+        Map<String, Object> map = new HashMap<>();
+        map.put("A", "a" + page);
+        map.put("B", "b" + page);
+        String key = new String(new char[]{(char) ('B' + page)});
+        map.put(key, key + page);
+        rows.add(map);
+        return rows;
+    }
+
+    public static class AppendKeyMapSheet extends ListMapSheet {
+        // 保存已存在中列
+        Set<String> existsKeys = new HashSet<>();
+
+        @Override
+        public Column[] getHeaderColumns() {
+            Column[] columns = super.getHeaderColumns();
+            for (Column col : columns) existsKeys.add(col.name);
+            return columns;
+        }
+
+        @Override
+        protected void resetBlockData() {
+            if (!eof && left() < rowBlock.capacity()) append();
+            int end = getEndIndex(), len;
+            for (; start < end; rows++, start++) {
+                org.ttzero.excel.entity.Row row = rowBlock.next();
+                row.index = rows;
+                row.height = getRowHeight();
+                Map<String, ?> rowDate = data.get(start);
+                boolean isNull = rowDate == null;
+
+                if (!isNull) {
+                    // 检查是否有不存在的key
+                    for (String k : rowDate.keySet()) {
+                        if (!existsKeys.contains(k)) {
+                            Column col = new Column(k, k), pre = columns[columns.length - 1].getTail(); // <- 需要判断NPE
+                            col.colIndex = pre.colIndex + 1;
+                            col.realColIndex = pre.realColIndex + 1;
+                            col.styles = getWorkbook().getStyles();
+                            // 扩容并追加到末尾
+                            columns = Arrays.copyOf(columns, columns.length + 1);
+                            columns[columns.length - 1] = col;
+                            existsKeys.add(k);
+                        }
+                    }
+                }
+                len = columns.length;
+
+                Cell[] cells = row.realloc(len);
+                for (int i = 0; i < len; i++) {
+                    Column hc = columns[i];
+                    Object e = !isNull ? rowDate.get(hc.key) : null;
+                    // Clear cells
+                    Cell cell = cells[i];
+                    cell.clear();
+
+                    cellValueAndStyle.reset(row, cell, e, hc);
+                }
+            }
+        }
+    }
+
+    public static class AppendHeaderWorksheetWriter extends XMLWorksheetWriter {
+        // 记录body的位置
+        long position = 0L;
+
+        @Override
+        protected void beforeSheetData(boolean nonHeader) throws IOException {
+            super.beforeSheetData(nonHeader);
+            bw.flush(); // 刷新流
+
+            // 获取当前position，从position以后开始写实际的body
+            position = Files.size(workSheetPath.resolve(sheet.getFileName()));
+        }
+
+        @Override
+        public void close() {
+            super.close();
+
+            XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
+                @Override
+                protected boolean hasMedia() {
+                    return false;
+                }
+            };
+            Class<XMLWorksheetWriter> clazz = XMLWorksheetWriter.class;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                Field totalRowsField = clazz.getDeclaredField("totalRows");
+                totalRowsField.setAccessible(true);
+                totalRowsField.set(_writer, totalRows);
+                Field startRowField = clazz.getDeclaredField("startRow");
+                startRowField.setAccessible(true);
+                startRowField.set(_writer, startRow - columns[0].subColumnSize());
+                Field startHeaderRowField = clazz.getDeclaredField("startHeaderRow");
+                startHeaderRowField.setAccessible(true);
+                startHeaderRowField.set(_writer, startHeaderRow);
+                Field includeAutoWidthField = clazz.getDeclaredField("includeAutoWidth");
+                includeAutoWidthField.setAccessible(true);
+                includeAutoWidthField.set(_writer, includeAutoWidth);
+                Field stylesField = clazz.getDeclaredField("styles");
+                stylesField.setAccessible(true);
+                stylesField.set(_writer, styles);
+                Field bwField = clazz.getDeclaredField("bw");
+                bwField.setAccessible(true);
+                BufferedWriter bw = new ExtBufferedWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8));
+                bwField.set(_writer, bw);
+                // 重写col
+                Method writeBeforeMethod = clazz.getDeclaredMethod("writeBefore");
+                writeBeforeMethod.setAccessible(true);
+                writeBeforeMethod.invoke(_writer);
+
+                // 重写表头
+                Method beforeSheetDataMethod = clazz.getDeclaredMethod("beforeSheetData", boolean.class);
+                beforeSheetDataMethod.setAccessible(true);
+                beforeSheetDataMethod.invoke(_writer, sheet.getNonHeader() == 1);
+
+                bw.close();
+            } catch (NoSuchFieldException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                Path currentPath = workSheetPath.resolve(sheet.getFileName());
+                String fileName = currentPath.getFileName().toString();
+                // 创建临时文件
+                Path tmpPath = Files.createFile(workSheetPath.resolve(fileName + "_cp"));
+                // 将新表头复制到临时文件中
+                try (SeekableByteChannel channel = Files.newByteChannel(tmpPath, StandardOpenOption.WRITE, StandardOpenOption.READ)) {
+                    ByteBuffer buffer = ByteBuffer.wrap(baos.toByteArray());
+                    buffer.order(ByteOrder.LITTLE_ENDIAN);
+                    channel.write(buffer);
+                }
+
+                // 将Body复制到临时文件中
+                try (InputStream is = Files.newInputStream(currentPath);
+                     OutputStream os = Files.newOutputStream(tmpPath, StandardOpenOption.APPEND)) {
+                    is.skip(position); // <- 跳到body处
+
+                    byte[] bytes = new byte[4096];
+                    int n;
+                    while ((n = is.read(bytes)) > 0) {
+                        os.write(bytes, 0, n);
+                    }
+                }
+
+                // 替换现有文件
+                Files.delete(currentPath);
+                tmpPath.toFile().renameTo(currentPath.toFile());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -871,7 +1094,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     static void assertAllTypes(List<Map<String, ?>> expectList, List<Map<String, ?>> list) {
-        assert expectList.size() == list.size();
+        assertEquals(expectList.size(), list.size());
         for (int i = 0, len = expectList.size(); i < len; i++) {
             Map<String, ?> expect = expectList.get(i), e = list.get(i);
             assertAllType(expect, e);
@@ -879,58 +1102,58 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     static void assertAllType(Map<String, ?> expect, Map<String, ?> e) {
-        assert expect.size() == e.size();
-        assert expect.get("bv").equals(e.get("bv"));
-        assert expect.get("cv").toString().equals(e.get("cv").toString());
-        assert expect.get("sv").toString().equals(e.get("sv").toString());
-        assert expect.get("nv").toString().equals(e.get("nv").toString());
-        assert expect.get("lv").toString().equals(e.get("lv").toString());
-        assert Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("fv").toString())) == 0;
-        assert Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("dv").toString())) == 0;
-        assert expect.get("s").equals(e.get("s"));
-        assert ((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN).equals(new BigDecimal(e.get("mv").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
+        assertEquals(expect.size(), e.size());
+        assertEquals(expect.get("bv"), e.get("bv"));
+        assertEquals(expect.get("cv").toString(), e.get("cv").toString());
+        assertEquals(expect.get("sv").toString(), e.get("sv").toString());
+        assertEquals(expect.get("nv").toString(), e.get("nv").toString());
+        assertEquals(expect.get("lv").toString(), e.get("lv").toString());
+        assertEquals(Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("fv").toString())), 0);
+        assertEquals(Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("dv").toString())), 0);
+        assertEquals(expect.get("s"), e.get("s"));
+        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN), new BigDecimal(e.get("mv").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("av");
-        assert av1.getTime() / 1000 == av2.getTime() / 1000;
+        assertEquals(av1.getTime() / 1000, av2.getTime() / 1000);
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("iv");
-        assert iv1.getTime() / 1000 == iv2.getTime() / 1000;
+        assertEquals(iv1.getTime() / 1000, iv2.getTime() / 1000);
         Time tv1 = (Time) expect.get("tv"), tv2 = (Time) e.get("tv");
-        assert String.valueOf(tv1).equals(String.valueOf(tv2));
+        assertEquals(String.valueOf(tv1), String.valueOf(tv2));
         LocalDate ldv1 = (LocalDate) expect.get("ldv");
         Timestamp ldv2 = (Timestamp) e.get("ldv");
-        assert ldv1.equals(ldv2.toLocalDateTime().toLocalDate());
+        assertEquals(ldv1, ldv2.toLocalDateTime().toLocalDate());
         LocalDateTime ldtv1 = (LocalDateTime) expect.get("ldtv");
         Timestamp ldtv2 = (Timestamp) e.get("ldtv");
-        assert Timestamp.valueOf(ldtv1).getTime() / 1000 == ldtv2.getTime() / 1000;
+        assertEquals(Timestamp.valueOf(ldtv1).getTime() / 1000, ldtv2.getTime() / 1000);
         LocalTime ltv1 = (LocalTime) expect.get("ltv");
         Time ltv2 = (Time) e.get("ltv");
-        assert String.valueOf(Time.valueOf(ltv1)).equals(String.valueOf(ltv2));
+        assertEquals(String.valueOf(Time.valueOf(ltv1)), String.valueOf(ltv2));
     }
 
     static void assertAllTypeFullKey(Map<String, ?> expect, Map<String, ?> e) {
-        assert expect.size() == e.size();
-        assert expect.get("bv").equals(e.get("boolean"));
-        assert expect.get("cv").toString().equals(e.get("char").toString());
-        assert expect.get("sv").toString().equals(e.get("short").toString());
-        assert expect.get("nv").toString().equals(e.get("int").toString());
-        assert expect.get("lv").toString().equals(e.get("long").toString());
-        assert Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("float").toString())) == 0;
-        assert Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("double").toString())) == 0;
-        assert expect.get("s").equals(e.get("string"));
-        assert ((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN).equals(new BigDecimal(e.get("decimal").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
+        assertEquals(expect.size(), e.size());
+        assertEquals(expect.get("bv"), e.get("boolean"));
+        assertEquals(expect.get("cv").toString(), e.get("char").toString());
+        assertEquals(expect.get("sv").toString(), e.get("short").toString());
+        assertEquals(expect.get("nv").toString(), e.get("int").toString());
+        assertEquals(expect.get("lv").toString(), e.get("long").toString());
+        assertEquals(Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("float").toString())), 0);
+        assertEquals(Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("double").toString())), 0);
+        assertEquals(expect.get("s"), e.get("string"));
+        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN), new BigDecimal(e.get("decimal").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("date");
-        assert av1.getTime() / 1000 == av2.getTime() / 1000;
+        assertEquals(av1.getTime() / 1000, av2.getTime() / 1000);
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("timestamp");
-        assert iv1.getTime() / 1000 == iv2.getTime() / 1000;
+        assertEquals(iv1.getTime() / 1000, iv2.getTime() / 1000);
         Time tv1 = (Time) expect.get("tv"), tv2 = (Time) e.get("time");
-        assert String.valueOf(tv1).equals(String.valueOf(tv2));
+        assertEquals(String.valueOf(tv1), String.valueOf(tv2));
         LocalDate ldv1 = (LocalDate) expect.get("ldv");
         Timestamp ldv2 = (Timestamp) e.get("LocalDate");
-        assert ldv1.equals(ldv2.toLocalDateTime().toLocalDate());
+        assertEquals(ldv1, ldv2.toLocalDateTime().toLocalDate());
         LocalDateTime ldtv1 = (LocalDateTime) expect.get("ldtv");
         Timestamp ldtv2 = (Timestamp) e.get("LocalDateTime");
-        assert Timestamp.valueOf(ldtv1).getTime() / 1000 == ldtv2.getTime() / 1000;
+        assertEquals(Timestamp.valueOf(ldtv1).getTime() / 1000, ldtv2.getTime() / 1000);
         LocalTime ltv1 = (LocalTime) expect.get("ltv");
         Time ltv2 = (Time) e.get("LocalTime");
-        assert String.valueOf(Time.valueOf(ltv1)).equals(String.valueOf(ltv2));
+        assertEquals(String.valueOf(Time.valueOf(ltv1)), String.valueOf(ltv2));
     }
 }

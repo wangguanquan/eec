@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
@@ -56,6 +57,10 @@ import static org.ttzero.excel.entity.style.NumFmt.TIME_FORMAT;
  * @author guanquan.wang at 2021-08-29 19:49
  */
 public class Column {
+    /**
+     * 未实例化的列，可用于在写超出预知范围外的列
+     */
+    public static final Column UNALLOCATED_COLUMN = new Column();
     /**
      * Java对象中的字段、Map的Key或者SQL语句中的select字段，具体值由工作表类型决定
      */
@@ -156,7 +161,7 @@ public class Column {
      * 28, 1 | 忽略导出值 1位, 仅导出表头
      * 27, 1 | 隐藏列 1位
      * 26, 1 | 共享字符串 1位
-     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片
+     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片 2: 超链接
      * 23, 2 | 垂直对齐
      * 21, 3 | 水平对齐
      * </pre></blockquote>
@@ -591,186 +596,6 @@ public class Column {
     }
 
     /**
-     * 获取默认水平对齐，水平对齐可用值包含在{@link Horizontals}定义中，
-     * 默认的时间居中，数字居右其余居左
-     *
-     * @return 水平对齐
-     */
-    protected int defaultHorizontal() {
-        int horizontal;
-        if (isDate(clazz) || isDateTime(clazz)
-                || isLocalDate(clazz) || isLocalDateTime(clazz)
-                || isTime(clazz) || isLocalTime(clazz)
-                || isChar(clazz) || isBool(clazz)) {
-            horizontal = Horizontals.CENTER;
-        } else if (isInt(clazz) || isLong(clazz)
-                || isFloat(clazz) || isDouble(clazz)
-                || isBigDecimal(clazz)) {
-            horizontal = Horizontals.RIGHT;
-        } else {
-            horizontal = Horizontals.LEFT;
-        }
-        return horizontal;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font 字体
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font       字体
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param border 边框
-     * @return 当前列
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Border border) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font       字体
-     * @param border     边框
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Border border, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | defaultHorizontal());
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | Verticals.CENTER
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param vertical   垂直对齐,参考值{@link Verticals}
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-        this.cellStyle = styles.of(
-                (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | vertical
-                        | horizontal);
-        return this;
-    }
-
-    /**
-     * 设置单元格样式
-     *
-     * @param numFmt     格式化
-     * @param font   字体
-     * @param fill   填充
-     * @param border 边框
-     * @param vertical   垂直对齐,参考值{@link Verticals}
-     * @param horizontal 水平对齐,参考值{@link Horizontals}
-     * @deprecated 使用 {@link #setFont} {@link #setFill} 等独立方法代替
-     * @return 当前列
-     */
-    @Deprecated
-    public Column setCellStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-        this.cellStyle = styles.of(
-                (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-                        | (font != null ? styles.addFont(font) : 0)
-                        | (fill != null ? styles.addFill(fill) : 0)
-                        | (border != null ? styles.addBorder(border) : 0)
-                        | vertical
-                        | horizontal);
-        return this;
-    }
-
-    /**
      * 设置当前列统一“字体”样式
      *
      * @param font 字体
@@ -880,7 +705,7 @@ public class Column {
             style = Styles.defaultStringBorderStyle();
         } else if (isDateTime(clazz) || isDate(clazz) || isLocalDateTime(clazz)) {
             if (numFmt == null) numFmt = DATETIME_FORMAT;
-            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isBool(clazz) || isChar(clazz)) {
             style = Styles.clearHorizontal(Styles.defaultStringBorderStyle()) | Horizontals.CENTER;
         } else if (isInt(clazz) || isLong(clazz)) {
@@ -889,10 +714,10 @@ public class Column {
             style = Styles.defaultDoubleBorderStyle();
         } else if (isLocalDate(clazz)) {
             if (numFmt == null) numFmt = DATE_FORMAT;
-            style = (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else if (isTime(clazz) || isLocalTime(clazz)) {
             if (numFmt == null) numFmt = TIME_FORMAT;
-            style =  (1 << INDEX_BORDER) | Horizontals.CENTER;
+            style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER) | Horizontals.CENTER;
         } else {
             style = (1 << Styles.INDEX_FONT) | (1 << INDEX_BORDER); // Auto-style
         }
@@ -913,6 +738,13 @@ public class Column {
 
         // 重置"字体"
         if (font != null) style = styles.modifyFont(style, font);
+        // 超连接字体特殊处理
+        if (getColumnType() == 2) {
+            Font font = styles.getFont(style).clone();
+            font.setStyle(Font.Style.PLAIN).underline();
+            font.setColor(ColorIndex.themeColors[10]);
+            style = styles.modifyFont(style, font);
+        }
         // 重置“格式化”
         if (numFmt != null) style = styles.modifyNumFmt(style, numFmt);
         // 重置“边框”
@@ -1133,7 +965,7 @@ public class Column {
     /**
      * 获取列属性
      *
-     * @return 0: 默认 1: 媒体（图片）
+     * @return 0: 默认 1: 媒体（图片） 2: 超链接
      */
     public int getColumnType() {
         return (this.option >> 6) & 3;
@@ -1157,5 +989,15 @@ public class Column {
      */
     public Effect getEffect() {
         return effect;
+    }
+
+    /**
+     * 指定当前列以“超链接”类型导出
+     *
+     * @return 当前列
+     */
+    public Column writeAsHyperlink() {
+        this.option = this.option & ~(3 << 6) | (2 << 6);
+        return this;
     }
 }

@@ -17,6 +17,7 @@
 package org.ttzero.excel.entity.e7;
 
 import org.ttzero.excel.entity.AbstractTemplate;
+import org.ttzero.excel.entity.TemplateSheet;
 import org.ttzero.excel.entity.Workbook;
 
 import java.nio.file.Path;
@@ -24,7 +25,9 @@ import java.util.Arrays;
 
 /**
  * @author guanquan.wang at 2018-02-26 14:00
+ * @deprecated 使用 {@link TemplateSheet}代替
  */
+@Deprecated
 public class EmbedTemplate extends AbstractTemplate {
 
     public EmbedTemplate(Path zipPath, Workbook wb) {

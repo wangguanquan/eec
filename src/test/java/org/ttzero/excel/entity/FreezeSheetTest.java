@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author guanquan.wang at 2022-04-17 15:04
@@ -41,10 +43,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<FreezeTopRow> list = reader.sheet(0).dataRows().map(row -> row.to(FreezeTopRow.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 FreezeTopRow expect = (FreezeTopRow) expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -58,10 +60,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<FreezeTopRow> list = reader.sheet(0).dataRows().map(row -> row.to(FreezeTopRow.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 FreezeTopRow expect = (FreezeTopRow) expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -76,10 +78,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<FreezePanesRow1Column1> list = reader.sheet(0).dataRows().map(row -> row.to(FreezePanesRow1Column1.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 FreezePanesRow1Column1 expect = (FreezePanesRow1Column1) expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -94,10 +96,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -112,10 +114,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -130,10 +132,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -148,10 +150,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.AllType> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.AllType.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.AllType expect = expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }
@@ -165,10 +167,10 @@ public class FreezeSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<FreezePanesRow5Column2> list = reader.sheet(0).dataRows().map(row -> row.to(FreezePanesRow5Column2.class)).collect(Collectors.toList());
-            assert expectList.size() == list.size();
+            assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 FreezePanesRow5Column2 expect = (FreezePanesRow5Column2) expectList.get(i), e = list.get(i);
-                assert expect.equals(e);
+                assertEquals(expect, e);
             }
         }
     }

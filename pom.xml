@@ -5,13 +5,13 @@
 
   <groupId>org.ttzero</groupId>
   <artifactId>eec</artifactId>
-  <version>0.5.12</version>
+  <version>0.5.15</version>
   <name>Excel Write/Read Framework</name>
   <packaging>jar</packaging>
   <url>https://www.ttzero.org</url>
   <description>
     A fast and lower memory excel write/read tool
-    一个非POI底层，支持流式处理的高效且超低内存的Excel读写工具
+    一个非POI底层支持流式处理的高效且超低内存的Excel读写工具
   </description>
 
   <properties>
@@ -21,7 +21,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <dom4j.version>2.1.3</dom4j.version>
-    <slf4j.version>1.7.32</slf4j.version>
+    <slf4j.version>2.0.12</slf4j.version>
   </properties>
 
   <dependencies>
@@ -73,7 +73,7 @@
   <developers>
     <developer>
       <name>guanquan.wang</name>
-      <email>guanquan.wang@yandex.com</email>
+      <email>guanquan.wang@hotmail.com</email>
     </developer>
   </developers>
 

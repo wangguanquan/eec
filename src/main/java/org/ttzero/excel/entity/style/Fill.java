@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
- * 填充，在样式中位于第{@code 18-24}位
+ * 填充，在样式中位于第{@code 18-24}位，目前只支持单色填充
  *
  * @author guanquan.wang at 2018-02-06 08:55
  */
@@ -149,7 +149,7 @@ public class Fill implements Cloneable {
         return fill;
     }
 
-    Element toDom4j(Element root) {
+    Element toDom(Element root) {
         if (patternType == null) {
             patternType = PatternType.solid;
         }
@@ -183,6 +183,33 @@ public class Fill implements Cloneable {
         return element;
     }
 
+    /**
+     * 解析Dom树并转为填充对象
+     *
+     * @param root dom树
+     * @param indexedColors 特殊indexed颜色（大部分情况下为null）
+     * @return 填充
+     */
+    public static List<Fill> domToFill(Element root, Color[] indexedColors) {
+        List<Fill> fills = domToFill(root);
+        int indexed;
+        for (Fill fill : fills) {
+            if (fill.fgColor instanceof BuildInColor && (indexed = ((BuildInColor) fill.fgColor).getIndexed()) < indexedColors.length) {
+                fill.fgColor = indexedColors[indexed];
+            }
+            if (fill.bgColor instanceof BuildInColor && (indexed = ((BuildInColor) fill.bgColor).getIndexed()) < indexedColors.length) {
+                fill.bgColor = indexedColors[indexed];
+            }
+        }
+        return fills;
+    }
+
+    /**
+     * 解析Dom树并转为填充对象
+     *
+     * @param root dom树
+     * @return 填充
+     */
     public static List<Fill> domToFill(Element root) {
         // Fills tags
         Element ele = root.element("fills");
@@ -194,20 +221,32 @@ public class Fill implements Cloneable {
     }
 
     static Fill parseFillTag(Element tag) {
-        Element e = tag.element("patternFill");
         Fill fill = new Fill();
-        try {
-            fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
-        } catch (IllegalArgumentException ex) {
-            // Ignore
+        // 单色背景
+        Element e = tag.element("patternFill");
+        if (e != null) {
+            try {
+                fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
+            } catch (IllegalArgumentException ex) {
+                // Ignore
+            }
+            Element fgColor = e.element("fgColor");
+            if (fgColor != null) {
+                fill.fgColor = Styles.parseColor(fgColor);
+            }
+            Element bgColor = e.element("bgColor");
+            if (bgColor != null) {
+                fill.bgColor = Styles.parseColor(bgColor);
+            }
         }
-        Element fgColor = e.element("fgColor");
-        if (fgColor != null) {
-            fill.fgColor = Styles.parseColor(fgColor);
-        }
-        Element bgColor = e.element("bgColor");
-        if (bgColor != null) {
-            fill.bgColor = Styles.parseColor(bgColor);
+        // FIXME 双色背景目前仅简单支持（取双色中的起始色）
+        else if ((e = tag.element("gradientFill")) != null) {
+            List<Element> sub = e.elements("stop");
+            if (sub != null && !sub.isEmpty()) {
+                Element sub0 = sub.get(0).element("color");
+                fill.fgColor = Styles.parseColor(sub0);
+                fill.patternType = PatternType.solid;
+            }
         }
         return fill;
     }

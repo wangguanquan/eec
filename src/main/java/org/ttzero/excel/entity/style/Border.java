@@ -343,6 +343,20 @@ public class Border implements Cloneable {
         return this;
     }
 
+    /**
+     * 检查边框是否有效（样式不为NONE)
+     *
+     * @return true有效
+     */
+    public boolean isEffectiveBorder() {
+        int i = 0;
+        for (; i < borders.length; i++) {
+            SubBorder sub = borders[i];
+            if (sub != null && sub.style != BorderStyle.NONE) break;
+        }
+        return i < borders.length;
+    }
+
     @Override
     public int hashCode() {
         int down = borders[4] != null ? 1 : 0
@@ -460,7 +474,7 @@ public class Border implements Cloneable {
 
     static final String[] direction = {"left", "right", "top", "bottom", "diagonal", "diagonal"};
 
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         Element element = root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()));
         for (int i = 0; i < direction.length; i++) {
             Element sub = element.element(direction[i]);
@@ -478,6 +492,33 @@ public class Border implements Cloneable {
         return element;
     }
 
+    /**
+     * 解析Dom树并转为边框对象
+     *
+     * @param root dom树
+     * @param indexedColors 特殊indexed颜色（大部分情况下为null）
+     * @return 边框
+     */
+    public static List<Border> domToBorder(Element root, Color[] indexedColors) {
+        List<Border> borders = domToBorder(root);
+        int indexed;
+        for (Border border : borders) {
+            for (int i = 0; i < border.borders.length; i++) {
+                SubBorder b = border.borders[i];
+                if (b != null && (b.color instanceof BuildInColor) && (indexed = ((BuildInColor) b.color).getIndexed()) < indexedColors.length) {
+                    border.borders[i] = new SubBorder(b.style, indexedColors[indexed]);
+                }
+            }
+        }
+        return borders;
+    }
+
+    /**
+     * 解析Dom树并转为边框对象
+     *
+     * @param root dom树
+     * @return 边框
+     */
     public static List<Border> domToBorder(Element root) {
         // Borders tags
         Element ele = root.element("borders");
@@ -522,7 +563,7 @@ public class Border implements Cloneable {
                 colorEle.addAttribute("indexed", String.valueOf(((BuildInColor) subBorder.color).getIndexed()));
             }
             else if ((index = ColorIndex.indexOf(subBorder.color)) > -1) {
-                element.addAttribute("indexed", String.valueOf(index));
+                colorEle.addAttribute("indexed", String.valueOf(index));
             }
             else {
                 colorEle.addAttribute("rgb", ColorIndex.toARGB(subBorder.color));

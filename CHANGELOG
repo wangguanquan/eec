@@ -1,3 +1,30 @@
+Version 0.5.15 (2024-05-21)
+-------------
+- 修复onProgress出现越界问题
+- 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
+- 删除部分已标记为过时的方法
+
+Version 0.5.14 (2024-04-22)
+-------------
+- 新增数据验证Validation
+- 新增超链接注解Hyperlink
+- 新增模板工作表TemplateSheet
+- 新增TypeCastException用于Row转对象时如果出现类型转换异常时携带行列等信息
+- ListSheet新增data-supplier减化分片开发难度
+- 新增zoomScale扩展属性支持设置工作表缩放比例
+- 修复读取双色填充样式时抛异常
+
+Version 0.5.13 (2024-02-20)
+-------------
+- logback安全更新
+- 新增全属性工作表FullSheet以读取更多属性，它集合了MergeSheet和CalcSheet的功能
+- 新增扩展属性AutoFilter用于添加列筛选功能
+- 修复继承自ListSheet的工作表初始无法获取对象类型导致单元格空白的问题
+- 修复部分场景下边框颜色无法设置的问题
+- 修复部分Excel的indexed颜色与标准有所不同导致获取颜色不正确的问题
+- 修复部分场景读取Excel发生IndexOutOfBound异常
+- 修复HeaderStyle注解设置样式时，字段样式被全局样式替换的问题
+
 Version 0.5.12 (2023-11-26)
 -------------
 - 移除watch改用slf4j输出日志

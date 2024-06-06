@@ -18,57 +18,58 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author guanquan.wang at 2020-01-05 20:35
  */
 public class PreCalcTest {
     @Test public void testSimple() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(0, "B2:B8");
         row.setCalc(0, "A89");
         String calc = row.getCalc(0, 5 << 14 | 2);
-        assert "A92".equals(calc);
+        assertEquals("A92", calc);
     }
 
     @Test public void testPlus() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(0, "B2:B8");
         row.setCalc(0, "(A2+A3)+1");
         String calc = row.getCalc(0, 4 << 14 | 2);
-        assert "(A4+A5)+1".equals(calc);
+        assertEquals("(A4+A5)+1", calc);
     }
 
     @Test public void testRange() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(0, "B2:D8");
         row.setCalc(0, "(A2+B3)+1");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        assert "(B4+C5)+1".equals(calc);
+        assertEquals("(B4+C5)+1", calc);
     }
 
     @Test public void testDoubleQuotes() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(0, "B2:D8");
         row.setCalc(0, "\"AB12\".substring(3)");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        assert "\"AB12\".substring(3)".equals(calc);
+        assertEquals("\"AB12\".substring(3)", calc);
     }
 
     @Test public void testDoubleQuotes2() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(0, "B2:D8");
         row.setCalc(0, "\"AB12.substring(3)");
         String calc = row.getCalc(0, 4 << 14 | 3);
-        assert "\"AB12.substring(3)".equals(calc);
+        assertEquals("\"AB12.substring(3)", calc);
     }
 
     @Test public void testRows() {
-        Row row = new MyRow();
+        Row row = new Row();
         row.addRef(1, "B9:B65");
         row.setCalc(1, "A9+1");
         String calc = row.getCalc(1, 10 << 14 | 2);
-        assert "A10+1".equals(calc);
+        assertEquals("A10+1", calc);
     }
 
-    private static class MyRow extends Row { }
 }

@@ -26,17 +26,19 @@ import org.ttzero.excel.reader.Cell;
  */
 public class Row {
     // Index to row
-    int index = -1;
+    public int index = -1;
     // Index to first column (zero base)
-    int fc = 0;
+    public int fc = 0;
     // Index to last column (zero base)
-    int lc = -1;
-    // Index to XF record
-    int xf;
+    public int lc = -1;
     // Share cell
-    Cell[] cells;
+    public Cell[] cells;
     // height
-    public double height = -1D;
+    public Double height;
+    // Is row hidden
+    public boolean hidden;
+    // Outline level
+    public Integer outlineLevel;
 
     public int getIndex() {
         return index;
@@ -89,6 +91,7 @@ public class Row {
         if (cells == null || cells.length < n) {
             calloc(n);
         }
+        lc = n;
         return cells;
     }
 
@@ -97,7 +100,7 @@ public class Row {
      *
      * @return 行高
      */
-    public double getHeight() {
+    public Double getHeight() {
         return height;
     }
 
@@ -107,8 +110,44 @@ public class Row {
      * @param height 行高
      * @return 当前行
      */
-    public Row setHeight(double height) {
+    public Row setHeight(Double height) {
         this.height = height;
         return this;
+    }
+
+    /**
+     * 判断当前行是否隐藏
+     *
+     * @return true: 隐藏
+     */
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    /**
+     * 设置当前行显示或隐藏
+     *
+     * @param hidden true：隐藏当前行 false: 显示
+     */
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    /**
+     * 获取行层级
+     *
+     * @return 层级
+     */
+    public Integer getOutlineLevel() {
+        return outlineLevel;
+    }
+
+    /**
+     * 设置行层级
+     *
+     * @param outlineLevel 层级（不能为负数）
+     */
+    public void setOutlineLevel(Integer outlineLevel) {
+        this.outlineLevel = outlineLevel;
     }
 }

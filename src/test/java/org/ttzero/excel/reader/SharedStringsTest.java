@@ -68,7 +68,7 @@ public class SharedStringsTest {
     @Test public void testEscape2() {
         char[] chars = "&lt;tag&gt;,random&amp;more,with&quot;signs&quot;,random&amp;more,&abcd;352,&lt;this will be escaped &#x1f601;&gt;,An &#128512;awesome &#128515;string with a few &#x1f609;emojis!".toCharArray();
         String desc = SharedStrings.escape(chars, 0, chars.length);
-        assert desc.equals("<tag>,random&more,with\"signs\",random&more,&abcd;352,<this will be escaped \uD83D\uDE01>,An 😀awesome 😃string with a few 😉emojis!");
+        assertEquals(desc, "<tag>,random&more,with\"signs\",random&more,&abcd;352,<this will be escaped \uD83D\uDE01>,An 😀awesome 😃string with a few 😉emojis!");
     }
 
     private void checkTrue(SharedStrings sst, List<String> list) {

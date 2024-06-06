@@ -52,16 +52,17 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  * <li><a href="https://support.office.com/en-us/article/create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4">Create a custom number format</a></li>
  * <li><a href="https://support.office.com/en-us/article/Number-format-codes-5026bbd6-04bc-48cd-bf33-80f18b4eae68?ui=en-US&rs=en-US&ad=US">Number format codes</a></li>
  * <li><a href="https://docs.microsoft.com/en-us/previous-versions/office/developer/office-2010/ee857658(v=office.14)">NumberingFormat Class</a></li>
+ * <li><a href="https://support.microsoft.com/zh-cn/office/%E6%95%B0%E5%AD%97%E6%A0%BC%E5%BC%8F%E4%BB%A3%E7%A0%81-5026bbd6-04bc-48cd-bf33-80f18b4eae68">数字格式代码</a></li>
  * </ul>
  *
  * @author guanquan.wang at 2018-02-06 08:51
  */
-public class NumFmt implements Comparable<NumFmt> {
+public class NumFmt implements Cloneable, Comparable<NumFmt> {
 
     /**
      * Format as {@code yyyy-mm-dd hh:mm:ss}
      */
-    public static final NumFmt DATETIME_FORMAT = new NumFmt("yyyy\\-mm\\-dd\\ hh:mm:ss"),
+    public static final NumFmt DATETIME_FORMAT = new NumFmt("yyyy\\-mm\\-dd hh:mm:ss"),
     /**
      * Format as {@code yyyy-mm-dd}
      */
@@ -130,7 +131,7 @@ public class NumFmt implements Comparable<NumFmt> {
         // Replace '-' to '\-'
         code = escape(code, '-');
         // Replace ' ' to '\ '
-        code = escape(code, ' ');
+//        code = escape(code, ' ');
 
         return code;
     }
@@ -152,22 +153,6 @@ public class NumFmt implements Comparable<NumFmt> {
             code = buf.append(code, j, code.length()).toString();
         }
         return code;
-    }
-
-    /**
-     * 兼容之前版本，这里固定按默认字体 “宋体” 11字号处理，后续将删除
-     */
-    static final Font SONG = new Font("宋体", 11);
-    /**
-     * 粗略计算单元格长度
-     *
-     * @param base the cell value length
-     * @return cell length
-     * @deprecated 使用 {@link #calcNumWidth(double, Font)}替代，新方法会根据字体/字号进行计算
-     */
-    @Deprecated
-    public double calcNumWidth(double base) {
-        return calcNumWidth(base, SONG);
     }
 
     /**
@@ -199,7 +184,7 @@ public class NumFmt implements Comparable<NumFmt> {
             double s = (widthCache >>> 8) / 10000.0;
             width = (base + (comma == 1 ? (base - 1) / 3 : 1) + k) * s; // 有逗号分隔符时计算分隔符个数
         }
-        return width;
+        return width * 1.16D;
     }
 
     /**
@@ -309,7 +294,7 @@ public class NumFmt implements Comparable<NumFmt> {
         return "id: " + id + ", code: " + code;
     }
 
-    public Element toDom4j(Element root) {
+    public Element toDom(Element root) {
         if (StringUtil.isEmpty(code)) return root; // Build in style
         return root.addElement(StringUtil.lowFirstKey(getClass().getSimpleName()))
             .addAttribute("formatCode", code)
@@ -336,6 +321,19 @@ public class NumFmt implements Comparable<NumFmt> {
 
     @Override
     public int compareTo(NumFmt o) {
-        return id - o.id;
+        return Integer.compare(id, o.id);
+    }
+
+    @Override
+    public NumFmt clone() {
+        NumFmt other;
+        try {
+            other = (NumFmt) super.clone();
+        } catch (CloneNotSupportedException e) {
+            other = new NumFmt();
+            other.id = id;
+            other.code = code;
+        }
+        return other;
     }
 }

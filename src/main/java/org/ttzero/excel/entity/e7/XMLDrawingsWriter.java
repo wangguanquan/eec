@@ -55,7 +55,7 @@ import java.util.Arrays;
 import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
- * Drawings writer(For Picture only)
+ * 多媒体类型输出协议（目前只支持图片）
  *
  * @author guanquan.wang at 2023-03-07 09:09
  */
@@ -127,32 +127,33 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         if (StringUtil.isEmpty(picture.picName)) return;
         Relationship picRel = relManager.add(new Relationship("../media/" + picture.picName, Const.Relationship.IMAGE));
         size++;
-
-        bw.write("<xdr:twoCellAnchor editAs=\"");
-        bw.write(ANCHOR_PROPERTY[picture.property & 3]);
-        // Default editAs="twoCell"
-        bw.write("\">");
+        int editAs = picture.property >= 0 ? picture.property & 3 : 0;
+        if (editAs >= 0) {
+            bw.write("<xdr:twoCellAnchor editAs=\"");
+            bw.write(ANCHOR_PROPERTY[editAs]);
+            bw.write("\">");
+        } else bw.write("<xdr:twoCellAnchor>");
 
         // From
         bw.write("<xdr:from><xdr:col>");
         bw.writeInt(picture.col);
         bw.write("</xdr:col><xdr:colOff>");
-        bw.writeInt((picture.padding & 0xFF) * 12700);
+        bw.writeInt(picture.padding[3] * 12700);
         bw.write("</xdr:colOff><xdr:row>");
-        bw.writeInt(picture.row - 1);
+        bw.writeInt(picture.row);
         bw.write("</xdr:row><xdr:rowOff>");
-        bw.writeInt((picture.padding >>> 24) * 12700);
+        bw.writeInt(picture.padding[0] * 12700);
         bw.write("</xdr:rowOff></xdr:from>");
 
         // TO
         bw.write("<xdr:to><xdr:col>");
-        bw.writeInt(picture.col + 1);
+        bw.writeInt(Math.max(picture.col, picture.toCol));
         bw.write("</xdr:col><xdr:colOff>");
-        bw.writeInt(-((picture.padding >>> 16) & 0xFF) * 12700);
+        bw.writeInt(picture.padding[1] * 12700);
         bw.write("</xdr:colOff><xdr:row>");
-        bw.writeInt(picture.row);
+        bw.writeInt(Math.max(picture.row, picture.toRow));
         bw.write("</xdr:row><xdr:rowOff>");
-        bw.writeInt(-((picture.padding >>> 8) & 0xFF) * 12700);
+        bw.writeInt(picture.padding[2] * 12700);
         bw.write("</xdr:rowOff></xdr:to>");
 
         // Picture

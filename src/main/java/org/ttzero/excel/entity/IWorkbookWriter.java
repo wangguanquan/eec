@@ -23,6 +23,7 @@ import org.dom4j.io.SAXReader;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,46 +39,52 @@ import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.StringUtil.indexOf;
 
 /**
+ * 工作薄输出协议，负责协调所有部件输出并组装所有零散的文件
+ *
  * @author guanquan.wang at 2019-04-22 16:00
+ * @see org.ttzero.excel.entity.e7.XMLWorkbookWriter
+ * @see org.ttzero.excel.entity.csv.CSVWorkbookWriter
  */
-public interface IWorkbookWriter extends Storable {
+public interface IWorkbookWriter extends Storable, Closeable {
 
     /**
-     * Setting workbook
+     * 设置工作薄
      *
-     * @param workbook the global workbook context
+     * @param workbook 工作薄
      */
     void setWorkbook(Workbook workbook);
 
     /**
-     * The Workbook suffix
+     * 获取最终的输出格式
      *
-     * @return xlsx if excel07, xls if excel03
+     * @return xlsx: excel07, xls: excel03
      */
     String getSuffix();
 
     /**
-     * Write to OutputStream ${os}
+     * 将工作薄写到指定流
      *
-     * @param os the out put stream
-     * @throws IOException         if io error occur
+     * @param os 输出流
+     * @throws IOException if I/O error occur
      */
     void writeTo(OutputStream os) throws IOException;
 
     /**
-     * Write to file ${file}
+     * 将工作薄写到指定位置
      *
-     * @param file the storage file
-     * @throws IOException         if io error occur
+     * @param file 目标文件
+     * @throws IOException if I/O error occur
      */
     void writeTo(File file) throws IOException;
 
     /**
-     * Write with template
+     * 指定模板导出时获取制作好的文件临时路径
      *
-     * @return the template path
-     * @throws IOException if io error occur
+     * @return 文件临时路径
+     * @throws IOException if I/O error occur
+     * @deprecated 使用 {@link TemplateSheet}代替
      */
+    @Deprecated
     Path template() throws IOException;
 
     /**
@@ -89,12 +96,16 @@ public interface IWorkbookWriter extends Storable {
     IWorksheetWriter getWorksheetWriter(Sheet sheet);
 
     /**
-     * Move src file into output path
+     * 移动文件到指定位置，如果已存在相同文件名则会在文件名后追回{@code '（n）‘}以区分，
+     * {@code n}从1开始如果已存在{@code '（n）‘}则新文件名为{@code '（n + 1）‘}
      *
-     * @param src the src file
-     * @param rootPath the output root path
-     * @param fileName the output file name
-     * @return the output file path
+     * <p>例：目标文件夹已存在{@code a.xlsx}和{@code b（5）.xlsx}两个文件，添加一个名为{@code a.xlsx}的文件
+     * 则新文件另存为{@code a（1）.xlsx}，添加一个名为{@code b.xlsx}的文件则新文件另存为{@code b（6）.xlsx}</p>
+     *
+     * @param src      源文件
+     * @param rootPath 目标文件夹
+     * @param fileName 目标文件名
+     * @return 另存为目标文件绝对路径
      * @throws IOException if I/O error occur
      */
     default Path reMarkPath(Path src, Path rootPath, String fileName) throws IOException {
@@ -133,6 +144,8 @@ public interface IWorkbookWriter extends Storable {
     }
 
     /**
+     * 获取pom配置相关信息
+     *
      * @return general pom properties
      */
     static Properties pom() {

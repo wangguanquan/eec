@@ -29,6 +29,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.stream.Stream;
 
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * @author guanquan.wang at 2023-03-03 11:03
@@ -121,22 +123,22 @@ public class ZebraLineTest extends WorkbookTest {
     }
 
     static void assertNonZebraLine(Stream<Row> rows) {
-        assert rows.allMatch(row -> {
+        assertTrue(rows.allMatch(row -> {
             Styles styles = row.getStyles();
             int style = row.getCellStyle(0);
             Fill fill = styles.getFill(style);
             return fill == null || fill.getPatternType() == PatternType.none;
-        });
+        }));
     }
 
     static void assertZebraLineEquals(Stream<Row> rows, PatternType patternType, Color color) {
-        assert rows.allMatch(row -> {
+        assertTrue(rows.allMatch(row -> {
             Styles styles = row.getStyles();
             // Skip header
             int rowNum = row.getRowNum();
             int style = row.getCellStyle(0);
             Fill fill = styles.getFill(style);
             return (rowNum & 1) == 0 ? fill == null || fill.getPatternType() == PatternType.none : fill != null && fill.getPatternType() == patternType && color.equals(fill.getFgColor());
-        });
+        }));
     }
 }

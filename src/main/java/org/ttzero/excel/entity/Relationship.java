@@ -48,6 +48,10 @@ public class Relationship implements Serializable, Cloneable {
      * 引用者通过该Id查询对应的引用资源
      */
     private String id;
+    /**
+     * Mode
+     */
+    private String targetMode;
 
     public Relationship() { }
 
@@ -66,24 +70,36 @@ public class Relationship implements Serializable, Cloneable {
         return target;
     }
 
-    public void setTarget(String target) {
+    public Relationship setTarget(String target) {
         this.target = target;
+        return this;
     }
 
     public String getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public Relationship setType(String type) {
         this.type = type;
+        return this;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public Relationship setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    public String getTargetMode() {
+        return targetMode;
+    }
+
+    public Relationship setTargetMode(String targetMode) {
+        this.targetMode = targetMode;
+        return this;
     }
 
     @Override
@@ -96,6 +112,7 @@ public class Relationship implements Serializable, Cloneable {
             r.id = id;
             r.target = target;
             r.type = type;
+            r.targetMode = targetMode;
         }
         return r;
     }

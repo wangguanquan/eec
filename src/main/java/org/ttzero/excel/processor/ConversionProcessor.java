@@ -19,13 +19,13 @@ package org.ttzero.excel.processor;
 /**
  * 输出转换器，将Java数据类型转为Excel输出类型，通常用于将状态值、枚举值转换为文本
  *
- * <blockquote><pre>
+ * <pre>
  * new Workbook()
  *   .addSheet(new ListSheet&lt;&gt;(
  *      new Column("审核单号", "billNo"),
  *      new Column("审核状态", "status", n -&gt; AuditStatus.byVal((int)n).desc())
  *   ))
- *   .writeTo(Paths.get("/tmp/"));</pre></blockquote>
+ *   .writeTo(Paths.get("/tmp/"));</pre>
  *
  * @author guanquan.wang on 2021-11-30 19:10
  */

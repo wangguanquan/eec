@@ -30,7 +30,7 @@ public class BuildInColor extends Color {
 
     public BuildInColor(int indexed) {
         // Approximate processing, when indexed greater than 64 means automatic
-        super(indexed >=0 && indexed < 64 ? ColorIndex.colors[indexed] : 0);
+        super(indexed >= 0 && indexed < 64 ? ColorIndex.indexedColors[indexed] : 0);
         this.indexed = indexed;
     }
 

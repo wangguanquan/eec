@@ -31,6 +31,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author guanquan.wang at 2019-04-29 21:36
  */
@@ -43,7 +46,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
 
@@ -60,27 +63,27 @@ public class EmptySheetTest extends SQLWorkbookTest {
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            assert "Empty".equals(sheet.getName());
+            assertEquals("Empty", sheet.getName());
             Iterator<Row> iter = sheet.rows().iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assert "ID".equals(row.getString(0));
-            assert "NAME".equals(row.getString(1));
-            assert "AGE".equals(row.getString(2));
+            assertEquals("ID", row.getString(0));
+            assertEquals("NAME", row.getString(1));
+            assertEquals("AGE", row.getString(2));
         }
     }
 
     @Test public void testEmptyDataReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty.xlsx"))) {
             long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count();
-            assert count == 0L;
+            assertEquals(count, 0L);
         }
     }
 
     @Test public void testEmptyWithHeaderDataReader() throws IOException {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test empty header.xlsx"))) {
             long count = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows).count();
-            assert count == 0L;
+            assertEquals(count, 0L);
         }
     }
 
@@ -95,10 +98,10 @@ public class EmptySheetTest extends SQLWorkbookTest {
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assert "id".equals(row.getString(0));
-            assert "name".equals(row.getString(1));
+            assertEquals("id", row.getString(0));
+            assertEquals("name", row.getString(1));
         }
     }
 
@@ -110,7 +113,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
 
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
 
@@ -128,10 +131,10 @@ public class EmptySheetTest extends SQLWorkbookTest {
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assert "id".equals(row.getString(0));
-            assert "name".equals(row.getString(1));
+            assertEquals("id", row.getString(0));
+            assertEquals("name", row.getString(1));
         }
     }
 
@@ -143,8 +146,8 @@ public class EmptySheetTest extends SQLWorkbookTest {
 
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert "empty".equals(reader.sheet(0).getName());
-            assert reader.sheet(0).rows().count() == 0L;
+            assertEquals("empty", reader.sheet(0).getName());
+            assertEquals(reader.sheet(0).rows().count(), 0L);
         }
     }
 
@@ -156,12 +159,12 @@ public class EmptySheetTest extends SQLWorkbookTest {
 
         // Check header row
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            assert "empty".equals(reader.sheet(0).getName());
+            assertEquals("empty", reader.sheet(0).getName());
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
-            assert iter.hasNext();
+            assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assert "id".equals(row.getString(0));
-            assert "name".equals(row.getString(1));
+            assertEquals("id", row.getString(0));
+            assertEquals("name", row.getString(1));
         }
     }
 
@@ -177,13 +180,13 @@ public class EmptySheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery();
             try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
                 Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
-                assert iter.hasNext();
+                assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row header = iter.next();
-                assert "id".equals(header.getString(0));
-                assert "name".equals(header.getString(1));
-                assert "age".equals(header.getString(2));
-                assert "create_date".equals(header.getString(3));
-                assert "update_date".equals(header.getString(4));
+                assertEquals("id", header.getString(0));
+                assertEquals("name", header.getString(1));
+                assertEquals("age", header.getString(2));
+                assertEquals("create_date", header.getString(3));
+                assertEquals("update_date", header.getString(4));
             }
             rs.close();
             ps.close();
