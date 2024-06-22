@@ -1041,7 +1041,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         final String[] statusDesc = { "未开始", "进行中", "完结", "中止" };
 
         @Override
-        public Integer reversion(String v) {
+        public Integer reversion(String v, Class<?> fieldClazz) {
             for (int i = 0; i < statusDesc.length; i++) {
                 if (statusDesc[i].equals(v)) {
                     return i;
