@@ -59,6 +59,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -1078,5 +1079,138 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test  public void multipleEnumReversionTest() throws IOException {
+        List<MultipleEnumReversionModel> list = MultipleEnumReversionModel.testData();
+        new Workbook()
+                .addSheet(new ListSheet<>(list))
+                .writeTo(defaultTestPath.resolve("multipleEnumReversion.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("multipleEnumReversion.xlsx"))) {
+            List<MultipleEnumReversionModel> readList = reader.sheet(0).dataRows().map(row -> row.to(MultipleEnumReversionModel.class)).collect(Collectors.toList());
+            assertEquals(list.size(), readList.size());
+
+            MultipleEnumReversionModel multipleEnumReversionModel0 = readList.get(0);
+            assertEquals(multipleEnumReversionModel0.getOperator(), Operator.PLUS);
+            assertEquals(multipleEnumReversionModel0.getSymbol(), Symbol.PLUS);
+
+            MultipleEnumReversionModel multipleEnumReversionModel1 = readList.get(1);
+            assertEquals(multipleEnumReversionModel1.getOperator(), Operator.REDUCE);
+            assertEquals(multipleEnumReversionModel1.getSymbol(), Symbol.REDUCE);
+        }
+    }
+
+
+    public static class MultipleEnumReversionModel {
+        @ExcelColumn(value = "运算符", converter = MultipleEnumConverter.class)
+        private Operator operator;
+        @ExcelColumn(value = "符号", converter = MultipleEnumConverter.class)
+        private Symbol symbol;
+
+
+        public Operator getOperator() {
+            return this.operator;
+        }
+
+        public Symbol getSymbol() {
+            return this.symbol;
+        }
+
+        public void setOperator(Operator operator) {
+            this.operator = operator;
+        }
+
+        public void setSymbol(Symbol symbol) {
+            this.symbol = symbol;
+        }
+
+        public static List<MultipleEnumReversionModel> testData() {
+            List<MultipleEnumReversionModel> reversionModels = new ArrayList<>();
+            MultipleEnumReversionModel model0 = new MultipleEnumReversionModel();
+            model0.setOperator(Operator.PLUS);
+            model0.setSymbol(Symbol.PLUS);
+            reversionModels.add(model0);
+
+            MultipleEnumReversionModel model1 = new MultipleEnumReversionModel();
+            model1.setOperator(Operator.REDUCE);
+            model1.setSymbol(Symbol.REDUCE);
+            reversionModels.add(model1);
+            return reversionModels;
+        }
+    }
+
+    public interface IBaseEnum {
+        String caption();
+    }
+
+    public enum Operator implements IBaseEnum {
+
+        PLUS("加"),
+        REDUCE("减");
+
+
+        private final String caption;
+
+        Operator(String caption) {
+            this.caption = caption;
+        }
+
+
+        @Override
+        public String caption() {
+            return caption;
+        }
+    }
+
+    public enum Symbol implements IBaseEnum {
+
+        PLUS("加"),
+        REDUCE("减");
+
+
+        private final String caption;
+
+        Symbol(String caption) {
+            this.caption = caption;
+        }
+
+
+        @Override
+        public String caption() {
+            return caption;
+        }
+    }
+
+    public static class MultipleEnumConverter implements Converter<IBaseEnum> {
+        Map<String, Map<String, IBaseEnum>> map = new HashMap<>(4);;
+
+        public MultipleEnumConverter() {
+            Map<String, IBaseEnum> operatorMap = new HashMap<>();
+            operatorMap.put(Operator.PLUS.caption(), Operator.PLUS);
+            operatorMap.put(Operator.REDUCE.caption(), Operator.REDUCE);
+            map.put(Operator.class.getSimpleName(), operatorMap);
+
+            Map<String, IBaseEnum> symbolMap = new HashMap<>();
+            symbolMap.put(Symbol.PLUS.caption(), Symbol.PLUS);
+            symbolMap.put(Symbol.REDUCE.caption(), Symbol.REDUCE);
+            map.put(Symbol.class.getSimpleName(), symbolMap);
+        }
+
+
+        @Override
+        public IBaseEnum reversion(String v, Class<?> fieldClazz) {
+
+            Map<String, IBaseEnum> clazzIBaseEnumMap = map.get(fieldClazz.getSimpleName());
+            if (clazzIBaseEnumMap == null) {
+                return null;
+            }
+            return clazzIBaseEnumMap.get(v);
+        }
+
+        @Override
+        public Object conversion(Object v) {
+            IBaseEnum v1 = (IBaseEnum)  v;
+            return v1.caption();
+        }
+    }
 
 }
