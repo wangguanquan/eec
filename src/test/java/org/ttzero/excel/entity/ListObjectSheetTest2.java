@@ -1181,7 +1181,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     public static class MultipleEnumConverter implements Converter<IBaseEnum> {
-        Map<String, Map<String, IBaseEnum>> map = new HashMap<>(4);;
+        Map<String, Map<String, IBaseEnum>> map = new HashMap<>(4);
 
         public MultipleEnumConverter() {
             Map<String, IBaseEnum> operatorMap = new HashMap<>();
