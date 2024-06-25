@@ -490,10 +490,12 @@ public class ExcelReader implements Closeable {
         entry = getEntry("xl/styles.xml");
         if (entry != null) {
             try {
-                styles = Styles.load(zipFile.getInputStream(entry));
-                // Load Theme style
+                // Load Theme style first
                 ZipEntry themeEntry = getEntry("xl/theme/theme1.xml");
                 if (themeEntry != null) Theme.load(zipFile.getInputStream(themeEntry));
+
+                // Then load custom styles
+                styles = Styles.load(zipFile.getInputStream(entry));
             } catch (Exception ex) {
                 LOGGER.warn("Parse style failed.", ex);
             }
