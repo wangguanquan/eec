@@ -22,6 +22,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
@@ -73,7 +74,7 @@ public class TemplateSheetTest extends WorkbookTest {
         File[] files = testResourceRoot().toFile().listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.getName().endsWith(".xlsx")) {
+                if (ExcelReader.getType(file.toPath()) == ExcelType.XLSX) {
                     try (ExcelReader reader = ExcelReader.read(file.toPath())) {
                         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
                         // 这里设置占位符前缀为[#@^!]是为了全量复制数据用
