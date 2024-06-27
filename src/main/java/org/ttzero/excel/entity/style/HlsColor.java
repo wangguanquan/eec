@@ -45,10 +45,10 @@ public class HlsColor {
     public float s;
 
     /**
-     * Convert rgba color to hls Color
+     * 将RGBA颜色转换为HLS颜色
      *
-     * @param rgbColor rgb Color
-     * @return hlsColor
+     * @param rgbColor RGB颜色
+     * @return HLS颜色
      */
     public static HlsColor rgbToHls(Color rgbColor) {
         HlsColor hlsColor = new HlsColor();
@@ -76,31 +76,23 @@ public class HlsColor {
     }
 
     /**
-     * Convert hls color to rgba
+     * 将HLS颜色转换为RGBA颜色
      *
-     * @param hlsColor hls color
-     * @return rgbColor
+     * @param hlsColor HLS颜色
+     * @return RGBA颜色
      */
     public static Color hlsToRgb(HlsColor hlsColor) {
-        Color rgbColor;
+        // 灰色，没有色相和饱和度
         if (hlsColor.s == 0) {
-            rgbColor = new Color(hlsColor.l, hlsColor.l, hlsColor.l, hlsColor.a);
-            return rgbColor;
+            return new Color(hlsColor.l, hlsColor.l, hlsColor.l, hlsColor.a);
         }
-        float t1;
-        if (hlsColor.l < 0.5F) t1 = hlsColor.l * (1.0F + hlsColor.s);
-        else t1 = hlsColor.l + hlsColor.s - (hlsColor.l * hlsColor.s);
+        float t1 = hlsColor.l < 0.5F ? hlsColor.l * (1.0F + hlsColor.s) : hlsColor.l + hlsColor.s - (hlsColor.l * hlsColor.s);
         float t2 = 2.0F * hlsColor.l - t1;
         float h = hlsColor.h / 360F;
-        float tR = h + (1.0F / 3.0F);
-        float r = hueToRGB(t1, t2, tR);
-        float tG = h;
-        float g = hueToRGB(t1, t2, tG);
-        float tB = h - (1.0F / 3.0F);
-        float b = hueToRGB(t1, t2, tB);
-//        rgbColor = new Color((int) (r * 255), (int) (g * 255), (int) (b * 255), (int) (hlsColor.a * 255));
-        rgbColor = new Color(r, g, b, hlsColor.a);
-        return rgbColor;
+        float r = hueToRGB(t1, t2, h + 0.3333333333F);
+        float g = hueToRGB(t1, t2, h);
+        float b = hueToRGB(t1, t2, h - 0.3333333333F);
+        return new Color(r, g, b, hlsColor.a);
     }
 
     private static float hueToRGB(float t1, float t2, float t3) {
