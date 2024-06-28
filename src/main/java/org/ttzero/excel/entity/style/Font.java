@@ -678,7 +678,7 @@ public class Font implements Cloneable {
         if (family > 0) {
             element.addElement("family").addAttribute("val", String.valueOf(family));
         }
-        if (StringUtil.isNotEmpty(scheme)) {
+        if (StringUtil.isNotEmpty(scheme) && !"none".equals(scheme)) {
             element.addElement("scheme").addAttribute("val", scheme);
         }
         if (charset > 0) {
@@ -775,7 +775,7 @@ public class Font implements Cloneable {
                 case "color"  : font.color = Styles.parseColor(e);                          break;
                 case "name"   : font.name = getAttr(e, "val");                              break;
                 case "charset": font.charset = Integer.parseInt(getAttr(e, "val"));         break;
-                case "scheme" : font.scheme = getAttr(e, "val");                            break;
+                case "scheme" : font.setScheme(getAttr(e, "val"));                          break;
                 case "family" : font.family = Integer.parseInt(getAttr(e, "val"));          break;
                 case "b"      : font.style |= Style.BOLD;                                   break;
                 case "i"      : font.style |= Style.ITALIC;                                 break;
