@@ -607,7 +607,7 @@ public class Font implements Cloneable {
         if (charset > 0) {
             buf.append("<charset val=\"").append(charset).append("\"/>");
         }
-        if (StringUtil.isNotEmpty(scheme) && !"none".equals(scheme)) {
+        if (("minor".equals(scheme) || "major".equals(scheme))) {
             buf.append("<scheme val=\"").append(scheme).append("\"/>");
         }
 
@@ -619,12 +619,12 @@ public class Font implements Cloneable {
         int hash = size << 16;
         hash += color != null ? color.hashCode() : 0;
         hash += style << 24;
-        if (StringUtil.isEmpty(scheme) || "none".equals(scheme)) {
+        if (("minor".equals(scheme) || "major".equals(scheme))) {
+            hash += scheme.hashCode();
+        } else {
             hash += name.hashCode() << 8;
             hash += charset;
             hash += family;
-        } else {
-            hash += scheme.hashCode();
         }
         return hash;
     }
@@ -638,9 +638,9 @@ public class Font implements Cloneable {
                 && Objects.equals(other.color, color)
                 && other.style == style;
             if (r) {
-                r = (StringUtil.isEmpty(scheme) || "none".equals(scheme))
-                    ? Objects.equals(other.name, name) && other.charset == charset && other.family == family
-                    : Objects.equals(other.scheme, scheme);
+                r = (("minor".equals(scheme) || "major".equals(scheme)))
+                    ? Objects.equals(other.scheme, scheme)
+                    : Objects.equals(other.name, name) && other.charset == charset && other.family == family;
             }
         }
         return r;
@@ -678,7 +678,7 @@ public class Font implements Cloneable {
         if (family > 0) {
             element.addElement("family").addAttribute("val", String.valueOf(family));
         }
-        if (StringUtil.isNotEmpty(scheme) && !"none".equals(scheme)) {
+        if (("minor".equals(scheme) || "major".equals(scheme))) {
             element.addElement("scheme").addAttribute("val", scheme);
         }
         if (charset > 0) {
