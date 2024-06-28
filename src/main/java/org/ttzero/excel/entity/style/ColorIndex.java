@@ -25,7 +25,7 @@ import java.awt.Color;
  *
  * @author guanquan.wang at 2018-02-06 14:40
  */
-public class ColorIndex {
+public final class ColorIndex {
     /** Default indexed color */
     public static final int[] indexedColors = {
         -16777216, -1,        -65536,    -16711936, -16776961, -256,      -65281,    -16711681,

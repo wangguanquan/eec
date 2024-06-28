@@ -446,7 +446,7 @@ public class PictureTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size paging.xlsx"))) {
-            assertEquals(reader.getSheetCount(), (count + (rowLimit >> 1)) / rowLimit);
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<Drawings.Picture> list = reader.sheet(i).listPictures();
