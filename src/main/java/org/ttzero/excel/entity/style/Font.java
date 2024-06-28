@@ -369,6 +369,10 @@ public class Font implements Cloneable {
      * @return 当前字体
      */
     public Font setScheme(String scheme) {
+        if (StringUtil.isNotEmpty(scheme)) {
+            scheme = scheme.toLowerCase();
+            scheme = ("minor".equals(scheme) || "major".equals(scheme)) ? scheme : null;
+        } else scheme = null;
         this.scheme = scheme;
         return this;
     }
@@ -603,7 +607,7 @@ public class Font implements Cloneable {
         if (charset > 0) {
             buf.append("<charset val=\"").append(charset).append("\"/>");
         }
-        if (StringUtil.isNotEmpty(scheme)) {
+        if (StringUtil.isNotEmpty(scheme) && !"none".equals(scheme)) {
             buf.append("<scheme val=\"").append(scheme).append("\"/>");
         }
 
@@ -612,31 +616,34 @@ public class Font implements Cloneable {
 
     @Override
     public int hashCode() {
-        int hash;
-        hash = style << 24;
-        hash += size << 16;
-        hash += name.hashCode() << 8;
+        int hash = size << 16;
         hash += color != null ? color.hashCode() : 0;
-        hash += charset;
-        hash += family;
-        if (StringUtil.isNotEmpty(scheme)) hash += scheme.hashCode();
+        hash += style << 24;
+        if (StringUtil.isEmpty(scheme) || "none".equals(scheme)) {
+            hash += name.hashCode() << 8;
+            hash += charset;
+            hash += family;
+        } else {
+            hash += scheme.hashCode();
+        }
         return hash;
     }
 
     @Override
     public boolean equals(Object o) {
+        boolean r = false;
         if (o instanceof Font) {
             Font other = (Font) o;
-            return other.size == size
-                && (Objects.equals(other.name, name))
-                && (Objects.equals(other.color, color))
-                && other.charset == charset
-                && other.family == family
-                && other.style == style
-                && (Objects.equals(other.scheme, scheme))
-                ;
+            r = other.size == size
+                && Objects.equals(other.color, color)
+                && other.style == style;
+            if (r) {
+                r = (StringUtil.isEmpty(scheme) || "none".equals(scheme))
+                    ? Objects.equals(other.name, name) && other.charset == charset && other.family == family
+                    : Objects.equals(other.scheme, scheme);
+            }
         }
-        return false;
+        return r;
     }
 
     /**
