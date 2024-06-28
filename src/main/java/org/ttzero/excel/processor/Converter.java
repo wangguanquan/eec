@@ -11,9 +11,10 @@ public interface Converter<T> extends ConversionProcessor {
      * 输入转换器，读取Excel时将单元格的值转为指定类型{@code T}
      *
      * @param v Excel原始值
+     * @param fieldClazz 导入字段类型
      * @return 转换后的值
      */
-    T reversion(String v);
+    T reversion(String v, Class<?> fieldClazz);
 
     /**
      * 无类型转换，默认
@@ -21,7 +22,7 @@ public interface Converter<T> extends ConversionProcessor {
     final class None implements Converter<Object> {
 
         @Override
-        public Object reversion(String v) {
+        public Object reversion(String v, Class<?> fieldClazz) {
             return v;
         }
 
