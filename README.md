@@ -291,6 +291,11 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.16 (2024-06-29)
+-------------
+- 输入转换Converter#reversion增加数据类型提升扩展性(#376) [兼容问题参考](./wiki/版本兼容性升级指引)
+- 修复读取自定义theme颜色会出现偏差的问题
+
 Version 0.5.15 (2024-05-21)
 -------------
 - 修复onProgress出现越界问题
@@ -318,19 +323,10 @@ Version 0.5.13 (2024-02-20)
 - 修复部分场景读取Excel发生IndexOutOfBound异常
 - 修复HeaderStyle注解设置样式时，字段样式被全局样式替换的问题
 
-Version 0.5.12 (2023-11-26)
--------------
-- 移除watch改用slf4j输出日志
-- 新增进度窗口`onProgress`
-- 优化自适应列宽算法使其支持更多字体和大小
-- 数据转换器功能增强，ExcelColumn增加converter属性以支持导出/导入时双向数据转换([#362](https://github.com/wangguanquan/eec/issues/362))
-- 支持读取xlsx格式wps的内嵌图片([#363](https://github.com/wangguanquan/eec/issues/363))
-- 部分类的注释改为中文，后续会将全部注释改为中文
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.15-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.16-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
