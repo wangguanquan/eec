@@ -96,11 +96,11 @@ public interface IWorkbookWriter extends Storable, Closeable {
     IWorksheetWriter getWorksheetWriter(Sheet sheet);
 
     /**
-     * 移动文件到指定位置，如果已存在相同文件名则会在文件名后追回{@code '（n）‘}以区分，
-     * {@code n}从1开始如果已存在{@code '（n）‘}则新文件名为{@code '（n + 1）‘}
+     * 移动文件到指定位置，如果已存在相同文件名则会在文件名后追回{@code （n）}以区分，
+     * {@code n}从1开始如果已存在{@code （n）}则新文件名为{@code （n + 1）}
      *
      * <p>例：目标文件夹已存在{@code a.xlsx}和{@code b（5）.xlsx}两个文件，添加一个名为{@code a.xlsx}的文件
-     * 则新文件另存为{@code a（1）.xlsx}，添加一个名为{@code b.xlsx}的文件则新文件另存为{@code b（6）.xlsx}</p>
+     * 因为{@code a.xlsx}已存在所以新文件另存为{@code a（1）.xlsx}，添加一个名为{@code b.xlsx}的文件则新文件另存为{@code b（6）.xlsx}</p>
      *
      * @param src      源文件
      * @param rootPath 目标文件夹

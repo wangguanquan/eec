@@ -43,7 +43,7 @@ public interface IDrawingsWriter extends Closeable, Storable {
     void asyncDrawing(Picture picture) throws IOException;
 
     /**
-     * 通知图片忆准备好，与{@link #asyncDrawing}搭配使用
+     * 通知图片已准备好，与{@link #asyncDrawing}搭配使用
      *
      * @param picture 已完成的图片{@link Picture}
      */
