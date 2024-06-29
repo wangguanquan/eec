@@ -293,7 +293,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ## CHANGELOG
 Version 0.5.16 (2024-06-29)
 -------------
-- 输入转换Converter#reversion增加数据类型提升扩展性(#376) [兼容问题参考](./wiki/版本兼容性升级指引)
+- 输入转换Converter#reversion增加数据类型提升扩展性(#376) 
 - 修复读取自定义theme颜色会出现偏差的问题
 
 Version 0.5.15 (2024-05-21)
