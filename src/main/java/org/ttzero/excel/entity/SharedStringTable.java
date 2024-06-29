@@ -61,7 +61,7 @@ public class SharedStringTable implements Closeable, Iterable<String> {
     private long mark = -1;
 
     /**
-     * Delete the temp file if @author {@link SharedStringTable}
+     * Delete the temp file if close buffer
      */
     protected boolean shouldDelete;
 
