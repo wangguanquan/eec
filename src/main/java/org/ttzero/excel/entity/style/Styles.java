@@ -52,7 +52,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 /**
  * Excel样式包含格式化{@link NumFmt}、字体{@link Font}、填充{@link Fill}、边框{@link Border}、
  * 垂直对齐{@link Verticals}和水平对齐{@link Horizontals}以及自动折行组成，样式存放在共享区域供多个工作表共用，
- * 每个样式值都是由这7种值进行组合而来。全局样式库统管样式读写，添加样式时会查询当前库是否已存在，如果存在则直接返回该样式在库中的索引值，
+ * 每个样式值都是由这7种值进行组合而来。全局样式库统管样式读写，添加样式时会查询当前样式是否已存在，如果存在则直接返回该样式在库中的索引值
  * 否则添加到样式库末尾
  *
  * <p>本工具简化了样式设计，基础的4种样式由数组保存，单元格样式值由一个{@code int}值保存，
