@@ -1342,7 +1342,8 @@ public class Row {
         String key;
         int from = hasHeader ? hr.fc : fc, to = hasHeader ? hr.lc : lc;
         for (int i = from; i < to; i++) {
-            Cell c = cells[i];
+            // Cell c = cells[i];
+            Cell c = getCell(i);
             key = hasHeader ? names[i] : Integer.toString(i);
             // Ignore null key
             if (key == null) continue;
