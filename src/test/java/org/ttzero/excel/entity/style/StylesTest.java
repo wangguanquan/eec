@@ -18,7 +18,6 @@ package org.ttzero.excel.entity.style;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.ttzero.excel.entity.I18N;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -46,7 +45,7 @@ public class StylesTest {
     private Styles styles;
 
     @Before public void before() {
-        styles = Styles.create(new I18N());
+        styles = Styles.create();
 
         // Built-In number format
         styles.of(16 << INDEX_NUMBER_FORMAT);

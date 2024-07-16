@@ -234,7 +234,9 @@ public class Workbook implements Storable {
      * 获取全局{@link I18N}配置
      *
      * @return 全局I18N配置
+     * @deprecated 不适用
      */
+    @Deprecated
     public I18N getI18N() {
         return i18N;
     }
@@ -360,7 +362,7 @@ public class Workbook implements Storable {
     public Styles getStyles() {
         // CSV do not need Styles
         if (styles == null && !(workbookWriter instanceof CSVWorkbookWriter))
-            styles = Styles.create(i18N);
+            styles = Styles.create();
         return styles;
     }
 
@@ -778,7 +780,7 @@ public class Workbook implements Storable {
         }
         // 创建全局样式
         if (styles == null) {
-            styles = Styles.create(i18N);
+            styles = Styles.create();
         }
     }
 

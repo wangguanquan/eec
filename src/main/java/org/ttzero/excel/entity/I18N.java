@@ -29,7 +29,9 @@ import java.util.Properties;
 
 /**
  * @author guanquan.wang on 2018-10-13
+ * @deprecated 不适用，后续将删除
  */
+@Deprecated
 public class I18N {
     /**
      * Here converted to HashMap is to improve performance,
