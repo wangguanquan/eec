@@ -5,7 +5,7 @@
 
   <groupId>org.ttzero</groupId>
   <artifactId>eec</artifactId>
-  <version>0.5.16</version>
+  <version>0.5.17</version>
   <name>Excel Write/Read Framework</name>
   <packaging>jar</packaging>
   <url>https://www.ttzero.org</url>
