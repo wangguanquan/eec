@@ -136,7 +136,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     protected void reMarkPath(Path src, Path path) throws IOException {
         String name;
         if (StringUtil.isEmpty(name = workbook.getName())) {
-            name = workbook.getI18N().getOrElse("non-name-file", "Non name");
+            name = "新建文件";
         }
 
         Path resultPath = reMarkPath(src, path, name);

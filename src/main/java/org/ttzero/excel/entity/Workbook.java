@@ -129,7 +129,6 @@ public class Workbook implements Storable {
      * 导出进度监控器
      */
     private BiConsumer<Sheet, Integer> progressConsumer;
-    private final I18N i18N;
     /**
      * 全局字符串共享区
      */
@@ -188,7 +187,6 @@ public class Workbook implements Storable {
         this.name = name;
         this.creator = creator;
         sheets = new Sheet[3]; // Create three worksheet
-        i18N = new I18N();
         contentType = new ContentType();
     }
 
@@ -233,12 +231,12 @@ public class Workbook implements Storable {
     /**
      * 获取全局{@link I18N}配置
      *
-     * @return 全局I18N配置
+     * @return 固定返回 {@code null}
      * @deprecated 不适用
      */
     @Deprecated
     public I18N getI18N() {
-        return i18N;
+        return null;
     }
 
     /**
