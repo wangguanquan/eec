@@ -161,8 +161,7 @@ public class Workbook implements Storable {
     /**
      * 创建一个未命名工作薄
      *
-     * <p>如果writeTo方法指定的File或Path为文件夹时，未命名工作薄将会从{@code resources/I18N/message.XXX.properties}
-     * 查找名为'non-name-file'的配置，有且不为空时以该配置为文件名否则以'Non name'作为文件名</p>
+     * <p>如果writeTo方法指定的File或Path为文件夹时，未命名工作薄将会以'新建文件'作为文件名</p>
      */
     public Workbook() {
         this(null);
@@ -226,17 +225,6 @@ public class Workbook implements Storable {
      */
     public String getCompany() {
         return company;
-    }
-
-    /**
-     * 获取全局{@link I18N}配置
-     *
-     * @return 固定返回 {@code null}
-     * @deprecated 不适用
-     */
-    @Deprecated
-    public I18N getI18N() {
-        return null;
     }
 
     /**
