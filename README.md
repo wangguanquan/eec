@@ -291,6 +291,10 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.17 (2024-07-18)
+-------------
+- 修复部分情况下Row#toMap抛下标越界问题(#380)
+
 Version 0.5.16 (2024-06-29)
 -------------
 - 输入转换Converter#reversion增加数据类型提升扩展性(#376) 
@@ -312,21 +316,10 @@ Version 0.5.14 (2024-04-22)
 - 新增zoomScale扩展属性支持设置工作表缩放比例
 - 修复读取双色填充样式时抛异常
 
-Version 0.5.13 (2024-02-20)
--------------
-- logback安全更新
-- 新增全属性工作表FullSheet以读取更多属性，它集合了MergeSheet和CalcSheet的功能
-- 新增扩展属性AutoFilter用于添加列筛选功能
-- 修复继承自ListSheet的工作表初始无法获取对象类型导致单元格空白的问题
-- 修复部分场景下边框颜色无法设置的问题
-- 修复部分Excel的indexed颜色与标准有所不同导致获取颜色不正确的问题
-- 修复部分场景读取Excel发生IndexOutOfBound异常
-- 修复HeaderStyle注解设置样式时，字段样式被全局样式替换的问题
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.16-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.17-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
