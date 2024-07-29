@@ -22,6 +22,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,7 +36,7 @@ import java.util.Properties;
  */
 public class SQLWorkbookTest extends WorkbookTest {
     private static final Properties pro;
-    private static String protocol;
+    protected static String protocol;
     static {
         pro = new Properties();
         try {
@@ -86,6 +87,7 @@ public class SQLWorkbookTest extends WorkbookTest {
             rs = ps.executeQuery();
             // No data in database
             if (!rs.next()) {
+                rs.close();
                 ps.close();
                 con.setAutoCommit(false);
                 ps = con.prepareStatement("insert into student(name, age, create_date, update_date) values (?,?,?,?)");
@@ -107,6 +109,45 @@ public class SQLWorkbookTest extends WorkbookTest {
                 }
                 ps.executeBatch();
                 con.commit();
+            } else {
+                rs.close();
+                ps.close();
+            }
+
+            String typesTest = "CREATE TABLE if not exists `types_test` (`id` int(11) NOT NULL,`t_bit` bit(1) DEFAULT NULL,`t_tinyint` tinyint(3) DEFAULT NULL,`t_smallint` smallint(6) DEFAULT NULL,`t_int` int(11) DEFAULT NULL,`t_bigint` bigint(19) DEFAULT NULL,`t_float` float DEFAULT NULL,`t_double` double DEFAULT NULL,`t_varchar` varchar(45) DEFAULT NULL,`t_char` char(10) DEFAULT NULL,`t_date` date DEFAULT NULL,`t_datetime` datetime DEFAULT NULL,`t_timestamp` timestamp NULL DEFAULT NULL)";
+            ps = con.prepareStatement(typesTest);
+            ps.executeUpdate();
+            ps.close();
+
+            ps = con.prepareStatement("select id from types_test limit 1");
+            rs = ps.executeQuery();
+            // No data in database
+            if (!rs.next()) {
+                rs.close();
+                ps.close();
+                con.setAutoCommit(true);
+                ps = con.prepareStatement("insert into types_test(id,t_bit,t_tinyint,t_smallint,t_int,t_bigint,t_float,t_double,t_varchar,t_char,t_date,t_datetime,t_timestamp) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                ps.setInt(1, 1);
+                ps.setByte(2, (byte) 1);
+                ps.setByte(3, (byte) 123);
+                ps.setShort(4, (short) 1234);
+                ps.setInt(5, 12345678);
+                ps.setLong(6, 125436456543L);
+                ps.setFloat(7, 129.304F);
+                ps.setDouble(8, 47484.395D);
+                ps.setString(9, "abc");
+                ps.setString(10, "are");
+                ps.setDate(11, new Date(System.currentTimeMillis()));
+                ps.setDate(12, new Date(System.currentTimeMillis()));
+                ps.setTimestamp(13, new Timestamp(System.currentTimeMillis()));
+                ps.executeUpdate();
+                ps = con.prepareStatement("insert into types_test(id) values(?)");
+                ps.setInt(1, 2);
+                ps.executeUpdate();
+                ps.close();
+            } else {
+                rs.close();
+                ps.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();

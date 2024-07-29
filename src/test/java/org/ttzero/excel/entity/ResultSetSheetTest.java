@@ -659,5 +659,99 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testTypes() throws SQLException, IOException {
+        try (
+            Connection con = getConnection();
+            PreparedStatement ps = con.prepareStatement("select * from types_test");
+            ResultSet rs = ps.executeQuery()
+        ) {
+            new Workbook()
+                .addSheet(new ResultSetSheet(rs))
+                .writeTo(defaultTestPath.resolve("test types.xlsx"));
+
+            PreparedStatement ps1 = con.prepareStatement("select * from types_test");
+            ResultSet rs1 = ps1.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test types.xlsx"))) {
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
+                Iterator<Row> iter = sheet.iterator();
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row header = iter.next();
+                assertEquals("id", header.getString(0));
+                assertEquals("t_bit", header.getString(1));
+                assertEquals("t_tinyint", header.getString(2));
+                assertEquals("t_smallint", header.getString(3));
+                assertEquals("t_int", header.getString(4));
+                assertEquals("t_bigint", header.getString(5));
+                assertEquals("t_float", header.getString(6));
+                assertEquals("t_double", header.getString(7));
+                assertEquals("t_varchar", header.getString(8));
+                assertEquals("t_char", header.getString(9));
+                assertEquals("t_date", header.getString(10));
+                assertEquals("t_datetime", header.getString(11));
+                assertEquals("t_timestamp", header.getString(12));
+
+                assertTrue(iter.hasNext());
+                assertTrue(rs1.next());
+                // Row1
+                org.ttzero.excel.reader.Row row = iter.next();
+
+                assertEquals(row.getCellType(0), CellType.INTEGER);
+                assertEquals(row.getCellType(1), "mysql".equals(protocol) ? CellType.BOOLEAN : CellType.INTEGER);
+                assertEquals(row.getCellType(2), CellType.INTEGER);
+                assertEquals(row.getCellType(3), CellType.INTEGER);
+                assertEquals(row.getCellType(4), CellType.INTEGER);
+                assertEquals(row.getCellType(5), CellType.LONG);
+                assertEquals(row.getCellType(6), CellType.DECIMAL);
+                assertEquals(row.getCellType(7), CellType.DECIMAL);
+                assertEquals(row.getCellType(8), CellType.STRING);
+                assertEquals(row.getCellType(9), CellType.STRING);
+                assertEquals(row.getCellType(10), CellType.DATE);
+                assertEquals(row.getCellType(11), CellType.DATE);
+                assertEquals(row.getCellType(12), CellType.DATE);
+
+                assertEquals(rs1.getInt(1), (int) row.getInt(0));
+                if ("mysql".equals(protocol)) {
+                    assertEquals(rs1.getBoolean(2), row.getBoolean(1));
+                } else {
+                    assertEquals(rs1.getInt(2), (int) row.getInt(1));
+                }
+                assertEquals(rs1.getInt(3), (int) row.getInt(2));
+                assertEquals(rs1.getInt(4), (int) row.getInt(3));
+                assertEquals(rs1.getInt(5), (int) row.getInt(4));
+                assertEquals(rs1.getLong(6), (long) row.getLong(5));
+                assertTrue(rs1.getDouble(7) - row.getDouble(6) <= 0.0001);
+                assertTrue(rs1.getDouble(8) - row.getDouble(7) <= 0.0001);
+                assertEquals(rs1.getString(9), row.getString(8));
+                assertEquals(rs1.getString(10), row.getString(9));
+                assertEquals(rs1.getDate(11).getTime() / 1000, row.getDate(10).getTime() / 1000);
+                assertEquals(rs1.getDate(12).getTime() / 1000, row.getDate(11).getTime() / 1000);
+                assertEquals(rs1.getTimestamp(13).getTime() / 1000, row.getTimestamp(12).getTime() / 1000);
+
+                // Row2
+                assertTrue(iter.hasNext());
+                assertTrue(rs1.next());
+                // Row1
+                row = iter.next();
+
+                assertEquals(row.getCellType(0), CellType.INTEGER);
+                assertEquals(row.getCellType(1), CellType.BLANK);
+                assertEquals(row.getCellType(2), CellType.BLANK);
+                assertEquals(row.getCellType(3), CellType.BLANK);
+                assertEquals(row.getCellType(4), CellType.BLANK);
+                assertEquals(row.getCellType(5), CellType.BLANK);
+                assertEquals(row.getCellType(6), CellType.BLANK);
+                assertEquals(row.getCellType(7), CellType.BLANK);
+                assertEquals(row.getCellType(8), CellType.BLANK);
+                assertEquals(row.getCellType(9), CellType.BLANK);
+                assertEquals(row.getCellType(10), CellType.BLANK);
+                assertEquals(row.getCellType(11), CellType.BLANK);
+                assertEquals(row.getCellType(12), CellType.BLANK);
+
+                assertEquals(rs1.getInt(1), (int) row.getInt(0));
+            }
+            rs1.close();
+            ps1.close();
+        }
+    }
 
 }
