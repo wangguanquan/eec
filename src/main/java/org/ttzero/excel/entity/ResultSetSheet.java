@@ -258,13 +258,12 @@ public class ResultSetSheet extends Sheet {
                     if (hc.ri > 0) {
                         switch (hc.sqlType) {
                             case VARCHAR:
+                            case CHAR:
                             case LONGVARCHAR:
-                            case NULL:           e = rs.getString(hc.ri);      break;
-                            case INTEGER:
+                            case NULL:            e = rs.getString(hc.ri);     break;
+                            case INTEGER:         e = rs.getInt(hc.ri);        break;
                             case TINYINT:
-                            case SMALLINT:
-                            case BIT:
-                            case CHAR:            e = rs.getInt(hc.ri);        break;
+                            case SMALLINT:        e = rs.getShort(hc.ri);      break;
                             case DATE:            e = rs.getDate(hc.ri);       break;
                             case TIMESTAMP:       e = rs.getTimestamp(hc.ri);  break;
                             case NUMERIC:
@@ -273,9 +272,12 @@ public class ResultSetSheet extends Sheet {
                             case REAL:
                             case FLOAT:
                             case DOUBLE:          e = rs.getDouble(hc.ri);     break;
+                            case BIT:             e = rs.getBoolean(hc.ri);    break;
                             case TIME:            e = rs.getTime(hc.ri);       break;
                             default:              e = rs.getObject(hc.ri);     break;
                         }
+                        // Clear value if NULL
+                        if (rs.wasNull()) e = null;
                     } else e = null;
 
                     cellValueAndStyle.reset(row, cell, e, hc);
@@ -386,18 +388,17 @@ public class ResultSetSheet extends Sheet {
             case LONGVARCHAR:
             case NULL:      clazz = String.class;        break;
             case INTEGER:   clazz = Integer.class;       break;
+            case TINYINT:
+            case SMALLINT:  clazz = Short.class;         break;
             case DATE:      clazz = java.sql.Date.class; break;
             case TIMESTAMP: clazz = Timestamp.class;     break;
             case NUMERIC:
             case DECIMAL:   clazz = BigDecimal.class;    break;
-            case BIT:       clazz = Boolean.class;       break;
-            case TINYINT:   clazz = Byte.class;          break;
-            case SMALLINT:  clazz = Short.class;         break;
             case BIGINT:    clazz = Long.class;          break;
-            case REAL:      clazz = Float.class;         break;
+            case REAL:
             case FLOAT:
             case DOUBLE:    clazz = Double.class;        break;
-//            case CHAR:      clazz = char.class;          break;
+            case BIT:       clazz = Boolean.class;       break;
             case TIME:      clazz = java.sql.Time.class; break;
             default:        clazz = Object.class;
         }
