@@ -166,7 +166,7 @@ public class CSVUtil {
      */
     public static List<String[]> read(Path path, char separator, Charset charset) throws IOException {
         // Check comma character and column
-        // FileNotFoundException will be occur
+        // FileNotFoundException will be occurred
         O o = init(path, separator, charset);
         // Empty file
         if (o == null) {
@@ -367,7 +367,7 @@ public class CSVUtil {
          */
         public Stream<String[]> stream() throws IOException {
             // Check comma character and column
-            // FileNotFoundException will be occur
+            // FileNotFoundException will be occurred
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
@@ -404,7 +404,7 @@ public class CSVUtil {
          */
         public Stream<String[]> sharedStream(char separator) throws IOException {
             // Check comma character and column
-            // FileNotFoundException will be occur
+            // FileNotFoundException will be occurred
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
@@ -841,7 +841,7 @@ public class CSVUtil {
         int offset = o.offset, i = offset, iq = -1;
         // the first character is '"'
         boolean quoted = chars[i] == QUOTE
-            // a integral string
+            // an integral string
             , integral = false
             // if data size less than block length
             , last_block = len < chars.length;
@@ -893,7 +893,7 @@ public class CSVUtil {
 
         if (integral) {
             if (quoted) offset++;
-            // a integral string
+            // an integral string
             if (offset == i && chars[offset] == LF || offset - i == 1 && chars[offset] == CR && chars[i] == LF)
                 o.value = null;
             else {
@@ -916,7 +916,7 @@ public class CSVUtil {
 
     /**
      * Returns a string whose value is this string, with any leading and trailing
-     * whitespace removed and double quoted character convert to single quoted character.
+     * whitespace removed and double-quoted character convert to single-quoted character.
      *
      * @param chars a block data
      * @param offset initial offset of the block data.
@@ -960,6 +960,8 @@ public class CSVUtil {
         private char[] cb;
         private int offset;
         private final static int length = 8192;
+        // Write BOM(default false)
+        private boolean writeBom;
 
         /**
          * Line separator string.  This is the value of the line.separator
@@ -1002,6 +1004,11 @@ public class CSVUtil {
 
         private void init() {
             cb = new char[length];
+
+            // Write BOM
+            if (writeBom) {
+
+            }
         }
 
         /**

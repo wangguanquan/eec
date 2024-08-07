@@ -772,7 +772,6 @@ public class Workbook implements Storable {
      */
     protected void init() {
         // 创建全局字符串共享区
-        // FIXME 根据worksheet配置来判断是否需要创建字符串共享区
         if (sst == null) {
             sst = new SharedStrings();
         }
