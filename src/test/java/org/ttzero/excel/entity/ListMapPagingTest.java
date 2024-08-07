@@ -36,9 +36,9 @@ public class ListMapPagingTest extends WorkbookTest {
 
     @Test public void testPaging() throws IOException {
         String fileName = "test map paging.xlsx";
-        List<Map<String, ?>> expectList = ListMapSheetTest.createTestData(301);
+        List<Map<String, Object>> expectList = ListMapSheetTest.createTestData(301);
         Workbook workbook = new Workbook()
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
@@ -62,9 +62,9 @@ public class ListMapPagingTest extends WorkbookTest {
 
     @Test public void testLessPaging() throws IOException {
         String fileName = "test map less paging.xlsx";
-        List<Map<String, ?>> expectList = ListMapSheetTest.createTestData(29);
+        List<Map<String, Object>> expectList = ListMapSheetTest.createTestData(29);
         Workbook workbook = new Workbook()
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 

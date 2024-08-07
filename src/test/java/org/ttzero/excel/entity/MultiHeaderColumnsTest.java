@@ -427,7 +427,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testMapRepeatHeader() throws IOException {
         List<Map<String, Object>> expectList = new ArrayList<>();
         new Workbook()
-            .addSheet(new ListMapSheet("Map"
+            .addSheet(new ListMapSheet<Object>("Map"
                   , new Column("aaa").addSubColumn(new Column("boolean", "bv"))
                   , new Column("aaa").addSubColumn(new Column("char", "cv"))
                   , new Column("short", "sv")
@@ -438,7 +438,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                   int i = 3;
 
                   @Override
-                  protected List<Map<String, ?>> more() {
+                  protected List<Map<String, Object>> more() {
                       List<Map<String, Object>> a = new ArrayList<>();
                       for (; i > 0; i--) {
                           Map<String, Object> data = new LinkedHashMap<>();
@@ -469,7 +469,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 assertEquals(expect.get("sv"), o.get("short"));
                 assertEquals(expect.get("nv"), o.get("int"));
                 assertEquals(expect.get("lv"), o.get("long"));
-                assertTrue(Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000 == ((Timestamp) o.get("LocalDateTime")).getTime() / 1000);
+                assertEquals(Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000, ((Timestamp) o.get("LocalDateTime")).getTime() / 1000);
                 LocalTime t0 = (LocalTime) expect.get("ltv");
                 Time t1 = (Time) o.get("LocalTime");
                 assertEquals(t0.getHour(), t1.getHours());
