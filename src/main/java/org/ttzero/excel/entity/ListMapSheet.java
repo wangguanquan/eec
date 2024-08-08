@@ -173,6 +173,11 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
                 Cell cell = cells[i];
                 cell.clear();
 
+                // Reset value type
+                if (e != null && e.getClass() != hc.getClazz()) {
+                    hc.setClazz(e.getClass());
+                }
+
                 cellValueAndStyle.reset(row, cell, e, hc);
                 if (hasGlobalStyleProcessor) {
                     cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
