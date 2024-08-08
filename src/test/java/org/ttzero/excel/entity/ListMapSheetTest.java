@@ -880,6 +880,24 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testMultiTypeStoreInSameKey() throws IOException {
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        expectList.add(new HashMap<String, Object>(){{
+            put("a", "abc");
+            put("b", 1);
+        }});
+        expectList.add(new HashMap<String, Object>(){{
+            put("b", "abc");
+        }});
+
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"))) {
+            List<Map<String, Object>> result = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(expectList.size(), result.size());
+        }
+    }
+
     static List<Map<String, Object>> getRows(int page) {
         if (page > 127 - 67) return null;
         List<Map<String, Object>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
