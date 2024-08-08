@@ -82,8 +82,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test
-    public void testWrite() throws IOException {
+    @Test public void testWrite() throws IOException {
         new Workbook("test object")
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSV()
@@ -372,5 +371,12 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(new ListSheet<>(list))
             .saveAsCSV()
             .writeTo(defaultTestPath);
+    }
+
+    @Test public void testWriteWithBom() throws IOException {
+        new Workbook("test object with utf8 bom")
+            .addSheet(new ListSheet<>(Item.randomTestData()))
+            .saveAsCSVWithBom()
+            .writeTo(getOutputTestPath());
     }
 }

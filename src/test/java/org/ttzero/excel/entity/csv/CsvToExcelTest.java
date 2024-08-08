@@ -27,6 +27,7 @@ import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -181,10 +182,29 @@ public class CsvToExcelTest extends WorkbookTest {
         }
     }
 
+    @Test public void testWriterCharsetGBK() throws IOException {
+        String[] expectList = {"中文", "123"};
+        Path distPath = getOutputTestPath().resolve("write-with-gbk.csv");
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, Charset.forName("GBK"))) {
+            for (String v : expectList) {
+                writer.write(v);
+            }
+        }
+
+        try (CSVUtil.Reader reader = CSVUtil.newReader(distPath, Charset.forName("GBK"))) {
+            CSVUtil.RowsIterator iter = reader.iterator();
+            assertTrue(iter.hasNext());
+            String[] readList = iter.next();
+            assertArrayEquals(expectList, readList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test public void testUTF8BOM() throws IOException {
         String[] expectList = {"中文", "123"};
         Path distPath = getOutputTestPath().resolve("write-with-utf8-bom.csv");
-        try (CSVUtil.Writer writer = CSVUtil.newWriter(Files.newBufferedWriter(distPath, StandardCharsets.UTF_8)).writeWithBOM()) {
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, StandardCharsets.UTF_8).writeWithBom()) {
             for (String v : expectList) {
                 writer.write(v);
             }
@@ -210,7 +230,7 @@ public class CsvToExcelTest extends WorkbookTest {
     @Test public void testUTF16BEBOM() throws IOException {
         String[] expectList = {"中文", "123"};
         Path distPath = getOutputTestPath().resolve("write-with-utf16BE-bom.csv");
-        try (CSVUtil.Writer writer = CSVUtil.newWriter(Files.newBufferedWriter(distPath, StandardCharsets.UTF_16BE)).writeWithBOM()) {
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, StandardCharsets.UTF_16BE).writeWithBom()) {
             for (String v : expectList) {
                 writer.write(v);
             }
