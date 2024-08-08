@@ -95,7 +95,6 @@ public class CSVUtil {
      * @param <T> the result type
      * @return ArrayList of clazz
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz) throws IOException {
         return read(path, clazz, null);
@@ -107,7 +106,6 @@ public class CSVUtil {
      * @param path the csv file path
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path) throws IOException {
         return read(path, (Charset) null);
@@ -120,7 +118,6 @@ public class CSVUtil {
      * @param separator the separator character
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, char separator) throws IOException {
         return read(path, separator, null);
@@ -135,7 +132,6 @@ public class CSVUtil {
      * @param <T> the result type
      * @return ArrayList of clazz
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz, Charset charset) throws IOException {
         throw new UnsupportedOperationException();
@@ -148,7 +144,6 @@ public class CSVUtil {
      * @param charset the charset to use for encoding
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, Charset charset) throws IOException {
         return read(path, (char) 0x0, charset);
@@ -162,7 +157,6 @@ public class CSVUtil {
      * @param charset the charset to use for encoding
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, char separator, Charset charset) throws IOException {
         // Check comma character and column
@@ -330,8 +324,6 @@ public class CSVUtil {
 
     /**
      * A CSV format file reader.
-     *
-     * @since 1.8
      */
     public static class Reader implements Closeable {
 
@@ -352,7 +344,6 @@ public class CSVUtil {
          * @param clazz the class convert to
          * @param <T> the result type
          * @return a stream of clazz array
-         * @since 1.8
          */
         public <T> Stream<T> stream(Class<T> clazz) {
             throw new UnsupportedOperationException();
@@ -363,7 +354,6 @@ public class CSVUtil {
          *
          * @return a stream of string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> stream() throws IOException {
             // Check comma character and column
@@ -387,7 +377,6 @@ public class CSVUtil {
          *
          * @return a stream of sheared string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> sharedStream() throws IOException {
             return sharedStream((char) 0x0);
@@ -400,7 +389,6 @@ public class CSVUtil {
          * @param separator the separator character
          * @return a stream of sheared string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> sharedStream(char separator) throws IOException {
             // Check comma character and column
@@ -954,8 +942,6 @@ public class CSVUtil {
 
     /**
      * A CSV format file writer.
-     *
-     * @since 1.8
      */
     public static class Writer implements Closeable {
 
