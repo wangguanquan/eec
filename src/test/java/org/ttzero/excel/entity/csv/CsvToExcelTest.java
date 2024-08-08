@@ -26,11 +26,14 @@ import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -175,6 +178,58 @@ public class CsvToExcelTest extends WorkbookTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test public void testUTF8BOM() throws IOException {
+        String[] expectList = {"中文", "123"};
+        Path distPath = getOutputTestPath().resolve("write-with-utf8-bom.csv");
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(Files.newBufferedWriter(distPath, StandardCharsets.UTF_8)).writeWithBOM()) {
+            for (String v : expectList) {
+                writer.write(v);
+            }
+        }
+
+        try (InputStream is = Files.newInputStream(distPath)) {
+            byte[] bytes = new byte[3];
+            int n = is.read(bytes);
+            assertEquals(3, n);
+            assertArrayEquals(bytes, new byte[] {(byte) 239, (byte) 187, (byte) 191});
+        }
+
+        try (CSVUtil.Reader reader = CSVUtil.newReader(distPath)) {
+            CSVUtil.RowsIterator iter = reader.iterator();
+            assertTrue(iter.hasNext());
+            String[] readList = iter.next();
+            assertArrayEquals(expectList, readList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test public void testUTF16BEBOM() throws IOException {
+        String[] expectList = {"中文", "123"};
+        Path distPath = getOutputTestPath().resolve("write-with-utf16BE-bom.csv");
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(Files.newBufferedWriter(distPath, StandardCharsets.UTF_16BE)).writeWithBOM()) {
+            for (String v : expectList) {
+                writer.write(v);
+            }
+        }
+
+        try (InputStream is = Files.newInputStream(distPath)) {
+            byte[] bytes = new byte[2];
+            int n = is.read(bytes);
+            assertEquals(2, n);
+            assertArrayEquals(bytes, new byte[] {-2, -1});
+        }
+
+        try (CSVUtil.Reader reader = CSVUtil.newReader(distPath)) {
+            CSVUtil.RowsIterator iter = reader.iterator();
+            assertTrue(iter.hasNext());
+            String[] readList = iter.next();
+            assertArrayEquals(expectList, readList);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
