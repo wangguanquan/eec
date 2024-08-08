@@ -168,7 +168,7 @@ public class CSVUtil {
         }
 
         // Use iterator
-        try (RowsIterator iter = new RowsIterator(o, path, charset)) {
+        try (RowsIterator iter = new RowsIterator(o, path, o.charset)) {
             List<String[]> result = new ArrayList<>();
             while (iter.hasNext()) {
                 result.add(iter.next());
@@ -365,7 +365,7 @@ public class CSVUtil {
             }
 
             // Use iterator
-            iterator = new RowsIterator(o, path, charset);
+            iterator = new RowsIterator(o, path, o.charset);
 
             return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                 iterator, Spliterator.ORDERED | Spliterator.NONNULL), false);
@@ -422,7 +422,7 @@ public class CSVUtil {
             }
 
             // Use iterator
-            return new RowsIterator(o, path, charset);
+            return new RowsIterator(o, path, o.charset);
         }
 
         /**
@@ -485,6 +485,7 @@ public class CSVUtil {
         int offset, line;
         String value;
         boolean newLine;
+        Charset charset;
         O(int offset) { this.offset = offset; }
     }
 
@@ -759,6 +760,7 @@ public class CSVUtil {
 
             O o = new O(0);
             o.line = bom != null ? 1 : 0;
+            o.charset = charset;
             n = 0;
             // Find the final comma and column
             for (int i = 0; i < nc.length; i++) {
@@ -954,8 +956,6 @@ public class CSVUtil {
         private char[] cb;
         private int offset;
         private final static int length = 8192;
-        // Write BOM(default false)
-        private boolean writeBom;
 
         /**
          * Line separator string.  This is the value of the line.separator
@@ -970,8 +970,7 @@ public class CSVUtil {
          * @throws IOException If an I/O error occurs
          */
         private Writer(Path path) throws IOException {
-            this.writer = Files.newBufferedWriter(path);
-            init();
+            this(path, StandardCharsets.UTF_8);
         }
 
         /**
@@ -998,11 +997,21 @@ public class CSVUtil {
 
         private void init() {
             cb = new char[length];
+        }
 
-            // Write BOM
-            if (writeBom) {
-
+        /**
+         * Write csv bytes with BOM
+         *
+         * <p>Note: This property must be set before writing, otherwise it will be ignored</p>
+         *
+         * @return current writer
+         */
+        public Writer writeWithBOM() {
+            if (offset == 0 && i == 0 && column == 0) {
+                // Write UTF BOM
+                cb[offset++] = '\uFEFF';
             }
+            return this;
         }
 
         /**
