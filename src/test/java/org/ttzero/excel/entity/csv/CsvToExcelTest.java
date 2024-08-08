@@ -22,6 +22,7 @@ import org.ttzero.excel.entity.CSVSheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.Row;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -36,6 +37,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -199,6 +201,18 @@ public class CsvToExcelTest extends WorkbookTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // CSV to Excel
+        new Workbook().addSheet(new CSVSheet(distPath).setCharset(Charset.forName("GBK")).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-gbk.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-gbk.xlsx"))) {
+            Iterator<Row> iter = reader.sheet(0).rows().iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            assertEquals(row.getString(0), expectList[0]);
+            assertEquals(row.getString(1), expectList[1]);
+            assertFalse(iter.hasNext());
+        }
     }
 
     @Test public void testUTF8BOM() throws IOException {
@@ -225,6 +239,18 @@ public class CsvToExcelTest extends WorkbookTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // CSV to Excel
+        new Workbook().addSheet(new CSVSheet(distPath).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-utf8-bom.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-utf8-bom.xlsx"))) {
+            Iterator<Row> iter = reader.sheet(0).rows().iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            assertEquals(row.getString(0), expectList[0]);
+            assertEquals(row.getString(1), expectList[1]);
+            assertFalse(iter.hasNext());
+        }
     }
 
     @Test public void testUTF16BEBOM() throws IOException {
@@ -250,6 +276,18 @@ public class CsvToExcelTest extends WorkbookTest {
             assertArrayEquals(expectList, readList);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        // CSV to Excel
+        new Workbook().addSheet(new CSVSheet(distPath).setCharset(StandardCharsets.UTF_16BE).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-utf16BE-bom.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-utf16BE-bom.xlsx"))) {
+            Iterator<Row> iter = reader.sheet(0).rows().iterator();
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+            assertEquals(row.getString(0), expectList[0]);
+            assertEquals(row.getString(1), expectList[1]);
+            assertFalse(iter.hasNext());
         }
     }
 }
