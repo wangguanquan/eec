@@ -28,6 +28,7 @@ import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.DateUtil;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -55,9 +56,18 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
      * A progress window
      */
     protected BiConsumer<Sheet, Integer> progressConsumer;
+    // Write BOM header
+    protected boolean withBom;
+    // Charset 默认UTF-8
+    protected Charset charset;
 
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
+    }
+
+    public CSVWorksheetWriter(Sheet sheet, boolean withBom) {
+        this.sheet = sheet;
+        this.withBom = withBom;
     }
 
     /**
@@ -186,7 +196,15 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
 
     protected Path initWriter(Path root) throws IOException {
         Path workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
-        writer = CSVUtil.newWriter(workSheetPath);
+        if (charset == null) {
+            writer = CSVUtil.newWriter(workSheetPath);
+            if (withBom) writer.writeWithBom();
+        } else {
+            writer = CSVUtil.newWriter(workSheetPath, charset);
+            // Write BOM only support utf
+            if (withBom && charset.name().toLowerCase().startsWith("utf"))
+                writer.writeWithBom();
+        }
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
 
@@ -248,5 +266,16 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
             }
         }
         writer.newLine();
+    }
+
+    /**
+     * 设置字符集
+     *
+     * @param charset Charset
+     * @return 当前Writer
+     */
+    public CSVWorksheetWriter setCharset(Charset charset) {
+        this.charset = charset;
+        return this;
     }
 }

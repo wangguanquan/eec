@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -608,6 +609,36 @@ public class Workbook implements Storable {
      */
     public Workbook saveAsCSV() {
         workbookWriter = new CSVWorkbookWriter(this);
+        return this;
+    }
+
+    /**
+     * 另存为Comma-Separated Values格式并保存BOM，默认使用','逗号分隔
+     *
+     * @return 当前工作薄
+     */
+    public Workbook saveAsCSVWithBom() {
+        workbookWriter = new CSVWorkbookWriter(this, true);
+        return this;
+    }
+
+    /**
+     * 以指定字符集保存为Comma-Separated Values格式，默认使用','逗号分隔
+     *
+     * @return 当前工作薄
+     */
+    public Workbook saveAsCSV(Charset charset) {
+        workbookWriter = new CSVWorkbookWriter(this).setCharset(charset);
+        return this;
+    }
+
+    /**
+     * 以指定字符集保存为Comma-Separated Values格式并保存BOM，默认使用','逗号分隔
+     *
+     * @return 当前工作薄
+     */
+    public Workbook saveAsCSVWithBom(Charset charset) {
+        workbookWriter = new CSVWorkbookWriter(this, true).setCharset(charset);
         return this;
     }
 

@@ -1006,7 +1006,7 @@ public class CSVUtil {
          *
          * @return current writer
          */
-        public Writer writeWithBOM() {
+        public Writer writeWithBom() {
             if (offset == 0 && i == 0 && column == 0) {
                 // Write UTF BOM
                 cb[offset++] = '\uFEFF';
