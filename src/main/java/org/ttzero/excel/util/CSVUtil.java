@@ -547,6 +547,17 @@ public class CSVUtil {
                         // EOF
                         if (n <= 0) {
                             EOF = true;
+                            // End of {comma}
+                            if (chars[o.offset - 1] == comma) {
+                                // Contain more than standard comma-separated fields
+                                if (i == column) {
+                                    String[] _array = new String[++column];
+                                    System.arraycopy(nextRow, 0, _array, 0, column - 1);
+                                    nextRow = _array;
+                                }
+                                nextRow[i++] = EMPTY;
+                                _i = i;
+                            }
                             return nextRow[0] != null;
                         }
                         n += offset;
@@ -838,7 +849,7 @@ public class CSVUtil {
      * @return true if the char array has more integral string
      */
     private static boolean parse(char[] chars, int len, O o, char comma) {
-        int offset = o.offset, i = offset, iq = -1;
+        int offset = o.offset, i = offset, iq = -1, qn = 0;
         // the first character is '"'
         boolean quoted = chars[i] == QUOTE
             // an integral string
@@ -850,45 +861,42 @@ public class CSVUtil {
         for (; i < len; i++) {
             char c = chars[i];
             if (c == QUOTE) {
-                if (!quoted) {
-                    throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values" +
-                        " format error.\nFields containing a line-break, double-quote or commas should be quoted.");
-                }
                 if (i >= len - 1) {
                     integral = true;
                     i++;
                     break;
                 }
-                if (chars[i + 1] == QUOTE) {
-                    iq = ++i;
-                    continue;
-                }
+                if (quoted) {
+                    if (chars[i + 1] == QUOTE) {
+                        iq = ++i;
+                        continue;
+                    } else if (chars[i + 1] != comma && chars[i + 1] != LF && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
+                        throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values" +
+                            " format error.\nInvalid char between encapsulated token and delimiter.");
+                    }
+                } else qn++;
                 if (!last_block && chars[i + 1] != comma && chars[i + 1] != LF
                     && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
-                    throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                        "format error.\nA (double) quote character in a field must be represented by " +
-                        "two (double) quote characters.");
+                    throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
+                        "format error.\nA (double) quote character in a field must be represented by two (double) quote characters.");
                 }
                 i++;
-                integral = true;
-                break;
+                if (qn == 0) {
+                    integral = true;
+                    break;
+                }
             } else if (c == comma || c == LF) {
                 if (!quoted) {
                     integral = true;
                     break;
                 }
-            } else if (c == HT && !quoted) {
-                throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                    "format error.\nA (double) quote character in a field must be represented by " +
-                    "two (double) quote characters.");
             }
         }
 
         if (!integral && last_block) {
             if (!quoted) integral = true;
-            else throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                "format error.\nA (double) quote character in a field must be represented by " +
-                "two (double) quote characters.");
+            else throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
+                "format error.\nEOF reached before encapsulated token finished.");
         }
 
         if (integral) {
