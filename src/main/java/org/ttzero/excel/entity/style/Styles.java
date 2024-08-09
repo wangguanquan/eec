@@ -19,7 +19,6 @@ package org.ttzero.excel.entity.style;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
-import org.ttzero.excel.entity.I18N;
 import org.ttzero.excel.entity.Storable;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.FileUtil;
@@ -156,10 +155,9 @@ public class Styles implements Storable {
     /**
      * Create a general style
      *
-     * @param i18N the {@link I18N}
      * @return Styles
      */
-    public static Styles create(I18N i18N) {
+    public static Styles create() {
         Styles self = new Styles();
 
         self.document = createDocument();
@@ -174,9 +172,8 @@ public class Styles implements Storable {
 
         String lang = Locale.getDefault().toLanguageTag();
         // Add chinese font
-        Font font2 = new Font(i18N.get("local-font-family"), 11); // cn
+        Font font2 = new Font("宋体", 11); // cn
         if ("zh-CN".equals(lang)) {
-            if (StringUtil.isBlank(font2.getName())) font2.setName("宋体");
             font2.setCharset(Charset.GB2312);
         } else if ("zh-TW".equals(lang)) {
             if (StringUtil.isBlank(font2.getName())) font2.setName("新細明體");

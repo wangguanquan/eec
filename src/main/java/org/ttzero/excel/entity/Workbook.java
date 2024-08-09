@@ -129,7 +129,6 @@ public class Workbook implements Storable {
      * 导出进度监控器
      */
     private BiConsumer<Sheet, Integer> progressConsumer;
-    private final I18N i18N;
     /**
      * 全局字符串共享区
      */
@@ -162,8 +161,7 @@ public class Workbook implements Storable {
     /**
      * 创建一个未命名工作薄
      *
-     * <p>如果writeTo方法指定的File或Path为文件夹时，未命名工作薄将会从{@code resources/I18N/message.XXX.properties}
-     * 查找名为'non-name-file'的配置，有且不为空时以该配置为文件名否则以'Non name'作为文件名</p>
+     * <p>如果writeTo方法指定的File或Path为文件夹时，未命名工作薄将会以'新建文件'作为文件名</p>
      */
     public Workbook() {
         this(null);
@@ -188,7 +186,6 @@ public class Workbook implements Storable {
         this.name = name;
         this.creator = creator;
         sheets = new Sheet[3]; // Create three worksheet
-        i18N = new I18N();
         contentType = new ContentType();
     }
 
@@ -228,15 +225,6 @@ public class Workbook implements Storable {
      */
     public String getCompany() {
         return company;
-    }
-
-    /**
-     * 获取全局{@link I18N}配置
-     *
-     * @return 全局I18N配置
-     */
-    public I18N getI18N() {
-        return i18N;
     }
 
     /**
@@ -360,7 +348,7 @@ public class Workbook implements Storable {
     public Styles getStyles() {
         // CSV do not need Styles
         if (styles == null && !(workbookWriter instanceof CSVWorkbookWriter))
-            styles = Styles.create(i18N);
+            styles = Styles.create();
         return styles;
     }
 
@@ -778,7 +766,7 @@ public class Workbook implements Storable {
         }
         // 创建全局样式
         if (styles == null) {
-            styles = Styles.create(i18N);
+            styles = Styles.create();
         }
     }
 
