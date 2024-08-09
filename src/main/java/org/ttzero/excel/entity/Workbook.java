@@ -76,7 +76,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *     .addSheet(new ListSheet&lt;Item&gt;("总销量排行")
  *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
  *     // 添加一个名为"单品销量排行"的Worksheet
- *     .addSheet(new ListMapSheet<>("单品销量排行")
+ *     .addSheet(new ListMapSheet&lt;&gt;("单品销量排行")
  *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
  *     // 指定输出路径 '/tmp/"双11销量统计".xlsx'
  *     .writeTo(Paths.get("/tmp/"));</pre>
@@ -613,6 +613,7 @@ public class Workbook implements Storable {
     /**
      * 以指定字符集保存为Comma-Separated Values格式，默认使用','逗号分隔
      *
+     * @param charset 指定输出字符集
      * @return 当前工作薄
      */
     public Workbook saveAsCSV(Charset charset) {
@@ -623,6 +624,7 @@ public class Workbook implements Storable {
     /**
      * 以指定字符集保存为Comma-Separated Values格式并保存BOM，默认使用','逗号分隔
      *
+     * @param charset 指定输出字符集
      * @return 当前工作薄
      */
     public Workbook saveAsCSVWithBom(Charset charset) {
