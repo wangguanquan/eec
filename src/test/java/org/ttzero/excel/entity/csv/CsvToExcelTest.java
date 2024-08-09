@@ -17,12 +17,14 @@
 package org.ttzero.excel.entity.csv;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.ttzero.excel.entity.CSVSheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
+import org.ttzero.excel.reader.Sheet;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -34,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -288,6 +291,33 @@ public class CsvToExcelTest extends WorkbookTest {
             assertEquals(row.getString(0), expectList[0]);
             assertEquals(row.getString(1), expectList[1]);
             assertFalse(iter.hasNext());
+        }
+    }
+
+    @Ignore
+    @Test public void testIah94s() throws IOException {
+        try (CSVUtil.Writer writer = CSVUtil.newWriter(defaultTestPath.resolve("3343494.csv"))) {
+            StringBuilder buf = new StringBuilder("ab");
+            for (int i = 0; i < 3343494; i++) {
+                writer.write(i);
+                buf.append(i);
+                writer.write(buf.toString());
+                writer.newLine();
+                buf.delete(2, buf.length());
+            }
+        }
+
+        new Workbook()
+                .addSheet(new CSVSheet(defaultTestPath.resolve("3343494.csv")).ignoreHeader())
+                .writeTo(defaultTestPath.resolve("3343494.xlsx"));
+
+        AtomicInteger oi = new AtomicInteger(0);
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("3343494.xlsx"))) {
+            boolean noneMatch = reader.sheets().flatMap(Sheet::rows).noneMatch(row -> {
+                int i = oi.getAndIncrement();
+                return row.getInt(0) == i && ("ab" + i).equals(row.getString(1));
+            });
+            assertFalse(noneMatch);
         }
     }
 }
