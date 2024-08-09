@@ -427,7 +427,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testMapRepeatHeader() throws IOException {
         List<Map<String, Object>> expectList = new ArrayList<>();
         new Workbook()
-            .addSheet(new ListMapSheet("Map"
+            .addSheet(new ListMapSheet<Object>("Map"
                   , new Column("aaa").addSubColumn(new Column("boolean", "bv"))
                   , new Column("aaa").addSubColumn(new Column("char", "cv"))
                   , new Column("short", "sv")
@@ -438,7 +438,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                   int i = 3;
 
                   @Override
-                  protected List<Map<String, ?>> more() {
+                  protected List<Map<String, Object>> more() {
                       List<Map<String, Object>> a = new ArrayList<>();
                       for (; i > 0; i--) {
                           Map<String, Object> data = new LinkedHashMap<>();

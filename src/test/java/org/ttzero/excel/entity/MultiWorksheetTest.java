@@ -45,14 +45,14 @@ import static org.junit.Assert.assertTrue;
 public class MultiWorksheetTest extends SQLWorkbookTest {
 
     @Test public void testMultiWorksheet() throws IOException {
-        List<Map<String, ?>> sheet1Data = ListMapSheetTest.createTestData(), sheet2Data = ListMapSheetTest.createAllTypeData();
+        List<Map<String, Object>> sheet1Data = ListMapSheetTest.createTestData(), sheet2Data = ListMapSheetTest.createAllTypeData();
 
         new Workbook()
                 .setAutoSize(true)
                 // The first worksheet
-                .addSheet(new ListMapSheet("E", sheet1Data))
+                .addSheet(new ListMapSheet<>("E", sheet1Data))
                 // The other worksheet
-                .addSheet(new ListMapSheet("All type", sheet2Data))
+                .addSheet(new ListMapSheet<>("All type", sheet2Data))
                 .writeTo(defaultTestPath.resolve("test multi worksheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test multi worksheet.xlsx"))) {
@@ -87,7 +87,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiDataSource() throws SQLException, IOException {
-        List<Map<String, ?>> sheet1Data =  ListMapSheetTest.createAllTypeData();
+        List<Map<String, Object>> sheet1Data =  ListMapSheetTest.createAllTypeData();
         List<ListObjectSheetTest.Item> sheet2Data = ListObjectSheetTest.Item.randomTestData();
         String sql3 = "select id, name, age from student", sql5 = "select id, name, age from student order by age limit 10";
         List<ListObjectSheetTest.Student> sheet5Data = new ArrayList<>();
@@ -100,7 +100,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
             new Workbook()
                 .setAutoSize(true)
                 // List<Map>
-                .addSheet(new ListMapSheet("ListMap", sheet1Data))
+                .addSheet(new ListMapSheet<>("ListMap", sheet1Data))
                 // List<Object>
                 .addSheet(new ListSheet<>("ListObject", sheet2Data))
                 // Statement

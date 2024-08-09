@@ -141,7 +141,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
     @Test public void testEmptyMapList() throws IOException {
         String fileName = "empty map list sheet.xlsx";
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet("empty"))
+            .addSheet(new ListMapSheet<>("empty"))
             .writeTo(defaultTestPath.resolve(fileName));
 
         // Check header row
@@ -154,7 +154,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
     @Test public void testEmptyMapListSpecifyHeaders() throws IOException {
         String fileName = "empty map list sheet specify headers.xlsx";
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet("empty", new Column("id"), new Column("name")))
+            .addSheet(new ListMapSheet<>("empty", new Column("id"), new Column("name")))
             .writeTo(defaultTestPath.resolve(fileName));
 
         // Check header row

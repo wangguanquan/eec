@@ -34,11 +34,11 @@ import static org.ttzero.excel.util.StringUtil.isEmpty;
  * {@code ListMapSheet}是{@code ListSheet}的一个子集，因为取值方式完全不同所以将其独立，
  * 未指定表头信息时{@code ListMapSheet}将导出全字段这是与{@code ListSheet}完全不同的设定
  *
+ * @param <T> Value的类型
  * @author guanquan.wang at 2018-01-26 14:46
  * @see ListSheet
  */
-public class ListMapSheet extends ListSheet<Map<String, ?>> {
-
+public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     /**
      * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
      */
@@ -90,7 +90,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      *
      * @param data 需要导出的数据
      */
-    public ListMapSheet(List<Map<String, ?>> data) {
+    public ListMapSheet(List<Map<String, T>> data) {
         this(null, data);
     }
 
@@ -100,7 +100,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param name 工作表名称
      * @param data 需要导出的数据
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data) {
+    public ListMapSheet(String name, List<Map<String, T>> data) {
         super(name);
         setData(data);
     }
@@ -111,7 +111,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    需要导出的数据
      * @param columns 表头信息
      */
-    public ListMapSheet(List<Map<String, ?>> data, final Column... columns) {
+    public ListMapSheet(List<Map<String, T>> data, final Column... columns) {
         this(null, data, columns);
     }
 
@@ -122,7 +122,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param data    需要导出的数据
      * @param columns 表头信息
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, final Column... columns) {
+    public ListMapSheet(String name, List<Map<String, T>> data, final Column... columns) {
         this(name, data, null, columns);
     }
 
@@ -133,7 +133,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark 水印
      * @param columns   表头信息
      */
-    public ListMapSheet(List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+    public ListMapSheet(List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
 
@@ -145,7 +145,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param waterMark 水印
      * @param columns   表头信息
      */
-    public ListMapSheet(String name, List<Map<String, ?>> data, WaterMark waterMark, final Column... columns) {
+    public ListMapSheet(String name, List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         setData(data);
     }
@@ -165,13 +165,18 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
             row.index = rows;
             row.height = getRowHeight();
             Cell[] cells = row.realloc(len);
-            Map<String, ?> rowDate = data.get(start);
+            Map<String, T> rowDate = data.get(start);
             for (int i = 0; i < len; i++) {
                 Column hc = columns[i];
-                Object e = rowDate != null ? rowDate.get(hc.key) : null;
+                T e = rowDate != null ? rowDate.get(hc.key) : null;
                 // Clear cells
                 Cell cell = cells[i];
                 cell.clear();
+
+                // Reset value type
+                if (e != null && e.getClass() != hc.getClazz()) {
+                    hc.setClazz(e.getClass());
+                }
 
                 cellValueAndStyle.reset(row, cell, e, hc);
                 if (hasGlobalStyleProcessor) {
@@ -190,7 +195,7 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
     @Override
     protected Column[] getHeaderColumns() {
         if (headerReady) return columns;
-        Map<String, ?> first = getFirst();
+        Map<String, T> first = getFirst();
         // No data
         if (first == null) {
             if (columns == null) {
@@ -199,8 +204,8 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
         } else if (!hasHeaderColumns()) {
             int size = first.size(), i = 0;
             columns = new Column[size];
-            for (Iterator<? extends Map.Entry<String, ?>> it = first.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<String, ?> entry = it.next();
+            for (Iterator<Map.Entry<String, T>> it = first.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<String, T> entry = it.next();
                 Column hc = createColumn(entry);
                 if (hc != null) columns[i++] = hc;
             }
@@ -228,10 +233,10 @@ public class ListMapSheet extends ListSheet<Map<String, ?>> {
      * @param entry 第一个非{@code null}的map包含的所有值
      * @return 单列表头信息
      */
-    protected Column createColumn(Map.Entry<String, ?> entry) {
+    protected Column createColumn(Map.Entry<String, T> entry) {
         // Ignore the null key
         if (isEmpty(entry.getKey())) return null;
-        Object value = entry.getValue();
+        T value = entry.getValue();
         return new Column(entry.getKey(), entry.getKey(), value != null ? value.getClass() : String.class);
     }
 

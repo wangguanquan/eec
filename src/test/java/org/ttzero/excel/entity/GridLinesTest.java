@@ -94,9 +94,9 @@ public class GridLinesTest extends SQLWorkbookTest {
 
     @Test public void testListMapSheet() throws IOException {
         String fileName = "ListMapSheet ignore grid lines.xlsx";
-        List<Map<String, ?>> expectList = createTestData();
+        List<Map<String, Object>> expectList = createTestData();
         new Workbook()
-            .addSheet(new ListMapSheet(expectList).hideGridLines())
+            .addSheet(new ListMapSheet<>(expectList).hideGridLines())
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {

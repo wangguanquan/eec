@@ -71,7 +71,7 @@ public class AutoSizeTest extends WorkbookTest {
     }
 
     @Test public void testAutoSize2() throws IOException {
-        List<Map<String, ?>> expectList = new ArrayList<>(2);
+        List<Map<String, Object>> expectList = new ArrayList<>(2);
         for (int i = 0; i < 2; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
             for (int j = 1; j <= Const.Limit.MAX_COLUMNS_ON_SHEET; j++) {
@@ -82,15 +82,15 @@ public class AutoSizeTest extends WorkbookTest {
         String fileName = "服务数据.xlsx";
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("服务报表1", expectList)
+            .addSheet(new ListMapSheet<>("服务报表1", expectList)
             .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(1)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }

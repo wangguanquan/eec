@@ -76,7 +76,7 @@ import static org.ttzero.excel.util.FileUtil.exists;
  *     .addSheet(new ListSheet&lt;Item&gt;("总销量排行")
  *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
  *     // 添加一个名为"单品销量排行"的Worksheet
- *     .addSheet(new ListMapSheet("单品销量排行")
+ *     .addSheet(new ListMapSheet<>("单品销量排行")
  *         .setData(new ArrayList&lt;&gt;())) // &lt;- 这里替换为实际数据
  *     // 指定输出路径 '/tmp/"双11销量统计".xlsx'
  *     .writeTo(Paths.get("/tmp/"));</pre>

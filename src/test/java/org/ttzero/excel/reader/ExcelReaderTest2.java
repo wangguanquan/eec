@@ -169,7 +169,7 @@ public class ExcelReaderTest2 {
         data2.put("id", 2);
         data2.put("name", "xyz");
         new Workbook()
-            .addSheet(new ListMapSheet().setData(Arrays.asList(data1, data2)))
+            .addSheet(new ListMapSheet<>().setData(Arrays.asList(data1, data2)))
             .writeTo(defaultTestPath.resolve("Force Import.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Force Import.xlsx"))) {
@@ -190,7 +190,7 @@ public class ExcelReaderTest2 {
         data2.put("NAME", "xyz");
 
         new Workbook()
-            .addSheet(new ListMapSheet(Arrays.asList(data1, data2)))
+            .addSheet(new ListMapSheet<>(Arrays.asList(data1, data2)))
             .writeTo(defaultTestPath.resolve("Upper case Reader test.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Upper case Reader test.xlsx"))) {
@@ -217,7 +217,7 @@ public class ExcelReaderTest2 {
         data2.put("USER_NAME", "xyz");
 
         new Workbook()
-            .addSheet(new ListMapSheet(Arrays.asList(data1, data2)))
+            .addSheet(new ListMapSheet<>(Arrays.asList(data1, data2)))
             .writeTo(defaultTestPath.resolve("Underline case Reader test.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Underline case Reader test.xlsx"))) {

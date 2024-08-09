@@ -42,6 +42,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SeekableByteChannel;
@@ -79,16 +80,16 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrite() throws IOException {
         String fileName = "test map.xlsx";
-        List<Map<String, ?>> expectList = createTestData();
+        List<Map<String, Object>> expectList = createTestData();
         new Workbook()
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
@@ -96,23 +97,23 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testAllType() throws IOException {
         String fileName = "test all type map.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData();
+        List<Map<String, Object>> expectList = createAllTypeData();
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertAllTypes(expectList, list);
         }
     }
 
     @Test public void testStyleDesign4Map() throws IOException {
         String fileName = "Map标识行样式.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(100);
+        List<Map<String, Object>> expectList = createAllTypeData(100);
         new Workbook()
-                .addSheet(new ListMapSheet("Map", expectList).setStyleProcessor((map, style, sst) -> {
+                .addSheet(new ListMapSheet<>("Map", expectList).setStyleProcessor((map, style, sst) -> {
                     if ((Boolean) map.get("bv")) {
                         style = sst.modifyFill(style, new Fill(PatternType.solid, Color.green));
                     }
@@ -124,10 +125,10 @@ public class ListMapSheetTest extends WorkbookTest {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0).header(1);
             assertEquals("Map", sheet.getName());
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
-            for (Map<String, ?> expect : expectList) {
+            for (Map<String, Object> expect : expectList) {
                 assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                Map<String, ?> e = row.toMap();
+                Map<String, Object> e = row.toMap();
                 assertAllType(expect, e);
 
                 boolean bv = (Boolean) expect.get("bv");
@@ -147,9 +148,9 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testStyleDesign4Map2() throws IOException {
         String fileName = "Map标识行样式2.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(100);
+        List<Map<String, Object>> expectList = createAllTypeData(100);
         new Workbook()
-            .addSheet(new ListMapSheet("Map", expectList
+            .addSheet(new ListMapSheet<>("Map", expectList
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -176,10 +177,10 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals("LocalDateTime", header.get(5));
             assertEquals("LocalTime", header.get(6));
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
-            for (Map<String, ?> expect : expectList) {
+            for (Map<String, Object> expect : expectList) {
                 assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                Map<String, ?> e = row.toMap();
+                Map<String, Object> e = row.toMap();
 
                 assertEquals(expect.get("bv"), e.get("boolean"));
                 assertEquals(expect.get("cv").toString(), e.get("char").toString());
@@ -219,9 +220,9 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testHeaderColumn() throws IOException {
         String fileName = "test header column map.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData();
+        List<Map<String, Object>> expectList = createAllTypeData();
         new Workbook()
-            .addSheet(new ListMapSheet(expectList
+            .addSheet(new ListMapSheet<>(expectList
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -241,10 +242,10 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
             }
         }
@@ -252,9 +253,9 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testHeaderColumnBox() throws IOException {
         String fileName = "test header column box type map.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData();
+        List<Map<String, Object>> expectList = createAllTypeData();
         new Workbook()
-            .addSheet(new ListMapSheet(expectList
+            .addSheet(new ListMapSheet<>(expectList
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
                 , new Column("Integer", "nv", Integer.class)
@@ -274,10 +275,10 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals("Float", header.get(4));
             assertEquals("Double", header.get(5));
             Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
-            for (Map<String, ?> expect : expectList) {
+            for (Map<String, Object> expect : expectList) {
                 assertTrue(iter.hasNext());
                 org.ttzero.excel.reader.Row row = iter.next();
-                Map<String, ?> e = row.toMap();
+                Map<String, Object> e = row.toMap();
 
                 assertEquals(expect.get("cv").toString(), e.get("Character").toString());
                 assertEquals(expect.get("sv").toString(), e.get("Short").toString());
@@ -293,7 +294,7 @@ public class ListMapSheetTest extends WorkbookTest {
         String fileName = "test list map sheet Constructor1.xlsx";
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet())
+            .addSheet(new ListMapSheet<>())
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -303,17 +304,17 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor2() throws IOException {
         String fileName = "test list map sheet Constructor2.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("Map").setData(expectList))
+            .addSheet(new ListMapSheet<>("Map").setData(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
@@ -321,10 +322,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor3() throws IOException {
         String fileName = "test list map sheet Constructor3.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(10);
+        List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("Map"
+            .addSheet(new ListMapSheet<>("Map"
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -344,10 +345,10 @@ public class ListMapSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
             }
         }
@@ -355,10 +356,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor4() throws IOException {
         String fileName = "test list map sheet Constructor4.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(10);
+        List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("Map", WaterMark.of(author)
+            .addSheet(new ListMapSheet<>("Map", WaterMark.of(author)
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -384,10 +385,10 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals(pictures.size(), 1);
             assertTrue(pictures.get(0).isBackground());
 
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertAllTypeFullKey(expect, e);
             }
         }
@@ -395,18 +396,18 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor5() throws IOException {
         String fileName = "test list map sheet Constructor5.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(10);
+        List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertAllType(expect, e);
             }
         }
@@ -414,19 +415,19 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor6() throws IOException {
         String fileName = "test list map sheet Constructor6.xlsx";
-        List<Map<String, ?>> expectList = createAllTypeData(10);
+        List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("Map", expectList))
+            .addSheet(new ListMapSheet<>("Map", expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             assertEquals("Map", sheet.getName());
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertAllType(expect, e);
             }
         }
@@ -434,10 +435,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor8() throws IOException {
         String fileName = "test list map sheet Constructor8.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("MAP", expectList
+            .addSheet(new ListMapSheet<>("MAP", expectList
                 , new Column("ID", "id", int.class)
                 , new Column("NAME", "name", String.class)))
             .writeTo(defaultTestPath.resolve(fileName));
@@ -445,10 +446,10 @@ public class ListMapSheetTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             assertEquals("MAP", sheet.getName());
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect.get("id"), e.get("ID"));
                 assertEquals(expect.get("name"), e.get("NAME"));
             }
@@ -457,10 +458,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor9() throws IOException {
         String fileName = "test list map sheet Constructor9.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet(expectList
+            .addSheet(new ListMapSheet<>(expectList
                 , WaterMark.of(author)
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
@@ -474,10 +475,10 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals(pictures.size(), 1);
             assertTrue(pictures.get(0).isBackground());
 
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect.get("id"), e.get("ID"));
                 assertEquals(expect.get("name"), e.get("NAME"));
             }
@@ -486,10 +487,10 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testConstructor10() throws IOException {
         String fileName = "test list map sheet Constructor10.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet("MAP"
+            .addSheet(new ListMapSheet<>("MAP"
                 , expectList
                 , WaterMark.of(author)
                 , new Column("ID", "id", int.class)
@@ -505,10 +506,10 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals(pictures.size(), 1);
             assertTrue(pictures.get(0).isBackground());
 
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect.get("id"), e.get("ID"));
                 assertEquals(expect.get("name"), e.get("NAME"));
             }
@@ -517,7 +518,7 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testArray() throws IOException {
         String fileName = "ListMapSheet Array Map.xlsx";
-        List<Map<String, ?>> expectList;
+        List<Map<String, Object>> expectList;
         Map<String, Object> data1 = new HashMap<>();
         data1.put("id", 1);
         data1.put("name", "abc");
@@ -526,15 +527,15 @@ public class ListMapSheetTest extends WorkbookTest {
         data2.put("id", 2);
         data2.put("name", "xyz");
         new Workbook()
-            .addSheet(new ListMapSheet().setData(expectList = Arrays.asList(data1, data2)))
+            .addSheet(new ListMapSheet<>().setData(expectList = Arrays.asList(data1, data2)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
@@ -542,21 +543,21 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testSingleList() throws IOException {
         String fileName = "ListMapSheet Single List Map.xlsx";
-        List<Map<String, ?>> expectList;
+        List<Map<String, Object>> expectList;
         Map<String, Object> data = new HashMap<>();
         data.put("id", 1);
         data.put("name", "abc");
 
         new Workbook()
-            .addSheet(new ListMapSheet().setData(expectList = Collections.singletonList(data)))
+            .addSheet(new ListMapSheet<>().setData(expectList = Collections.singletonList(data)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
@@ -564,17 +565,17 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testNullValue() throws IOException {
         String fileName = "test map null value.xlsx";
-        List<Map<String, ?>> expectList = createNullTestData(10);
+        List<Map<String, Object>> expectList = createNullTestData(10);
         new Workbook()
-            .addSheet(new ListMapSheet(expectList))
+            .addSheet(new ListMapSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
-            List<Map<String, ?>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = sheet.dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect.get("id"), e.get("id"));
                 assertTrue(e.get("name") == null || StringUtil.isEmpty(e.get("name").toString()));
             }
@@ -584,33 +585,33 @@ public class ListMapSheetTest extends WorkbookTest {
     // Issue #93
     @Test public void testListMapSheet_93() throws IOException {
         String fileName = "Issue#93 List Map.xlsx";
-        List<Map<String, ?>> expectList = new ArrayList<>();
-        new Workbook().addSheet(new ListMapSheet() {
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        new Workbook().addSheet(new ListMapSheet<Object>() {
             private int i;
             @Override
-            protected List<Map<String, ?>> more() {
-                List<Map<String, ?>> list = i++ < 10 ? createAllTypeData(30) : null;
+            protected List<Map<String, Object>> more() {
+                List<Map<String, Object>> list = i++ < 10 ? createAllTypeData(30) : null;
                 if (list != null) expectList.addAll(list);
                 return list;
             }
         }).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertAllTypes(expectList, list);
         }
     }
 
     @Test public void test_161() throws IOException {
         String fileName = "Issue#161.xlsx";
-        List<Map<String, ?>> expectList = new ArrayList<>();
-        new Workbook().addSheet(new ListMapSheet() {
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        new Workbook().addSheet(new ListMapSheet<Object>() {
             private int i = 0;
             @Override
-            protected List<Map<String, ?>> more() {
+            protected List<Map<String, Object>> more() {
                 // Only write one row
                 if (i++ > 0) return null;
-                List<Map<String, ?>> list = new ArrayList<>();
+                List<Map<String, Object>> list = new ArrayList<>();
                 Map<String, Object> map = new HashMap<>();
                 map.put("uuid", UUID.randomUUID().toString());
                 map.put("hobbies", new ArrayList<String>() {{
@@ -633,9 +634,9 @@ public class ListMapSheetTest extends WorkbookTest {
         }).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), expectList.size());
-            Map<String, ?> expect = expectList.get(0), e = list.get(0);
+            Map<String, Object> expect = expectList.get(0), e = list.get(0);
             assertEquals(expect.get("uuid"), e.get("uuid"));
             assertEquals(expect.get("hobbies").toString(), e.get("hobbies"));
             assertEquals(expect.get("sex"), e.get("sex"));
@@ -649,19 +650,19 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrapText() throws IOException {
         String fileName = "MAP WRAP TEXT.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         new Workbook()
-                .addSheet(new ListMapSheet(expectList
+                .addSheet(new ListMapSheet<>(expectList
                     , new Column("ID", "id", int.class)
                     , new Column("NAME", "name", String.class).setWrapText(true)
                 ))
                 .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect.get("id"), e.get("ID"));
                 assertEquals(expect.get("name"), e.get("NAME"));
             }
@@ -671,7 +672,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test(expected = TooManyColumnsException.class) public void testOverLargeOrderColumn() throws IOException {
         new Workbook("test list map sheet Constructor8", author)
                 .setAutoSize(true)
-                .addSheet(new ListMapSheet("MAP", createTestData(10)
+                .addSheet(new ListMapSheet<>("MAP", createTestData(10)
                         , new Column("ID", "id", int.class).setColIndex(9999999)
                         , new Column("NAME", "name", String.class)))
                 .writeTo(defaultTestPath);
@@ -679,12 +680,12 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void test257() throws IOException {
         String fileName = "Issue#257.xlsx";
-        List<Map<String, ?>> expectList = new ArrayList<>();
-        expectList.add(new HashMap<String, String>(){{put("sub1", "moban1");}});
-        expectList.add(new HashMap<String, String>(){{put("sub2", "moban2");}});
-        expectList.add(new HashMap<String, String>(){{put("sub3", "moban3");}});
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        expectList.add(new HashMap<String, Object>(){{put("sub1", "moban1");}});
+        expectList.add(new HashMap<String, Object>(){{put("sub2", "moban2");}});
+        expectList.add(new HashMap<String, Object>(){{put("sub3", "moban3");}});
 
-        new Workbook().addSheet(new ListMapSheet(expectList
+        new Workbook().addSheet(new ListMapSheet<>(expectList
                 , new Column("ID", "id")
                 , new Column("子表单", "sub1")
                 , new Column("模板2", "sub2")
@@ -705,9 +706,9 @@ public class ListMapSheetTest extends WorkbookTest {
             assertEquals("模板2", header.get(5));
             assertEquals("xx", header.get(6));
             assertEquals("xyz", header.get(7));
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
-            Map<String, ?> expect = expectList.get(0), e = list.get(0);
+            Map<String, Object> expect = expectList.get(0), e = list.get(0);
             assertEquals(expect.get("sub1"), e.get("子表单"));
             expect = expectList.get(1); e = list.get(1);
             assertEquals(expect.get("sub2"), e.get("模板2"));
@@ -722,15 +723,15 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testNullInListMap() throws IOException {
         String fileName = "Null in list map.xlsx";
-        List<Map<String, ?>> expectList = createTestData(10);
+        List<Map<String, Object>> expectList = createTestData(10);
         expectList.add(0, null);
         expectList.add(3, null);
         expectList.add(null);
-        new Workbook().addSheet(new ListMapSheet(expectList)).writeTo(defaultTestPath.resolve(fileName));
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).header(1).iterator();
-            for (Map<String, ?> expect : expectList) {
+            for (Map<String, Object> expect : expectList) {
                 assertTrue(iter.hasNext());
                 Row row = iter.next();
                 if (expect == null || expect.isEmpty()) {
@@ -744,73 +745,73 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testLargeColumns() throws IOException {
         int len = 1436;
-        List<Map<String, ?>> expectList = new ArrayList<>(len);
+        List<Map<String, Object>> expectList = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
-            Map<String, String> map = new LinkedHashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             for (int j = 0; j < 500; j++) {
                 map.put("key" + j, getRandomString());
             }
             expectList.add(map);
         }
 
-        new Workbook().addSheet(new ListMapSheet(expectList)).writeTo(defaultTestPath.resolve("large map.xlsx"));
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve("large map.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large map.xlsx"))) {
-            List<Map<String, ?>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0; i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
     }
 
     @Test public void testSpecifyRowWrite() throws IOException {
-        List<Map<String, ?>> list = createTestData(10);
+        List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet(list).setStartRowIndex(5))
+            .addSheet(new ListMapSheet<>(list).setStartRowIndex(5))
             .writeTo(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"))) {
-            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
-                Map<String, ?> r = readList.get(i), w = list.get(i);
+                Map<String, Object> r = readList.get(i), w = list.get(i);
                 assertEquals(r, w);
             }
         }
     }
 
     @Test public void testSpecifyRowStayA1Write() throws IOException {
-        List<Map<String, ?>> list = createTestData(10);
+        List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet(list).setStartRowIndex(5, false))
+            .addSheet(new ListMapSheet<>(list).setStartRowIndex(5, false))
             .writeTo(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"))) {
-            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
-                Map<String, ?> r = readList.get(i), w = list.get(i);
+                Map<String, Object> r = readList.get(i), w = list.get(i);
                 assertEquals(r, w);
             }
         }
     }
 
     @Test public void testSpecifyRowAndColWrite() throws IOException {
-        List<Map<String, ?>> list = createTestData(10);
+        List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet(list
+            .addSheet(new ListMapSheet<>(list
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
                 .setStartRowIndex(5))
             .writeTo(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"))) {
-            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
-                Map<String, ?> r = readList.get(i), w = list.get(i);
+                Map<String, Object> r = readList.get(i), w = list.get(i);
                 assertEquals(r.size(), w.size());
                 assertEquals(r.get("id"), w.get("id"));
                 assertEquals(r.get("name"), w.get("name"));
@@ -819,19 +820,19 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowAndColStayA1Write() throws IOException {
-        List<Map<String, ?>> list = createTestData(10);
+        List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet(list
+            .addSheet(new ListMapSheet<>(list
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
                 .setStartRowIndex(5, false))
             .writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"))) {
-            List<Map<String, ?>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
-                Map<String, ?> r = readList.get(i), w = list.get(i);
+                Map<String, Object> r = readList.get(i), w = list.get(i);
                 assertEquals(r, w);
             }
         }
@@ -843,7 +844,7 @@ public class ListMapSheetTest extends WorkbookTest {
             int page = 1;
 
             @Override
-            protected List<Map<String, ?>> more() {
+            protected List<Map<String, Object>> more() {
                 return getRows(page++);
             }
         }.setSheetWriter(new AppendHeaderWorksheetWriter())) // <- 使用自定义输出协议
@@ -859,39 +860,57 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testDataSupplier() throws IOException {
         final String fileName = "list map data supplier.xlsx";
-        List<Map<String, ?>> expectList = new ArrayList<>(100);
+        List<Map<String, Object>> expectList = new ArrayList<>(100);
         new Workbook()
-            .addSheet(new ListMapSheet().setData((i, lastOne) -> {
+            .addSheet(new ListMapSheet<>().setData((i, lastOne) -> {
                 if (i >= 100) return null;
-                List<Map<String, ?>> sub = createTestData(10);
+                List<Map<String, Object>> sub = createTestData(10);
                 expectList.addAll(sub);
                 return sub;
             }))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            List<Map<String, ?>> list =  reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> list =  reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
-                Map<String, ?> expect = expectList.get(i), e = list.get(i);
+                Map<String, Object> expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }
     }
 
-    static List<Map<String, ?>> getRows(int page) {
+    @Test public void testMultiTypeStoreInSameKey() throws IOException {
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        expectList.add(new HashMap<String, Object>(){{
+            put("a", "abc");
+            put("b", 1);
+        }});
+        expectList.add(new HashMap<String, Object>(){{
+            put("b", "abc");
+        }});
+
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"))) {
+            List<Map<String, Object>> result = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(expectList.size(), result.size());
+        }
+    }
+
+    static List<Map<String, Object>> getRows(int page) {
         if (page > 127 - 67) return null;
-        List<Map<String, ?>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
+        List<Map<String, Object>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
         Map<String, Object> map = new HashMap<>();
         map.put("A", "a" + page);
         map.put("B", "b" + page);
-        String key = new String(new char[]{(char) ('B' + page)});
+        String key = String.valueOf((char) ('B' + page));
         map.put(key, key + page);
         rows.add(map);
         return rows;
     }
 
-    public static class AppendKeyMapSheet extends ListMapSheet {
+    public static class AppendKeyMapSheet extends ListMapSheet<Object> {
         // 保存已存在中列
         Set<String> existsKeys = new HashSet<>();
 
@@ -910,7 +929,7 @@ public class ListMapSheetTest extends WorkbookTest {
                 org.ttzero.excel.entity.Row row = rowBlock.next();
                 row.index = rows;
                 row.height = getRowHeight();
-                Map<String, ?> rowDate = data.get(start);
+                Map<String, Object> rowDate = data.get(start);
                 boolean isNull = rowDate == null;
 
                 if (!isNull) {
@@ -1037,13 +1056,13 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
-    public static List<Map<String, ?>> createTestData() {
+    public static List<Map<String, Object>> createTestData() {
         int size = random.nextInt(100) + 1;
         return createTestData(size);
     }
 
-    public static List<Map<String, ?>> createTestData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
+    public static List<Map<String, Object>> createTestData(int size) {
+        List<Map<String, Object>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", random.nextInt());
@@ -1053,13 +1072,13 @@ public class ListMapSheetTest extends WorkbookTest {
         return list;
     }
 
-    public static List<Map<String, ?>> createAllTypeData() {
+    public static List<Map<String, Object>> createAllTypeData() {
         int size = random.nextInt(100) + 1;
         return createAllTypeData(size);
     }
 
-    public static List<Map<String, ?>> createAllTypeData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
+    public static List<Map<String, Object>> createAllTypeData(int size) {
+        List<Map<String, Object>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("bv", random.nextInt(10) == 6);
@@ -1082,8 +1101,8 @@ public class ListMapSheetTest extends WorkbookTest {
         return list;
     }
 
-    public static List<Map<String, ?>> createNullTestData(int size) {
-        List<Map<String, ?>> list = new ArrayList<>(size);
+    public static List<Map<String, Object>> createNullTestData(int size) {
+        List<Map<String, Object>> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", random.nextInt());
@@ -1093,15 +1112,15 @@ public class ListMapSheetTest extends WorkbookTest {
         return list;
     }
 
-    static void assertAllTypes(List<Map<String, ?>> expectList, List<Map<String, ?>> list) {
+    static void assertAllTypes(List<Map<String, Object>> expectList, List<Map<String, Object>> list) {
         assertEquals(expectList.size(), list.size());
         for (int i = 0, len = expectList.size(); i < len; i++) {
-            Map<String, ?> expect = expectList.get(i), e = list.get(i);
+            Map<String, Object> expect = expectList.get(i), e = list.get(i);
             assertAllType(expect, e);
         }
     }
 
-    static void assertAllType(Map<String, ?> expect, Map<String, ?> e) {
+    static void assertAllType(Map<String, Object> expect, Map<String, Object> e) {
         assertEquals(expect.size(), e.size());
         assertEquals(expect.get("bv"), e.get("bv"));
         assertEquals(expect.get("cv").toString(), e.get("cv").toString());
@@ -1111,7 +1130,7 @@ public class ListMapSheetTest extends WorkbookTest {
         assertEquals(Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("fv").toString())), 0);
         assertEquals(Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("dv").toString())), 0);
         assertEquals(expect.get("s"), e.get("s"));
-        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN), new BigDecimal(e.get("mv").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
+        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, RoundingMode.HALF_DOWN), new BigDecimal(e.get("mv").toString()).setScale(4, RoundingMode.HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("av");
         assertEquals(av1.getTime() / 1000, av2.getTime() / 1000);
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("iv");
@@ -1129,7 +1148,7 @@ public class ListMapSheetTest extends WorkbookTest {
         assertEquals(String.valueOf(Time.valueOf(ltv1)), String.valueOf(ltv2));
     }
 
-    static void assertAllTypeFullKey(Map<String, ?> expect, Map<String, ?> e) {
+    static void assertAllTypeFullKey(Map<String, Object> expect, Map<String, Object> e) {
         assertEquals(expect.size(), e.size());
         assertEquals(expect.get("bv"), e.get("boolean"));
         assertEquals(expect.get("cv").toString(), e.get("char").toString());
@@ -1139,7 +1158,7 @@ public class ListMapSheetTest extends WorkbookTest {
         assertEquals(Float.compare((Float) expect.get("fv"), Float.parseFloat(e.get("float").toString())), 0);
         assertEquals(Double.compare((Double) expect.get("dv"), Double.parseDouble(e.get("double").toString())), 0);
         assertEquals(expect.get("s"), e.get("string"));
-        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, BigDecimal.ROUND_HALF_DOWN), new BigDecimal(e.get("decimal").toString()).setScale(4, BigDecimal.ROUND_HALF_DOWN));
+        assertEquals(((BigDecimal) expect.get("mv")).setScale(4, RoundingMode.HALF_DOWN), new BigDecimal(e.get("decimal").toString()).setScale(4, RoundingMode.HALF_DOWN));
         Date av1 = (Date) expect.get("av"), av2 = (Date) e.get("date");
         assertEquals(av1.getTime() / 1000, av2.getTime() / 1000);
         Date iv1 = (Date) expect.get("iv"), iv2 = (Date) e.get("timestamp");
