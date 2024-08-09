@@ -121,7 +121,6 @@ public final class LockFreeBitArray {
     public boolean equals(Object o) {
         if (o instanceof LockFreeBitArray) {
             LockFreeBitArray lockFreeBitArray = (LockFreeBitArray) o;
-            // TODO(lowasser): avoid allocation here
             return Arrays.equals(toPlainArray(data), toPlainArray(lockFreeBitArray.data));
         }
         return false;
@@ -129,7 +128,6 @@ public final class LockFreeBitArray {
 
     @Override
     public int hashCode() {
-        // TODO(lowasser): avoid allocation here
         return Arrays.hashCode(toPlainArray(data));
     }
 

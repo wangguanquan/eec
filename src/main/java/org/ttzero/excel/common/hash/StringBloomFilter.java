@@ -248,7 +248,6 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
             expectedInsertions = 1;
         }
         /*
-         * TODO(user): Put a warning in the javadoc about tiny fpp values, since the resulting size
          * is proportional to -log(p), but there is not much of a point after all, e.g.
          * optimalM(1000, 0.0000000000000001) = 76680 which is less than 10kb. Who cares!
          */
@@ -303,5 +302,4 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
         }
         return (long) (-n * Math.log(p) / (Math.log(2) * Math.log(2)));
     }
-
 }
