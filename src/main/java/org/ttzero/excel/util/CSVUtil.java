@@ -95,7 +95,6 @@ public class CSVUtil {
      * @param <T> the result type
      * @return ArrayList of clazz
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz) throws IOException {
         return read(path, clazz, null);
@@ -107,7 +106,6 @@ public class CSVUtil {
      * @param path the csv file path
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path) throws IOException {
         return read(path, (Charset) null);
@@ -120,7 +118,6 @@ public class CSVUtil {
      * @param separator the separator character
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, char separator) throws IOException {
         return read(path, separator, null);
@@ -135,7 +132,6 @@ public class CSVUtil {
      * @param <T> the result type
      * @return ArrayList of clazz
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static <T> List<T> read(Path path, Class<T> clazz, Charset charset) throws IOException {
         throw new UnsupportedOperationException();
@@ -148,7 +144,6 @@ public class CSVUtil {
      * @param charset the charset to use for encoding
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, Charset charset) throws IOException {
         return read(path, (char) 0x0, charset);
@@ -162,11 +157,10 @@ public class CSVUtil {
      * @param charset the charset to use for encoding
      * @return ArrayList of string
      * @throws IOException if I/O error occur
-     * @since 1.7
      */
     public static List<String[]> read(Path path, char separator, Charset charset) throws IOException {
         // Check comma character and column
-        // FileNotFoundException will be occur
+        // FileNotFoundException will be occurred
         O o = init(path, separator, charset);
         // Empty file
         if (o == null) {
@@ -174,7 +168,7 @@ public class CSVUtil {
         }
 
         // Use iterator
-        try (RowsIterator iter = new RowsIterator(o, path, charset)) {
+        try (RowsIterator iter = new RowsIterator(o, path, o.charset)) {
             List<String[]> result = new ArrayList<>();
             while (iter.hasNext()) {
                 result.add(iter.next());
@@ -330,8 +324,6 @@ public class CSVUtil {
 
     /**
      * A CSV format file reader.
-     *
-     * @since 1.8
      */
     public static class Reader implements Closeable {
 
@@ -352,7 +344,6 @@ public class CSVUtil {
          * @param clazz the class convert to
          * @param <T> the result type
          * @return a stream of clazz array
-         * @since 1.8
          */
         public <T> Stream<T> stream(Class<T> clazz) {
             throw new UnsupportedOperationException();
@@ -363,11 +354,10 @@ public class CSVUtil {
          *
          * @return a stream of string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> stream() throws IOException {
             // Check comma character and column
-            // FileNotFoundException will be occur
+            // FileNotFoundException will be occurred
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
@@ -375,7 +365,7 @@ public class CSVUtil {
             }
 
             // Use iterator
-            iterator = new RowsIterator(o, path, charset);
+            iterator = new RowsIterator(o, path, o.charset);
 
             return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
                 iterator, Spliterator.ORDERED | Spliterator.NONNULL), false);
@@ -387,7 +377,6 @@ public class CSVUtil {
          *
          * @return a stream of sheared string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> sharedStream() throws IOException {
             return sharedStream((char) 0x0);
@@ -400,11 +389,10 @@ public class CSVUtil {
          * @param separator the separator character
          * @return a stream of sheared string array
          * @throws IOException file not exists or read file error.
-         * @since 1.8
          */
         public Stream<String[]> sharedStream(char separator) throws IOException {
             // Check comma character and column
-            // FileNotFoundException will be occur
+            // FileNotFoundException will be occurred
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
@@ -434,7 +422,7 @@ public class CSVUtil {
             }
 
             // Use iterator
-            return new RowsIterator(o, path, charset);
+            return new RowsIterator(o, path, o.charset);
         }
 
         /**
@@ -497,6 +485,7 @@ public class CSVUtil {
         int offset, line;
         String value;
         boolean newLine;
+        Charset charset;
         O(int offset) { this.offset = offset; }
     }
 
@@ -547,6 +536,17 @@ public class CSVUtil {
                         // EOF
                         if (n <= 0) {
                             EOF = true;
+                            // End of {comma}
+                            if (chars[o.offset - 1] == comma) {
+                                // Contain more than standard comma-separated fields
+                                if (i == column) {
+                                    String[] _array = new String[++column];
+                                    System.arraycopy(nextRow, 0, _array, 0, column - 1);
+                                    nextRow = _array;
+                                }
+                                nextRow[i++] = EMPTY;
+                                _i = i;
+                            }
                             return nextRow[0] != null;
                         }
                         n += offset;
@@ -760,6 +760,7 @@ public class CSVUtil {
 
             O o = new O(0);
             o.line = bom != null ? 1 : 0;
+            o.charset = charset;
             n = 0;
             // Find the final comma and column
             for (int i = 0; i < nc.length; i++) {
@@ -838,10 +839,10 @@ public class CSVUtil {
      * @return true if the char array has more integral string
      */
     private static boolean parse(char[] chars, int len, O o, char comma) {
-        int offset = o.offset, i = offset, iq = -1;
+        int offset = o.offset, i = offset, iq = -1, qn = 0;
         // the first character is '"'
         boolean quoted = chars[i] == QUOTE
-            // a integral string
+            // an integral string
             , integral = false
             // if data size less than block length
             , last_block = len < chars.length;
@@ -850,50 +851,47 @@ public class CSVUtil {
         for (; i < len; i++) {
             char c = chars[i];
             if (c == QUOTE) {
-                if (!quoted) {
-                    throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values" +
-                        " format error.\nFields containing a line-break, double-quote or commas should be quoted.");
-                }
                 if (i >= len - 1) {
                     integral = true;
                     i++;
                     break;
                 }
-                if (chars[i + 1] == QUOTE) {
-                    iq = ++i;
-                    continue;
-                }
+                if (quoted) {
+                    if (chars[i + 1] == QUOTE) {
+                        iq = ++i;
+                        continue;
+                    } else if (chars[i + 1] != comma && chars[i + 1] != LF && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
+                        throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values" +
+                            " format error.\nInvalid char between encapsulated token and delimiter.");
+                    }
+                } else qn++;
                 if (!last_block && chars[i + 1] != comma && chars[i + 1] != LF
                     && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
-                    throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                        "format error.\nA (double) quote character in a field must be represented by " +
-                        "two (double) quote characters.");
+                    throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
+                        "format error.\nA (double) quote character in a field must be represented by two (double) quote characters.");
                 }
                 i++;
-                integral = true;
-                break;
+                if (qn == 0) {
+                    integral = true;
+                    break;
+                }
             } else if (c == comma || c == LF) {
                 if (!quoted) {
                     integral = true;
                     break;
                 }
-            } else if (c == HT && !quoted) {
-                throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                    "format error.\nA (double) quote character in a field must be represented by " +
-                    "two (double) quote characters.");
             }
         }
 
         if (!integral && last_block) {
             if (!quoted) integral = true;
-            else throw new RuntimeException("LINE-NUMBER (zero-base): " + o.line + ". Comma-separated values " +
-                "format error.\nA (double) quote character in a field must be represented by " +
-                "two (double) quote characters.");
+            else throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
+                "format error.\nEOF reached before encapsulated token finished.");
         }
 
         if (integral) {
             if (quoted) offset++;
-            // a integral string
+            // an integral string
             if (offset == i && chars[offset] == LF || offset - i == 1 && chars[offset] == CR && chars[i] == LF)
                 o.value = null;
             else {
@@ -916,7 +914,7 @@ public class CSVUtil {
 
     /**
      * Returns a string whose value is this string, with any leading and trailing
-     * whitespace removed and double quoted character convert to single quoted character.
+     * whitespace removed and double-quoted character convert to single-quoted character.
      *
      * @param chars a block data
      * @param offset initial offset of the block data.
@@ -946,8 +944,6 @@ public class CSVUtil {
 
     /**
      * A CSV format file writer.
-     *
-     * @since 1.8
      */
     public static class Writer implements Closeable {
 
@@ -974,8 +970,7 @@ public class CSVUtil {
          * @throws IOException If an I/O error occurs
          */
         private Writer(Path path) throws IOException {
-            this.writer = Files.newBufferedWriter(path);
-            init();
+            this(path, StandardCharsets.UTF_8);
         }
 
         /**
@@ -1002,6 +997,21 @@ public class CSVUtil {
 
         private void init() {
             cb = new char[length];
+        }
+
+        /**
+         * Write csv bytes with BOM
+         *
+         * <p>Note: This property must be set before writing, otherwise it will be ignored</p>
+         *
+         * @return current writer
+         */
+        public Writer writeWithBom() {
+            if (offset == 0 && i == 0 && column == 0) {
+                // Write UTF BOM
+                cb[offset++] = '\uFEFF';
+            }
+            return this;
         }
 
         /**

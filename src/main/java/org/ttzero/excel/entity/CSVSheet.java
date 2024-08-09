@@ -25,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -44,20 +45,24 @@ public class CSVSheet extends Sheet {
     /**
      * csv文件路径
      */
-    private Path path;
+    protected Path path;
     /**
      * csv行迭代器，配合工作表输出协议获取数据可以极大降低内存消耗
      */
-    private CSVUtil.RowsIterator iterator;
+    protected CSVUtil.RowsIterator iterator;
     /**
      * 是否需要清理临时资源，实例化时如果传入{@code InputStream}或{@code Reader}时会先将数据保存到临时文件
      * 然后创建迭代器逐行读取数据，这个过程产生的临时文件会在关闭工作表时被一起清理
      */
-    private boolean shouldClean;
+    protected boolean shouldClean;
     /**
      * 是否包含表头，如果csv文件无表头时可将此值置为{@code false}
      */
-    private boolean hasHeader;
+    protected boolean hasHeader;
+    /**
+     * 指定读取CSV使用的字符集
+     */
+    protected Charset charset;
 
     /**
      * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
@@ -168,7 +173,7 @@ public class CSVSheet extends Sheet {
     // Create CSV iterator
     private void init() throws IOException {
         assert path != null && exists(path);
-        iterator = CSVUtil.newReader(path).sharedIterator();
+        iterator = CSVUtil.newReader(path, charset).sharedIterator();
     }
 
     /**
@@ -235,4 +240,14 @@ public class CSVSheet extends Sheet {
     @Override
     protected void mergeHeaderCellsIfEquals() { }
 
+    /**
+     * 设置读取CSV使用的字符集
+     *
+     * @param charset 指定字符集
+     * @return 当前工作表
+     */
+    public CSVSheet setCharset(Charset charset) {
+        this.charset = charset;
+        return this;
+    }
 }

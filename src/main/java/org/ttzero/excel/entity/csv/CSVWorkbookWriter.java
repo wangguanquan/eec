@@ -32,6 +32,7 @@ import org.ttzero.excel.util.ZipUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -45,14 +46,23 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      * LOGGER
      */
     protected Logger LOGGER = LoggerFactory.getLogger(getClass());
-    private Workbook workbook;
+    protected Workbook workbook;
     // The csv suffix
     private String suffix = Const.Suffix.CSV;
+    // Write BOM header
+    protected boolean withBom;
+    // Charset 默认UTF-8
+    protected Charset charset;
 
     public CSVWorkbookWriter() { }
 
     public CSVWorkbookWriter(Workbook workbook) {
         this.workbook = workbook;
+    }
+
+    public CSVWorkbookWriter(Workbook workbook, boolean withBom) {
+        this.workbook = workbook;
+        this.withBom = withBom;
     }
 
     @Override
@@ -197,9 +207,20 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     @Override
     public void close() throws IOException { }
 
+    /**
+     * 设置字符集
+     *
+     * @param charset Charset
+     * @return 当前Writer
+     */
+    public CSVWorkbookWriter setCharset(Charset charset) {
+        this.charset = charset;
+        return this;
+    }
+
     // --- Customize worksheet writer
 
     public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
-        return new CSVWorksheetWriter(sheet);
+        return new CSVWorksheetWriter(sheet, withBom).setCharset(charset);
     }
 }
