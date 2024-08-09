@@ -187,7 +187,9 @@ public class ZipUtil {
      * @param srcPath  the source path
      * @return the result zip file path
      * @throws IOException if error occur.
+     * @deprecated About to delete
      */
+    @Deprecated
     public static Path xlsx(Path destPath, Path... srcPath) throws IOException {
         if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
