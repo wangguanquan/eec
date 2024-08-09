@@ -16,8 +16,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.common.hash.BloomFilter;
-import org.ttzero.excel.common.hash.Funnels;
+import org.ttzero.excel.common.hash.StringBloomFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
@@ -78,7 +77,7 @@ public class SharedStrings implements Storable, Closeable {
     /**
      * Import google BloomFilter to check keyword not exists
      */
-    private BloomFilter<String> filter;
+    private StringBloomFilter filter;
 
     /**
      * Cache ASCII value
@@ -119,7 +118,7 @@ public class SharedStrings implements Storable, Closeable {
             // -1 means the keyword not exists
             Arrays.fill(ascii, -1);
             // Create a 2^17 expected insertions and 0.3% fpp bloom filter 2.84M
-            filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
+            filter = StringBloomFilter.create(expectedInsertions, 0.0003);
 
             try {
                 temp = Files.createTempFile("~", "sst");
@@ -296,7 +295,7 @@ public class SharedStrings implements Storable, Closeable {
     private void resetBloomFilter() {
         filter_constructor++;
 //        expectedInsertions <<= 1;
-        filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), expectedInsertions, 0.0003);
+        filter = StringBloomFilter.create(expectedInsertions, 0.0003);
 //        for (String key : hot) {
 //            filter.put(key);
 //        }

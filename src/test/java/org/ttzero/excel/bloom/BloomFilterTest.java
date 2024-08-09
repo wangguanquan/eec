@@ -16,11 +16,9 @@
 
 package org.ttzero.excel.bloom;
 
-import org.ttzero.excel.common.hash.BloomFilter;
-import org.ttzero.excel.common.hash.Funnels;
+import org.ttzero.excel.common.hash.StringBloomFilter;
 import org.junit.Test;
 
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertTrue;
 
@@ -29,17 +27,20 @@ import static org.junit.Assert.assertTrue;
  */
 public class BloomFilterTest {
     @Test public void test() {
-        BloomFilter<String> filter = BloomFilter.create(Funnels.stringFunnel(StandardCharsets.UTF_8), 100000, 0.0003);
+        long start = System.currentTimeMillis();
+        StringBloomFilter filter = StringBloomFilter.create(100000, 0.003);
 
-        for (int index = 0; index < 50000; index++) {
+        for (int index = 0; index < 100000; index++) {
             filter.put("abc_test_" + index);
         }
         int n = 0;
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100000; i++) {
             if (filter.mightContain("abc_test_" + i)) {
                 n++;
             }
         }
-        assertTrue(n >= 995);
+        System.out.println((System.currentTimeMillis() - start) + " " + n);
+        assertTrue(n >= 99900);
+
     }
 }

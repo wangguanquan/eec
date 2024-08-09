@@ -25,7 +25,7 @@ import java.nio.ByteOrder;
  * @author Dimitris Andreou
  */
 // TODO(kevinb): this class still needs some design-and-document-for-inheritance love
-abstract class AbstractStreamingHasher extends AbstractHasher {
+abstract class AbstractStreamingHasher {
   /** Buffer via which we pass data to the hash algorithm (the implementor) */
   private final ByteBuffer buffer;
 
@@ -34,6 +34,9 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
 
   /** Number of bytes processed per process() invocation. */
   private final int chunkSize;
+
+  /** Temporary use */
+  private ByteBuffer tmpBuffer = ByteBuffer.allocate(512);
 
   /**
    * Constructor for use by subclasses. This hasher instance will process chunks of the specified
@@ -57,6 +60,8 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
    */
   protected AbstractStreamingHasher(int chunkSize, int bufferSize) {
     // TODO(kevinb): check more preconditions (as bufferSize >= chunkSize) if this is ever public
+    int mod = bufferSize % chunkSize;
+    if (mod != 0) bufferSize += (chunkSize - mod);
 
     // TODO(user): benchmark performance difference with longer buffer
     // always space for a single primitive
@@ -85,12 +90,22 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
     process(bb);
   }
 
-  @Override
-  public final Hasher putBytes(byte[] bytes, int off, int len) {
-    return putBytesInternal(ByteBuffer.wrap(bytes, off, len).order(ByteOrder.LITTLE_ENDIAN));
+  public final AbstractStreamingHasher putBytes(byte[] bytes) {
+    return putBytes(bytes, 0, bytes.length);
   }
 
-  private Hasher putBytesInternal(ByteBuffer readBuffer) {
+  public final AbstractStreamingHasher putBytes(byte[] bytes, int off, int len) {
+    if (tmpBuffer.capacity() >= len) {
+      tmpBuffer.clear();
+      tmpBuffer.put(bytes, off, len);
+      tmpBuffer.flip();
+    } else {
+      tmpBuffer = ByteBuffer.wrap(bytes, off, len).order(ByteOrder.LITTLE_ENDIAN);
+    }
+    return putBytesInternal(tmpBuffer);
+  }
+
+  private AbstractStreamingHasher putBytesInternal(ByteBuffer readBuffer) {
     // If we have room for all of it, this is easy
     if (readBuffer.remaining() <= buffer.remaining()) {
       buffer.put(readBuffer);
@@ -115,25 +130,7 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
     return this;
   }
 
-  /*
-   * Note: hashString(CharSequence, Charset) is intentionally not overridden.
-   *
-   * While intuitively, using CharsetEncoder to encode the CharSequence directly to the buffer (or
-   * even to an intermediate buffer) should be considerably more efficient than potentially
-   * copying the CharSequence to a String and then calling getBytes(Charset) on that String, in
-   * reality there are optimizations that make the getBytes(Charset) approach considerably faster,
-   * at least for commonly used charsets like UTF-8.
-   */
-
-  @Override
-  public final Hasher putByte(byte b) {
-    buffer.put(b);
-    munchIfFull();
-    return this;
-  }
-
-  @Override
-  public final HashCode hash() {
+  public final byte[] hash() {
     munch();
     buffer.flip();
     if (buffer.remaining() > 0) {
@@ -148,7 +145,7 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
    * after all chunks are handled with {@link #process} and any leftover bytes that did not make a
    * complete chunk are handled with {@link #processRemaining}.
    */
-  protected abstract HashCode makeHash();
+  protected abstract byte[] makeHash();
 
   // Process pent-up data in chunks
   private void munchIfFull() {
@@ -166,5 +163,11 @@ abstract class AbstractStreamingHasher extends AbstractHasher {
       process(buffer);
     }
     buffer.compact(); // preserve any remaining data that do not make a full chunk
+  }
+
+  // Reset Buffer
+  protected AbstractStreamingHasher reset() {
+    buffer.clear();
+    return this;
   }
 }
