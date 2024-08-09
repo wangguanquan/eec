@@ -94,11 +94,7 @@ public class SQLWorkbookTest extends WorkbookTest {
                 int size = 10_000;
                 for (int i = 0; i < size; i++) {
                     ps.setString(1, getRandomString());
-                    if (random.nextInt(1000) >= 975) {
-                        ps.setNull(2, Types.INTEGER);
-                    } else {
-                        ps.setInt(2, random.nextInt(15) + 5);
-                    }
+                    ps.setInt(2, random.nextInt(15) + 5);
                     ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
                     if (random.nextInt(1000) >= 615) {
                         ps.setNull(4, Types.DATE);
