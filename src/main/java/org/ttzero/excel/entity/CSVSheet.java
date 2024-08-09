@@ -163,9 +163,12 @@ public class CSVSheet extends Sheet {
      */
     @Override
     public void close() throws IOException {
-        iterator.close();
-        if (shouldClean) {
-            FileUtil.rm_rf(path);
+        // 最后一个Sheet关闭CSV流
+        if (shouldClose) {
+            iterator.close();
+            if (shouldClean) {
+                FileUtil.rm_rf(path);
+            }
         }
         super.close();
     }

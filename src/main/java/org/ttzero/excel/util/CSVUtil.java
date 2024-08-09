@@ -620,8 +620,6 @@ public class CSVUtil {
             if (reader != null) {
                 reader.close();
             }
-            chars = null;
-            nextRow = null;
         }
 
         static RowsIterator createEmptyIterator() {
