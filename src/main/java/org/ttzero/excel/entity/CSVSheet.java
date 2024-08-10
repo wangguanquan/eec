@@ -38,6 +38,10 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * 相似的切片属性，输出协议调用{@code nextBlock}获取分片数据时{@code CSVSheet}从CSVIterator
  * 中逐行读取数据并输出以此控制整个过程对内存的消耗
  *
+ * <p>默认情况下CSV文件第一行数据将做为Excel表头，如果要忽略这个设定则需要调用{@link #ignoreHeader()}方法忽略表头，
+ * 忽略表头后第一行数据将被视为普通数据导了，也就是说无论是否忽略表头CSV的数据都将被完全复制到Excel文件中，
+ * 只是默认第一行将添加表头样式</p>
+ *
  * @author guanquan.wang at 2019-09-26 08:33
  */
 public class CSVSheet extends Sheet {
@@ -55,10 +59,6 @@ public class CSVSheet extends Sheet {
      * 然后创建迭代器逐行读取数据，这个过程产生的临时文件会在关闭工作表时被一起清理
      */
     protected boolean shouldClean;
-    /**
-     * 是否包含表头，如果csv文件无表头时可将此值置为{@code false}
-     */
-    protected boolean hasHeader;
     /**
      * 指定读取CSV使用的字符集
      */
@@ -146,17 +146,6 @@ public class CSVSheet extends Sheet {
     }
 
     /**
-     * 设置是否需要表头
-     *
-     * @param hasHeader true: 包含表头
-     * @return 当前工作表
-     */
-    public CSVSheet setHasHeader(boolean hasHeader) {
-        this.hasHeader = hasHeader;
-        return this;
-    }
-
-    /**
      * 清理临时文件
      *
      * @throws IOException if I/O error occur
@@ -226,7 +215,7 @@ public class CSVSheet extends Sheet {
             columns = new Column[rows.length];
             for (int i = 0; i < rows.length; i++) {
                 // FIXME the column type
-                columns[i] = new Column(hasHeader ? rows[i] : null, String.class);
+                columns[i] = new Column(getNonHeader() != 1 ? rows[i] : null, String.class);
                 columns[i].styles = workbook.getStyles();
             }
         } catch (IOException e) {
@@ -238,7 +227,7 @@ public class CSVSheet extends Sheet {
     @Override
     public void checkColumnLimit() {
         super.checkColumnLimit();
-        if (nonHeader == 1) {
+        if (getNonHeader() == 1) {
             ((CSVUtil.SharedRowsIterator) iterator).retain();
         }
     }
