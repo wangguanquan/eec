@@ -240,9 +240,9 @@ public class ResultSetSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len = columns.length, n = 0, limit = getRowLimit();
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
+        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2, hasNext = true;
         try {
-            for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && rs.next(); rows++) {
+            for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && (hasNext = rs.next()); rows++) {
                 Row row = rowBlock.next();
                 row.index = rows;
                 row.height = getRowHeight();
@@ -291,9 +291,11 @@ public class ResultSetSheet extends Sheet {
         // Paging
         if (rows >= limit) {
             shouldClose = false;
+            rowBlock.markEOF();
             ResultSetSheet copy = getClass().cast(clone());
+            copy.shouldClose = true;
             workbook.insertSheet(id, copy);
-        } else shouldClose = true;
+        } else if (!hasNext) rowBlock.markEOF();
     }
 
     /**

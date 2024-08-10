@@ -186,7 +186,8 @@ public class CSVSheet extends Sheet {
     @Override
     protected void resetBlockData() {
         int len = columns.length, n = 0, limit = getRowLimit();
-        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && iterator.hasNext(); rows++) {
+        boolean hasNext = true;
+        for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && (hasNext = iterator.hasNext()); rows++) {
             Row row = rowBlock.next();
             row.index = rows;
             Cell[] cells = row.realloc(len);
@@ -207,9 +208,11 @@ public class CSVSheet extends Sheet {
         // Paging
         if (rows >= limit) {
             shouldClose = false;
+            rowBlock.markEOF();
             CSVSheet copy = getClass().cast(clone());
+            copy.shouldClose = true;
             workbook.insertSheet(id, copy);
-        } else shouldClose = true;
+        } else if (!hasNext) rowBlock.markEOF();
     }
 
     @Override
