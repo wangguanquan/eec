@@ -193,7 +193,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected ICellValueAndStyle cellValueAndStyle;
     /**
-     * 忽略表头
+     * 忽略表头 -1 未设置, 0 输出表头, 1 忽略表头
      */
     protected int nonHeader = -1;
     /**

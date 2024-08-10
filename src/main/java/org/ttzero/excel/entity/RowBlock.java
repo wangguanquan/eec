@@ -117,7 +117,7 @@ public class RowBlock implements Iterator<Row> {
     /**
      * 标记行块已结束，后续将不再装填数据
      */
-    private void markEnd() {
+    public void markEOF() {
         eof = true;
     }
 
@@ -137,7 +137,7 @@ public class RowBlock implements Iterator<Row> {
      */
     public final RowBlock flip() {
         if (i < limit) {
-            markEnd();
+            markEOF();
         }
         n = i;
         total += i;
