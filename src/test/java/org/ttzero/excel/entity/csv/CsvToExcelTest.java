@@ -167,7 +167,7 @@ public class CsvToExcelTest extends WorkbookTest {
     @Test public void testHasHeaderFromPath() throws IOException {
         String fileName = "csv header path test.xlsx";
         new Workbook()
-            .addSheet(new CSVSheet(path).setHasHeader(true))
+            .addSheet(new CSVSheet(path))
             .writeTo(getOutputTestPath().resolve(fileName));
 
         List<String[]> expectList = CSVUtil.read(path);
@@ -297,6 +297,9 @@ public class CsvToExcelTest extends WorkbookTest {
     @Ignore
     @Test public void testIah94s() throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(defaultTestPath.resolve("3343494.csv"))) {
+            writer.write("ID");
+            writer.write("NAME");
+            writer.newLine();
             StringBuilder buf = new StringBuilder("ab");
             for (int i = 0; i < 3343494; i++) {
                 writer.write(i);
@@ -308,12 +311,12 @@ public class CsvToExcelTest extends WorkbookTest {
         }
 
         new Workbook()
-                .addSheet(new CSVSheet(defaultTestPath.resolve("3343494.csv")).ignoreHeader())
+                .addSheet(new CSVSheet(defaultTestPath.resolve("3343494.csv")))
                 .writeTo(defaultTestPath.resolve("3343494.xlsx"));
 
         AtomicInteger oi = new AtomicInteger(0);
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("3343494.xlsx"))) {
-            boolean noneMatch = reader.sheets().flatMap(Sheet::rows).noneMatch(row -> {
+            boolean noneMatch = reader.sheets().flatMap(Sheet::dataRows).noneMatch(row -> {
                 int i = oi.getAndIncrement();
                 return row.getInt(0) == i && ("ab" + i).equals(row.getString(1));
             });
