@@ -67,7 +67,7 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
          */
         public boolean put(String object, Charset charset, int numHashFunctions, LockFreeBitArray bits) {
             long bitSize = bits.bitSize();
-            byte[] bytes = hasher.reset().putBytes(object.getBytes(charset)).hash();
+            byte[] bytes = hasher.clear().putBytes(object.getBytes(charset)).hash();
             long hash1 = fromBytes(bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
             long hash2 = fromBytes(bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
 
@@ -87,7 +87,7 @@ public final class StringBloomFilter implements Predicate<String>, Serializable 
          */
         public boolean mightContain(String object, Charset charset, int numHashFunctions, LockFreeBitArray bits) {
             long bitSize = bits.bitSize();
-            byte[] bytes = hasher.reset().putBytes(object.getBytes(charset)).hash();
+            byte[] bytes = hasher.clear().putBytes(object.getBytes(charset)).hash();
             long hash1 = fromBytes(bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
             long hash2 = fromBytes(bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
 

@@ -181,8 +181,8 @@ final class Murmur3_128Hasher extends AbstractStreamingHasher {
     }
 
     @Override
-    public Murmur3_128Hasher reset() {
-        super.reset();
+    public Murmur3_128Hasher clear() {
+        super.clear();
         h1 = seed;
         h2 = seed;
         length = 0;

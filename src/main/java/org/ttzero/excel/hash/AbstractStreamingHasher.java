@@ -172,8 +172,8 @@ abstract class AbstractStreamingHasher {
         buffer.compact(); // preserve any remaining data that do not make a full chunk
     }
 
-    // Reset Buffer
-    protected AbstractStreamingHasher reset() {
+    // Clear Buffer
+    protected AbstractStreamingHasher clear() {
         buffer.clear();
         return this;
     }
