@@ -43,7 +43,7 @@ abstract class AbstractStreamingHasher {
     /**
      * Temporary use
      */
-    private ByteBuffer tmpBuffer = ByteBuffer.allocate(512);
+    private ByteBuffer tmpBuffer = ByteBuffer.allocate(512).order(ByteOrder.LITTLE_ENDIAN);
 
     /**
      * Constructor for use by subclasses. This hasher instance will process chunks of the specified
