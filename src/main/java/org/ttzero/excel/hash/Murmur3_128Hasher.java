@@ -23,7 +23,7 @@
  * (Modified to adapt to Guava coding conventions and to use the HashFunction interface)
  */
 
-package org.ttzero.excel.common.hash;
+package org.ttzero.excel.hash;
 
 import java.nio.ByteBuffer;
 

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package org.ttzero.excel.common.hash;
+package org.ttzero.excel.hash;
 
 
 import java.io.Serializable;
@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 /**
- * A Bloom filter for instances of {@code T}. A Bloom filter offers an approximate containment test
+ * A Bloom filter for instances of {@code String}. A Bloom filter offers an approximate containment test
  * with one-sided error: if it claims that an element is contained in it, this might be in error,
  * but if it claims that an element is <i>not</i> contained in it, then this is definitely true.
  *

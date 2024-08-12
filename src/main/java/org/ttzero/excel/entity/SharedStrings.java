@@ -16,7 +16,7 @@
 
 package org.ttzero.excel.entity;
 
-import org.ttzero.excel.common.hash.StringBloomFilter;
+import org.ttzero.excel.hash.StringBloomFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package org.ttzero.excel.common.hash;
+package org.ttzero.excel.hash;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

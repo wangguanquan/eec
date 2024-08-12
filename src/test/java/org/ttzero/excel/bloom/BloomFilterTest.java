@@ -16,7 +16,7 @@
 
 package org.ttzero.excel.bloom;
 
-import org.ttzero.excel.common.hash.StringBloomFilter;
+import org.ttzero.excel.hash.StringBloomFilter;
 import org.junit.Test;
 
 
