@@ -19,15 +19,13 @@ package org.ttzero.excel.bloom;
 import org.ttzero.excel.hash.StringBloomFilter;
 import org.junit.Test;
 
-
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author guanquan.wang at 2019-05-06 16:44
  */
 public class BloomFilterTest {
-    @Test public void test() {
-        long start = System.currentTimeMillis();
+    @Test public void testStringFilter() {
         StringBloomFilter filter = StringBloomFilter.create(100000, 0.003);
 
         for (int index = 0; index < 100000; index++) {
@@ -39,8 +37,6 @@ public class BloomFilterTest {
                 n++;
             }
         }
-        System.out.println((System.currentTimeMillis() - start) + " " + n);
-        assertTrue(n >= 99900);
-
+        assertTrue(n >= 99997);
     }
 }
