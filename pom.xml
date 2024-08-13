@@ -111,7 +111,7 @@
           </execution>
         </executions>
         <configuration>
-          <excludePackageNames>org.ttzero.excel.common.*</excludePackageNames>
+          <excludePackageNames>org.ttzero.excel.hash</excludePackageNames>
         </configuration>
       </plugin>
     </plugins>
