@@ -33,6 +33,7 @@ import static java.lang.Character.isValidCodePoint;
 import static java.lang.Character.lowSurrogate;
 import static java.lang.Integer.numberOfTrailingZeros;
 import static org.ttzero.excel.manager.Const.Limit.MAX_CHARACTERS_PER_CELL;
+import static org.ttzero.excel.util.ExtBufferedWriter.MALFORMED_CHAR;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
@@ -686,7 +687,7 @@ public class SharedStrings implements Closeable {
             dst[i] = highSurrogate(codePoint);
             n = 2;
         } else {
-           dst[i] = 0xFFFD; // Illegal value �
+           dst[i] = MALFORMED_CHAR; // Illegal value �
            n = 1;
         }
         return n;
@@ -700,7 +701,7 @@ public class SharedStrings implements Closeable {
         if (reader != null) {
             // Debug hit rate
             LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max
-                , (total > 0 ? (total - max) * 100.0/ total : 0));
+                , (total > 0 ? (total - max) * 100.0 / total : 0));
             LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
