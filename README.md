@@ -102,7 +102,7 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 3. 支持模板导出
 
-EEC支持xls和xlsx模板格式，模板工作表TemplateSheet与其它工作表一样是一种数据源，只是样式由源工作表决定且不受ExcelColumn注解限制，导出的数据范围由模板中的占位符决定，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
+EEC支持xls和xlsx模板格式，使用模板工作表可以合并多个Excel文件，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
@@ -291,6 +291,14 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.18 (2024-08-13)
+-------------
+- 增加CSVSheet的兼容性, Excel转CSV支持保存BOM
+- 增加ResultSetSheet的类型兼容性
+- ListMapSheet支持泛型
+- 删除I18N相关代码降低复杂度
+- 精简BloomFilter降低复杂度，精简后仅支持String类型
+
 Version 0.5.17 (2024-07-18)
 -------------
 - 修复部分情况下Row#toMap抛下标越界问题(#380)
@@ -306,20 +314,10 @@ Version 0.5.15 (2024-05-21)
 - 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
 - 删除部分已标记为过时的方法
 
-Version 0.5.14 (2024-04-22)
--------------
-- 新增数据验证Validation
-- 新增超链接注解Hyperlink
-- 新增模板工作表TemplateSheet
-- 新增TypeCastException用于Row转对象时如果出现类型转换异常时携带行列等信息
-- ListSheet新增data-supplier减化分片开发难度
-- 新增zoomScale扩展属性支持设置工作表缩放比例
-- 修复读取双色填充样式时抛异常
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.17-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.18-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

@@ -1,9 +1,10 @@
-Version 0.5.18
+Version 0.5.18 (2024-08-13)
 -------------
 - 增加CSVSheet的兼容性, Excel转CSV支持保存BOM
 - 增加ResultSetSheet的类型兼容性
 - ListMapSheet支持泛型
 - 删除I18N相关代码降低复杂度
+- 精简BloomFilter降低复杂度，精简后仅支持String类型
 
 Version 0.5.17 (2024-07-18)
 -------------
