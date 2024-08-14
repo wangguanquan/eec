@@ -178,22 +178,4 @@ public class ZipUtil {
         zis.close();
         return destPath;
     }
-
-    /**
-     * zip files exclude root path
-     * command: zip destPath srcPath1 srcPath2 ...
-     *
-     * @param destPath the destination path
-     * @param srcPath  the source path
-     * @return the result zip file path
-     * @throws IOException if error occur.
-     * @deprecated About to delete
-     */
-    @Deprecated
-    public static Path xlsx(Path destPath, Path... srcPath) throws IOException {
-        if (!exists(destPath.getParent())) {
-            FileUtil.mkdir(destPath.getParent());
-        }
-        return zip(destPath, false, srcPath);
-    }
 }

@@ -78,16 +78,6 @@ public interface IWorkbookWriter extends Storable, Closeable {
     void writeTo(File file) throws IOException;
 
     /**
-     * 指定模板导出时获取制作好的文件临时路径
-     *
-     * @return 文件临时路径
-     * @throws IOException if I/O error occur
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    Path template() throws IOException;
-
-    /**
      * 获取工作表输出协议
      *
      * @param sheet 工作表

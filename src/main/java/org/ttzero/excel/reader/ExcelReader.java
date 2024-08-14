@@ -133,12 +133,6 @@ public class ExcelReader implements Closeable {
     private SharedStrings sharedStringTable;
 
     /**
-     * 是否包含公式标记，此标记不可信，因为它只检查是否包含{@code calcChain.xml}文件，
-     * 并不检查单元格中的内嵌公式。
-     */
-    protected boolean hasFormula;
-
-    /**
      * 图片管理器
      */
     protected Drawings drawings;
@@ -356,19 +350,6 @@ public class ExcelReader implements Closeable {
         return appInfo != null ? appInfo : (appInfo = getGeneralInfo());
     }
 
-    /**
-     * 是否包含"公式"，返回{@code true}一定包含公式，返回{@code false}则不一定不包含
-     *
-     * @return true: 包含 false: 不确认是否包含
-     * @deprecated 此方法无法准确反映工作簿是否包含公式，这里仅检查是否包含一个通用的calcChain文件，
-     * 某些工具生成的Excel文件不包含calcChain文件而是内嵌在每个单元格中，这部分公式只有在读取单元格时才
-     * 明确知道，通过{@link Row#hasFormula(int)}可以精准判断某些单元格是否包含公式。
-     */
-    @Deprecated
-    public boolean hasFormula() {
-        return this.hasFormula;
-    }
-
     // --- PROTECTED FUNCTIONS
 
     /**
@@ -504,8 +485,6 @@ public class ExcelReader implements Closeable {
         if (styles == null) {
             styles = Styles.forReader();
         }
-
-        hasFormula = getEntry("xl/calcChain.xml") != null;
 
         entry = getEntry("xl/_rels/workbook.xml.rels");
         if (entry == null)

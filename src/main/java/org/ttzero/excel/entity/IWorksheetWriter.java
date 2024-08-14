@@ -72,22 +72,6 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     IWorksheetWriter setWorksheet(Sheet sheet);
 
     /**
-     * 写空工作表
-     *
-     * @param path 保存路径
-     * @throws IOException if I/O error occur
-     * @deprecated 无用方法后续将删除
-     */
-    @Deprecated
-    default void writeEmptySheet(Path path) throws IOException {
-        try {
-            writeTo(path, () -> null);
-        } finally {
-            close();
-        }
-    }
-
-    /**
      * 复制工作表输出协议
      *
      * @return IWorksheetWriter

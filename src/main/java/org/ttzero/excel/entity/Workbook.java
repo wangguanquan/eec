@@ -29,7 +29,6 @@ import org.ttzero.excel.util.StringUtil;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -727,53 +726,6 @@ public class Workbook implements Storable {
         } finally {
             workbookWriter.close();
         }
-    }
-
-    /////////////////////////////////模板，目前只实现简单模板///////////////////////////////////
-    /**
-     * 模板输入流
-     */
-    private InputStream is;
-    /**
-     * 替换对象
-     */
-    private Object o;
-
-    /**
-     * 获取模板输入流
-     *
-     * @return 模板的输入流
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public InputStream getTemplate() {
-        return is;
-    }
-
-    /**
-     * 获取绑定对象
-     *
-     * @return 绑定对象
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public Object getBind() {
-        return o;
-    }
-
-    /**
-     * 指定模板输入流并绑定替换对象
-     *
-     * @param is 模板输入流
-     * @param o  绑定替换对象
-     * @return 当前工作薄
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public Workbook withTemplate(InputStream is, Object o) {
-        this.is = is;
-        this.o = o;
-        return this;
     }
 
     /**

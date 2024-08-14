@@ -113,21 +113,21 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        Path zip = workbook.getTemplate() == null ? createTemp() : template();
+        Path zip = createTemp();
         reMarkPath(zip, path);
         FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        Path zip = workbook.getTemplate() == null ? createTemp() : template();
+        Path zip = createTemp();
         Files.copy(zip, os);
         FileUtil.rm(zip);
     }
 
     @Override
     public void writeTo(File file) throws IOException {
-        Path zip = workbook.getTemplate() == null ? createTemp() : template();
+        Path zip = createTemp();
         FileUtil.cp(zip, file);
         FileUtil.rm(zip);
     }
@@ -416,35 +416,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         Path resultPath = reMarkPath(zip, path, name);
         LOGGER.debug("Write completed. {}", resultPath);
-    }
-
-    // --- TEMPLATE
-
-    @Override
-    public Path template() throws IOException {
-        // Store template stream as zip file
-        Path temp = FileUtil.mktmp(Const.EEC_PREFIX);
-        ZipUtil.unzip(workbook.getTemplate(), temp);
-
-        // Bind data
-        EmbedTemplate bt = new EmbedTemplate(temp, workbook);
-        if (bt.check()) { // Check files
-            bt.bind(workbook.getBind());
-        }
-        LOGGER.debug("All sheets have completed writing, starting to compression ...");
-
-        // Zip compress
-        Path zipFile = ZipUtil.zipExcludeRoot(temp, temp);
-        LOGGER.debug("Compression completed. {}", zipFile);
-
-        // Delete source files
-        FileUtil.rm_rf(temp.toFile(), true);
-        LOGGER.debug("Clean up temporary files");
-
-        // Close shared string table
-        workbook.getSharedStrings().close();
-
-        return zipFile;
     }
 
     @Override
