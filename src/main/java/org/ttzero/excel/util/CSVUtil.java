@@ -51,6 +51,7 @@ import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 import static org.ttzero.excel.util.FileUtil.exists;
 import static org.ttzero.excel.util.FileUtil.mkdir;
+import static org.ttzero.excel.util.StringUtil.EMPTY;
 
 /**
  * Comma-Separated Values
@@ -83,7 +84,6 @@ public class CSVUtil {
     private static final char LF = 10;
     private static final char CR = 13;
     private static final char COMMA = ',';
-    private static final String EMPTY = "";
 
     // --- Read
 
