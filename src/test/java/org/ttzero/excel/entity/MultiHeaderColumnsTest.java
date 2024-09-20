@@ -21,6 +21,9 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
+import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.ExcelReader;
@@ -573,6 +576,111 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 assertEquals(sub.get("寄件地址:详细地址"), src.sDetail);
                 assertEquals(sub.get("寄件人"), src.sender);
             }
+        }
+    }
+
+    @Test public void testMultiHeaderAndStyles() throws IOException {
+        Workbook workbook = new Workbook();
+        Styles styles = workbook.getStyles();
+        Font fontYahei20Red = new Font("微软雅黑", 20, Color.RED);
+        Font fontYahei16Black = new Font("微软雅黑", 16, Color.BLACK);
+        Font fontYahei25Blue = new Font("微软雅黑", 25, Color.BLUE);
+        Fill fillGrey = new Fill(Styles.toColor("#E9EAEC"));
+        Fill fillYellow = new Fill(Color.YELLOW);
+        Fill fillCyan = new Fill(Color.CYAN);
+        Border borderGary = new Border(BorderStyle.THIN, Color.GRAY);
+        int borderIndex = styles.addBorder(borderGary);
+
+        workbook.addSheet(new ListSheet<>(new Column("headerlonglong").setHeaderStyle(styles.addFont(fontYahei20Red) | styles.addFill(fillGrey) | borderIndex | Horizontals.LEFT).setHeaderHeight(40)
+            .addSubColumn(new Column("middle column").setHeaderStyle(styles.addFont(fontYahei16Black) | styles.addFill(fillYellow) | borderIndex | Horizontals.CENTER).setHeaderHeight(30))
+            .addSubColumn(new Column("StuName", "stuName").setHeaderStyle(styles.addFont(fontYahei25Blue) | styles.addFill(fillGrey) | borderIndex | Horizontals.CENTER).setHeaderHeight(20).setWidth(50))
+            , new Column("header3").setHeaderStyle(styles.addFont(fontYahei16Black) | styles.addFill(fillCyan) | borderIndex | Horizontals.CENTER)
+            .addSubColumn(new Column("header2").setHeaderStyle(styles.addFont(fontYahei16Black) | styles.addFill(fillGrey) | borderIndex | Horizontals.CENTER))
+            .addSubColumn(new Column("header3").setHeaderStyle(styles.addFont(fontYahei20Red) | styles.addFill(fillGrey) | borderIndex | Horizontals.CENTER)).setWidth(30)));
+
+        workbook.writeTo(defaultTestPath.resolve("multiheader-multistyles.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("multiheader-multistyles.xlsx"))) {
+            // Global styles
+            Styles style = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).iterator();
+            // Row1
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+
+            // Row1 Cell1
+            int xf = row.getCellStyle(0);
+            Font font = style.getFont(xf);
+            assertEquals(font, fontYahei20Red);
+            Fill fill = style.getFill(xf);
+            assertEquals(fill, fillGrey);
+            Border border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            int horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.LEFT);
+
+            // Row1 Cell2
+            xf = row.getCellStyle(1);
+            font = style.getFont(xf);
+            assertEquals(font, fontYahei16Black);
+            fill = style.getFill(xf);
+            assertEquals(fill, fillCyan);
+            border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.CENTER);
+
+            // Row2
+            assertTrue(iter.hasNext());
+            row = iter.next();
+
+            // Row2 Cell1
+            xf = row.getCellStyle(0);
+            font = style.getFont(xf);
+            assertEquals(font, fontYahei16Black);
+            fill = style.getFill(xf);
+            assertEquals(fill, fillYellow);
+            border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.CENTER);
+
+            // Row2 Cell2
+            xf = row.getCellStyle(1);
+            font = style.getFont(xf);
+            assertEquals(font, fontYahei16Black);
+            fill = style.getFill(xf);
+            assertEquals(fill, fillGrey);
+            border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.CENTER);
+
+            // Row3
+            assertTrue(iter.hasNext());
+            row = iter.next();
+
+            // Row3 Cell1
+            xf = row.getCellStyle(0);
+            font = style.getFont(xf);
+            assertEquals(font, fontYahei25Blue);
+            fill = style.getFill(xf);
+            assertEquals(fill, fillGrey);
+            border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.CENTER);
+
+            // Row3 Cell2
+            xf = row.getCellStyle(1);
+            font = style.getFont(xf);
+            assertEquals(font, fontYahei20Red);
+            fill = style.getFill(xf);
+            assertEquals(fill, fillGrey);
+            border = style.getBorder(xf);
+            assertEquals(border, borderGary);
+            horizontals = style.getHorizontal(xf);
+            assertEquals(horizontals, Horizontals.CENTER);
         }
     }
 

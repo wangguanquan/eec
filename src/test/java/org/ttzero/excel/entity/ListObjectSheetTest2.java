@@ -52,11 +52,13 @@ import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -685,6 +687,25 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 bw.write("</row>");
             }
         })).writeTo(defaultTestPath.resolve("tree style.xlsx"));
+    }
+
+    @Test public void testCustomProperties() throws IOException {
+        Map<String, Object> properties = new LinkedHashMap<>();
+        properties.put("办公室", "24F");
+        properties.put("记录日期", new Timestamp(System.currentTimeMillis()));
+        properties.put("工作组", 9527);
+        properties.put("批复", true);
+        properties.put("工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工", "1");
+        properties.put("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 2);
+        properties.put(" ", 1);
+        properties.put("short", (short) 12);
+        properties.put("long", System.currentTimeMillis());
+        properties.put("double", 124353.234354);
+        properties.put("负数", -1234);
+        properties.put("负double", -1234.123445);
+        new Workbook()
+            .putCustomProperties(properties)
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve("custom property.xlsx"));
     }
 
     @TreeStyle
