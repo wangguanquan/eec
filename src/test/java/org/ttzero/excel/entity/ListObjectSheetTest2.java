@@ -57,6 +57,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -697,15 +698,35 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         properties.put("批复", true);
         properties.put("工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工", "1");
         properties.put("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 2);
-        properties.put(" ", 1);
+        properties.put(" ", Integer.MAX_VALUE);
         properties.put("short", (short) 12);
         properties.put("long", System.currentTimeMillis());
-        properties.put("double", 124353.234354);
+        properties.put("double", 124353.234354D);
         properties.put("负数", -1234);
-        properties.put("负double", -1234.123445);
+        properties.put("负double", -1234.123445D);
         new Workbook()
-            .putCustomProperties(properties)
+            .putCustomProperties(properties)     // <- 设置多组属性
+            .putCustomProperty("追加属性", "abc") // <- 设置单组属性
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve("custom property.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("custom property.xlsx"))) {
+            Map<String, Object> prop = reader.getCustomProperties();
+            for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                Object expect = entry.getValue(), val = prop.get(entry.getKey());
+                if (expect instanceof String || expect instanceof Boolean) {
+                    assertEquals(expect, val);
+                } else if (expect instanceof Date) {
+                    assertEquals(((Date) expect).getTime() / 1000, ((Date) val).getTime() / 1000);
+                } else if (expect instanceof Short || expect instanceof Integer) {
+                    assertEquals(Integer.valueOf(expect.toString()), val);
+                } else if (expect instanceof Long) {
+                    assertEquals(expect, ((BigDecimal) val).longValue());
+                } else if (expect instanceof Float || expect instanceof Double) {
+                    assertEquals(expect, ((BigDecimal) val).doubleValue());
+                } else assertEquals(expect.toString(), val.toString());
+            }
+            assertEquals("abc", prop.get("追加属性"));
+        }
     }
 
     @TreeStyle
