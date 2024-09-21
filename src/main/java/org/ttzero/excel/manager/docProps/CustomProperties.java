@@ -168,6 +168,41 @@ public class CustomProperties extends XmlEntity {
     }
 
     /**
+     * Dom转Custom对象
+     *
+     * @param root dom树
+     * @return Custom对象
+     */
+    public static CustomProperties domToCustom(Element root) {
+        List<Element> list = root.elements();
+        if (list == null || list.isEmpty()) return null;
+        CustomProperties custom = new CustomProperties();
+        Element val;
+        List<Element> sub;
+        for (Element e : list) {
+            String key = e.attributeValue("name");
+            sub = e.elements();
+            if (sub != null && !sub.isEmpty()) {
+                val = sub.get(0);
+                String type = val.getName(), value = val.getText();
+                switch (type) {
+                    case "lpwstr": custom.properties.put(key, Tuple2.of(value, 0));                break;
+                    case "filetime": custom.properties.put(key, Tuple2.of(DateUtil.utcDateTimeFormat.get().parse(value, new ParsePosition(0)), 1)); break;
+                    case "i4":
+                    case "i2": custom.properties.put(key, Tuple2.of(Integer.parseInt(value), 2));  break;
+                    case "i8": custom.properties.put(key, Tuple2.of(Long.parseLong(value), 3));    break;
+                    case "r8":
+                    case "r4":
+                    case "ui8": custom.properties.put(key, Tuple2.of(new BigDecimal(value), 3));   break;
+                    case "bool": custom.properties.put(key, Tuple2.of(Boolean.valueOf(value), 4)); break;
+                    default: custom.properties.put(key, Tuple2.of(value, 0)); // Origin value
+                }
+            } else custom.properties.put(key, Tuple2.of(null, 0)); // Put a null value
+        }
+        return custom;
+    }
+
+    /**
      * 检查属性的合法性
      *
      * @param key 属性名
