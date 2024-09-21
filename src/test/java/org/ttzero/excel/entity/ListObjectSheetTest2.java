@@ -29,6 +29,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
@@ -52,11 +53,14 @@ import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -685,6 +689,46 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 bw.write("</row>");
             }
         })).writeTo(defaultTestPath.resolve("tree style.xlsx"));
+    }
+
+    @Test public void testCustomProperties() throws IOException {
+        Map<String, Object> properties = new LinkedHashMap<>();
+        properties.put("办公室", "24F");
+        properties.put("记录日期", new Timestamp(System.currentTimeMillis()));
+        properties.put("工作组", 9527);
+        properties.put("批复", true);
+        properties.put("工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工工", "1");
+        properties.put("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 2);
+        properties.put(" ", Integer.MAX_VALUE);
+        properties.put("short", (short) 12);
+        properties.put("long", System.currentTimeMillis());
+        properties.put("double", 124353.234354D);
+        properties.put("负数", -1234);
+        properties.put("负double", -1234.123445D);
+        new Workbook()
+            .markAsReadOnly()
+            .putCustomProperties(properties)     // <- 设置多组属性
+            .putCustomProperty("追加属性", "abc") // <- 设置单组属性
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve("custom property.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("custom property.xlsx"))) {
+            CustomProperties customProperties = reader.getCustomProperties();
+            for (Map.Entry<String, Object> entry : properties.entrySet()) {
+                Object expect = entry.getValue(), val = customProperties.get(entry.getKey());
+                if (expect instanceof String || expect instanceof Boolean) {
+                    assertEquals(expect, val);
+                } else if (expect instanceof Date) {
+                    assertEquals(((Date) expect).getTime() / 1000, ((Date) val).getTime() / 1000);
+                } else if (expect instanceof Short || expect instanceof Integer) {
+                    assertEquals(Integer.valueOf(expect.toString()), val);
+                } else if (expect instanceof Long) {
+                    assertEquals(expect, ((BigDecimal) val).longValue());
+                } else if (expect instanceof Float || expect instanceof Double) {
+                    assertEquals(expect, ((BigDecimal) val).doubleValue());
+                } else assertEquals(expect.toString(), val.toString());
+            }
+            assertEquals("abc", customProperties.get("追加属性"));
+        }
     }
 
     @TreeStyle

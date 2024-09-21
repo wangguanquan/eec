@@ -36,6 +36,7 @@ import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -824,5 +825,31 @@ public class ExcelReader implements Closeable {
         else if (path.startsWith("./") || path.startsWith(".\\")) i = 2;
         else if (path.charAt(0) == '/' || path.charAt(0) == '\\') i = 1;
         return i > 0 ? path.substring(i) : path;
+    }
+
+    /**
+     * 获取自定义属性
+     *
+     * <p>返回数据类型说明，时间返回{@code java.util.Date}，布尔值返回{@code Boolean}，
+     * 整数类型分情况返回{@code Integer}或{@code Long}，浮点数返回{@code BigDecimal}</p>
+     *
+     * @return 存在时返回键值对否则返回 {@code null}
+     */
+    public CustomProperties getCustomProperties() {
+        // Load custom.xml
+        SAXReader reader = SAXReader.createDefault();
+        ZipEntry entry = getEntry("docProps/custom.xml");
+        if (entry == null) return null;
+        Document document = null;
+        try {
+            document = reader.read(zipFile.getInputStream(entry));
+        } catch (DocumentException | IOException e) {
+            LOGGER.warn("The file format is incorrect or corrupted. [docProps/custom.xml]");
+        }
+        if (document == null) return null;
+        Element root = document.getRootElement();
+        List<Element> list = root.elements();
+        if (list == null || list.isEmpty()) return null;
+        return CustomProperties.domToCustom(root);
     }
 }

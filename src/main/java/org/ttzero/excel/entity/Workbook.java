@@ -23,6 +23,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -34,6 +35,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -157,6 +159,10 @@ public class Workbook implements Storable {
      * 全局多媒体记数器（当前仅支持图片）
      */
     private int mediaCounter;
+    /**
+     * 自定义属性
+     */
+    private CustomProperties customProperties;
 
     /**
      * 创建一个未命名工作薄
@@ -830,5 +836,64 @@ public class Workbook implements Storable {
      */
     public int getMediaCounter() {
         return mediaCounter;
+    }
+
+    /**
+     * 添加自定义属性，自定义属性可以从"信息"-&gt;"属性"-&gt;"自定义属性"查看
+     *
+     * <p>注意：只支持{@code "文本"}、{@code "数字"}、{@code "日期"}以及{@code "布尔值"}，其它数据类型将使用{@code toString}强转换为文本</p>
+     *
+     * @param key 属性名，不超过{@code 256}个字符
+     * @param value 属性值，
+     * @return 当前工作表
+     */
+    public Workbook putCustomProperty(String key, Object value) {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.put(key, value);
+        return this;
+    }
+
+    /**
+     * 添加自定义属性，自定义属性可以从"信息"-&gt;"属性"-&gt;"自定义属性"查看
+     *
+     * <p>注意：只支持{@code "文本"}、{@code "数字"}、{@code "日期"}以及{@code "布尔值"}，其它数据类型将使用{@code toString}强转换为文本</p>
+     *
+     * @param properties 批量属性
+     * @return 当前工作表
+     */
+    public Workbook putCustomProperties(Map<String, Object> properties) {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.putAll(properties);
+        return this;
+    }
+
+    /**
+     * 删除自定义属性
+     *
+     * @param key 指定属性名
+     * @return 如果属性存在则返回属性值否则返回 {@code null}
+     */
+    public Object removeCustomProperty(String key) {
+        return customProperties != null ? customProperties.remove(key) : null;
+    }
+
+    /**
+     * 获取自定义属性类
+     *
+     * @return {@code Custom}自定义属性类
+     */
+    public CustomProperties getCustomProperties() {
+        return customProperties;
+    }
+
+    /**
+     * 文档保护-标记只读
+     *
+     * @return 当前工作表
+     */
+    public Workbook markAsReadOnly() {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.markAsReadOnly();
+        return this;
     }
 }

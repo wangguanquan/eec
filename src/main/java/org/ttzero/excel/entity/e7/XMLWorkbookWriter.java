@@ -39,6 +39,7 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
@@ -140,7 +141,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager.add(rel);
     }
 
-    private void writeGlobalAttribute(Path root) throws IOException {
+    protected void writeGlobalAttribute(Path root) throws IOException {
 
         // Content type
         ContentType contentType = workbook.getContentType();
@@ -155,6 +156,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
         // Write core
         writeCore(root);
+
+        // Write custom properties
+        writeCustomProperties(root);
 
         Path themeP = root.resolve("theme");
         if (!exists(themeP)) {
@@ -224,7 +228,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    private void writeApp(Path root) throws IOException {
+    protected void writeApp(Path root) throws IOException {
 
         // docProps
         App app = new App();
@@ -254,7 +258,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             .addContentTypeRel(new Relationship("docProps/app.xml", Const.Relationship.APP));
     }
 
-    private void writeCore(Path root) throws IOException {
+    protected void writeCore(Path root) throws IOException {
         Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
         if (StringUtil.isEmpty(core.getCreator())) {
             if (workbook.getCreator() != null) {
@@ -272,7 +276,22 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             .addContentTypeRel(new Relationship("docProps/core.xml", Const.Relationship.CORE));
     }
 
-    private void writeSelf(Path root) throws IOException {
+    /**
+     * 写自定义属性
+     *
+     * @param root root路径
+     * @throws IOException If I/O error occur.
+     */
+    protected void writeCustomProperties(Path root) throws IOException {
+        CustomProperties custom = workbook.getCustomProperties();
+        if (custom != null && custom.hasProperty()) {
+            custom.writeTo(root.getParent().resolve("docProps/custom.xml"));
+            workbook.addContentType(new ContentType.Override(Const.ContentType.CUSTOM, "/docProps/custom.xml"))
+                .addContentTypeRel(new Relationship("docProps/custom.xml", Const.Relationship.CUSTOM));
+        }
+    }
+
+    protected void writeSelf(Path root) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
