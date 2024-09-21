@@ -41,6 +41,10 @@ import java.util.Map;
     , "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"}, value = "Properties")
 public class Custom extends XmlEntity {
     /**
+     * 自定义属性的GUID值{D5CDD505-2E9C-101B-9397-08002B2CF9AE}
+     */
+    public static final String FORMAT_ID = "{D5CDD505-2E9C-101B-9397-08002B2CF9AE}";
+    /**
      * 自定义属性
      * key: 属性名
      * value: v1: 属性值 v2: 值类型
@@ -109,10 +113,11 @@ public class Custom extends XmlEntity {
 
     @Override
     void toDom(Element root, Map<String, Namespace> namespaceMap) {
-        int id = 2;
+        int id = 2; // beginning pid
         Namespace vt = namespaceMap.get("vt");
         for (Map.Entry<String, Tuple2<Object, Integer>> entry : properties.entrySet()) {
-            Element property = root.addElement("property").addAttribute("pid", Integer.toString(id++)).addAttribute("name", entry.getKey());
+            Element property = root.addElement("property").addAttribute("fmtid", FORMAT_ID)
+                .addAttribute("pid", Integer.toString(id++)).addAttribute("name", entry.getKey());
             Tuple2<Object, Integer> val = entry.getValue();
             switch (val.v2) {
                 case 0: property.addElement(QName.get("lpwstr", vt)).addText(val.v1.toString());                   break;
