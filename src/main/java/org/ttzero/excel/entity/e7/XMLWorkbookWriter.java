@@ -39,7 +39,7 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.manager.docProps.Custom;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
@@ -157,8 +157,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // Write core
         writeCore(root);
 
-        // Write custom
-        writeCustom(root);
+        // Write custom properties
+        writeCustomProperties(root);
 
         Path themeP = root.resolve("theme");
         if (!exists(themeP)) {
@@ -282,8 +282,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      * @param root root路径
      * @throws IOException If I/O error occur.
      */
-    protected void writeCustom(Path root) throws IOException {
-        Custom custom = workbook.getCustom();
+    protected void writeCustomProperties(Path root) throws IOException {
+        CustomProperties custom = workbook.getCustomProperties();
         if (custom != null && custom.hasProperty()) {
             custom.writeTo(root.getParent().resolve("docProps/custom.xml"));
             workbook.addContentType(new ContentType.Override(Const.ContentType.CUSTOM, "/docProps/custom.xml"))

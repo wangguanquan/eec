@@ -23,7 +23,7 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.manager.docProps.Custom;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -163,7 +163,7 @@ public class Workbook implements Storable {
     /**
      * 自定义属性
      */
-    private Custom custom;
+    private CustomProperties customProperties;
 
     /**
      * 创建一个未命名工作薄
@@ -896,8 +896,8 @@ public class Workbook implements Storable {
      * @return 当前工作表
      */
     public Workbook putCustomProperty(String key, Object value) {
-        if (custom == null) custom = new Custom();
-        custom.put(key, value);
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.put(key, value);
         return this;
     }
 
@@ -910,8 +910,8 @@ public class Workbook implements Storable {
      * @return 当前工作表
      */
     public Workbook putCustomProperties(Map<String, Object> properties) {
-        if (custom == null) custom = new Custom();
-        custom.putAll(properties);
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.putAll(properties);
         return this;
     }
 
@@ -922,7 +922,7 @@ public class Workbook implements Storable {
      * @return 如果属性存在则返回属性值否则返回 {@code null}
      */
     public Object removeCustomProperty(String key) {
-        return custom != null ? custom.remove(key) : null;
+        return customProperties != null ? customProperties.remove(key) : null;
     }
 
     /**
@@ -930,7 +930,7 @@ public class Workbook implements Storable {
      *
      * @return {@code Custom}自定义属性类
      */
-    public Custom getCustom() {
-        return custom;
+    public CustomProperties getCustomProperties() {
+        return customProperties;
     }
 }

@@ -39,7 +39,7 @@ import java.util.Map;
  */
 @TopNS(prefix = {"", "vt"}, uri = {"http://schemas.openxmlformats.org/officeDocument/2006/custom-properties"
     , "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"}, value = "Properties")
-public class Custom extends XmlEntity {
+public class CustomProperties extends XmlEntity {
     /**
      * 自定义属性的GUID值{D5CDD505-2E9C-101B-9397-08002B2CF9AE}
      */
@@ -51,7 +51,7 @@ public class Custom extends XmlEntity {
      */
     private final Map<String, Tuple2<Object, Integer>> properties;
 
-    public Custom() {
+    public CustomProperties() {
         this.properties = new LinkedHashMap<>();
     }
 
