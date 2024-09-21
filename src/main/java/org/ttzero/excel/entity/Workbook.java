@@ -933,4 +933,15 @@ public class Workbook implements Storable {
     public CustomProperties getCustomProperties() {
         return customProperties;
     }
+
+    /**
+     * 文档保护-标记只读
+     *
+     * @return 当前工作表
+     */
+    public Workbook markAsReadOnly() {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.markAsReadOnly();
+        return this;
+    }
 }

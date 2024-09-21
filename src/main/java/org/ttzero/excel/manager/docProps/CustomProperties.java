@@ -24,9 +24,12 @@ import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
+import java.math.BigDecimal;
+import java.text.ParsePosition;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,6 +47,10 @@ public class CustomProperties extends XmlEntity {
      * 自定义属性的GUID值{D5CDD505-2E9C-101B-9397-08002B2CF9AE}
      */
     public static final String FORMAT_ID = "{D5CDD505-2E9C-101B-9397-08002B2CF9AE}";
+    /**
+     * 文档保护-只读标记
+     */
+    private static final String MARK_AS_READ_ONLY = "_MarkAsFinal";
     /**
      * 自定义属性
      * key: 属性名
@@ -79,6 +86,23 @@ public class CustomProperties extends XmlEntity {
     }
 
     /**
+     * 文档保护-只读标记
+     */
+    public void markAsReadOnly() {
+        properties.put(MARK_AS_READ_ONLY, Tuple2.of(true, 4));
+    }
+
+    /**
+     * 判断文档是否受为只读
+     *
+     * @return true: 工作表为只读
+     */
+    public boolean hasReadOnlyMark() {
+        Tuple2<Object, Integer> v = properties.remove(MARK_AS_READ_ONLY);
+        return v != null && (Boolean) v.v1;
+    }
+
+    /**
      * 移除指定属性
      *
      * @param key 指定需要移除的Key
@@ -94,12 +118,25 @@ public class CustomProperties extends XmlEntity {
      *
      * @return 自定义属性列表
      */
-    public Map<String, Object> getAllProperties() {
+    public Map<String, Object> getAll() {
         Map<String, Object> result = new HashMap<>(properties.size());
         for (Map.Entry<String, Tuple2<Object, Integer>> entry : properties.entrySet()) {
+            // Ignore build-in key
+            if (MARK_AS_READ_ONLY.equals(entry.getKey())) continue;
             result.put(entry.getKey(), entry.getValue().v1);
         }
         return result;
+    }
+
+    /**
+     * 获取自定义属性的值
+     *
+     * @param key 属性Key
+     * @return 如果Key存在则返回对应的值否则返回 {@code null}
+     */
+    public Object get(String key) {
+        Tuple2<Object, Integer> v = properties.get(key);
+        return v != null ? v.v1 : null;
     }
 
     /**

@@ -29,6 +29,7 @@ import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.processor.Converter;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Cell;
@@ -705,14 +706,15 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         properties.put("负数", -1234);
         properties.put("负double", -1234.123445D);
         new Workbook()
+            .markAsReadOnly()
             .putCustomProperties(properties)     // <- 设置多组属性
             .putCustomProperty("追加属性", "abc") // <- 设置单组属性
             .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve("custom property.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("custom property.xlsx"))) {
-            Map<String, Object> prop = reader.getCustomProperties();
+            CustomProperties customProperties = reader.getCustomProperties();
             for (Map.Entry<String, Object> entry : properties.entrySet()) {
-                Object expect = entry.getValue(), val = prop.get(entry.getKey());
+                Object expect = entry.getValue(), val = customProperties.get(entry.getKey());
                 if (expect instanceof String || expect instanceof Boolean) {
                     assertEquals(expect, val);
                 } else if (expect instanceof Date) {
@@ -725,7 +727,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     assertEquals(expect, ((BigDecimal) val).doubleValue());
                 } else assertEquals(expect.toString(), val.toString());
             }
-            assertEquals("abc", prop.get("追加属性"));
+            assertEquals("abc", customProperties.get("追加属性"));
         }
     }
 
