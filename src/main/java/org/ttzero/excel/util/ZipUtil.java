@@ -16,6 +16,8 @@
 
 package org.ttzero.excel.util;
 
+import org.ttzero.excel.manager.Const;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -40,7 +42,6 @@ import static org.ttzero.excel.util.FileUtil.exists;
  * @author guanquan.wang on 2017/10/13.
  */
 public class ZipUtil {
-    private static final String suffix = ".zip";
     /**
      * Compression level for middle compression.
      */
@@ -71,8 +72,8 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     public static Path zipExcludeRoot(Path destPath, Path... srcPath) throws IOException {
-        if (!destPath.toString().endsWith(suffix)) {
-            destPath = Paths.get(destPath.toString() + suffix);
+        if (!destPath.toString().endsWith(Const.Suffix.ZIP)) {
+            destPath = Paths.get(destPath.toString() + Const.Suffix.ZIP);
         }
         if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
