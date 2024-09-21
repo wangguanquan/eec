@@ -49,17 +49,21 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Spliterator;
@@ -845,5 +849,54 @@ public class ExcelReader implements Closeable {
         else if (path.startsWith("./") || path.startsWith(".\\")) i = 2;
         else if (path.charAt(0) == '/' || path.charAt(0) == '\\') i = 1;
         return i > 0 ? path.substring(i) : path;
+    }
+
+    /**
+     * 获取自定义属性
+     *
+     * <p>返回数据类型说明，时间返回{@code java.util.Date}，布尔值返回{@code Boolean}，
+     * 整数类型分情况返回{@code Integer}或{@code Long}，浮点数返回{@code BigDecimal}</p>
+     *
+     * @return 存在时返回键值对否则返回 {@code null}
+     */
+    public Map<String, Object> getCustomProperties() {
+        // Load custom.xml
+        SAXReader reader = SAXReader.createDefault();
+        ZipEntry entry = getEntry("docProps/custom.xml");
+        if (entry == null) return null;
+        Document document = null;
+        try {
+            document = reader.read(zipFile.getInputStream(entry));
+        } catch (DocumentException | IOException e) {
+            LOGGER.warn("The file format is incorrect or corrupted. [docProps/custom.xml]");
+        }
+        if (document == null) return null;
+        Element root = document.getRootElement();
+        List<Element> list = root.elements();
+        if (list == null || list.isEmpty()) return null;
+        Map<String, Object> properties = new HashMap<>(list.size());
+        Element val;
+        List<Element> sub;
+        for (Element e : list) {
+            String key = e.attributeValue("name");
+            sub = e.elements();
+            if (sub != null && !sub.isEmpty()) {
+                val = sub.get(0);
+                String type = val.getName(), value = val.getText();
+                switch (type) {
+                    case "lpwstr": properties.put(key, value); break;
+                    case "filetime": properties.put(key, DateUtil.utcDateTimeFormat.get().parse(value, new ParsePosition(0))); break;
+                    case "i4":
+                    case "i2": properties.put(key, Integer.parseInt(value)); break;
+                    case "i8": properties.put(key, Long.parseLong(value)); break;
+                    case "r8":
+                    case "r4":
+                    case "ui8": properties.put(key, new BigDecimal(value)); break;
+                    case "bool": properties.put(key, Boolean.valueOf(value)); break;
+                    default: properties.put(key, value); // Origin value
+                }
+            } else properties.put(key, null); // Put a null value
+        }
+        return properties;
     }
 }
