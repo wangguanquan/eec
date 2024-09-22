@@ -291,6 +291,12 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.19 (2024-09-22)
+-------------
+- 支持增加自定义属性
+- 支持设置“只读”标识，设置只读后打开Excel后无法编辑
+- 删除部分已标记为过时的方法
+
 Version 0.5.18 (2024-08-13)
 -------------
 - 增加CSVSheet的兼容性, Excel转CSV支持保存BOM
@@ -308,16 +314,10 @@ Version 0.5.16 (2024-06-29)
 - 输入转换Converter#reversion增加数据类型提升扩展性(#376) 
 - 修复读取自定义theme颜色会出现偏差的问题
 
-Version 0.5.15 (2024-05-21)
--------------
-- 修复onProgress出现越界问题
-- 修复data-supplier计算offset出现偏差使得导出数据缺失的问题
-- 删除部分已标记为过时的方法
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.18-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.19-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

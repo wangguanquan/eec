@@ -499,6 +499,7 @@ public class PictureTest extends WorkbookTest {
 
     static List<Path> getLocalImages() throws IOException {
         Path picturesPath = Paths.get(System.getProperty("user.home"), "Pictures");
+        if (!Files.exists(picturesPath)) return Collections.emptyList();
         return Files.list(picturesPath).filter(p -> {
             String name = p.getFileName().toString();
             return !Files.isDirectory(p) && (name.endsWith(".png")
