@@ -12,18 +12,23 @@ public class TypeCastException extends IllegalArgumentException {
     /**
      * 行号，从1开始
      */
-    int row;
+    public final int row;
 
     /**
      * 列号，从1开始，可通过{@link #toColumnLetter()}转为字母
      */
-    int col;
-
-    CellType from;
-
-    Class<?> to;
+    public final int col;
+    /**
+     * Excel单元格类型
+     */
+    public final CellType from;
+    /**
+     * 目标转换类型
+     */
+    public final Class<?> to;
 
     public TypeCastException(int row, int col, CellType from, Class<?> to) {
+        super("Can't cast " + from + "to " + to + " in cell '" + new String(int2Col(col)) + row + "'");
         this.row = row;
         this.col = col;
         this.from = from;
@@ -58,32 +63,16 @@ public class TypeCastException extends IllegalArgumentException {
         return row;
     }
 
-    public void setRow(int row) {
-        this.row = row;
-    }
-
     public int getCol() {
         return col;
-    }
-
-    public void setCol(int col) {
-        this.col = col;
     }
 
     public CellType getFrom() {
         return from;
     }
 
-    public void setFrom(CellType from) {
-        this.from = from;
-    }
-
     public Class<?> getTo() {
         return to;
-    }
-
-    public void setTo(Class<?> to) {
-        this.to = to;
     }
 
     public String toColumnLetter() {

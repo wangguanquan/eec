@@ -106,17 +106,6 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         cleanTmp(path);
     }
 
-    /**
-     * The Comma-Separated Values format do not support.
-     *
-     * @return the template path
-     * @throws UnsupportedOperationException not support
-     */
-    @Override
-    public Path template() {
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public void writeTo(Path root) throws IOException {
         Path path = createTemp();
@@ -205,7 +194,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     }
 
     @Override
-    public void close() throws IOException { }
+    public void close() { }
 
     /**
      * 设置字符集

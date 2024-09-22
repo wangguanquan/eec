@@ -23,18 +23,19 @@ import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
+import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -158,6 +159,10 @@ public class Workbook implements Storable {
      * 全局多媒体记数器（当前仅支持图片）
      */
     private int mediaCounter;
+    /**
+     * 自定义属性
+     */
+    private CustomProperties customProperties;
 
     /**
      * 创建一个未命名工作薄
@@ -729,53 +734,6 @@ public class Workbook implements Storable {
         }
     }
 
-    /////////////////////////////////模板，目前只实现简单模板///////////////////////////////////
-    /**
-     * 模板输入流
-     */
-    private InputStream is;
-    /**
-     * 替换对象
-     */
-    private Object o;
-
-    /**
-     * 获取模板输入流
-     *
-     * @return 模板的输入流
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public InputStream getTemplate() {
-        return is;
-    }
-
-    /**
-     * 获取绑定对象
-     *
-     * @return 绑定对象
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public Object getBind() {
-        return o;
-    }
-
-    /**
-     * 指定模板输入流并绑定替换对象
-     *
-     * @param is 模板输入流
-     * @param o  绑定替换对象
-     * @return 当前工作薄
-     * @deprecated 使用 {@link TemplateSheet}代替
-     */
-    @Deprecated
-    public Workbook withTemplate(InputStream is, Object o) {
-        this.is = is;
-        this.o = o;
-        return this;
-    }
-
     /**
      * 设置自定义工作薄输出协议
      *
@@ -878,5 +836,64 @@ public class Workbook implements Storable {
      */
     public int getMediaCounter() {
         return mediaCounter;
+    }
+
+    /**
+     * 添加自定义属性，自定义属性可以从"信息"-&gt;"属性"-&gt;"自定义属性"查看
+     *
+     * <p>注意：只支持{@code "文本"}、{@code "数字"}、{@code "日期"}以及{@code "布尔值"}，其它数据类型将使用{@code toString}强转换为文本</p>
+     *
+     * @param key 属性名，不超过{@code 256}个字符
+     * @param value 属性值，
+     * @return 当前工作表
+     */
+    public Workbook putCustomProperty(String key, Object value) {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.put(key, value);
+        return this;
+    }
+
+    /**
+     * 添加自定义属性，自定义属性可以从"信息"-&gt;"属性"-&gt;"自定义属性"查看
+     *
+     * <p>注意：只支持{@code "文本"}、{@code "数字"}、{@code "日期"}以及{@code "布尔值"}，其它数据类型将使用{@code toString}强转换为文本</p>
+     *
+     * @param properties 批量属性
+     * @return 当前工作表
+     */
+    public Workbook putCustomProperties(Map<String, Object> properties) {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.putAll(properties);
+        return this;
+    }
+
+    /**
+     * 删除自定义属性
+     *
+     * @param key 指定属性名
+     * @return 如果属性存在则返回属性值否则返回 {@code null}
+     */
+    public Object removeCustomProperty(String key) {
+        return customProperties != null ? customProperties.remove(key) : null;
+    }
+
+    /**
+     * 获取自定义属性类
+     *
+     * @return {@code Custom}自定义属性类
+     */
+    public CustomProperties getCustomProperties() {
+        return customProperties;
+    }
+
+    /**
+     * 文档保护-标记只读
+     *
+     * @return 当前工作表
+     */
+    public Workbook markAsReadOnly() {
+        if (customProperties == null) customProperties = new CustomProperties();
+        customProperties.markAsReadOnly();
+        return this;
     }
 }
