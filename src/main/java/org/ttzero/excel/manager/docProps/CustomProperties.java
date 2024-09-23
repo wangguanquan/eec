@@ -53,10 +53,8 @@ public class CustomProperties extends XmlEntity {
     private static final String MARK_AS_READ_ONLY = "_MarkAsFinal";
     /**
      * 自定义属性
-     * key: 属性名
-     * value: v1: 属性值 v2: 值类型
      */
-    private final Map<String, Tuple2<Object, Integer>> properties;
+    private final Map<String, Object> properties;
 
     public CustomProperties() {
         this.properties = new LinkedHashMap<>();
@@ -70,7 +68,7 @@ public class CustomProperties extends XmlEntity {
      */
     public void put(String key, Object value) {
         check(key, value);
-        properties.put(key, toProValue(value));
+        properties.put(key, value);
     }
 
     /**
@@ -81,7 +79,7 @@ public class CustomProperties extends XmlEntity {
     public void putAll(Map<String, Object> properties) {
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
             check(entry.getKey(), entry.getValue());
-            this.properties.put(entry.getKey(), toProValue(entry.getValue()));
+            this.properties.put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -89,7 +87,7 @@ public class CustomProperties extends XmlEntity {
      * 文档保护-只读标记
      */
     public void markAsReadOnly() {
-        properties.put(MARK_AS_READ_ONLY, Tuple2.of(true, 4));
+        properties.put(MARK_AS_READ_ONLY, true);
     }
 
     /**
@@ -98,8 +96,8 @@ public class CustomProperties extends XmlEntity {
      * @return true: 工作表为只读
      */
     public boolean hasReadOnlyMark() {
-        Tuple2<Object, Integer> v = properties.remove(MARK_AS_READ_ONLY);
-        return v != null && (Boolean) v.v1;
+        Object v = properties.get(MARK_AS_READ_ONLY);
+        return (v instanceof Boolean) && (Boolean) v;
     }
 
     /**
@@ -109,8 +107,7 @@ public class CustomProperties extends XmlEntity {
      * @return 如果Key存在则返回对应的值否则返回 {@code null}
      */
     public Object remove(String key) {
-        Tuple2<Object, Integer> v = properties.remove(key);
-        return v != null ? v.v1 : null;
+        return properties.remove(key);
     }
 
     /**
@@ -120,10 +117,10 @@ public class CustomProperties extends XmlEntity {
      */
     public Map<String, Object> getAll() {
         Map<String, Object> result = new HashMap<>(properties.size());
-        for (Map.Entry<String, Tuple2<Object, Integer>> entry : properties.entrySet()) {
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
             // Ignore build-in key
             if (MARK_AS_READ_ONLY.equals(entry.getKey())) continue;
-            result.put(entry.getKey(), entry.getValue().v1);
+            result.put(entry.getKey(), entry.getValue());
         }
         return result;
     }
@@ -135,8 +132,7 @@ public class CustomProperties extends XmlEntity {
      * @return 如果Key存在则返回对应的值否则返回 {@code null}
      */
     public Object get(String key) {
-        Tuple2<Object, Integer> v = properties.get(key);
-        return v != null ? v.v1 : null;
+        return properties.get(key);
     }
 
     /**
@@ -152,16 +148,16 @@ public class CustomProperties extends XmlEntity {
     void toDom(Element root, Map<String, Namespace> namespaceMap) {
         int id = 2; // beginning pid
         Namespace vt = namespaceMap.get("vt");
-        for (Map.Entry<String, Tuple2<Object, Integer>> entry : properties.entrySet()) {
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
             Element property = root.addElement("property").addAttribute("fmtid", FORMAT_ID)
                 .addAttribute("pid", Integer.toString(id++)).addAttribute("name", entry.getKey());
-            Tuple2<Object, Integer> val = entry.getValue();
-            switch (val.v2) {
-                case 0: property.addElement(QName.get("lpwstr", vt)).addText(val.v1.toString());                   break;
-                case 1: property.addElement(QName.get("filetime", vt)).addText(DateUtil.toTString((Date) val.v1)); break;
-                case 2: property.addElement(QName.get("i4", vt)).addText(val.v1.toString());                       break;
-                case 3: property.addElement(QName.get("r8", vt)).addText(val.v1.toString());                       break;
-                case 4: property.addElement(QName.get("bool", vt)).addText(val.v1.toString());                     break;
+            Object val = entry.getValue();
+            switch (testValueType(val)) {
+                case 0: property.addElement(QName.get("lpwstr", vt)).addText(val.toString());                   break;
+                case 1: property.addElement(QName.get("filetime", vt)).addText(DateUtil.toTString((Date) val)); break;
+                case 2: property.addElement(QName.get("i4", vt)).addText(val.toString());                       break;
+                case 3: property.addElement(QName.get("r8", vt)).addText(val.toString());                       break;
+                case 4: property.addElement(QName.get("bool", vt)).addText(val.toString());                     break;
                 default:
             }
         }
@@ -186,18 +182,18 @@ public class CustomProperties extends XmlEntity {
                 val = sub.get(0);
                 String type = val.getName(), value = val.getText();
                 switch (type) {
-                    case "lpwstr": custom.properties.put(key, Tuple2.of(value, 0));                break;
-                    case "filetime": custom.properties.put(key, Tuple2.of(DateUtil.utcDateTimeFormat.get().parse(value, new ParsePosition(0)), 1)); break;
+                    case "lpwstr": custom.properties.put(key, value);                break;
+                    case "filetime": custom.properties.put(key, DateUtil.utcDateTimeFormat.get().parse(value, new ParsePosition(0))); break;
                     case "i4":
-                    case "i2": custom.properties.put(key, Tuple2.of(Integer.parseInt(value), 2));  break;
-                    case "i8": custom.properties.put(key, Tuple2.of(Long.parseLong(value), 3));    break;
+                    case "i2": custom.properties.put(key, Integer.parseInt(value));  break;
+                    case "i8": custom.properties.put(key, Long.parseLong(value));    break;
                     case "r8":
                     case "r4":
-                    case "ui8": custom.properties.put(key, Tuple2.of(new BigDecimal(value), 3));   break;
-                    case "bool": custom.properties.put(key, Tuple2.of(Boolean.valueOf(value), 4)); break;
-                    default: custom.properties.put(key, Tuple2.of(value, 0)); // Origin value
+                    case "ui8": custom.properties.put(key, new BigDecimal(value));   break;
+                    case "bool": custom.properties.put(key, Boolean.valueOf(value)); break;
+                    default: custom.properties.put(key, value); // Origin value
                 }
-            } else custom.properties.put(key, Tuple2.of(null, 0)); // Put a null value
+            } else custom.properties.put(key, null); // Put a null value
         }
         return custom;
     }
@@ -218,12 +214,12 @@ public class CustomProperties extends XmlEntity {
     }
 
     /**
-     * 将属性值转换为可识别的结果
+     * 检查属性值的类型
      *
      * @param val 外部属性值
      * @return 内部属性值 v1: 原值 v2：类型
      */
-    protected static Tuple2<Object, Integer> toProValue(Object val) {
+    protected static int testValueType(Object val) {
         int t;
         if (val instanceof String) t = 0;
         else if (val instanceof Date) t = 1;
@@ -231,6 +227,6 @@ public class CustomProperties extends XmlEntity {
         else if (val instanceof Long || val instanceof Double || val instanceof Float) t = 3;
         else if (val instanceof Boolean) t = 4;
         else t = 0;
-        return Tuple2.of(val, t);
+        return t;
     }
 }
