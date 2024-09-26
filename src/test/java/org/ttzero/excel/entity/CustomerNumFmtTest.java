@@ -26,6 +26,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
+import org.ttzero.excel.util.FileUtil;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -41,6 +42,7 @@ import java.util.function.Supplier;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
@@ -199,6 +201,8 @@ public class CustomerNumFmtTest extends WorkbookTest {
     }
 
     @Test public void testNumFmtWidth() {
+        // 操作系统不同会计算出不同宽度
+        assumeTrue(FileUtil.isWindows());
         NumberFormat nf = NumberFormat.getInstance();
         nf.setGroupingUsed(false);
         nf.setMaximumFractionDigits(6);

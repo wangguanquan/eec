@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
@@ -71,7 +72,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Path).xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -91,7 +92,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (File).xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -118,7 +119,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Byte array).xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -147,7 +148,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Buffer).xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -175,7 +176,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (InputStream).xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -210,7 +211,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Sync download remote image.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -246,7 +247,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("sync download remote image use OkHttp.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -294,7 +295,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Async download remote image.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -314,7 +315,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture annotation.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i).pic);
@@ -342,7 +343,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i).pic);
@@ -407,7 +408,7 @@ public class PictureTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Preset Picture Effects.xlsx"))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list.size());
+            assertEquals(expectList.size(), list != null ? list.size() : 0);
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i).pic;
                 Drawings.Picture pic = list.get(i);
@@ -430,8 +431,7 @@ public class PictureTest extends WorkbookTest {
 
     @Test public void testExportPictureAutoSizePaging() throws IOException {
         List<Path> expectList = new ArrayList<>(256);
-        for (int i = 0; i < 5; i++)
-            expectList.addAll(getLocalImages());
+        for (int i = 0; i < 5; i++, expectList.addAll(getLocalImages()));
 
         IWorksheetWriter worksheetWriter;
         new Workbook()
@@ -446,21 +446,23 @@ public class PictureTest extends WorkbookTest {
 
         int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size paging.xlsx"))) {
-            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
+            if (expectList.size() > 0) {
+                assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
-            for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
-                List<Drawings.Picture> list = reader.sheet(i).listPictures();
-                if (i < len - 1) assertEquals(list.size(), rowLimit);
-                else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
-                for (int j = 0; j < list.size(); j++) {
-                    Path expectPath = expectList.get(a++);
-                    Drawings.Picture pic = list.get(j);
-                    // Check file size
-                    assertEquals(Files.size(expectPath), Files.size(pic.getLocalPath()));
-                    // Check CRC32
-                    assertEquals(crc32(expectPath), crc32(pic.getLocalPath()));
+                for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
+                    List<Drawings.Picture> list = reader.sheet(i).listPictures();
+                    if (i < len - 1) assertEquals(list.size(), rowLimit);
+                    else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                    for (int j = 0; j < list.size(); j++) {
+                        Path expectPath = expectList.get(a++);
+                        Drawings.Picture pic = list.get(j);
+                        // Check file size
+                        assertEquals(Files.size(expectPath), Files.size(pic.getLocalPath()));
+                        // Check CRC32
+                        assertEquals(crc32(expectPath), crc32(pic.getLocalPath()));
+                    }
                 }
-            }
+            } else assertNull(reader.listPictures());
         }
     }
 
