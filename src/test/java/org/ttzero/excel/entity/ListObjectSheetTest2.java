@@ -793,7 +793,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         rows.add(Arrays.asList(1, 2, 3, 4));
         rows.add(Arrays.asList(5, 6, 7, null, "字母", 9, 10));
         final String fileName = "list simple sheet.xlsx";
-        new Workbook().addSheet(new SimpleSheet<>().setData(rows)).writeTo(defaultTestPath.resolve(fileName));
+        new Workbook().addSheet(new SimpleSheet<>(rows)).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
@@ -818,7 +818,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         rows.add(Arrays.asList(5, 6, 7, null, "字母", 9, 10));
 
         final String fileName2 = "list simple sheet - first-row-as-header.xlsx";
-        new Workbook().addSheet(new SimpleSheet<>().firstRowAsHeader().setData(rows)).writeTo(defaultTestPath.resolve(fileName2));
+        new Workbook().addSheet(new SimpleSheet<>(rows).firstRowAsHeader()).writeTo(defaultTestPath.resolve(fileName2));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName2))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
@@ -851,7 +851,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         final String fileName3 = "list simple sheet - specify header.xlsx";
 
         new Workbook()
-            .addSheet(new SimpleSheet<>().setHeader(Arrays.asList("表头1", "表头2")).setData(rows))
+            .addSheet(new SimpleSheet<>(rows).setHeader(Arrays.asList("表头1", "表头2")))
             .writeTo(defaultTestPath.resolve(fileName3));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName3))) {
@@ -878,6 +878,22 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             row = iter.next();
             // 时间忽略毫秒值，所以这里特殊处理
             assertEquals(row.toString(), "5 | " + new Timestamp(now.getTime() / 1000 * 1000) + " | 7 | null | 字母 | 9 | 10.1243");
+        }
+    }
+
+    @Test public void testSimpleSheetPutObject() throws IOException {
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
+        final String fileName = "list simple sheet put objects.xlsx";
+        new Workbook().addSheet(new SimpleSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Student> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Student expect = expectList.get(i), e = list.get(i);
+                assertEquals(expect.getName(), e.getName());
+                assertEquals(expect.getScore(), e.getScore());
+            }
         }
     }
 
