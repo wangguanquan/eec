@@ -199,7 +199,7 @@ public class XMLDrawings implements Drawings {
         else relsKey = entry.getName();
         String key = relsKey + ".rels";
         ZipEntry entry1 = getEntry(zipFile, key);
-        if (entry1 == null) throw new ExcelReadException("The file format is incorrect or corrupted. [" + key + "]");
+        if (entry1 == null) return null; //throw new ExcelReadException("The file format is incorrect or corrupted. [" + key + "]");
         SAXReader reader = SAXReader.createDefault();
         Document document;
         try {
@@ -367,7 +367,7 @@ public class XMLDrawings implements Drawings {
             try {
                 excelReader.tempDir = FileUtil.mktmp("eec-");
             } catch (IOException e) {
-                throw new ExcelReadException("创建临时文件夹失败.", e);
+                throw new ExcelReadException("Create temp directory failed.", e);
             }
         }
         Map<String, Path> cellImageMapper = new HashMap<>(images.size());
