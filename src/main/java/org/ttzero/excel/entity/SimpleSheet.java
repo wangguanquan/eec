@@ -18,6 +18,7 @@
 package org.ttzero.excel.entity;
 
 import org.ttzero.excel.entity.style.NumFmt;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
 
 import java.lang.reflect.Array;
@@ -25,20 +26,22 @@ import java.util.List;
 
 /**
  * 简单工作表，它的简单之处在于只需要指定单元格的值即可输出，不需要再定义对象也不受&#x40;ExcelColumn注解影响
- * 例如{@code setData(Arrays.asList(1, 2, 3))}则会将数字{@code 1,2,3}输出到第一行的{@code A,B,C}三列。
+ * 例如{@code Arrays.asList(1, 2, 3)}则会将数字{@code 1,2,3}输出到第一行的{@code A,B,C}三列。
  *
- * <p>工作表支持传入{@code List}或{@code Array}，但两种类型不能掺杂使用，要么全是{@code List}
- * 要么全是{@code Array}，导出过程中并不会逐一判断泛型的实际类型，所以需要在外部做好约束。每一行的数组长度并不要求一致但最长不能超过Excel限制的长度</p>
+ * <p>简单工作表支持传入{@code List}或{@code Array}，但两种类型不能掺杂使用，要么全是{@code List}
+ * 要么全是{@code Array}，导出过程中并不会逐一判断泛型的实际类型，所以需要在外部做好约束。由于没有表头做为限制所以每一行的数组长度
+ * 并不要求一致数据类型也不要求一致但最长不能超过Excel限制的长度，除日期类型外每个单元格均保持"常规"格式，日期类型默认添加格式化。
+ * {@code SimpleSheet}继承于{@code ListSheet}如果传入数据为普通数组对象则将使用{@code ListSheet}进行处理。</p>
  *
- * <p>默认情况下简单工作表将忽略所有样式(包括表头样式)，如果需要样式则需要手动添加。
- * 简单工作表将所有数据都做为值输出表头需要手动指定，{@code SimpleSheet}提供简化的{@link #setHeader(List)}方法来指定表头，
- * 也可以使用{@link #firstRowAsHeader}方法将第一行数据做为表头，当指定表头时依然会保持通用样式。</p>
+ * <p>默认情况下简单工作表将忽略所有样式(包括表头样式)，样式和表头需要手动添加，{@code SimpleSheet}提供简化的
+ * {@link #setHeader(List)}方法来指定表头，也可以使用{@link #firstRowAsHeader}方法将第一行数据做为表头，
+ * 当指定表头时依然会保持通用样式。</p>
  *
  * <pre>
  * new Workbook()
- *     .addSheet(new SimpleSheet&lt;Object&gt;()
+ *     .addSheet(new SimpleSheet&lt;&gt;()
  *          // 设置两行数据
- *         .setData(Arrays.asList(new String[]{"a","b","c"}, new int[]{1,2,3,4,5}));
+ *         .setData(Arrays.asList(new String[]{"a","b","c"}, new int[]{1,2,3,4,5}))
  *     ).writeTo(Paths.get("f://abc.xlsx"));</pre>
  * @author guanquan.wang
  * @since 2024-09-24
@@ -57,6 +60,103 @@ public class SimpleSheet<T> extends ListSheet<T> {
      * 未实例化的列，可用于在写超出预知范围外的列
      */
     protected static final Column UNALLOCATED_COLUMN = new Column();
+    /**
+     * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
+     */
+    public SimpleSheet() { }
+    /**
+     * 实例化工作表并指定工作表名称
+     *
+     * @param name 工作表名称
+     */
+    public SimpleSheet(String name) {
+        super(name);
+    }
+    /**
+     * 实例化工作表并指定表头信息
+     *
+     * @param columns 表头信息
+     */
+    public SimpleSheet(Column... columns) {
+        super(columns);
+    }
+    /**
+     * 实例化工作表并指定工作表名称和表头信息
+     *
+     * @param name    工作表名称
+     * @param columns 表头信息
+     */
+    public SimpleSheet(String name, Column... columns) {
+        super(name, columns);
+    }
+    /**
+     * 实例化工作表并指定工作表名称，水印和表头信息
+     *
+     * @param name      工作表名称
+     * @param waterMark 水印
+     * @param columns   表头信息
+     */
+    public SimpleSheet(String name, WaterMark waterMark, Column... columns) {
+        super(name, waterMark, columns);
+    }
+    /**
+     * 实例化工作表并指定初始数据
+     *
+     * @param data 初始数据
+     */
+    public SimpleSheet(List<T> data) {
+        super(data);
+    }
+    /**
+     * 实例化工作表并指定工作表名称和初始数据
+     *
+     * @param name 工作表名称
+     * @param data 初始数据
+     */
+    public SimpleSheet(String name, List<T> data) {
+        super(name, data);
+    }
+    /**
+     * 实例化工作表并指定初始数据和表头
+     *
+     * @param data    初始数据
+     * @param columns 表头信息
+     */
+    public SimpleSheet(List<T> data, Column... columns) {
+        super(data, columns);
+    }
+    /**
+     * 实例化工作表并指定工作表名称、初始数据和表头
+     *
+     * @param name    工作表名称
+     * @param data    初始数据
+     * @param columns 表头信息
+     */
+    public SimpleSheet(String name, List<T> data, Column... columns) {
+        super(name, data, columns);
+    }
+    /**
+     * 实例化工作表并指定初始数据、水印和表头
+     *
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
+     */
+    public SimpleSheet(List<T> data, WaterMark waterMark, Column... columns) {
+        super(data, waterMark, columns);
+    }
+    /**
+     * 实例化工作表并指定工作表名称、初始数据、水印和表头
+     *
+     * @param name      工作表名称
+     * @param data      初始数据
+     * @param waterMark 水印
+     * @param columns   表头信息
+     */
+    public SimpleSheet(String name, List<T> data, WaterMark waterMark, Column... columns) {
+        super(name, data, waterMark, columns);
+    }
+
     /**
      * 设置表头信息
      *
@@ -165,36 +265,40 @@ public class SimpleSheet<T> extends ListSheet<T> {
                 Cell cell = cells[i];
                 cell.clear();
 
-                Object e;
+                Object e = null;
                 Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
-                if (column.isIgnoreValue() || isNull) e = null;
                 // 根据下标取数
-                else {
-                    switch (type) {
-                        case 1: e = sub.get(i);      break;
-                        case 2: e = Array.get(o, i); break;
-                        default: e = null;
-                    }
+                if (!column.isIgnoreValue()) {
+                    if (type == 1) e = sub.get(i);
+                    else e = Array.get(o, i);
                 }
-                column.clazz = null; // 无法确定纵向类型完全一至所以这里将缓存的类型清除
+                column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
                 cellValueAndStyle.reset(row, cell, e, column);
-                // FIXME 日期类目需要format
-                if (cell.t == Cell.DATETIME) {
-                    int style = workbook.getStyles().getStyleByIndex(cell.xf);
-                    style = workbook.getStyles().modifyNumFmt(style, NumFmt.DATETIME_FORMAT);
-                    cell.xf = workbook.getStyles().of(style);
-                } else if (cell.t == Cell.DATE) {
-                    int style = workbook.getStyles().getStyleByIndex(cell.xf);
-                    style = workbook.getStyles().modifyNumFmt(style, NumFmt.DATE_FORMAT);
-                    cell.xf = workbook.getStyles().of(style);
-                } else if (cell.t == Cell.TIME) {
-                    int style = workbook.getStyles().getStyleByIndex(cell.xf);
-                    style = workbook.getStyles().modifyNumFmt(style, NumFmt.TIME_FORMAT);
-                    cell.xf = workbook.getStyles().of(style);
+                // 日期类型添加默认format
+                if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
+                    datetimeCell(cell);
                 }
             }
             row.height = getRowHeight();
         }
+    }
+
+    /**
+     * 日期类型添加默认format
+     *
+     * @param cell 单元格
+     */
+    protected void datetimeCell(Cell cell) {
+        Styles styles = workbook.getStyles();
+        int style = styles.getStyleByIndex(cell.xf);
+        // 如果已有格式化则保留
+        if (Styles.hasNumFmt(style)) return;
+        switch (cell.t) {
+            case Cell.DATETIME: style = styles.modifyNumFmt(style, NumFmt.DATETIME_FORMAT); break;
+            case Cell.DATE    : style = styles.modifyNumFmt(style, NumFmt.DATE_FORMAT);     break;
+            case Cell.TIME    : style = styles.modifyNumFmt(style, NumFmt.TIME_FORMAT);     break;
+        }
+        cell.xf = styles.of(style);
     }
 
     /**
@@ -219,6 +323,6 @@ public class SimpleSheet<T> extends ListSheet<T> {
      */
     @Override
     public double getDefaultWidth() {
-        return 10.16D;
+        return type <= 2 ? 10.16D : super.getDefaultWidth();
     }
 }
