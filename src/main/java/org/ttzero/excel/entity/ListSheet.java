@@ -78,7 +78,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * <p>如上示例覆写{@link #more}方法获取切片数据，直到返回空数据或{@code null}为止,这样不至少将大量数据堆积到内存，
  * 输出协议使用{@link RowBlock}进行装填数据并落盘。{@code more}方法在{@code ListSheet}工作表是一定会被
  * 调用的即使初始化工作表传入了数据，工作表判断无需导出的情况除外，比如未指定表头且{@code Bean}对象无任何&#x40;ExcelColumn注释，
- * 此时效果等同于{@link EmptySheet}</p>
+ * 则会导出空工作表</p>
  *
  * <p>{@code ListSheet}使用{@link #getTClass}方法获取泛型的实际类型，内部优先使用{@link Class#getGenericSuperclass}方法获取，
  * 如果有子类指定{@code T}类型则可以获取到{@code T}的类型，否则将使用数组中第一条数据做为泛型的具体类型，

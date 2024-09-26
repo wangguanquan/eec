@@ -49,7 +49,7 @@ public class ValidationTest extends WorkbookTest {
 
         final String fileName = "Validation Test.xlsx";
         new Workbook()
-            .addSheet(new EmptySheet().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations))
+            .addSheet(new ListSheet<>().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations))
             .writeTo(defaultTestPath.resolve(fileName));
     }
 }

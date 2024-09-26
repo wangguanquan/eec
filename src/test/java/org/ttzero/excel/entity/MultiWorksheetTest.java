@@ -118,7 +118,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                         })
                 ))
                 // Empty
-                .addSheet(new EmptySheet("Empty"))
+                .addSheet(new ListSheet<>("Empty"))
                 // ResultSet
                 .addSheet(new ResultSetSheet("ResultSet", rs
                     , new Column("学号", int.class)

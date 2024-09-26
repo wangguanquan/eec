@@ -42,7 +42,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
     @Test public void testEmpty() throws IOException {
         String fileName = "test empty.xlsx";
         new Workbook()
-            .addSheet(new EmptySheet())
+            .addSheet(new ListSheet<>())
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -53,7 +53,7 @@ public class EmptySheetTest extends SQLWorkbookTest {
     @Test public void testEmptyWithHeader() throws IOException {
         String fileName = "test empty header.xlsx";
         new Workbook()
-            .addSheet(new EmptySheet("Empty"
+            .addSheet(new ListSheet<>("Empty"
                 , new Column("ID", Integer.class)
                 , new Column("NAME", String.class)
                 , new Column("AGE", Integer.class)

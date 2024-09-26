@@ -21,7 +21,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
-import org.ttzero.excel.entity.EmptySheet;
 import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.ListSheet;
@@ -235,7 +234,7 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testEmptyBindObj() throws IOException {
-        new Workbook().addSheet(new EmptySheet()).writeTo(defaultTestPath.resolve("empty.xlsx"));
+        new Workbook().addSheet(new ListSheet<>()).writeTo(defaultTestPath.resolve("empty.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("empty.xlsx"))) {
             Sheet sheet = reader.sheet(0);

@@ -95,7 +95,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @see ResultSetSheet
  * @see StatementSheet
  * @see CSVSheet
- * @see EmptySheet
+ * @see SimpleSheet
  */
 public abstract class Sheet implements Cloneable, Storable {
     /**
