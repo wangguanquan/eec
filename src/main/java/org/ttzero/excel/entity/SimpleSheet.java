@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
@@ -298,6 +299,7 @@ public class SimpleSheet<T> extends ListSheet<T> {
             case Cell.DATE    : style = styles.modifyNumFmt(style, NumFmt.DATE_FORMAT);     break;
             case Cell.TIME    : style = styles.modifyNumFmt(style, NumFmt.TIME_FORMAT);     break;
         }
+        if (!Styles.hasHorizontal(style)) style |= Horizontals.CENTER;
         cell.xf = styles.of(style);
     }
 
