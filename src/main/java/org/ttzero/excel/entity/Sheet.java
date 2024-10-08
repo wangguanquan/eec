@@ -228,7 +228,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
-    private BiConsumer<Sheet, Integer> progressConsumer;
+    protected BiConsumer<Sheet, Integer> progressConsumer;
     /**
      * 获取工作表ID，与当前工作表在工作薄中的下标一致，一般与其它资源关联使用
      *
