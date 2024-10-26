@@ -269,7 +269,7 @@ public class IndexSharedStringTable extends SharedStringTable {
     }
 
     /**
-     * Puts the main's position into index file if need.
+     * Puts the main's position into index file if needed.
      *
      * @throws IOException if I/O error occur
      */
@@ -283,7 +283,7 @@ public class IndexSharedStringTable extends SharedStringTable {
         // Cache position every 64 records
         if ((size & kSplit) == size) {
             /*
-            Flush buffer when it full. The type of position in
+            Flush buffer when it fulls. The type of position in
             channel is long, so here is compared with the length
             of the long(8 bytes in JAVA).
              */

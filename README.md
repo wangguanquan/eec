@@ -22,7 +22,7 @@ EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计
 - [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
-- [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
+- [SimpleSheet](./src/main/java/org/ttzero/excel/entity/SimpleSheet.java) // 简单工作表
 
 ## 主要功能
 
@@ -58,21 +58,37 @@ pom.xml添加
 ## 示例
 
 #### 1. 简单导出
-对象数组导出时可以在对象上使用注解`@ExcelColumn("列名")`来设置excel头部信息
+使用SimpleSheet简单工作表导出Excel可以不必定义对象或者Map且不包含任意单元格样式（除水平对齐外）
 
 ```java
-@ExcelColumn("渠道ID")
-private int channelId;
+// 准备导出数据
+List<Object> rows = new ArrayList<>();
+rows.add(new String[]{"列1", "列2", "列3"});
+rows.add(new int[] {1, 2, 3, 4});
+rows.add(new Object[] {5, new Date(), 7, null, "字母", 9, 10.1243});
 
-@ExcelColumn
-private String account;
+new Workbook()
+    .addSheet(new SimpleSheet<>(rows)) // 添加一个工作表
+    .writeTo(Paths.get("f:/excel")); // 导出到F:/excel目录下
 ```
 
-默认情况下导出的列顺序与字段在对象中的定义顺序一致，可以通过指定`colIndex`或指定Column数组来重置顺序。
+![simple_sheet](images/simple_sheet.png)
+
+#### 2. 对象导出
+对象数组是使用最广泛的工作表，导出时需要在对象的属性上添加注解`@ExcelColumn("列名")`来标识当前属性可被导出，默认情况下导出的列顺序与字段在对象中的定义顺序一致，可以通过指定`colIndex`来重置列顺序。
 
 ```java
-// 创建一个名为"test object"的excel文件
-new Workbook("test object")
+// 定义导出对象
+public class Student {
+    @ExcelColumn("学号")
+    private int id;
+
+    @ExcelColumn("姓名")
+    private String name;
+}
+
+// 创建一个名为"一年级学生表"的excel文件
+new Workbook("一年级学生表")
 
     // 添加"工作表"并指定导出数据，可以通过addSheet添加多个worksheet
     .addSheet(new ListSheet<>("学生信息", students))
@@ -81,7 +97,7 @@ new Workbook("test object")
     .writeTo(Paths.get("f:/excel"));
 ```
 
-#### 2. 动态样式
+#### 3. 动态样式
 
 动态样式和数据转换都是使用`@FunctionalInterface`实现，通常用于**突出或高亮**显示一些重要的单元格或行，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
 
@@ -96,18 +112,19 @@ new Workbook("2021小五班期未考试成绩")
     ).writeTo(Paths.get("f:/excel"));
 ```
 
-效果如下图
-
 ![期未成绩](images/dynamic_style.png)
 
-#### 3. 支持模板导出
+#### 4. 支持模板导出
 
-EEC支持xls和xlsx模板格式，使用模板工作表可以合并多个Excel文件，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
+EEC支持xls和xlsx模板格式，使用模板工作表可以**合并多个Excel文件**，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
+    
     // 复制[企业名片.xls]文件的[封面]工作表
     .addSheet(new TemplateSheet(Paths.get("./template/企业名片.xls", "封面"))
+    
+    // 复制[商品导入模板]的第一个工作表，并添加导出数据
     .addSheet(new TemplateSheet(Paths.get("./template/商品导入模板.xlsx"))
         .setData(Entity.mock()) // 设置对象 对应占位符${*}
         // 分片拉取数据 对应占位符${list.*}
@@ -115,7 +132,7 @@ new Workbook()
     ).writeTo(Paths.get("f:/excel"));
 ```
 
-#### 4. 自适应列宽更精准
+#### 5. 自适应列宽更精准
 
 ```java
 // 测试类
@@ -137,7 +154,7 @@ new Workbook("Auto Width Test")
 ```
 ![自动列宽](./images/auto_width.png)
 
-#### 5. 支持多级表头
+#### 6. 支持多级表头
 
 EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列将自动合并
 
@@ -171,19 +188,14 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 ```
 ![多行表头](./images/multi-headers.png)
 
-#### 6. 报表轻松制作
+#### 7. 报表轻松制作
 
 现在使用普通的ListSheet就可以导出漂亮的报表。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
-记帐类
-
 ![报表1](./images/report1.png)
-
-统计类
-
 ![报表2](images/report3.png)
 
-#### 7. 支持28种预设图片样式
+#### 8. 支持28种预设图片样式
 
 导出图片时添加内置样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
@@ -220,7 +232,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("./User.xlsx"))) {
 
 #### 3. 过滤和聚合
 
-EEC支持Stream的大部分功能，以下代码展示过滤平台为"iOS"的注册用户
+EEC支持Stream的大部分功能，以下代码使用`filter`来演示如何过滤平台为"iOS"的注册用户
 
 ```java
 reader.sheet(0).header(6)
@@ -233,7 +245,7 @@ reader.sheet(0).header(6)
 
 #### 4. 多级表头读取
 
-多级表头可以使用`header`方法来指定表头所在的多个行号
+多级表头可以使用`header`方法来指定表头所在的多个行号，表头将使用`:`拼接多个行单元格来组成一个聚合头
 
 ```java
 reader.sheet(0)
@@ -242,7 +254,7 @@ reader.sheet(0)
     .forEach(System.out::println)
 ```
 
-多级表头将以`A1:A2:A3`这种格式进行纵向拼接，像上面第4个示例中的运单数据读取结果将以`运单号`，`收件地址:省`，`收件地址:市`呈现，这样就可以解决出现两个`省`、`市`导致错乱的问题
+多级表头将以`A1:A2:A3`这种格式进行纵向拼接，读取第6个示例中的运单数据读取结果将以`运单号`，`收件地址:省`，`收件地址:市`呈现，这样就可以解决出现两个`省`、`市`导致错乱的问题
 
 更多关于多表头使用方法可以参考 [WIKI](https://github.com/wangguanquan/eec/wiki/%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4#%E8%AF%BB%E5%8F%96%E5%B8%A6%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%96%87%E4%BB%B6)
 
@@ -293,8 +305,8 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ## CHANGELOG
 Version 0.5.19 (2024-09-22)
 -------------
-- 支持增加自定义属性
-- 支持设置“只读”标识，设置只读后打开Excel后无法编辑
+- Workbook支持增加自定义属性
+- Workbook支持设置“只读”标识，设置只读后打开Excel后无法编辑
 - 删除部分已标记为过时的方法
 
 Version 0.5.18 (2024-08-13)

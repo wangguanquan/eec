@@ -464,7 +464,7 @@ public interface Grid {
                     tail = val;
                 }
             }
-            // Not Found, it never occur
+            // Not Found, it never occurs
             else return null;
 
             return val.entry;
