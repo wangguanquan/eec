@@ -67,8 +67,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      * LOGGER
      */
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    private Workbook workbook;
-    private final RelManager relManager;
+    protected Workbook workbook;
+    protected final RelManager relManager;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();
@@ -76,7 +76,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     public XMLWorkbookWriter(Workbook workbook) {
         this.workbook = workbook;
-        relManager = new RelManager();
+        this.relManager = new RelManager();
     }
 
     public Workbook getWorkbook() {
@@ -136,18 +136,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     // --- PRIVATE FUNCTIONS
 
-
-    private void addRel(Relationship rel) {
-        relManager.add(rel);
-    }
-
     protected void writeGlobalAttribute(Path root) throws IOException {
 
         // Content type
         ContentType contentType = workbook.getContentType();
         contentType.add(new ContentType.Default(Const.ContentType.RELATIONSHIP, "rels"));
         contentType.add(new ContentType.Default(Const.ContentType.XML, "xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.SHAREDSTRING, "/xl/sharedStrings.xml"));
         contentType.add(new ContentType.Override(Const.ContentType.WORKBOOK, "/xl/workbook.xml"));
         contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
 
@@ -172,38 +166,29 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } catch (IOException e) {
             // Nothing
         }
-        addRel(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
+        relManager.add(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
-
-        // style
-        addRel(new Relationship("styles.xml", Const.Relationship.STYLE));
-        contentType.add(new ContentType.Override(Const.ContentType.STYLE, "/xl/styles.xml"));
-
-        addRel(new Relationship("sharedStrings.xml", Const.Relationship.SHARED_STRING));
 
         WaterMark waterMark;
         if ((waterMark = workbook.getWaterMark()) != null && waterMark.canWrite()) {
             contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
         }
 
-        int size = workbook.getSize();
-        for (int i = 0; i < size; i++) {
-            Sheet sheet = workbook.getSheetAt(i);
-            contentType.add(new ContentType.Override(Const.ContentType.SHEET
-                , "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
-            Comments comments = sheet.getComments();
-            if (comments != null) {
-                comments.writeTo(root);
-                contentType.add(new ContentType.Override(Const.ContentType.COMMENTS
-                    , "/xl/comments" + sheet.getId() + Const.Suffix.XML));
-                contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
-            }
-            // Marker
-            WaterMark wm = sheet.getWaterMark();
-            if (wm != null && wm.canWrite()) {
-                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
-            }
-        } // END
+        // workbook.xml
+        writeWorkbook(root);
+
+        // styles
+        workbook.getStyles().writeTo(root.resolve("styles.xml"));
+        // style relationship
+        relManager.add(new Relationship("styles.xml", Const.Relationship.STYLE));
+        contentType.add(new ContentType.Override(Const.ContentType.STYLE, "/xl/styles.xml"));
+
+        // share string
+        try (SharedStrings sst = workbook.getSharedStrings()) {
+            sst.writeTo(root);
+        }
+        relManager.add(new Relationship("sharedStrings.xml", Const.Relationship.SHARED_STRING));
+        contentType.add(new ContentType.Override(Const.ContentType.SHAREDSTRING, "/xl/sharedStrings.xml"));
 
         // write content type
         contentType.writeTo(root.getParent());
@@ -215,17 +200,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         } else name = "workbook";
         // Relationship
         relManager.write(root, name + Const.Suffix.XML);
-
-        // workbook.xml
-        writeSelf(root);
-
-        // styles
-        workbook.getStyles().writeTo(root.resolve("styles.xml"));
-
-        // share string
-        try (SharedStrings sst = workbook.getSharedStrings()) {
-            sst.writeTo(root);
-        }
     }
 
     protected void writeApp(Path root) throws IOException {
@@ -249,7 +223,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         for (int i = 0; i < size; i++) {
             Sheet sheet = workbook.getSheetAt(i);
             titleParts.add(sheet.getName());
-            addRel(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
+            relManager.add(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
         }
         app.setTitlePards(titleParts);
 
@@ -291,7 +265,21 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
+    /**
+     * @deprecated Rename to {@link #writeWorkbook(Path)}
+     */
+    @Deprecated
     protected void writeSelf(Path root) throws IOException {
+        writeWorkbook(root);
+    }
+
+    /**
+     * 将工作簿写入到指定路径
+     *
+     * @param root 根目录路径
+     * @throws IOException 如果写入过程中发生I/O错误
+     */
+    protected void writeWorkbook(Path root) throws IOException {
         DocumentFactory factory = DocumentFactory.getInstance();
         //use the factory to create a root element
         Element rootElement = null;
@@ -334,12 +322,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheetInfo = workbook.getSheetAt(i);
             Element st = sheetEle.addElement("sheet")
-                .addAttribute("sheetId", String.valueOf(i + 1))
+                .addAttribute("sheetId", String.valueOf(sheetInfo.getId()))
                 .addAttribute("name", sheetInfo.getName());
             if (sheetInfo.isHidden()) {
                 st.addAttribute("state", "hidden");
             }
-            Relationship rs = relManager.getByTarget("worksheets/sheet" + (i + 1) + Const.Suffix.XML);
+            Relationship rs = relManager.getByTarget("worksheets/sheet" + sheetInfo.getId() + Const.Suffix.XML);
             if (rs != null) {
                 st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
             }
@@ -349,11 +337,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         FileUtil.writeToDiskNoFormat(doc, root.resolve(rootName + Const.Suffix.XML)); // write to desk
     }
 
-    //////////////////////////////////////////////////////
-    protected Path createTemp() throws IOException, ExcelWriteException {
-        Sheet[] sheets = workbook.getSheets();
-        for (int i = 0; i < sheets.length; i++) {
-            Sheet sheet = sheets[i];
+    protected void writeWorksheets(Path root) throws IOException {
+        LOGGER.debug("Start to write Sheet.");
+        ContentType contentType = workbook.getContentType();
+        for (int i = 0; i < workbook.getSize(); i++) {
+            Sheet sheet = workbook.getSheetAt(i);
             if (sheet.getSheetWriter() == null) {
                 IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
                 sheet.setSheetWriter(worksheetWriter);
@@ -372,7 +360,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             sheet.setId(i + 1);
             // default worksheet name
             if (StringUtil.isEmpty(sheet.getName())) {
-                sheet.setName("Sheet" + (i + 1));
+                sheet.setName("Sheet" + sheet.getId());
             }
             // Set cell value and style processor
             if (sheet.getCellValueAndStyle() == null) {
@@ -390,9 +378,33 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             if (workbook.getProgressConsumer() != null && sheet.getProgressConsumer() == null) {
                 sheet.onProgress(workbook.getProgressConsumer());
             }
-        }
-        LOGGER.debug("Sheet initialization completed.");
 
+            // Add content-type
+            contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
+
+            // Add comments
+            Comments comments = sheet.getComments();
+            if (comments != null) {
+                comments.writeTo(root);
+                contentType.add(new ContentType.Override(Const.ContentType.COMMENTS, "/xl/comments" + sheet.getId() + Const.Suffix.XML));
+                contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
+            }
+            // Add water marker
+            WaterMark wm = sheet.getWaterMark();
+            if (wm != null && wm.canWrite()) {
+                contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
+            }
+
+            try {
+                // Write to desk
+                sheet.writeTo(root);
+            } finally {
+                sheet.close();
+            }
+        }
+    }
+
+    protected Path createTemp() throws IOException, ExcelWriteException {
         Path root = null;
         try {
             root = FileUtil.mktmp(Const.EEC_PREFIX);
@@ -401,11 +413,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Path xl = Files.createDirectory(root.resolve("xl"));
 
             // Write worksheet data one by one
-            for (int i = 0; i < workbook.getSize(); i++) {
-                Sheet e = workbook.getSheetAt(i);
-                e.writeTo(xl);
-                e.close();
-            }
+            writeWorksheets(xl);
 
             // Write SharedString, Styles and workbook.xml
             writeGlobalAttribute(xl);
@@ -415,15 +423,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Path zipFile = ZipUtil.zipExcludeRoot(root, root);
             LOGGER.debug("Compression completed. {}", zipFile);
 
-            // Delete source files
-            FileUtil.rm_rf(root.toFile(), true);
-            LOGGER.debug("Clean up temporary files");
             return zipFile;
-        } catch (Exception e) {
+        } finally {
             // Remove temp path
             if (root != null) FileUtil.rm_rf(root);
-            workbook.getSharedStrings().close();
-            throw e;
         }
     }
 
@@ -444,6 +447,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 sheet.getWaterMark().delete();
         }
         if (workbook.getWaterMark() != null) workbook.getWaterMark().delete() ; // Delete template image
+        workbook.getSharedStrings().close();
     }
 
     // --- Customize worksheet writer
