@@ -17,21 +17,29 @@
 
 package org.ttzero.excel.entity;
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
+import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.reader.Row;
+import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
+import org.ttzero.excel.util.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -42,6 +50,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -397,6 +407,114 @@ public class TemplateSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve(fileName));
     }
 
+    @Ignore
+    @Test public void test1kSheet() throws IOException {
+        Workbook workbook = new Workbook();
+        for (int i = 0; i < 1000; i++) {
+            workbook.addSheet(new CleanTemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                .setData(YzEntity.mock())
+                .setData("YzEntity", YzOrderEntity.mock(1000)));
+        }
+        final String fileName = "template 1k sheets.xlsx";
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.all().length, 1000);
+            for (int i = 0; i < 1000; i++) {
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet(i);
+                assertEquals(sheet.rows().count(), 1010L);
+            }
+        }
+    }
+
+    @Ignore
+    @Test public void test1kSheet2() throws IOException {
+        final String fileName = "template 1k sheets.xlsx";
+        AtomicInteger counter = new AtomicInteger(0);
+        new Workbook().setWorkbookWriter(
+            new SupplierXMLWorkbookWriter(() -> counter.incrementAndGet() <= 1000 ?
+                new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                    .setData(YzEntity.mock())
+                    .setData("YzEntity", YzOrderEntity.mock(1000)) : null)
+        ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.all().length, 1000);
+            for (int i = 0; i < 1000; i++) {
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet(i);
+                assertEquals(sheet.rows().count(), 1010L);
+            }
+        }
+    }
+
+    public static class SupplierXMLWorkbookWriter extends XMLWorkbookWriter {
+        private final Supplier<Sheet> sheetSupplier;
+
+        public SupplierXMLWorkbookWriter(Supplier<Sheet> sheetSupplier) {
+            this.sheetSupplier = sheetSupplier;
+        }
+
+        @Override
+        protected Path createTemp() throws IOException, ExcelWriteException {
+            Workbook workbook = getWorkbook();
+            Path root = null;
+            try {
+                root = FileUtil.mktmp(Const.EEC_PREFIX);
+                Path xl = Files.createDirectory(root.resolve("xl"));
+
+                ICellValueAndStyle cvas = new XMLCellValueAndStyle();
+                // 在循环中创建sheet，创建好后就后就输出并回收
+                for (int i = 1; i < 50000; i++) { // 为了安全最多限制5万个sheet
+                    // 从supplier中获取sheet
+                    Sheet sheet = sheetSupplier.get();
+                    if (sheet == null) break;
+                    sheet.setId(i);
+                    if (StringUtil.isEmpty(sheet.getName())) {
+                        sheet.setName("Sheet" + i);
+                    }
+                    sheet.setWorkbook(workbook);
+                    sheet.setCellValueAndStyle(cvas);
+                    sheet.setSheetWriter(getWorksheetWriter(sheet));
+                    sheet.writeTo(xl);
+                    sheet.close();
+
+                    // 放入空的Sheet用于占位
+                    workbook.addSheet(new ListSheet<>(sheet.getName()).setId(sheet.getId()));
+                }
+
+                writeGlobalAttribute(xl);
+                Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+                FileUtil.rm_rf(root.toFile(), true);
+                return zipFile;
+            } catch (Exception e) {
+                if (root != null) FileUtil.rm_rf(root);
+                workbook.getSharedStrings().close();
+                throw e;
+            }
+        }
+    }
+
+    public static class CleanTemplateSheet extends TemplateSheet {
+        //  根据实际情况而定
+        public CleanTemplateSheet(Path templatePath, String originalSheetName) {
+            super(templatePath, originalSheetName);
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            styleMap = null;
+            preCells = null;
+
+            columns = null;
+            relManager = null;
+            rowBlock = null;
+            sheetWriter = null;
+            cellValueAndStyle = null;
+            extProp = null;
+        }
+    }
+
     static void assertListObject(FullSheet sheet, List<YzOrderEntity> expectList) {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
@@ -586,6 +704,25 @@ public class TemplateSheetTest extends WorkbookTest {
             e.taxAmount = e.amount * e.tax;
             e.remark = "备注";
             return e;
+        }
+
+        public static List<YzOrderEntity> mock(int len) {
+            List<YzOrderEntity> list = new ArrayList<>(len);
+            for (int i = 0; i < len; i++) {
+                YzOrderEntity e = new YzOrderEntity();
+                e.xh = i + 1;
+                e.jpCode = "code" + e.xh;
+                e.jpName = "name" + e.xh;
+                e.num = e.xh;
+                e.price = 3.5D * e.xh;
+                e.amount = e.price * e.num;
+                e.tax = 0.006;
+                e.taxPrice = e.price * (e.tax + 1);
+                e.taxAmount = e.amount * e.tax;
+                e.remark = "备注" + e.xh;
+                list.add(e);
+            }
+            return list;
         }
 
         public static List<YzOrderEntity> randomData() {

@@ -455,7 +455,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 o.nv = random.nextInt();
                  o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
                 o.sen = getRandomAssicString(20);
-                o.scn = "联想笔记本电脑拯救者R7000\n(标压6核 R5-5600H 16G 512G RTX3050\n 100%sRGB)黑";
+                o.scn = "张三11111222222北京朝阳区(可放快递柜❤)hello EEC";
                 list.add(o);
             }
             return list;
