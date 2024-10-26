@@ -284,16 +284,16 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         //use the factory to create a root element
         Element rootElement = null;
         //use the factory to create a new document with the previously created root element
-        boolean hasTopNs;
         String[] prefixs = null, uris = null;
         String rootName = null;
         TopNS topNs = getClass().getAnnotation(TopNS.class);
-        if (hasTopNs = getClass().isAnnotationPresent(TopNS.class)) {
+        boolean hasTopNs = (topNs != null);
+        if (hasTopNs) {
             prefixs = topNs.prefix();
             uris = topNs.uri();
             rootName = topNs.value();
             for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs[i].length() == 0) {
+                if (prefixs[i].isEmpty()) {
                     rootElement = factory.createElement(rootName, uris[i]);
                     break;
                 }
@@ -308,7 +308,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             }
         }
 
-        if (prefixs != null && prefixs.length > 0) {
+        if (prefixs.length > 0) {
             for (int i = 0; i < prefixs.length; i++) {
                 rootElement.add(Namespace.get(prefixs[i], uris[i]));
             }
@@ -342,25 +342,19 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         ContentType contentType = workbook.getContentType();
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            if (sheet.getSheetWriter() == null) {
-                IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
-                sheet.setSheetWriter(worksheetWriter);
-            }
-            if (sheet.getAutoSize() == 0) {
-                if (workbook.isAutoSize()) {
-                    sheet.autoSize();
-                } else {
-                    sheet.fixedSize();
-                }
-            }
-
-            if (workbook.getZebraFill() != null && sheet.getZebraFillStyle() < 0) {
-                sheet.setZebraLine(workbook.getZebraFill());
-            }
             sheet.setId(i + 1);
             // default worksheet name
             if (StringUtil.isEmpty(sheet.getName())) {
                 sheet.setName("Sheet" + sheet.getId());
+            }
+            if (sheet.getSheetWriter() == null) {
+                sheet.setSheetWriter(getWorksheetWriter(sheet));
+            }
+            if (workbook.isAutoSize() && sheet.getAutoSize() == 0) {
+                sheet.autoSize();
+            }
+            if (workbook.getZebraFill() != null && sheet.getZebraFillStyle() < 0) {
+                sheet.setZebraLine(workbook.getZebraFill());
             }
             // Set cell value and style processor
             if (sheet.getCellValueAndStyle() == null) {
