@@ -28,7 +28,7 @@ import java.util.function.Consumer;
  * @author guanquan.wang at 2018-10-31 16:06
  */
 public class FixSizeLRUCache<K, V> implements Cache<K, V> {
-    private static class E<K, V> implements Cache.Entry<K, V> {
+    protected static class E<K, V> implements Cache.Entry<K, V> {
         private final K k;
         private V v;
 
@@ -159,7 +159,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
         // Remove the keyword from the hash table to make them unsearchable
         table.remove(k);
 
-        if (table.size() == 0) {
+        if (table.isEmpty()) {
             clear();
             return o.data.v;
         }
@@ -208,7 +208,7 @@ public class FixSizeLRUCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * Removes all of the mappings from this cache (optional operation).
+     * Removes all the mappings from this cache (optional operation).
      * The cache will be empty after this call returns.
      */
     @Override

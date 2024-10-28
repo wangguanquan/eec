@@ -55,7 +55,7 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>> {
     V remove(K k);
 
     /**
-     * Removes all of the mappings from this cache (optional operation).
+     * Removes all the mappings from this cache (optional operation).
      * The cache will be empty after this call returns.
      */
     void clear();
