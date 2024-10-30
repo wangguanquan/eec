@@ -50,6 +50,16 @@ public class ReflectUtil {
      * List all declared fields that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
+     * @return all declared fields
+     */
+    public static Field[] listDeclaredFieldsUntilJavaPackage(Class<?> beanClass) {
+        return listDeclaredFieldsUntilJavaPackage(beanClass, Object.class);
+    }
+
+    /**
+     * List all declared fields that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
      * @param stopClass The base class at which to stop the analysis.  Any
      *                  methods/properties/events in the stopClass or in its base classes
      *                  will be ignored in the analysis.
@@ -79,11 +89,54 @@ public class ReflectUtil {
      * List all declared fields that contains all supper class
      *
      * @param beanClass The bean class to be analyzed.
+     * @param stopClass The base class at which to stop the analysis.  Any
+     *                  methods/properties/events in the stopClass or in its base classes
+     *                  will be ignored in the analysis.
+     * @return all declared fields
+     */
+    public static Field[] listDeclaredFieldsUntilJavaPackage(Class<?> beanClass, Class<?> stopClass) {
+        if (isJavaPackage(beanClass)) return new Field[0];
+        Field[] fields = beanClass.getDeclaredFields();
+        int i = fields.length, last = 0;
+        for (; (beanClass = beanClass.getSuperclass()) != stopClass && beanClass != null && !isJavaPackage(beanClass); ) {
+            Field[] subFields = beanClass.getDeclaredFields();
+            if (subFields.length > 0) {
+                if (subFields.length > last) {
+                    Field[] tmp = new Field[fields.length + subFields.length];
+                    System.arraycopy(fields, 0, tmp, 0, i);
+                    fields = tmp;
+                    last = tmp.length - i;
+                }
+                System.arraycopy(subFields, 0, fields, i, subFields.length);
+                i += subFields.length;
+                last -= subFields.length;
+            }
+        }
+        return fields;
+    }
+
+    /**
+     * List all declared fields that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
      * @param filter A field filter
      * @return all declared fields
      */
     public static Field[] listDeclaredFields(Class<?> beanClass, Predicate<Field> filter) {
         return listDeclaredFields(beanClass, Object.class, filter);
+    }
+
+    /**
+     * List all declared fields that contains all supper class
+     *
+     * @param beanClass The bean class to be analyzed.
+     * @param filter A field filter
+     * @return all declared fields
+     */
+    public static Field[] listDeclaredFieldsUntilJavaPackage(Class<?> beanClass, Predicate<Field> filter) {
+        Field[] fields = listDeclaredFieldsUntilJavaPackage(beanClass, Object.class);
+
+        return filter != null ? fieldFilter(fields, filter) : fields;
     }
 
     /**
@@ -434,5 +487,16 @@ public class ReflectUtil {
             }
         }
         return equals;
+    }
+
+    /**
+     * 判断一个类是否属于{@code java}或{@code JDK}包
+     *
+     * @param clazz 要检查的类对象
+     * @return {@code true}如果该类属于{@code java.*}或{@code jdk.*}包
+     */
+    public static boolean isJavaPackage(Class<?> clazz) {
+        String packageName = clazz.getPackage().getName();
+        return packageName.startsWith("java.") || packageName.startsWith("jdk.");
     }
 }

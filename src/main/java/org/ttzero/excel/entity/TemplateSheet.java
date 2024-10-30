@@ -62,7 +62,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
-import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 
 /**
@@ -1092,7 +1092,7 @@ public class TemplateSheet extends Sheet {
         try {
             tmp.putAll(readMethodsMap(clazz, Object.class));
 
-            Field[] declaredFields = listDeclaredFields(clazz);
+            Field[] declaredFields = listDeclaredFieldsUntilJavaPackage(clazz);
             for (Field f : declaredFields) {
                 if (!tmp.containsKey(f.getName())) {
                     f.setAccessible(true);

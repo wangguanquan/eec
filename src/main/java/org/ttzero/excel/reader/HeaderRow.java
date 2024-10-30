@@ -54,7 +54,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
 import static org.ttzero.excel.entity.Sheet.int2Col;
-import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.ReflectUtil.writeMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -181,7 +181,7 @@ public class HeaderRow extends Row {
     protected HeaderRow setClass(Class<?> clazz) {
         this.clazz = clazz;
         // Parse Field
-        Field[] declaredFields = listDeclaredFields(clazz, c -> !ignoreColumn(c));
+        Field[] declaredFields = listDeclaredFieldsUntilJavaPackage(clazz, c -> !ignoreColumn(c));
 
         // Parse Method
         Map<String, Method> tmp = new HashMap<>();
@@ -196,7 +196,7 @@ public class HeaderRow extends Row {
         ListSheet.EntryColumn column;
         for (int i = 0; i < declaredFields.length; i++) {
             Field f = declaredFields[i];
-            f.setAccessible(true);
+            if (!f.isAccessible()) f.setAccessible(true);
             String gs = f.getName();
 
             // The setter methods take precedence over property reflection

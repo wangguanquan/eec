@@ -51,7 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-import static org.ttzero.excel.util.ReflectUtil.listDeclaredFields;
+import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.listReadMethods;
 import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
@@ -397,7 +397,7 @@ public class ListSheet<T> extends Sheet {
                     EntryColumn column = (EntryColumn) columns[i];
                     /*
                     The default processing of null values still retains the row style.
-                    If don't want any style and value, you can change it to {@code continue}
+                    If you don't want any style and value, you can change it to {@code continue}
                      */
                     if (column.isIgnoreValue() || isNull)
                         e = null;
@@ -510,7 +510,7 @@ public class ListSheet<T> extends Sheet {
             LOGGER.warn("Get class {} methods failed.", clazz);
         }
 
-        Field[] declaredFields = listDeclaredFields(clazz, c -> !ignoreColumn(c));
+        Field[] declaredFields = listDeclaredFieldsUntilJavaPackage(clazz, c -> !ignoreColumn(c));
 
         boolean forceExport = this.forceExport == 1;
 
@@ -626,10 +626,8 @@ public class ListSheet<T> extends Sheet {
                 if (ec.method == null) {
                     Method method = tmp.get(hc.key);
                     if (method != null) {
-                        method.setAccessible(true);
                         ec.method = method;
                     } else if ((method = otherMap.get(hc.key)) != null) {
-                        method.setAccessible(true);
                         ec.method = method;
                     }
                 }
@@ -758,8 +756,8 @@ public class ListSheet<T> extends Sheet {
         // Converter
         if (!Converter.None.class.isAssignableFrom(ec.converter())) {
             try {
-                 column.setConverter(ec.converter().newInstance());
-            } catch (InstantiationException | IllegalAccessException e) {
+                 column.setConverter(ec.converter().getDeclaredConstructor().newInstance());
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 LOGGER.warn("Construct {} error occur, it will be ignore.", ec.converter(), e);
             }
         }
@@ -878,8 +876,8 @@ public class ListSheet<T> extends Sheet {
     protected StyleProcessor<?> getDesignStyle(StyleDesign styleDesign) {
         if (styleDesign != null && !StyleProcessor.None.class.isAssignableFrom(styleDesign.using())) {
             try {
-                return styleDesign.using().newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
+                return styleDesign.using().getDeclaredConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
                 LOGGER.warn("Construct {} error occur, it will be ignore.", styleDesign.using(), e);
             }
         }
@@ -1092,7 +1090,7 @@ public class ListSheet<T> extends Sheet {
      * 强制导出
      *
      * <p>为了保证数据安全默认情况下Java Bean只导出标记有&#x40;ExcelColumn的字段和方法，
-     * 但某些情况不方便修改实体此时可以使用强制导出功能将Bean中的全字段导出（标记有&#x40;IgnroeExport注解除外），
+     * 但某些情况不方便修改实体此时可以使用强制导出功能将Bean中的全字段导出（标记有&#x40;IgnoreExport注解除外），
      * 此方法可能会造成数据泄漏风险，可参考{@link ExcelColumn}注解说明</p>
      *
      * @return 当前工作表
