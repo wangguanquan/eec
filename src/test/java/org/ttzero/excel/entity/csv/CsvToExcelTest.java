@@ -201,8 +201,6 @@ public class CsvToExcelTest extends WorkbookTest {
             assertTrue(iter.hasNext());
             String[] readList = iter.next();
             assertArrayEquals(expectList, readList);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         // CSV to Excel
@@ -239,8 +237,6 @@ public class CsvToExcelTest extends WorkbookTest {
             assertTrue(iter.hasNext());
             String[] readList = iter.next();
             assertArrayEquals(expectList, readList);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         // CSV to Excel
@@ -277,8 +273,6 @@ public class CsvToExcelTest extends WorkbookTest {
             assertTrue(iter.hasNext());
             String[] readList = iter.next();
             assertArrayEquals(expectList, readList);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         // CSV to Excel

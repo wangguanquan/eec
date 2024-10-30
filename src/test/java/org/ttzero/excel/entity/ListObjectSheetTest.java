@@ -869,9 +869,10 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testIgnoreSupperMethod() throws IOException {
-        new Workbook("忽略父类属性", author)
+        new Workbook()
+            .setWaterMark(WaterMark.of(author))
             .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0))))
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("忽略父类属性.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("忽略父类属性.xlsx"))) {
             Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)

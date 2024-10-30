@@ -29,6 +29,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static org.junit.Assert.assertThrows;
+
 /**
  * @author guanquan.wang at 2019-04-28 21:50
  */
@@ -39,26 +41,22 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("result set")
+            new Workbook()
                 .addSheet(new ResultSetSheet(rs
                     , new Column("学号", int.class)
                     , new Column("性名", String.class)
                     , new Column("年龄", int.class)
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("result set.csv"));
         }
     }
 
-    @Test public void testConstructor1() throws IOException {
-        try {
-            new Workbook("test ResultSet sheet Constructor1")
-                .addSheet(new ResultSetSheet())
-                .saveAsCSV()
-                .writeTo(getOutputTestPath());
-        } catch (ExcelWriteException e) {
-            assert true;
-        }
+    @Test public void testConstructor1() {
+        assertThrows(ExcelWriteException.class, () -> new Workbook()
+            .addSheet(new ResultSetSheet())
+            .saveAsCSV()
+            .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor1.csv")));
     }
 
     @Test public void testConstructor2() throws SQLException, IOException {
@@ -67,10 +65,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor2")
+            new Workbook()
                 .addSheet(new ResultSetSheet().setResultSet(rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor2.csv"));
         }
     }
 
@@ -80,10 +78,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor3")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student").setResultSet(rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor3.csv"));
         }
     }
 
@@ -93,14 +91,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor4")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class))
                     .setResultSet(rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor4.csv"));
         }
     }
 
@@ -110,14 +108,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor5")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class))
                     .setResultSet(rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor5.csv"));
         }
     }
 
@@ -127,10 +125,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor6")
+            new Workbook()
                 .addSheet(new ResultSetSheet(rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor6.csv"));
         }
     }
 
@@ -140,10 +138,10 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor7")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student", rs))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor7.csv"));
         }
     }
 
@@ -153,14 +151,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor8")
+            new Workbook()
                 .addSheet(new ResultSetSheet(rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor8.csv"));
         }
     }
 
@@ -170,14 +168,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor9")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor9.csv"));
         }
     }
 
@@ -187,14 +185,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor10")
+            new Workbook()
                 .addSheet(new ResultSetSheet(rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor10.csv"));
         }
     }
 
@@ -204,14 +202,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet sheet Constructor11")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet sheet Constructor11.csv"));
         }
     }
 
@@ -221,16 +219,14 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             PreparedStatement ps = con.prepareStatement("select id, name, age from student limit 10");
             ResultSet rs = ps.executeQuery()
         ) {
-            new Workbook("test ResultSet different type from metadata")
+            new Workbook()
                 .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", String.class)  // Integer in database
                     , new Column("NAME", String.class)
                     , new Column("AGE", String.class) // // Integer in database
                 ))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("test ResultSet different type from metadata.csv"));
         }
     }
-
-
 }

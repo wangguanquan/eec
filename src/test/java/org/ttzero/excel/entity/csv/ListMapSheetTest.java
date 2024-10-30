@@ -45,22 +45,22 @@ import static org.ttzero.excel.entity.ListMapSheetTest.createTestData;
 public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testWrite() throws IOException {
-        new Workbook("test map")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createTestData()))
             .addSheet(new ListMapSheet<>(createTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test map.csv"));
     }
 
     @Test public void testAllType() throws IOException {
-        new Workbook("test all type map")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createAllTypeData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test all type map.csv"));
     }
 
     @Test public void testHeaderColumn() throws IOException {
-        new Workbook("test header column map")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createAllTypeData()
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
@@ -79,11 +79,11 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("LocalTime", "ltv", LocalTime.class)
             ))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test header column map.csv"));
     }
 
     @Test public void testHeaderColumnBox() throws IOException {
-        new Workbook("test header column box type map")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createAllTypeData()
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
@@ -93,25 +93,25 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("Double", "dv", Double.class)
             ))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test header column box type map.csv"));
     }
 
     @Test public void testConstructor1() throws IOException {
-        new Workbook("test list map sheet Constructor1")
+        new Workbook()
             .addSheet(new ListMapSheet<>())
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor1.csv"));
     }
 
     @Test public void testConstructor2() throws IOException {
-        new Workbook("test list map sheet Constructor2")
+        new Workbook()
             .addSheet(new ListMapSheet<>("Map").setData(createTestData(10)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor2.csv"));
     }
 
     @Test public void testConstructor3() throws IOException {
-        new Workbook("test list map sheet Constructor3")
+        new Workbook()
             .addSheet(new ListMapSheet<>("Map"
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
@@ -131,24 +131,24 @@ public class ListMapSheetTest extends WorkbookTest {
             )
                 .setData(createAllTypeData(10)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor3.csv"));
     }
 
     @Test public void testConstructor5() throws IOException {
-        new Workbook("test list map sheet Constructor5")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createAllTypeData(10)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor5.csv"));
     }
 
     @Test public void testConstructor6() throws IOException {
-        new Workbook("test list map sheet Constructor6")
+        new Workbook()
             .addSheet(new ListMapSheet<>("Map", createAllTypeData(10)))
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor6.csv"));
     }
 
     @Test public void testConstructor7() throws IOException {
-        new Workbook("test list map sheet Constructor7")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createAllTypeData(10)
                 , new Column("Character", "cv", Character.class)
                 , new Column("Short", "sv", Short.class)
@@ -157,35 +157,35 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("Float", "fv", Float.class)
                 , new Column("Double", "dv", Double.class)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor7.csv"));
     }
 
     @Test public void testConstructor8() throws IOException {
-        new Workbook("test list map sheet Constructor8")
+        new Workbook()
             .addSheet(new ListMapSheet<>("MAP", createTestData(10)
                 , new Column("ID", "id", int.class)
                 , new Column("NAME", "name", String.class)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor8.csv"));
     }
 
     @Test public void testConstructor9() throws IOException {
-        new Workbook("test list map sheet Constructor9")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createTestData(10)
                 , new Column("ID", "id")
                 , new Column("NAME", "name")))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor9.csv"));
     }
 
     @Test public void testConstructor10() throws IOException {
-        new Workbook("test list map sheet Constructor10")
+        new Workbook()
             .addSheet(new ListMapSheet<>("MAP"
                 , createTestData(10)
                 , new Column("ID", "id", int.class)
                 , new Column("NAME", "name", String.class)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test list map sheet Constructor10.csv"));
     }
 
     @Test public void testArray() throws IOException {
@@ -196,10 +196,10 @@ public class ListMapSheetTest extends WorkbookTest {
         Map<String, Object> data2 = new HashMap<>();
         data2.put("id", 2);
         data2.put("name", "xyz");
-        new Workbook("ListMapSheet array to csv")
+        new Workbook()
             .addSheet(new ListMapSheet<>().setData(Arrays.asList(data1, data2)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("ListMapSheet array to csv.csv"));
     }
 
     @Test public void testSingleList() throws IOException {
@@ -207,16 +207,16 @@ public class ListMapSheetTest extends WorkbookTest {
         data.put("id", 1);
         data.put("name", "abc");
 
-        new Workbook("ListMapSheet single list to csv")
+        new Workbook()
             .addSheet(new ListMapSheet<>().setData(Collections.singletonList(data)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("ListMapSheet single list to csv.csv"));
     }
 
     @Test public void testNullValue() throws IOException {
-        new Workbook("test map null value")
+        new Workbook()
             .addSheet(new ListMapSheet<>(createNullTestData(10)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test map null value.csv"));
     }
 }

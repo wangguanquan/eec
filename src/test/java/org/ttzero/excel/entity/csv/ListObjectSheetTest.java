@@ -16,7 +16,6 @@
 
 package org.ttzero.excel.entity.csv;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
@@ -26,6 +25,7 @@ import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.MultiHeaderColumnsTest;
 import org.ttzero.excel.entity.TooManyColumnsException;
+import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -42,15 +42,13 @@ import org.ttzero.excel.util.CSVUtil;
 import java.awt.Color;
 import java.io.IOException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.ttzero.excel.entity.ListObjectSheetTest.sp;
 import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
 
@@ -58,78 +56,54 @@ import static org.ttzero.excel.entity.ListObjectSheetTest.conversion;
  * @author guanquan.wang at 2019-04-28 19:17
  */
 public class ListObjectSheetTest extends WorkbookTest {
-
-    @BeforeClass
-    public static void setUp() {
-        // 删除之前的测试文件，防止重复执行不正确
-        List<String> randomExcelNameList = new ArrayList<>();
-        randomExcelNameList.add("testForceExportOnWorkSheet.csv");
-        randomExcelNameList.add("testForceExportOnWorkbook.csv");
-        randomExcelNameList.add("testForceExportOnWorkbook2Cancel1.xlsx");
-        for (String fileName : randomExcelNameList) {
-            Path resolve = defaultTestPath.resolve(fileName);
-            boolean deleted = false;
-            try {
-                deleted = Files.deleteIfExists(resolve);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (deleted) {
-                System.out.println(fileName + "File deleted successfully.");
-            } else {
-                System.out.println(fileName + "File deletion failed.");
-            }
-        }
-    }
-
     @Test public void testWrite() throws IOException {
-        new Workbook("test object")
+        new Workbook()
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test object.csv"));
     }
 
     @Test public void testAllTypeWrite() throws IOException {
-        new Workbook("all type object")
+        new Workbook()
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("all type object.csv"));
     }
 
     @Test public void testAnnotation() throws IOException {
-        new Workbook("annotation object")
+        new Workbook()
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("annotation object.csv"));
     }
 
     @Test public void testAnnotationAutoSize() throws IOException {
-        new Workbook("annotation object auto-size")
+        new Workbook()
             .addSheet(new ListSheet<>(Student.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("annotation object auto-size.csv"));
     }
 
     @Test public void testAutoSize() throws IOException {
-        new Workbook("all type auto size")
+        new Workbook()
             .addSheet(new ListSheet<>(AllType.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("all type auto size.csv"));
     }
 
     @Test public void testIntConversion() throws IOException {
-        new Workbook("test int conversion")
+        new Workbook()
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
                 , new Column("成绩", "score", n -> (int) n < 60 ? "不合格" : n)
             ))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test int conversion.csv"));
     }
 
     @Test public void testStyleConversion() throws IOException {
-        new Workbook("object style processor")
+        new Workbook()
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -142,11 +116,11 @@ public class ListObjectSheetTest extends WorkbookTest {
                     })
             ))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("object style processor.csv"));
     }
 
     @Test public void testConvertAndStyleConversion() throws IOException {
-        new Workbook("object style and style processor")
+        new Workbook()
             .addSheet(new ListSheet<>(Student.randomTestData()
                 , new Column("学号", "id")
                 , new Column("姓名", "name")
@@ -159,42 +133,43 @@ public class ListObjectSheetTest extends WorkbookTest {
                     })
             ))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("object style and style processor.csv"));
     }
 
     @Test public void testCustomizeDataSource() throws IOException {
-        new Workbook("customize datasource")
+        new Workbook()
             .addSheet(new CustomizeDataSourceSheet())
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("customize datasource.csv"));
     }
 
     @Test public void testBoxAllTypeWrite() throws IOException {
-        new Workbook("box all type object")
+        new Workbook()
             .addSheet(new ListSheet<>(BoxAllType.randomTestData()))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("box all type object.csv"));
     }
 
     @Test public void testArray() throws IOException {
-        new Workbook("ListObjectSheet array to csv")
+        new Workbook()
             .addSheet(new ListSheet<>()
                 .setData(Arrays.asList(new Item(1, "abc"), new Item(2, "xyz"))))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("ListObjectSheet array to csv.csv"));
     }
 
     @Test public void testSingleList() throws IOException {
-        new Workbook("ListObject single list to csv")
+        new Workbook()
             .addSheet(new ListSheet<>()
                 .setData(Collections.singletonList(new Item(1, "a b c"))))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("ListObject single list to csv.csv"));
     }
 
     @Test
     public void testStyleConversion1() throws IOException {
-        new Workbook("object style processor1", author)
+        new Workbook()
+            .setWaterMark(WaterMark.of(author))
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Column("学号", "id")
                     , new Column("姓名", "name")
@@ -203,34 +178,30 @@ public class ListObjectSheetTest extends WorkbookTest {
                 )
             )
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("object style processor1.csv"));
     }
 
     @Test public void testNullValue() throws IOException {
-        new Workbook("test null value")
+        new Workbook()
             .addSheet(new ListSheet<>("EXT-ITEM", ExtItem.randomTestData(10)))
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test null value.csv"));
     }
 
     @Test public void testFieldUnDeclare() throws IOException {
-        try {
-            new Workbook("field un-declare")
-                .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
-                        , new Column("学号", "id")
-                        , new Column("姓名", "name")
-                        , new Column("成绩", "sore") // un-declare field
-                    )
+        new Workbook()
+            .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
+                    , new Column("学号", "id")
+                    , new Column("姓名", "name")
+                    , new Column("成绩", "sore") // un-declare field
                 )
-                .saveAsCSV()
-                .writeTo(getOutputTestPath());
-        } catch (ExcelWriteException e) {
-            assert true;
-        }
+            )
+            .saveAsCSV()
+            .writeTo(getOutputTestPath().resolve("field un-declare.csv"));
     }
 
     @Test public void testResetMethod() throws IOException {
-        new Workbook("重写期末成绩")
+        new Workbook()
             .addSheet(new ListSheet<Student>("重写期末成绩", Collections.singletonList(new Student(9527, author, 0) {
                     @Override
                     public int getScore() {
@@ -239,11 +210,11 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }))
             )
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("重写期末成绩.csv"));
     }
 
     @Test public void testMethodAnnotation() throws IOException {
-        new Workbook("重写方法注解")
+        new Workbook()
             .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new Student(9527, author, 0) {
                 @Override
                 @ExcelColumn("ID")
@@ -259,14 +230,14 @@ public class ListObjectSheetTest extends WorkbookTest {
             }))
             )
             .saveAsCSV()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("重写方法注解.csv"));
     }
 
     @Test public void testNoForceExport() throws IOException {
-        new Workbook("testNoForceExport")
+        new Workbook()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData()))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testNoForceExport.csv"));
 
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testNoForceExport.csv"))) {
             assertEquals(reader.stream().count(), 0L);
@@ -275,11 +246,11 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkbook() throws IOException {
         int lines = random.nextInt(100) + 3;
-        new Workbook("testForceExportOnWorkbook")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testForceExportOnWorkbook.csv"));
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkbook.csv"))) {
             assertEquals(reader.stream().count(), lines + 1);
         }
@@ -287,10 +258,10 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkSheet() throws IOException {
         int lines = random.nextInt(100) + 3;
-        new Workbook("testForceExportOnWorkSheet")
+        new Workbook()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).forceExport())
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testForceExportOnWorkSheet.csv"));
         try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("testForceExportOnWorkSheet.csv"))) {
             assertEquals(reader.stream().count(), lines + 1);
         }
@@ -298,85 +269,81 @@ public class ListObjectSheetTest extends WorkbookTest {
 
     @Test public void testForceExportOnWorkbook2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)))
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testForceExportOnWorkbook2.csv"));
     }
 
     @Test public void testForceExportOnWorkbook2Cancel1() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2Cancel1")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)))
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testForceExportOnWorkbook2Cancel1.csv"));
     }
 
     @Test public void testForceExportOnWorkbook2Cancel2() throws IOException {
         int lines = random.nextInt(100) + 3, lines2 = random.nextInt(100) + 4;
-        new Workbook("testForceExportOnWorkbook2Cancel2")
+        new Workbook()
                 .forceExport()
                 .addSheet(new ListSheet<>(NoColumnAnnotation.randomTestData(lines)).cancelForceExport())
                 .addSheet(new ListSheet<>(NoColumnAnnotation2.randomTestData(lines2)).cancelForceExport())
                 .saveAsCSV()
-                .writeTo(getOutputTestPath());
+                .writeTo(getOutputTestPath().resolve("testForceExportOnWorkbook2Cancel2.csv"));
     }
 
     @Test public void testOrderColumn() throws IOException {
-        new Workbook(("Order column"))
+        new Workbook()
                 .addSheet(new ListSheet<>(CustomColIndexTest.OrderEntry.randomTestData()))
                 .saveAsCSV()
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("Order column.csv"));
     }
 
     @Test public void testSameOrderColumn() throws IOException {
-        new Workbook(("Same order column"))
+        new Workbook()
                 .addSheet(new ListSheet<>(CustomColIndexTest.SameOrderEntry.randomTestData()))
                 .saveAsCSV()
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("Same order column.csv"));
     }
 
     @Test public void testFractureOrderColumn() throws IOException {
-        new Workbook(("Fracture order column"))
+        new Workbook()
                 .addSheet(new ListSheet<>(CustomColIndexTest.FractureOrderEntry.randomTestData()))
                 .saveAsCSV()
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("Fracture order column.csv"));
     }
 
     @Test public void testLargeOrderColumn() throws IOException {
-        new Workbook(("Large order column"))
+        new Workbook()
                 .addSheet(new ListSheet<>(CustomColIndexTest.LargeOrderEntry.randomTestData()))
                 .saveAsCSV()
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath.resolve("Large order column.csv"));
     }
 
-    @Test public void testOverLargeOrderColumn() throws IOException {
-        try {
-            new Workbook(("Over Large order column"))
-                    .addSheet(new ListSheet<>(CustomColIndexTest.OverLargeOrderEntry.randomTestData()))
-                    .saveAsCSV()
-                    .writeTo(defaultTestPath);
-        } catch (TooManyColumnsException e) {
-            assert true;
-        }
+    @Test public void testOverLargeOrderColumn() {
+       assertThrows(TooManyColumnsException.class, () -> new Workbook(("Over Large order column"))
+           .addSheet(new ListSheet<>(CustomColIndexTest.OverLargeOrderEntry.randomTestData()))
+           .saveAsCSV()
+           .writeTo(defaultTestPath));
     }
 
     @Test public void testRepeatAnnotations() throws IOException {
         List<MultiHeaderColumnsTest.RepeatableEntry> list = MultiHeaderColumnsTest.RepeatableEntry.randomTestData();
-        new Workbook("Repeat Columns Annotation")
+        new Workbook()
             .addSheet(new ListSheet<>(list))
             .saveAsCSV()
-            .writeTo(defaultTestPath);
+            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.csv"));
     }
 
     @Test public void testWriteWithBom() throws IOException {
-        new Workbook("test object with utf8 bom")
+        new Workbook()
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSVWithBom()
-            .writeTo(getOutputTestPath());
+            .writeTo(getOutputTestPath().resolve("test object with utf8 bom.csv"));
     }
 }

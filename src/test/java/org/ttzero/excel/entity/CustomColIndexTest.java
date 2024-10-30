@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -140,8 +141,8 @@ public class CustomColIndexTest extends WorkbookTest {
         }
     }
 
-    @Test(expected = TooManyColumnsException.class) public void testOverLargeOrderColumn() throws IOException {
-        new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath);
+    @Test public void testOverLargeOrderColumn() {
+        assertThrows(TooManyColumnsException.class, () -> new Workbook(("Over Large order column")).addSheet(new ListSheet<>(OverLargeOrderEntry.randomTestData())).writeTo(defaultTestPath));
     }
 
     @Test public void testOrderColumnSpecifyOnColumn() throws IOException {

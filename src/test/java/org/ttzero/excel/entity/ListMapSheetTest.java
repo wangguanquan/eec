@@ -71,6 +71,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -669,13 +670,15 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
-    @Test(expected = TooManyColumnsException.class) public void testOverLargeOrderColumn() throws IOException {
-        new Workbook("test list map sheet Constructor8", author)
+    @Test public void testOverLargeOrderColumn() {
+        assertThrows(TooManyColumnsException.class, () ->
+            new Workbook("test list map sheet Constructor8", author)
                 .setAutoSize(true)
                 .addSheet(new ListMapSheet<>("MAP", createTestData(10)
-                        , new Column("ID", "id", int.class).setColIndex(9999999)
-                        , new Column("NAME", "name", String.class)))
-                .writeTo(defaultTestPath);
+                    , new Column("ID", "id", int.class).setColIndex(9999999)
+                    , new Column("NAME", "name", String.class)))
+                .writeTo(defaultTestPath)
+        );
     }
 
     @Test public void test257() throws IOException {
