@@ -306,7 +306,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 Version 0.5.19 (2024-09-22)
 -------------
 - Workbook支持增加自定义属性
-- Workbook支持设置“只读”标识，设置只读后打开Excel后无法编辑
+- Workbook支持设置"只读"标识，设置只读后打开Excel后无法编辑
 - 删除部分已标记为过时的方法
 
 Version 0.5.18 (2024-08-13)
