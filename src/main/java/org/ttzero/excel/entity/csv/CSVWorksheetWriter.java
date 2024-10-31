@@ -61,6 +61,8 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     // Charset 默认UTF-8
     protected Charset charset;
 
+    public CSVWorksheetWriter() {}
+
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
     }
