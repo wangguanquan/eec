@@ -961,7 +961,7 @@ class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
             if (mergeCells != null && !mergeCells.isEmpty()) {
                 this.mergeGrid = GridFactory.create(mergeCells);
                 this.mergeCells = mergeCells;
-                LOGGER.debug("Grid: {} ===> Size: {}", mergeCells.getClass(), mergeCells.size());
+                LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass().getSimpleName(), mergeGrid.size());
             } else {
                 this.mergeGrid = new Grid.FastGrid(Dimension.of("A1"));
                 this.mergeCells = Collections.emptyList();
@@ -1199,7 +1199,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
         List<Dimension> dims = getMergeCells();
         if (dims != null) {
             mergeGrid = GridFactory.create(dims);
-            LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass(), mergeGrid.size());
+            LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass().getSimpleName(), mergeGrid.size());
         }
         return mergeGrid;
     }
