@@ -22,6 +22,7 @@ EEC是*线程不安全*的它不支持多线程读写，同时其为流式设计
 - [StatementSheet](./src/main/java/org/ttzero/excel/entity/StatementSheet.java) // PreparedStatement
 - [ResultSetSheet](./src/main/java/org/ttzero/excel/entity/ResultSetSheet.java) // ResultSet支持(多用于存储过程)
 - [CSVSheet](./src/main/java/org/ttzero/excel/entity/CSVSheet.java) // 支持csv与xlsx互转
+- [EmptySheet](./src/main/java/org/ttzero/excel/entity/EmptySheet.java) // 空worksheet
 - [SimpleSheet](./src/main/java/org/ttzero/excel/entity/SimpleSheet.java) // 简单工作表
 
 ## 主要功能
@@ -58,7 +59,7 @@ pom.xml添加
 ## 示例
 
 #### 1. 简单导出
-使用SimpleSheet简单工作表导出Excel可以不必定义对象或者Map且不包含任意单元格样式（除水平对齐外）
+使用SimpleSheet简单工作表导出Excel可以不必定义对象或者Map，直接添加单元格的值即可导出。
 
 ```java
 // 准备导出数据
@@ -303,6 +304,11 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.20
+-------------
+- 修改部分语法提升对OpenJDK8-21的兼容性
+- 新增SimpleSheet简单工作表，简化导出的数据格式
+
 Version 0.5.19 (2024-09-22)
 -------------
 - Workbook支持增加自定义属性

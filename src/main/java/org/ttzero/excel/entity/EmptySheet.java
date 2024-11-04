@@ -20,9 +20,7 @@ package org.ttzero.excel.entity;
  * 空工作表，可用于占位，如果指定表头则会输出表头
  *
  * @author guanquan.wang at 2018-01-29 16:05
- * @deprecated 应用范围极少将在随后版本中删除，可以使用{@code new ListSheet()}替代
  */
-@Deprecated
 public class EmptySheet extends Sheet {
 
     /**
