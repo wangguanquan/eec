@@ -75,7 +75,7 @@ public class ExcelReaderTest {
         File[] files = testResourceRoot().toFile().listFiles((dir, name) -> name.endsWith(".xlsx"));
         if (files != null) {
             for (File file : files) {
-                testReader(file.toPath());
+                testReader(file.toPath(), 0);
             }
         }
     }
@@ -490,10 +490,6 @@ public class ExcelReaderTest {
         }
     }
 
-    private void testReader(Path path) throws IOException {
-        testReader(path, 0);
-    }
-
     private void testReader(Path path, int option) throws IOException {
         try (ExcelReader reader = ExcelReader.read(path)) {
             String fileName = path.getFileName().toString();
@@ -522,7 +518,8 @@ public class ExcelReaderTest {
                                 default      : o = row.getString(start);
                             }
                             if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
-                            else assertEquals(o, e);
+                            // Mixed judgment of carriage return and line break in various systems
+                            else assertEquals(o.replace("\r\n", "\n"), e.replace("\r\n", "\n"));
                         }
                     }
                 } else {
