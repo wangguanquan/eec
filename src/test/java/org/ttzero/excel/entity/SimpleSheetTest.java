@@ -86,8 +86,8 @@ public class SimpleSheetTest extends WorkbookTest {
         new Workbook()
             .setAutoSize(true)
             .addSheet(new SimpleSheet<>("Item", WaterMark.of(author)
-                , new Column("ID", "id")
-                , new Column("NAME", "name"))
+                , new Column("ID", "id").setFont(new Font("华文行楷", 24, Color.BLUE))
+                , new Column("NAME", "name").setFont(new Font("微软雅黑", 18)))
                 .setData(getSimpleDataRows()))
             .writeTo(defaultTestPath.resolve(fileName));
 
