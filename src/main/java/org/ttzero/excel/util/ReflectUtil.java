@@ -496,7 +496,8 @@ public class ReflectUtil {
      * @return {@code true}如果该类属于{@code java.*}或{@code jdk.*}包
      */
     public static boolean isJavaPackage(Class<?> clazz) {
-        String packageName = clazz.getPackage().getName();
-        return packageName.startsWith("java.") || packageName.startsWith("jdk.");
+        Package pck = clazz.getPackage();
+        String packageName = pck != null ? pck.getName() : null;
+        return packageName != null && (packageName.startsWith("java.") || packageName.startsWith("jdk."));
     }
 }
