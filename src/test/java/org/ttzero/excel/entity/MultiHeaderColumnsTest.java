@@ -726,17 +726,17 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
         @ExcelColumn("A")
-        @ExcelColumn("省")
+        @ExcelColumn(value = "省", share = true)
         private String province;
         @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
         @ExcelColumn("A")
-        @ExcelColumn("市")
+        @ExcelColumn(value = "市", share = true)
         private String city;
         @ExcelColumn("TOP")
         @ExcelColumn("收件地址")
         @ExcelColumn("B")
-        @ExcelColumn("区")
+        @ExcelColumn(value = "区", share = true)
         private String area;
         @ExcelColumn("TOP")
         @ExcelColumn(value = "收件地址", comment = @HeaderComment("精确到门牌号"))
