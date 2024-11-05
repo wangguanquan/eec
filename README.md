@@ -304,11 +304,6 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
-Version 0.5.20
--------------
-- 修改部分语法提升对OpenJDK8-21的兼容性
-- 新增SimpleSheet简单工作表，简化导出的数据格式
-
 Version 0.5.19 (2024-09-22)
 -------------
 - Workbook支持增加自定义属性
