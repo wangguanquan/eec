@@ -1713,7 +1713,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             hasSharedString |= col.isShare();
         }
         // 初始化SharedStringsTable
-        if (hasSharedString) sst.init();
+        if (hasSharedString && sst != null) sst.init();
         // 如果有自适应列宽则创建临时数组
         if (includeAutoWidth) {
             columnWidths = new double[columns.length];
