@@ -748,7 +748,9 @@ public class Workbook implements Storable {
 
     /**
      * 初始化，创建全局样式和字符串共享区
+     * @deprecated 不需要主动初始化，后续将删除
      */
+    @Deprecated
     protected void init() {
         // 创建全局字符串共享区
         if (sst == null) {
@@ -765,8 +767,8 @@ public class Workbook implements Storable {
      */
     protected void checkAndInitWriter() {
         if (workbookWriter == null) {
-            // 初始化
-            init();
+//            // 初始化
+//            init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
     }
