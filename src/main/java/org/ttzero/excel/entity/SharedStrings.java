@@ -307,6 +307,8 @@ public class SharedStrings implements Storable, Closeable {
 
     @Override
     public void close() throws IOException {
+        // Already closed
+        if (hot == null && sst == null && (temp == null || Files.notExists(temp))) return;
         LOGGER.debug("Total: {}, Hot: {}, SST: {}, Char Cache: {}, Filter Constructor: {}"
             , count, total_hot, total_sst_find, total_char_cache, filter_constructor);
         filter = null;
@@ -314,7 +316,10 @@ public class SharedStrings implements Storable, Closeable {
             hot.clear();
             hot = null;
         }
-        if (sst != null) sst.close();
+        if (sst != null) {
+            sst.close();
+            sst = null;
+        }
         if (temp != null) FileUtil.rm(temp);
     }
 }
