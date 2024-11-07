@@ -409,6 +409,10 @@ public class HeaderRow extends Row {
 
     @Override
     public String toString() {
+        return String.join(" | ", names);
+    }
+
+    public String toMarkdownString() {
         StringJoiner joiner = new StringJoiner(" | ");
         StringBuilder buf = new StringBuilder();
         int i = 0;
@@ -439,7 +443,7 @@ public class HeaderRow extends Row {
 
         }
 
-        buf.insert(0, joiner.toString() + Const.lineSeparator);
+        buf.insert(0, joiner + Const.lineSeparator);
 
         return buf.toString();
     }
