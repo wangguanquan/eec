@@ -44,7 +44,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         }
     }
 
-    private final char[][] CACHE_CHAR_ARRAY = new char[25][];
+    private final static char[][] CACHE_CHAR_ARRAY = new char[25][];
     static final char[] MIN_INTEGER_CHARS = {'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'};
     static final char[] MIN_LONG_CHARS = "-9223372036854775808".toCharArray();
     private static final char[][] ESCAPE_CHARS = new char[63][];
@@ -127,7 +127,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         for (i = 0; i < size; i++) {
             char c = block[i];
             if (c > 62) continue;
-            // UnDisplay char
+            // Cannot display characters
             if (c < 32) {
                 if (i > last) writeUTF8(block, last, i - last);
                 write(c == 9 || c == 10 || c == 13 ? c : MALFORMED_CHAR);
@@ -172,7 +172,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         super.write(cb, off, len);
     }
 
-    public char[] toChars(int i) {
+    public static char[] toChars(int i) {
         if (i == Integer.MIN_VALUE)
             return MIN_INTEGER_CHARS;
         int size = stringSize(i);
@@ -208,7 +208,7 @@ public class ExtBufferedWriter extends BufferedWriter {
         if (negative) buf[--index] = '-';
     }
 
-    public char[] toChars(long i) {
+    public static char[] toChars(long i) {
         if (i == Long.MIN_VALUE)
             return MIN_LONG_CHARS;
         int size = stringSize(i);
