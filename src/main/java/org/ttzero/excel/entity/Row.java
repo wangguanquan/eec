@@ -150,4 +150,16 @@ public class Row {
     public void setOutlineLevel(Integer outlineLevel) {
         this.outlineLevel = outlineLevel;
     }
+
+    /**
+     * 清除附加属性
+     *
+     * @return 当前行
+     */
+    public Row clear() {
+        hidden = false;
+        outlineLevel = null;
+        height = null;
+        return this;
+    }
 }
