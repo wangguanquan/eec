@@ -23,6 +23,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.reader.Cell;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -159,18 +160,30 @@ public class SimpleSheet<T> extends ListSheet<T> {
     }
 
     /**
-     * 设置表头信息
+     * 设置表头信息，与Columns不同的是本方法只设置表头值并不带任何其它属性，可以看为{@link #setColumns(List)}的简化方法
      *
      * @param header 表头信息列表
      * @return 当前对象，支持链式调用
      */
     public SimpleSheet<T> setHeader(List<String> header) {
+        Column[] columns;
         if (header == null || header.isEmpty()) columns = new Column[0];
         else {
             columns = new Column[header.size()];
             for (int i = 0, len = header.size(); i < len; columns[i] = new Column(header.get(i++)).setCellStyle(0));
         }
+        super.setColumns(columns);
         return this;
+    }
+
+    /**
+     * 设置表头信息，与Columns不同的是本方法只设置表头值并不带任何其它属性，可以看为{@link #setColumns(Column...)}的简化方法
+     *
+     * @param header 表头信息列表
+     * @return 当前对象，支持链式调用
+     */
+    public SimpleSheet<T> setHeader(String ... header) {
+        return setHeader(Arrays.asList(header));
     }
 
     /**

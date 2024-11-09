@@ -16,6 +16,9 @@
 
 package org.ttzero.excel.entity;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 空工作表，可用于占位，如果指定表头则会输出表头
  *
@@ -37,6 +40,15 @@ public class EmptySheet extends Sheet {
      */
     public EmptySheet(String name) {
         super(name);
+    }
+
+    /**
+     * 实例化工作表并指定表头信息
+     *
+     * @param columns 表头信息
+     */
+    public EmptySheet(Column... columns) {
+        super(columns);
     }
 
     /**
@@ -74,5 +86,32 @@ public class EmptySheet extends Sheet {
     @Override
     public int size() {
         return 0;
+    }
+
+    /**
+     * 设置表头信息，与Columns不同的是本方法只设置表头值并不带任何其它属性，可以看为{@link #setColumns(List)}的简化方法
+     *
+     * @param header 表头信息列表
+     * @return 当前对象，支持链式调用
+     */
+    public EmptySheet setHeader(List<String> header) {
+        Column[] columns;
+        if (header == null || header.isEmpty()) columns = new Column[0];
+        else {
+            columns = new Column[header.size()];
+            for (int i = 0, len = header.size(); i < len; columns[i] = new Column(header.get(i++)).setCellStyle(0));
+        }
+        super.setColumns(columns);
+        return this;
+    }
+
+    /**
+     * 设置表头信息，与Columns不同的是本方法只设置表头值并不带任何其它属性，可以看为{@link #setColumns(Column...)}的简化方法
+     *
+     * @param header 表头信息列表
+     * @return 当前对象，支持链式调用
+     */
+    public EmptySheet setHeader(String ... header) {
+        return setHeader(Arrays.asList(header));
     }
 }
