@@ -97,19 +97,10 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
-     * The delimiter char, default char {@code ','}
-     *
-     * @return delimiter char
-     */
-    public char getDelimiter() {
-        return delimiter;
-    }
-
-    /**
      * Settings delimiter char
      *
      * @param delimiter delimiter char
-     * @return current worksheetWriter
+     * @return current CSVWorksheetWriter
      */
     public CSVWorksheetWriter setDelimiter(char delimiter) {
         this.delimiter = delimiter;

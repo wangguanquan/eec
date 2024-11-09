@@ -63,6 +63,10 @@ public class CSVSheet extends Sheet {
      * 指定读取CSV使用的字符集
      */
     protected Charset charset;
+    /**
+     * Delimiter char
+     */
+    protected char delimiter = 0x0;
 
     /**
      * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名
@@ -165,7 +169,7 @@ public class CSVSheet extends Sheet {
     // Create CSV iterator
     private void init() throws IOException {
         assert path != null && exists(path);
-        iterator = CSVUtil.newReader(path, charset).sharedIterator();
+        iterator = CSVUtil.newReader(path, delimiter, charset).sharedIterator();
     }
 
     /**
@@ -243,6 +247,17 @@ public class CSVSheet extends Sheet {
      */
     public CSVSheet setCharset(Charset charset) {
         this.charset = charset;
+        return this;
+    }
+
+    /**
+     * Settings delimiter char
+     *
+     * @param delimiter delimiter char
+     * @return current CSVSheet
+     */
+    public CSVSheet setDelimiter(char delimiter) {
+        this.delimiter = delimiter;
         return this;
     }
 }
