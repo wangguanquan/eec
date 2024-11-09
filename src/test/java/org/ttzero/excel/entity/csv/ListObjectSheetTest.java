@@ -21,9 +21,10 @@ import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.CustomColIndexTest;
 import org.ttzero.excel.entity.CustomizeDataSourceSheet;
-import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.MultiHeaderColumnsTest;
+import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.TooManyColumnsException;
 import org.ttzero.excel.entity.WaterMark;
 import org.ttzero.excel.entity.Workbook;
@@ -345,5 +346,18 @@ public class ListObjectSheetTest extends WorkbookTest {
             .addSheet(new ListSheet<>(Item.randomTestData()))
             .saveAsCSVWithBom()
             .writeTo(getOutputTestPath().resolve("test object with utf8 bom.csv"));
+    }
+
+    @Test public void testWriteSpecifyDelimiter() throws IOException {
+        new Workbook()
+            .addSheet(new ListSheet<>(Item.randomTestData()))
+            .saveAsCSVWithBom()
+            .setWorkbookWriter(new CSVWorkbookWriter() {
+                @Override
+                public IWorksheetWriter getWorksheetWriter(Sheet sheet) {
+                    return new CSVWorksheetWriter(sheet, withBom).setCharset(charset).setDelimiter('\001');
+                }
+            })
+            .writeTo(getOutputTestPath().resolve("test object with specify delimiter.csv"));
     }
 }
