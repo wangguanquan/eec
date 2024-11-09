@@ -23,10 +23,6 @@ import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +34,7 @@ import static org.junit.Assert.assertTrue;
  * @author guanquan.wang at 2019-04-29 21:36
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class EmptySheetTest extends SQLWorkbookTest {
+public class EmptySheetTest extends WorkbookTest {
     @Test public void testEmpty() throws IOException {
         String fileName = "test empty.xlsx";
         new Workbook()
@@ -168,29 +164,13 @@ public class EmptySheetTest extends SQLWorkbookTest {
         }
     }
 
-    @Test public void testEmptyStatementSheet() throws SQLException, IOException {
-        try (Connection con = getConnection()) {
-            String fileName = "test empty statement sheet.xlsx",
-                sql = "select id, name, age, create_date, update_date from student where id < 0"; //
-            new Workbook()
-                .addSheet(new StatementSheet(con, sql))
-                .writeTo(defaultTestPath.resolve(fileName));
+    @Test public void testSpecifyHeader() throws IOException {
+        final String fileName = "empty sheet with simple header.xlsx";
+        new Workbook().addSheet(new EmptySheet().setHeader("A", "B", "C", "D")).writeTo(defaultTestPath.resolve(fileName));
 
-            PreparedStatement ps = con.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
-            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-                Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
-                assertTrue(iter.hasNext());
-                org.ttzero.excel.reader.Row header = iter.next();
-                assertEquals("id", header.getString(0));
-                assertEquals("name", header.getString(1));
-                assertEquals("age", header.getString(2));
-                assertEquals("create_date", header.getString(3));
-                assertEquals("update_date", header.getString(4));
-            }
-            rs.close();
-            ps.close();
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Row row = reader.sheet(0).header(1).getHeader();
+            assertEquals("A | B | C | D", row.toString());
         }
     }
-
 }

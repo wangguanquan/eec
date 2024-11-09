@@ -811,4 +811,29 @@ public class StatementSheetTest extends SQLWorkbookTest {
             ps.close();
         }
     }
+
+    @Test public void testEmptyStatementSheet() throws SQLException, IOException {
+        try (Connection con = getConnection()) {
+            String fileName = "test empty statement sheet.xlsx",
+                sql = "select id, name, age, create_date, update_date from student where id < 0"; //
+            new Workbook()
+                .addSheet(new StatementSheet(con, sql))
+                .writeTo(defaultTestPath.resolve(fileName));
+
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row header = iter.next();
+                assertEquals("id", header.getString(0));
+                assertEquals("name", header.getString(1));
+                assertEquals("age", header.getString(2));
+                assertEquals("create_date", header.getString(3));
+                assertEquals("update_date", header.getString(4));
+            }
+            rs.close();
+            ps.close();
+        }
+    }
 }
