@@ -33,6 +33,10 @@ import java.sql.SQLException;
  * <p>这是一个比较小众的工作表，最好只在比较简单的场景下使用，比如一次性导出的场景。因为{@code StatementSheet}
  * 并不支持数据切片，所以当查询结果较大时可能出现OOM。如果不确认数据量时最好使用{@link ListSheet}分片获取数据</p>
  *
+ * <p>注意：如果实例化传入SQL语句和{@code Connection}在内部创建{@code Statement}时将默认设置{@code fetch-size=Integer.MIN_VALUE}
+ * 以尝试关闭游标的服务器端缓存，适用于处理非常大的结果集，但并不适用于所有JDBC驱动程序且需要权衡网络流量和服务器负载的影响。
+ * 如果数据量小不需要这个设定则可以使用{@link #setStatement}方法传入外部已设置好的{@code Statement}</p>
+ *
  * <pre>
  * try (Connection con = getConnection()) {
  *     String sql = "select name,age,create_date,update_date " +
@@ -120,9 +124,8 @@ public class StatementSheet extends ResultSetSheet {
         try {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE, e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -155,9 +158,8 @@ public class StatementSheet extends ResultSetSheet {
         try {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE, e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -222,9 +224,8 @@ public class StatementSheet extends ResultSetSheet {
         try {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
-            ps.setFetchDirection(ResultSet.FETCH_REVERSE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of {}", Integer.MIN_VALUE, e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
