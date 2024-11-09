@@ -125,7 +125,7 @@ public class StatementSheet extends ResultSetSheet {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE");
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -159,7 +159,7 @@ public class StatementSheet extends ResultSetSheet {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE");
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
@@ -225,7 +225,7 @@ public class StatementSheet extends ResultSetSheet {
             ps = con.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             ps.setFetchSize(Integer.MIN_VALUE);
         } catch (SQLException e) {
-            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE", e);
+            LOGGER.debug("Not support fetch size value of Integer.MIN_VALUE");
         }
         if (ps == null) {
             throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
