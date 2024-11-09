@@ -276,6 +276,9 @@ public class StatementSheet extends ResultSetSheet {
     @Override
     public void writeTo(Path path) throws IOException {
         if (rs == null) {
+            if (ps == null) {
+                throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
+            }
             // Execute query
             try {
                 rs = ps.executeQuery();
