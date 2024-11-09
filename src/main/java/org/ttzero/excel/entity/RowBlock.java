@@ -69,7 +69,7 @@ public class RowBlock implements Iterator<Row> {
         // 创建连续行共享区并实例化行对象
         rows = new Row[capacity];
         for (int i = 0; i < capacity; i++) {
-            rows[i++] = new Row();
+            rows[i] = new Row();
         }
     }
 
