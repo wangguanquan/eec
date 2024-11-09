@@ -152,9 +152,7 @@ public class RelManager implements Serializable {
                 Object oo = null;
                 try {
                     oo = field.get(rel);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                } catch (IllegalAccessException e) { }
                 if (oo == null) continue;
                 Class<?> _clazz = field.getType();
                 if (_clazz == this.getClass()) {

@@ -1244,10 +1244,7 @@ public abstract class Sheet implements Cloneable, Storable {
             } catch (IOException | ClassNotFoundException e1) {
                 try {
                     copy = getClass().getConstructor().newInstance();
-                } catch (NoSuchMethodException | IllegalAccessException
-                    | InstantiationException | InvocationTargetException e2) {
-                    e2.printStackTrace();
-                }
+                } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e2) { }
             } finally {
                 FileUtil.close(oos);
                 FileUtil.close(ois);

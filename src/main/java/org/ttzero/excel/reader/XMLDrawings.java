@@ -250,9 +250,7 @@ public class XMLDrawings implements Drawings {
                         Path targetPath = imagesPath.resolve(rel.getTarget());
                         Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
                         picture.localPath = targetPath;
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
+                    } catch (IOException ioException) { }
                 }
 
                 int[][] ft = parseDimension(e, xdr);
