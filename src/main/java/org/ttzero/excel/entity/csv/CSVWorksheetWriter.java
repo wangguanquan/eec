@@ -210,8 +210,8 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
 
-        // Fire progress event
-        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
+//        // Fire progress event
+//        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
 
         return workSheetPath;
     }
