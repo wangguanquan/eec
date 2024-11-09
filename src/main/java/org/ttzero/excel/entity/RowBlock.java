@@ -35,13 +35,13 @@ public class RowBlock implements Iterator<Row> {
     /**
      * 内存连续的一组行数据
      */
-    private Row[] rows;
+    private final Row[] rows;
     /**
-     * i与Buffer中position等价
-     * n与Buffer中limit等价
+     * position与Buffer中position等价
+     * limit与Buffer中limit等价
      * total记录行填共装填了多少行数据
      */
-    private int i, n, total = 0;
+    private int position, limit, total = 0;
     /**
      * 当本次装填数据少于块容量时被标记为{@code EOF}
      */
@@ -49,7 +49,7 @@ public class RowBlock implements Iterator<Row> {
     /**
      * 与Buffer中capacity等价
      */
-    private final int limit;
+    private final int capacity;
 
     /**
      * 以默认大小实例化行块，默认{@code 32}
@@ -61,20 +61,15 @@ public class RowBlock implements Iterator<Row> {
     /**
      * 实例化行块并指定容量
      *
-     * @param limit 容量
+     * @param capacity 容量
      */
-    public RowBlock(int limit) {
-        this.limit = limit;
-        init();
-    }
+    public RowBlock(int capacity) {
+        this.capacity = capacity;
 
-    /**
-     * 创建连续行共享区并实例化行对象
-     */
-    private void init() {
-        rows = new Row[limit];
-        for (int i = 0; i < limit; i++) {
-            rows[i] = new Row();
+        // 创建连续行共享区并实例化行对象
+        rows = new Row[capacity];
+        for (int i = 0; i < capacity; i++) {
+            rows[i++] = new Row();
         }
     }
 
@@ -86,7 +81,7 @@ public class RowBlock implements Iterator<Row> {
     public final RowBlock reopen() {
         eof = false;
         total = 0;
-        return this;
+        return clear();
     }
 
     /**
@@ -95,13 +90,8 @@ public class RowBlock implements Iterator<Row> {
      * @return 当前行块
      */
     public final RowBlock clear() {
-        i = n = 0;
-        // 清除行属性
-        for (Row row : rows) {
-            row.height = null;
-            row.hidden = false;
-            row.outlineLevel = null;
-        }
+        position = 0;
+        limit = capacity;
         return this;
     }
 
@@ -136,12 +126,12 @@ public class RowBlock implements Iterator<Row> {
      * @return 当前行块
      */
     public final RowBlock flip() {
-        if (i < limit) {
+        if (position < capacity) {
             markEOF();
         }
-        n = i;
-        total += i;
-        i = 0;
+        limit = position;
+        total += limit;
+        position = 0;
         return this;
     }
 
@@ -151,7 +141,7 @@ public class RowBlock implements Iterator<Row> {
      * @return 行块容器大小
      */
     public final int capacity() {
-        return limit;
+        return capacity;
     }
 
     /**
@@ -161,7 +151,7 @@ public class RowBlock implements Iterator<Row> {
      */
     @Override
     public boolean hasNext() {
-        return i < n;
+        return position < limit;
     }
 
     /**
@@ -171,7 +161,7 @@ public class RowBlock implements Iterator<Row> {
      */
     @Override
     public Row next() {
-        return rows[i++];
+        return rows[position++];
     }
 
     /**
@@ -190,7 +180,7 @@ public class RowBlock implements Iterator<Row> {
      */
     public Row lastRow() {
         Row row;
-        if (n >= 1) row = rows[n - 1];
+        if (limit >= 1) row = rows[limit - 1];
         else {
             int i = 0;
             for (int len = rows.length - 1; i < len; i++) {
@@ -217,9 +207,20 @@ public class RowBlock implements Iterator<Row> {
      * 本批次共装填了多少数据
      *
      * @return 本批次装填个数
+     * @deprecated 使用 {@link #limit()}方法代替
      */
+    @Deprecated
     public int size() {
-        return n;
+        return limit();
+    }
+
+    /**
+     * 本批次共装填了多少数据
+     *
+     * @return 本批次装填个数
+     */
+    public int limit() {
+        return limit;
     }
 
     /**
@@ -228,9 +229,9 @@ public class RowBlock implements Iterator<Row> {
      * @param position 指定下标
      */
     public void position(int position) {
-        if (position < 0 || position >= n)
-            throw new ArrayIndexOutOfBoundsException("Index: " + position + ", Size: " + n);
-        i = position;
+        if (position < 0 || position >= limit)
+            throw new ArrayIndexOutOfBoundsException("Index: " + position + ", Size: " + limit);
+        this.position = position;
     }
 
     /**
@@ -239,6 +240,6 @@ public class RowBlock implements Iterator<Row> {
      * @return 当前洲标位置
      */
     public int position() {
-        return i;
+        return position;
     }
 }
