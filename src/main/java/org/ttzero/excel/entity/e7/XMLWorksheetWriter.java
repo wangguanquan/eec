@@ -692,7 +692,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         boolean notEmpty = s != null && s.length() > 0;
 
         // 超链接
-        if (notEmpty && cell.h) {
+        if (cell.h && notEmpty) {
             Relationship rel = relManager.add(new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External"));
             List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
             dim.add(new String(int2Col(col + 1)) + row);
