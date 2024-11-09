@@ -956,7 +956,9 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         if (rowBlock == null) {
             rowBlock = new RowBlock(getRowBlockSize());
-        } else rowBlock.reopen();
+        }
+        // 自动分页的Sheet可复用RowBlock
+        else rowBlock.reopen();
 
         if (!copySheet) {
             paging();
