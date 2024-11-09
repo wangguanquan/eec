@@ -275,29 +275,14 @@ public class StatementSheet extends ResultSetSheet {
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        if (sheetWriter != null) {
-            if (!copySheet) {
-                if (ps == null) {
-                    throw new ExcelWriteException("Constructor worksheet error.\nMiss the parameter Statement");
-                }
-                // Execute query
-                try {
-                    rs = ps.executeQuery();
-                } catch (SQLException e) {
-                    throw new ExcelWriteException(e);
-                }
-
-                // Check the header information is exists
-                getAndSortHeaderColumns();
+        if (rs == null) {
+            // Execute query
+            try {
+                rs = ps.executeQuery();
+            } catch (SQLException e) {
+                throw new ExcelWriteException(e);
             }
-
-            if (rowBlock == null) {
-                rowBlock = new RowBlock(getRowBlockSize());
-            } else rowBlock.reopen();
-
-            sheetWriter.writeTo(path);
-        } else {
-            throw new ExcelWriteException("Worksheet writer is not instanced.");
         }
+        super.writeTo(path);
     }
 }
