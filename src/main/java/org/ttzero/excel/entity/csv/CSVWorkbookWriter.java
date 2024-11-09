@@ -83,7 +83,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
     /**
      * Write to OutputStream
      *
-     * @param os the out put stream
+     * @param os the output stream
      * @throws IOException         if io error occur
      */
     @Override
