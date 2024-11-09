@@ -60,6 +60,10 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     protected boolean withBom;
     // Charset 默认UTF-8
     protected Charset charset;
+    /**
+     * Delimiter char
+     */
+    protected char delimiter = 0x0;
 
     public CSVWorksheetWriter() {}
 
@@ -90,6 +94,26 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     @Override
     public int getColumnLimit() {
         return Const.Limit.MAX_COLUMNS_ON_SHEET;
+    }
+
+    /**
+     * The delimiter char, default char {@code ','}
+     *
+     * @return delimiter char
+     */
+    public char getDelimiter() {
+        return delimiter;
+    }
+
+    /**
+     * Settings delimiter char
+     *
+     * @param delimiter delimiter char
+     * @return current worksheetWriter
+     */
+    public CSVWorksheetWriter setDelimiter(char delimiter) {
+        this.delimiter = delimiter;
+        return this;
     }
 
     @Override
@@ -199,10 +223,10 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     protected Path initWriter(Path root) throws IOException {
         Path workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
         if (charset == null) {
-            writer = CSVUtil.newWriter(workSheetPath);
+            writer = CSVUtil.newWriter(workSheetPath, delimiter);
             if (withBom) writer.writeWithBom();
         } else {
-            writer = CSVUtil.newWriter(workSheetPath, charset);
+            writer = CSVUtil.newWriter(workSheetPath, delimiter, charset);
             // Write BOM only support utf
             if (withBom && charset.name().toLowerCase().startsWith("utf"))
                 writer.writeWithBom();
