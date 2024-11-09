@@ -171,9 +171,7 @@ public class ContentType implements Storable {
                     if (oo != null) {
                         ele.addAttribute(StringUtil.uppFirstKey(field.getName()), oo.toString());
                     }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                } catch (IllegalAccessException e) { }
             }
         }
         Document doc = factory.createDocument(rootElement);
