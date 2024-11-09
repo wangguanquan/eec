@@ -292,8 +292,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
 
-        // Fire progress event
-        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
+//        // Fire progress event
+//        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
 
         // Relationship
         if (relManager == null) relManager = sheet.getRelManager();
