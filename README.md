@@ -69,7 +69,7 @@ rows.add(new int[] {1, 2, 3, 4});
 rows.add(new Object[] {5, new Date(), 7, null, "字母", 9, 10.1243});
 
 new Workbook()
-    .addSheet(new SimpleSheet<>(rows)) // 添加一个工作表
+    .addSheet(new SimpleSheet<>(rows)) // 添加一个简单工作表
     .writeTo(Paths.get("f:/excel")); // 导出到F:/excel目录下
 ```
 
