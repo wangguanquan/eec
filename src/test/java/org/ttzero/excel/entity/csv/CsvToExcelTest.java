@@ -317,4 +317,27 @@ public class CsvToExcelTest extends WorkbookTest {
             assertFalse(noneMatch);
         }
     }
+
+    @Test public void testFromInputStreamSpecifyDelimiter() throws IOException {
+        String fileName = "csv inputstream specify delimiter test.xlsx";
+        new Workbook()
+            .addSheet(new CSVSheet(Files.newInputStream(path)).setDelimiter(','))
+            .writeTo(getOutputTestPath().resolve(fileName));
+
+        List<String[]> expectList = CSVUtil.read(path, ',');
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            for (String[] expect : expectList) {
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row row = iter.next();
+                for (int i = 0; i < expect.length; i++) {
+                    if (expect[i] != null) {
+                        assertEquals(expect[i], row.getString(i));
+                    } else {
+                        assertTrue(StringUtil.isEmpty(row.getString(i)));
+                    }
+                }
+            }
+        }
+    }
 }
