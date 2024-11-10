@@ -455,7 +455,7 @@ public class CustomerNumFmtTest extends WorkbookTest {
                 o.nv = random.nextInt();
                  o.iv = new Timestamp(System.currentTimeMillis() - random.nextInt(9999999));
                 o.sen = getRandomAssicString(20);
-                o.scn = "张三11111222222北京朝阳区(可放快递柜❤)hello EEC";
+                o.scn = "EEC（Excel Export Core）是一款轻量且高效的Excel读写工具❤";
                 list.add(o);
             }
             return list;
