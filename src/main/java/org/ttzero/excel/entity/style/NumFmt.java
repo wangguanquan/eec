@@ -184,7 +184,7 @@ public class NumFmt implements Cloneable, Comparable<NumFmt> {
             double s = (widthCache >>> 8) / 10000.0;
             width = (base + (comma == 1 ? (base - 1) / 3 : 1) + k) * s; // 有逗号分隔符时计算分隔符个数
         }
-        return width * 1.16D;
+        return width;
     }
 
     /**
