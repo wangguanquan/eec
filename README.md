@@ -153,7 +153,7 @@ new Workbook("Auto Width Test")
     .addSheet(new ListSheet<>(randomTestData()))
     .writeTo(Paths.get("f:/excel"));
 ```
-![自动列宽](./images/auto_width.png)
+![自动列宽](./images/auto-width.png)
 
 #### 6. 支持多级表头
 
