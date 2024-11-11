@@ -35,14 +35,13 @@ import java.util.List;
  * 并不要求一致数据类型也不要求一致但最长不能超过Excel限制的长度，除日期类型外每个单元格均保持"常规"格式，日期类型默认添加格式化。
  * {@code SimpleSheet}继承于{@code ListSheet}如果传入数据为普通数组对象则将使用{@code ListSheet}进行处理。</p>
  *
- * <p>默认情况下简单工作表将忽略所有样式(包括表头样式)，样式和表头需要手动添加，{@code SimpleSheet}提供简化的
- * {@link #setHeader(List)}方法来指定表头，也可以使用{@link #firstRowAsHeader}方法将第一行数据做为表头，
- * 当指定表头时依然会保持通用样式。</p>
+ * <p>默认情况下简单工作表将不会设置样式(包括表头样式)，{@code SimpleSheet}提供简化的{@link #setHeader(List)}方法来指定表头，
+ * 也可以使用{@link #firstRowAsHeader}方法将第一行数据做为表头，当指定表头时依然会保持通用样式。</p>
  *
  * <pre>
  * new Workbook()
  *     .addSheet(new SimpleSheet&lt;&gt;()
- *          // 设置两行数据
+ *          // 导出两行数据
  *         .setData(Arrays.asList(new String[]{"a","b","c"}, new int[]{1,2,3,4,5}))
  *     ).writeTo(Paths.get("f://abc.xlsx"));</pre>
  * @author guanquan.wang
