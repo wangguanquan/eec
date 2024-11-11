@@ -1021,7 +1021,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param fill   填充色
      * @param border 边框
      * @return 当前工作表
+     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
      */
+    @Deprecated
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
         return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
     }
@@ -1035,7 +1037,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param vertical   垂直对齐
      * @param horizontal 水平对齐
      * @return 当前工作表
+     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
      */
+    @Deprecated
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
         return setHeadStyle(null, font, fill, border, vertical, horizontal);
     }
@@ -1050,7 +1054,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param vertical   垂直对齐
      * @param horizontal 水平对齐
      * @return 当前工作表
+     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
      */
+    @Deprecated
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
         Styles styles = workbook.getStyles();
         headStyle = (numFmt != null ? styles.addNumFmt(numFmt) : 0)
