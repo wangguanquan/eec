@@ -685,9 +685,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        bw.write("\" s=\"");
 
-        int xf = cell.xf;
         String s = cell.stringVal;
         boolean notEmpty = s != null && s.length() > 0;
 
@@ -698,7 +696,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             dim.add(new String(int2Col(col + 1)) + row);
         }
 
-        bw.writeInt(xf);
+        if (cell.xf > 0) {
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+        }
 
         if (cell.f) {
             bw.write("\" t=\"str\"><f>");
@@ -726,7 +727,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // TODO optimize If auto-width
         if (hc.getAutoSize() == 1) {
             double ln;
-            if (columnWidths[col] < (ln = stringWidth(s, xf))) columnWidths[col] = ln;
+            if (columnWidths[col] < (ln = stringWidth(s, cell.xf))) columnWidths[col] = ln;
         }
     }
 
@@ -743,8 +744,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        bw.write("\" s=\"");
-        bw.writeInt(cell.xf);
+        if (cell.xf > 0) {
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+        }
         bw.write("\">");
         if (cell.f) {
             bw.write("<f>");
@@ -798,8 +801,11 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        bw.write("\" t=\"b\" s=\"");
-        bw.writeInt(cell.xf);
+        bw.write("\" t=\"b");
+        if (cell.xf > 0) {
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+        }
         bw.write("\">");
         if (cell.f) {
             bw.write("<f>");
@@ -830,8 +836,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.write("<c r=\"");
         bw.write(int2Col(hc.getRealColIndex()));
         bw.writeInt(row);
-        bw.write("\" s=\"");
-        bw.writeInt(cell.xf);
+        if (cell.xf > 0) {
+            bw.write("\" s=\"");
+            bw.writeInt(cell.xf);
+        }
         char c = cell.charVal;
         if (cell.f) {
             bw.write("\" t\"str\"><f>");
