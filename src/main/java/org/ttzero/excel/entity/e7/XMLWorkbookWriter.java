@@ -169,10 +169,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         relManager.add(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
 
-        WaterMark waterMark;
-        if ((waterMark = workbook.getWaterMark()) != null && waterMark.canWrite()) {
-            contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
-        }
+//        WaterMark waterMark;
+//        if ((waterMark = workbook.getWaterMark()) != null && waterMark.canWrite()) {
+//            contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
+//        }
 
         // workbook.xml
         writeWorkbook(root);
@@ -375,6 +375,13 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 sheet.onProgress(workbook.getProgressConsumer());
             }
 
+            try {
+                // Write to desk
+                sheet.writeTo(root);
+            } finally {
+                sheet.close();
+            }
+
             // Add content-type
             contentType.add(new ContentType.Override(Const.ContentType.SHEET, "/xl/worksheets/sheet" + sheet.getId() + Const.Suffix.XML));
 
@@ -385,17 +392,11 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 contentType.add(new ContentType.Override(Const.ContentType.COMMENTS, "/xl/comments" + sheet.getId() + Const.Suffix.XML));
                 contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
             }
+
             // Add water marker
             WaterMark wm = sheet.getWaterMark();
             if (wm != null && wm.canWrite()) {
                 contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
-            }
-
-            try {
-                // Write to desk
-                sheet.writeTo(root);
-            } finally {
-                sheet.close();
             }
         }
     }
