@@ -1,4 +1,4 @@
-Version 0.5.20
+Version 0.5.20 (2024-11-13)
 -------------
 - 新增SimpleSheet简单工作表，简化导出的数据格式
 - CSVSheetWriter新增分隔符delimiter属性

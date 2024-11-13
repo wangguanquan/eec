@@ -64,7 +64,7 @@ pom.xml添加
 ```java
 // 准备导出数据
 List<Object> rows = new ArrayList<>();
-rows.add(new String[]{"列1", "列2", "列3"});
+rows.add(new String[] {"列1", "列2", "列3"});
 rows.add(new int[] {1, 2, 3, 4});
 rows.add(new Object[] {5, new Date(), 7, null, "字母", 9, 10.1243});
 
@@ -117,7 +117,7 @@ new Workbook("2021小五班期未考试成绩")
 
 #### 4. 支持模板导出
 
-EEC支持xls和xlsx模板格式，使用模板工作表可以**合并多个Excel文件**，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
+TemplateSheet工作表支持xls和xlsx模板格式，使用模板工作表可以**合并多个Excel文件**也可以和其它工作表混用，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
 ```java
 new Workbook()
@@ -246,19 +246,15 @@ reader.sheet(0).header(6)
 
 #### 4. 多级表头读取
 
-多级表头可以使用`header`方法来指定表头所在的多个行号，表头将使用`:`拼接多个行单元格来组成一个聚合头
+多级表头可以使用`header`方法来指定表头所在的多个行号，多级表头将使用`:`拼接多个行单元格来组成一个聚合头
 
 ```java
 reader.sheet(0)
     .header(1, 2)    // <- 指定第1、2行均为表头
     .rows()
     .map(Row::toMap) // <- Row 转 Map
-    .forEach(System.out::println)
-```
+    .forEach(System.out::println);
 
-多级表头将以`A1:A2:A3`这种格式进行纵向拼接，读取第6个示例中的运单数据读取结果将以`运单号`，`收件地址:省`，`收件地址:市`呈现，这样就可以解决出现两个`省`、`市`导致错乱的问题
-
-```
 # 输出如下（数据均随机生成所以输出与示例不一致）
 运单号 | 收件地址:省 | 收件地址:市 | 收件地址:详细地址 | 收件人 | 寄件地址:省 | 寄件地址:市 | 寄件地址:详细地址 | 寄件人
 921674764 | 湖北省 | 宜昌市 | xx街4号 | 王** | 江苏省 | 南京市 | xx街5号 | 周**
@@ -267,6 +263,9 @@ reader.sheet(0)
 1484573956 | 湖北省 | 武汉市 | xx街4号 | 王** | 江苏省 | 南京市 | xx街9号 | 周**
 1409795643 | 湖北省 | 黄冈市 | xx街3号 | 王** | 江苏省 | 南京市 | xx街1号 | 周**
 ```
+
+多级表头将以`A1:A2:A3`这种格式进行纵向拼接，读取第6个示例中的运单数据读取结果将以`运单号`，`收件地址:省`，`收件地址:市`呈现，这样就可以解决出现两个`省`、`市`导致错乱的问题
+
 更多关于多表头使用方法可以参考 [WIKI](https://github.com/wangguanquan/eec/wiki/%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4#%E8%AF%BB%E5%8F%96%E5%B8%A6%E5%A4%9A%E8%A1%8C%E8%A1%A8%E5%A4%B4%E7%9A%84%E6%96%87%E4%BB%B6)
 
 ### xls格式支持
@@ -314,6 +313,12 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.20 (2024-11-13)
+-------------
+- 新增SimpleSheet简单工作表，简化导出的数据格式
+- CSVSheetWriter新增分隔符delimiter属性
+- 提升OpenJDK8-21的兼容性
+
 Version 0.5.19 (2024-09-22)
 -------------
 - Workbook支持增加自定义属性
@@ -332,15 +337,10 @@ Version 0.5.17 (2024-07-18)
 -------------
 - 修复部分情况下Row#toMap抛下标越界问题(#380)
 
-Version 0.5.16 (2024-06-29)
--------------
-- 输入转换Converter#reversion增加数据类型提升扩展性(#376) 
-- 修复读取自定义theme颜色会出现偏差的问题
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.19-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.20-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
