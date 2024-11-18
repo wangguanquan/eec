@@ -68,7 +68,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -669,7 +669,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                         Column hc = columnsArray[j][i];
                         if (hc.headerComment != null) {
                             if (comments == null) comments = sheet.createComments();
-                            comments.addComment(new String(int2Col(hc.getRealColIndex())) + row, hc.headerComment);
+                            comments.addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
                         }
                     }
                     bw.write("</row>");

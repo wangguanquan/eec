@@ -1,6 +1,7 @@
 package org.ttzero.excel.reader;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 
 /**
  * 读取时类型转换异常
@@ -28,7 +29,7 @@ public class TypeCastException extends IllegalArgumentException {
     public final Class<?> to;
 
     public TypeCastException(int row, int col, CellType from, Class<?> to) {
-        super("Can't cast " + from + "to " + to + " in cell '" + new String(int2Col(col)) + row + "'");
+        super("Can't cast " + from + "to " + to + " in cell '" + toCoordinate(row, col) + "'");
         this.row = row;
         this.col = col;
         this.from = from;

@@ -50,6 +50,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
+import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
@@ -1352,6 +1354,21 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     private static final char[][] cache = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
+
+    /**
+     * 将行列坐标转换为 Excel 样式的单元格地址
+     *
+     * @param row 行号，从{@code 1}开始
+     * @param col 列号，从{@code 1}开始
+     * @return Excel 样式的单元格地址，例如{@code A1}、{@code B2}等
+     */
+    public static String toCoordinate(int row, int col) {
+        char[] cols = int2Col(col);
+        char[] chars = new char[cols.length + stringSize(row)];
+        System.arraycopy(cols, 0, chars, 0, cols.length);
+        getChars(row, chars.length, chars);
+        return new String(chars);
+    }
 
     /**
      * 忽略表头，调用此方法后表头将不会输出到Excel中，注意这里不是隐藏

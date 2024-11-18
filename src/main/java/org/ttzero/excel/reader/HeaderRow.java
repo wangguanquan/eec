@@ -53,7 +53,7 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isInt;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDate;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalDateTime;
 import static org.ttzero.excel.entity.IWorksheetWriter.isLocalTime;
-import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredMethods;
 import static org.ttzero.excel.util.ReflectUtil.writeMethodsMap;
@@ -479,7 +479,7 @@ public class HeaderRow extends Row {
             int colNum = colIndex + 1;
             CellType excelType = row.getCellType(colIndex);
             Class<?> javaType = c.clazz;
-            String msg = "The value in cell '" + new String(int2Col(colNum)) + rowNum + "' is \"" + row.getString(colIndex) + "\"(" + excelType + "), cannot cast to " + javaType.getTypeName();
+            String msg = "The value in cell '" + toCoordinate(rowNum, colNum) + "' is \"" + row.getString(colIndex) + "\"(" + excelType + "), cannot cast to " + javaType.getTypeName();
             throw new TypeCastException(rowNum, colNum, excelType, javaType, msg, ex);
         }
     }

@@ -16,7 +16,7 @@
 
 package org.ttzero.excel.reader;
 
-import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 
 /**
@@ -148,8 +148,8 @@ public class Dimension {
 
     @Override
     public String toString() {
-        return new String(int2Col(firstColumn)) + this.firstRow
-            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + new String(int2Col(lastColumn)) + this.lastRow
+        return toCoordinate(firstRow, firstColumn)
+            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + toCoordinate(lastRow, lastColumn)
             : "");
     }
 

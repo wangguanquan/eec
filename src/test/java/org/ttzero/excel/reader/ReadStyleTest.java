@@ -33,6 +33,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 
 /**
  * @author guanquan.wang at 2023-01-03 20:57
@@ -42,7 +43,7 @@ public class ReadStyleTest {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("4.xlsx"))) {
             reader.sheet(0).rows().forEach(row -> {
                 for (int i = row.fc; i < row.lc; i++) {
-                    String rc = new String(org.ttzero.excel.entity.Sheet.int2Col(i + 1)) + row.getRowNum();
+                    String rc = toCoordinate(row.getRowNum(), i + 1);
                     Cell cell = row.getCell(i);
                     Styles styles = row.getStyles();
                     int style = row.getCellStyle(cell);

@@ -197,15 +197,15 @@ public class ExtBufferedWriter extends BufferedWriter {
         return negative ? l + 1 : l;
     }
 
-    static void getChars(int i, int index, char[] buf) {
+    public static void getChars(int i, int maxIndex, char[] buf) {
         if (i == 0) {
-            buf[index - 1] = '0';
+            buf[maxIndex - 1] = '0';
             return;
         }
         boolean negative = i < 0;
         if (negative) i = -i;
-        for (; i > 0; buf[--index] = (char) ((i % 10) + '0'), i /= 10);
-        if (negative) buf[--index] = '-';
+        for (; i > 0; buf[--maxIndex] = (char) ((i % 10) + '0'), i /= 10);
+        if (negative) buf[--maxIndex] = '-';
     }
 
     public static char[] toChars(long i) {
@@ -233,15 +233,15 @@ public class ExtBufferedWriter extends BufferedWriter {
         return negative ? l + 1 : l;
     }
 
-    static void getChars(long i, int index, char[] buf) {
+    public static void getChars(long i, int maxIndex, char[] buf) {
         if (i == 0) {
-            buf[index - 1] = '0';
+            buf[maxIndex - 1] = '0';
             return;
         }
         boolean negative = i < 0;
         if (negative) i = -i;
-        for (; i > 0; buf[--index] = (char) ((i % 10) + '0'), i /= 10);
-        if (negative) buf[--index] = '-';
+        for (; i > 0; buf[--maxIndex] = (char) ((i % 10) + '0'), i /= 10);
+        if (negative) buf[--maxIndex] = '-';
     }
 
     // Find malformed characters and return to their location, -1 means OK

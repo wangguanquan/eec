@@ -79,6 +79,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.Cell.BINARY;
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.BYTE_BUFFER;
@@ -466,7 +467,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
                     if (comments == null) comments = sheet.createComments();
-                    comments.addComment(new String(int2Col(hc.getRealColIndex())) + row, hc.headerComment);
+                    comments.addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
                 }
             }
             bw.write("</row>");
@@ -693,7 +694,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (cell.h && notEmpty) {
             Relationship rel = relManager.add(new Relationship(s, Const.Relationship.HYPERLINK).setTargetMode("External"));
             List<String> dim = hyperlinkMap.computeIfAbsent(rel.getId(), k -> new ArrayList<>());
-            dim.add(new String(int2Col(col + 1)) + row);
+            dim.add(toCoordinate(row, col + 1));
         }
 
         if (cell.xf > 0) {
