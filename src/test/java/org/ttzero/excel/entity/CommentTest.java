@@ -20,8 +20,10 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.HeaderComment;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.reader.ExcelReader;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +77,30 @@ public class CommentTest extends WorkbookTest {
             }
         }
     }
+
+    @Test public void testBodyComments() throws IOException {
+        List<Stock> list = new ArrayList<>();
+        list.add(new Stock(60, StockHealth.HEALTHY));
+        list.add(new Stock(40, StockHealth.NORMAL));
+        list.add(new Stock(10, StockHealth.DANGER));
+
+        Workbook workbook = new Workbook();
+        ListSheet listSheet = new ListSheet<>(list);
+        // 获取Comments
+        Comments comments = listSheet.createComments();
+        // A1单元格添加批注
+        comments.addComment(1, 1, "实际库存");
+        // B4单元格添加批注
+        comments.addComment(4, 2, new Comment("库存不足", "低于警戒线13%,请尽快添加库存").setValueFont(new Font("微软雅黑", 10, Color.RED)));
+        workbook.addSheet(listSheet);
+        workbook.writeTo(defaultTestPath.resolve("Body批注测试.xlsx"));
+    }
+
+    @Test public void t() {
+        String c = Sheet.toCoordinate(45, 10);
+        System.out.println(c);
+    }
+
 
     /**
      * Annotation Object
@@ -156,6 +182,46 @@ public class CommentTest extends WorkbookTest {
         @Override
         public String toString() {
             return "id: " + id + ", name: " + name + ", score: " + score;
+        }
+    }
+
+    public static class Stock {
+        @ExcelColumn("库存")
+        private int stock;
+        @ExcelColumn(value = "库存健康度", comment = @HeaderComment(value =
+            "健康：库存大于阈值20%\n" +
+            "正常：库存高于阈值10%\n" +
+            "警告：库存高于阈值0～10%\n" +
+            "危险：库存低于阈值10%", width = 120))
+        private StockHealth stockHealth;
+
+        public Stock(int stock, StockHealth stockHealth) {
+            this.stock = stock;
+            this.stockHealth = stockHealth;
+        }
+    }
+
+    public enum StockHealth {
+        HEALTHY("健康", 2),
+        NORMAL("正常", 1),
+        WARNING("警告", 0),
+        DANGER("危险", -1);
+
+        StockHealth(String desc, int threshold) {
+            this.desc = desc;
+            this.threshold = threshold;
+        }
+
+        private final String desc;
+        private final int threshold;
+
+        public String getDesc() {
+            return desc;
+        }
+
+        @Override
+        public String toString() {
+            return desc;
         }
     }
 }
