@@ -17,6 +17,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.entity.style.Font;
+
 /**
  * 批注，包含标题和内容且两者且少有一个不为空
  *
@@ -35,11 +37,23 @@ public class Comment {
      * 指定批注框显示的宽和高
      */
     private Double width, height;
+    /**
+     * 指定批注字体
+     */
+    private Font titleFont, valueFont;
 
     public Comment() { }
-    public Comment(String title, String value) {
-        this.title = title;
+
+    public Comment(String value) {
         this.value = value;
+    }
+
+    public Comment(String title, String value) {
+        this(title, value, null, null);
+    }
+
+    public Comment(String value, Double width, Double height) {
+        this(null, value, width, height);
     }
 
     public Comment(String title, String value, Double width, Double height) {
@@ -53,31 +67,65 @@ public class Comment {
         return title;
     }
 
-    public void setTitle(String title) {
+    public Comment setTitle(String title) {
         this.title = title;
+        return this;
+    }
+
+    public Comment setTitle(String title, Font titleFont) {
+        this.title = title;
+        this.titleFont = titleFont;
+        return this;
     }
 
     public String getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public Comment setValue(String value) {
         this.value = value;
+        return this;
+    }
+
+    public Comment setValue(String value, Font valueFont) {
+        this.value = value;
+        this.valueFont = valueFont;
+        return this;
     }
 
     public Double getWidth() {
         return width;
     }
 
-    public void setWidth(Double width) {
+    public Comment setWidth(Double width) {
         this.width = width;
+        return this;
     }
 
     public Double getHeight() {
         return height;
     }
 
-    public void setHeight(Double height) {
+    public Comment setHeight(Double height) {
         this.height = height;
+        return this;
+    }
+
+    public Font getTitleFont() {
+        return titleFont;
+    }
+
+    public Comment setTitleFont(Font titleFont) {
+        this.titleFont = titleFont;
+        return this;
+    }
+
+    public Font getValueFont() {
+        return valueFont;
+    }
+
+    public Comment setValueFont(Font valueFont) {
+        this.valueFont = valueFont;
+        return this;
     }
 }

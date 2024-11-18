@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.manager.Const;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -40,6 +42,10 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  */
 @TopNS(prefix = "", value = "comments", uri = Const.SCHEMA_MAIN)
 public class Comments implements Storable, Closeable {
+    /**
+     * 换行符常量，用于在添加批注时分隔标题和内容
+     */
+    private static final String LF = "\n";
 
     /** Comments Cache*/
     public List<C> commentList = new ArrayList<>();
@@ -53,57 +59,87 @@ public class Comments implements Storable, Closeable {
         this.author = author;
     }
 
+    /**
+     * 添加评论到指定的单元格位置
+     *
+     * @param ref 单元格位置索引
+     * @param title 评论的标题
+     * @param value 评论的内容
+     * @return 包含新添加批注的对象
+     */
     public C addComment(String ref, String title, String value) {
-        C c = new C();
-        c.ref = ref;
-        c.text = new ArrayList<>();
-        if (isNotEmpty(title)) {
-            parse(title, true, c.text);
-        }
-        if (isNotEmpty(value)) {
-            parse(value, false, c.text);
-        }
-
-        commentList.add(c);
-
-        return c;
+        return addComment(ref, new Comment(title, value));
     }
 
+    /**
+     * 添加评论到指定的单元格位置
+     *
+     * @param ref 单元格位置索引
+     * @param comment 批注对象
+     * @return 包含新添加批注的对象
+     */
     public C addComment(String ref, Comment comment) {
         C c = new C();
         c.ref = ref;
-        c.text = new ArrayList<>();
         c.width = comment.getWidth();
         c.height = comment.getHeight();
-        if (isNotEmpty(comment.getTitle())) {
-            parse(comment.getTitle(), true, c.text);
+        boolean hasTitle = isNotEmpty(comment.getTitle()), hasValue = isNotEmpty(comment.getValue());
+        c.nodes = new R[hasTitle && hasValue ? 3 : 1];
+        int i = 0;
+        if (hasTitle) {
+            c.nodes[i++] = toR(comment.getTitle(), true, comment.getTitleFont());
+            if (hasValue) c.nodes[i++] = toR(LF, true, comment.getTitleFont());
         }
-        if (isNotEmpty(comment.getValue())) {
-            parse(comment.getValue(), false, c.text);
-        }
-
+        if (hasValue) c.nodes[i] = toR(comment.getValue(), false, comment.getValueFont());
         commentList.add(c);
-
         return c;
     }
 
-    protected void parse(String val, boolean bold, List<R> list) {
-        // a simple implement
-        R r = new R();
-        r.rPr = new Pr("宋体", 9);
-        if (bold) {
-            r.rPr.bold();
-            if (val.charAt(val.length() - 1) != 10) {
-                val += (char) 10;
-            }
-        }
-        r.t = val;
-        list.add(r);
+    /**
+     * 在指定行列添加批注
+     *
+     * @param row 行号
+     * @param col 列号
+     * @param value 批注内容
+     * @return 包含新添加批注的对象
+     */
+    public C addComment(int row, int col, String value) {
+        return addComment(toCoordinate(row, col), new Comment(null, value));
     }
 
-    public void flush() {
-        // TODO Write tmp and clear cache
+    /**
+     * 在指定单元格添加批注
+     *
+     * @param row 行号
+     * @param col 列号
+     * @param title 批注标题
+     * @param value 批注内容
+     * @return 包含新添加批注的对象
+     */
+    public C addComment(int row, int col, String title, String value) {
+        return addComment(toCoordinate(row, col), new Comment(title, value));
+    }
 
+    /**
+     * 在指定单元格添加批注
+     *
+     * @param row 行号
+     * @param col 列号
+     * @param comment 批注对象
+     * @return 包含新添加批注的对象
+     */
+    public C addComment(int row, int col, Comment comment) {
+        return addComment(toCoordinate(row, col), comment);
+    }
+
+    protected R toR(String val, boolean isTitle,  Font font) {
+        // a simple implement
+        R r = new R();
+        r.rPr = font == null ? new Pr("宋体", 9) : new Pr(font);
+        // set bold default
+        if (isTitle) r.rPr.bold();
+        r.t = val;
+        return r;
     }
 
     @Override
@@ -131,11 +167,11 @@ public class Comments implements Storable, Closeable {
                 writer.write("<comment ref=\"");
                 writer.write(c.ref);
                 writer.write("\" authorId=\"0\"><text>");
-                for (R r : c.text) {
+                for (R r : c.nodes) {
                     writer.write("<r>");
                     writer.write(r.rPr.toString());
                     writer.write("<t");
-                    writer.write((r.t.indexOf(10) > 0 ? " xml:space=\"preserve\">" : ">"));
+                    writer.write((r.t.indexOf(10) >= 0 ? " xml:space=\"preserve\">" : ">"));
                     writer.escapeWrite(r.t);
                     writer.write("</t></r>");
                 }
@@ -196,14 +232,14 @@ public class Comments implements Storable, Closeable {
 
     public static class C {
         public String ref;
-        public List<R> text;
+        public R[] nodes;
         public Double width, height;
 
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder("<comment ref=\"")
                 .append(ref).append("\" authorId=\"0\"><text>");
-            for (R r : text)
+            for (R r : nodes)
                 buf.append(r);
             buf.append("</text>").append("</comment>");
             return buf.toString();
@@ -227,12 +263,21 @@ public class Comments implements Storable, Closeable {
             super(name, size);
         }
 
+        public Pr(Font font) {
+            super(font);
+        }
+
         @Override
         public String toString() {
-            return "<rPr>" + STYLE[getStyle() & 0x07] +
-                "<sz val=\"" + getSize() + "\"/>" +
-                "<rFont val=\"" + getName() + "\"/>" +
-                "<charset val=\"" + getCharset() + "\"/></rPr>";
+            StringBuilder buf = new StringBuilder("<rPr>");
+            if (getStyle() > 0) buf.append(STYLE[getStyle() & 0x07]);
+            buf.append("<rFont val=\"").append(getName()).append("\"/>");
+            buf.append("<sz val=\"").append(getSize()).append("\"/>");
+            if (getCharset() > 0) buf.append("<charset val=\"").append(getCharset()).append("\"/>");
+            if (getColor() != null) buf.append("<color rgb=\"").append(ColorIndex.toARGB(getColor().getRGB())).append("\"/>");
+            if (getFamily() > 0) buf.append("<family val=\"").append(getFamily()).append("\"/>");
+            buf.append("</rPr>");
+            return buf.toString();
         }
     }
 }

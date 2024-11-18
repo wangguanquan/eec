@@ -122,6 +122,13 @@ public class Font implements Cloneable {
         if (name != null && !name.isEmpty() && name.charAt(0) > 0x4E) this.charset = Charset.GB2312;
     }
 
+    public Font(Font other) {
+        this(other.name, other.getSize(), other.style, other.color);
+        this.family = other.family;
+        this.charset = other.charset;
+        this.scheme = other.scheme;
+    }
+
     /**
      * 解析字符串为字体
      * <p>
@@ -134,7 +141,7 @@ public class Font implements Cloneable {
      * @throws IllegalArgumentException if convert failed.
      */
     public static Font parse(String fontString) {
-        if (fontString.isEmpty()) {
+        if (StringUtil.isEmpty(fontString)) {
             throw new NullPointerException("Font string empty");
         }
         String s = fontString.trim();
