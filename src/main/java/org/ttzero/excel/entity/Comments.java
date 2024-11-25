@@ -84,12 +84,9 @@ public class Comments implements Storable, Closeable {
         c.width = comment.getWidth();
         c.height = comment.getHeight();
         boolean hasTitle = isNotEmpty(comment.getTitle()), hasValue = isNotEmpty(comment.getValue());
-        c.nodes = new R[hasTitle && hasValue ? 3 : 1];
+        c.nodes = new R[hasTitle && hasValue ? 2 : 1];
         int i = 0;
-        if (hasTitle) {
-            c.nodes[i++] = toR(comment.getTitle(), true, comment.getTitleFont());
-            if (hasValue) c.nodes[i++] = toR(LF, true, comment.getTitleFont());
-        }
+        if (hasTitle) c.nodes[i++] = toR(comment.getTitle(), true, comment.getTitleFont());
         if (hasValue) c.nodes[i] = toR(comment.getValue(), false, comment.getValueFont());
         commentList.add(c);
         return c;
@@ -167,7 +164,14 @@ public class Comments implements Storable, Closeable {
                 writer.write("<comment ref=\"");
                 writer.write(c.ref);
                 writer.write("\" authorId=\"0\"><text>");
-                for (R r : c.nodes) {
+                R[] nodes = c.nodes;
+                if (c.nodes.length == 2) {
+                    R lf = new R();
+                    lf.t = LF;
+                    lf.rPr = c.nodes[0].rPr;
+                    nodes = new R[] { c.nodes[0], lf, c.nodes[1] };
+                }
+                for (R r : nodes) {
                     writer.write("<r>");
                     writer.write(r.rPr.toString());
                     writer.write("<t");
@@ -270,7 +274,7 @@ public class Comments implements Storable, Closeable {
         @Override
         public String toString() {
             StringBuilder buf = new StringBuilder("<rPr>");
-            if (getStyle() > 0) buf.append(STYLE[getStyle() & 0x07]);
+            if (getStyle() > 0 && getStyle() < 8) buf.append(STYLE[getStyle() & 0x07]);
             buf.append("<rFont val=\"").append(getName()).append("\"/>");
             buf.append("<sz val=\"").append(getSize()).append("\"/>");
             if (getCharset() > 0) buf.append("<charset val=\"").append(getCharset()).append("\"/>");
