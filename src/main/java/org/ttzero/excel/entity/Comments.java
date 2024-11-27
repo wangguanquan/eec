@@ -95,8 +95,8 @@ public class Comments implements Storable, Closeable {
     /**
      * 在指定行列添加批注
      *
-     * @param row 行号
-     * @param col 列号
+     * @param row 行号，从{@code 1}开始
+     * @param col 列号，从{@code 1}开始
      * @param value 批注内容
      * @return 包含新添加批注的对象
      */
@@ -107,8 +107,8 @@ public class Comments implements Storable, Closeable {
     /**
      * 在指定单元格添加批注
      *
-     * @param row 行号
-     * @param col 列号
+     * @param row 行号，从{@code 1}开始
+     * @param col 列号，从{@code 1}开始
      * @param title 批注标题
      * @param value 批注内容
      * @return 包含新添加批注的对象
@@ -120,8 +120,8 @@ public class Comments implements Storable, Closeable {
     /**
      * 在指定单元格添加批注
      *
-     * @param row 行号
-     * @param col 列号
+     * @param row 行号，从{@code 1}开始
+     * @param col 列号，从{@code 1}开始
      * @param comment 批注对象
      * @return 包含新添加批注的对象
      */
