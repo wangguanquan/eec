@@ -29,7 +29,6 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Column;
-import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Panes;
@@ -124,7 +123,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * 全局样式，为工作表的一个指针
      */
     protected Styles styles;
-    protected Comments comments;
     protected int startRow // The first data-row index
         , startHeaderRow // The first header row index
         , totalRows
@@ -349,7 +347,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         e.sheetDataReady = 0;
         e.totalRows = 0;
         e.drawingsWriter = null;
-        e.comments = null;
         return copy;
     }
 
@@ -466,8 +463,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             for (int j = 0; j < columns.length; j++) {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
-                    if (comments == null) comments = sheet.createComments();
-                    comments.addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
+                    sheet.createComments().addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
                 }
             }
             bw.write("</row>");
@@ -1423,7 +1419,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // Compatible processing
-        else if (comments != null) {
+        else if (sheet.getComments() != null) {
             sheet.addRel(r = new Relationship("../drawings/vmlDrawing" + sheet.getId() + Const.Suffix.VML, Const.Relationship.VMLDRAWING));
             sheet.addRel(new Relationship("../comments" + sheet.getId() + Const.Suffix.XML, Const.Relationship.COMMENTS));
 

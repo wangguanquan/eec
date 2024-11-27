@@ -668,8 +668,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     for (int j = 0; j < realColumnLen; j++) {
                         Column hc = columnsArray[j][i];
                         if (hc.headerComment != null) {
-                            if (comments == null) comments = sheet.createComments();
-                            comments.addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
+                            sheet.createComments().addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
                         }
                     }
                     bw.write("</row>");
