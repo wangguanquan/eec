@@ -167,19 +167,17 @@ public class Comments implements Storable, Closeable {
                 writer.write("<comment ref=\"");
                 writer.write(c.ref);
                 writer.write("\" authorId=\"0\"><text>");
-                R[] nodes = c.nodes;
-                if (c.nodes.length == 2) {
-                    R lf = new R();
-                    lf.t = LF;
-                    lf.rPr = c.nodes[0].rPr;
-                    nodes = new R[] { c.nodes[0], lf, c.nodes[1] };
-                }
-                for (R r : nodes) {
+                boolean alf = c.nodes.length == 2;
+                for (R r : c.nodes) {
                     writer.write("<r>");
                     writer.write(r.rPr.toString());
                     writer.write("<t");
-                    writer.write((r.t.indexOf(10) >= 0 ? " xml:space=\"preserve\">" : ">"));
+                    writer.write((alf || r.t.indexOf(10) >= 0 ? " xml:space=\"preserve\">" : ">"));
                     writer.escapeWrite(r.t);
+                    if (alf) {
+                        writer.write(10);
+                        alf = false;
+                    }
                     writer.write("</t></r>");
                 }
                 writer.write("</text></comment>");
@@ -214,7 +212,7 @@ public class Comments implements Storable, Closeable {
             for (C c : commentList) {
                 long cr = ExcelReader.coordinateToLong(c.ref);
                 writer.write(" <v:shape id=\"_x0000_s");writer.writeInt(100 + i);
-                writer.write("\" type=\"#_x0000_t202\" style='width:" + (c.width != null ? c.width : 100.8D) + "pt;height:" + (c.height != null ? c.height : 60.6D) + " pt;z-index:");
+                writer.write("\" type=\"#_x0000_t202\" style='width:");writer.write(c.width != null ? c.width : 100.8D);writer.write("pt;height:");writer.write(c.height != null ? c.height : 60.6D);writer.write(" pt;z-index:");
                 writer.writeInt(i++);
                 writer.write(";  visibility:hidden' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
                 writer.write("  <v:fill color2=\"#ffffe1\"/>");
