@@ -25,6 +25,7 @@ import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
 
+import java.awt.Color;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,11 +43,6 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  */
 @TopNS(prefix = "", value = "comments", uri = Const.SCHEMA_MAIN)
 public class Comments implements Storable, Closeable {
-    /**
-     * 换行符常量，用于在添加批注时分隔标题和内容
-     */
-    private static final String LF = "\n";
-
     /** Comments Cache*/
     public List<C> commentList = new ArrayList<>();
     public int id;
@@ -132,12 +128,19 @@ public class Comments implements Storable, Closeable {
     protected R toR(String val, boolean isTitle,  Font font) {
         // a simple implement
         R r = new R();
-        r.rPr = font == null ? new Pr("宋体", 9) : new Pr(font);
-        // set bold default
-        if (isTitle) r.rPr.bold();
+        r.rPr = font == null ? isTitle ? DEFAULT_TITLE_PR : DEFAULT_PR : new Pr(font);
         r.t = val;
         return r;
     }
+
+    /**
+     * 默认字体设置，用于在没有明确指定字体时使用
+     */
+    protected static final Pr DEFAULT_PR = new Pr("宋体", 9);
+    /**
+     * 默认标题字体设置，用于在没有明确指定字体时使用
+     */
+    protected static final Pr DEFAULT_TITLE_PR = new Pr(new Font("宋体", 9, Font.Style.BOLD, Color.BLACK));
 
     @Override
     public void close() {
