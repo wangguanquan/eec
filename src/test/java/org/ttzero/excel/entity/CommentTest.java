@@ -96,12 +96,6 @@ public class CommentTest extends WorkbookTest {
         workbook.writeTo(defaultTestPath.resolve("Body批注测试.xlsx"));
     }
 
-    @Test public void t() {
-        String c = Sheet.toCoordinate(45, 10);
-        System.out.println(c);
-    }
-
-
     /**
      * Annotation Object
      */
