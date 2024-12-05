@@ -69,6 +69,8 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
+import static org.ttzero.excel.reader.Cell.INLINESTR;
+import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -729,6 +731,98 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    @Test public void testMergeWrap() throws IOException {
+        List<Dimension> mergeList = new ArrayList<>();
+        List<Object[]> data = new ArrayList<>();
+        // Row 1
+        data.add(new String[]{"富裕可不会"});
+        mergeList.add(Dimension.of("A1:G1"));
+        // Row 2
+        data.add(new String[]{"被考核人：张三", null, null, "部门："});
+        mergeList.add(Dimension.of("A2:C2"));
+        mergeList.add(Dimension.of("D2:G2"));
+        // Row 3
+        data.add(new String[]{"序号", "考核维度", "考核内容", "否决项", "最高分", "评分", "备注"});
+        // Row N
+        int r = 4;
+        for (int i = 1; i <= 15; i++, r++) {
+            data.add(new Object[]{i, "维度" + ('A' + i), "内容" + ('A' + 1), "否", 1 + i, 1 + i, "ABC"});
+        }
+        // Row 5
+        data.add(new Object[]{"合计得分：", null, null, null, null, 42});
+        mergeList.add(Dimension.of("A" + r + ":E" + r));
+        mergeList.add(Dimension.of("F" + r + ":G" + r));
+        // Row 6
+        r++;
+        data.add(new Object[]{"考核结果："});
+        mergeList.add(Dimension.of("A" + r + ":E" + r));
+        mergeList.add(Dimension.of("F" + r + ":G" + r));
+        // Row 7
+        r++;
+        data.add(new String[]{"扣分描述：", null, null, "建议措施："});
+        mergeList.add(Dimension.of("A" + r + ":C" + r));
+        mergeList.add(Dimension.of("D" + r + ":E" + r));
+        mergeList.add(Dimension.of("F" + r + ":G" + r));
+        // Row 8
+        r++;
+        data.add(new String[]{"说明：", null, "1：否决项未达到即可得分为0分。\n2:第二行内容。\n3:第三行内容AAAA"});
+        mergeList.add(Dimension.of("A" + r + ":B" + r));
+        mergeList.add(Dimension.of("C" + r + ":G" + r));
+        // Row 9
+        r++;
+        data.add(new String[]{"考评人：", null, "zcc123(P001)", "考评日期：", null, "2024-04-08"});
+        mergeList.add(Dimension.of("A" + r + ":B" + r));
+        mergeList.add(Dimension.of("D" + r + ":E" + r));
+        mergeList.add(Dimension.of("F" + r + ":G" + r));
+
+        new Workbook()
+            .addSheet(new SimpleSheet<>(data)
+                .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeList)
+                .setSheetWriter(new XMLWorksheetWriter() {
+                    @Override
+                    protected int startRow(Row row) throws IOException {
+                        int line = 1; // 记录回车的个数
+                        Cell[] cells = row.getCells();
+                        for (int i = row.fc; i < row.lc; i++) {
+                            if (cells[i].t == INLINESTR || cells[i].t == SST) {
+                                // 统计回车的个数
+                                line = Math.max(line, countLf(cells[i].stringVal) + 1);
+                            }
+                        }
+                        // 折行重算行高
+                        if (line > 1) {
+                            double rowHeight = row.getHeight() != null ? row.getHeight() : 16.5;
+                            row.setHeight(rowHeight * line);
+                        }
+                        return super.startRow(row);
+                    }
+
+                    @Override
+                    protected void writeString(Cell cell, int row, int col) throws IOException {
+                        // 判断是否包含“回车”
+                        if (cell.stringVal.indexOf("\n") >= 0) {
+                            int xf = cell.xf;
+                            int style = styles.getStyleByIndex(xf);
+                            // 包含“回车”符时默认设置折行
+                            if (!Styles.hasWrapText(style)) {
+                                style = styles.modifyWrapText(style, true);
+                            }
+                            cell.xf = styles.of(style);
+                        }
+                        super.writeString(cell, row, col);
+                    }
+                }))
+            .writeTo(defaultTestPath.resolve("MergeWrap.xlsx"));
+    }
+
+    static int countLf(String s) {
+        int i = s.indexOf(10), c = 0;
+        if (i >= 0) {
+            for (int len = s.length(); i > 0 && c++ < len; i = s.indexOf(10, i + 1)) ;
+        }
+        return c;
+    }
+
     @TreeStyle
     public static class TreeNode {
         @ExcelColumn
@@ -1157,4 +1251,10 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
+    /**
+     * 支持纵向工作表
+     */
+    public static class VerticalWorksheetWriter extends XMLWorksheetWriter {
+
+    }
 }
