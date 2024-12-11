@@ -54,41 +54,41 @@ public interface Drawings {
         /**
          * 图片所在的工作表 {@link Sheet}
          */
-        Sheet sheet;
+        public Sheet sheet;
         /**
          * 图片在工作表中的位置，记录图片左上角和右下角的行列坐标
          */
-        Dimension dimension;
+        public Dimension dimension;
         /**
          * 图片的临时路径
          */
-        Path localPath;
+        public Path localPath;
         /**
          * 如果是网络图片，则此属性保留网络图片的原始链接
          */
-        String srcUrl;
+        public String srcUrl;
         /**
          * 是否为背景图片，水印图片
          */
-        boolean background;
+        public boolean background;
         /**
          * 0: Move and size with cells
          * 1: Move but don't size with cells
          * 2: Don't move or size with cells
          */
-        int property;
+        public int property;
         /**
          * Revolve -360 ~ 360
          */
-        int revolve;
+        public int revolve;
         /**
          * Padding top | right | bottom | left
          */
-        short[] padding;
+        public short[] padding;
         /**
          * Picture effects
          */
-        Effect effect;
+        public Effect effect;
 
         public Sheet getSheet() {
             return sheet;
