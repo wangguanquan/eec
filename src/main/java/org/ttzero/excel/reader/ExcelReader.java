@@ -836,11 +836,11 @@ public class ExcelReader implements Closeable {
      * @return 存在时返回键值对否则返回 {@code null}
      */
     public CustomProperties getCustomProperties() {
-        // Load custom.xml
-        SAXReader reader = SAXReader.createDefault();
         ZipEntry entry = getEntry("docProps/custom.xml");
         if (entry == null) return null;
         Document document = null;
+        // Load custom.xml
+        SAXReader reader = SAXReader.createDefault();
         try {
             document = reader.read(zipFile.getInputStream(entry));
         } catch (DocumentException | IOException e) {
