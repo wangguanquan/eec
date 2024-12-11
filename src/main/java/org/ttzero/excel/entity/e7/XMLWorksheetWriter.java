@@ -426,8 +426,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // cols
         writeCols(fillSpace, defaultWidth);
 
-        // Initialization DrawingsWriter
-        initDrawingsWriter();
+//        // Initialization DrawingsWriter
+//        initDrawingsWriter();
     }
 
     /**
@@ -907,6 +907,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             LOGGER.warn("File types that are not allowed");
             return;
         }
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
         // Store in disk
@@ -932,6 +934,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             LOGGER.warn("File types that are not allowed");
             return;
         }
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
         // Reset buffer position
@@ -960,6 +964,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             LOGGER.warn("File types that are not allowed");
             return;
         }
+        // 实例化drawingsWriter
+        if (drawingsWriter == null) createDrawingsWriter();
         int id = sheet.getWorkbook().incrementMediaCounter();
         String name = "image" + id + "." + signature.extension;
         // Store
@@ -991,6 +997,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 LOGGER.warn("File types that are not allowed");
                 return;
             }
+            // 实例化drawingsWriter
+            if (drawingsWriter == null) createDrawingsWriter();
             int id = sheet.getWorkbook().incrementMediaCounter();
             String name = "image" + id + "." + signature.extension;
             os = Files.newOutputStream(mediaPath.resolve(name));
@@ -1106,11 +1114,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             }
         }
 
-        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
-            @Override protected boolean hasMedia() {
-                return false;
-            }
-        };
+        XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
+//        {
+//            @Override protected boolean hasMedia() {
+//                return false;
+//            }
+//        };
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
@@ -1564,30 +1573,30 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         return h;
     }
 
-    /**
-     * Check if images are output
-     *
-     * @return true if any column type equals 1
-     */
-    protected boolean hasMedia() {
-        boolean hasMedia = false;
-        for (Column column : columns) {
-            hasMedia = column.getColumnType() == 1;
-            if (hasMedia) break;
-        }
-        return hasMedia;
-    }
-
-    /**
-     * Initialization DrawingsWriter
-     *
-     * @throws IOException if I/O error occur
-     */
-    protected void initDrawingsWriter() throws IOException {
-        if (hasMedia()) {
-            createDrawingsWriter();
-        }
-    }
+//    /**
+//     * Check if images are output
+//     *
+//     * @return true if any column type equals 1
+//     */
+//    protected boolean hasMedia() {
+//        boolean hasMedia = false;
+//        for (Column column : columns) {
+//            hasMedia = column.getColumnType() == 1;
+//            if (hasMedia) break;
+//        }
+//        return hasMedia;
+//    }
+//
+//    /**
+//     * Initialization DrawingsWriter
+//     *
+//     * @throws IOException if I/O error occur
+//     */
+//    protected void initDrawingsWriter() throws IOException {
+//        if (hasMedia()) {
+//            createDrawingsWriter();
+//        }
+//    }
 
     /**
      * Create drawing writer and add relationship

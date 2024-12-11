@@ -41,6 +41,7 @@ import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.beans.IntrospectionException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.AccessibleObject;
@@ -48,6 +49,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +63,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
@@ -114,7 +117,7 @@ import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
  * row1.put("name", "张三");
  * row1.put("age", 26);
  * row1.put("sex", "男");
- * row1.put("pic", "https://zhangsan.png");
+ * row1.put("pic", Paths.get("./images/head.png"));
  * row1.put("jumpUrl", "https://jianli.com/zhangsan");
  * data.add(row1);
  *
@@ -704,22 +707,35 @@ public class TemplateSheet extends Sheet {
         Object e;
         if (pn.nodes.length == 1) {
             e = getNodeValue(pn.nodes[0]);
+            int type = pn.nodes[0].getType();
             if (e != null) {
-                if (String.class == e.getClass()) {
-                    switch (pn.nodes[0].getType()) {
-                        // Hyperlink
-                        case 1: cell.setHyperlink(e.toString()); break;
-                        // Media
-                        case 2: cellValueAndStyle.writeAsMedia(row, cell, e.toString(), emptyColumn, String.class); break;
-                        default: cell.setString(e.toString());
-                    }
-                } else {
-                    emptyColumn.setClazz(e.getClass());
-                    cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, e.getClass(), false);
+                Class<?> clazz = e.getClass();
+                switch (type) {
+                    // Hyperlink
+                    case 1: if (isString(clazz)) cell.setHyperlink(e.toString()); break;
+                    // Media
+                    case 2:
+                        if (isString(clazz)) {
+                            cellValueAndStyle.writeAsMedia(row, cell, e.toString(), emptyColumn, String.class);
+                        } else if (Path.class.isAssignableFrom(clazz)) {
+                            cell.setPath((Path) e);
+                        } else if (File.class.isAssignableFrom(clazz)) {
+                            cell.setPath(((File) e).toPath());
+                        } else if (InputStream.class.isAssignableFrom(clazz)) {
+                            cell.setInputStream((InputStream) e);
+                        } else if (clazz == byte[].class) {
+                            cell.setBinary((byte[]) e);
+                        } else if (ByteBuffer.class.isAssignableFrom(clazz)) {
+                            cell.setByteBuffer((ByteBuffer) e);
+                        }
+                        break;
+                    default:
+                        emptyColumn.setClazz(clazz);
+                        cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, clazz, false);
                 }
             } else cell.emptyTag();
             // 序列的dimension纵向+1
-            if (pn.nodes[0].getType() == 3) pn.v++;
+            if (type == 3) pn.v++;
         } else {
             int k = 0;
             for (Node node : pn.nodes) {
