@@ -96,7 +96,7 @@ public class PreCalc {
             }
 
             Node next = new Node();
-            next.coordinate = r << 14 | c;
+            next.coordinate = ((long) r) << 14 | c;
 
             tail.next = next;
             tail = next;
