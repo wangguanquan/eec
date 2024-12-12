@@ -211,25 +211,24 @@ public class Comments implements Storable, Closeable {
             int i = 1;
             for (C c : commentList) {
                 long cr = ExcelReader.coordinateToLong(c.ref);
-                writer.write(" <v:shape id=\"_x0000_s");writer.writeInt(100 + i);
-                writer.write("\" type=\"#_x0000_t202\" style='width:");writer.write(c.width != null ? c.width : 100.8D);writer.write("pt;height:");writer.write(c.height != null ? c.height : 60.6D);writer.write(" pt;z-index:");
+                writer.write("<v:shape id=\"_x0000_s");writer.writeInt(100 + i);
+                writer.write("\" type=\"#_x0000_t202\" style='width:");writer.write(c.width != null ? c.width : 100.8D);writer.write("pt;height:");writer.write(c.height != null ? c.height : 60.6D);writer.write("pt;z-index:");
                 writer.writeInt(i++);
-                writer.write(";  visibility:hidden' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
-                writer.write("  <v:fill color2=\"#ffffe1\"/>");
-                writer.write("  <v:shadow on=\"t\" color=\"black\" obscured=\"t\"/>");
-                writer.write("  <v:path o:connecttype=\"none\"/>");
-                writer.write("  <v:textbox style='mso-direction-alt:auto'>");
-                writer.write("   <div style='text-align:left'></div>");
-                writer.write("  </v:textbox>");
-                writer.write("  <x:ClientData ObjectType=\"Note\">");
-                writer.write("   <x:MoveWithCells/>");
-                writer.write("   <x:SizeWithCells/>");
-                writer.write("   <x:Anchor/>");
-                writer.write("   <x:AutoFill>False</x:AutoFill>");
-                writer.write("   <x:Row>");writer.write((cr >> 16) - 1);writer.write("</x:Row>");
-                writer.write("   <x:Column>");writer.write((cr & 0x7FFF) - 1);writer.write("</x:Column>");
-                writer.write("  </x:ClientData>");
-                writer.write(" </v:shape>");
+                writer.write(";visibility:hidden' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
+//                writer.write("<v:fill color2=\"#ffffe1\"/>");
+                writer.write("<v:shadow on=\"t\" color=\"black\" obscured=\"t\"/>");
+//                writer.write("<v:path o:connecttype=\"none\"/>");
+//                writer.write("<v:textbox style='mso-direction-alt:auto'>");
+//                writer.write("<div style='text-align:left'></div>");
+//                writer.write("</v:textbox>");
+                writer.write("<x:ClientData ObjectType=\"Note\">");
+//                writer.write("<x:MoveWithCells/>");
+//                writer.write("<x:SizeWithCells/>");
+//                writer.write("<x:Anchor/>");
+//                writer.write("<x:AutoFill>False</x:AutoFill>");
+                writer.write("<x:Row>");writer.write((cr >> 16) - 1);writer.write("</x:Row>");
+                writer.write("<x:Column>");writer.write((cr & 0x7FFF) - 1);writer.write("</x:Column>");
+                writer.write("</x:ClientData></v:shape>");
             }
             writer.write("</xml>");
         }
