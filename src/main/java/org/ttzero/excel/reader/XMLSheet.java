@@ -524,7 +524,7 @@ public class XMLSheet implements Sheet {
      *
      * @return Row
      */
-    private XMLRow nextRow() {
+    protected XMLRow nextRow() {
         if (eof) return null;
         boolean endTag = false;
         int start = nChar;
@@ -736,7 +736,7 @@ public class XMLSheet implements Sheet {
     Read from tail and look at the line number of the last line
     to confirm the scope of the entire worksheet.
      */
-    Dimension parseDimension() {
+    protected Dimension parseDimension() {
         try (InputStream is = zipFile.getInputStream(entry)) {
             // Skips specified number of bytes of uncompressed data.
             if (lastRowMark > 0L) is.skip(lastRowMark);
@@ -831,7 +831,7 @@ public class XMLSheet implements Sheet {
         }
     }
 
-    Row createHeader(char[] cb, int start, int n) {
+    protected Row createHeader(char[] cb, int start, int n) {
         return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n);
     }
 
@@ -935,7 +935,7 @@ class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
     }
 
     @Override
-    Row createHeader(char[] cb, int start, int n) {
+    protected Row createHeader(char[] cb, int start, int n) {
         return createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1).with(cb, start, n).asCalcRow().setCalcFun(this::findCalc);
     }
 }
@@ -974,7 +974,7 @@ class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
     }
 
     @Override
-    Row createHeader(char[] cb, int start, int n) {
+    protected Row createHeader(char[] cb, int start, int n) {
         return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n).asMergeRow();
     }
 }
@@ -1061,7 +1061,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     }
 
     @Override
-    Row createHeader(char[] cb, int start, int n) {
+    protected Row createHeader(char[] cb, int start, int n) {
         return ((XMLRow) super.createHeader(cb, start, n)).asFullRow().setCalcFun(this::findCalc);
     }
 
@@ -1089,7 +1089,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 
     /*
     Parse `mergeCells` tag
-    TODO parse autoFilter and dataValidation
+    TODO parse dataValidation
      */
     Map<String, Object> parseTails() {
         Map<String, Object> tags = new HashMap<>();
