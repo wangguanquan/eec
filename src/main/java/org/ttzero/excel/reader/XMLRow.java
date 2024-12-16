@@ -594,7 +594,7 @@ class XMLFullRow extends XMLRow {
         // Function string is shared
         else if (cell.si > -1) {
             // Get from ref
-            cell.formula = getCalc(cell.si, (getRowNum() << 14) | cell.i);
+            cell.formula = getCalc(cell.si, (((long) getRowNum()) << 14) | cell.i);
         }
     }
 
