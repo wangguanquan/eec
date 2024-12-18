@@ -25,6 +25,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,7 +45,10 @@ import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
+import static org.ttzero.excel.util.DateUtil.timeChars;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -315,6 +319,8 @@ public interface Sheet extends Closeable {
      * @throws IOException 读写异常
      */
     default void saveAsCSV(BufferedWriter bw) throws IOException {
+        // Shared buffer to loading times
+        char[] buf = new char[8];
         try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
             for (Iterator<Row> iter = iterator(); iter.hasNext(); ) {
                 Row row = iter.next();
@@ -332,19 +338,21 @@ public interface Sheet extends Closeable {
                             writer.write(c.stringVal);
                             break;
                         case NUMERIC:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.intVal);
+                            if (!row.styles.isDate(c.xf)) writer.write(c.intVal);
                             else writer.write(toLocalDate(c.intVal).toString());
                             break;
                         case LONG:
                             writer.write(c.longVal);
                             break;
                         case DECIMAL:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.decimal.toString());
-                            else writer.write(toTimestamp(c.decimal.doubleValue()).toString());
+                            if (!row.styles.isDate(c.xf)) writer.write(c.decimal.toString());
+                            else if (c.decimal.compareTo(BigDecimal.ONE) >= 0) writer.write(toDateTimeString(toTimestamp(c.decimal.doubleValue())));
+                            else writer.write(timeChars(toLocalTime(c.decimal.doubleValue()), buf));
                             break;
                         case DOUBLE:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.doubleVal);
-                            else writer.write(toTimestamp(c.doubleVal).toString());
+                            if (!row.styles.isDate(c.xf)) writer.write(c.doubleVal);
+                            else if (c.doubleVal >= 1.0D) writer.write(toDateTimeString(toTimestamp(c.doubleVal)));
+                            else writer.write(timeChars(toLocalTime(c.doubleVal), buf));
                             break;
                         case BOOL:
                             writer.write(c.boolVal);

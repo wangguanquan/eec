@@ -370,4 +370,21 @@ public class DateUtil {
         }
         return java.sql.Timestamp.valueOf(v);
     }
+
+    /**
+     * 将给定的 LocalTime 对象转换为指定格式的字符数组
+     *
+     * <p>注意：内部使用，外部勿用</p>
+     *
+     * @param time 要转换的 LocalTime 对象
+     * @param chars 用于存储转换结果的字符数组，长度固定{@code 8}
+     * @return 转换后的字符数组。
+     */
+    public static char[] timeChars(LocalTime time, char[] chars) {
+        int hms = time.getHour() * 10000 + time.getMinute() * 100 + time.getSecond();
+        for (int i = chars.length - 1; i >= 0; chars[i--] = (char) (hms % 10 + '0'), hms /= 10) {
+            if (i == 5 || i == 2) chars[i--] = ':';
+        }
+        return chars;
+    }
 }
