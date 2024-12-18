@@ -88,8 +88,19 @@ public class DateUtil {
      *
      * @param date 待转换日期
      * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
+     * @deprecated 使用 {@link #toDateTimeString(Date)} 替代
      */
+    @Deprecated
     public static String toString(Date date) {
+        return toDateTimeString(date);
+    }
+    /**
+     * 将日期{@code date}格式化为{@code yyyy-MM-dd HH:mm:ss}
+     *
+     * @param date 待转换日期
+     * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
+     */
+    public static String toDateTimeString(Date date) {
         return dateTimeFormat.get().format(date);
     }
     /**
@@ -109,6 +120,18 @@ public class DateUtil {
      */
     public static String toDateString(Date date) {
         return dateFormat.get().format(date);
+    }
+    /**
+     * 将日期{@code date}格式化为{@code HH:mm:ss}
+     *
+     * @param date 待转换日期
+     * @return {@code HH:mm:ss}格式字符串
+     */
+    public static String toTimeString(Date date) {
+        LocalTime lt = new Timestamp(date.getTime()).toLocalDateTime().toLocalTime();
+        char[] chars = new char[8];
+        timeChars(lt, chars);
+        return new String(chars);
     }
     /**
      * 获取当日{@code yyyy-MM-dd}字符串

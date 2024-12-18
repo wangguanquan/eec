@@ -27,7 +27,6 @@ import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.util.CSVUtil;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -49,6 +48,7 @@ import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 import static org.ttzero.excel.entity.WorkbookTest.random;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
  * @author guanquan.wang at 2023-01-06 09:32
@@ -326,7 +326,7 @@ public class ExcelReaderTest2 {
                         switch (type) {
                             case INTEGER : o = row.getInt(cell).toString();                   break;
                             case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                            case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                            case DATE    : o = toDateTimeString(row.getDate(cell));          break;
                             default: o = row.getString(start);
                         }
                         if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));

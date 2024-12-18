@@ -44,6 +44,10 @@ import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
+import static org.ttzero.excel.util.DateUtil.toDate;
+import static org.ttzero.excel.util.DateUtil.toDateString;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
+import static org.ttzero.excel.util.DateUtil.toTimeString;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -65,7 +69,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
      */
     protected char delimiter = 0x0;
 
-    public CSVWorksheetWriter() {}
+    public CSVWorksheetWriter() { }
 
     public CSVWorksheetWriter(Sheet sheet) {
         this.sheet = sheet;
@@ -269,16 +273,16 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         for (Cell cell : cells) {
             switch (cell.t) {
                 case INLINESTR:
-                case SST      : writer.write(cell.stringVal);                                      break;
-                case NUMERIC  : writer.write(cell.intVal);                                         break;
-                case LONG     : writer.write(cell.longVal);                                        break;
-                case DOUBLE   : writer.write(cell.doubleVal);                                      break;
-                case BOOL     : writer.write(cell.boolVal);                                        break;
-                case DECIMAL  : writer.write(cell.decimal.toString());                             break;
-                case CHARACTER: writer.writeChar(cell.charVal);                                    break;
-                case DATE     : writer.write(DateUtil.toDateString(DateUtil.toDate(cell.intVal))); break;
-                case DATETIME : writer.write(DateUtil.toString(DateUtil.toDate(cell.doubleVal)));  break;
-                case TIME     : writer.write(DateUtil.toDate(cell.doubleVal).toString());          break;
+                case SST      : writer.write(cell.stringVal);                           break;
+                case NUMERIC  : writer.write(cell.intVal);                              break;
+                case LONG     : writer.write(cell.longVal);                             break;
+                case DOUBLE   : writer.write(cell.doubleVal);                           break;
+                case BOOL     : writer.write(cell.boolVal);                             break;
+                case DECIMAL  : writer.write(cell.decimal.toString());                  break;
+                case CHARACTER: writer.writeChar(cell.charVal);                         break;
+                case DATE     : writer.write(toDateString(toDate(cell.intVal)));        break;
+                case DATETIME : writer.write(toDateTimeString(toDate(cell.doubleVal))); break;
+                case TIME     : writer.write(toTimeString(toDate(cell.doubleVal)));     break;
                 default       : writer.writeEmpty();
             }
         }

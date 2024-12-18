@@ -42,6 +42,8 @@ import static org.ttzero.excel.entity.IWorksheetWriter.isLong;
 import static org.ttzero.excel.entity.IWorksheetWriter.isShort;
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
 import static org.ttzero.excel.entity.IWorksheetWriter.isTime;
+import static org.ttzero.excel.util.DateUtil.toDateString;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
  * @author guanquan.wang at 2019-09-25 11:46
@@ -83,9 +85,9 @@ public class CSVCellValueAndStyle implements ICellValueAndStyle {
             cell.setString(e.toString());
         } else if (isDate(clazz)) {
             // TODO hc.numFmt
-            cell.setString(DateUtil.toDateString((java.util.Date) e));
+            cell.setString(toDateString((java.util.Date) e));
         } else if (isDateTime(clazz)) {
-            cell.setString(DateUtil.toString((Timestamp) e));
+            cell.setString(toDateTimeString((Timestamp) e));
         } else if (isChar(clazz)) {
             cell.setChar((Character) e);
         } else if (isShort(clazz)) {

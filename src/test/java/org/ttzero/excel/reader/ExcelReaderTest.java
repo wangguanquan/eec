@@ -25,7 +25,6 @@ import org.ttzero.excel.annotation.IgnoreImport;
 import org.ttzero.excel.annotation.RowNum;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.util.CSVUtil;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
@@ -55,7 +54,9 @@ import static org.junit.Assert.assertThrows;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
+import static org.ttzero.excel.util.DateUtil.toDateString;
 import static org.ttzero.excel.util.StringUtil.swap;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
  * @author guanquan.wang at 2019-04-26 17:42
@@ -128,7 +129,7 @@ public class ExcelReaderTest {
                     switch (type) {
                         case INTEGER : o = row.getInt(cell).toString();                   break;
                         case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                        case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                        case DATE    : o = toDateTimeString(row.getDate(cell));           break;
                         default      : o = row.getString(start);
                     }
                     if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
@@ -150,7 +151,7 @@ public class ExcelReaderTest {
                     switch (type) {
                         case INTEGER : o = row.getInt(cell).toString();                   break;
                         case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                        case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                        case DATE    : o = toDateTimeString(row.getDate(cell));           break;
                         default      : o = row.getString(start);
                     }
                     if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
@@ -181,7 +182,7 @@ public class ExcelReaderTest {
                         switch (type) {
                             case INTEGER : o = row.getInt(cell).toString();                   break;
                             case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                            case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                            case DATE    : o = toDateTimeString(row.getDate(cell));           break;
                             default: o = row.getString(start);
                         }
                         if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
@@ -224,7 +225,7 @@ public class ExcelReaderTest {
                 assertEquals(o[0], e.channelId.toString());
                 assertEquals(o[1], CustomAnnoReaderTest.GameConverter.names[Integer.parseInt(e.pro)]);
                 assertEquals(o[2], e.account);
-                assertEquals(o[3], DateUtil.toString(e.registered));
+                assertEquals(o[3], toDateTimeString(e.registered));
                 assertEquals(o[4], e.up30 ? "TRUE" : "FALSE");
                 assertEquals(o[5], new String(new char[] {e.c}, 0, 1));
             }
@@ -242,7 +243,7 @@ public class ExcelReaderTest {
                 assertEquals(o[0], e.channelId.toString());
                 assertEquals(o[1], e.pro);
                 assertNull(e.account);
-                assertEquals(o[3], DateUtil.toString(e.registered));
+                assertEquals(o[3], toDateTimeString(e.registered));
                 assertEquals(o[4], e.up30 ? "TRUE" : "FALSE");
                 assertEquals(o[5], new String(new char[] {e.c}, 0, 1));
             }
@@ -261,7 +262,7 @@ public class ExcelReaderTest {
                 assertEquals(o[0], row.getString("渠道ID"));
                 assertEquals(o[1], row.getString("游戏"));
                 assertEquals(o[2], row.getString("account"));
-                assertEquals(o[3], DateUtil.toString(row.getDate("注册时间")));
+                assertEquals(o[3], toDateTimeString(row.getDate("注册时间")));
                 assertEquals(o[4], row.getBoolean("是否满30级") ? "TRUE" : "FALSE");
                 assertEquals(o[5], row.getString("VIP"));
             }
@@ -514,7 +515,7 @@ public class ExcelReaderTest {
                                 case LONG    : o = row.getLong(cell).toString();                  break;
                                 case DECIMAL : o = row.getDecimal(cell).toString();               break;
                                 case BOOLEAN : o = row.getBoolean(cell).toString().toUpperCase(); break;
-                                case DATE    : o = DateUtil.toString(row.getDate(cell));          break;
+                                case DATE    : o = toDateTimeString(row.getDate(cell));           break;
                                 default      : o = row.getString(start);
                             }
                             if (StringUtil.isEmpty(e)) assertTrue(StringUtil.isEmpty(o));
@@ -936,7 +937,7 @@ public class ExcelReaderTest {
             return num + " | " + channelId + " | "
                 + pro + " | "
                 + account + " | "
-                + (registered != null ? DateUtil.toDateString(registered) : null) + " | "
+                + (registered != null ? toDateString(registered) : null) + " | "
                 + up30 + " | "
                 + c + " | "
                 + isVip()
@@ -994,7 +995,7 @@ public class ExcelReaderTest {
             return channelId + " | "
                 + pro + " | "
                 + account + " | "
-                + (registered != null ? DateUtil.toDateString(registered) : null) + " | "
+                + (registered != null ? toDateString(registered) : null) + " | "
                 + up30 + " | "
                 + c + " | "
                 + vip
@@ -1063,7 +1064,7 @@ public class ExcelReaderTest {
             return rowNum + " | " + channelId + " | "
                 + pro + " | "
                 + account + " | "
-                + (registered != null ? DateUtil.toDateString(registered) : null) + " | "
+                + (registered != null ? toDateString(registered) : null) + " | "
                 + up30 + " | "
                 + c + " | "
                 + vip
