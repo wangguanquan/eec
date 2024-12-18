@@ -25,7 +25,6 @@ import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.util.CSVUtil;
-import org.ttzero.excel.util.DateUtil;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -67,7 +66,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     /**
      * Delimiter char
      */
-    protected char delimiter = 0x0;
+    protected char delimiter = ',';
 
     public CSVWorksheetWriter() { }
 
