@@ -129,9 +129,7 @@ public class DateUtil {
      */
     public static String toTimeString(Date date) {
         LocalTime lt = new Timestamp(date.getTime()).toLocalDateTime().toLocalTime();
-        char[] chars = new char[8];
-        timeChars(lt, chars);
-        return new String(chars);
+        return new String(toTimeChars(lt));
     }
     /**
      * 获取当日{@code yyyy-MM-dd}字符串
@@ -400,13 +398,13 @@ public class DateUtil {
      * <p>注意：内部使用，外部勿用</p>
      *
      * @param time 要转换的 LocalTime 对象
-     * @param chars 用于存储转换结果的字符数组，长度固定{@code 8}
-     * @return 转换后的字符数组。
+     * @return 转换后的字符数组，固定格式化为{@code HH:mm:ss}
      */
-    public static char[] timeChars(LocalTime time, char[] chars) {
+    public static char[] toTimeChars(LocalTime time) {
         int hms = time.getHour() * 10000 + time.getMinute() * 100 + time.getSecond();
-        for (int i = chars.length - 1; i >= 0; chars[i--] = (char) (hms % 10 + '0'), hms /= 10) {
-            if (i == 5 || i == 2) chars[i--] = ':';
+        char[] chars = { '0', '0', ':', '0', '0', ':', '0', '0' };
+        for (int i = chars.length - 1; hms > 0; chars[i--] += hms % 10, hms /= 10) {
+            if (i == 5 || i == 2) i--;
         }
         return chars;
     }
