@@ -320,11 +320,14 @@ public interface Sheet extends Closeable {
      * @throws IOException 读写异常
      */
     default void saveAsCSV(BufferedWriter bw) throws IOException {
-        // Shared buffer to loading times
-        char[] buf = new char[8];
         try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
+            int rowNum = 1;
             for (Iterator<Row> iter = iterator(); iter.hasNext(); ) {
                 Row row = iter.next();
+                // 保持与xlsx相同行号
+                if (row.getRowNum() - rowNum > 1) {
+                    for (; ++rowNum < row.getRowNum(); writer.newLine());
+                }
                 if (row.isEmpty()) {
                     writer.newLine();
                     continue;
@@ -365,6 +368,7 @@ public interface Sheet extends Closeable {
                     }
                 }
                 writer.newLine();
+                rowNum = row.getRowNum();
             }
         }
     }
