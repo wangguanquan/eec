@@ -327,8 +327,8 @@ public interface Sheet extends Closeable {
                 // 保持与xlsx相同行号
                 if (row.getRowNum() - rowNum > 1) {
                     for (; ++rowNum < row.getRowNum(); writer.newLine());
-                }
-                if (row.isEmpty()) {
+                } else rowNum = row.getRowNum();
+                if (row.isBlank()) {
                     writer.newLine();
                     continue;
                 }
@@ -368,7 +368,6 @@ public interface Sheet extends Closeable {
                     }
                 }
                 writer.newLine();
-                rowNum = row.getRowNum();
             }
         }
     }
