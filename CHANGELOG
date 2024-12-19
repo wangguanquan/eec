@@ -1,6 +1,7 @@
 Version 0.5.21
 -------------
 - 提升Excel转CSV时对时间类型的兼容性(#409)
+- Excel转CSV时保持Excel中的空行位置
 - 提升添加批注的便利性
 - 模板导出支持File和Bufer图片类型
 - 修复CSVSheet默认分割符设置为0x0过失问题
