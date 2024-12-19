@@ -531,7 +531,7 @@ public class ExcelReader implements Closeable {
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
             sheet.setPath("xl/" + r.getTarget());
-            entry = getEntry("xl/" + r.getTarget());
+            entry = getEntry(sheet.path);
             if (entry == null) {
                 sheet.close();
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
