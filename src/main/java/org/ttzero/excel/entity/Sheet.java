@@ -549,7 +549,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Comments createComments() {
         if (comments == null) {
-            comments = workbook != null ? new Comments(id, workbook.getCreator()) : new Comments();
+            comments = new Comments(id, workbook != null ? workbook.getCreator() : null);
             // FIXME Removed at excel version 2013
             if (id > 0) {
                 addRel(new Relationship("../drawings/vmlDrawing" + id + Const.Suffix.VML, Const.Relationship.VMLDRAWING));

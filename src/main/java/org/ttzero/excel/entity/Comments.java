@@ -48,7 +48,9 @@ public class Comments implements Storable, Closeable {
     public int id;
     public String author;
 
-    public Comments() { }
+    public Comments(int id) {
+        this(id, "-");
+    }
 
     public Comments(int id, String author) {
         this.id = id;
