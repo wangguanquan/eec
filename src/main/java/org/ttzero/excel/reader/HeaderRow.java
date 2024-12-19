@@ -489,7 +489,7 @@ public class HeaderRow extends Row {
         int c = ec.colIndex;
         Class<?> fieldClazz = ec.clazz;
         if (ec.converter != null) {
-            ec.field.set(t, ec.converter.reversion(row.getString(c), fieldClazz));
+            ec.field.set(t, ec.converter.reversion(row, row.getCell(c), fieldClazz));
         }
         else if (fieldClazz == String.class) {
             ec.field.set(t, row.getString(c));
@@ -581,7 +581,7 @@ public class HeaderRow extends Row {
         int c = ec.colIndex;
         Class<?> fieldClazz = ec.clazz;
         if (ec.converter != null) {
-            ec.method.invoke(t, ec.converter.reversion(row.getString(c), fieldClazz));
+            ec.method.invoke(t, ec.converter.reversion(row, row.getCell(c), fieldClazz));
         }
         else if (fieldClazz == String.class) {
             ec.method.invoke(t, row.getString(c));

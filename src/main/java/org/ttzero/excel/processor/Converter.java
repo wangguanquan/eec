@@ -1,5 +1,8 @@
 package org.ttzero.excel.processor;
 
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Row;
+
 /**
  * 转换器，包含{@link #conversion}和{@link #reversion}方法，前者用于输出时将Java数据转为Excel数据，
  * 后者正好相反输入时将Excel数据转为Java数据
@@ -10,11 +13,12 @@ public interface Converter<T> extends ConversionProcessor {
     /**
      * 输入转换器，读取Excel时将单元格的值转为指定类型{@code T}
      *
-     * @param v Excel原始值
-     * @param fieldClazz 导入字段类型
+     * @param row 当前行{@link Row}
+     * @param cell 当前单元格{@link Cell}
+     * @param destClazz 转换后的类型
      * @return 转换后的值
      */
-    T reversion(String v, Class<?> fieldClazz);
+    T reversion(Row row, Cell cell, Class<?> destClazz);
 
     /**
      * 无类型转换，默认
@@ -22,8 +26,8 @@ public interface Converter<T> extends ConversionProcessor {
     final class None implements Converter<Object> {
 
         @Override
-        public Object reversion(String v, Class<?> fieldClazz) {
-            return v;
+        public Object reversion(Row row, Cell cell, Class<?> destClazz) {
+            return row.getString(cell);
         }
 
         @Override
