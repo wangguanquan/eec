@@ -394,6 +394,8 @@ public class PictureTest extends WorkbookTest {
                         LOGGER.warn("File types that are not allowed");
                         return;
                     }
+                    // 实例化drawingsWriter
+                    if (drawingsWriter == null) createDrawingsWriter();
                     int id = sheet.getWorkbook().incrementMediaCounter();
                     picName = "image" + id + "." + signature.extension;
                     // Store

@@ -983,12 +983,13 @@ public class ListMapSheetTest extends WorkbookTest {
         public void close() {
             super.close();
 
-            XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet) {
-                @Override
-                protected boolean hasMedia() {
-                    return false;
-                }
-            };
+            XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
+//            {
+//                @Override
+//                protected boolean hasMedia() {
+//                    return false;
+//                }
+//            };
             Class<XMLWorksheetWriter> clazz = XMLWorksheetWriter.class;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
