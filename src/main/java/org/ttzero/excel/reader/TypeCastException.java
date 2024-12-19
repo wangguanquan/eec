@@ -80,4 +80,12 @@ public class TypeCastException extends IllegalArgumentException {
         return new String(int2Col(col));
     }
 
+    /**
+     * 获取单位格坐标
+     *
+     * @return 单元格坐标 eg: {@code A10}
+     */
+    public String getCoordinate() {
+        return toCoordinate(row, col);
+    }
 }
