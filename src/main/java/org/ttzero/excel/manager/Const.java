@@ -168,7 +168,7 @@ public interface Const {
     }
 
     /**
-     * The extend properties key
+     * The extends properties key
      */
     interface ExtendPropertyKey {
         /**

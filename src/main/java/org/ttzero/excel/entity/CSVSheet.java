@@ -66,7 +66,7 @@ public class CSVSheet extends Sheet {
     /**
      * Delimiter char
      */
-    protected char delimiter = 0x0;
+    protected char delimiter = ',';
 
     /**
      * 实例化工作表，未指定工作表名称时默认以{@code 'Sheet'+id}命名

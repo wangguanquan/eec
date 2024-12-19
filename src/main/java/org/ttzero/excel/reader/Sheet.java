@@ -25,10 +25,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
@@ -44,7 +46,10 @@ import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.LONG;
 import static org.ttzero.excel.reader.Cell.NUMERIC;
 import static org.ttzero.excel.reader.Cell.SST;
+import static org.ttzero.excel.util.DateUtil.toTimeChars;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
+import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -316,9 +321,14 @@ public interface Sheet extends Closeable {
      */
     default void saveAsCSV(BufferedWriter bw) throws IOException {
         try (CSVUtil.Writer writer = CSVUtil.newWriter(bw)) {
+            int rowNum = 1;
             for (Iterator<Row> iter = iterator(); iter.hasNext(); ) {
                 Row row = iter.next();
-                if (row.isEmpty()) {
+                // 保持与xlsx相同行号
+                if (row.getRowNum() - rowNum > 1) {
+                    for (; ++rowNum < row.getRowNum(); writer.newLine());
+                } else rowNum = row.getRowNum();
+                if (row.isBlank()) {
                     writer.newLine();
                     continue;
                 }
@@ -332,19 +342,23 @@ public interface Sheet extends Closeable {
                             writer.write(c.stringVal);
                             break;
                         case NUMERIC:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.intVal);
-                            else writer.write(toLocalDate(c.intVal).toString());
+                            if (!row.styles.isDate(c.xf)) writer.write(c.intVal);
+                            else if (c.intVal > 0) writer.write(toLocalDate(c.intVal).toString());
+                            // 时分秒为00:00:00时读取为整数0
+                            else writer.write(toTimeChars(LocalTime.MIN));
                             break;
                         case LONG:
                             writer.write(c.longVal);
                             break;
                         case DECIMAL:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.decimal.toString());
-                            else writer.write(toTimestamp(c.decimal.doubleValue()).toString());
+                            if (!row.styles.isDate(c.xf)) writer.write(c.decimal.toString());
+                            else if (c.decimal.compareTo(BigDecimal.ONE) >= 0) writer.write(toDateTimeString(toTimestamp(c.decimal.doubleValue())));
+                            else writer.write(toTimeChars(toLocalTime(c.decimal.doubleValue())));
                             break;
                         case DOUBLE:
-                            if (!row.styles.fastTestDateFmt(c.xf)) writer.write(c.doubleVal);
-                            else writer.write(toTimestamp(c.doubleVal).toString());
+                            if (!row.styles.isDate(c.xf)) writer.write(c.doubleVal);
+                            else if (c.doubleVal >= 1.0D) writer.write(toDateTimeString(toTimestamp(c.doubleVal)));
+                            else writer.write(toTimeChars(toLocalTime(c.doubleVal)));
                             break;
                         case BOOL:
                             writer.write(c.boolVal);

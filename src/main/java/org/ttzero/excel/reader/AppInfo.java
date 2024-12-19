@@ -18,12 +18,13 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.manager.docProps.App;
 import org.ttzero.excel.manager.docProps.Core;
-import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.ReflectUtil;
 
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.StringJoiner;
+
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
  * Excel文件基础信息包含作者、日期等信息，在windows操作系统上使用鼠标右键-&gt;属性-&gt;详细信息查看
@@ -183,7 +184,7 @@ public class AppInfo {
                 if (o != null) {
                     joiner.add(method.getReturnType() == boolean.class ? method.getName().substring(2)
                         : method.getName().substring(3) + ": "
-                        + (o instanceof Date ? DateUtil.toString((Date) o) : o.toString()));
+                        + (o instanceof Date ? toDateTimeString((Date) o) : o.toString()));
                 }
             }
         } catch (Exception e) {

@@ -88,8 +88,19 @@ public class DateUtil {
      *
      * @param date 待转换日期
      * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
+     * @deprecated 使用 {@link #toDateTimeString(Date)} 替代
      */
+    @Deprecated
     public static String toString(Date date) {
+        return toDateTimeString(date);
+    }
+    /**
+     * 将日期{@code date}格式化为{@code yyyy-MM-dd HH:mm:ss}
+     *
+     * @param date 待转换日期
+     * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
+     */
+    public static String toDateTimeString(Date date) {
         return dateTimeFormat.get().format(date);
     }
     /**
@@ -109,6 +120,16 @@ public class DateUtil {
      */
     public static String toDateString(Date date) {
         return dateFormat.get().format(date);
+    }
+    /**
+     * 将日期{@code date}格式化为{@code HH:mm:ss}
+     *
+     * @param date 待转换日期
+     * @return {@code HH:mm:ss}格式字符串
+     */
+    public static String toTimeString(Date date) {
+        LocalTime lt = new Timestamp(date.getTime()).toLocalDateTime().toLocalTime();
+        return new String(toTimeChars(lt));
     }
     /**
      * 获取当日{@code yyyy-MM-dd}字符串
@@ -369,5 +390,22 @@ public class DateUtil {
             }
         }
         return java.sql.Timestamp.valueOf(v);
+    }
+
+    /**
+     * 将给定的 LocalTime 对象转换为指定格式的字符数组
+     *
+     * <p>注意：内部使用，外部勿用</p>
+     *
+     * @param time 要转换的 LocalTime 对象
+     * @return 转换后的字符数组，固定格式化为{@code HH:mm:ss}
+     */
+    public static char[] toTimeChars(LocalTime time) {
+        int hms = time.getHour() * 10000 + time.getMinute() * 100 + time.getSecond();
+        char[] chars = { '0', '0', ':', '0', '0', ':', '0', '0' };
+        for (int i = chars.length - 1; hms > 0; chars[i--] += hms % 10, hms /= 10) {
+            if (i == 5 || i == 2) i--;
+        }
+        return chars;
     }
 }
