@@ -20,10 +20,13 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.Panes;
+import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -81,6 +84,7 @@ public class XMLSheet implements Sheet {
         this.zipFile = sheet.zipFile;
         this.entry = sheet.entry;
         this.option = sheet.option;
+        this.relManager = sheet.relManager;
     }
 
     protected String name;
@@ -112,6 +116,8 @@ public class XMLSheet implements Sheet {
     // Simple properties
     // The low 16 bits are allocated to the header, while the high 16 bits are occupied by the sheet
     protected int option;
+    // Relationship Manager
+    protected RelManager relManager;
 
     /**
      * Setting the worksheet name
@@ -409,6 +415,37 @@ public class XMLSheet implements Sheet {
             throw new ExcelReadException(e);
         }
         return this;
+    }
+
+    /**
+     * 获取关系管理器
+     *
+     * @return 关系管理器实例
+     */
+    public RelManager getRelManager() {
+        if (relManager == null) {
+            int i = path.lastIndexOf('/');
+            if (i < 0) i = path.lastIndexOf('\\');
+            String fileName = path.substring(i + 1);
+            ZipEntry entry = getEntry(zipFile, "xl/worksheets/_rels/" + fileName + ".rels");
+            if (entry != null) {
+                SAXReader reader = SAXReader.createDefault();
+                try {
+                    Document document = reader.read(zipFile.getInputStream(entry));
+                    List<Element> list = document.getRootElement().elements();
+                    Relationship[] rels = new Relationship[list.size()];
+                    i = 0;
+                    for (Element e : list) {
+                        rels[i++] = new Relationship(e.attributeValue("Id"), e.attributeValue("Target"), e.attributeValue("Type"), e.attributeValue("TargetMode"));
+                    }
+                    relManager = RelManager.of(rels);
+                } catch (DocumentException | IOException e) {
+                    LOGGER.error("The file format is incorrect or corrupted. [{}]", entry.getName());
+                }
+            }
+            if (relManager == null) relManager = new RelManager();
+        }
+        return relManager;
     }
 
     @Override
@@ -1182,6 +1219,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                                     && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] <= ' ') {
                                     // TODO
                                 }
+                                break;
                         }
                     }
                 } while ((len = is.read(buf, offset, limit - offset)) > 0 && (len += offset) > 0);

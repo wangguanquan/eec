@@ -105,49 +105,30 @@ public class XMLDrawings implements Drawings {
         ZipFile zipFile = excelReader.zipFile;
         if (zipFile == null) return null;
 
-        // 兼容读取WPS内嵌图片cellimages.xml
-        ZipEntry cellImagesEntry = getEntry(zipFile, "xl/cellimages.xml");
-        // 内嵌图片临时缓存 ID: 临时路径
-        Map<String, Path> cellImagesMapper = cellImagesEntry != null ? listCellImages(zipFile, cellImagesEntry) : null;
-        boolean hasCellImages = cellImagesMapper != null && !cellImagesMapper.isEmpty();
-
-        SAXReader reader = SAXReader.createDefault();
-        Document document;
+        if (excelReader.tempDir == null) {
+            try {
+                excelReader.tempDir = FileUtil.mktmp("eec-");
+            } catch (IOException e) {
+                throw new ExcelReadException("Create temp directory failed.", e);
+            }
+        }
+        Path imagesPath = excelReader.tempDir.resolve("media");
+        if (!Files.exists(imagesPath)) {
+            // Create media path
+            try {
+                Files.createDirectory(imagesPath);
+            } catch (IOException e) {
+                throw new ExcelReadException("Create temp directory failed.", e);
+            }
+        }
 
         List<Picture> pictures = new ArrayList<>();
         for (Sheet sheet : excelReader.sheets) {
             XMLSheet xmlSheet = (XMLSheet) sheet;
-            int i = xmlSheet.path.lastIndexOf('/');
-            if (i < 0) i = xmlSheet.path.lastIndexOf('\\');
-            String fileName = xmlSheet.path.substring(i + 1);
-            ZipEntry entry = getEntry(zipFile, "xl/worksheets/_rels/" + fileName + ".rels");
-            if (entry == null) continue;
-            try {
-                document = reader.read(zipFile.getInputStream(entry));
-            } catch (DocumentException | IOException e) {
-                throw new ExcelReadException("The file format is incorrect or corrupted. [" + entry.getName() + ".rels]");
-            }
-
-            if (excelReader.tempDir == null) {
-                try {
-                    excelReader.tempDir = FileUtil.mktmp("eec-");
-                } catch (IOException e) {
-                    throw new ExcelReadException("Create temp directory failed.", e);
-                }
-            }
-            Path imagesPath = excelReader.tempDir.resolve("media");
-            if (!Files.exists(imagesPath)) {
-                // Create media path
-                try {
-                    Files.createDirectory(imagesPath);
-                } catch (IOException e) {
-                    throw new ExcelReadException("Create temp directory failed.", e);
-                }
-            }
-            List<Element> list = document.getRootElement().elements();
-            for (Element e : list) {
-                String target = e.attributeValue("Target"), type = e.attributeValue("Type");
-                entry = getEntry(zipFile, "xl/" + toZipPath(target));
+            List<Relationship> list = xmlSheet.getRelManager().getAllByTypes(Const.Relationship.DRAWINGS, Const.Relationship.IMAGE);
+            for (Relationship e : list) {
+                String target = e.getTarget(), type = e.getType();
+                ZipEntry entry = getEntry(zipFile, "xl/" + toZipPath(target));
                 // Background
                 if (Const.Relationship.IMAGE.equals(type)) {
                     Picture picture = new Picture();
@@ -175,8 +156,12 @@ public class XMLDrawings implements Drawings {
                 }
             }
 
+            // 兼容读取WPS内嵌图片cellimages.xml
+            ZipEntry cellImagesEntry = getEntry(zipFile, "xl/cellimages.xml");
+            // 内嵌图片临时缓存 ID: 临时路径
+            Map<String, Path> cellImagesMapper = cellImagesEntry != null ? listCellImages(zipFile, cellImagesEntry) : null;
             // WPS内嵌图片兼容处理
-            if (hasCellImages) {
+            if (cellImagesMapper != null && !cellImagesMapper.isEmpty()) {
                 try {
                     pictures.addAll(quickFindCellImages(sheet, cellImagesMapper));
                 } catch (IOException e) {

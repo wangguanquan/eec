@@ -56,14 +56,18 @@ public class Relationship implements Serializable, Cloneable {
     public Relationship() { }
 
     public Relationship(String target, String type) {
-        this.target = target;
-        this.type = type;
+        this(null, target, type, null);
     }
 
     public Relationship(String id, String target, String type) {
+        this(id, target, type, null);
+    }
+
+    public Relationship(String id, String target, String type, String targetMode) {
         this.id = id;
         this.target = target;
         this.type = type;
+        this.targetMode = targetMode;
     }
 
     public String getTarget() {

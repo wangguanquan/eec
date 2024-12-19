@@ -33,7 +33,10 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -116,6 +119,23 @@ public class RelManager implements Serializable {
             if (type.equals(rel.getType())) return rel;
         }
         return null;
+    }
+
+    public List<Relationship> getAllByTypes(String ... types) {
+        if (relationships == null || relationships.isEmpty() || types == null || types.length == 0)
+            return Collections.emptyList();
+        List<Relationship> list = new ArrayList<>();
+        Set<String> distinctTypes = new HashSet<>(Arrays.asList(types));
+        for (Relationship rel : relationships) {
+            if (distinctTypes.contains(rel.getType())) {
+                list.add(rel);
+            }
+        }
+        return list;
+    }
+
+    public int size() {
+        return relationships != null ? relationships.size() : 0;
     }
 
     public void write(Path parent, String name) throws IOException {
