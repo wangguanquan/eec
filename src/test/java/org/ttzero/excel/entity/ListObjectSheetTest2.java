@@ -1080,9 +1080,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         final String[] statusDesc = { "未开始", "进行中", "完结", "中止" };
 
         @Override
-        public Integer reversion(String v, Class<?> fieldClazz) {
+        public Integer reversion(org.ttzero.excel.reader.Row row, Cell cell, Class<?> destClazz) {
             for (int i = 0; i < statusDesc.length; i++) {
-                if (statusDesc[i].equals(v)) {
+                if (statusDesc[i].equals(row.getString(cell))) {
                     return i;
                 }
             }
@@ -1235,13 +1235,13 @@ public class ListObjectSheetTest2 extends WorkbookTest {
 
 
         @Override
-        public IBaseEnum reversion(String v, Class<?> fieldClazz) {
+        public IBaseEnum reversion(org.ttzero.excel.reader.Row row, Cell cell, Class<?> destClazz) {
 
-            Map<String, IBaseEnum> clazzIBaseEnumMap = map.get(fieldClazz.getSimpleName());
+            Map<String, IBaseEnum> clazzIBaseEnumMap = map.get(destClazz.getSimpleName());
             if (clazzIBaseEnumMap == null) {
                 return null;
             }
-            return clazzIBaseEnumMap.get(v);
+            return clazzIBaseEnumMap.get(row.getString(cell));
         }
 
         @Override
