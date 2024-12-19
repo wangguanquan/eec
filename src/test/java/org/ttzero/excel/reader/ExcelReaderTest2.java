@@ -25,7 +25,10 @@ import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Panes;
+import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.Workbook;
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.StringUtil;
@@ -334,6 +337,29 @@ public class ExcelReaderTest2 {
                     }
                 }
             }
+        }
+    }
+
+    @Test public void testReadRelManager() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("template2.xlsx"))) {
+            XMLSheet sheet = (XMLSheet) reader.sheet(2);
+            RelManager rel = sheet.getRelManager();
+            assertEquals(rel.size(), 4);
+            Relationship rId1 = rel.getById("rId1");
+            assertEquals(rId1.getTarget(), "../printerSettings/printerSettings3.bin");
+            assertEquals(rId1.getType(), Const.Relationship.PRINTER_SETTINGS);
+
+            Relationship rId2 = rel.getById("rId2");
+            assertEquals(rId2.getTarget(), "../drawings/drawing1.xml");
+            assertEquals(rId2.getType(), Const.Relationship.DRAWINGS);
+
+            Relationship rId3 = rel.getById("rId3");
+            assertEquals(rId3.getTarget(), "../drawings/vmlDrawing1.vml");
+            assertEquals(rId3.getType(), Const.Relationship.VMLDRAWING);
+
+            Relationship rId4 = rel.getById("rId4");
+            assertEquals(rId4.getTarget(), "../comments1.xml");
+            assertEquals(rId4.getType(), Const.Relationship.COMMENTS);
         }
     }
 

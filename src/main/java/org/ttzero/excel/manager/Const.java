@@ -67,6 +67,7 @@ public interface Const {
             , VMLDRAWING = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing"
             , CHARTS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
             , HYPERLINK = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
+            , PRINTER_SETTINGS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings"
             ;
     }
 
