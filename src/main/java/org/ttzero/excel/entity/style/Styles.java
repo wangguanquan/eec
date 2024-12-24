@@ -971,7 +971,7 @@ public class Styles implements Storable {
      */
     public boolean isDate(int styleIndex) {
         // Test from cache
-        if (fastTestDateFmt(styleIndex)) return true;
+        if (dateFmtCache != null && dateFmtCache.contains(styleIndex)) return true;
 
         if (styleIndex > counter.get()) return false;
         int style = this.styleIndex[styleIndex];
@@ -1133,7 +1133,9 @@ public class Styles implements Storable {
      *
      * @param styleIndex the style index
      * @return true if the style content data format
+     * @deprecated Replace with {@link  #isDate(int)}
      */
+    @Deprecated
     public boolean fastTestDateFmt(int styleIndex) {
         return dateFmtCache != null && dateFmtCache.contains(styleIndex);
     }

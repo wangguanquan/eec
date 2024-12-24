@@ -125,7 +125,7 @@ public class StylesTest {
 
         Styles styles = Styles.load(Files.newInputStream(storagePath));
         for (int i = 0, size = styles.size(); i < size; i++) {
-           boolean isDate = styles.fastTestDateFmt(i);
+           boolean isDate = styles.isDate(i);
            if (i == 0 || i == 5 || i >= 7 && i <= 9) assertFalse(isDate);
            else assertTrue(isDate);
         }

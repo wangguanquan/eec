@@ -50,10 +50,12 @@ import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED_CELL;
 import static org.ttzero.excel.util.DateUtil.toDate;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDateTime;
 import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTime;
+import static org.ttzero.excel.util.DateUtil.toTimeChars;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
 import static org.ttzero.excel.util.StringUtil.EMPTY;
 import static org.ttzero.excel.util.StringUtil.isNotBlank;
@@ -1092,19 +1094,19 @@ public class Row {
         CellType type;
         switch (c.t) {
             case SST        :
-            case INLINESTR  : type = CellType.STRING;                                                  break;
+            case INLINESTR  : type = CellType.STRING;                                         break;
             case NUMERIC    :
-            case CHARACTER  : type = !styles.fastTestDateFmt(c.xf) ? CellType.INTEGER : CellType.DATE; break;
-            case LONG       : type = CellType.LONG;                                                    break;
-            case DECIMAL    : type = !styles.fastTestDateFmt(c.xf) ? CellType.DECIMAL : CellType.DATE; break;
-            case DOUBLE     : type = !styles.fastTestDateFmt(c.xf) ? CellType.DOUBLE : CellType.DATE;  break;
+            case CHARACTER  : type = !styles.isDate(c.xf) ? CellType.INTEGER : CellType.DATE; break;
+            case LONG       : type = CellType.LONG;                                           break;
+            case DECIMAL    : type = !styles.isDate(c.xf) ? CellType.DECIMAL : CellType.DATE; break;
+            case DOUBLE     : type = !styles.isDate(c.xf) ? CellType.DOUBLE : CellType.DATE;  break;
             case DATETIME   :
             case DATE       :
-            case TIME       : type = CellType.DATE;                                                    break;
-            case BOOL       : type = CellType.BOOLEAN;                                                 break;
+            case TIME       : type = CellType.DATE;                                           break;
+            case BOOL       : type = CellType.BOOLEAN;                                        break;
             case EMPTY_TAG  :
-            case BLANK      : type = CellType.BLANK;                                                   break;
-            case UNALLOCATED: type = CellType.UNALLOCATED;                                             break;
+            case BLANK      : type = CellType.BLANK;                                          break;
+            case UNALLOCATED: type = CellType.UNALLOCATED;                                    break;
             default         : type = CellType.STRING;
         }
         return type;
@@ -1298,19 +1300,20 @@ public class Row {
                 case SST      : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
                 case INLINESTR: joiner.add(c.stringVal); break;
                 case NUMERIC  :
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.intVal));
-                    else joiner.add(toLocalDate(c.intVal).toString());
+                    if (!styles.isDate(c.xf)) joiner.add(String.valueOf(c.intVal));
+                    else if (c.intVal > 0) joiner.add(toLocalDate(c.intVal).toString());
+                    else joiner.add(new String(toTimeChars(LocalTime.MIN)));
                     break;
                 case LONG     : joiner.add(String.valueOf(c.longVal)); break;
                 case DECIMAL:
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(c.decimal.toString());
-                    else if (c.decimal.compareTo(BigDecimal.ONE) > 0) joiner.add(toTimestamp(c.decimal.doubleValue()).toString());
-                    else joiner.add(toLocalTime(c.decimal.doubleValue()).toString());
+                    if (!styles.isDate(c.xf)) joiner.add(c.decimal.toString());
+                    else if (c.decimal.compareTo(BigDecimal.ONE) >= 0) joiner.add(toDateTimeString(toTimestamp(c.decimal.doubleValue())));
+                    else joiner.add(new String(toTimeChars(toLocalTime(c.decimal.doubleValue()))));
                     break;
                 case DOUBLE:
-                    if (!styles.fastTestDateFmt(c.xf)) joiner.add(String.valueOf(c.doubleVal));
-                    else if (c.doubleVal > 1.0000) joiner.add(toTimestamp(c.doubleVal).toString());
-                    else joiner.add(toLocalTime(c.doubleVal).toString());
+                    if (!styles.isDate(c.xf)) joiner.add(String.valueOf(c.doubleVal));
+                    else if (c.doubleVal >= 1.0000D) joiner.add(toDateTimeString(toTimestamp(c.doubleVal)));
+                    else joiner.add(new String(toTimeChars(toLocalTime(c.doubleVal))));
                     break;
                 case BLANK    :
                 case EMPTY_TAG: joiner.add(EMPTY); break;
@@ -1355,20 +1358,22 @@ public class Row {
                     data.put(key, c.stringVal);
                     break;
                 case NUMERIC:
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.intVal);
-                    else data.put(key, toTimestamp(c.intVal));
+                    if (!styles.isDate(c.xf)) data.put(key, c.intVal);
+                    else if (c.intVal > 0) data.put(key, toTimestamp(c.intVal));
+                    // 时分秒为00:00:00时读取为整数0
+                    else data.put(key, java.sql.Time.valueOf(LocalTime.MIN));
                     break;
                 case LONG:
                     data.put(key, c.longVal);
                     break;
                 case DECIMAL:
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.decimal);
-                    else if (c.decimal.compareTo(BigDecimal.ONE) > 0) data.put(key, toTimestamp(c.decimal.doubleValue()));
+                    if (!styles.isDate(c.xf)) data.put(key, c.decimal);
+                    else if (c.decimal.compareTo(BigDecimal.ONE) >= 0) data.put(key, toTimestamp(c.decimal.doubleValue()));
                     else data.put(key, toTime(c.decimal.doubleValue()));
                     break;
                 case DOUBLE:
-                    if (!styles.fastTestDateFmt(c.xf)) data.put(key, c.doubleVal);
-                    else if (c.doubleVal > 1.00000) data.put(key, toTimestamp(c.doubleVal));
+                    if (!styles.isDate(c.xf)) data.put(key, c.doubleVal);
+                    else if (c.doubleVal >= 1.00000D) data.put(key, toTimestamp(c.doubleVal));
                     else data.put(key, toTime(c.doubleVal));
                     break;
                 case BLANK:
