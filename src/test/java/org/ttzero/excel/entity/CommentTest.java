@@ -85,7 +85,7 @@ public class CommentTest extends WorkbookTest {
         list.add(new Stock(10, StockHealth.DANGER));
 
         Workbook workbook = new Workbook();
-        ListSheet listSheet = new ListSheet<>(list);
+        ListSheet<Stock> listSheet = new ListSheet<>(list);
         // 获取Comments
         Comments comments = listSheet.createComments();
         // A1单元格添加批注
