@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
  * @author guanquan.wang
@@ -202,26 +203,26 @@ public class SimpleSheetTest extends WorkbookTest {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row = iter.next();
-            assertEquals(row.toString(), "表头1 | 表头2");
+            assertEquals("表头1 | 表头2", row.toString());
             Styles styles = reader.getStyles();
             int fx = row.getCellStyle(0);
             Font font = styles.getFont(fx);
-            assertEquals(font, new Font("宋体", 12, Font.Style.BOLD, Color.BLACK));
+            assertEquals(new Font("宋体", 12, Font.Style.BOLD, Color.BLACK), font);
             Fill fill = styles.getFill(fx);
-            assertEquals(fill, new Fill(Styles.toColor("#E9EAEC")));
+            assertEquals(new Fill(Styles.toColor("#E9EAEC")), fill);
 
             assertTrue(iter.hasNext());
             row = iter.next();
-            assertEquals(row.toString(), "列1 | 列2 | 列3");
+            assertEquals("列1 | 列2 | 列3", row.toString());
 
             assertTrue(iter.hasNext());
             row = iter.next();
-            assertEquals(row.toString(), "1 | 2 | 3 | 4");
+            assertEquals("1 | 2 | 3 | 4", row.toString());
 
             assertTrue(iter.hasNext());
             row = iter.next();
             // 时间忽略毫秒值，所以这里特殊处理
-            assertEquals(row.toString(), "5 | " + new Timestamp(now.getTime() / 1000 * 1000) + " | 7 | null | 字母 | 9 | 10.1243");
+            assertEquals("5 | " + toDateTimeString(now) + " | 7 | null | 字母 | 9 | 10.1243", row.toString());
         }
     }
 
