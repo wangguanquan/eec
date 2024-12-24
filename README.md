@@ -313,6 +313,15 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.21 (2024-12-24)
+-------------
+- 提升Excel转CSV时对时间类型的兼容性(#409)
+- Excel转CSV时保持Excel中的空行位置
+- 提升添加批注的便利性并开放批注的字体属性
+- 模板导出支持File和Buffer图片类型
+- 修复CSVSheet默认分割符设置为0x0的过失问题
+- 修复导出批注数量超过57344时抛异常的BUG(#404)
+
 Version 0.5.20 (2024-11-13)
 -------------
 - 新增SimpleSheet简单工作表，简化导出的数据格式
@@ -333,14 +342,10 @@ Version 0.5.18 (2024-08-13)
 - 删除I18N相关代码降低复杂度
 - 精简BloomFilter降低复杂度，精简后仅支持String类型
 
-Version 0.5.17 (2024-07-18)
--------------
-- 修复部分情况下Row#toMap抛下标越界问题(#380)
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.20-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.21-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
