@@ -1294,7 +1294,7 @@ public class Row {
         StringJoiner joiner = new StringJoiner(" | ");
         // show row number
 //        joiner.add(String.valueOf(getRowNumber()));
-        for (int i = fc; i < lc; i++) {
+        for (int i = 0; i < lc; i++) {
             Cell c = cells[i];
             switch (c.t) {
                 case SST      : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
