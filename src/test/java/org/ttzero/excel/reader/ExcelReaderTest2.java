@@ -259,6 +259,7 @@ public class ExcelReaderTest2 {
         // 1: nv大于1w的行数
         final int[] expect = { 0, 0 };
         new Workbook()
+            .bestSpeed()
             .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
             .addSheet(new ListSheet<E>().setData((i, lastOne) -> {
                 List<E> list = null;

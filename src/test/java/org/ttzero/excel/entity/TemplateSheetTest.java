@@ -483,7 +483,7 @@ public class TemplateSheetTest extends WorkbookTest {
                 }
 
                 writeGlobalAttribute(xl);
-                Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+                Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
                 FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
             } catch (Exception e) {

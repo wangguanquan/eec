@@ -815,6 +815,24 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             .writeTo(defaultTestPath.resolve("MergeWrap.xlsx"));
     }
 
+    @Test public void testBestSpeedWrite() throws IOException {
+        String fileName = "test best speed object.xlsx";
+        List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData();
+        new Workbook()
+            .bestSpeed()
+            .addSheet(new ListSheet<>(expectList))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> list =  reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Item expect = expectList.get(i), e = list.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
     static int countLf(String s) {
         int i = s.indexOf(10), c = 0;
         if (i >= 0) {
