@@ -98,7 +98,7 @@ public class FileUtil {
     }
 
     /**
-     * Remove file and sub-files if it a directory
+     * Remove file and sub-files if it is a directory
      *
      * @param root the root path
      * @param rmSelf remove self if true
@@ -108,20 +108,17 @@ public class FileUtil {
         if (root.isDirectory()) {
             File[] subFiles = root.listFiles();
             if (subFiles == null) return;
-            List<File> files = new ArrayList<>();
             int index = 0;
-            do {
-                files.addAll(Arrays.asList(subFiles));
-                for (; index < files.size(); index++) {
-                    if (files.get(index).isDirectory()) {
-                        root = files.get(index);
-                        subFiles = root.listFiles();
-                        if (subFiles != null) {
-                            files.addAll(Arrays.asList(subFiles));
-                        }
+            List<File> files = new ArrayList<>(Arrays.asList(subFiles));
+            for (; index < files.size(); index++) {
+                if (files.get(index).isDirectory()) {
+                    root = files.get(index);
+                    subFiles = root.listFiles();
+                    if (subFiles != null) {
+                        files.addAll(Arrays.asList(subFiles));
                     }
                 }
-            } while (index < files.size());
+            }
 
             for (; --index >= 0; ) {
                 rm(files.get(index));
