@@ -282,11 +282,7 @@ public class NumFmt implements Cloneable, Comparable<NumFmt> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof NumFmt) {
-            NumFmt other = (NumFmt) o;
-            return Objects.equals(other.code, code);
-        }
-        return false;
+        return this == o || (o instanceof NumFmt) && Objects.equals(((NumFmt) o).code, code);
     }
 
     @Override

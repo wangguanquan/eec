@@ -104,13 +104,13 @@ public class Fill implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Fill) {
+        boolean r = this == o;
+        if (!r && o instanceof Fill) {
             Fill other = (Fill) o;
-            return (other.patternType == this.patternType)
-                && (Objects.equals(other.bgColor, bgColor))
-                && (Objects.equals(other.fgColor, fgColor));
+            r = (other.patternType == patternType) && (Objects.equals(other.bgColor, bgColor)) && (Objects.equals(other.fgColor, fgColor))
+                || other.patternType == PatternType.none && patternType == PatternType.none;
         }
-        return false;
+        return r;
     }
 
     /**

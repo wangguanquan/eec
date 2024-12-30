@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.ttzero.excel.entity.style.ColorIndex.colorNullEqualsBlack;
 import static org.ttzero.excel.entity.style.Styles.getAttr;
 
 /**
@@ -638,17 +639,15 @@ public class Font implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        boolean r = false;
-        if (o instanceof Font) {
+        boolean r = this == o;
+        if (!r && o instanceof Font) {
             Font other = (Font) o;
             r = other.size == size
-                && Objects.equals(other.color, color)
-                && other.style == style;
-            if (r) {
-                r = (("minor".equals(scheme) || "major".equals(scheme)))
-                    ? Objects.equals(other.scheme, scheme)
-                    : Objects.equals(other.name, name) && other.charset == charset && other.family == family;
-            }
+                && colorNullEqualsBlack(other.color, color)
+                && other.style == style
+                && ((("minor".equals(scheme) || "major".equals(scheme)))
+                ? Objects.equals(other.scheme, scheme)
+                : Objects.equals(other.name, name) && other.charset == charset && other.family == family);
         }
         return r;
     }

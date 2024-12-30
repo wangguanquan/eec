@@ -171,11 +171,12 @@ public class Dimension {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Dimension) {
+        boolean r = this == o;
+        if (!r && o instanceof Dimension) {
             Dimension other = (Dimension) o;
-            return other.firstRow == firstRow && other.firstColumn == firstColumn
+            r = other.firstRow == firstRow && other.firstColumn == firstColumn
                     && other.lastRow == lastRow && other.lastColumn == lastColumn;
         }
-        return false;
+        return r;
     }
 }

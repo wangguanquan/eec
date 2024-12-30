@@ -122,4 +122,22 @@ public final class ColorIndex {
         return new String(chars);
     }
 
+    /**
+     * 颜色比较，{@code null}与{@code Color.BLACK}等价
+     *
+     * @param color1 颜色1
+     * @param color2 颜色2
+     * @return true：颜色相同
+     */
+    public static boolean colorNullEqualsBlack(Color color1, Color color2) {
+        int n = (color1 != null ? 1 : 0) | (color2 != null ? 2 : 0);
+        boolean r;
+        switch (n) {
+            case 3:  r = color1.equals(color2);      break;
+            case 2:  r = color2.equals(Color.BLACK); break;
+            case 1:  r = color1.equals(Color.BLACK); break;
+            default: r = true;
+        }
+        return r;
+    }
 }
