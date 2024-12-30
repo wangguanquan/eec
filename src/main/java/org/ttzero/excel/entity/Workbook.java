@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.zip.Deflater;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -163,6 +164,10 @@ public class Workbook implements Storable {
      * 自定义属性
      */
     private CustomProperties customProperties;
+    /**
+     * 压缩等级 {@code 0-9}，数字越小压缩效果越好耗时越长
+     */
+    private int compressionLevel = 5;
 
     /**
      * 创建一个未命名工作薄
@@ -897,5 +902,35 @@ public class Workbook implements Storable {
         if (customProperties == null) customProperties = new CustomProperties();
         customProperties.markAsReadOnly();
         return this;
+    }
+
+    /**
+     * 将压缩等级设为{@code 1}以获取更快的速度
+     *
+     * @return 当前工作表
+     */
+    public Workbook bestSpeed() {
+        this.compressionLevel = Deflater.BEST_SPEED;
+        return this;
+    }
+
+    /**
+     * 设置压缩等级，范围{@code -1-9}
+     *
+     * @param level 压缩等级
+     * @return 当前工作表
+     */
+    public Workbook setCompressionLevel(int level) {
+        this.compressionLevel = Math.max(Math.min(level, 9), -1);
+        return this;
+    }
+
+    /**
+     * 获取压缩等级
+     *
+     * @return 压缩等级
+     */
+    public int getCompressionLevel() {
+        return compressionLevel;
     }
 }

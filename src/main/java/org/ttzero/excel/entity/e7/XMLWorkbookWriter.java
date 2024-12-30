@@ -417,7 +417,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             LOGGER.debug("All sheets have completed writing, starting to compression ...");
 
             // Zip compress
-            Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+            Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
             LOGGER.debug("Compression completed. {}", zipFile);
 
             return zipFile;
