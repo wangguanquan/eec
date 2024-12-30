@@ -55,10 +55,24 @@ public class Dimension {
      */
     public final int width, height;
 
+    /**
+     * 创建一个范围值， 起始和结束相同
+     *
+     * @param firstRow    起始行号 (one base)
+     * @param firstColumn 起始列号 (one base)
+     */
     public Dimension(int firstRow, short firstColumn) {
         this(firstRow, firstColumn, firstRow, firstColumn);
     }
 
+    /**
+     * 创建一个范围值
+     *
+     * @param firstRow    起始行号 (one base)
+     * @param firstColumn 起始列号 (one base)
+     * @param lastRow     末尾行号 (one base)
+     * @param lastColumn  末尾列号 (one base)
+     */
     public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
         this.firstRow = Math.max(firstRow, 1);
         this.firstColumn = (short) Math.max(firstColumn, 1);
@@ -68,7 +82,7 @@ public class Dimension {
         this.width = this.lastColumn - this.firstColumn + 1;
         this.height = this.lastRow - this.firstRow + 1;
         if (width < 1 || height < 1)
-            throw new IllegalArgumentException("Dimension(firstRow:" + firstRow + ",firstColumn:" + firstColumn + ",lastRow=" + lastRow + ",lastColumn=" + lastColumn +") contains invalid range");
+            throw new IllegalArgumentException("Dimension(firstRow:" + firstRow + ",firstColumn:" + firstColumn + ",lastRow=" + lastRow + ",lastColumn=" + lastColumn + ") contains invalid range");
     }
 
     /**
@@ -149,8 +163,7 @@ public class Dimension {
     @Override
     public String toString() {
         return toCoordinate(firstRow, firstColumn)
-            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + toCoordinate(lastRow, lastColumn)
-            : "");
+            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + toCoordinate(lastRow, lastColumn) : "");
     }
 
     /**
