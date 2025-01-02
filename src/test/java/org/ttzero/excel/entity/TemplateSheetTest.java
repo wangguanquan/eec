@@ -447,6 +447,20 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void defaultFormatOnDateCell() throws IOException {
+        Map<String, Object> data = new HashMap<>();
+        data.put("channel", new Timestamp(System.currentTimeMillis()));
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx")).setData(data))
+            .writeTo(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"))) {
+            Map<String, Object> map = reader.sheet(0).header(1).iterator().next().toMap();
+            assertEquals(map.get("渠道").getClass(), Timestamp.class);
+            assertEquals(((Timestamp) map.get("渠道")).getTime() / 1000, ((Timestamp)data.get("channel")).getTime() / 1000);
+        }
+    }
+
     public static class SupplierXMLWorkbookWriter extends XMLWorkbookWriter {
         private final Supplier<Sheet> sheetSupplier;
 
