@@ -64,6 +64,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
+import static org.ttzero.excel.entity.SimpleSheet.defaultDatetimeCell;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
@@ -572,6 +573,12 @@ public class TemplateSheet extends Sheet {
                 // Clear cells
                 cell.clear();
 
+                // TODO 复制公式（不是简单的复制，需重新计算位置）
+                if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
+                // 复制样式
+                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
+                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
+
                 boolean fillCell = false;
                 // 复制数据
                 switch (row0.getCellType(cell0)) {
@@ -600,13 +607,6 @@ public class TemplateSheet extends Sheet {
                 }
 
                 if (!writeAsExcel) continue;
-
-                // TODO 复制公式（不是简单的复制，需重新计算位置）
-                if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
-
-                // 复制样式
-                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
-                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
                 // 合并单元格重新计算位置
                 if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
@@ -732,6 +732,10 @@ public class TemplateSheet extends Sheet {
                     default:
                         emptyColumn.setClazz(clazz);
                         cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, clazz, false);
+                        // 日期类型添加默认format
+                        if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
+                            datetimeCell(workbook.getStyles(), cell);
+                        }
                 }
             } else cell.emptyTag();
             // 序列的dimension纵向+1
@@ -750,6 +754,16 @@ public class TemplateSheet extends Sheet {
             }
             cell.setString(new String(pn.cb, 0, k));
         }
+    }
+
+    /**
+     * 日期类型添加默认format
+     *
+     * @param styles Styles
+     * @param cell 单元格
+     */
+    protected void datetimeCell(Styles styles, Cell cell) {
+        defaultDatetimeCell(styles, cell);
     }
 
     @Override

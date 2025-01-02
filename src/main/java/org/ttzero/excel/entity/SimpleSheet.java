@@ -289,7 +289,7 @@ public class SimpleSheet<T> extends ListSheet<T> {
                 cellValueAndStyle.reset(row, cell, e, column);
                 // 日期类型添加默认format
                 if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
-                    datetimeCell(cell);
+                    datetimeCell(workbook.getStyles(), cell);
                 }
             }
             row.height = getRowHeight();
@@ -299,20 +299,11 @@ public class SimpleSheet<T> extends ListSheet<T> {
     /**
      * 日期类型添加默认format
      *
+     * @param styles Styles
      * @param cell 单元格
      */
-    protected void datetimeCell(Cell cell) {
-        Styles styles = workbook.getStyles();
-        int style = styles.getStyleByIndex(cell.xf);
-        // 如果已有格式化则保留
-        if (Styles.hasNumFmt(style)) return;
-        switch (cell.t) {
-            case Cell.DATETIME: style = styles.modifyNumFmt(style, NumFmt.DATETIME_FORMAT); break;
-            case Cell.DATE    : style = styles.modifyNumFmt(style, NumFmt.DATE_FORMAT);     break;
-            case Cell.TIME    : style = styles.modifyNumFmt(style, NumFmt.TIME_FORMAT);     break;
-        }
-        if (!Styles.hasHorizontal(style)) style |= Horizontals.CENTER;
-        cell.xf = styles.of(style);
+    protected static void datetimeCell(Styles styles, Cell cell) {
+        defaultDatetimeCell(styles, cell);
     }
 
     /**
@@ -338,5 +329,24 @@ public class SimpleSheet<T> extends ListSheet<T> {
     @Override
     public double getDefaultWidth() {
         return type <= 2 ? 10.16D : super.getDefaultWidth();
+    }
+
+    /**
+     * 日期类型添加默认format
+     *
+     * @param styles Styles
+     * @param cell 单元格
+     */
+    public static void defaultDatetimeCell(Styles styles, Cell cell) {
+        // 已有日期格式化则保留
+        if (styles.isDate(cell.xf)) return;
+        int style = styles.getStyleByIndex(cell.xf);
+        switch (cell.t) {
+            case Cell.DATETIME: style = styles.modifyNumFmt(style, NumFmt.DATETIME_FORMAT); break;
+            case Cell.DATE    : style = styles.modifyNumFmt(style, NumFmt.DATE_FORMAT);     break;
+            case Cell.TIME    : style = styles.modifyNumFmt(style, NumFmt.TIME_FORMAT);     break;
+        }
+        if (!Styles.hasHorizontal(style)) style |= Horizontals.CENTER;
+        cell.xf = styles.of(style);
     }
 }
