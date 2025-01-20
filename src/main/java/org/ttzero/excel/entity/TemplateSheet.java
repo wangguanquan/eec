@@ -805,6 +805,12 @@ public class TemplateSheet extends Sheet {
         }
         rowIterator = null;
         namespaceMapper = null;
+        columns = null;
+        relManager = null;
+        rowBlock = null;
+        sheetWriter = null;
+        cellValueAndStyle = null;
+        extProp = null;
     }
 
     /**
