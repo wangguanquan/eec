@@ -60,6 +60,15 @@ public abstract class Validation {
      */
     public abstract String validationFormula();
 
+    /**
+     * 是否为扩展节点
+     *
+     * @return {@code true} 扩展节点
+     */
+    public boolean isExtension() {
+        return false;
+    }
+
     public Validation dimension(Dimension sqref) {
         this.sqref = sqref;
         return this;
@@ -67,14 +76,14 @@ public abstract class Validation {
 
     @Override
     public String toString() {
-        return "<dataValidation type=\"" + getType()
+        return "<" + (isExtension() ? "x14:" : "" ) + "dataValidation type=\"" + getType()
             + (operator == null || operator == Operator.between ? "" : "\" operator=\"" + operator)
             + "\" allowBlank=\"" + (allowBlank ? 1 : 0)
             + "\" showInputMessage=\"" + (showInputMessage ? 1 : 0)
             + "\" showErrorMessage=\"" + (showErrorMessage ? 1 : 0)
-            + "\" sqref=\"" + sqref + "\">"
+            + (isExtension() ? "\">" : "\" sqref=\"" + sqref + "\">")
             + validationFormula()
-            + "</dataValidation>";
+            + "</" + (isExtension() ? "x14:" : "" ) + "dataValidation>";
     }
 
     public enum Operator {

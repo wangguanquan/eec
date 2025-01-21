@@ -16,8 +16,11 @@
 
 package org.ttzero.excel.reader;
 
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
+import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
+import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
  * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
@@ -154,6 +157,38 @@ public class Dimension {
     }
 
     /**
+     * 转为引用字符串
+     *
+     * @return 引用字符串
+     */
+    public String toReferer() {
+        char[] chars;
+        if (lastRow > firstRow || lastColumn > firstColumn) {
+            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastRow <= 26 ? 1 : lastRow <= 702 ? 2 : 3, r1 = stringSize(lastRow);
+            chars = new char[c0 + r0 + c1 + r1 + 5];
+            chars[i++] = '$';
+            System.arraycopy(int2Col(firstColumn), 0, chars, i, c0);
+            i += c0;
+            chars[i++] = '$';
+            getChars(firstRow, i += r0, chars);
+            chars[i++] = ':';
+            chars[i++] = '$';
+            System.arraycopy(int2Col(lastColumn), 0, chars, i, c1);
+            i += c1;
+            chars[i++] = '$';
+            getChars(lastRow, i + r1, chars);
+        } else {
+            int c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3;
+            chars = new char[c0 + stringSize(firstRow) + 2];
+            chars[0] = '$';
+            System.arraycopy(int2Col(firstColumn), 0, chars, 1, c0);
+            chars[c0 + 1] = '$';
+            getChars(firstRow, chars.length, chars);
+        }
+        return new String(chars);
+    }
+
+    /**
      * 检查指定坐标是否在本范围中
      *
      * @param r 行号
@@ -171,11 +206,12 @@ public class Dimension {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Dimension) {
+        boolean r = this == o;
+        if (!r && o instanceof Dimension) {
             Dimension other = (Dimension) o;
-            return other.firstRow == firstRow && other.firstColumn == firstColumn
-                    && other.lastRow == lastRow && other.lastColumn == lastColumn;
+            r = other.firstRow == firstRow && other.firstColumn == firstColumn
+                && other.lastRow == lastRow && other.lastColumn == lastColumn;
         }
-        return false;
+        return r;
     }
 }
