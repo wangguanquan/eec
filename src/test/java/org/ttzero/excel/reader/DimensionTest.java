@@ -33,6 +33,8 @@ public class DimensionTest {
         assertEquals(d.lastRow, 1);
         assertEquals(d.width, 1);
         assertEquals(d.height, 1);
+
+        assertEquals(d.toReferer(), "$A$1");
     }
 
     @Test public void testFirstDim2() {
@@ -43,6 +45,8 @@ public class DimensionTest {
         assertEquals(d.lastRow, 3);
         assertEquals(d.width, 1);
         assertEquals(d.height, 1);
+
+        assertEquals(d.toReferer(), "$B$3");
     }
 
     @Test public void testLastDim() {
@@ -53,15 +57,19 @@ public class DimensionTest {
         assertEquals(d.lastRow, 2);
         assertEquals(d.width, 3);
         assertEquals(d.height, 2);
+
+        assertEquals(d.toReferer(), "$A$1:$C$2");
     }
 
     @Test public void testFullDim() {
-        Dimension d = Dimension.of("A1:C2");
-        assertEquals(d.firstColumn, 1);
-        assertEquals(d.firstRow, 1);
-        assertEquals(d.lastColumn, 3);
-        assertEquals(d.lastRow, 2);
-        assertEquals(d.width, 3);
-        assertEquals(d.height, 2);
+        Dimension d = Dimension.of("AZ103:CCA63335");
+        assertEquals(d.firstColumn, 52);
+        assertEquals(d.firstRow, 103);
+        assertEquals(d.lastColumn, 2107);
+        assertEquals(d.lastRow, 63335);
+        assertEquals(d.width, 2056);
+        assertEquals(d.height, 63233);
+
+        assertEquals(d.toReferer(), "$AZ$103:$CCA$63335");
     }
 }
