@@ -302,12 +302,13 @@ public class Comments implements Storable, Closeable {
         Comment c = new Comment();
         Element r0 = rs.get(0), r1 = rs.size() > 1 ? rs.get(1) : null;
         String v0 = r0.elementText("t");
-        boolean lf = StringUtil.isNotEmpty(v0) && v0.charAt(v0.length() - 1) == '\n', h1 = r1 != null;
-        if (h1 || lf) {
-            c.setTitle(lf ? v0.substring(0, v0.length() - 1) : v0);
-            c.setTitleFont(parseFont(r0.element("rPr")));
+        Font f0 = parseFont(r0.element("rPr"));
+        boolean h0 = f0 != null && f0.isBold(), h1 = r1 != null;
+        if (h0 || r1 != null) {
+            c.setTitleFont(f0);
+            c.setTitle(StringUtil.isNotEmpty(v0) && v0.charAt(v0.length() - 1) == '\n' ? v0.substring(0, v0.length() - 1) : v0);
         }
-        if (h1 || !lf) {
+        if (h1 || !h0) {
             Element t = h1 ? r1 : r0;
             c.setValue(t.elementText("t"));
             c.setValueFont(parseFont(t.element("rPr")));
@@ -319,8 +320,7 @@ public class Comments implements Storable, Closeable {
         if (rPr == null) return null;
         Font font = Font.parseFontTag(rPr);
         // Reset font name
-        Element rFont = rPr.element("rFont");
-        if (rFont != null) font.setName(getAttr(rFont, "val"));
+        font.setName(getAttr(rPr.element("rFont"), "val"));
         return font;
     }
 
