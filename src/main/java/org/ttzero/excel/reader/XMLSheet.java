@@ -1217,6 +1217,14 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                                     && buf[i + 4] == 'V' && buf[i + 5] == 'a' && buf[i + 6] == 'l' && buf[i + 7] == 'i'
                                     && buf[i + 8] == 'd' && buf[i + 9] == 'a' && buf[i + 10] == 't' && buf[i + 11] == 'i'
                                     && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] <= ' ') {
+                                    i += 15;
+                                    // TODO
+                                }
+                                break;
+                            // extLst
+                            case 'e':
+                                if (buf[i + 1] == 'x' && buf[i + 2] == 't' && buf[i + 3] == 'L' && buf[i + 4] == 's' && buf[i + 5] == 't' && buf[i + 6] == '>') {
+                                    i += 7;
                                     // TODO
                                 }
                                 break;
