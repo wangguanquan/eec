@@ -300,18 +300,26 @@ public class Comments implements Storable, Closeable {
         List<Element> rs = text.elements("r");
         if (rs == null || rs.isEmpty()) return null;
         Comment c = new Comment();
-        Element r0 = rs.get(0), r1 = rs.size() > 1 ? rs.get(1) : null;
-        String v0 = r0.elementText("t");
+        Element r0 = rs.get(0);
         Font f0 = parseFont(r0.element("rPr"));
-        boolean h0 = f0 != null && f0.isBold(), h1 = r1 != null;
-        if (h0 || r1 != null) {
+        boolean h0 = f0 != null && f0.isBold();
+        if (h0) {
             c.setTitleFont(f0);
+            String v0 = r0.elementText("t");
             c.setTitle(StringUtil.isNotEmpty(v0) && v0.charAt(v0.length() - 1) == '\n' ? v0.substring(0, v0.length() - 1) : v0);
         }
-        if (h1 || !h0) {
-            Element t = h1 ? r1 : r0;
-            c.setValue(t.elementText("t"));
-            c.setValueFont(parseFont(t.element("rPr")));
+        // TODO 包含多种字体样式
+        if (rs.size() > 1) {
+            StringBuilder buf = new StringBuilder();
+            for (int i = h0 ? 1 : 0; i < rs.size(); i++) {
+                Element t = rs.get(i);
+                String txt = t.elementText("t");
+                if (h0 && i == 1 && StringUtil.isNotEmpty(txt) && txt.charAt(0) == '\n') txt = txt.substring(1);
+                buf.append(txt);
+                Font f1 = parseFont(t.element("rPr"));
+                if (f1 != null) c.setValueFont(f1);
+            }
+            c.setValue(buf.toString());
         }
         return c;
     }
