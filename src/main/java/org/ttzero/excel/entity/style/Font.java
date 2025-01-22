@@ -773,7 +773,7 @@ public class Font implements Cloneable {
      * @param tag dom树font节点
      * @return 字体
      */
-    static Font parseFontTag(Element tag) {
+    public static Font parseFontTag(Element tag) {
         List<Element> sub = tag.elements();
         Font font = new Font();
         for (Element e : sub) {

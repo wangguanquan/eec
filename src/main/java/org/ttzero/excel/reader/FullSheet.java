@@ -17,9 +17,11 @@
 
 package org.ttzero.excel.reader;
 
+import org.ttzero.excel.entity.Comment;
 import org.ttzero.excel.entity.Panes;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 全属性工作表，与普通工作表不同除了值以外{@code FullSheet}将会额外读取行高和列宽以及单元格公式，
@@ -81,4 +83,11 @@ public interface FullSheet extends MergeSheet, CalcSheet {
      * @return 百分比整数化，{@code null}表示未设置
      */
     Integer getZoomScale();
+
+    /**
+     * 获取批注
+     *
+     * @return key: 行列值 {@code col & 0x7FFF | ((long) row) << 16}, value: 批注
+     */
+    Map<Long, Comment> getComments();
 }

@@ -28,19 +28,23 @@ public class Comment {
     /**
      * 标题，加粗显示
      */
-    private String title;
+    public String title;
     /**
      * 内容
      */
-    private String value;
+    public String value;
     /**
      * 指定批注框显示的宽和高
      */
-    private Double width, height;
+    public Double width, height;
     /**
      * 指定批注字体
      */
-    private Font titleFont, valueFont;
+    public Font titleFont, valueFont;
+    /**
+     * Styles
+     */
+    public String style;
 
     public Comment() { }
 

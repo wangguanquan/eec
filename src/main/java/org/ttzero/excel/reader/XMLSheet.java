@@ -23,9 +23,12 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.Comment;
+import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.Panes;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.StringUtil;
 
@@ -47,6 +50,7 @@ import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.ExcelReader.getEntry;
 import static org.ttzero.excel.reader.CalcSheet.parseCalcChain;
+import static org.ttzero.excel.reader.ExcelReader.toZipPath;
 
 /**
  * The open-xml format Worksheet
@@ -1031,6 +1035,9 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     List<Col> cols; // 列宽
     Dimension filter; // 过滤
     Integer zoomScale; // 缩放比例
+    Map<Long, Comment> comments; // 批注
+    String legacyDrawing;
+
 
     XMLFullSheet(XMLSheet sheet) {
         super(sheet);
@@ -1220,6 +1227,20 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                                     // TODO
                                 }
                                 break;
+                            // legacyDrawing
+                            case 'l':
+                                if (len >= 25 && buf[i + 1] == 'e' && buf[i + 2] == 'g' && buf[i + 3] == 'a'
+                                    && buf[i + 4] == 'c' && buf[i + 5] == 'y' && buf[i + 6] == 'D' && buf[i + 7] == 'r'
+                                    && buf[i + 8] == 'a' && buf[i + 9] == 'w' && buf[i + 10] == 'i' && buf[i + 11] == 'n'
+                                    && buf[i + 12] == 'g' && buf[i + 13] <= ' ') {
+                                    i += 13;
+                                    for (int k = nChar - 8; i < k && buf[i] != 'r' && buf[i + 1] != ':'
+                                        && buf[i + 2] != 'i' && buf[i + 3] != 'd' && buf[i + 4] != '=' && buf[i + 5] != '"'; i++) ;
+                                    int a = i += 6;
+                                    for (; i < nChar && buf[i] != '"'; i++) ;
+                                    if (i > a) tags.put("legacyDrawing", new String(buf, a, i - a, StandardCharsets.US_ASCII));
+                                }
+                                break;
                         }
                     }
                 } while ((len = is.read(buf, offset, limit - offset)) > 0 && (len += offset) > 0);
@@ -1250,6 +1271,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
             dims = (List<Dimension>) tags.get("mergeCells");
             filter = (Dimension) tags.get("filter");
             mergeCells = dims != null ? dims : (dims = Collections.emptyList());
+            legacyDrawing = (String) tags.get("legacyDrawing");
         }
         return dims.isEmpty() ? null : dims;
     }
@@ -1367,5 +1389,29 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     @Override
     public Integer getZoomScale() {
         return zoomScale;
+    }
+
+    @Override
+    public Map<Long, Comment> getComments() {
+        if (comments == null) {
+            RelManager relManager = getRelManager();
+            Relationship commentsRel = relManager != null ? relManager.getByType(Const.Relationship.COMMENTS) : null;
+            if (commentsRel != null) {
+                if (mergeCells == null) getMergeCells();
+                Relationship vmlRel = StringUtil.isNotEmpty(legacyDrawing) ? relManager.getById(legacyDrawing) : null;
+                if (vmlRel != null) {
+                    ZipEntry commentEntry = getEntry(zipFile, "xl/" + toZipPath(commentsRel.getTarget())), vmlEntry = getEntry(zipFile, "xl/" + toZipPath(vmlRel.getTarget()));
+                    if (commentEntry != null) {
+                        try {
+                            comments = Comments.parseComments(zipFile.getInputStream(commentEntry), vmlEntry != null ? zipFile.getInputStream(vmlEntry): null);
+                        } catch (IOException ex) {
+                            throw new ExcelReadException(ex);
+                        }
+                    }
+                }
+            }
+            if (comments == null) comments = Collections.emptyMap();
+        }
+        return comments;
     }
 }

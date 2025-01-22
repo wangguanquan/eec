@@ -122,6 +122,8 @@ public class XMLDrawings implements Drawings {
             }
         }
 
+        // FIXME 目前使用dom4j解析，如果批注较多时耗时和内存将增大增
+
         List<Picture> pictures = new ArrayList<>();
         for (Sheet sheet : excelReader.sheets) {
             XMLSheet xmlSheet = (XMLSheet) sheet;
