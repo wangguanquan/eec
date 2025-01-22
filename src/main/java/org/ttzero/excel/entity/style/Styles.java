@@ -90,6 +90,8 @@ public class Styles implements Storable {
     private List<Fill> fills;
     private List<Border> borders;
 
+    public Color[] indexedColors;
+
     /**
      * Cache the data/time format style index.
      * It's use for fast test the cell value is a data or time value
@@ -319,6 +321,7 @@ public class Styles implements Storable {
         if (colors != null && colors.nodeCount() > 0) {
             List<Element> sub = colors.elements();
             Color[] indexedColors = new Color[sub.size()];
+            self.indexedColors = indexedColors;
             int i = 0;
             for (Element e : sub) indexedColors[i++] = parseColor(e);
 
