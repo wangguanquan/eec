@@ -211,6 +211,11 @@ public class TemplateSheet extends Sheet {
      */
     protected Map<String, ValueWrapper> namespaceMapper = new HashMap<>();
     /**
+     * 缓存源文件批注
+     * Key: 坐标 Value：批注
+     */
+    protected Map<Long, Comment> comments0;
+    /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
      * @param templatePath 模板路径
@@ -551,6 +556,7 @@ public class TemplateSheet extends Sheet {
         Dimension mergeCell;
         PreCell pn;
         Object e;
+        Comment comment;
         Column emptyColumn = new Column();
         for (int rbs = rowBlock.capacity(), n = 0, limit = sheetWriter.getRowLimit(), len; n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
@@ -608,13 +614,17 @@ public class TemplateSheet extends Sheet {
                 cell.xf = styleMap.getOrDefault(cell0.xf, 0);
                 if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
+                long k = dimensionKey(row0.getRowNum() - 1, i);
                 // 合并单元格重新计算位置
-                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
+                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
                     if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
                     else {
                         int r = rows - row0.getRowNum() + 1;
                         mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
                     }
+                }
+                if (comments0 != null && (comment = comments0.get(k)) != null) {
+                    createComments().addComment(rows + 1, i + 1, comment);
                 }
             }
 
@@ -962,6 +972,15 @@ public class TemplateSheet extends Sheet {
             }
         } catch (Exception ex) {
             // Ignore
+        }
+
+        // 批注
+        Map<Long, Comment> commentMap = originalSheet.getComments();
+        if (!commentMap.isEmpty()) {
+            this.comments0 = new HashMap<>(commentMap.size());
+            for (Map.Entry<Long, Comment> entry : commentMap.entrySet()) {
+                this.comments0.put(dimensionKey(((int) (entry.getKey() >> 16)) - 1, ((int) (entry.getKey() & 65535)) - 1), entry.getValue());
+            }
         }
 
         return len;
