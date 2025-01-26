@@ -962,7 +962,7 @@ public class TemplateSheet extends Sheet {
         try {
             List<Drawings.Picture> pictures = originalSheet.listPictures();
             if (pictures != null && !pictures.isEmpty()) {
-                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
+                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures.size()) : null;
                 for (Drawings.Picture p : pictures) {
                     if (FileUtil.exists(p.getLocalPath())) {
                         if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
