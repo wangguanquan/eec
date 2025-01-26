@@ -565,7 +565,7 @@ public class TemplateSheet extends Sheet {
             row.height = row0.getHeight();
             row.hidden = row0.isHidden();
             // 空行特殊处理（lc-fc=-1)
-            len = Math.max(row0.getLastColumnIndex() - row0.getFirstColumnIndex(), 0);
+            len = Math.max(row0.getLastColumnIndex(), 0);
             Cell[] cells = row.realloc(len);
             // 预处理
             if (row0.getRowNum() == pf && !rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi], namespaceMapper);
