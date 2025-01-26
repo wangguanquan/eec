@@ -950,7 +950,7 @@ public class TemplateSheet extends Sheet {
         this.showGridLines = originalSheet.isShowGridLines();
 
         // 是否隐藏
-        if (originalSheet.isHidden()) super.hidden();
+        this.hidden = originalSheet.isHidden();
 
         // 预置列宽
         double defaultColWidth = originalSheet.getDefaultColWidth(), defaultRowHeight = originalSheet.getDefaultRowHeight();
