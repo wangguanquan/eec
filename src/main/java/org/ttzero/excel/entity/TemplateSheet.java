@@ -949,6 +949,9 @@ public class TemplateSheet extends Sheet {
         // 是否显示网格线
         this.showGridLines = originalSheet.isShowGridLines();
 
+        // 是否隐藏
+        if (originalSheet.isHidden()) super.hidden();
+
         // 预置列宽
         double defaultColWidth = originalSheet.getDefaultColWidth(), defaultRowHeight = originalSheet.getDefaultRowHeight();
         if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
