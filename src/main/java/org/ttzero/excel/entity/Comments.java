@@ -309,7 +309,7 @@ public class Comments implements Storable, Closeable {
             c.setTitle(StringUtil.isNotEmpty(v0) && v0.charAt(v0.length() - 1) == '\n' ? v0.substring(0, v0.length() - 1) : v0);
         }
         // TODO 包含多种字体样式
-        if (rs.size() > 1) {
+        if (rs.size() > 1 || !h0) {
             StringBuilder buf = new StringBuilder();
             for (int i = h0 ? 1 : 0; i < rs.size(); i++) {
                 Element t = rs.get(i);
