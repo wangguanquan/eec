@@ -195,7 +195,7 @@ public class TemplateSheetTest extends WorkbookTest {
             org.ttzero.excel.reader.Row row = iter.next();
             assertEquals(row.getString(0), yzEntity.gsName + "精品采购订单");
             Font font = styles.getFont(row.getCellStyle(0));
-            assertEquals(font.getName(), "Calibri");
+            assertEquals(font.getName(), "宋体");
             assertEquals(font.getSize(), 20);
             assertTrue(font.isBold());
 
@@ -233,7 +233,7 @@ public class TemplateSheetTest extends WorkbookTest {
                     int style = row.getCellStyle(cell);
                     font = styles.getFont(style);
                     assertTrue(font.isBold());
-                    assertEquals(font.getName(), "Calibri");
+                    assertEquals(font.getName(), "宋体");
                     assertEquals(font.getSize(), 11);
                     assertEquals(styles.getHorizontal(style), Horizontals.CENTER);
                 }
