@@ -56,8 +56,10 @@ import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -190,7 +192,10 @@ public class PictureTest extends WorkbookTest {
 
     @Test public void testBase64Image() throws IOException {
         String base64Image = "R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
-        new Workbook().addSheet(new ListSheet<>(Collections.singletonList("data:image/gif;base64," + base64Image))
+        Sheet sheet = new ListSheet<>(Collections.singletonList("data:image/gif;base64," + base64Image));
+        Comments comments = sheet.createComments();
+        comments.addComment("A1", new Comment("123"));
+        new Workbook().addSheet(sheet
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
             .writeTo(defaultTestPath.resolve("Base64 image.xlsx"));
 
@@ -200,6 +205,11 @@ public class PictureTest extends WorkbookTest {
             Drawings.Picture pic = list.get(0);
             // Check CRC32
             assertEquals(crc32(Base64.getDecoder().decode(base64Image)), crc32(pic.getLocalPath()));
+
+            Map<Long, Comment> commentMap = reader.sheet(0).asFullSheet().getComments();
+            Comment comment = commentMap.get(coordinateToLong("A1"));
+            assertNotNull(comment);
+            assertEquals("123", comment.value);
         }
     }
 
