@@ -357,11 +357,11 @@ public class ExcelReaderTest2 {
             assertEquals(rId2.getType(), Const.Relationship.DRAWINGS);
 
             Relationship rId3 = rel.getById("rId3");
-            assertEquals(rId3.getTarget(), "../drawings/vmlDrawing1.vml");
+            assertEquals(rId3.getTarget(), "../drawings/vmlDrawing2.vml");
             assertEquals(rId3.getType(), Const.Relationship.VMLDRAWING);
 
             Relationship rId4 = rel.getById("rId4");
-            assertEquals(rId4.getTarget(), "../comments1.xml");
+            assertEquals(rId4.getTarget(), "../comments2.xml");
             assertEquals(rId4.getType(), Const.Relationship.COMMENTS);
         }
     }
@@ -373,7 +373,7 @@ public class ExcelReaderTest2 {
             Comment c1 = commentMap.get(coordinateToLong("C1"));
             assertNotNull(c1);
             assertEquals(c1.title, "Administrator:");
-            assertEquals(c1.value, "\n如果有一票多个FBA号码一起发货，多出的FBA号请填写在C12备注栏！\n" +
+            assertEquals(c1.value, "如果有一票多个FBA号码一起发货，多出的FBA号请填写在C12备注栏！\n" +
                 "\n" +
                 "\n" +
                 "如FBA123456788\n" +
