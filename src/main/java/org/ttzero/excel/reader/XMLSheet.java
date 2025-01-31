@@ -1158,7 +1158,6 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 //                for (; i < n && (buf[i] != '<' || ((buf[i + 1] != 'm' || buf[i + 5] != 'e') && (buf[i + 1] != 'a' || buf[i + 5] != 'F') && (buf[i + 1] != 'd' || buf[i + 5] != 'V'))); i++) ;
                 for (; i < n && (buf[i] != '<' || buf[i + 1] != '/' || buf[i + 2] != 's' || buf[i + 3] != 'h' || buf[i + 4] != 'e' || buf[i + 5] != 'e' || buf[i + 6] != 't'
                     || buf[i + 7] != 'D' || buf[i + 8] != 'a' || buf[i + 9] != 't' || buf[i + 10] != 'a' || buf[i + 11] != '>'); i++) ;
-                i += 12;
                 // Compact
                 if (i >= n) {
                     if (buf[i] == '<') {
