@@ -950,7 +950,9 @@ public class XMLSheet implements Sheet {
 
 /**
  * A sub {@link XMLSheet} to parse cell calc
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
     XMLCalcSheet(XMLSheet sheet) {
         super(sheet);
@@ -983,7 +985,9 @@ class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
 
 /**
  * A sub {@link XMLSheet} to copy value on merge cells
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
 
     XMLMergeSheet(XMLSheet sheet) {
