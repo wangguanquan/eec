@@ -81,7 +81,7 @@ public abstract class Validation {
             + "\" allowBlank=\"" + (allowBlank ? 1 : 0)
             + "\" showInputMessage=\"" + (showInputMessage ? 1 : 0)
             + "\" showErrorMessage=\"" + (showErrorMessage ? 1 : 0)
-            + (isExtension() ? "\">" : "\" sqref=\"" + sqref + "\">")
+            + (isExtension() ? "\" xr:uid=\"{E9742D38-9313-3C47-9945-211275B11887}\">" : "\" sqref=\"" + sqref + "\">")
             + validationFormula()
             + "</" + (isExtension() ? "x14:" : "" ) + "dataValidation>";
     }

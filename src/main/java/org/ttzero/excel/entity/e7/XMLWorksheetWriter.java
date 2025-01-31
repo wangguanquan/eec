@@ -1173,7 +1173,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<worksheet xmlns=\"");
             bw.write(Const.SCHEMA_MAIN);
         }
-        bw.write("\">");
+        bw.write("\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\">");
     }
 
     /**
@@ -1495,7 +1495,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeExtList(List<Validation> extList) throws IOException {
         // 扩展节点-当前只支持数据校验
         if (extList == null || extList.isEmpty()) return;
-        bw.write("<extLst><ext xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\">");
+        bw.write("<extLst><ext xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" uri=\"{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}\">");
         bw.write("<x14:dataValidations xmlns:xm=\"http://schemas.microsoft.com/office/excel/2006/main\" count=\"");
         bw.writeInt(extList.size());
         bw.write("\">");
