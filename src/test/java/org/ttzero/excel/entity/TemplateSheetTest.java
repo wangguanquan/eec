@@ -24,6 +24,7 @@ import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.ExcelType;
@@ -455,7 +456,11 @@ public class TemplateSheetTest extends WorkbookTest {
             .writeTo(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"))) {
-            Map<String, Object> map = reader.sheet(0).header(1).iterator().next().toMap();
+            Row row = reader.sheet(0).header(1).iterator().next();
+            int styleIndex = row.getCellStyle(0);
+            NumFmt numFmt = reader.getStyles().getNumFmt(styleIndex);
+            assertEquals(NumFmt.DATETIME_FORMAT, numFmt);
+            Map<String, Object> map = row.toMap();
             assertEquals(map.get("渠道").getClass(), Timestamp.class);
             assertEquals(((Timestamp) map.get("渠道")).getTime() / 1000, ((Timestamp)data.get("channel")).getTime() / 1000);
         }
