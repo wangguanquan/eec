@@ -16,8 +16,11 @@
 
 package org.ttzero.excel.reader;
 
+import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
+import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
+import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
  * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
@@ -55,10 +58,24 @@ public class Dimension {
      */
     public final int width, height;
 
+    /**
+     * 创建一个范围值， 起始和结束相同
+     *
+     * @param firstRow    起始行号 (one base)
+     * @param firstColumn 起始列号 (one base)
+     */
     public Dimension(int firstRow, short firstColumn) {
         this(firstRow, firstColumn, firstRow, firstColumn);
     }
 
+    /**
+     * 创建一个范围值
+     *
+     * @param firstRow    起始行号 (one base)
+     * @param firstColumn 起始列号 (one base)
+     * @param lastRow     末尾行号 (one base)
+     * @param lastColumn  末尾列号 (one base)
+     */
     public Dimension(int firstRow, short firstColumn, int lastRow, short lastColumn) {
         this.firstRow = Math.max(firstRow, 1);
         this.firstColumn = (short) Math.max(firstColumn, 1);
@@ -68,7 +85,7 @@ public class Dimension {
         this.width = this.lastColumn - this.firstColumn + 1;
         this.height = this.lastRow - this.firstRow + 1;
         if (width < 1 || height < 1)
-            throw new IllegalArgumentException("Dimension(firstRow:" + firstRow + ",firstColumn:" + firstColumn + ",lastRow=" + lastRow + ",lastColumn=" + lastColumn +") contains invalid range");
+            throw new IllegalArgumentException("Dimension(firstRow:" + firstRow + ",firstColumn:" + firstColumn + ",lastRow=" + lastRow + ",lastColumn=" + lastColumn + ") contains invalid range");
     }
 
     /**
@@ -149,8 +166,39 @@ public class Dimension {
     @Override
     public String toString() {
         return toCoordinate(firstRow, firstColumn)
-            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + toCoordinate(lastRow, lastColumn)
-            : "");
+            + (lastRow > firstRow || lastColumn > firstColumn ? ":" + toCoordinate(lastRow, lastColumn) : "");
+    }
+
+    /**
+     * 转为引用字符串
+     *
+     * @return 引用字符串
+     */
+    public String toReferer() {
+        char[] chars;
+        if (lastRow > firstRow || lastColumn > firstColumn) {
+            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastRow <= 26 ? 1 : lastRow <= 702 ? 2 : 3, r1 = stringSize(lastRow);
+            chars = new char[c0 + r0 + c1 + r1 + 5];
+            chars[i++] = '$';
+            System.arraycopy(int2Col(firstColumn), 0, chars, i, c0);
+            i += c0;
+            chars[i++] = '$';
+            getChars(firstRow, i += r0, chars);
+            chars[i++] = ':';
+            chars[i++] = '$';
+            System.arraycopy(int2Col(lastColumn), 0, chars, i, c1);
+            i += c1;
+            chars[i++] = '$';
+            getChars(lastRow, i + r1, chars);
+        } else {
+            int c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3;
+            chars = new char[c0 + stringSize(firstRow) + 2];
+            chars[0] = '$';
+            System.arraycopy(int2Col(firstColumn), 0, chars, 1, c0);
+            chars[c0 + 1] = '$';
+            getChars(firstRow, chars.length, chars);
+        }
+        return new String(chars);
     }
 
     /**
