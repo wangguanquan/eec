@@ -570,13 +570,14 @@ public class TemplateSheet extends Sheet {
             // 预处理
             if (row0.getRowNum() == pf && !rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi], namespaceMapper);
 
-            // 占位符是否已消费结束
-            boolean consumerEnd = true;
-
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i], cell0 = row0.getCell(i);
                 // Clear cells
                 cell.clear();
+
+                // 复制样式
+                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
+                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
                 boolean fillCell = false;
                 // 复制数据
@@ -610,12 +611,9 @@ public class TemplateSheet extends Sheet {
                 // TODO 复制公式（不是简单的复制，需重新计算位置）
                 if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
 
-                // 复制样式
-                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
-                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
-
+                long k = dimensionKey(row0.getRowNum() - 1, i);
                 // 合并单元格重新计算位置
-                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(dimensionKey(row0.getRowNum() - 1, i))) != null) {
+                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
                     if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
                     else {
                         int r = rows - row0.getRowNum() + 1;
@@ -632,45 +630,50 @@ public class TemplateSheet extends Sheet {
         }
     }
 
-            // 如果为数组时需要移动游标
-            if (!rowIterator.consumerNamespaces.isEmpty()) {
-                for (String vwKey : rowIterator.consumerNamespaces) {
-                    ValueWrapper vw = namespaceMapper.get(vwKey);
-                    if (++vw.i < vw.list.size()) consumerEnd = false;
+    protected void rowEnd(org.ttzero.excel.reader.Row row0, Row row) {
+        // 占位符是否已消费结束
+        boolean consumerEnd = true;
+        if (!rowIterator.consumerNamespaces.isEmpty()) {
+            for (String vwKey : rowIterator.consumerNamespaces) {
+                ValueWrapper vw = namespaceMapper.get(vwKey);
+                if (++vw.i < vw.list.size()) consumerEnd = false;
                     // 加载更多数据
-                    else if (vw.supplier != null) {
-                        List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
-                        if (list != null && !list.isEmpty()) {
-                            vw.list = list;
-                            vw.i = 0;
-                            vw.size += list.size();
-                            consumerEnd = false;
-                        } else vw.option = -1;
+                else if (vw.supplier != null) {
+                    List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
+                    if (list != null && !list.isEmpty()) {
+                        vw.list = list;
+                        vw.i = 0;
+                        vw.size += list.size();
+                        consumerEnd = false;
                     } else vw.option = -1;
-                }
-            }
-
-            // 循环替换占位符时不要ark
-            if (consumerEnd) {
-                if (rowIterator.hasFillCell) {
-                    for (int i = row0.getFirstColumnIndex(); i < len; i++) {
-                        if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
-                            Dimension sqref = pn.validation.sqref;
-                            pn.validation.sqref = new Dimension(sqref.firstRow, sqref.firstColumn, sqref.lastRow + pn.v, sqref.firstColumn);
-                        }
-                    }
-                    pi++;
-                    pf = preCells.length > pi && preCells[pi] != null && preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
-                }
-                // 过滤行列重算
-                if (afr == row0.getRowNum() && (e = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER)) instanceof Dimension) {
-                    Dimension autoFilter = (Dimension) e;
-                    putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, new Dimension(autoFilter.firstRow + row.getIndex() - afr + 1, autoFilter.firstColumn, autoFilter.getLastRow() + row.getIndex() - afr + 1, autoFilter.lastColumn));
-                    afr = -1;
-                }
-                rowIterator.commit();
+                } else vw.option = -1;
             }
         }
+        // Rrk
+        if (consumerEnd) rowCommit(row0, row);
+    }
+
+    protected void rowCommit(org.ttzero.excel.reader.Row row0, org.ttzero.excel.entity.Row row) {
+        PreCell pn;
+        Object e;
+        int len = Math.max(row0.getLastColumnIndex(), 0);
+        if (rowIterator.hasFillCell) {
+            for (int i = row0.getFirstColumnIndex(); i < len; i++) {
+                if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
+                    Dimension sqref = pn.validation.sqref;
+                    pn.validation.sqref = new Dimension(sqref.firstRow, sqref.firstColumn, sqref.lastRow + pn.v, sqref.firstColumn);
+                }
+            }
+            pi++;
+            pf = preCells.length > pi && preCells[pi] != null && preCells[pi].length >= 1 ? preCells[pi][0].row : -1;
+        }
+        // 过滤行列重算
+        if (afr == row0.getRowNum() && (e = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER)) instanceof Dimension) {
+            Dimension autoFilter = (Dimension) e;
+            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, new Dimension(autoFilter.firstRow + row.getIndex() - afr + 1, autoFilter.firstColumn, autoFilter.getLastRow() + row.getIndex() - afr + 1, autoFilter.lastColumn));
+            afr = -1;
+        }
+        rowIterator.commit();
     }
 
     /**
@@ -819,6 +822,12 @@ public class TemplateSheet extends Sheet {
         }
         rowIterator = null;
         namespaceMapper = null;
+        columns = null;
+        relManager = null;
+        rowBlock = null;
+        sheetWriter = null;
+        cellValueAndStyle = null;
+        extProp = null;
     }
 
     /**
@@ -979,6 +988,9 @@ public class TemplateSheet extends Sheet {
         // 是否显示网格线
         this.showGridLines = originalSheet.isShowGridLines();
 
+        // 是否隐藏
+        this.hidden = originalSheet.isHidden();
+
         // 预置列宽
         double defaultColWidth = originalSheet.getDefaultColWidth(), defaultRowHeight = originalSheet.getDefaultRowHeight();
         if (defaultColWidth >= 0) putExtProp("defaultColWidth", defaultColWidth);
@@ -992,7 +1004,7 @@ public class TemplateSheet extends Sheet {
         try {
             List<Drawings.Picture> pictures = originalSheet.listPictures();
             if (pictures != null && !pictures.isEmpty()) {
-                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures) : null;
+                this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures.size()) : null;
                 for (Drawings.Picture p : pictures) {
                     if (FileUtil.exists(p.getLocalPath())) {
                         if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
