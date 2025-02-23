@@ -64,6 +64,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static org.ttzero.excel.entity.IWorksheetWriter.isString;
+import static org.ttzero.excel.entity.SimpleSheet.defaultDatetimeCell;
 import static org.ttzero.excel.entity.style.Styles.INDEX_FONT;
 import static org.ttzero.excel.util.ReflectUtil.listDeclaredFieldsUntilJavaPackage;
 import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
@@ -732,6 +733,10 @@ public class TemplateSheet extends Sheet {
                     default:
                         emptyColumn.setClazz(clazz);
                         cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, clazz, false);
+                        // 日期类型添加默认format
+                        if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
+                            datetimeCell(workbook.getStyles(), cell);
+                        }
                 }
             } else cell.emptyTag();
             // 序列的dimension纵向+1
@@ -750,6 +755,16 @@ public class TemplateSheet extends Sheet {
             }
             cell.setString(new String(pn.cb, 0, k));
         }
+    }
+
+    /**
+     * 日期类型添加默认format
+     *
+     * @param styles Styles
+     * @param cell 单元格
+     */
+    protected void datetimeCell(Styles styles, Cell cell) {
+        defaultDatetimeCell(styles, cell);
     }
 
     @Override
