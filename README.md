@@ -313,6 +313,14 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.22 (2025-02-24)
+-------------
+- 开放性能模式提升导出速度
+- 支持读取批注，xls暂不支持(#418)
+- 支持跨工作表引用Validation(#420)
+- 优化读取图片，过滤隐藏、重复节点(#414)
+- 模板工作表增加默认日期格式化
+
 Version 0.5.21 (2024-12-24)
 -------------
 - 提升Excel转CSV时对时间类型的兼容性(#409)
@@ -335,18 +343,10 @@ Version 0.5.19 (2024-09-22)
 - Workbook支持设置"只读"标识，设置只读后打开Excel后无法编辑
 - 删除部分已标记为过时的方法
 
-Version 0.5.18 (2024-08-13)
--------------
-- 增加CSVSheet的兼容性, Excel转CSV支持保存BOM
-- 增加ResultSetSheet的类型兼容性
-- ListMapSheet支持泛型
-- 删除I18N相关代码降低复杂度
-- 精简BloomFilter降低复杂度，精简后仅支持String类型
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.21-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.22-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
