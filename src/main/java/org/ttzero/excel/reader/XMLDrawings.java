@@ -122,6 +122,8 @@ public class XMLDrawings implements Drawings {
             }
         }
 
+        // FIXME 目前使用dom4j解析，如果批注较多时耗时和内存将增大增
+
         List<Picture> pictures = new ArrayList<>();
         for (Sheet sheet : excelReader.sheets) {
             XMLSheet xmlSheet = (XMLSheet) sheet;
@@ -211,6 +213,9 @@ public class XMLDrawings implements Drawings {
 
         List<Element> elements = root.elements();
         List<Picture> pictures = new ArrayList<>(elements.size());
+        // Ignore hidden picture
+        boolean ignoreIfHidden = ignoreHiddenPicture();
+        Map<String, Path> localPathMap = new HashMap<>(Math.min(1 << 8, elements.size()));
         for (Element e : root.elements()) {
             Element pic = e.element(QName.get("pic", xdr));
             // Not a picture
@@ -222,62 +227,72 @@ public class XMLDrawings implements Drawings {
             Element blip = blipFill.element(QName.get("blip", a));
             if (blip == null) continue;
 
+            if (ignoreIfHidden) {
+                Element nvPicPr = pic.element(QName.get("nvPicPr", xdr)), cNvPr;
+                // Ignore if hidden
+                if (nvPicPr != null && (cNvPr = nvPicPr.element(QName.get("cNvPr", xdr))) != null && "1".equals(cNvPr.attributeValue("hidden"))) {
+                    continue;
+                }
+            }
+
             Namespace r = blip.getNamespaceForPrefix("r");
             String embed = blip.attributeValue(QName.get("embed", r));
             Relationship rel = relManager.getById(embed);
-            if (rel != null && Const.Relationship.IMAGE.equals(rel.getType())) {
-                Picture picture = new Picture();
-                pictures.add(picture);
+            if (rel == null || !Const.Relationship.IMAGE.equals(rel.getType())) continue;
+
+            Picture picture = new Picture();
+            pictures.add(picture);
+            String target = toZipPath(rel.getTarget());
+            Path targetPath = localPathMap.get(target);
+            if (targetPath == null && (entry = getEntry(zipFile, "xl/" + target)) != null) {
                 // Copy image to tmp path
-                entry = getEntry(zipFile, "xl/" + toZipPath(rel.getTarget()));
-                if (entry != null) {
+                try {
+                    targetPath = imagesPath.resolve(rel.getTarget());
+                    Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    localPathMap.put(target, targetPath);
+                } catch (IOException ex) { }
+            }
+            picture.localPath = targetPath;
+
+            int[][] ft = parseDimension(e, xdr);
+            picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1), ft[1][2] + 1, (short) (ft[1][0] + 1));
+            picture.padding = new short[] { (short) ft[0][3], (short) ft[1][1], (short) ft[1][3], (short) ft[0][1] };
+            String editAs = e.attributeValue("editAs");
+            int property = -1;
+            if (StringUtil.isNotEmpty(editAs)) {
+                switch (editAs) {
+                    case "twoCell" : property = 0; break;
+                    case "oneCell" : property = 1; break;
+                    case "absolute": property = 2; break;
+                    default:
+                }
+            }
+            picture.property = property;
+            Element spPr = pic.element(QName.get("spPr", xdr));
+            if (spPr != null) {
+                Element xfrm = spPr.element(QName.get("xfrm", a));
+                String rot;
+                if (xfrm != null && StringUtil.isNotBlank(rot = xfrm.attributeValue("rot"))) {
                     try {
-                        Path targetPath = imagesPath.resolve(rel.getTarget());
-                        Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
-                        picture.localPath = targetPath;
-                    } catch (IOException ioException) { }
-                }
-
-                int[][] ft = parseDimension(e, xdr);
-                picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1), ft[1][2] + 1, (short) (ft[1][0] + 1));
-                picture.padding = new short[] { (short) ft[0][3], (short) ft[1][1], (short) ft[1][3], (short) ft[0][1] };
-                String editAs = e.attributeValue("editAs");
-                int property = -1;
-                if (StringUtil.isNotEmpty(editAs)) {
-                    switch (editAs) {
-                        case "twoCell" : property = 0; break;
-                        case "oneCell" : property = 1; break;
-                        case "absolute": property = 2; break;
-                        default:
+                        picture.revolve = Integer.parseInt(rot) / 60000;
+                    } catch (Exception ex) {
+                        // Ignore
                     }
                 }
-                picture.property = property;
-                Element spPr = pic.element(QName.get("spPr", xdr));
-                if (spPr != null) {
-                    Element xfrm = spPr.element(QName.get("xfrm", a));
-                    String rot;
-                    if (xfrm != null && StringUtil.isNotBlank(rot = xfrm.attributeValue("rot"))) {
-                        try {
-                            picture.revolve = Integer.parseInt(rot) / 60000;
-                        } catch (Exception ex) {
-                            // Ignore
-                        }
-                    }
 
-                    // TODO Attach picture effects
-                }
+                // TODO Attach picture effects
+            }
 
-                Element extLst = blip.element(QName.get("extLst", a));
-                if (extLst == null) continue;
+            Element extLst = blip.element(QName.get("extLst", a));
+            if (extLst == null) continue;
 
-                for (Element ext : extLst.elements()) {
-                    Element srcUrl = ext.element("picAttrSrcUrl");
-                    // hyperlink
-                    if (srcUrl != null) {
-                        rel = relManager.getById(srcUrl.attributeValue(QName.get("id", r)));
-                        if (rel != null && Const.Relationship.HYPERLINK.equals(rel.getType())) {
-                            picture.srcUrl = rel.getTarget();
-                        }
+            for (Element ext : extLst.elements()) {
+                Element srcUrl = ext.element("picAttrSrcUrl");
+                // hyperlink
+                if (srcUrl != null) {
+                    rel = relManager.getById(srcUrl.attributeValue(QName.get("id", r)));
+                    if (rel != null && Const.Relationship.HYPERLINK.equals(rel.getType())) {
+                        picture.srcUrl = rel.getTarget();
                     }
                 }
             }
@@ -313,7 +328,7 @@ public class XMLDrawings implements Drawings {
      * 拉取WPS单元格内嵌图片
      *
      * @param zipFile xlsx源
-     * @param entry   cellimages
+     * @param entry   cellImages
      * @return ID:图片本地路径
      */
     public Map<String, Path> listCellImages(ZipFile zipFile, ZipEntry entry) {
@@ -353,7 +368,9 @@ public class XMLDrawings implements Drawings {
                 throw new ExcelReadException("Create temp directory failed.", e);
             }
         }
-        Map<String, Path> cellImageMapper = new HashMap<>(images.size());
+        Map<String, Path> cellImageMapper = new HashMap<>(Math.min(1 << 8, images.size()));
+        // Ignore hidden picture
+        boolean ignoreIfHidden = ignoreHiddenPicture();
         for (Element e : images) {
             Element pic = e.element(QName.get("pic", xdr));
             // Not a picture
@@ -362,7 +379,8 @@ public class XMLDrawings implements Drawings {
             Element nvPicPr = pic.element(QName.get("nvPicPr", xdr));
             if (nvPicPr == null) continue;
             Element cNvPr = nvPicPr.element(QName.get("cNvPr", xdr));
-            if (cNvPr == null) continue;
+            // Ignore if hidden
+            if (cNvPr == null || ignoreIfHidden && "1".equals(cNvPr.attributeValue("hidden"))) continue;
             String name = cNvPr.attributeValue("name");
 
             Element blipFill = pic.element(QName.get("blipFill", xdr));
@@ -374,25 +392,23 @@ public class XMLDrawings implements Drawings {
             Namespace r = blip.getNamespaceForPrefix("r");
             String embed = blip.attributeValue(QName.get("embed", r));
             Relationship rel = relManager.getById(embed);
-            if (r != null && Const.Relationship.IMAGE.equals(rel.getType())) {
-                Path localPath = null;
-                // 复制图片到临时文件夹
-                entry = getEntry(zipFile, "xl/" + rel.getTarget());
-                if (entry != null) {
-                    try {
-                        Path targetPath = excelReader.tempDir.resolve(rel.getTarget());
-                        if (!Files.exists(targetPath.getParent())) {
-                            Files.createDirectories(targetPath);
-                        }
-                        Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
-                        localPath = targetPath;
-                    } catch (IOException ex) {
-                        LOGGER.warn("Copy picture error.", ex);
+            if (r == null || !Const.Relationship.IMAGE.equals(rel.getType())) continue;
+            Path localPath = cellImageMapper.get(name), targetPath = excelReader.tempDir.resolve(rel.getTarget());
+            if (localPath != null && localPath.equals(targetPath)) continue;
+            // 复制图片到临时文件夹
+            entry = getEntry(zipFile, "xl/" + rel.getTarget());
+            if (entry != null) {
+                try {
+                    if (!Files.exists(targetPath.getParent())) {
+                        Files.createDirectories(targetPath);
                     }
-                    cellImageMapper.put(name, localPath);
+                    Files.copy(zipFile.getInputStream(entry), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    localPath = targetPath;
+                } catch (IOException ex) {
+                    LOGGER.warn("Copy picture error.", ex);
                 }
-
             }
+            cellImageMapper.put(name, localPath);
         }
         return cellImageMapper;
     }
@@ -427,5 +443,14 @@ public class XMLDrawings implements Drawings {
             }
         }
         return pictures;
+    }
+
+    /**
+     * 是否忽略隐藏图片
+     *
+     * @return {@code true}忽略
+     */
+    protected boolean ignoreHiddenPicture() {
+        return true;
     }
 }
