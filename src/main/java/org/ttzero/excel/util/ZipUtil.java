@@ -18,6 +18,7 @@ package org.ttzero.excel.util;
 
 import org.ttzero.excel.manager.Const;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -28,8 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.Adler32;
-import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -59,7 +58,7 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     public static Path zip(Path destPath, Path... srcPath) throws IOException {
-        return zip(destPath, true, srcPath);
+        return zip(destPath, true, MIDDLE_COMPRESSION, srcPath);
     }
 
     /**
@@ -72,13 +71,27 @@ public class ZipUtil {
      * @throws IOException if error occur.
      */
     public static Path zipExcludeRoot(Path destPath, Path... srcPath) throws IOException {
+        return zipExcludeRoot(destPath, MIDDLE_COMPRESSION, srcPath);
+    }
+
+    /**
+     * zip files exclude root path
+     * command: zip destPath srcPath1 srcPath2 ...
+     *
+     * @param destPath the destination path
+     * @param compressionLevel compression level
+     * @param srcPath  the source path
+     * @return the result zip file path
+     * @throws IOException if error occur.
+     */
+    public static Path zipExcludeRoot(Path destPath, int compressionLevel, Path... srcPath) throws IOException {
         if (!destPath.toString().endsWith(Const.Suffix.ZIP)) {
             destPath = Paths.get(destPath.toString() + Const.Suffix.ZIP);
         }
         if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
         }
-        return zip(destPath, false, srcPath);
+        return zip(destPath, false, compressionLevel, srcPath);
     }
 
     /**
@@ -87,14 +100,15 @@ public class ZipUtil {
      *
      * @param destPath     the destination path
      * @param compressRoot include root path if true
+     * @param compressionLevel compression level
      * @param srcPath      the source path
      * @return the result zip file path
      * @throws IOException if error occur.
      */
-    private static Path zip(Path destPath, boolean compressRoot, Path... srcPath) throws IOException {
-        ZipOutputStream zos = new ZipOutputStream(new CheckedOutputStream(
-            Files.newOutputStream(destPath, StandardOpenOption.CREATE), new Adler32()));
-        zos.setLevel(MIDDLE_COMPRESSION);
+    private static Path zip(Path destPath, boolean compressRoot, int compressionLevel, Path... srcPath) throws IOException {
+        ZipOutputStream zos = new ZipOutputStream(
+            new BufferedOutputStream(Files.newOutputStream(destPath, StandardOpenOption.CREATE)));
+        zos.setLevel(Math.max(Math.min(compressionLevel, 9), -1));
         List<Path> paths = new ArrayList<>();
         int i = 0, index = 0;
         int[] array = new int[srcPath.length];

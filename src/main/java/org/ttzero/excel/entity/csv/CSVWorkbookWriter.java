@@ -179,7 +179,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             // Zip compress if multi worksheet occur
             if (workbook.getSize() > 1) {
                 suffix = Const.Suffix.ZIP;
-                Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+                Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
                 LOGGER.debug("Compression completed. {}", zipFile);
                 FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
