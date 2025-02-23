@@ -672,7 +672,7 @@ public class Workbook implements Storable {
             // write to file
             if (name.indexOf('.') > 0) {
                 Path parent = path.getParent();
-                FileUtil.mkdir(parent);
+                if (parent != null && Files.exists(parent)) FileUtil.mkdir(parent);
                 writeTo(path.toFile());
                 return;
                 // write to directory
@@ -729,7 +729,7 @@ public class Workbook implements Storable {
      */
     public void writeTo(File file) throws IOException, ExcelWriteException {
         checkAndInitWriter();
-        if (!file.getParentFile().exists()) {
+        if (file.getParent() != null && !file.getParentFile().exists()) {
             FileUtil.mkdir(file.toPath().getParent());
         }
         try {
