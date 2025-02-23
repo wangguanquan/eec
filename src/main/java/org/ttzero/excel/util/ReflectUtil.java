@@ -498,6 +498,6 @@ public class ReflectUtil {
     public static boolean isJavaPackage(Class<?> clazz) {
         Package pck = clazz.getPackage();
         String packageName = pck != null ? pck.getName() : null;
-        return packageName != null && (packageName.startsWith("java.") || packageName.startsWith("jdk."));
+        return packageName != null && (packageName.startsWith("java.") || packageName.startsWith("jdk.") || packageName.startsWith("javax.") || packageName.startsWith("sun."));
     }
 }
