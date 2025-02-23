@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.entity.style.Styles.getAttr;
@@ -370,19 +371,14 @@ public class Border implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof Border) {
+        boolean r = this == o;
+        if (!r && o instanceof Border) {
+            int i = 0;
             Border other = (Border) o;
-            for (int i = 0; i < borders.length; i++) {
-                if (other.borders[i] != null) {
-                    if (!other.borders[i].equals(borders[i]))
-                        return false;
-                } else if (borders[i] != null) {
-                    return false;
-                }
-            }
-            return true;
+            for (; i < borders.length && Objects.equals(other.borders[i], borders[i]); i++);
+            r = i == borders.length;
         }
-        return false;
+        return r;
     }
 
     /**
