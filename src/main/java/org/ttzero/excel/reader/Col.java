@@ -36,6 +36,10 @@ public class Col {
      * 是否隐藏列
      */
     public boolean hidden;
+    /**
+     * 样式索引
+     */
+    public int styleIndex;
 
     public Col() { }
     public Col(int min, int max, double width) {
@@ -51,6 +55,6 @@ public class Col {
 
     @Override
     public String toString() {
-        return "min: " + min + ", max:" + max + ", width:" + width + ", hidden:" + hidden;
+        return "min:" + min + ",max:" + max + ",width:" + width + ",hidden:" + hidden + (styleIndex > 0 ? ",xf:" + styleIndex : "");
     }
 }

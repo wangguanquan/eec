@@ -17,23 +17,33 @@
 
 package org.ttzero.excel.entity;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
 import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.manager.Const;
-import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
+import static org.ttzero.excel.entity.style.Styles.getAttr;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
@@ -81,6 +91,7 @@ public class Comments implements Storable, Closeable {
         c.ref = ref;
         c.width = comment.getWidth();
         c.height = comment.getHeight();
+        c.style = comment.style;
         boolean hasTitle = isNotEmpty(comment.getTitle()), hasValue = isNotEmpty(comment.getValue());
         c.nodes = new R[hasTitle && hasValue ? 2 : 1];
         int i = 0;
@@ -212,22 +223,18 @@ public class Comments implements Storable, Closeable {
             writer.write(" </v:shapetype>");
             int i = 1;
             for (C c : commentList) {
-                long cr = ExcelReader.coordinateToLong(c.ref);
+                long cr = coordinateToLong(c.ref);
                 writer.write("<v:shape id=\"_x0000_s");writer.writeInt(100 + i);
-                writer.write("\" type=\"#_x0000_t202\" style='width:");writer.write(c.width != null ? c.width : 100.8D);writer.write("pt;height:");writer.write(c.height != null ? c.height : 60.6D);writer.write("pt;z-index:");
-                writer.writeInt(i++);
-                writer.write(";visibility:hidden' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
-//                writer.write("<v:fill color2=\"#ffffe1\"/>");
+                writer.write("\" type=\"#_x0000_t202\" style='");
+                if (StringUtil.isEmpty(c.style)) {
+                    writer.write("width:"); writer.write(c.width != null ? c.width : 100.8D);
+                    writer.write("pt;height:"); writer.write(c.height != null ? c.height : 60.6D);
+                    writer.write("pt;z-index:"); writer.writeInt(i++);
+                    writer.write(";visibility:hidden");
+                } else writer.write(c.style);
+                writer.write("' fillcolor=\"#ffffe1\" o:insetmode=\"auto\">");
                 writer.write("<v:shadow on=\"t\" color=\"black\" obscured=\"t\"/>");
-//                writer.write("<v:path o:connecttype=\"none\"/>");
-//                writer.write("<v:textbox style='mso-direction-alt:auto'>");
-//                writer.write("<div style='text-align:left'></div>");
-//                writer.write("</v:textbox>");
                 writer.write("<x:ClientData ObjectType=\"Note\">");
-//                writer.write("<x:MoveWithCells/>");
-//                writer.write("<x:SizeWithCells/>");
-//                writer.write("<x:Anchor/>");
-//                writer.write("<x:AutoFill>False</x:AutoFill>");
                 writer.write("<x:Row>");writer.write((cr >> 16) - 1);writer.write("</x:Row>");
                 writer.write("<x:Column>");writer.write((cr & 0x7FFF) - 1);writer.write("</x:Column>");
                 writer.write("</x:ClientData></v:shape>");
@@ -236,8 +243,98 @@ public class Comments implements Storable, Closeable {
         }
     }
 
+    /**
+     * 解析批注
+     *
+     * @param commentEntry 批注信息
+     * @param vmlEntry 位置信息
+     * @return key: 行列值 {@code col & 0x7FFF | ((long) row) << 16}, value: 批注
+     * @throws IOException if I/O error occur.
+     */
+    public static Map<Long, Comment> parseComments(InputStream commentEntry, InputStream vmlEntry) throws IOException {
+        // FIXME 目前使用dom4j解析，如果批注较多时耗时和内存将增大增
+        if (commentEntry == null) return Collections.emptyMap();
+        SAXReader reader = SAXReader.createDefault();
+        List<Element> comments = null;
+        try {
+            Document document = reader.read(commentEntry);
+            Element commentList = document.getRootElement().element("commentList");
+            if (commentList != null) comments = commentList.elements();
+        } catch (DocumentException e) {
+            throw new IOException(e);
+        }
+
+        if (comments == null || comments.isEmpty()) return Collections.emptyMap();
+
+        Map<Long, Comment> commentMap = new HashMap<>(comments.size());
+        Element text;
+        Comment c;
+        for (Element e : comments) {
+            if (!"comment".equals(e.getName()) || (text = e.element("text")) == null || (c = parseComment(text)) == null) continue;
+            commentMap.put(coordinateToLong(e.attributeValue("ref")), c);
+        }
+
+        if (vmlEntry != null) {
+            List<Element> vmls = null;
+            try {
+                Document vmlDoc = reader.read(vmlEntry);
+                vmls = vmlDoc.getRootElement().elements("shape");
+            } catch (DocumentException e) {
+                // Ignore
+            }
+            if (vmls != null && !vmls.isEmpty()) {
+                for (Element vml : vmls) {
+                    Element clientData = vml.element("ClientData");
+                    if (clientData != null) {
+                        String row = clientData.elementText("Row"), col = clientData.elementText("Column");
+                        long k = (Long.parseLong(col) + 1L) & 0x7FFF | (Long.parseLong(row) + 1L) << 16;
+                        c = commentMap.get(k);
+                        if (c != null) c.style = vml.attributeValue("style");
+                    }
+                }
+            }
+        }
+        return commentMap;
+    }
+
+    static Comment parseComment(Element text) {
+        List<Element> rs = text.elements("r");
+        if (rs == null || rs.isEmpty()) return null;
+        Comment c = new Comment();
+        Element r0 = rs.get(0);
+        Font f0 = parseFont(r0.element("rPr"));
+        boolean h0 = f0 != null && f0.isBold();
+        if (h0) {
+            c.setTitleFont(f0);
+            String v0 = r0.elementText("t");
+            c.setTitle(StringUtil.isNotEmpty(v0) && v0.charAt(v0.length() - 1) == '\n' ? v0.substring(0, v0.length() - 1) : v0);
+        }
+        // TODO 包含多种字体样式
+        if (rs.size() > 1 || !h0) {
+            StringBuilder buf = new StringBuilder();
+            for (int i = h0 ? 1 : 0; i < rs.size(); i++) {
+                Element t = rs.get(i);
+                String txt = t.elementText("t");
+                if (h0 && i == 1 && StringUtil.isNotEmpty(txt) && txt.charAt(0) == '\n') txt = txt.substring(1);
+                buf.append(txt);
+                Font f1 = parseFont(t.element("rPr"));
+                if (f1 != null) c.setValueFont(f1);
+            }
+            c.setValue(buf.toString());
+        }
+        return c;
+    }
+
+    static Font parseFont(Element rPr) {
+        if (rPr == null) return null;
+        Font font = Font.parseFontTag(rPr);
+        // Reset font name
+        font.setName(getAttr(rPr.element("rFont"), "val"));
+        return font;
+    }
+
     public static class C {
-        public String ref;
+        public String ref, style;
         public R[] nodes;
         public Double width, height;
 

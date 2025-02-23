@@ -1423,8 +1423,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("</hyperlinks>");
         }
 
+        Relationship r;
+        // Drawings
+        if (drawingsWriter != null) {
+            r = relManager.getByType(Const.Relationship.DRAWINGS);
+            if (r != null) {
+                bw.write("<drawing r:id=\"");
+                bw.write(r.getId());
+                bw.write("\"/>");
+            }
+        }
+
         // vmlDrawing
-        Relationship r = sheet.findRel("vmlDrawing");
+        r = sheet.findRel("vmlDrawing");
         if (r != null) {
             bw.write("<legacyDrawing r:id=\"");
             bw.write(r.getId());
@@ -1439,16 +1450,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("<legacyDrawing r:id=\"");
             bw.write(r.getId());
             bw.write("\"/>");
-        }
-
-        // Drawings
-        if (drawingsWriter != null) {
-            r = relManager.getByType(Const.Relationship.DRAWINGS);
-            if (r != null) {
-                bw.write("<drawing r:id=\"");
-                bw.write(r.getId());
-                bw.write("\"/>");
-            }
         }
 
         // 背景图片
