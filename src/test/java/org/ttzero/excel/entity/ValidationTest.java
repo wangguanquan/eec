@@ -30,26 +30,42 @@ import org.ttzero.excel.validation.WholeValidation;
 import java.io.IOException;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 
 /**
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
 public class ValidationTest extends WorkbookTest {
     @Test public void testValidation() throws IOException {
-        List<Validation> validations = new ArrayList<>();
+        List<Validation> expectValidations = new ArrayList<>();
         // 下拉框选择“男”，“女”
-        validations.add(new ListValidation<>().in("男", "女").dimension(Dimension.of("A1")));
+        expectValidations.add(new ListValidation<>().in("男", "女").dimension(Dimension.of("A1")));
         // B1:E1 单元格只能输入大于1的数
-        validations.add(new WholeValidation().greaterThan(1).dimension(Dimension.of("B1:E1")));
+        expectValidations.add(new WholeValidation().greaterThan(1).dimension(Dimension.of("B1:E1")));
         // 限制日期在2022年
-        validations.add(new DateValidation().between("2022-01-01", "2022-12-31").dimension(Dimension.of("A2")));
+        expectValidations.add(new DateValidation().between("2022-01-01", "2022-12-31").dimension(Dimension.of("A2")));
         // 限制时间小于下午6点（因为此时下班...）
-        validations.add(new TimeValidation().lessThan(DateUtil.toTimeValue(Time.valueOf("18:00:00"))).dimension(Dimension.of("B2")));
-
+        expectValidations.add(new TimeValidation().lessThan(DateUtil.toTimeValue(Time.valueOf("18:00:00"))).dimension(Dimension.of("B2")));
+        // 引用
+        expectValidations.add(new ListValidation<>().in(Dimension.of("A10:A12")).dimension(Dimension.of("D5")));
         final String fileName = "Validation Test.xlsx";
         new Workbook()
-            .addSheet(new ListSheet<>().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations))
+            .addSheet(new ListSheet<>(Arrays.asList("北京", "天津", "上海"))
+                .setStartRowIndex(10, false)
+                .putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
+            .writeTo(defaultTestPath.resolve(fileName));
+    }
+
+    @Test public void testValidationExtension() throws IOException {
+        List<Validation> expectValidations = new ArrayList<>();
+        // 引用
+        expectValidations.add(new ListValidation<>().in("Sheet2", Dimension.of("A1:A3")).dimension(Dimension.of("D1:D5")));
+        final String fileName = "Validation Extension Test.xlsx";
+        new Workbook()
+            .addSheet(new ListSheet<>().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
+            .addSheet(new ListSheet<>(Arrays.asList("未知","男","女")))
             .writeTo(defaultTestPath.resolve(fileName));
     }
 }

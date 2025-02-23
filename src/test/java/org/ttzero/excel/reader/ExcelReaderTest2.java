@@ -21,6 +21,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
+import org.ttzero.excel.entity.Comment;
 import org.ttzero.excel.entity.ListMapSheet;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.entity.ListSheet;
@@ -46,11 +47,13 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
 import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
 import static org.ttzero.excel.entity.WorkbookTest.random;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
@@ -259,6 +262,7 @@ public class ExcelReaderTest2 {
         // 1: nv大于1w的行数
         final int[] expect = { 0, 0 };
         new Workbook()
+            .bestSpeed()
             .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
             .addSheet(new ListSheet<E>().setData((i, lastOne) -> {
                 List<E> list = null;
@@ -354,12 +358,36 @@ public class ExcelReaderTest2 {
             assertEquals(rId2.getType(), Const.Relationship.DRAWINGS);
 
             Relationship rId3 = rel.getById("rId3");
-            assertEquals(rId3.getTarget(), "../drawings/vmlDrawing1.vml");
+            assertEquals(rId3.getTarget(), "../drawings/vmlDrawing2.vml");
             assertEquals(rId3.getType(), Const.Relationship.VMLDRAWING);
 
             Relationship rId4 = rel.getById("rId4");
-            assertEquals(rId4.getTarget(), "../comments1.xml");
+            assertEquals(rId4.getTarget(), "../comments2.xml");
             assertEquals(rId4.getType(), Const.Relationship.COMMENTS);
+        }
+    }
+
+    @Test public void testReadComments() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("template2.xlsx"))) {
+            Map<Long, Comment> commentMap = reader.sheet(2).asFullSheet().getComments();
+            assertEquals(commentMap.size(), 31);
+            Comment c1 = commentMap.get(coordinateToLong("C1"));
+            assertNotNull(c1);
+            assertEquals(c1.title, "Administrator:");
+            assertEquals(c1.value, "如果有一票多个FBA号码一起发货，多出的FBA号请填写在C12备注栏！\n" +
+                "\n" +
+                "\n" +
+                "如FBA123456788\n" +
+                "（注意，不要U）");
+
+            Comment j17 = commentMap.get(coordinateToLong("J17"));
+            assertNotNull(j17);
+            assertEquals(j17.value, "\n" +
+                "填货物的单位CTN，即货物的箱数\n" +
+                "\n" +
+                "有多少箱就填多少箱，如果是混装产品对应箱数都写1\n" +
+                "\n" +
+                "不得合并单元格！\n");
         }
     }
 

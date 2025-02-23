@@ -195,7 +195,7 @@ public class TemplateSheetTest extends WorkbookTest {
             org.ttzero.excel.reader.Row row = iter.next();
             assertEquals(row.getString(0), yzEntity.gsName + "精品采购订单");
             Font font = styles.getFont(row.getCellStyle(0));
-            assertEquals(font.getName(), "Calibri");
+            assertEquals(font.getName(), "宋体");
             assertEquals(font.getSize(), 20);
             assertTrue(font.isBold());
 
@@ -233,7 +233,7 @@ public class TemplateSheetTest extends WorkbookTest {
                     int style = row.getCellStyle(cell);
                     font = styles.getFont(style);
                     assertTrue(font.isBold());
-                    assertEquals(font.getName(), "Calibri");
+                    assertEquals(font.getName(), "宋体");
                     assertEquals(font.getSize(), 11);
                     assertEquals(styles.getHorizontal(style), Horizontals.CENTER);
                 }
@@ -447,6 +447,20 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testDefaultFormatOnDateCell() throws IOException {
+        Map<String, Object> data = new HashMap<>();
+        data.put("channel", new Timestamp(System.currentTimeMillis()));
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx")).setData(data))
+            .writeTo(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"))) {
+            Map<String, Object> map = reader.sheet(0).header(1).iterator().next().toMap();
+            assertEquals(map.get("渠道").getClass(), Timestamp.class);
+            assertEquals(((Timestamp) map.get("渠道")).getTime() / 1000, ((Timestamp)data.get("channel")).getTime() / 1000);
+        }
+    }
+
     public static class SupplierXMLWorkbookWriter extends XMLWorkbookWriter {
         private final Supplier<Sheet> sheetSupplier;
 
@@ -483,7 +497,7 @@ public class TemplateSheetTest extends WorkbookTest {
                 }
 
                 writeGlobalAttribute(xl);
-                Path zipFile = ZipUtil.zipExcludeRoot(root, root);
+                Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
                 FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
             } catch (Exception e) {

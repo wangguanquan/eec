@@ -27,10 +27,12 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 /**
@@ -51,6 +53,21 @@ public class CommentTest extends WorkbookTest {
                 Student expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
+
+            Map<Long, Comment> commentMap = reader.sheet(0).asFullSheet().getComments();
+            Comment A1 = commentMap.get(1L << 16 | 1);
+            assertNotNull(A1);
+            assertEquals(A1.title, "王老师：");
+            assertEquals(A1.value, "学生ID");
+
+            Comment B1 = commentMap.get(1L << 16 | 2);
+            assertNotNull(B1);
+            assertEquals(B1.title, "王老师：");
+            assertEquals(B1.value, "学生姓名");
+
+            Comment C1 = commentMap.get(1L << 16 | 3);
+            assertNotNull(C1);
+            assertEquals(C1.value, "低于60分显示\"不合格\"");
         }
     }
 
@@ -75,6 +92,15 @@ public class CommentTest extends WorkbookTest {
                 Student expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
+
+            Map<Long, Comment> commentMap = reader.sheet(0).asFullSheet().getComments();
+            Comment C5 = commentMap.get(5L << 16 | 3);
+            assertNotNull(C5);
+            assertEquals(C5.title, "提示：");
+            assertEquals(C5.value, "1、第一行批注内容较多时无法完全显示内容，增加弹出框大小设置\n" +
+                "2、第二行批注内容较多时无法完全显示内容\n" +
+                "3、第三行批注内容较多时无法完全显示内容\n" +
+                "4、第四行批注内容较多时无法完全显示内容");
         }
     }
 
@@ -84,6 +110,7 @@ public class CommentTest extends WorkbookTest {
         list.add(new Stock(40, StockHealth.NORMAL));
         list.add(new Stock(10, StockHealth.DANGER));
 
+        Font yh10 = new Font("微软雅黑", 10, Color.RED);
         Workbook workbook = new Workbook();
         ListSheet<Stock> listSheet = new ListSheet<>(list);
         // 获取Comments
@@ -91,9 +118,22 @@ public class CommentTest extends WorkbookTest {
         // A1单元格添加批注
         comments.addComment(1, 1, "实际库存");
         // B4单元格添加批注
-        comments.addComment(4, 2, new Comment("库存不足", "低于警戒线13%,请尽快添加库存").setValueFont(new Font("微软雅黑", 10, Color.RED)));
+        comments.addComment(4, 2, new Comment("库存不足", "低于警戒线13%,请尽快添加库存").setValueFont(yh10));
         workbook.addSheet(listSheet);
         workbook.writeTo(defaultTestPath.resolve("Body批注测试.xlsx"));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Body批注测试.xlsx"))) {
+            Map<Long, Comment> commentMap = reader.sheet(0).asFullSheet().getComments();
+            Comment A1 = commentMap.get(1L << 16 | 1);
+            assertNotNull(A1);
+            assertEquals(A1.value, "实际库存");
+
+            Comment B4 = commentMap.get(4L << 16 | 2);
+            assertNotNull(B4);
+            assertEquals(B4.title, "库存不足");
+            assertEquals(B4.value, "低于警戒线13%,请尽快添加库存");
+            assertEquals(yh10, B4.valueFont);
+        }
     }
 
     /**
