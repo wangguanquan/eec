@@ -474,10 +474,10 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 assertEquals(expect.get("lv"), o.get("long"));
                 assertEquals(Timestamp.valueOf((LocalDateTime) expect.get("ldtv")).getTime() / 1000, ((Timestamp) o.get("LocalDateTime")).getTime() / 1000);
                 LocalTime t0 = (LocalTime) expect.get("ltv");
-                Time t1 = (Time) o.get("LocalTime");
-                assertEquals(t0.getHour(), t1.getHours());
-                assertEquals(t0.getMinute(), t1.getMinutes());
-                assertEquals(t0.getSecond(), t1.getSeconds());
+                LocalTime t1 = ((Time) o.get("LocalTime")).toLocalTime();
+                assertEquals(t0.getHour(), t1.getHour());
+                assertEquals(t0.getMinute(), t1.getMinute());
+                assertEquals(t0.getSecond(), t1.getSecond());
             }
         }
     }
