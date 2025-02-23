@@ -27,7 +27,7 @@ import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.StyleProcessor;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
-import org.ttzero.excel.reader.MergeSheet;
+import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.reader.Row;
 
 import java.awt.Color;
@@ -192,7 +192,7 @@ public class ReportDesignTest extends WorkbookTest {
                 .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath.resolve("Report Design.xlsx"));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Report Design.xlsx"))) {
-            MergeSheet sheet = reader.sheet(0).asMergeSheet();
+            FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Dimension> mergeCells1 = sheet.getMergeCells();
 
             // Expect merge cells

@@ -33,6 +33,21 @@ public interface FullSheet extends MergeSheet, CalcSheet {
     /**
      * 复制合并单元格的值
      *
+     * <p>通常合并单元格的值保存在左上角第一个单元格中其余单元格的值为{@code null}，如果要读取这类合并单元的值就需要特殊处理，
+     * 使用{@code copyOnMerged}方法就可以直接获取合并范围内的所有单元格的值，每个值均为首个单元格的值。
+     * 本方法会有一定的性能损耗，数据量少时可忽略这种损耗</p>
+     * <blockquote><pre>
+     * |---------|     |---------|     |---------|
+     * |         |     |  1 |    |     |  1 |  1 |
+     * |    1    |  =&gt; |----|----|  =&gt; |----|----|
+     * |         |     |    |    |     |  1 |  1 |
+     * |---------|     |---------|     |---------|
+     * Merged(A1:B2)     Default           Copy
+     *                  Value in A1
+     *                  others are
+     *                  `null`
+     * </pre></blockquote>
+     *
      * @return 本工作表
      */
     FullSheet copyOnMerged();

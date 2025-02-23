@@ -111,7 +111,7 @@ public class ExcelReaderTest2 {
 
     @Test public void testMerge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            MergeSheet sheet = reader.sheet(0).asMergeSheet();
+            FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Dimension> list = sheet.getMergeCells();
             assertEquals(list.size(), 4);
             assertEquals(list.get(0), Dimension.of("B2:C2"));
@@ -119,19 +119,19 @@ public class ExcelReaderTest2 {
             assertEquals(list.get(2), Dimension.of("A13:A20"));
             assertEquals(list.get(3), Dimension.of("B16:E17"));
 
-            sheet = reader.sheet(1).asMergeSheet();
+            sheet = reader.sheet(1).asFullSheet();
             list = sheet.getMergeCells();
             assertEquals(list.size(), 2);
             assertEquals(list.get(0), Dimension.of("BM2:BQ11"));
             assertEquals(list.get(1), Dimension.of("A1:B26"));
 
-            sheet = reader.sheet(2).asMergeSheet();
+            sheet = reader.sheet(2).asFullSheet();
             list = sheet.getMergeCells();
             assertEquals(list.size(), 2);
             assertEquals(list.get(0), Dimension.of("A16428:D16437"));
             assertEquals(list.get(1), Dimension.of("A1:K3"));
 
-            sheet = reader.sheet(3).asMergeSheet();
+            sheet = reader.sheet(3).asFullSheet();
             list = sheet.getMergeCells();
             assertEquals(list.size(), 1);
             assertEquals(list.get(0), Dimension.of("A1:CF1434"));
@@ -140,7 +140,7 @@ public class ExcelReaderTest2 {
 
     @Test public void testLargeMerge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
-            MergeSheet sheet = reader.sheet(0).asMergeSheet();
+            FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Dimension> list = sheet.getMergeCells();
             assertEquals(list.size(), 2608);
             assertEquals(list.get(0), Dimension.of("C3:F3"));

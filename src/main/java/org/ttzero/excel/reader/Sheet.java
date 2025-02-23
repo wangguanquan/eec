@@ -447,14 +447,18 @@ public interface Sheet extends Closeable {
      * 将工作表转为{@code CalcSheet}以解析单元格公式
      *
      * @return {@link CalcSheet}
+     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code CalcSheet}所有功能
      */
+    @Deprecated
     CalcSheet asCalcSheet();
 
     /**
      * 将工作表转为{@code MergeSheet}，它将复制合并单元格的首坐标值到合并范围内的其它单元格中
      *
      * @return {@link MergeSheet}
+     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code MergeSheet}所有功能
      */
+    @Deprecated
     MergeSheet asMergeSheet();
 
     /**

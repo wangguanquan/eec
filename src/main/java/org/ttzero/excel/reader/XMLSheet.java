@@ -49,9 +49,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.ExcelReader.getEntry;
-import static org.ttzero.excel.reader.CalcSheet.parseCalcChain;
 import static org.ttzero.excel.reader.ExcelReader.toZipPath;
 import static org.ttzero.excel.reader.SharedStrings.toInt;
+import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 
 /**
  * The open-xml format Worksheet
@@ -59,7 +59,7 @@ import static org.ttzero.excel.reader.SharedStrings.toInt;
  * @author guanquan.wang on 2018-09-22
  */
 public class XMLSheet implements Sheet {
-    final Logger LOGGER = LoggerFactory.getLogger(getClass());
+    static final Logger LOGGER = LoggerFactory.getLogger(XMLSheet.class);
 
     public XMLSheet() { }
 
@@ -354,13 +354,11 @@ public class XMLSheet implements Sheet {
 
             if (i > 0) {
                 List<Dimension> mergeCells;
-                if (!(this instanceof MergeSheet)) {
+                if (!(this instanceof FullSheet)) {
                     // Parse merged cells
-                    XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
-                    tmp.reader = null; // Prevent streams from being consumed by mistake
-                    tmp.parseTails();
+                    FullSheet tmp = new XMLSheet(this).asFullSheet();
                     mergeCells = tmp.getMergeCells();
-                } else mergeCells = ((MergeSheet) this).getMergeCells();
+                } else mergeCells = ((FullSheet) this).getMergeCells();
 
                 if (mergeCells != null) {
                     mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
@@ -879,14 +877,16 @@ public class XMLSheet implements Sheet {
 
     @Override
     public XMLSheet asSheet() {
-        return (this instanceof XMLCalcSheet || this instanceof XMLMergeSheet) ? new XMLSheet(this) : this;
+        return (this instanceof XMLCalcSheet || this instanceof XMLMergeSheet || this instanceof XMLFullSheet) ? new XMLSheet(this) : this;
     }
 
+    @Deprecated
     @Override
     public XMLCalcSheet asCalcSheet() {
         return !(this instanceof XMLCalcSheet) ? new XMLCalcSheet(this) : (XMLCalcSheet) this;
     }
 
+    @Deprecated
     @Override
     public XMLMergeSheet asMergeSheet() {
         return !(this instanceof XMLMergeSheet) ? new XMLMergeSheet(this) : (XMLMergeSheet) this;
@@ -1064,7 +1064,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     void load0() {
         if (ready || eof) return;
 
-        // 解析公式
+        // Parse calcChain.xml
         ZipEntry entry = getEntry(zipFile, "xl/calcChain.xml");
         long[][] calcArray = null;
         try {
@@ -1257,6 +1257,63 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
         }
         this.mergeCells = mergeCells;
         tailPared = true;
+    }
+
+    /* Parse `calcChain` */
+    static long[][] parseCalcChain(InputStream is) {
+        SAXReader reader = SAXReader.createDefault();
+        Element calcChain;
+        try {
+            calcChain = reader.read(is).getRootElement();
+        } catch (DocumentException e) {
+            LOGGER.warn("Part of `calcChain` has be damaged, It will be ignore all formulas.");
+            return null;
+        }
+
+        Iterator<Element> ite = calcChain.elementIterator();
+        int i = 1, n = 10;
+        long[][] array = new long[n][];
+        int[] indices = new int[n];
+        for (; ite.hasNext(); ) {
+            Element e = ite.next();
+            // i: index of sheets
+            // r: range
+            String si = e.attributeValue("i"), r = e.attributeValue("r");
+            if (isNotEmpty(si)) {
+                i = toInt(si.toCharArray(), 0, si.length());
+            }
+            if (isNotEmpty(r)) {
+                if (n < i) {
+                    n <<= 1;
+                    indices = Arrays.copyOf(indices, n);
+                    long[][] _array = new long[n][];
+                    for (int j = 0; j < n; j++) _array[j] = array[j]; // Do not copy hear.
+                    array = _array;
+                }
+                long[] sub = array[i - 1];
+                if (sub == null) {
+                    sub = new long[10];
+                    array[i - 1] = sub;
+                }
+
+                if (++indices[i - 1] > sub.length) {
+                    long[] _sub = new long[sub.length << 1];
+                    System.arraycopy(sub, 0, _sub, 0, sub.length);
+                    array[i - 1] = sub = _sub;
+                }
+                sub[indices[i - 1] - 1] = ExcelReader.coordinateToLong(r);
+            }
+        }
+
+        i = 0;
+        for (; i < n; i++) {
+            if (indices[i] > 0) {
+                long[] a = Arrays.copyOf(array[i], indices[i]);
+                Arrays.sort(a);
+                array[i] = a;
+            } else array[i] = null;
+        }
+        return array;
     }
 
     @Override

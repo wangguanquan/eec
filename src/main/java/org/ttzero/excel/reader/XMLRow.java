@@ -563,7 +563,7 @@ class XMLFullRow extends XMLRow {
      */
     protected void subParseCellValue(Cell cell) {
         // Parse calc
-        parseCalcFunc(cell);
+        if (cell.f) parseCalcFunc(cell);
 
         // Parse value
         super.parseCellValue(cell);

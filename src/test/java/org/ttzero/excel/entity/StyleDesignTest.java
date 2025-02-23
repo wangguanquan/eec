@@ -238,7 +238,7 @@ public class StyleDesignTest extends WorkbookTest {
             }
 
             // Copy on merged reader
-            List<Map<String, Object>> readList2 = reader.sheet(0).asMergeSheet().header(1, 2).rows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
+            List<Map<String, Object>> readList2 = reader.sheet(0).asFullSheet().copyOnMerged().header(1, 2).rows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
             List<String> expected2 = Arrays.asList("{姓名=暗月月, 性别=男, 证书:编号=1, 证书:类型=数学, 证书:等级=3, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育b}",
                 "{姓名=暗月月, 性别=男, 证书:编号=2, 证书:类型=语文, 证书:等级=1, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育c}",
                 "{姓名=暗月月, 性别=男, 证书:编号=3, 证书:类型=历史, 证书:等级=1, 年龄=30, 教育:教育1=教育b, 教育:教育2=教育c}",

@@ -38,7 +38,7 @@ import java.util.List;
  * </pre></blockquote>
  *
  * @author guanquan.wang at 2022-08-10 11:36
- * @deprecated 使用 {@link FullSheet}代替
+ * @deprecated 使用 {@link FullSheet}代替，{@code FullSheet}包含{@code MergeSheet}所有功能
  */
 @Deprecated
 public interface MergeSheet extends Sheet {

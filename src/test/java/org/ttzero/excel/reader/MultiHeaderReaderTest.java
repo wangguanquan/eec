@@ -17,12 +17,10 @@
 package org.ttzero.excel.reader;
 
 import org.junit.Test;
-import org.ttzero.excel.manager.Const;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,28 +36,28 @@ public class MultiHeaderReaderTest {
 
     @Test public void testMergeExcel() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("merge.xlsx"))) {
-            List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
+            List<Dimension> list = reader.sheet(0).asFullSheet().getMergeCells();
             assertTrue(list.contains(Dimension.of("B2:C2")));
             assertTrue(list.contains(Dimension.of("E5:F8")));
             assertTrue(list.contains(Dimension.of("A13:A20")));
             assertTrue(list.contains(Dimension.of("B16:E17")));
 
-            list.addAll(reader.sheet(1).asMergeSheet().getMergeCells());
+            list.addAll(reader.sheet(1).asFullSheet().getMergeCells());
             assertTrue(list.contains(Dimension.of("A1:B26")));
             assertTrue(list.contains(Dimension.of("BM2:BQ11")));
 
-            list.addAll(reader.sheet(2).asMergeSheet().getMergeCells());
+            list.addAll(reader.sheet(2).asFullSheet().getMergeCells());
             assertTrue(list.contains(Dimension.of("A1:K3")));
             assertTrue(list.contains(Dimension.of("A16428:D16437")));
 
-            list.addAll(reader.sheet(3).asMergeSheet().getMergeCells());
+            list.addAll(reader.sheet(3).asFullSheet().getMergeCells());
             assertTrue(list.contains(Dimension.of("A1:CF1434")));
         }
     }
 
     @Test public void testMergeExcel2() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
-            List<Dimension> list = reader.sheet(0).asMergeSheet().getMergeCells();
+            List<Dimension> list = reader.sheet(0).asFullSheet().getMergeCells();
             assertTrue(list.contains(Dimension.of("A2:A31")));
             assertTrue(list.contains(Dimension.of("B8:B13")));
             assertTrue(list.contains(Dimension.of("A48:A54")));
@@ -69,8 +67,8 @@ public class MultiHeaderReaderTest {
 
     @Test public void testLargeMerge() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("largeMerged.xlsx"))) {
-            MergeSheet mergeSheet = reader.sheet(0).asMergeSheet();
-            Grid grid = mergeSheet.getMergeGrid();
+            FullSheet fullSheet = reader.sheet(0).asFullSheet();
+            Grid grid = fullSheet.getMergeGrid();
             assertEquals(grid.size(), 2608);
             assertTrue(grid.test(3, 1));
             assertTrue(grid.test(382, 1));
@@ -79,18 +77,10 @@ public class MultiHeaderReaderTest {
             assertTrue(grid.test(2101, 10));
             assertTrue(grid.test(2201, 6));
             assertFalse(grid.test(2113, 5));
-            long count = mergeSheet.rows().count();
+            long count = fullSheet.rows().count();
 
-            Sheet sheet = mergeSheet.asCalcSheet();
-            assertEquals(sheet.getClass(), XMLCalcSheet.class);
-            assertEquals(sheet.reset().rows().count(), count);
-
-            sheet = sheet.asSheet();
+            Sheet sheet = fullSheet.asSheet();
             assertEquals(sheet.getClass(), XMLSheet.class);
-            assertEquals(sheet.reset().rows().count(), count);
-
-            sheet = sheet.asMergeSheet();
-            assertEquals(sheet.getClass(), XMLMergeSheet.class);
             assertEquals(sheet.reset().rows().count(), count);
         }
     }

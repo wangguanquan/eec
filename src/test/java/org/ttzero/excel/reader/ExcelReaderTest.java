@@ -337,7 +337,7 @@ public class ExcelReaderTest {
 
     @Test public void testFormula() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+            reader.sheets().map(Sheet::asFullSheet).forEach(sheet -> {
                 Map<Long, String> formulasMap = FormulasLoader.load(testResourceRoot().resolve("expect/formula$" + sheet.getName() + "$formulas.txt"));
                 Iterator<Row> it = sheet.iterator();
                 while (it.hasNext()) {
@@ -432,7 +432,7 @@ public class ExcelReaderTest {
 
     @Test public void testMergeFunc() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-            reader.sheets().map(Sheet::asMergeSheet).flatMap(Sheet::rows).forEach(Print::println);
+            reader.sheets().map(Sheet::asFullSheet).flatMap(Sheet::rows).forEach(Print::println);
         }
     }
 
@@ -478,16 +478,7 @@ public class ExcelReaderTest {
             reader.sheet(0).reset().rows().forEach(Print::println);
 
             println("--------6--------");
-            reader.sheet(0).asCalcSheet().reset().rows().forEach(Print::println);
-
-            println("--------7--------");
-            reader.sheet(0).asCalcSheet().reset().rows().forEach(Print::println);
-
-            println("--------8--------");
-            reader.sheet(0).asMergeSheet().reset().rows().forEach(Print::println);
-
-            println("--------9--------");
-            reader.sheet(0).reset().rows().forEach(Print::println);
+            reader.sheet(0).asFullSheet().reset().rows().forEach(Print::println);
         }
     }
 
@@ -496,8 +487,7 @@ public class ExcelReaderTest {
             String fileName = path.getFileName().toString();
             for (int i = 0, len = reader.getSheetCount(); i < len; i++) {
                 Sheet sheet = reader.sheet(i);
-                if (option == 1) sheet = sheet.asCalcSheet();
-                else if (option == 2) sheet = sheet.asMergeSheet();
+                if (option == 2) sheet = sheet.asFullSheet().copyOnMerged();
                 Path expectPath = testResourceRoot().resolve("expect/" + fileName.substring(0, fileName.length() - 5) + "$" + sheet.getName() + ".txt");
                 if (Files.exists(expectPath)) {
                     List<String[]> expectList = CSVUtil.read(expectPath);
@@ -538,7 +528,7 @@ public class ExcelReaderTest {
         println("----------" + path.getFileName() + "----------");
         try (ExcelReader reader = ExcelReader.read(path)) {
             String fileName = path.getFileName().toString();
-            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+            reader.sheets().map(Sheet::asFullSheet).forEach(sheet -> {
                 Path expectPath = testResourceRoot().resolve("expect/" + fileName.substring(0, fileName.length() - 5) + "$" + sheet.getName() + "$formulas.txt");
                 Map<Long, String> formulasMap = FormulasLoader.load(expectPath);
                 Iterator<Row> it = sheet.iterator();
@@ -707,8 +697,8 @@ public class ExcelReaderTest {
             }
 
             // Read next 48 rows as calc sheet
-            sheet = sheet.asCalcSheet();
-            for (Iterator<Row> it = sheet.iterator(); it.hasNext(); ) {
+            FullSheet fullSheet = sheet.asFullSheet();
+            for (Iterator<Row> it = fullSheet.iterator(); it.hasNext(); ) {
                 Row row = it.next();
                 if (row.getRowNum() == 3) {
 //                    assertEquals("(A3+A4)+1", row.getFormula(1));
@@ -724,8 +714,7 @@ public class ExcelReaderTest {
             }
 
             // Read last rows as merged sheet
-            MergeSheet mergeSheet = sheet.asMergeSheet();
-            List<Dimension> mergeCells = mergeSheet.getMergeCells();
+            List<Dimension> mergeCells = fullSheet.getMergeCells();
             assertEquals(6, mergeCells.size());
             assertTrue(mergeCells.contains(Dimension.of("D1:D2")));
             assertTrue(mergeCells.contains(Dimension.of("E1:E2")));
@@ -733,7 +722,7 @@ public class ExcelReaderTest {
             assertTrue(mergeCells.contains(Dimension.of("E11:E18")));
             assertTrue(mergeCells.contains(Dimension.of("B56:D56")));
             assertTrue(mergeCells.contains(Dimension.of("A59:A64")));
-            for (Iterator<Row> it = mergeSheet.iterator(); it.hasNext(); ) {
+            for (Iterator<Row> it = fullSheet.copyOnMerged().iterator(); it.hasNext(); ) {
                 Row row = it.next();
 
                 // Copy on merged
