@@ -1004,6 +1004,15 @@ public class TemplateSheet extends Sheet {
             // Ignore
         }
 
+        // 批注
+        Map<Long, Comment> commentMap = originalSheet.getComments();
+        if (!commentMap.isEmpty()) {
+            this.comments0 = new HashMap<>(commentMap.size());
+            for (Map.Entry<Long, Comment> entry : commentMap.entrySet()) {
+                this.comments0.put(dimensionKey(((int) (entry.getKey() >> 16)) - 1, ((int) (entry.getKey() & 65535)) - 1), entry.getValue());
+            }
+        }
+
         // 样式缓存
         if (styleMap == null) styleMap = new HashMap<>();
         // 复制全局样式
