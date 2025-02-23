@@ -412,7 +412,7 @@ public class TemplateSheetTest extends WorkbookTest {
     @Test public void test1kSheet() throws IOException {
         Workbook workbook = new Workbook();
         for (int i = 0; i < 1000; i++) {
-            workbook.addSheet(new CleanTemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+            workbook.addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                 .setData(YzEntity.mock())
                 .setData("YzEntity", YzOrderEntity.mock(1000)));
         }
@@ -510,27 +510,6 @@ public class TemplateSheetTest extends WorkbookTest {
                 workbook.getSharedStrings().close();
                 throw e;
             }
-        }
-    }
-
-    public static class CleanTemplateSheet extends TemplateSheet {
-        //  根据实际情况而定
-        public CleanTemplateSheet(Path templatePath, String originalSheetName) {
-            super(templatePath, originalSheetName);
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.close();
-            styleMap = null;
-            preCells = null;
-
-            columns = null;
-            relManager = null;
-            rowBlock = null;
-            sheetWriter = null;
-            cellValueAndStyle = null;
-            extProp = null;
         }
     }
 
