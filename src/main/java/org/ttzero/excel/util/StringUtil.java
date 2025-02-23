@@ -202,7 +202,7 @@ public class StringUtil {
 
 
     /**
-     * 毫秒时间转字符串，通常用于格式化某段代码的耗时, 如：1h:3s or 4m:1s
+     * 毫秒时间转字符串，通常用于格式化某段代码的耗时, 如：{@code 1h:3s} or {@code 4m:1s}
      *
      * @param t 毫秒时间
      * @return 格式化文本

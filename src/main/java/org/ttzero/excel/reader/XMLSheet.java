@@ -31,6 +31,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.StringUtil;
+import org.ttzero.excel.validation.Validation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +41,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +50,8 @@ import java.util.zip.ZipFile;
 
 import static org.ttzero.excel.reader.ExcelReader.getEntry;
 import static org.ttzero.excel.reader.CalcSheet.parseCalcChain;
+import static org.ttzero.excel.reader.ExcelReader.toZipPath;
+import static org.ttzero.excel.reader.SharedStrings.toInt;
 
 /**
  * The open-xml format Worksheet
@@ -356,8 +358,8 @@ public class XMLSheet implements Sheet {
                     // Parse merged cells
                     XMLMergeSheet tmp = new XMLSheet(this).asMergeSheet();
                     tmp.reader = null; // Prevent streams from being consumed by mistake
-                    Map<String, Object> tags = tmp.parseTails();
-                    mergeCells = (List<Dimension>) tags.get("mergeCells");
+                    tmp.parseTails();
+                    mergeCells = tmp.getMergeCells();
                 } else mergeCells = ((MergeSheet) this).getMergeCells();
 
                 if (mergeCells != null) {
@@ -949,7 +951,9 @@ public class XMLSheet implements Sheet {
 
 /**
  * A sub {@link XMLSheet} to parse cell calc
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
     XMLCalcSheet(XMLSheet sheet) {
         super(sheet);
@@ -982,7 +986,9 @@ class XMLCalcSheet extends XMLFullSheet implements CalcSheet {
 
 /**
  * A sub {@link XMLSheet} to copy value on merge cells
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
 
     XMLMergeSheet(XMLSheet sheet) {
@@ -993,19 +999,13 @@ class XMLMergeSheet extends XMLFullSheet implements MergeSheet {
     @Override
     void load0() {
         if (ready || eof) return;
-        if (mergeCells == null) {
-            Map<String, Object> tags = parseTails();
-            @SuppressWarnings("unchecked")
-            List<Dimension> mergeCells = (List<Dimension>) tags.get("mergeCells");
-
-            if (mergeCells != null && !mergeCells.isEmpty()) {
-                this.mergeGrid = GridFactory.create(mergeCells);
-                this.mergeCells = mergeCells;
-                LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass().getSimpleName(), mergeGrid.size());
-            } else {
-                this.mergeGrid = new Grid.FastGrid(Dimension.of("A1"));
-                this.mergeCells = Collections.emptyList();
-            }
+        if (!tailPared) parseTails();
+        if (mergeCells != null && !mergeCells.isEmpty()) {
+            this.mergeGrid = GridFactory.create(mergeCells);
+            LOGGER.debug("Grid: {} ===> Size: {}", mergeGrid.getClass().getSimpleName(), mergeGrid.size());
+        } else {
+            this.mergeGrid = new Grid.FastGrid(Dimension.of("A1"));
+            this.mergeCells = Collections.emptyList();
         }
 
         if (!(sRow instanceof XMLMergeRow)) sRow = sRow.asMergeRow();
@@ -1221,7 +1221,15 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                                 if (len >= 35 && buf[i + 1] == 'a' && buf[i + 2] == 't' && buf[i + 3] == 'a'
                                     && buf[i + 4] == 'V' && buf[i + 5] == 'a' && buf[i + 6] == 'l' && buf[i + 7] == 'i'
                                     && buf[i + 8] == 'd' && buf[i + 9] == 'a' && buf[i + 10] == 't' && buf[i + 11] == 'i'
-                                    && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] <= ' ') {
+                                    && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] == 's' && (buf[i + 15] <= ' ' || buf[i + 15] == '/')) {
+                                        i += 16;
+                                        // TODO
+                                }
+                                break;
+                            // extLst
+                            case 'e':
+                                if (len >= 20 && buf[i + 1] == 'x' && buf[i + 2] == 't' && buf[i + 3] == 'L' && buf[i + 4] == 's' && buf[i + 5] == 't' && buf[i + 6] == '>') {
+                                    i += 7;
                                     // TODO
                                 }
                                 break;
@@ -1320,7 +1328,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                         break;
                 }
             } catch (DocumentException e) {
-                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+                LOGGER.warn("Parse header tag [{}] failed.", v, e);
             }
         } else if (v.startsWith("<sheetView") && v.charAt(10) <= ' ') {
             char[] ncb = new char[n + 1];
@@ -1332,7 +1340,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                 String showGridLines = e.attributeValue("showGridLines");
                 if ("0".equals(showGridLines)) this.showGridLines = 0;
             } catch (DocumentException e) {
-                LOGGER.warn("Parse header tag [" + v + "] failed.", e);
+                LOGGER.warn("Parse header tag [{}] failed.", v, e);
             }
         }
     }
