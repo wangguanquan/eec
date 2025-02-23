@@ -54,6 +54,12 @@ public class ListValidation<T> extends Validation {
         return this;
     }
 
+    public ListValidation<T> in(String otherSheetName, Dimension referer) {
+        this.otherSheetName = otherSheetName;
+        this.referer = referer;
+        return this;
+    }
+
     @Override
     public String getType() {
         return "list";
@@ -61,6 +67,16 @@ public class ListValidation<T> extends Validation {
 
     @Override
     public String validationFormula() {
-        return "<formula1>\"" + (options != null ? options.stream().map(String::valueOf).collect(Collectors.joining(",")) : referer) + "\"</formula1>";
+        String val;
+        if (isExtension()) {
+            val = "<x14:formula1><xm:f>" + otherSheetName + "!" + referer.toReferer() + "</xm:f></x14:formula1><xm:sqref>" + sqref + "</xm:sqref>";
+        } else if (options != null) {
+            val = "<formula1>\"" + options.stream().map(String::valueOf).collect(Collectors.joining(",")) + "\"</formula1>";
+        } else if (referer != null) {
+            val = "<formula1>" + referer.toReferer() + "</formula1>";
+        } else {
+            val = "<formula1>\"\"</formula1>";
+        }
+        return val;
     }
 }

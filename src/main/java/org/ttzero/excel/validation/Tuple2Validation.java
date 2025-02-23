@@ -18,6 +18,8 @@
 package org.ttzero.excel.validation;
 
 
+import org.ttzero.excel.reader.Dimension;
+
 /**
  * 范围验证，限定起始和结束值范围
  *
@@ -83,17 +85,23 @@ public abstract class Tuple2Validation<V1, V2> extends Validation {
 
     @Override
     public String validationFormula() {
+        boolean ext = isExtension()
+            , b1 = v1 != null && v1 instanceof Dimension
+            , b2 = v2 != null && v2 instanceof  Dimension;
+        if (ext && !(b1 || b2))
+            throw new IllegalArgumentException("Extension validation must setting dimension values");
         String v;
         if (operator == null) operator = Operator.between;
         switch (operator) {
             case equal:
             case notEqual:
             case greaterThan:
-            case greaterThanOrEqual: v = "<formula1>" + v1 + "</formula1>"; break;
+            case greaterThanOrEqual: v = ext && b1 ? "<x14:formula1><xm:f>" + otherSheetName + ":" + ((Dimension) v1).toReferer() + " </xm:f></x14:formula1>" : "<formula1>" + v1 + "</formula1>"; break;
             case lessThan:
-            case lessThanOrEqual: v = "<formula1>" + v2 + "</formula1>"; break;
-            default: v = "<formula1>" + v1 + "</formula1><formula2>" + v2 + "</formula2>"; break;
+            case lessThanOrEqual: v = ext && b2 ? "<x14:formula1><xm:f>" + otherSheetName + ":" + ((Dimension) v2).toReferer() + " </xm:f></x14:formula1>" : "<formula1>" + v2 + "</formula1>"; break;
+            default: v = ext ? "<x14:formula1><xm:f>" + otherSheetName + ":" + ((Dimension) v1).toReferer() + " </xm:f></x14:formula1><x14:formula2><xm:f>" + otherSheetName + ":" + ((Dimension) v2).toReferer() + " </xm:f></x14:formula2>": "<formula1>" + v1 + "</formula1><formula2>" + v2 + "</formula2>"; break;
         }
+        if (ext) v += "<xm:sqref>"+ sqref +"</xm:sqref>";
         return v;
     }
 }

@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
@@ -1398,14 +1399,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // 数据验证
         @SuppressWarnings("unchecked")
         List<Validation> validations = (List<Validation>) sheet.getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
+        List<Validation> extList = null;
         if (validations != null && !validations.isEmpty()) {
-            bw.write("<dataValidations count=\"");
-            bw.writeInt(validations.size());
-            bw.write("\">");
-            for (Validation e : validations) {
-                bw.write(e.toString());
+            // Extension validation
+            extList = validations.stream().filter(Validation::isExtension).collect(Collectors.toList());
+            if (extList.size() < validations.size()) {
+                bw.write("<dataValidations count=\"");
+                bw.writeInt(validations.size() - extList.size());
+                bw.write("\">");
+                for (Validation e : validations) {
+                    if (!e.isExtension()) bw.write(e.toString());
+                }
+                bw.write("</dataValidations>");
             }
-            bw.write("</dataValidations>");
         }
 
         // 超链接
@@ -1454,6 +1460,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // 背景图片
         writeWaterMark();
+
+        // 扩展节点
+        writeExtList(extList);
     }
 
     /**
@@ -1480,6 +1489,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(r.getId());
             bw.write("\"/>");
         }
+    }
+
+    /**
+     * 添加扩展节点
+     *
+     * @param extList 数据校验扩展节点
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeExtList(List<Validation> extList) throws IOException {
+        // 扩展节点-当前只支持数据校验
+        if (extList == null || extList.isEmpty()) return;
+        bw.write("<extLst><ext xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" uri=\"{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}\">");
+        bw.write("<x14:dataValidations xmlns:xm=\"http://schemas.microsoft.com/office/excel/2006/main\" count=\"");
+        bw.writeInt(extList.size());
+        bw.write("\">");
+        for (Validation e : extList) {
+            bw.write(e.toString());
+        }
+        bw.write("</x14:dataValidations></ext></extLst>");
     }
 
     /**
