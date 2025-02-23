@@ -672,7 +672,7 @@ public class Workbook implements Storable {
             // write to file
             if (name.indexOf('.') > 0) {
                 Path parent = path.getParent();
-                if (parent != null && Files.exists(parent)) FileUtil.mkdir(parent);
+                if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
                 writeTo(path.toFile());
                 return;
                 // write to directory

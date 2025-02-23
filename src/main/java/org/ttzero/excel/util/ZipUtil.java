@@ -108,7 +108,7 @@ public class ZipUtil {
     private static Path zip(Path destPath, boolean compressRoot, int compressionLevel, Path... srcPath) throws IOException {
         ZipOutputStream zos = new ZipOutputStream(
             new BufferedOutputStream(Files.newOutputStream(destPath, StandardOpenOption.CREATE)));
-        zos.setLevel(Math.max(Math.min(compressionLevel, 9), -1));
+        zos.setLevel(Math.min(Math.max(compressionLevel, 0), 9));
         List<Path> paths = new ArrayList<>();
         int i = 0, index = 0;
         int[] array = new int[srcPath.length];

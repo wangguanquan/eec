@@ -313,7 +313,7 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
-Version 0.5.22 (2025-02-24)
+Version 0.5.22 (2025-02-23)
 -------------
 - 开放性能模式提升导出速度
 - 支持读取批注，xls暂不支持(#418)
