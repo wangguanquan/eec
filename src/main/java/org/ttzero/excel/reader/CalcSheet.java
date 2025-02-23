@@ -34,7 +34,9 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * 支持解析公式的工作表，可以通过{@link #asCalcSheet}将普通工作表转为{@code CalcSheet}
  *
  * @author guanquan.wang at 2020-01-11 11:36
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 public interface CalcSheet extends Sheet {
 
     /* Parse `calcChain` */

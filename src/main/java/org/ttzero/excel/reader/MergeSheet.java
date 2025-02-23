@@ -38,7 +38,9 @@ import java.util.List;
  * </pre></blockquote>
  *
  * @author guanquan.wang at 2022-08-10 11:36
+ * @deprecated 使用 {@link FullSheet}代替
  */
+@Deprecated
 public interface MergeSheet extends Sheet {
     /**
      * 获取抽象的合并表格，通过表格快速判断某个坐标是否为合并单元格的一部分
