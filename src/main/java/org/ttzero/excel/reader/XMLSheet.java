@@ -1034,7 +1034,9 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     List<Col> cols; // 列宽
     Dimension filter; // 过滤
     Integer zoomScale; // 缩放比例
+    Map<Long, Comment> comments; // 批注
     String legacyDrawing;
+    List<Validation> validations; // 数据验证
 
     XMLFullSheet(XMLSheet sheet) {
         super(sheet);

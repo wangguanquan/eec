@@ -212,6 +212,11 @@ public class TemplateSheet extends Sheet {
      */
     protected Map<String, ValueWrapper> namespaceMapper = new HashMap<>();
     /**
+     * 缓存源文件批注
+     * Key: 坐标 Value：批注
+     */
+    protected Map<Long, Comment> comments0;
+    /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
      * @param templatePath 模板路径
@@ -551,7 +556,7 @@ public class TemplateSheet extends Sheet {
     protected void resetBlockData() {
         Dimension mergeCell;
         PreCell pn;
-        Object e;
+        Comment comment;
         Column emptyColumn = new Column();
         for (int rbs = rowBlock.capacity(), n = 0, limit = sheetWriter.getRowLimit(), len; n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
@@ -617,7 +622,15 @@ public class TemplateSheet extends Sheet {
                         mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
                     }
                 }
+                if (comments0 != null && (comment = comments0.get(k)) != null) {
+                    createComments().addComment(rows + 1, i + 1, comment);
+                }
             }
+
+            // 写入一行数据末尾处理
+            rowEnd(row0, row);
+        }
+    }
 
             // 如果为数组时需要移动游标
             if (!rowIterator.consumerNamespaces.isEmpty()) {
