@@ -838,7 +838,7 @@ public class TemplateSheet extends Sheet {
         // 模板文件样式
         Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
         // 样式缓存
-        styleMap = writeAsExcel ? new HashMap<>() : Collections.emptyMap();
+        if (styleMap == null) styleMap = writeAsExcel ? new HashMap<>() : Collections.emptyMap();
         int prefixLen = prefix.length(), suffixLen = suffix.length(), pf = 0;
         for (Iterator<org.ttzero.excel.reader.Row> iter = originalSheet.iterator(); iter.hasNext(); ) {
             org.ttzero.excel.reader.Row row = iter.next();
@@ -848,28 +848,8 @@ public class TemplateSheet extends Sheet {
 
                 // 复制样式
                 if (writeAsExcel && !styleMap.containsKey(cell.xf)) {
-                    int style = row.getCellStyle(cell), xf = 0;
-                    // 字体
-                    Font font = styles0.getFont(style);
-                    if (font != null) xf |= styles.addFont(font.clone());
-                    // 填充
-                    Fill fill = styles0.getFill(style);
-                    if (fill != null) xf |= styles.addFill(fill.clone());
-                    // 边框
-                    Border border = styles0.getBorder(style);
-                    if (border != null) xf |= styles.addBorder(border.clone());
-                    // 格式化
-                    NumFmt numFmt = styles0.getNumFmt(style);
-                    if (numFmt != null) xf |= styles.addNumFmt(numFmt.clone());
-                    // 水平对齐
-                    xf |= styles0.getHorizontal(style);
-                    // 垂直对齐
-                    xf |= styles0.getVertical(style);
-                    // 自动折行
-                    xf |= styles0.getWrapText(style);
-
-                    // 添加进样式表
-                    styleMap.put(cell.xf, styles.of(xf));
+                    // 复制样式添加进样式表
+                    styleMap.put(cell.xf, copyStyle(styles0, styles, cell.xf));
                 }
 
                 // 判断字符串是否包含占位符，可以是一个或多个
@@ -893,6 +873,37 @@ public class TemplateSheet extends Sheet {
         }
 
         return new CommitRowSetIterator((RowSetIterator) originalSheet.reset().iterator());
+    }
+
+    /**
+     * 复制样式
+     *
+     * @param srcStyles 源样式表
+     * @param distStyle 目标样式表
+     * @param copyXf    样式索引
+     * @return 复制样式在目标样式表中的索引
+     */
+    protected static int copyStyle(Styles srcStyles, Styles distStyle, int copyXf) {
+        int style =  srcStyles.getStyleByIndex(copyXf), xf = 0;
+        // 字体
+        Font font = srcStyles.getFont(style);
+        if (font != null) xf |= distStyle.addFont(font.clone());
+        // 填充
+        Fill fill = srcStyles.getFill(style);
+        if (fill != null) xf |= distStyle.addFill(fill.clone());
+        // 边框
+        Border border = srcStyles.getBorder(style);
+        if (border != null) xf |= distStyle.addBorder(border.clone());
+        // 格式化
+        NumFmt numFmt = srcStyles.getNumFmt(style);
+        if (numFmt != null) xf |= distStyle.addNumFmt(numFmt.clone());
+        // 水平对齐
+        xf |= srcStyles.getHorizontal(style);
+        // 垂直对齐
+        xf |= srcStyles.getVertical(style);
+        // 自动折行
+        xf |= srcStyles.getWrapText(style);
+        return distStyle.of(xf);
     }
 
     /**
@@ -923,6 +934,7 @@ public class TemplateSheet extends Sheet {
                     c.width = col.width;
                     c.colIndex = a - 1;
                     if (col.hidden) c.hide();
+                    if (col.styleIndex > 0) c.globalStyleIndex = col.styleIndex;
                     columns[i++] = c;
                 }
             }
@@ -977,6 +989,24 @@ public class TemplateSheet extends Sheet {
             }
         } catch (Exception ex) {
             // Ignore
+        }
+
+        // 样式缓存
+        if (styleMap == null) styleMap = new HashMap<>();
+        // 复制全局样式
+        if (columns != null) {
+            Styles styles0 = reader.getStyles(), styles = workbook.getStyles();
+            for (Column col : columns) {
+                // 存在全局列样式添加进样式表
+                if (col.globalStyleIndex > 0) {
+                    int newXf = styleMap.getOrDefault(col.globalStyleIndex, -1);
+                    if (newXf == -1) {
+                        newXf = copyStyle(styles0, styles, col.globalStyleIndex);
+                        styleMap.put(col.globalStyleIndex, newXf);
+                    }
+                    col.globalStyleIndex = newXf;
+                }
+            }
         }
 
         return len;

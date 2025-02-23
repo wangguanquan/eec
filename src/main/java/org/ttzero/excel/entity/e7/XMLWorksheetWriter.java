@@ -1336,19 +1336,19 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     Column col = columns[i], pCol = columns[i - 1];
                     String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
                     boolean lastColumn = i == columns.length - 1;
-                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1) {
-                        writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.isHide());
+                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1 || fCol.globalStyleIndex != col.globalStyleIndex) {
+                        writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.globalStyleIndex, fCol.isHide());
                         fWidth = width;
                         fCol = col;
                     }
-                    if (lastColumn) writeCol(width, fCol.getRealColIndex(), col.realColIndex, fillSpace, col.isHide());
+                    if (lastColumn) writeCol(width, fCol.getRealColIndex(), col.realColIndex, fillSpace, fCol.globalStyleIndex, col.isHide());
                 }
-            } else writeCol(fWidth, fCol.getRealColIndex(), fCol.getRealColIndex(), fillSpace, fCol.isHide());
+            } else writeCol(fWidth, fCol.getRealColIndex(), fCol.getRealColIndex(), fillSpace, fCol.globalStyleIndex, fCol.isHide());
             bw.write("</cols>");
         }
     }
 
-    protected void writeCol(String width, int min, int max, int fillSpace, boolean isHide) throws IOException {
+    protected void writeCol(String width, int min, int max, int fillSpace, int xf, boolean isHide) throws IOException {
         bw.write("<col customWidth=\"1\" width=\"");
         bw.write(width);
         int w = width.length();
@@ -1362,6 +1362,10 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.writeInt(min);
         bw.write("\" max=\"");
         bw.writeInt(max);
+        if (xf > 0) {
+            bw.write("\" style=\"");
+            bw.writeInt(xf);
+        }
         bw.write("\" bestFit=\"1\"/>");
     }
 

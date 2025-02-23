@@ -1272,17 +1272,20 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                         }
                         break;
                     case "col":
-                        String min = e.attributeValue("min"), max = e.attributeValue("max"), width = e.attributeValue("width"), hidden = e.attributeValue("hidden");
+                        String min = e.attributeValue("min"), max = e.attributeValue("max"), width = e.attributeValue("width")
+                            , hidden = e.attributeValue("hidden"), style = e.attributeValue("style");
                         if (cols == null) cols = new ArrayList<>();
-                        cols.add(new Col(Integer.parseInt(min), Integer.parseInt(max), Double.parseDouble(width), "1".equals(hidden)));
+                        Col col = new Col(Integer.parseInt(min), Integer.parseInt(max), Double.parseDouble(width), "1".equals(hidden));
+                        if (StringUtil.isNotEmpty(style)) col.styleIndex = toInt(style.toCharArray(), 0, style.length());
+                        cols.add(col);
                         break;
                     case "pane":
                         String xSplit = e.attributeValue("xSplit"), ySplit = e.attributeValue("ySplit");
                         if (StringUtil.isNotEmpty(ySplit) && Row.testNumberType(ySplit.toCharArray(), 0, ySplit.length()) == 1) panes = Panes.row(Integer.parseInt(ySplit));
                         if (StringUtil.isNotEmpty(xSplit) && Row.testNumberType(xSplit.toCharArray(), 0, xSplit.length()) == 1) {
-                            int col = Integer.parseInt(xSplit);
-                            if (panes != null) panes.col = col;
-                            else panes = Panes.col(col);
+                            int colIdx = Integer.parseInt(xSplit);
+                            if (panes != null) panes.col = colIdx;
+                            else panes = Panes.col(colIdx);
                         }
                         break;
                     case "sheetFormatPr":
