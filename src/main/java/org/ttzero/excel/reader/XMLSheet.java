@@ -1338,10 +1338,11 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
         String v = new String(cb, offset, n);
         // 去掉不必要的命名空间
         v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
+        Element e = null;
         if (cb[offset + n - 2] == '/') {
             try {
                 Document doc = DocumentHelper.parseText(v);
-                Element e = doc.getRootElement();
+                e = doc.getRootElement();
                 switch (e.getName()) {
                     case "dimension":
                         String ref = e.attributeValue("ref");
@@ -1374,18 +1375,9 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                         if (StringUtil.isNotEmpty(defaultRowHeight) && Row.testNumberType(defaultRowHeight.toCharArray(), 0, defaultRowHeight.length()) > 0)
                             this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
                         break;
-                    case "sheetView":
-                        String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
-                        if ("0".equals(showGridLines)) this.showGridLines = 0;
-                        if (StringUtil.isNotEmpty(zoomScale)) {
-                            try {
-                                this.zoomScale = Integer.parseInt(zoomScale.trim());
-                            } catch (NumberFormatException ex) { }
-                        }
-                        break;
                 }
-            } catch (DocumentException e) {
-                LOGGER.warn("Parse header tag [{}] failed.", v, e);
+            } catch (DocumentException ex) {
+                LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         } else if (v.startsWith("<sheetView") && v.charAt(10) <= ' ') {
             char[] ncb = new char[n + 1];
@@ -1393,11 +1385,19 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
             ncb[n - 1] = '/'; ncb[n] = '>';
             try {
                 Document doc = DocumentHelper.parseText(new String(ncb, 0, n + 1));
-                Element e = doc.getRootElement();
-                String showGridLines = e.attributeValue("showGridLines");
-                if ("0".equals(showGridLines)) this.showGridLines = 0;
-            } catch (DocumentException e) {
-                LOGGER.warn("Parse header tag [{}] failed.", v, e);
+                e = doc.getRootElement();
+            } catch (DocumentException ex) {
+                LOGGER.warn("Parse header tag [{}] failed.", v, ex);
+            }
+        }
+
+        if (e != null && e.getName().equals("sheetView")) {
+            String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
+            if ("0".equals(showGridLines)) this.showGridLines = 0;
+            if (StringUtil.isNotEmpty(zoomScale)) {
+                try {
+                    this.zoomScale = Integer.parseInt(zoomScale.trim());
+                } catch (NumberFormatException ex) { }
             }
         }
     }
