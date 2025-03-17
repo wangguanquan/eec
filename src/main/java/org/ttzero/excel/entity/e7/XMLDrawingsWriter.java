@@ -127,12 +127,14 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         if (StringUtil.isEmpty(picture.picName)) return;
         Relationship picRel = relManager.add(new Relationship("../media/" + picture.picName, Const.Relationship.IMAGE));
         size++;
-        int editAs = picture.property >= 0 ? picture.property & 3 : 0;
-        if (editAs >= 0) {
+        int cellAnchor = (picture.property >> 2) & 3;
+        int editAs = picture.property & 3;
+        if (cellAnchor == 1) bw.write("<xdr:oneCellAnchor>");
+        else {
             bw.write("<xdr:twoCellAnchor editAs=\"");
             bw.write(ANCHOR_PROPERTY[editAs]);
             bw.write("\">");
-        } else bw.write("<xdr:twoCellAnchor>");
+        }
 
         // From
         bw.write("<xdr:from><xdr:col>");
@@ -145,16 +147,26 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         bw.writeInt(picture.padding[0] * 12700);
         bw.write("</xdr:rowOff></xdr:from>");
 
+        // width height
+        if (cellAnchor == 1) {
+            bw.write("<xdr:ext cx=\"");
+            bw.writeInt(picture.padding[1]);
+            bw.write("\" cy=\"");
+            bw.writeInt(picture.padding[2]);
+            bw.write("\"/>");
+        }
         // TO
-        bw.write("<xdr:to><xdr:col>");
-        bw.writeInt(Math.max(picture.col, picture.toCol));
-        bw.write("</xdr:col><xdr:colOff>");
-        bw.writeInt(picture.padding[1] * 12700);
-        bw.write("</xdr:colOff><xdr:row>");
-        bw.writeInt(Math.max(picture.row, picture.toRow));
-        bw.write("</xdr:row><xdr:rowOff>");
-        bw.writeInt(picture.padding[2] * 12700);
-        bw.write("</xdr:rowOff></xdr:to>");
+        else {
+            bw.write("<xdr:to><xdr:col>");
+            bw.writeInt(Math.max(picture.col, picture.toCol));
+            bw.write("</xdr:col><xdr:colOff>");
+            bw.writeInt(picture.padding[1] * 12700);
+            bw.write("</xdr:colOff><xdr:row>");
+            bw.writeInt(Math.max(picture.row, picture.toRow));
+            bw.write("</xdr:row><xdr:rowOff>");
+            bw.writeInt(picture.padding[2] * 12700);
+            bw.write("</xdr:rowOff></xdr:to>");
+        }
 
         // Picture
         bw.write("<xdr:pic><xdr:nvPicPr><xdr:cNvPr id=\"");
@@ -186,7 +198,9 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
 
         bw.write("</xdr:spPr>");
         // End Picture
-        bw.write("</xdr:pic><xdr:clientData/></xdr:twoCellAnchor>");
+        bw.write("</xdr:pic><xdr:clientData/></xdr:");
+        if (cellAnchor == 1) bw.write("oneCellAnchor>");
+        else bw.write("twoCellAnchor>");
     }
 
     @Override

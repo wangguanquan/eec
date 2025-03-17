@@ -26,6 +26,7 @@ import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.Relationship;
+import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.FileUtil;
@@ -255,7 +256,12 @@ public class XMLDrawings implements Drawings {
             picture.localPath = targetPath;
 
             int[][] ft = parseDimension(e, xdr);
-            picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1), ft[1][2] + 1, (short) (ft[1][0] + 1));
+            boolean oneCellAnchor = "oneCellAnchor".equals(e.getName());
+            if (oneCellAnchor) {
+                picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1));
+            } else {
+                picture.dimension = new Dimension(ft[0][2] + 1, (short) (ft[0][0] + 1), ft[1][2] + 1, (short) (ft[1][0] + 1));
+            }
             picture.padding = new short[] { (short) ft[0][3], (short) ft[1][1], (short) ft[1][3], (short) ft[0][1] };
             String editAs = e.attributeValue("editAs");
             int property = -1;
@@ -267,7 +273,7 @@ public class XMLDrawings implements Drawings {
                     default:
                 }
             }
-            picture.property = property;
+            picture.property = property | (oneCellAnchor ? 1 : 0) << 3;
             Element spPr = pic.element(QName.get("spPr", xdr));
             if (spPr != null) {
                 Element xfrm = spPr.element(QName.get("xfrm", a));
@@ -302,9 +308,16 @@ public class XMLDrawings implements Drawings {
 
     protected static int[][] parseDimension(Element e, Namespace xdr) {
         Element fromEle = e.element(QName.get("from", xdr));
-        int[] f = dimEle(fromEle, xdr);
-        Element toEle = e.element(QName.get("to", xdr));
-        int[] t = dimEle(toEle, xdr);
+        int[] f = dimEle(fromEle, xdr), t;
+        if ("oneCellAnchor".equals(e.getName())) {
+            Element ext = e.element(QName.get("ext", xdr));
+            String cx = Styles.getAttr(ext, "cx"), cy = Styles.getAttr(ext, "cy");
+            int width = StringUtil.isNotBlank(cx) ? Integer.parseInt(cx) : 0, height = StringUtil.isNotBlank(cy) ? Integer.parseInt(cy) : 0;
+            t = new int[] { 0, width, 0, height};
+        } else {
+            Element toEle = e.element(QName.get("to", xdr));
+            t = dimEle(toEle, xdr);
+        }
 
         return new int[][] { f, t };
     }

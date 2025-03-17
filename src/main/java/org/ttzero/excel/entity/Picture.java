@@ -40,7 +40,10 @@ public class Picture {
      */
     public int col, row, toCol, toRow;
     /**
+     * When property is {@code twoCellAnchor} padding saves
      * Padding top | right | bottom | left
+     * {@code oneCellAnchor} saves
+     * Padding top | width | height | left
      */
     public short[] padding;
     /**
@@ -54,6 +57,10 @@ public class Picture {
      */
     public int size;
     /**
+     * Low 2-3 bites
+     * 0: twoCellAnchor
+     * 1: oneCellAnchor
+     * Low 0-2 bits
      * 0: Move and size with cells
      * 1: Move but don't size with cells
      * 2: Don't move or size with cells
