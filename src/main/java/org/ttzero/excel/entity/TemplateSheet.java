@@ -188,7 +188,11 @@ public class TemplateSheet extends Sheet {
     /**
      * 以Excel格式输出
      */
-    protected boolean writeAsExcel;
+    protected boolean writeAsExcel,
+        /**
+         * 使用源工作表名称作为当前工作表名
+         */
+        useOriginalSheetName;
     /**
      * 包含占位符的单元格预处理后的结果
      */
@@ -373,6 +377,16 @@ public class TemplateSheet extends Sheet {
     }
 
     /**
+     * 使用源工作表名称作为当前工作表名
+     *
+     * @return 当前工作表
+     */
+    public TemplateSheet useOriginalSheetName() {
+        this.useOriginalSheetName = true;
+        return this;
+    }
+
+    /**
      * 绑定数据到默认命名空间，默认命名空间为{@code null}
      *
      * @param o 任意对象，可以为Java Bean，Map，或者数组
@@ -538,7 +552,8 @@ public class TemplateSheet extends Sheet {
         // 加载模板工作表
         FullSheet sheet = reader.sheet(originalSheetIndex).asFullSheet();
         writeAsExcel = sheetWriter != null && XMLWorksheetWriter.class.isAssignableFrom(sheetWriter.getClass());
-
+        // 使用源工作表名称作为当前工作表名
+        if (useOriginalSheetName) setName(sheet.getName());
         // 解析公共信息
         int n = prepareCommonData(sheet);
         // 预处理样式和占位符
