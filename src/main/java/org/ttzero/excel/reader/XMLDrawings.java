@@ -264,16 +264,16 @@ public class XMLDrawings implements Drawings {
             }
             picture.padding = new short[] { (short) ft[0][3], (short) ft[1][1], (short) ft[1][3], (short) ft[0][1] };
             String editAs = e.attributeValue("editAs");
-            int property = -1;
+            int property = 0;
             if (StringUtil.isNotEmpty(editAs)) {
                 switch (editAs) {
-                    case "twoCell" : property = 0; break;
+//                    case "twoCell" : property = 0; break;
                     case "oneCell" : property = 1; break;
                     case "absolute": property = 2; break;
                     default:
                 }
             }
-            picture.property = property | (oneCellAnchor ? 1 : 0) << 3;
+            picture.property = property | (oneCellAnchor ? 1 : 0) << 2;
             Element spPr = pic.element(QName.get("spPr", xdr));
             if (spPr != null) {
                 Element xfrm = spPr.element(QName.get("xfrm", a));
@@ -313,7 +313,7 @@ public class XMLDrawings implements Drawings {
             Element ext = e.element(QName.get("ext", xdr));
             String cx = Styles.getAttr(ext, "cx"), cy = Styles.getAttr(ext, "cy");
             int width = StringUtil.isNotBlank(cx) ? Integer.parseInt(cx) : 0, height = StringUtil.isNotBlank(cy) ? Integer.parseInt(cy) : 0;
-            t = new int[] { 0, width, 0, height};
+            t = new int[] { 0, (int) (width / 12700.0D + 0.5), 0, (int) (height / 12700.0D + 0.5)};
         } else {
             Element toEle = e.element(QName.get("to", xdr));
             t = dimEle(toEle, xdr);

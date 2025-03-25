@@ -150,9 +150,9 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
         // width height
         if (cellAnchor == 1) {
             bw.write("<xdr:ext cx=\"");
-            bw.writeInt(picture.padding[1]);
+            bw.writeInt(picture.padding[1] * 12700);
             bw.write("\" cy=\"");
-            bw.writeInt(picture.padding[2]);
+            bw.writeInt(picture.padding[2] * 12700);
             bw.write("\"/>");
         }
         // TO
