@@ -756,7 +756,7 @@ public class XMLSheet implements Sheet {
             }
             // Reload
             reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
-            reader.skip(mark);
+            if (mark > 0L) reader.skip(mark);
             length = reader.read(cb);
             nChar = 0;
             eof = sRow == null;

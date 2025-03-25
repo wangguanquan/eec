@@ -542,7 +542,7 @@ public class TemplateSheet extends Sheet {
         // 解析公共信息
         int n = prepareCommonData(sheet);
         // 预处理样式和占位符
-        rowIterator = prepare(sheet);
+        rowIterator = prepare(sheet.reset());
         pf = preCells == null ? -1 : preCells[0][0].row;
 
         // 忽略表头输出
