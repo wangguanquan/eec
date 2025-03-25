@@ -360,6 +360,7 @@ public class TemplateSheetTest extends WorkbookTest {
         List<Map<String, Object>> expectList = new ArrayList<>();
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
+                .useOriginalSheetName() // 使用源工作表名
                 .setData(YzEntity.mockMap())
                 .setData("YzEntity", (i, o) -> {
                     List<Map<String, Object>> sub = null;
@@ -376,6 +377,7 @@ public class TemplateSheetTest extends WorkbookTest {
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.sheet(0).getName(), "混合命名空间");
             assertListMap(reader.sheet(0).asFullSheet(), expectList);
         }
     }
