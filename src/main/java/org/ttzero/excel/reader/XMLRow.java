@@ -19,6 +19,7 @@ package org.ttzero.excel.reader;
 import org.ttzero.excel.entity.TooManyColumnsException;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.util.StringUtil;
 
 import java.math.BigDecimal;
 
@@ -686,15 +687,17 @@ class XMLFullRow extends XMLRow {
             swap(values, (_n << 1) + 1, _i + 1);
         }
 
-        int si = Integer.parseInt(values[3]);
+        if ("si".equals(values[2]) && StringUtil.isNotEmpty(values[3])) {
+            int si = Integer.parseInt(values[3]);
 
-        // Append and share href
-        if (index > 4) {
-            addRef(si, values[5]);
+            // Append and share href
+            if (index > 4) {
+                addRef(si, values[5]);
+            }
+
+            // Storage formula shared id
+            cell.si = si;
         }
-
-        // Storage formula shared id
-        cell.si = si;
     }
 
     XMLFullRow setCopyValueFunc(Grid mergeCells, MergeValueFunc mergedFunc) {
