@@ -690,7 +690,7 @@ public class Column {
      * @return 格式化 {@link NumFmt}
      */
     public NumFmt getNumFmt() {
-        return numFmt != null ? numFmt : (numFmt = styles.getNumFmt(cellStyle));
+        return numFmt != null ? numFmt : cellStyle != null ? (numFmt = styles.getNumFmt(cellStyle)) : null;
     }
 
     /**
