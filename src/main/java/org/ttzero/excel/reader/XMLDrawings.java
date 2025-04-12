@@ -438,7 +438,7 @@ public class XMLDrawings implements Drawings {
         List<Picture> pictures = new ArrayList<>();
         String formula;
         // 转为CalcSheet工作表解析公式，解析类似<f>_xlfn.DISPIMG("图片ID",1)</f>，取出图片ID与Mapper进行匹配
-        for (Iterator<Row> iter = sheet.asFullSheet().load().iterator(); iter.hasNext(); ) {
+        for (Iterator<Row> iter = excelReader.sheet(sheet.getName()).asFullSheet().iterator(); iter.hasNext(); ) {
             Row row = iter.next();
             for (int i = row.getFirstColumnIndex(), len = row.getLastColumnIndex(); i < len; i++) {
                 if ((formula = row.getFormula(i)) != null && formula.startsWith("_xlfn.DISPIMG(\"")) {
