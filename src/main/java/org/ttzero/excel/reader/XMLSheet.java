@@ -76,7 +76,7 @@ public class XMLSheet implements Sheet {
         this.dimension = sheet.dimension;
         this.drawings = sheet.drawings;
         this.reader = sheet.reader;
-        this.cb = sheet.cb;
+        this.cb = sheet.cb != null ? Arrays.copyOf(sheet.cb, sheet.cb.length) : null;
         this.nChar = sheet.nChar;
         this.length = sheet.length;
         this.eof = sheet.eof;
@@ -476,25 +476,23 @@ public class XMLSheet implements Sheet {
     @Override
     public XMLSheet load() throws IOException {
         // Prevent multiple parsing
-        if (sRow != null) {
-            reset();
-            return this;
+        if (sRow != null) reset();
+        else {
+            LOGGER.debug("Load {}", path);
+            reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
+            cb = new char[8192];
+            nChar = 0; mark = 0;
+
+            // 解析头信息
+            parseBOF();
+
+            // Empty sheet
+            if (length <= 0) eof = true;
+            if (!eof) sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
+
+            LOGGER.debug("eof: {}, mark: {}", eof, mark);
+            if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
         }
-        LOGGER.debug("Load {}", path);
-        reader = new InputStreamReader(zipFile.getInputStream(entry), StandardCharsets.UTF_8);
-        cb = new char[8192];
-        nChar = 0; mark = 0;
-
-        // 解析头信息
-        parseBOF();
-
-        // Empty sheet
-        if (length <= 0) eof = true;
-        if (!eof) sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
-
-        LOGGER.debug("eof: {}, mark: {}", eof, mark);
-        if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
-
         return this;
     }
 
