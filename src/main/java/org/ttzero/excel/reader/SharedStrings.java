@@ -459,7 +459,7 @@ public class SharedStrings implements Closeable {
 
             // Read more
             if ((len = reader.read(cb, offset, cb.length - offset)) <= 0) break;
-            len += offset;
+            length = len += offset;
             nChar = 0;
         }
 
