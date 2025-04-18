@@ -36,6 +36,7 @@ import org.ttzero.excel.util.StringUtil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -391,6 +392,33 @@ public class ExcelReaderTest2 {
         }
     }
 
+    @Test public void testSpecifyHeaderRow() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            Cell[] cells = new Cell[6];
+            cells[0] = new Cell(1).setString("channelId");
+            cells[1] = new Cell(2).setString("game");
+            cells[2] = new Cell();
+            cells[3] = new Cell(4).setString("registrationTime");
+            cells[4] = new Cell(5).setString("up30");
+            cells[5] = new Cell(6).setString("vip");
+            org.ttzero.excel.reader.Row headerRow = new org.ttzero.excel.reader.Row() {};
+            headerRow.setCells(cells);
+            List<A> list = reader.sheet(0).forceImport().header(1).bind(A.class, headerRow)
+                .dataRows().map(row -> (A) row.get()).collect(Collectors.toList());
+            assertEquals(list.size(), 94);
+            assertEquals(list.get(0).toString(), "4\t极品飞车\t2018-11-21\ttrue\tF");
+            assertEquals(list.get(10).toString(), "3\t守望先锋\t2018-11-21\ttrue\tI");
+            assertEquals(list.get(20).toString(), "9\t守望先锋\t2018-11-21\ttrue\tP");
+            assertEquals(list.get(30).toString(), "9\t怪物世界\t2018-11-21\ttrue\tH");
+            assertEquals(list.get(40).toString(), "10\tLOL\t2018-11-21\ttrue\tB");
+            assertEquals(list.get(50).toString(), "8\t怪物世界\t2018-11-21\ttrue\tK");
+            assertEquals(list.get(60).toString(), "5\t怪物世界\t2018-11-21\ttrue\tP");
+            assertEquals(list.get(70).toString(), "7\t怪物世界\t2018-11-21\tfalse\tA");
+            assertEquals(list.get(80).toString(), "7\tWOW\t2018-11-21\ttrue\tX");
+            assertEquals(list.get(90).toString(), "3\t极品飞车\t2018-11-21\ttrue\tP");
+        }
+    }
+
     public static <T> boolean listEquals(List<T> list, List<T> expectList) {
         if (list == expectList) return true;
         if (list == null || expectList == null) return false;
@@ -445,5 +473,17 @@ public class ExcelReaderTest2 {
             return list;
         }
 
+    }
+
+    public static class A {
+        private int channelId;
+        private String game;
+        private LocalDate registrationTime;
+        private boolean up30;
+        private char vip;
+        @Override
+        public String toString() {
+            return channelId + "\t" + game + "\t" + registrationTime + "\t" + up30 + "\t" + vip;
+        }
     }
 }
