@@ -309,10 +309,7 @@ public class XMLSheet implements Sheet {
                 sRow.setHeader(header);
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
-            Row row0 = findRow0();
-            if (row0 != null && row0.getRowNum() < hrl) {
-                for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
-            }
+            for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
             if (sRow != null && sRow.hr != header) sRow.setHeader(header);
         }
         return header;
