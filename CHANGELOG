@@ -1,3 +1,10 @@
+Version 0.5.23
+-------------
+- 修复读取某些特殊设置的图片造成读取异常
+- 修复某些情况下读取共享字符串异常
+- 修复指定自定义表头且指定headerRow为1时不跳过表头行的问题
+- 模板工作表新增useOriginalSheetName方法使导出的文件保持源Sheet名
+
 Version 0.5.22 (2025-02-23)
 -------------
 - 开放性能模式提升导出速度
@@ -373,37 +380,7 @@ Version 0.2.1 (2018-10-08)
 
 Version 0.2.0 (2018-09-30)
 -------------
-Add ExcelReader
-
-一个流式操作链，游标只会向前，所以不能反复操作同一个流。
-同一个Sheet页内部Row对象是内存共享的，所以不要直接将Stream<Row>转为集合类，
-如果要转为集合类可以使用Row对象内部的to方法`row -> row.to(class)`转为指定类型对象。
-to方法会将每行数据实例化。
-Row对象内部还包含一个too方法，用法与to方法一样，唯一区别是too方法返回的对象是内存共享的内存中只有一个实例，
-对于不需要转集合类，内存共享是一个好主意。
-> 测试前请创建一个名为Student&Teacher.xlsx的文件，然后建两个Sheet页分别为Student和Teacher，然后添写测试内容（列表）
-
-```
-// 读取Student&Teacher.xlsx并且输出每个Sheet页的数据
-ExcelReader.read(Paths.get("Student&Teacher.xlsx")).sheets().flatMap(Sheet::rows).forEach(System.out::println);
-
-// 读取Student&Teacher.xlsx的Student页并且转为对象数组
-Student[] students = ExcelReader.read(Paths.get("Student&Teacher.xlsx"))
-     .sheet("Student")
-     .dataRows() // 不包含所有空行（不含有任何数据和样式）和第一行数据
-     .map(row -> row.to(Student.class))
-     .toArray(Student[]::new);
-
-// 读取Student&Teacher.xlsx的Teacher页并且找出所有数学教师并保存数据库
-ExcelReader.read(Paths.get("Student&Teacher.xlsx"))
-    .sheet("Teacher")
-    .dataRows()
-    .map(row -> row.too(Teacher.class)) // 这里插库动作是one by one的操作，所以使用too共享对象比较好。
-    .filter(t -> "math".equals(t.getTeach()))
-    .forEach(this::save);
-```
-
-开发过程中你应该使用try-with-resource或手动关闭ExcelReader。
+1. 新增ExcelReader用于流式读取文件
 
 Version 0.1.0
 -------------
