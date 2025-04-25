@@ -225,10 +225,13 @@ public class Fill implements Cloneable {
         // 单色背景
         Element e = tag.element("patternFill");
         if (e != null) {
-            try {
-                fill.patternType = PatternType.valueOf(getAttr(e, "patternType"));
-            } catch (IllegalArgumentException ex) {
-                // Ignore
+            String patternType = getAttr(e, "patternType");
+            if (StringUtil.isNotEmpty(patternType)) {
+                try {
+                    fill.patternType = PatternType.valueOf(patternType);
+                } catch (IllegalArgumentException ex) {
+                    // Ignore
+                }
             }
             Element fgColor = e.element("fgColor");
             if (fgColor != null) {
