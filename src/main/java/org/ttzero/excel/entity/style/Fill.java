@@ -231,8 +231,9 @@ public class Fill implements Cloneable {
                     fill.patternType = PatternType.valueOf(patternType);
                 } catch (IllegalArgumentException ex) {
                     // Ignore
+                    fill.patternType = PatternType.none;
                 }
-            }
+            } else fill.patternType = PatternType.none;
             Element fgColor = e.element("fgColor");
             if (fgColor != null) {
                 fill.fgColor = Styles.parseColor(fgColor);
