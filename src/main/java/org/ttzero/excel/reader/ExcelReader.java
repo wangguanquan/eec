@@ -530,7 +530,16 @@ public class ExcelReader implements Closeable {
                 sheet.close();
                 throw new ExcelReadException("The file format is incorrect or corrupted.");
             }
-            sheet.setPath("xl/" + r.getTarget());
+            String worksheetTarget = r.getTarget();
+            if (!worksheetTarget.startsWith("worksheets")) {
+                int a = worksheetTarget.indexOf("worksheets");
+                if (a < 0) {
+                    sheet.close();
+                    throw new ExcelReadException("The file format is incorrect or corrupted.");
+                }
+                worksheetTarget = worksheetTarget.substring(a);
+            }
+            sheet.setPath("xl/" + worksheetTarget);
             entry = getEntry(sheet.path);
             if (entry == null) {
                 sheet.close();
