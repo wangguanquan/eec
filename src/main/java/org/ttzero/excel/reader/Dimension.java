@@ -35,7 +35,8 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
  *
  *
  * <p>范围值包含两个坐标，例{@code A1:B5}它表示从1行1列到5行2列的范围，如果起始坐标和结束坐标一样
- * 也就是压缩到一个单元格可以简写为起始坐标{@code A1:A1}被记为{@code A1}</p>
+ * 也就是压缩到一个单元格可以简写为起始坐标{@code A1:A1}被记为{@code A1}。如果冒号后面未指定坐标时
+ * 默认表示到最大行，例{@code A1:}表示整个A列，从A1到A列最后一行单元格，范围与Excel版本相关</p>
  *
  * @author guanquan.wang at 2019-12-20 10:07
  */
