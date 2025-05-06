@@ -16,6 +16,9 @@
 
 package org.ttzero.excel.reader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
@@ -36,6 +39,7 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
  * @author guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Dimension.class);
 
     /**
      * 表示表格中支撑的最大行数。该值通常基于Excel中的最大行限制，即1,048,576。
@@ -113,6 +117,7 @@ public class Dimension {
             String refer = range.substring(i + 1);
             if (refer.isEmpty()) {
                 t = MAX_ROW;
+                LOGGER.warn("Empty reference detected. The range will include the entire column instead of a single cell.");
             } else {
                 t = coordinateToLong(refer);
             }
