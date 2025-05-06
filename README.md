@@ -346,12 +346,6 @@ Version 0.5.20 (2024-11-13)
 - CSVSheetWriter新增分隔符delimiter属性
 - 提升OpenJDK8-21的兼容性
 
-Version 0.5.19 (2024-09-22)
--------------
-- Workbook支持增加自定义属性
-- Workbook支持设置"只读"标识，设置只读后打开Excel后无法编辑
-- 删除部分已标记为过时的方法
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
