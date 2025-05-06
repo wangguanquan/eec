@@ -42,11 +42,11 @@ public class DimensionTest {
         assertEquals(d.firstColumn, 2);
         assertEquals(d.firstRow, 3);
         assertEquals(d.lastColumn, 2);
-        assertEquals(d.lastRow, 3);
+        assertEquals(d.lastRow, 1048576);
         assertEquals(d.width, 1);
-        assertEquals(d.height, 1);
+        assertEquals(d.height, 1048574);
 
-        assertEquals(d.toReferer(), "$B$3");
+        assertEquals(d.toReferer(), "$B$3:$B$1048576");
     }
 
     @Test public void testLastDim() {
