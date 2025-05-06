@@ -36,6 +36,12 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
  * @author guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
+
+    /**
+     * 表示表格中支撑的最大行数。该值通常基于Excel中的最大行限制，即1,048,576。
+     */
+    public static final long MAX_ROW = 1048576L << 16;
+
     /**
      * 起始行号 (one base)
      */
@@ -104,7 +110,12 @@ public class Dimension {
             t = coordinateToLong(range.substring(i + 1));
         } else {
             f = coordinateToLong(range.substring(0, i));
-            t = coordinateToLong(range.substring(i + 1));
+            String refer = range.substring(i + 1);
+            if (refer.isEmpty()) {
+                t = MAX_ROW;
+            } else {
+                t = coordinateToLong(refer);
+            }
         }
         return new Dimension((int) (f >> 16), (short) f, (int) (t >> 16), (short) t);
     }
@@ -177,7 +188,7 @@ public class Dimension {
     public String toReferer() {
         char[] chars;
         if (lastRow > firstRow || lastColumn > firstColumn) {
-            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastRow <= 26 ? 1 : lastRow <= 702 ? 2 : 3, r1 = stringSize(lastRow);
+            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastColumn <= 26 ? 1 : lastColumn <= 702 ? 2 : 3, r1 = stringSize(lastRow);
             chars = new char[c0 + r0 + c1 + r1 + 5];
             chars[i++] = '$';
             System.arraycopy(int2Col(firstColumn), 0, chars, i, c0);
