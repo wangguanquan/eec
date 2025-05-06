@@ -177,7 +177,7 @@ public class Dimension {
     public String toReferer() {
         char[] chars;
         if (lastRow > firstRow || lastColumn > firstColumn) {
-            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastRow <= 26 ? 1 : lastRow <= 702 ? 2 : 3, r1 = stringSize(lastRow);
+            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastColumn <= 26 ? 1 : lastColumn <= 702 ? 2 : 3, r1 = stringSize(lastRow);
             chars = new char[c0 + r0 + c1 + r1 + 5];
             chars[i++] = '$';
             System.arraycopy(int2Col(firstColumn), 0, chars, i, c0);
