@@ -313,6 +313,13 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.23 (2025-05-06)
+-------------
+- 修复读取图片时某些特殊设置造成读取异常
+- 修复某些情况下读取共享字符串异常
+- 修复指定自定义表头且指定headerRow为1时不跳过表头行的问题
+- 模板工作表新增useOriginalSheetName方法使导出的文件保持源Sheet名
+
 Version 0.5.22 (2025-02-23)
 -------------
 - 开放性能模式提升导出速度
@@ -346,7 +353,7 @@ Version 0.5.19 (2024-09-22)
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.22-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.23-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
