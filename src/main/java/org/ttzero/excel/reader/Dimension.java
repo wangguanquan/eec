@@ -16,6 +16,10 @@
 
 package org.ttzero.excel.reader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.ttzero.excel.manager.Const;
+
 import static org.ttzero.excel.entity.Sheet.int2Col;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
@@ -36,6 +40,8 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
  * @author guanquan.wang at 2019-12-20 10:07
  */
 public class Dimension {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Dimension.class);
+
     /**
      * 起始行号 (one base)
      */
@@ -105,6 +111,10 @@ public class Dimension {
         } else {
             f = coordinateToLong(range.substring(0, i));
             t = coordinateToLong(range.substring(i + 1));
+            if (t == 0L) {
+                t = (long) Const.Limit.MAX_ROWS_ON_SHEET << 16;
+                LOGGER.warn("Empty reference detected. The range will include the entire column instead of a single cell.");
+            }
         }
         return new Dimension((int) (f >> 16), (short) f, (int) (t >> 16), (short) t);
     }
@@ -177,7 +187,7 @@ public class Dimension {
     public String toReferer() {
         char[] chars;
         if (lastRow > firstRow || lastColumn > firstColumn) {
-            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastRow <= 26 ? 1 : lastRow <= 702 ? 2 : 3, r1 = stringSize(lastRow);
+            int i = 0, c0 = firstColumn <= 26 ? 1 : firstColumn <= 702 ? 2 : 3 , r0 = stringSize(firstRow), c1 = lastColumn <= 26 ? 1 : lastColumn <= 702 ? 2 : 3, r1 = stringSize(lastRow);
             chars = new char[c0 + r0 + c1 + r1 + 5];
             chars[i++] = '$';
             System.arraycopy(int2Col(firstColumn), 0, chars, i, c0);
