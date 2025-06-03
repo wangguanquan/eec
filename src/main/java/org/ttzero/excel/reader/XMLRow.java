@@ -130,12 +130,14 @@ public class XMLRow extends Row {
                 i += 8;
                 int b, j = i;
                 for (; cb[i] != '"' && cb[i] != '>'; i++) ;
-                for (b = i - 1; cb[b] != ':'; b--) ;
-                if (++b < i) {
-                    lc = toInt(cb, b, i);
-                }
-                if (j < --b) {
-                    fc = toInt(cb, j, b);
+                if (i > j) {
+                    for (b = i - 1; cb[b] != ':'; b--) ;
+                    if (++b < i) {
+                        lc = toInt(cb, b, i);
+                    }
+                    if (j < --b) {
+                        fc = toInt(cb, j, b);
+                    }
                 }
             }
         }
