@@ -131,7 +131,7 @@ public class XMLRow extends Row {
                 int b, j = i;
                 for (; cb[i] != '"' && cb[i] != '>'; i++) ;
                 if (i > j) {
-                    for (b = i - 1; cb[b] != ':'; b--) ;
+                    for (b = i - 1; cb[b] != ':' && b > j; b--) ;
                     if (++b < i) {
                         lc = toInt(cb, b, i);
                     }
