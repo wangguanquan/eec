@@ -5,7 +5,7 @@
 
   <groupId>org.ttzero</groupId>
   <artifactId>eec</artifactId>
-  <version>0.5.23</version>
+  <version>0.5.24</version>
   <name>Excel Write/Read Framework</name>
   <packaging>jar</packaging>
   <url>https://www.ttzero.org</url>
@@ -135,18 +135,17 @@
               </execution>
             </executions>
           </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.7.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>oss</publishingServerId>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
-      <distributionManagement>
-        <snapshotRepository>
-          <id>oss</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
-        <repository>
-          <id>oss</id>
-          <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-      </distributionManagement>
     </profile>
   </profiles>
 </project>

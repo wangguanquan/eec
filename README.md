@@ -313,6 +313,10 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.24 (2025-06-04)
+-------------
+- 修复某种情况下读取文件抛OOM异常(#435)
+
 Version 0.5.23 (2025-05-06)
 -------------
 - 修复读取图片时某些特殊设置造成读取异常
@@ -340,16 +344,10 @@ Version 0.5.21 (2024-12-24)
 - 修复导出批注数量超过57344时抛异常的BUG(#404)
 - Converter方法增强，入参由String改为Row和Cell方便扩展
 
-Version 0.5.20 (2024-11-13)
--------------
-- 新增SimpleSheet简单工作表，简化导出的数据格式
-- CSVSheetWriter新增分隔符delimiter属性
-- 提升OpenJDK8-21的兼容性
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.23-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.24-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
