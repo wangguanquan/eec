@@ -18,11 +18,7 @@ package org.ttzero.excel.reader;
 
 import org.junit.Test;
 import org.ttzero.excel.Print;
-import org.ttzero.excel.annotation.CustomAnnoReaderTest;
-import org.ttzero.excel.annotation.ExcelColumn;
-import org.ttzero.excel.annotation.IgnoreExport;
-import org.ttzero.excel.annotation.IgnoreImport;
-import org.ttzero.excel.annotation.RowNum;
+import org.ttzero.excel.annotation.*;
 import org.ttzero.excel.entity.ListObjectSheetTest;
 import org.ttzero.excel.util.CSVUtil;
 import org.ttzero.excel.util.FileUtil;
@@ -36,27 +32,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
 import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
 import static org.ttzero.excel.util.DateUtil.toDateString;
-import static org.ttzero.excel.util.StringUtil.swap;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
+import static org.ttzero.excel.util.StringUtil.swap;
 
 /**
  * @author guanquan.wang at 2019-04-26 17:42
@@ -767,6 +752,59 @@ public class ExcelReaderTest {
         } catch (IOException ignored) {}
     }
 
+    @Test
+    public void testNested() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#428.xlsx"))) {
+            Sheet sheet = reader.sheet(0).header(1)
+                    /* .setHeaderColumnReadOption(NestedHeaderRow.CONTAINS_HEADER) */;
+            sheet.bind(Nested.class, new NestedHeaderRow().with(sheet.getHeader()));
+            List<Nested> list = sheet.dataRows()
+                    .map(row -> row.to(Nested.class))
+                    .collect(Collectors.toList());
+
+            List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/#428$Sheet1.txt"));
+            assertEquals(list.size(), expectList.size() - 1);
+            int i = 1;
+            for (Nested n : list) {
+                String[] expect = expectList.get(i++);
+                assertTrue(StringUtil.isEmpty(expect[0]) && StringUtil.isEmpty(n.name) || expect[0].equals(n.name));
+                assertTrue(StringUtil.isEmpty(expect[1]) && StringUtil.isEmpty(n.code) || expect[1].equals(n.code));
+                assertTrue(StringUtil.isEmpty(expect[2]) && StringUtil.isEmpty(n.nested.name) || expect[2].equals(n.nested.name));
+                assertTrue(StringUtil.isEmpty(expect[3]) && StringUtil.isEmpty(n.nested.code) || expect[3].equals(n.nested.code));
+                assertTrue(StringUtil.isEmpty(expect[4]) && StringUtil.isEmpty(n.nested.nested.name) || expect[4].equals(n.nested.nested.name));
+                assertTrue(StringUtil.isEmpty(expect[5]) && StringUtil.isEmpty(n.nested.nested.code) || expect[5].equals(n.nested.nested.code));
+                assertTrue(StringUtil.isEmpty(expect[6]) && StringUtil.isEmpty(n.nested.nested2.name) || expect[6].equals(n.nested.nested2.name));
+                assertTrue(StringUtil.isEmpty(expect[7]) && StringUtil.isEmpty(n.nested.nested2.code) || expect[7].equals(n.nested.nested2.code));
+            }
+        }
+    }
+
+    @Test
+    public void testNestedIsEmpty() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#428.xlsx"))) {
+            Sheet sheet = reader.sheet(1).header(1)
+                    .setHeaderColumnReadOption(NestedHeaderRow.NULLIFY_WHEN_ALL_NESTED_FIELDS_EMPTY);
+            sheet.bind(Nested.class, new NestedHeaderRow().with(sheet.getHeader()));
+            List<Nested> list = sheet.dataRows()
+                    .map(row -> row.to(Nested.class))
+                    .collect(Collectors.toList());
+
+            List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/#428$Sheet2.txt"));
+            assertEquals(list.size(), expectList.size() - 1);
+            int i = 1;
+            for (Nested n : list) {
+                String[] expect = expectList.get(i++);
+                assertTrue(StringUtil.isEmpty(expect[0]) && StringUtil.isEmpty(n.name) || expect[0].equals(n.name));
+                assertTrue(StringUtil.isEmpty(expect[1]) && StringUtil.isEmpty(n.code) || expect[1].equals(n.code));
+                assertTrue(StringUtil.isEmpty(expect[2]) && StringUtil.isEmpty(n.nested.name) || expect[2].equals(n.nested.name));
+                assertTrue(StringUtil.isEmpty(expect[3]) && StringUtil.isEmpty(n.nested.code) || expect[3].equals(n.nested.code));
+                assertTrue(StringUtil.isEmpty(expect[4]) && StringUtil.isEmpty(expect[5]) && n.nested.nested == null);
+                assertTrue(StringUtil.isEmpty(expect[6]) && StringUtil.isEmpty(n.nested.nested2.name) || expect[6].equals(n.nested.nested2.name));
+                assertTrue(StringUtil.isEmpty(expect[7]) && StringUtil.isEmpty(n.nested.nested2.code) || expect[7].equals(n.nested.nested2.code));
+            }
+        }
+    }
+
     public static class O {
         @ExcelColumn("亚马逊FBA子单号/箱唛号")
         private String fbaNo;
@@ -1437,4 +1475,47 @@ public class ExcelReaderTest {
         }
     }
 
+    public static class Nested {
+        @ExcelColumn("名称")
+        private String name;
+        @ExcelColumn("编码")
+        private String code;
+        @NestedObject(columnNameFormat = "内嵌%s")
+        private SecondNested nested;
+
+        public static class SecondNested {
+            @ExcelColumn("名称")
+            private String name;
+            @ExcelColumn("编码")
+            private String code;
+            @NestedObject(columnNameFormat = "内嵌%s2")
+            private ThirdNested nested;
+            // @NestedObject(columnNameFormat = "内嵌%s3")
+            // @NestedObject(startColIndex = 6)
+            @NestedObject(columnNameFormat = "%s3", columnNameFormatExtend = true)
+            private ThirdNested nested2;
+
+            @Override
+            public String toString() {
+                return name + "," + code + "," + nested + "," + nested2;
+            }
+
+            public static class ThirdNested {
+                @ExcelColumn("名称")
+                private String name;
+                @ExcelColumn("编码")
+                private String code;
+
+                @Override
+                public String toString() {
+                    return name + "," + code;
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return name + "," + code + "," + nested;
+        }
+    }
 }

@@ -1134,6 +1134,10 @@ public class ListSheet<T> extends Sheet {
          * 当前列对应的Bean字段
          */
         public Field field;
+        /**
+         * 当前 EntryColumn 的父级字段（如果为嵌套字段，则指向父对象的 Field）
+         */
+        public Field[] rootFields;
 
         public EntryColumn() {
             super();
@@ -1206,6 +1210,7 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn o = (EntryColumn) other;
                 this.method = o.method;
                 this.field = o.field;
+                this.rootFields = o.rootFields;
             }
             if (other.next != null) {
                 addSubColumn(new EntryColumn(other.next));
@@ -1228,6 +1233,31 @@ public class ListSheet<T> extends Sheet {
          */
         public Field getField() {
             return field;
+        }
+
+        /**
+         * 获取当前列对应的Bean的父级字段
+         *
+         * @return Field
+         */
+        public Field[] getRootFields() {
+            return rootFields;
+        }
+
+        /**
+         * 追加父级字段
+         * @param field 字段
+         */
+        public void addFirstRootField(Field field) {
+            if (rootFields == null) {
+                rootFields = new Field[]{field};
+            } else {
+                Field[] fields = new Field[rootFields.length + 1];
+                // 将新添加的放到数组最前
+                System.arraycopy(rootFields, 0, fields, 1, rootFields.length);
+                fields[0] = field;
+                rootFields = fields;
+            }
         }
     }
 }

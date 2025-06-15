@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.IgnoreExport;
+import org.ttzero.excel.annotation.NestedObject;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.PatternType;
@@ -26,12 +27,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.StyleProcessor;
-import org.ttzero.excel.reader.AppInfo;
-import org.ttzero.excel.reader.Dimension;
-import org.ttzero.excel.reader.Drawings;
-import org.ttzero.excel.reader.ExcelReader;
-import org.ttzero.excel.reader.ExcelReaderTest;
-import org.ttzero.excel.reader.HeaderRow;
+import org.ttzero.excel.reader.*;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -55,9 +51,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 /**
@@ -1304,6 +1298,45 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
+    @Test
+    public void testNested() throws IOException {
+        String fileName = "Nested.xlsx";
+        List<Nested> list = new ArrayList<>();
+        Nested n1 = new Nested();
+        n1.name = "a";
+        n1.code = "1";
+        Nested.SecondNested n2 = new Nested.SecondNested();
+        n2.name = "b";
+        n2.code = "2";
+        n1.nested = n2;
+        Nested.SecondNested.ThirdNested n3 = new Nested.SecondNested.ThirdNested();
+        n3.name = "c";
+        n3.code = "3";
+        n2.nested2 = n3;
+        n2.nested = null;
+        list.add(n1);
+        new Workbook().addSheet(new NestedListSheet<>(list)).writeTo(defaultTestPath.resolve(fileName));
+
+        try(ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            org.ttzero.excel.reader.Sheet sheet = reader.sheet(0)
+                    .header(1)
+                    .addHeaderColumnReadOption(NestedHeaderRow.NULLIFY_WHEN_ALL_NESTED_FIELDS_EMPTY);
+            sheet.bind(Nested.class, new NestedHeaderRow().with(sheet.getHeader()));
+            List<Nested> rows = sheet.dataRows()
+                    .map(row -> row.to(Nested.class))
+                    .collect(Collectors.toList());
+            for (Nested row : rows) {
+                assertEquals(row.name, n1.name);
+                assertEquals(row.code, n1.code);
+                assertEquals(row.nested.name, n2.name);
+                assertEquals(row.nested.code, n2.code);
+                assertNull(row.nested.nested);
+                assertEquals(row.nested.nested2.name, n3.name);
+                assertEquals(row.nested.nested2.code, n3.code);
+            }
+        }
+    }
+
     public static class Item {
         @ExcelColumn
         private int id;
@@ -2075,6 +2108,50 @@ public class ListObjectSheetTest extends WorkbookTest {
         @Override
         public int hashCode() {
             return Objects.hash(age, abc);
+        }
+    }
+
+    public static class Nested {
+        @ExcelColumn("名称")
+        private String name;
+        @ExcelColumn("编码")
+        private String code;
+        @NestedObject(columnNameFormat = "内嵌%s")
+        private Nested.SecondNested nested;
+
+        public static class SecondNested {
+            @ExcelColumn("名称")
+            private String name;
+            @ExcelColumn("编码")
+            private String code;
+            @NestedObject(columnNameFormat = "内嵌%s2")
+            private Nested.SecondNested.ThirdNested nested;
+            // @NestedObject(columnNameFormat = "内嵌%s3")
+            // @NestedObject(startColIndex = 6)
+            @NestedObject(columnNameFormat = "%s3", columnNameFormatExtend = true)
+            private Nested.SecondNested.ThirdNested nested2;
+
+            @Override
+            public String toString() {
+                return name + "," + code + "," + nested + "," + nested2;
+            }
+
+            public static class ThirdNested {
+                @ExcelColumn("名称")
+                private String name;
+                @ExcelColumn("编码")
+                private String code;
+
+                @Override
+                public String toString() {
+                    return name + "," + code;
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return name + "," + code + "," + nested;
         }
     }
 }
