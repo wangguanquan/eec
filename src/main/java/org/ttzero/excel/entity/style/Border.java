@@ -552,6 +552,7 @@ public class Border implements Cloneable {
     protected void writeProperties(Element element, SubBorder subBorder) {
         if (subBorder != null && subBorder.style != BorderStyle.NONE) {
             element.addAttribute("style", subBorder.style.getName());
+            if (subBorder.color == null) return;
             Element colorEle = element.element("color");
             if (colorEle == null) colorEle = element.addElement("color");
             int index;
