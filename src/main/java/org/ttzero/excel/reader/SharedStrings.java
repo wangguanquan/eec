@@ -641,6 +641,7 @@ public class SharedStrings implements Closeable {
                 else if (n == 3 && cb[idx_38 + 1] == 'a' && cb[idx_38 + 2] == 'm' && cb[idx_38 + 3] == 'p') buf[offset++] = '&';
                 else if (n == 4 && cb[idx_38 + 1] == 'n' && cb[idx_38 + 2] == 'b' && cb[idx_38 + 3] == 's' && cb[idx_38 + 4] == 'p') buf[offset++] = ' ';
                 else if (n == 4 && cb[idx_38 + 1] == 'q' && cb[idx_38 + 2] == 'u' && cb[idx_38 + 3] == 'o' && cb[idx_38 + 4] == 't') buf[offset++] = '"';
+                else if (n == 4 && cb[idx_38 + 1] == 'a' && cb[idx_38 + 2] == 'p' && cb[idx_38 + 3] == 'o' && cb[idx_38 + 4] == 's') buf[offset++] = '\'';
                 else {
                     System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
                     offset += n;
