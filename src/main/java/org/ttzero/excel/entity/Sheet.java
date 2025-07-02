@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
@@ -224,9 +225,9 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Double rowHeight;
     /**
-     * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
+     * 指定起始行列，高48位保存Row，低16位保存Col(zero base)
      */
-    protected int startRowIndex = 1;
+    protected long startCoordinate;
     /**
      * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
@@ -638,7 +639,17 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 起始行号
      */
     public int getStartRowIndex() {
-        return Math.abs(startRowIndex);
+        return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) >>> 16) : 1;
+    }
+
+    /**
+     * 获取工作表的起始列号(从1开始)，这里是行号也就是打开Excel顶部看到的列号(A)，
+     * 此列号将决定从哪一列开始写数据
+     *
+     * @return 起始列号
+     */
+    public int getStartColIndex() {
+        return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) & 0x7FFF) : 1;
     }
 
     /**
@@ -648,7 +659,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return {@code true}将首行首列滚动到左上角第一个位置，否则{@code A1}将为左上角第一个位置
      */
     public boolean isScrollToVisibleArea() {
-        return startRowIndex > 0;
+        return startCoordinate > 0;
     }
 
     /**
@@ -656,27 +667,105 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param startRowIndex 起始行号（从1开始）
      * @return 当前工作表
+     * @deprecated 使用 {@link #setStartCoordinate(int)}替代
      */
+    @Deprecated
     public Sheet setStartRowIndex(int startRowIndex) {
-        return setStartRowIndex(startRowIndex, true);
+        return setStartRowIndex(startRowIndex, false);
     }
 
     /**
      * 指定起始行并设置是否将该行滚动到窗口左上角，行号必须大于0
      *
-     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=0}则打开文件时{@code StartRowIndex}
+     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
      * 将会显示在窗口的第一行</p>
      *
      * @param startRowIndex       起始行号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
+     * @deprecated 使用 {@link #setStartCoordinate(int, boolean)}替代
      */
+    @Deprecated
     public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowIndex, 1, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始坐标
+     *
+     * @param coordinate 单元格位置字符串 {@code A1}
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(String coordinate) {
+        return setStartCoordinate(coordinate, false);
+    }
+
+    /**
+     * 指定起始坐标
+     *
+     * @param coordinate 单元格位置字符串 {@code A1}
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(String coordinate, boolean scrollToVisibleArea) {
+        long f = coordinateToLong(coordinate);
+        return setStartCoordinate((int) (f >> 16), (int) f & 0x7FFF, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始行，行号必须大于0
+     *
+     * @param startRowIndex 起始行号（从1开始）
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowIndex) {
+        return setStartCoordinate(startRowIndex, 1, false);
+    }
+
+    /**
+     * 指定起始行，行号必须大于0
+     *
+     * @param startRowIndex 起始行号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowIndex, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowIndex, 1, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始行号和列号，行号必须大于0
+     *
+     * @param startRowIndex 起始行号（从1开始）
+     * @param startColIndex 起始列号（从1开始）
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowIndex, int startColIndex) {
+        return setStartCoordinate(startRowIndex, startColIndex, false);
+    }
+
+    /**
+     * 指定起始行号和列号，行号必须大于0
+     *
+     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
+     * 将会显示在窗口的第一行</p>
+     *
+     * @param startRowIndex       起始行号（从1开始）
+     * @param startColIndex       起始列号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowIndex, int startColIndex, boolean scrollToVisibleArea) {
         if (startRowIndex <= 0)
             throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
         if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
             throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
-        this.startRowIndex = scrollToVisibleArea ? startRowIndex : -startRowIndex;
+        if (startColIndex <= 0)
+            throw new IndexOutOfBoundsException("The start col index must be greater than 0, current = " + startColIndex);
+        if (sheetWriter != null && sheetWriter.getColumnLimit() <= startColIndex)
+            throw new IndexOutOfBoundsException("The start col index must be less than col-limit, current(" + startColIndex + ") >= limit(" + sheetWriter.getColumnLimit() + ")");
+
+        long coordinate = ((long) startRowIndex) << 16 | (startColIndex & 0x7FFF);
+        this.startCoordinate = scrollToVisibleArea ? coordinate : -coordinate;
         return this;
     }
 
@@ -843,8 +932,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
+        int startColIndex = getStartColIndex();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
+            hc.colIndex += startColIndex;
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
                 hc.realColIndex = columns[i - 1].realColIndex + 1;
