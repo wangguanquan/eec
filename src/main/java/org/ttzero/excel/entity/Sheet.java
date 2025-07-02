@@ -935,12 +935,11 @@ public abstract class Sheet implements Cloneable, Storable {
         int startColIndex = getStartColIndex();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
-            hc.colIndex += startColIndex;
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
                 hc.realColIndex = columns[i - 1].realColIndex + 1;
-            else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
-            else hc.realColIndex = hc.colIndex + 1;
+            else if (hc.realColIndex <= i) hc.realColIndex = i + startColIndex;
+            else hc.realColIndex = hc.colIndex + startColIndex;
 
             if (hc.prev != null) {
                 for (Column col = hc.prev; col != null; col = col.prev)
