@@ -34,6 +34,7 @@ import java.sql.Timestamp;
 import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -172,6 +173,39 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             }
             rs.close();
             ps.close();
+        }
+    }
+
+    @Test public void testSpecifyCoordinateWrite() throws SQLException, IOException {
+        String fileName = "test specify coordinate D5 ResultSheet paging.xlsx",
+            sql = "select id, name, age, create_date, update_date from student";
+
+        try (Connection con = getConnection()) {
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            Workbook workbook = new Workbook()
+                .addSheet(new ResultSetSheet().setResultSet(rs).setStyleProcessor((rst, style, sst) -> {
+                    try {
+                        if (rst.getInt("age") > 14) {
+                            style = sst.modifyFill(style, new Fill(PatternType.solid, Color.yellow));
+                        }
+                    } catch (SQLException ex) {
+                        // Ignore
+                    }
+                    return style;
+                }).setStartCoordinate("D5"))
+                .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
+            workbook.writeTo(defaultTestPath.resolve(fileName));
+        }
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            reader.sheets().forEach(sheet -> {
+                Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+                org.ttzero.excel.reader.Row firstRow = iter.next();
+                assertNotNull(firstRow);
+                assertEquals(firstRow.getRowNum(), 5);
+                assertEquals(firstRow.getFirstColumnIndex(), 3);
+            });
         }
     }
 }

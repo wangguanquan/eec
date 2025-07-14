@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
@@ -331,6 +332,29 @@ public class ListObjectPagingTest extends WorkbookTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test public void testSpecifyCoordinateWrite() throws IOException {
+        final String fileName = "test specify coordinate D4 ListSheet paging.xlsx";
+        List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData(1024);
+        Workbook workbook = new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(expectList).setStyleProcessor((a, b, c) -> {
+                if (a.getId() > 95)
+                    b |= c.addFill(new Fill(PatternType.solid, Color.orange));
+                return b;
+            }).setStartCoordinate("D4"))
+            .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            reader.sheets().forEach(sheet -> {
+                Iterator<org.ttzero.excel.reader.Row> iter = sheet.iterator();
+                org.ttzero.excel.reader.Row firstRow = iter.next();
+                assertNotNull(firstRow);
+                assertEquals(firstRow.getRowNum(), 4);
+                assertEquals(firstRow.getFirstColumnIndex(), 3);
+            });
         }
     }
 }

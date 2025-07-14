@@ -52,6 +52,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -67,6 +68,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
@@ -1274,5 +1276,25 @@ public class ListObjectSheetTest2 extends WorkbookTest {
      */
     public static class VerticalWorksheetWriter extends XMLWorksheetWriter {
 
+    }
+
+    @Test public void testSpecifyCoordinateWrite() throws IOException {
+        final String fileName = "test specify coordinate D4 ListSheet.xlsx";
+        List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<>(list).setStartCoordinate("D4"))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            org.ttzero.excel.reader.Row firstRow = iter.next();
+            assertNotNull(firstRow);
+            assertEquals(firstRow.getRowNum(), 4);
+            assertEquals(firstRow.getFirstColumnIndex(), 3);
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).header(4).rows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assertEquals(list.size(), readList.size());
+            for (int i = 0, len = list.size(); i < len; i++)
+                assertEquals(list.get(i), readList.get(i));
+        }
     }
 }
