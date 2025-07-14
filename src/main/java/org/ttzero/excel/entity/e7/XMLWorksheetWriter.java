@@ -1798,7 +1798,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Column hc = index < columns.length ? columns[index] : null;
         if (hc == null) {
             hc = Column.UNALLOCATED_COLUMN;
-            hc.realColIndex = index + 1;
+            hc.realColIndex = index + sheet.getStartColIndex();
         }
         return hc;
     }
