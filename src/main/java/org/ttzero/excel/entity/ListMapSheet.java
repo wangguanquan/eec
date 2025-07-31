@@ -80,7 +80,9 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
@@ -91,7 +93,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param data 需要导出的数据
      */
     public ListMapSheet(List<Map<String, T>> data) {
-        this(null, data);
+        super(data);
     }
 
     /**
@@ -101,8 +103,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param data 需要导出的数据
      */
     public ListMapSheet(String name, List<Map<String, T>> data) {
-        super(name);
-        setData(data);
+        super(name, data);
     }
 
     /**
@@ -112,7 +113,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param columns 表头信息
      */
     public ListMapSheet(List<Map<String, T>> data, final Column... columns) {
-        this(null, data, columns);
+        super(data, columns);
     }
 
     /**
@@ -123,7 +124,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param columns 表头信息
      */
     public ListMapSheet(String name, List<Map<String, T>> data, final Column... columns) {
-        this(name, data, null, columns);
+        super(name, data, columns);
     }
 
     /**
@@ -132,9 +133,11 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param data      需要导出的数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListMapSheet(List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
-        this(null, data, waterMark, columns);
+        super(data, waterMark, columns);
     }
 
     /**
@@ -144,10 +147,11 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param data      需要导出的数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListMapSheet(String name, List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
-        setData(data);
+        super(name, data, waterMark, columns);
     }
 
     /**

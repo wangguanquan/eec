@@ -112,7 +112,9 @@ public class ResultSetSheet extends Sheet {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ResultSetSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
@@ -164,7 +166,9 @@ public class ResultSetSheet extends Sheet {
      * @param rs        数据源{@code ResultSet}
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ResultSetSheet(ResultSet rs, WaterMark waterMark, final Column... columns) {
         this(null, rs, waterMark, columns);
     }
@@ -176,7 +180,9 @@ public class ResultSetSheet extends Sheet {
      * @param rs        数据源{@code ResultSet}
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         this.rs = rs;

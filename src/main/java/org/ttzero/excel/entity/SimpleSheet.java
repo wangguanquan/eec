@@ -96,7 +96,9 @@ public class SimpleSheet<T> extends ListSheet<T> {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public SimpleSheet(String name, WaterMark waterMark, Column... columns) {
         super(name, waterMark, columns);
     }
@@ -142,7 +144,9 @@ public class SimpleSheet<T> extends ListSheet<T> {
      * @param data      初始数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public SimpleSheet(List<T> data, WaterMark waterMark, Column... columns) {
         super(data, waterMark, columns);
     }
@@ -153,7 +157,9 @@ public class SimpleSheet<T> extends ListSheet<T> {
      * @param data      初始数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public SimpleSheet(String name, List<T> data, WaterMark waterMark, Column... columns) {
         super(name, data, waterMark, columns);
     }

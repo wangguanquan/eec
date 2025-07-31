@@ -312,7 +312,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet(String name) {
         this.name = name;
-        relManager = new RelManager();
+        this.relManager = new RelManager();
     }
 
     /**
@@ -321,8 +321,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns 表头信息
      */
     public Sheet(final Column... columns) {
-        this.columns = columns;
-        relManager = new RelManager();
+        this(null, columns);
     }
 
     /**
@@ -332,7 +331,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns 表头信息
      */
     public Sheet(String name, final Column... columns) {
-        this(name, null, columns);
+        this.name = name;
+        this.columns = columns;
+        this.relManager = new RelManager();
     }
 
     /**
@@ -341,12 +342,12 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public Sheet(String name, WaterMark waterMark, final Column... columns) {
-        this.name = name;
-        this.columns = columns;
+        this(name, columns);
         this.waterMark = waterMark;
-        relManager = new RelManager();
     }
 
     /**

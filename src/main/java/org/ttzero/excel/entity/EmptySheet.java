@@ -67,7 +67,9 @@ public class EmptySheet extends Sheet {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public EmptySheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }

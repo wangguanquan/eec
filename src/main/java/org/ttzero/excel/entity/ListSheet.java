@@ -209,7 +209,9 @@ public class ListSheet<T> extends Sheet {
      * @param name      工作表名称
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListSheet(String name, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
     }
@@ -252,7 +254,8 @@ public class ListSheet<T> extends Sheet {
      * @param columns 表头信息
      */
     public ListSheet(String name, List<T> data, final Column... columns) {
-        this(name, data, null, columns);
+        super(name, columns);
+        setData(data);
     }
 
     /**
@@ -261,7 +264,9 @@ public class ListSheet<T> extends Sheet {
      * @param data      初始数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListSheet(List<T> data, WaterMark waterMark, final Column... columns) {
         this(null, data, waterMark, columns);
     }
@@ -273,7 +278,9 @@ public class ListSheet<T> extends Sheet {
      * @param data      初始数据
      * @param waterMark 水印
      * @param columns   表头信息
+     * @deprecated 极少使用后续将删除
      */
+    @Deprecated
     public ListSheet(String name, List<T> data, WaterMark waterMark, final Column... columns) {
         super(name, waterMark, columns);
         setData(data);
