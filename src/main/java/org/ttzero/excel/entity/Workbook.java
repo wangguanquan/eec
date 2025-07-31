@@ -109,10 +109,6 @@ public class Workbook implements Storable {
      */
     private int size;
     /**
-     * 全局自适应列宽标识
-     */
-    private boolean autoSize;
-    /**
      * 作者，未指定时将默认取当前系统登录名
      */
     private String creator;
@@ -145,10 +141,6 @@ public class Workbook implements Storable {
      */
     private IWorkbookWriter workbookWriter;
     /**
-     * 强制导出，绕过安全限制导出全字段
-     */
-    private int forceExport;
-    /**
      * 全局ContentType
      */
     private final ContentType contentType;
@@ -165,9 +157,18 @@ public class Workbook implements Storable {
      */
     private CustomProperties customProperties;
     /**
-     * 压缩等级 {@code 0-9}，数字越小压缩效果越好耗时越长
+     * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
+     *
+     * <blockquote><pre>
+     *  Bit  | Contents
+     * ------+---------
+     * 31, 1 | 自适应列宽 1位, 1: auto-size 0: fixed-size
+     * 30, 1 | 强制导出 1位, 1: 强制导出全字段
+     * 29, 4 | 压缩等级 4位, 0-9 数字越小压缩效果越好耗时越长
+     * 25, 1 | 模式 1位, 0: PULL 1：PUSH
+     * </pre></blockquote>
      */
-    private int compressionLevel = 5;
+    protected int option;
 
     /**
      * 创建一个未命名工作薄
@@ -196,6 +197,7 @@ public class Workbook implements Storable {
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
+        this.option |= (5 << 2); // 默认压缩等级5
         sheets = new Sheet[3]; // Create three worksheet
         contentType = new ContentType();
     }
@@ -317,7 +319,8 @@ public class Workbook implements Storable {
      * @return 当前工作薄
      */
     public Workbook setAutoSize(boolean autoSize) {
-        this.autoSize = autoSize;
+        if (autoSize) option |= 1;
+        else option = option >>> 1 << 1;
         return this;
     }
 
@@ -327,18 +330,18 @@ public class Workbook implements Storable {
      * @return true: 自适应宽度，false：固定宽度
      */
     public boolean isAutoSize() {
-        return autoSize;
+        return (option & 1) == 1;
     }
 
     /**
      * 强制导出
-     * 
+     *
      * <p>注意：设置此标记后将无视安全规则导出Java对象中的所有字段，请根据实际情况谨慎使用</p>
      *
      * @return 当前工作薄
      */
     public Workbook forceExport() {
-        this.forceExport = 1;
+        this.option |= 1 << 1;
         return this;
     }
 
@@ -348,7 +351,7 @@ public class Workbook implements Storable {
      * @return 强制导出时返回1，其它情况返回0
      */
     public int getForceExport() {
-        return forceExport;
+        return option >>> 1 & 1;
     }
 
     /**
@@ -910,7 +913,7 @@ public class Workbook implements Storable {
      * @return 当前工作表
      */
     public Workbook bestSpeed() {
-        this.compressionLevel = Deflater.BEST_SPEED;
+        this.option |= (Deflater.BEST_SPEED << 2);
         return this;
     }
 
@@ -920,6 +923,6 @@ public class Workbook implements Storable {
      * @return 压缩等级
      */
     public int getCompressionLevel() {
-        return Math.min(Math.max(compressionLevel, 0), 9);
+        return Math.min(Math.max((option >>> 2) & 15, 0), 9);
     }
 }
