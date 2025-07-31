@@ -1086,6 +1086,49 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
+     * 写行数据，必须在{@code PUSH}模式下使用，否则抛NPE异常
+     *
+     * <p>注意：由于外部拿不到自动分页创建的新工作表，所以{@code PUSH}模式将不支持自动分页，
+     * 超出数据上限将直接抛{@link IndexOutOfBoundsException}异常</p>
+     *
+     * @param data 行数据
+     * @return 当前工作表
+     * @throws IOException if I/O error occur.
+     */
+    public ListSheet<T> writeData(List<T> data) throws IOException {
+        // Write row-block
+        sheetWriter.writeData(fillRowBlock(data));
+        return this;
+    }
+
+    /**
+     * 将外部数据转为标准的行块
+     *
+     * @param data 外部数据
+     * @return 行块
+     */
+    protected RowBlock fillRowBlock(List<T> data) {
+        // Check bound
+        if (data == null || data.isEmpty()) return rowBlock;
+        if (rows + data.size() > sheetWriter.getRowLimit())
+            throw new IndexOutOfBoundsException("Max rows:" + sheetWriter.getRowLimit() + ", current:" + rows + data.size());
+        // Initialization header columns
+        if (!headerReady) {
+            this.data = data;
+            getAndSortHeaderColumns();
+            this.data = null;
+
+            if (rowBlock == null) rowBlock = new RowBlock(Math.max(getRowBlockSize(), data.size()));
+        }
+        // Resize row-block if
+        else if (rowBlock.capacity() < data.size()) rowBlock = new RowBlock(data.size());
+        else rowBlock.clear();
+
+        resetRowBlock(data, 0, data.size());
+        return rowBlock.flip();
+    }
+
+    /**
      * 将外部数据转为标准的行块
      *
      * @param data 外部数据

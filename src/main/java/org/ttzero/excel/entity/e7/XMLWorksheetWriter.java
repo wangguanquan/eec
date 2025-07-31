@@ -511,6 +511,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         LOGGER.debug("Sheet [{}] writing completed, total rows: {}", sheet.getName(), total);
     }
 
+    @Override
+    public void writeData(RowBlock rowBlock) throws IOException {
+        // TODO writer init
+
+        if (progressConsumer == null) writeRowBlock(rowBlock);
+        else writeRowBlockFireProgress(rowBlock);
+
+    }
+
     /**
      * Write a row-block
      *

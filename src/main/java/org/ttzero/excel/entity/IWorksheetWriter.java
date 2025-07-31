@@ -94,6 +94,14 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     default void writePicture(Picture picture) throws IOException { }
 
     /**
+     * 写行数据
+     *
+     * @param rowBlock 行块
+     * @throws IOException if I/O error occur
+     */
+    void writeData(RowBlock rowBlock) throws IOException;
+
+    /**
      * 判断是否为{@link java.util.Date}类型
      *
      * @param clazz the type

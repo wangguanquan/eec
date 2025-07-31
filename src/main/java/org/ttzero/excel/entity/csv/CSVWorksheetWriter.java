@@ -166,6 +166,12 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         return Const.Suffix.CSV;
     }
 
+    @Override
+    public void writeData(RowBlock rowBlock) throws IOException {
+        // TODO writer init
+
+    }
+
 
     @Override
     public void close() throws IOException {

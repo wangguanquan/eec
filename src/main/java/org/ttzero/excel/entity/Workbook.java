@@ -925,4 +925,16 @@ public class Workbook implements Storable {
     public int getCompressionLevel() {
         return Math.min(Math.max((option >>> 2) & 15, 0), 9);
     }
+
+    /**
+     * PUSH模式，数据主动推到工作表
+     *
+     * @return 当前工作表
+     */
+    public Workbook pushMode() {
+        this.option |= (1 << 6);
+        // Initialization
+        checkAndInitWriter();
+        return this;
+    }
 }
