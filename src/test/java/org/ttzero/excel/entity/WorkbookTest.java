@@ -76,7 +76,8 @@ public class WorkbookTest {
         if (!Files.exists(path)) return 0L;
         CRC32 crc32 = new CRC32();
         try {
-            crc32.update(Files.readAllBytes(path));
+            byte[] bytes = Files.readAllBytes(path);
+            crc32.update(bytes, 0, bytes.length);
         } catch (IOException e) {
             return 0L;
         }
@@ -85,7 +86,7 @@ public class WorkbookTest {
 
     public static long crc32(byte[] bytes) {
         CRC32 crc32 = new CRC32();
-        crc32.update(bytes);
+        crc32.update(bytes, 0, bytes.length);
         return crc32.getValue();
     }
 }
