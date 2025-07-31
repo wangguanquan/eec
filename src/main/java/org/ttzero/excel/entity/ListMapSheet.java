@@ -155,43 +155,6 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     }
 
     /**
-     * 重置{@code RowBlock}行块数据
-     */
-    @Override
-    protected void resetBlockData() {
-        if (!eof && left() < rowBlock.capacity()) {
-            append();
-        }
-        int end = getEndIndex(), len = columns.length;
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
-        for (; start < end; rows++, start++) {
-            Row row = rowBlock.next();
-            row.index = rows;
-            row.height = getRowHeight();
-            Cell[] cells = row.realloc(len);
-            Map<String, T> rowDate = data.get(start);
-            for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
-                T e = rowDate != null ? rowDate.get(hc.key) : null;
-                // Clear cells
-                Cell cell = cells[i];
-                cell.clear();
-
-                // Reset value type
-                if (e != null && e.getClass() != hc.getClazz()) {
-                    hc.setClazz(e.getClass());
-                }
-
-                cellValueAndStyle.reset(row, cell, e, hc);
-                if (hasGlobalStyleProcessor) {
-                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
-                }
-            }
-        }
-    }
-
-
-    /**
      * 获取表头信息，未指定{@code Columns}时默认以第1个非{@code null}的Map值做为参考，将该map中所有key做为表头
      *
      * @return 初如化表头
@@ -266,19 +229,28 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     }
 
     /**
-     * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
-     * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
+     * 重置单行数据
      *
-     * @return 行块
+     * @param row Excel行
+     * @param rowData 行数据
      */
     @Override
-    public RowBlock nextBlock() {
-        // clear first
-        rowBlock.clear();
+    protected void resetRowData(Row row, Map<String, T> rowData) {
+        int len = columns.length;
+        Cell[] cells = row.realloc(len);
+        for (int i = 0; i < len; i++) {
+            Column hc = columns[i];
+            T e = rowData != null ? rowData.get(hc.key) : null;
+            // Clear cells
+            Cell cell = cells[i];
+            cell.clear();
 
-        // As default as force export
-        resetBlockData();
+            // Reset value type
+            if (e != null && e.getClass() != hc.getClazz()) {
+                hc.setClazz(e.getClass());
+            }
 
-        return rowBlock.flip();
+            resetCellValueAndStyle(row, cell, rowData, e, hc);
+        }
     }
 }

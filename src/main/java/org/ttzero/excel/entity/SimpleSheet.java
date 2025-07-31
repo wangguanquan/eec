@@ -257,52 +257,6 @@ public class SimpleSheet<T> extends ListSheet<T> {
     }
 
     /**
-     * 重置{@code RowBlock}行块数据
-     */
-    @Override
-    protected void resetBlockData() {
-        // 普通ListSheet
-        if (type == 3) {
-            super.resetBlockData();
-            return;
-        }
-
-        if (!eof && left() < rowBlock.capacity()) append();
-
-        // Find the end index of row-block
-        int end = getEndIndex();
-        for (; start < end; rows++, start++) {
-            Row row = rowBlock.next();
-            row.index = rows;
-            T o = data.get(start);
-            boolean isNull = o == null;
-            List sub = !isNull && type == 1 ? (List) o : null;
-            int len = !isNull ? type == 1 ? sub.size() : Array.getLength(o) : 0;
-            Cell[] cells = row.realloc(len);
-            for (int i = 0; i < len; i++) {
-                // Clear cells
-                Cell cell = cells[i];
-                cell.clear();
-
-                Object e = null;
-                Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
-                // 根据下标取数
-                if (!column.isIgnoreValue()) {
-                    if (type == 1) e = sub.get(i);
-                    else e = Array.get(o, i);
-                }
-                column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
-                cellValueAndStyle.reset(row, cell, e, column);
-                // 日期类型添加默认format
-                if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
-                    datetimeCell(workbook.getStyles(), cell);
-                }
-            }
-            row.height = getRowHeight();
-        }
-    }
-
-    /**
      * 日期类型添加默认format
      *
      * @param styles Styles
@@ -354,5 +308,42 @@ public class SimpleSheet<T> extends ListSheet<T> {
         }
         if (!Styles.hasHorizontal(style)) style |= Horizontals.CENTER;
         cell.xf = styles.of(style);
+    }
+
+    /**
+     * 重置单行数据
+     *
+     * @param row Excel行
+     * @param rowData 行数据
+     */
+    @Override
+    protected void resetRowData(Row row, T rowData) {
+        if (type == 3) {
+            super.resetRowData(row, rowData);
+            return;
+        }
+        boolean isNull = rowData == null;
+        List sub = !isNull && type == 1 ? (List) rowData : null;
+        int len = !isNull ? type == 1 ? sub.size() : Array.getLength(rowData) : 0;
+        Cell[] cells = row.realloc(len);
+        for (int i = 0; i < len; i++) {
+            // Clear cells
+            Cell cell = cells[i];
+            cell.clear();
+
+            Object e = null;
+            Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
+            // 根据下标取数
+            if (!column.isIgnoreValue()) {
+                if (type == 1) e = sub.get(i);
+                else e = Array.get(rowData, i);
+            }
+            column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
+            resetCellValueAndStyle(row, cell, rowData, e, column);
+            // 日期类型添加默认format
+            if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
+                datetimeCell(workbook.getStyles(), cell);
+            }
+        }
     }
 }

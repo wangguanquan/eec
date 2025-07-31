@@ -381,51 +381,9 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        if (!eof && left() < rowBlock.capacity()) {
-            append();
-        }
-
-        // Find the end index of row-block
-        int end = getEndIndex(), len = columns.length;
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
-        try {
-            for (; start < end; rows++, start++) {
-                Row row = rowBlock.next();
-                row.index = rows;
-                Cell[] cells = row.realloc(len);
-                T o = data.get(start);
-                boolean isNull = o == null;
-                for (int i = 0; i < len; i++) {
-                    // Clear cells
-                    Cell cell = cells[i];
-                    cell.clear();
-
-                    Object e;
-                    EntryColumn column = (EntryColumn) columns[i];
-                    /*
-                    The default processing of null values still retains the row style.
-                    If you don't want any style and value, you can change it to {@code continue}
-                     */
-                    if (column.isIgnoreValue() || isNull)
-                        e = null;
-                    else {
-                        if (column.getMethod() != null)
-                            e = column.getMethod().invoke(o);
-                        else if (column.getField() != null)
-                            e = column.getField().get(o);
-                        else e = o;
-                    }
-
-                    cellValueAndStyle.reset(row, cell, e, column);
-                    if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
-                    }
-                }
-                row.height = getRowHeight();
-            }
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        if (!eof && left() < rowBlock.capacity()) append();
+        // 填充行块
+        resetRowBlock(data, start, start = getEndIndex());
     }
 
     /**
@@ -1125,6 +1083,77 @@ public class ListSheet<T> extends Sheet {
     @Override
     public int getForceExport() {
         return forceExport;
+    }
+
+    /**
+     * 将外部数据转为标准的行块
+     *
+     * @param data 外部数据
+     * @param fromIndex 读取数据的起始下标（包含）
+     * @param toIndex 读取数据的结束下标（不包含）
+     */
+    protected void resetRowBlock(List<T> data, int fromIndex, int toIndex) {
+        for (; fromIndex < toIndex; rows++, fromIndex++) {
+            Row row = rowBlock.next();
+            row.index = rows;
+            row.height = getRowHeight(); // 这里放到for循环内部获取行高，子类可以根据行号来动态设置行高
+            resetRowData(row, data.get(fromIndex));
+        }
+    }
+
+    /**
+     * 重置单行数据
+     *
+     * @param row Excel行
+     * @param rowData 行数据
+     */
+    protected void resetRowData(Row row, T rowData) {
+        int len = columns.length;
+        Cell[] cells = row.realloc(len);
+        boolean isNull = rowData == null;
+        try {
+            for (int i = 0; i < len; i++) {
+                // Clear cells
+                Cell cell = cells[i];
+                cell.clear();
+
+                Object e;
+                EntryColumn column = (EntryColumn) columns[i];
+                /*
+                The default processing of null values still retains the row style.
+                If you don't want any style and value, you can change it to {@code continue}
+                 */
+                if (column.isIgnoreValue() || isNull)
+                    e = null;
+                else {
+                    if (column.getMethod() != null)
+                        e = column.getMethod().invoke(rowData);
+                    else if (column.getField() != null)
+                        e = column.getField().get(rowData);
+                    else e = rowData;
+                }
+
+                resetCellValueAndStyle(row, cell, rowData, e, column);
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new ExcelWriteException(e);
+        }
+    }
+
+    /**
+     * 重置单元格数据
+     *
+     * @param row Excel行
+     * @param cell Excel单元格
+     * @param rowData 行数据
+     * @param cellData 单元格数据
+     * @param column 单列表头
+     */
+    protected void resetCellValueAndStyle(Row row, Cell cell, T rowData, Object cellData, Column column) {
+        cellValueAndStyle.reset(row, cell, cellData, column);
+        if ((extPropMark & 2) == 2) {
+            cellValueAndStyle.setStyleDesign(rowData, cell, column, getStyleProcessor());
+        }
     }
 
     /**
