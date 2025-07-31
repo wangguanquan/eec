@@ -234,12 +234,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     protected void writeCore(Path root) throws IOException {
         Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
-        if (StringUtil.isEmpty(core.getCreator())) {
-            if (workbook.getCreator() != null) {
-                core.setCreator(workbook.getCreator());
-            } else {
-                core.setCreator(System.getProperty("user.name"));
-            }
+        if (StringUtil.isEmpty(core.getCreator()) && StringUtil.isNotEmpty(workbook.getCreator())) {
+            core.setCreator(workbook.getCreator());
         }
         if (StringUtil.isEmpty(core.getTitle())) core.setTitle(workbook.getName());
         if (core.getCreated() == null) core.setCreated(new Date());
