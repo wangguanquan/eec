@@ -75,7 +75,7 @@ public class Row {
     public Cell[] calloc(int n) {
         malloc(n);
         for (int i = 0; i < n; i++) {
-            cells[i] = new Cell();
+            cells[i] = new Cell(i);
         }
         return cells;
     }
