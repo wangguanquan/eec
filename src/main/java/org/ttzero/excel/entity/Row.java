@@ -88,9 +88,8 @@ public class Row {
      * @return 单元格数组
      */
     public Cell[] realloc(int n) {
-        if (lc < n) {
-            calloc(n);
-        }
+        if (cells == null || cells.length < n) calloc(n);
+        lc = n;
         return cells;
     }
 
