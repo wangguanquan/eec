@@ -716,18 +716,18 @@ public class TemplateSheet extends Sheet {
      *
      * @param ao     Method 或 Field
      * @param o      对象
-     * @param logger 日志
      * @param key    占位符
      * @return 值
      */
-    protected static Object getObjectValue(AccessibleObject ao, Object o, Logger logger, String key) {
+    protected Object getObjectValue(AccessibleObject ao, Object o, String key) {
+        if (o == null) return null;
         Object e = null;
         try {
             if (ao instanceof Method) e = ((Method) ao).invoke(o);
             else if (ao instanceof Field) e = ((Field) ao).get(o);
             else e = o;
         } catch (IllegalAccessException | InvocationTargetException ex) {
-            logger.warn("Invoke " + key + " value error", ex);
+            LOGGER.warn("Invoke {} value error", key, ex);
         }
         return e;
     }
