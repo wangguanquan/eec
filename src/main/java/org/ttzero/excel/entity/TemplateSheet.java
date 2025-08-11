@@ -629,11 +629,8 @@ public class TemplateSheet extends Sheet {
                 long k = dimensionKey(row0.getRowNum() - 1, i);
                 // 合并单元格重新计算位置
                 if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
-                    if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
-                    else {
-                        int r = rows - row0.getRowNum() + 1;
-                        mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
-                    }
+                    int r = rows - row0.getRowNum() + 1;
+                    mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
                 }
                 if (comments0 != null && (comment = comments0.get(k)) != null) {
                     createComments().addComment(rows + 1, i + 1, comment);
