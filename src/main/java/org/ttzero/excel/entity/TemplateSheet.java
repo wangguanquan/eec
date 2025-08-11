@@ -701,10 +701,10 @@ public class TemplateSheet extends Sheet {
         Object e = null;
         if (vw != null) {
             switch (vw.option) {
-                case 1: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.o, LOGGER, node.val);              break;
-                case 2: e = vw.map.get(node.val);                                                                      break;
-                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val);                                   break;
-                case 4: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.list.get(vw.i), LOGGER, node.val); break;
+                case 1: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.o, node.val);              break;
+                case 2: e = vw.map.get(node.val);                                                              break;
+                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val);                           break;
+                case 4: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.list.get(vw.i), node.val); break;
                 default:
             }
         }
