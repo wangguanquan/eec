@@ -405,7 +405,7 @@ public class Column {
         if ((i = other.getHeaderStyleIndex()) > 0) this.headerStyleIndex = i;
         if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
         this.effect = other.effect;
-
+        this.globalStyleIndex = other.globalStyleIndex;
         return this;
     }
 
