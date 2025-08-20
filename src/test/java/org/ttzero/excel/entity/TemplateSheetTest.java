@@ -303,7 +303,7 @@ public class TemplateSheetTest extends WorkbookTest {
 
     @Test public void testFillListObject() throws IOException {
         final String fileName = "fill list object.xlsx";
-        List<YzOrderEntity> expectList = YzOrderEntity.randomData();
+        List<YzOrderEntity> expectList = YzOrderEntity.mock(2);
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                     .setData(YzEntity.mock())

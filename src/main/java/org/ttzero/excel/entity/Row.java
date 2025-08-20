@@ -75,7 +75,7 @@ public class Row {
     public Cell[] calloc(int n) {
         malloc(n);
         for (int i = 0; i < n; i++) {
-            cells[i] = new Cell();
+            cells[i] = new Cell(i);
         }
         return cells;
     }
@@ -88,9 +88,8 @@ public class Row {
      * @return 单元格数组
      */
     public Cell[] realloc(int n) {
-        if (lc < n) {
-            calloc(n);
-        }
+        if (cells == null || cells.length < n) calloc(n);
+        lc = n;
         return cells;
     }
 

@@ -629,11 +629,8 @@ public class TemplateSheet extends Sheet {
                 long k = dimensionKey(row0.getRowNum() - 1, i);
                 // 合并单元格重新计算位置
                 if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
-                    if (rows <= row0.getRowNum()) mergeCells.add(mergeCell);
-                    else {
-                        int r = rows - row0.getRowNum() + 1;
-                        mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
-                    }
+                    int r = rows - row0.getRowNum() + 1;
+                    mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
                 }
                 if (comments0 != null && (comment = comments0.get(k)) != null) {
                     createComments().addComment(rows + 1, i + 1, comment);
@@ -704,10 +701,10 @@ public class TemplateSheet extends Sheet {
         Object e = null;
         if (vw != null) {
             switch (vw.option) {
-                case 1: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.o, LOGGER, node.val);              break;
-                case 2: e = vw.map.get(node.val);                                                                      break;
-                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val);                                   break;
-                case 4: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.list.get(vw.i), LOGGER, node.val); break;
+                case 1: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.o, node.val);              break;
+                case 2: e = vw.map.get(node.val);                                                              break;
+                case 3: e = ((Map<String, Object>) vw.list.get(vw.i)).get(node.val);                           break;
+                case 4: e = getObjectValue(vw.accessibleObjectMap.get(node.val), vw.list.get(vw.i), node.val); break;
                 default:
             }
         }
@@ -719,18 +716,18 @@ public class TemplateSheet extends Sheet {
      *
      * @param ao     Method 或 Field
      * @param o      对象
-     * @param logger 日志
      * @param key    占位符
      * @return 值
      */
-    protected static Object getObjectValue(AccessibleObject ao, Object o, Logger logger, String key) {
+    protected Object getObjectValue(AccessibleObject ao, Object o, String key) {
+        if (o == null) return null;
         Object e = null;
         try {
             if (ao instanceof Method) e = ((Method) ao).invoke(o);
             else if (ao instanceof Field) e = ((Field) ao).get(o);
             else e = o;
         } catch (IllegalAccessException | InvocationTargetException ex) {
-            logger.warn("Invoke " + key + " value error", ex);
+            LOGGER.warn("Invoke {} value error", key, ex);
         }
         return e;
     }
