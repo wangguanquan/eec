@@ -158,7 +158,7 @@ public class CSVSheet extends Sheet {
     public void close() throws IOException {
         // 最后一个Sheet关闭CSV流
         if (shouldClose) {
-            iterator.close();
+            if (iterator != null) iterator.close();
             if (shouldClean) {
                 FileUtil.rm_rf(path);
             }

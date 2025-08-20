@@ -361,7 +361,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return StreamSupport.stream(emptySql, false);
+                return StreamSupport.stream(emptySpl, false);
             }
 
             // Use iterator
@@ -396,7 +396,7 @@ public class CSVUtil {
             O o = init(path, separator, charset);
             // Empty file
             if (o == null) {
-                return StreamSupport.stream(emptySql, false);
+                return StreamSupport.stream(emptySpl, false);
             }
 
             // Use iterator
@@ -456,7 +456,7 @@ public class CSVUtil {
         }
 
         // None item iterator
-        private final Spliterator<String[]> emptySql = new Spliterator<String[]>() {
+        private final Spliterator<String[]> emptySpl = new Spliterator<String[]>() {
             @Override
             public boolean tryAdvance(Consumer<? super String[]> action) {
                 return false;
@@ -530,7 +530,7 @@ public class CSVUtil {
         public boolean hasNext() {
             if (EOF) return false;
             try {
-                for ( ; ; ) {
+                for (boolean a = false; ; ) {
                     if (load) {
                         n = reader.read(chars, offset, length - offset);
                         // EOF
@@ -552,9 +552,21 @@ public class CSVUtil {
                         n += offset;
                         o.offset = 0;
                         load = false;
+                        if (a && o.line > 0 && !o.newLine) {
+                            if (chars[0] == comma || chars[0] == LF) o.offset++;
+                            else if (n > 1 && chars[0] == CR && chars[1] == LF) o.offset += 2;
+                            if (o.offset >= 1 && (chars[0] == LF || chars[0] == CR)) {
+                                o.line++;
+                                o.newLine = true;
+                                if ((i > 1 || nextRow[0] != null) && o.value == null) nextRow[i - 1] = EMPTY;
+                                i = 0;
+                                return true;
+                            }
+                        }
                     }
                     // Parse a block characters
-                    while (parse(chars, n, o, comma)) {
+                    for (; ;) {
+                        if (!(a = parse(chars, n, o, comma))) break;
                         offset = o.offset;
                         // Contain more than standard comma-separated fields
                         if (i == column) {
@@ -584,7 +596,7 @@ public class CSVUtil {
                         if (!o.newLine) continue;
                         // Unquoted (CR/LF) characters
                         o.line++;
-                        // Ignore empty row
+                        // Full rows
                         if ((i > 1 || nextRow[0] != null)) {
                             // Line end of '{comma}'
                             if (o.value == null) nextRow[i - 1] = EMPTY;
@@ -732,8 +744,7 @@ public class CSVUtil {
                 Map<Integer, Integer> c = new HashMap<>();
                 for (int j : columns[i]) {
                     if (j == 0) continue;
-                    Integer co = c.get(j);
-                    c.put(j, co != null ? co + 1 : 1);
+                    c.compute(j, (k, co) -> co != null ? co + 1 : 1);
                 }
                 if (c.isEmpty()) continue;
 
@@ -859,14 +870,14 @@ public class CSVUtil {
                         iq = ++i;
                         continue;
                     } else if (chars[i + 1] != comma && chars[i + 1] != LF && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
-                        throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values" +
-                            " format error.\nInvalid char between encapsulated token and delimiter.");
+                        throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values format error.\n" +
+                            "Invalid char between encapsulated token and delimiter.");
                     }
                 } else qn++;
                 if (!last_block && chars[i + 1] != comma && chars[i + 1] != LF
                     && !(chars[i + 1] == CR && i < len - 2 && chars[i + 2] == LF)) {
-                    throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
-                        "format error.\nA (double) quote character in a field must be represented by two (double) quote characters.");
+                    throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values format error.\n" +
+                        "A (double) quote character in a field must be represented by two (double) quote characters.");
                 }
                 i++;
                 if (qn == 0) {
@@ -883,29 +894,24 @@ public class CSVUtil {
 
         if (!integral && last_block) {
             if (!quoted) integral = true;
-            else throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values " +
-                "format error.\nEOF reached before encapsulated token finished.");
+            else throw new RuntimeException("line-number: " + o.line + " (zero-base). Comma-separated values format error.\n" +
+                "EOF reached before encapsulated token finished.");
         }
 
         if (integral) {
             if (quoted) offset++;
             // an integral string
-            if (offset == i && chars[offset] == LF || offset - i == 1 && chars[offset] == CR && chars[i] == LF)
-                o.value = null;
+            if (offset == i && chars[offset] == LF || offset - i == 1 && chars[offset] == CR && chars[i] == LF) o.value = null;
             else {
-                o.value = i - offset > 0
-                    ? trim(chars, offset, quoted || chars[i - 1] == CR ? i - offset - 1 : i - offset, iq) : EMPTY;
+                o.value = i - offset > 0 ? trim(chars, offset, quoted || chars[i - 1] == CR ? i - offset - 1 : i - offset, iq) : EMPTY;
             }
             if (i < len - 1 && chars[i] == CR && chars[i + 1] == LF) {
                 i += 1;
                 o.newLine = true;
-            } else if (i < len) {
-                o.newLine = chars[i] == LF;
-            } else o.newLine = false;
-            offset = i + 1;
+            } else o.newLine = i < len && chars[i] == LF;
 
             // reset the offset
-            o.offset = offset;
+            o.offset = i + 1;
         }
         return integral;
     }
