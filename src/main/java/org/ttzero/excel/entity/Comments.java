@@ -173,7 +173,7 @@ public class Comments implements Storable, Closeable {
             writer.write(" xmlns=\"");
             writer.write(topNS.uri()[0]);
             writer.write("\"><authors><author>");
-            writer.escapeWrite(isNotEmpty(author) ? author : System.getProperty("user.name"));
+            writer.escapeWrite(isNotEmpty(author) ? author : StringUtil.EMPTY);
             writer.write("</author></authors><commentList>");
 
             for (C c : commentList) {

@@ -191,7 +191,7 @@ public class Workbook implements Storable {
      * 创建一个工作薄并指定名称和作者
      *
      * @param name    工作薄名
-     * @param creator 作者，默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名.
+     * @param creator 作者
      */
     public Workbook(String name, String creator) {
         this.name = name;
@@ -377,11 +377,7 @@ public class Workbook implements Storable {
     /**
      * 设置作者
      *
-     * <p>默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名，这通常不是一个好主意。
-     * 应用程序一般发布在容器或云服务器上，获取系统登录用户名是没有意义的。如果不想设置它并默认设置系统登录用户名，
-     * 可以将其设置为空字符串("")。</p>
-     *
-     * <p>后续会去掉获取系统登录用户名的逻辑以防止信息泄露</P>
+     * <p>设置作者后可以通过查看文件属性来查看作者</p>
      *
      * @param creator 作者
      * @return 当前工作薄
