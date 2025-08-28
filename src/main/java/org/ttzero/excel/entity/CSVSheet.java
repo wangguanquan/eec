@@ -159,9 +159,7 @@ public class CSVSheet extends Sheet {
         // 最后一个Sheet关闭CSV流
         if (shouldClose) {
             if (iterator != null) iterator.close();
-            if (shouldClean) {
-                FileUtil.rm_rf(path);
-            }
+            if (shouldClean) FileUtil.rm_rf(path);
         }
         super.close();
     }
