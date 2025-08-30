@@ -73,6 +73,7 @@ public class XMLSheet implements Sheet {
         this.startRow = sheet.startRow;
         this.header = sheet.header;
         this.hidden = sheet.hidden;
+        this.useCurrentRow = sheet.useCurrentRow;
         this.dimension = sheet.dimension;
         this.drawings = sheet.drawings;
         this.reader = sheet.reader;
@@ -107,7 +108,8 @@ public class XMLSheet implements Sheet {
     protected Styles styles;
     protected int startRow = -1; // row index of data
     protected HeaderRow header;
-    protected boolean hidden; // state hidden
+    // state hidden
+    protected boolean hidden, useCurrentRow;
 
     // Range address of the used area in the current sheet
     protected Dimension dimension;
@@ -310,7 +312,11 @@ public class XMLSheet implements Sheet {
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
             for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
-            if (sRow != null && sRow.hr != header) sRow.setHeader(header);
+            if (sRow != null) {
+                if (sRow.hr != header) sRow.setHeader(header);
+                // Row index greater hrl
+                useCurrentRow = sRow.getRowNum() > hrl;
+            }
         }
         return header;
     }
@@ -319,7 +325,7 @@ public class XMLSheet implements Sheet {
         if (header != null || eof) return header;
         rangeCheck(fromRowNum, toRowNum);
         if (sRow.getRowNum() > -1 && fromRowNum < sRow.getRowNum())
-            throw new IndexOutOfBoundsException("Current row num " + sRow.getRowNum() + " is great than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
+            throw new IndexOutOfBoundsException("Current row num " + sRow.getRowNum() + " is greater than fromRowNum " + fromRowNum + ". Use Sheet#reset() to reset cursor.");
         HeaderRow headerRow;
         // Mutable header rows
         if (toRowNum - fromRowNum > 0) {
@@ -560,6 +566,10 @@ public class XMLSheet implements Sheet {
      * @return Row
      */
     protected XMLRow nextRow() {
+        if (useCurrentRow) {
+            useCurrentRow = false;
+            return sRow;
+        }
         if (eof) return null;
         boolean endTag = false;
         int start = nChar;
