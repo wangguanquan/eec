@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 /**
  * 低版本SAXReader兼容处理
  *
- * @author wangguanquan3 at 2025-08-30 16:06
+ * @author guanquan.wang at 2025-08-30 16:06
  */
 public class SAXReaderUtil {
 
