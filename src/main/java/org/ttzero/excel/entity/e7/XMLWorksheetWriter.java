@@ -282,7 +282,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (styles == null) this.styles = sheet.getWorkbook().getStyles();
 
         // Check the first row index
-        startHeaderRow = sheet.getStartRowIndex();
+        startHeaderRow = sheet.getStartRowNum();
         if (startHeaderRow <= 0)
             throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startHeaderRow);
         if (getRowLimit() <= startHeaderRow)
@@ -1798,7 +1798,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Column hc = index < columns.length ? columns[index] : null;
         if (hc == null) {
             hc = Column.UNALLOCATED_COLUMN;
-            hc.realColIndex = index + sheet.getStartColIndex();
+            hc.realColIndex = index + sheet.getStartColNum();
         }
         return hc;
     }

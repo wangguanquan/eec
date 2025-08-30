@@ -637,8 +637,20 @@ public abstract class Sheet implements Cloneable, Storable {
      * 此行号将决定从哪一行开始写数据
      *
      * @return 起始行号
+     * @deprecated 方法名容易引起误解，使用{@link #getStartRowNum()} 替换
      */
+    @Deprecated
     public int getStartRowIndex() {
+        return getStartRowNum();
+    }
+
+    /**
+     * 获取工作表的起始行号(从1开始)，这里是行号也就是打开Excel左侧看到的行号，
+     * 此行号将决定从哪一行开始写数据
+     *
+     * @return 起始行号
+     */
+    public int getStartRowNum() {
         return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) >>> 16) : 1;
     }
 
@@ -648,7 +660,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @return 起始列号
      */
-    public int getStartColIndex() {
+    public int getStartColNum() {
         return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) & 0x7FFF) : 1;
     }
 
@@ -665,13 +677,13 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 指定起始行并将该行自动滚到窗口左上角，行号必须大于0
      *
-     * @param startRowIndex 起始行号（从1开始）
+     * @param startRowNum 起始行号（从1开始）
      * @return 当前工作表
      * @deprecated 使用 {@link #setStartCoordinate(int)}替代
      */
     @Deprecated
-    public Sheet setStartRowIndex(int startRowIndex) {
-        return setStartRowIndex(startRowIndex, false);
+    public Sheet setStartRowIndex(int startRowNum) {
+        return setStartRowIndex(startRowNum, false);
     }
 
     /**
@@ -680,14 +692,14 @@ public abstract class Sheet implements Cloneable, Storable {
      * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
      * 将会显示在窗口的第一行</p>
      *
-     * @param startRowIndex       起始行号（从1开始）
+     * @param startRowNum       起始行号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      * @deprecated 使用 {@link #setStartCoordinate(int, boolean)}替代
      */
     @Deprecated
-    public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
-        return setStartCoordinate(startRowIndex, 1, scrollToVisibleArea);
+    public Sheet setStartRowIndex(int startRowNum, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowNum, 1, scrollToVisibleArea);
     }
 
     /**
@@ -704,6 +716,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * 指定起始坐标
      *
      * @param coordinate 单元格位置字符串 {@code A1}
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      */
     public Sheet setStartCoordinate(String coordinate, boolean scrollToVisibleArea) {
@@ -714,33 +727,33 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 指定起始行，行号必须大于0
      *
-     * @param startRowIndex 起始行号（从1开始）
+     * @param startRowNum 起始行号（从1开始）
      * @return 当前工作表
      */
-    public Sheet setStartCoordinate(int startRowIndex) {
-        return setStartCoordinate(startRowIndex, 1, false);
+    public Sheet setStartCoordinate(int startRowNum) {
+        return setStartCoordinate(startRowNum, 1, false);
     }
 
     /**
      * 指定起始行，行号必须大于0
      *
-     * @param startRowIndex 起始行号（从1开始）
+     * @param startRowNum 起始行号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      */
-    public Sheet setStartCoordinate(int startRowIndex, boolean scrollToVisibleArea) {
-        return setStartCoordinate(startRowIndex, 1, scrollToVisibleArea);
+    public Sheet setStartCoordinate(int startRowNum, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowNum, 1, scrollToVisibleArea);
     }
 
     /**
      * 指定起始行号和列号，行号必须大于0
      *
-     * @param startRowIndex 起始行号（从1开始）
-     * @param startColIndex 起始列号（从1开始）
+     * @param startRowNum 起始行号（从1开始）
+     * @param startColNum 起始列号（从1开始）
      * @return 当前工作表
      */
-    public Sheet setStartCoordinate(int startRowIndex, int startColIndex) {
-        return setStartCoordinate(startRowIndex, startColIndex, false);
+    public Sheet setStartCoordinate(int startRowNum, int startColNum) {
+        return setStartCoordinate(startRowNum, startColNum, false);
     }
 
     /**
@@ -749,22 +762,22 @@ public abstract class Sheet implements Cloneable, Storable {
      * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
      * 将会显示在窗口的第一行</p>
      *
-     * @param startRowIndex       起始行号（从1开始）
-     * @param startColIndex       起始列号（从1开始）
+     * @param startRowNum       起始行号（从1开始）
+     * @param startColNum       起始列号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      */
-    public Sheet setStartCoordinate(int startRowIndex, int startColIndex, boolean scrollToVisibleArea) {
-        if (startRowIndex <= 0)
-            throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
-        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
-            throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
-        if (startColIndex <= 0)
-            throw new IndexOutOfBoundsException("The start col index must be greater than 0, current = " + startColIndex);
-        if (sheetWriter != null && sheetWriter.getColumnLimit() <= startColIndex)
-            throw new IndexOutOfBoundsException("The start col index must be less than col-limit, current(" + startColIndex + ") >= limit(" + sheetWriter.getColumnLimit() + ")");
+    public Sheet setStartCoordinate(int startRowNum, int startColNum, boolean scrollToVisibleArea) {
+        if (startRowNum <= 0)
+            throw new IndexOutOfBoundsException("The start row num must be greater than 0, current = " + startRowNum);
+        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowNum)
+            throw new IndexOutOfBoundsException("The start row num must be less than row-limit, current(" + startRowNum + ") >= limit(" + sheetWriter.getRowLimit() + ")");
+        if (startColNum <= 0)
+            throw new IndexOutOfBoundsException("The start col num must be greater than 0, current = " + startColNum);
+        if (sheetWriter != null && sheetWriter.getColumnLimit() <= startColNum)
+            throw new IndexOutOfBoundsException("The start col num must be less than col-limit, current(" + startColNum + ") >= limit(" + sheetWriter.getColumnLimit() + ")");
 
-        long coordinate = ((long) startRowIndex) << 16 | (startColIndex & 0x7FFF);
+        long coordinate = ((long) startRowNum) << 16 | (startColNum & 0x7FFF);
         this.startCoordinate = scrollToVisibleArea ? coordinate : -coordinate;
         return this;
     }
@@ -932,7 +945,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
-        int startColIndex = getStartColIndex();
+        int startColIndex = getStartColNum();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
@@ -1485,7 +1498,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 数据行上限
      */
     protected int getRowLimit() {
-        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1);
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowNum() + 1);
     }
 
     /**
@@ -1706,10 +1719,10 @@ public abstract class Sheet implements Cloneable, Storable {
                 lastCol.headerComment = headerComment;
             }
 
-            if (getStartRowIndex() > 1) {
+            if (getStartRowNum() > 1) {
                 List<Dimension> tmp = new ArrayList<>();
                 for (Dimension dim : mergeCells) {
-                    tmp.add(new Dimension(dim.firstRow + getStartRowIndex() - 1, dim.firstColumn, dim.lastRow + getStartRowIndex() - 1, dim.lastColumn));
+                    tmp.add(new Dimension(dim.firstRow + getStartRowNum() - 1, dim.firstColumn, dim.lastRow + getStartRowNum() - 1, dim.lastColumn));
                 }
                 mergeCells = tmp;
             }
