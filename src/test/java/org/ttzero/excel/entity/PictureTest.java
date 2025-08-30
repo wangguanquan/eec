@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -537,16 +538,20 @@ public class PictureTest extends WorkbookTest {
     static List<Path> getLocalImages() throws IOException {
         Path picturesPath = Paths.get(System.getProperty("user.home"), "Pictures");
         if (!Files.exists(picturesPath)) return Collections.emptyList();
-        return Files.list(picturesPath).filter(p -> {
-            String name = p.getFileName().toString();
-            return !Files.isDirectory(p) && (name.endsWith(".png")
-                || name.endsWith(".jpg") || name.endsWith(".webp")
-                || name.endsWith(".wmf") || name.endsWith(".tif")
-                || name.endsWith(".tiff") || name.endsWith(".gif")
-                || name.endsWith(".jpeg") || name.endsWith(".ico")
-                || name.endsWith(".emf") || name.endsWith(".bmp")
-            );
-        }).collect(Collectors.toList());
+        List<Path> pictureList;
+        try (Stream<Path> paths = Files.list(picturesPath)) {
+            pictureList = paths.filter(p -> {
+                String name = p.getFileName().toString();
+                return !Files.isDirectory(p) && (name.endsWith(".png")
+                    || name.endsWith(".jpg") || name.endsWith(".webp")
+                    || name.endsWith(".wmf") || name.endsWith(".tif")
+                    || name.endsWith(".tiff") || name.endsWith(".gif")
+                    || name.endsWith(".jpeg") || name.endsWith(".ico")
+                    || name.endsWith(".emf") || name.endsWith(".bmp")
+                );
+            }).collect(Collectors.toList());
+        }
+        return pictureList;
     }
 
     static List<String> getRemoteUrls() {
