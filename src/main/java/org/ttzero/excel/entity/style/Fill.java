@@ -217,7 +217,8 @@ public class Fill implements Cloneable {
         if (ele == null) {
             return new ArrayList<>();
         }
-        return ele.elements().stream().map(Fill::parseFillTag).collect(Collectors.toList());
+        List<Element> elements = ele.elements();
+        return elements.stream().map(Fill::parseFillTag).collect(Collectors.toList());
     }
 
     static Fill parseFillTag(Element tag) {

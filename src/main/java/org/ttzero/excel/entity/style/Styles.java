@@ -27,6 +27,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -297,7 +298,7 @@ public class Styles implements Storable {
      */
     public static Styles load(InputStream is) {
         // load styles.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(is);

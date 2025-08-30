@@ -763,7 +763,8 @@ public class Font implements Cloneable {
         if (ele == null) {
             return new ArrayList<>();
         }
-        return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
+        List<Element> elements = ele.elements();
+        return elements.stream().map(Font::parseFontTag).collect(Collectors.toList());
     }
 
     /**

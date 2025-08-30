@@ -30,6 +30,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.IOException;
@@ -188,7 +189,7 @@ public class XMLDrawings implements Drawings {
         String key = relsKey + ".rels";
         ZipEntry entry1 = getEntry(zipFile, key);
         if (entry1 == null) return null; //throw new ExcelReadException("The file format is incorrect or corrupted. [" + key + "]");
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(zipFile.getInputStream(entry1));
@@ -217,7 +218,7 @@ public class XMLDrawings implements Drawings {
         // Ignore hidden picture
         boolean ignoreIfHidden = ignoreHiddenPicture();
         Map<String, Path> localPathMap = new HashMap<>(Math.min(1 << 8, elements.size()));
-        for (Element e : root.elements()) {
+        for (Element e : elements) {
             Element pic = e.element(QName.get("pic", xdr));
             // Not a picture
             if (pic == null) continue;
@@ -292,7 +293,8 @@ public class XMLDrawings implements Drawings {
             Element extLst = blip.element(QName.get("extLst", a));
             if (extLst == null) continue;
 
-            for (Element ext : extLst.elements()) {
+            List<Element> exts = extLst.elements();
+            for (Element ext : exts) {
                 Element srcUrl = ext.element("picAttrSrcUrl");
                 // hyperlink
                 if (srcUrl != null) {
@@ -345,7 +347,7 @@ public class XMLDrawings implements Drawings {
      * @return ID:图片本地路径
      */
     public Map<String, Path> listCellImages(ZipFile zipFile, ZipEntry entry) {
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
 
         ZipEntry refEntry = getEntry(zipFile, "xl/_rels/cellimages.xml.rels");
         if (refEntry == null) return Collections.emptyMap();

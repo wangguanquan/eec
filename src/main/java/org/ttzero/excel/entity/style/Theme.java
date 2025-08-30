@@ -23,6 +23,7 @@ import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -51,7 +52,7 @@ public class Theme {
     public static Theme load(InputStream is) {
         Theme self = new Theme();
         // load theme1.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(is);
