@@ -278,14 +278,12 @@ public class SharedStrings implements Closeable {
         if (length <= 0) return status = 0;
 
         String line = new String(cb, 0, Math.min(256, length));
-        // Microsoft Excel
         String uniqueCount = " uniqueCount=";
         int index = line.indexOf(uniqueCount)
             , end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
         if (end > 0) {
             off = Integer.parseInt(line.substring(index, end));
         }
-        // WPS
         else {
             String count = " count=";
             index = line.indexOf(count);
@@ -701,8 +699,7 @@ public class SharedStrings implements Closeable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max, Math.max(total - max, 0) * 100.0 / total);
-            LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
+            LOGGER.debug("Count:{}, Forward:{}, Backward:{}, SST:{}, Hot:{}, Tester:{Resize:{}, Size:{}}", max
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
             reader.close();

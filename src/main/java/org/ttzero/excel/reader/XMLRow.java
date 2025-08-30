@@ -55,8 +55,7 @@ public class XMLRow extends Row {
      */
     @Override
     public int getRowNum() {
-        if (index == -1)
-            searchRowNum();
+        if (index == -1) searchRowNum();
         // The first row index is one
         return index;
     }
