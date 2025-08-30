@@ -137,12 +137,8 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             bw.write("\">");
         }
 
-        if (picture.padding == null) {
-            picture.padding = DEFAULT_PADDING;
-        }
-        else if (picture.padding.length < 4) {
-            picture.padding = Arrays.copyOf(picture.padding, 4);
-        }
+        if (picture.padding == null) picture.padding = DEFAULT_PADDING;
+        else if (picture.padding.length < 4) picture.padding = Arrays.copyOf(picture.padding, 4);
 
         // From
         bw.write("<xdr:from><xdr:col>");
