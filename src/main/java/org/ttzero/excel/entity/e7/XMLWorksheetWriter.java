@@ -59,6 +59,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -417,7 +418,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (width.compareTo(new BigDecimal(Const.Limit.COLUMN_WIDTH)) > 0) {
             width = new BigDecimal(Const.Limit.COLUMN_WIDTH);
         }
-        String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+        String defaultWidth = width.setScale(2, RoundingMode.HALF_UP).toString();
 
         // SheetFormatPr
         writeSheetFormat();
@@ -685,7 +686,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         bw.writeInt(row);
 
         String s = cell.stringVal;
-        boolean notEmpty = s != null && s.length() > 0;
+        boolean notEmpty = s != null && !s.isEmpty();
 
         // 超链接
         if (cell.h && notEmpty) {
@@ -1009,8 +1010,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
             // Write picture
             writePictureDirect(id, name, column, row, signature);
-        } catch (IOException ex) {
-            LOGGER.warn("Copy stream error.", ex);
         } finally {
             try {
                 stream.close();
@@ -1330,12 +1329,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (columns.length > 0) {
             bw.write("<cols>");
             Column fCol = columns[0];
-            String fWidth = fCol.width >= 0.0000001D ? new BigDecimal(fCol.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+            String fWidth = fCol.width >= 0.0000001D ? new BigDecimal(fCol.width).setScale(2, RoundingMode.HALF_UP).toString() : defaultWidth;
             // 多个col时将相同属性的col进行压缩
             if (columns.length > 1) {
                 for (int i = 1; i < columns.length; i++) {
                     Column col = columns[i], pCol = columns[i - 1];
-                    String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, BigDecimal.ROUND_HALF_UP).toString() : defaultWidth;
+                    String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, RoundingMode.HALF_UP).toString() : defaultWidth;
                     boolean lastColumn = i == columns.length - 1;
                     if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1 || fCol.globalStyleIndex != col.globalStyleIndex) {
                         writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.globalStyleIndex, fCol.isHide());

@@ -36,6 +36,7 @@ import org.ttzero.excel.reader.HeaderRow;
 import java.awt.Color;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -700,7 +701,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    public static StyleProcessor sp = (o, style, sst) -> {
+    public static StyleProcessor<?> sp = (o, style, sst) -> {
         if ((int)o < 60) {
             style = sst.modifyFill(style, new Fill(PatternType.solid,Color.green, Color.blue));
         }
@@ -1566,7 +1567,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Float.compare(allType.fv, fv) == 0 &&
                 Double.compare(allType.dv, dv) == 0 &&
                 Objects.equals(s, allType.s) &&
-                Objects.equals(mv.setScale(4, BigDecimal.ROUND_HALF_DOWN), allType.mv.setScale(4, BigDecimal.ROUND_HALF_DOWN)) &&
+                Objects.equals(mv.setScale(4, RoundingMode.HALF_DOWN), allType.mv.setScale(4, RoundingMode.HALF_DOWN)) &&
                 av.getTime() / 1000 == allType.av.getTime() / 1000 &&
                 iv.getTime() / 1000 == allType.iv.getTime() / 1000 &&
                 String.valueOf(tv).equals(String.valueOf(allType.tv)) &&
@@ -1631,7 +1632,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         public static List<Student> randomTestData(int pageNo, int limit) {
             List<Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
-                Student e = new Student(random.nextInt(100), (k = random.nextInt(10)) < 3 ? new String(new char[] {(char)('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
+                Student e = new Student(random.nextInt(100), (k = random.nextInt(10)) < 3 ? String.valueOf((char) ('a' + k)) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;
@@ -1861,7 +1862,7 @@ public class ListObjectSheetTest extends WorkbookTest {
                 Objects.equals(fv, that.fv) &&
                 Objects.equals(dv, that.dv) &&
                 Objects.equals(s, that.s) &&
-                Objects.equals(mv.setScale(4, BigDecimal.ROUND_HALF_DOWN), that.mv.setScale(4, BigDecimal.ROUND_HALF_DOWN)) &&
+                Objects.equals(mv.setScale(4, RoundingMode.HALF_DOWN), that.mv.setScale(4, RoundingMode.HALF_DOWN)) &&
                 av.getTime() / 1000 == that.av.getTime() / 1000 &&
                 iv.getTime() / 1000 == that.iv.getTime() / 1000 &&
                 String.valueOf(tv).equals(String.valueOf(that.tv)) &&

@@ -412,7 +412,7 @@ public class StyleDesignTest extends WorkbookTest {
         public static List<ListObjectSheetTest.Student> randomTestData(int pageNo, int limit) {
             List<ListObjectSheetTest.Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
-                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? new String(new char[]{(char) ('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
+                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? String.valueOf((char) ('a' + k)) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;

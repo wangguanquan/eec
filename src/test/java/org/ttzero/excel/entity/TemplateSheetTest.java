@@ -521,7 +521,7 @@ public class TemplateSheetTest extends WorkbookTest {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
         List<Dimension> mergeCells = sheet.getMergeCells();
-        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3L);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
             mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
@@ -572,7 +572,7 @@ public class TemplateSheetTest extends WorkbookTest {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
         List<Dimension> mergeCells = sheet.getMergeCells();
-        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3L);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
             mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);

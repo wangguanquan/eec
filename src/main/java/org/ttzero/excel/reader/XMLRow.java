@@ -236,8 +236,8 @@ public class XMLRow extends Row {
     }
 
     protected static long toLong(char[] cb, int a, int b) {
-        boolean _n;
-        if (_n = cb[a] == '-') a++;
+        boolean _n = cb[a] == '-';
+        if (_n) a++;
         long n = cb[a++] - '0';
         for (; b > a; ) {
             n = n * 10 + cb[a++] - '0';

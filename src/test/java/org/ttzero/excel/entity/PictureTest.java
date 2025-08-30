@@ -487,7 +487,7 @@ public class PictureTest extends WorkbookTest {
                 for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                     List<Drawings.Picture> list = reader.sheet(i).listPictures();
                     if (i < len - 1) assertEquals(list.size(), rowLimit);
-                    else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                    else assertEquals(expectList.size() - (long) rowLimit * (len - 1), list.size());
                     for (int j = 0; j < list.size(); j++) {
                         Path expectPath = expectList.get(a++);
                         Drawings.Picture pic = list.get(j);

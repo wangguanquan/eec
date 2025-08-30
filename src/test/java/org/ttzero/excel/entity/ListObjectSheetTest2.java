@@ -52,6 +52,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -832,7 +833,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     @Override
                     protected void writeString(Cell cell, int row, int col) throws IOException {
                         // 判断是否包含“回车”
-                        if (cell.stringVal.indexOf("\n") >= 0) {
+                        if (cell.stringVal.indexOf('\n') >= 0) {
                             int xf = cell.xf;
                             int style = styles.getStyleByIndex(xf);
                             // 包含“回车”符时默认设置折行
@@ -986,7 +987,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             // Default row height and width
             int fillSpace = 6;
             BigDecimal width = BigDecimal.valueOf(!nonHeader ? sheet.getDefaultWidth() : 8.38D);
-            String defaultWidth = width.setScale(2, BigDecimal.ROUND_HALF_UP).toString();
+            String defaultWidth = width.setScale(2, RoundingMode.HALF_UP).toString();
             writeSheetFormat();
 
             // cols
