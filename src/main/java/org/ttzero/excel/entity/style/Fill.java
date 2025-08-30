@@ -18,6 +18,8 @@ package org.ttzero.excel.entity.style;
 
 
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -34,6 +36,7 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  * @author guanquan.wang at 2018-02-06 08:55
  */
 public class Fill implements Cloneable {
+    final static Logger LOGGER = LoggerFactory.getLogger(Fill.class);
     private PatternType patternType;
     private Color bgColor, fgColor;
 
@@ -149,7 +152,7 @@ public class Fill implements Cloneable {
         return fill;
     }
 
-    Element toDom(Element root) {
+    public Element toDom(Element root) {
         if (patternType == null) {
             patternType = PatternType.solid;
         }
@@ -230,6 +233,7 @@ public class Fill implements Cloneable {
                 try {
                     fill.patternType = PatternType.valueOf(patternType);
                 } catch (IllegalArgumentException ex) {
+                    LOGGER.error("Unknown pattern type {}", patternType);
                     // Ignore
                     fill.patternType = PatternType.none;
                 }
