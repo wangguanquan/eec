@@ -335,9 +335,9 @@ public class IndexSharedStringTable extends SharedStringTable {
             position = buffer.getLong();
             channel.position(pos);
             buffer.clear();
-
-            // Read from buffer
-        } else {
+        }
+        // Read from buffer
+        else {
             int _pos = buffer.position();
             buffer.flip();
             if (buffer.hasRemaining()) {

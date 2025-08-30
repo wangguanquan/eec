@@ -39,9 +39,7 @@ public class GridFactory {
         }
 
         Dimension range = new Dimension(fr, fc, lr, lc);
-        int r = lr - fr + 1
-            , c = lc - fc + 1;
-
+        int r = lr - fr + 1, c = lc - fc + 1;
         n = r * c;
 
         Grid grid = c <= 64 && r < 1 << 15 ? new Grid.FastGrid(range)
