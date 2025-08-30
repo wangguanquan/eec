@@ -52,7 +52,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.AccessibleObject;
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -79,13 +78,14 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @author guanquan.wang at 2023-04-04 22:38
  */
 public class ListObjectSheetTest2 extends WorkbookTest {
-    @Test public void testSpecifyRowWrite() throws IOException {
+    @Test public void testSpecifyStartCoordinateA4VisWrite() throws IOException {
+        final String fileName = "test specify start coordinate A4 vis ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(4))
-            .writeTo(defaultTestPath.resolve("test specify row 4 ListSheet.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(4, true))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 4 ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).header(4).rows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
@@ -93,13 +93,14 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
-    @Test public void testSpecifyRowStayA1Write() throws IOException {
+    @Test public void testSpecifyStartCoordinateA4Write() throws IOException {
+        final String fileName = "test specify start coordinate A4 ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(4, false))
-            .writeTo(defaultTestPath.resolve("test specify row 4 stay A1 ListSheet.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(4))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 4 stay A1 ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
@@ -107,17 +108,18 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
-    @Test public void testSpecifyRowAndColWrite() throws IOException {
+    @Test public void testSpecifyStartCoordinateD4Write() throws IOException {
+        final String fileName = "test specify start coordinate D4 ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
                 .setData(list)
-                .setStartRowIndex(4)
-            ).writeTo(defaultTestPath.resolve("test specify row and cel ListSheet.xlsx"));
+                .setStartCoordinate(4)
+            ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
@@ -125,17 +127,37 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         }
     }
 
-    @Test public void testSpecifyRowAndColStayA1Write() throws IOException {
+    @Test public void testSpecifyStartCoordinateC4Write() throws IOException {
+        final String fileName = "test specify start coordinate C4 ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
-                , new Column("id").setColIndex(3)
-                , new Column("name").setColIndex(4))
+                , new Column("id")
+                , new Column("name"))
                 .setData(list)
-                .setStartRowIndex(4, false)
-            ).writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListSheet.xlsx"));
+                .setStartCoordinate(4, 3)
+            ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
+            assertEquals(list.size(), readList.size());
+            for (int i = 0, len = list.size(); i < len; i++)
+                assertEquals(list.get(i), readList.get(i));
+        }
+    }
+
+    @Test public void testSpecifyStartCoordinateC4SWrite() throws IOException {
+        final String fileName = "test specify start coordinate C4S ListSheet.xlsx";
+        List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
+        new Workbook().setAutoSize(true)
+            .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
+                , new Column("id")
+                , new Column("name"))
+                .setData(list)
+                .setStartCoordinate("C4", true)
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).bind(ListObjectSheetTest.Item.class, 4).rows().map(row -> (ListObjectSheetTest.Item) row.get()).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++)
@@ -144,12 +166,13 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowIgnoreHeaderWrite() throws IOException {
+        final String fileName = "test specify row 4 ignore header ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(4).ignoreHeader())
-            .writeTo(defaultTestPath.resolve("test specify row 4 ignore header ListSheet.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(4).ignoreHeader())
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 4 ignore header ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0)
                 .header(3)
                 .bind(ListObjectSheetTest.Item.class, new HeaderRow().with(createHeaderRow()))
@@ -163,16 +186,17 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowStayA1IgnoreHeaderWrite() throws IOException {
+        final String fileName = "test specify start coordinate C4 ignore header ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(4, false).ignoreHeader())
-            .writeTo(defaultTestPath.resolve("test specify row 4 stay A1 ignore header ListSheet.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(4, 3).ignoreHeader())
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 4 stay A1 ignore header ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).rows().map(row -> {
                 ListObjectSheetTest.Item e = new ListObjectSheetTest.Item();
-                e.setId(row.getInt(0));
-                e.setName(row.getString(1));
+                e.setId(row.getInt(2));
+                e.setName(row.getString(3));
                 return e;
             }).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
@@ -182,17 +206,18 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowAndColIgnoreHeaderWrite() throws IOException {
+        final String fileName = "test specify row and cel ignore header ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
                 .setData(list)
-                .setStartRowIndex(4)
+                .setStartCoordinate(4)
                 .ignoreHeader()
-            ).writeTo(defaultTestPath.resolve("test specify row and cel ignore header ListSheet.xlsx"));
+            ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel ignore header ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).rows().map(row -> {
                 ListObjectSheetTest.Item e = new ListObjectSheetTest.Item();
                 e.setId(row.getInt(3));
@@ -206,17 +231,18 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowAndColStayA1IgnoreHeaderWrite() throws IOException {
+        final String fileName = "test specify row and cel stay A1 ignore header ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<ListObjectSheetTest.Item>("Item"
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
                 .setData(list)
-                .setStartRowIndex(4, false)
+                .setStartCoordinate(4, true)
                 .ignoreHeader()
-            ).writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ignore header ListSheet.xlsx"));
+            ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ignore header ListSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> readList = reader.sheet(0).rows().map(row -> {
                 ListObjectSheetTest.Item e = new ListObjectSheetTest.Item();
                 e.setId(row.getInt(3));
@@ -230,6 +256,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testCustomerRowHeight() throws IOException {
+        final String fileName = "Customer row height.xlsx";
         List<Template> list = new ArrayList<>();
         list.add(Template.of("备注说明\r\n第二行\r\n第三行\r\n第四行", "岗位名称", "岁位"));
         list.add(Template.of("字段名称", "*岗位名称", "岗位描述"));
@@ -239,9 +266,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             new ListSheet<>(list).setStyleProcessor(new TemplateStyleProcessor())
                 .setRowHeight(62.25D)
                 .cancelZebraLine().ignoreHeader().putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, Collections.singletonList(Dimension.of("A1:B1")))
-        ).writeTo(defaultTestPath.resolve("Customer row height.xlsx"));
+        ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Customer row height.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).rows().iterator();
             assertTrue(iter.hasNext());
             org.ttzero.excel.reader.Row row0 = iter.next();
@@ -541,6 +568,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testTreeStyle() throws IOException {
+        final String fileName = "tree style.xlsx";
         List<TreeNode> root = new ArrayList<>();
         TreeNode class1 = new TreeNode("一年级", (94 + 97) / 2.0D);
         root.add(class1);
@@ -612,7 +640,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 isTreeStyle = "1".equals(sheet.getExtPropValue("tree_style"));
             }
 
-            protected int startRow(int rows, int columns, Double rowHeight, int level) throws IOException {
+            int startRow(int rows, int columns, Double rowHeight, int level) throws IOException {
                 // Row number
                 int r = rows + startRow;
 
@@ -690,10 +718,11 @@ public class ListObjectSheetTest2 extends WorkbookTest {
 
                 bw.write("</row>");
             }
-        })).writeTo(defaultTestPath.resolve("tree style.xlsx"));
+        })).writeTo(defaultTestPath.resolve(fileName));
     }
 
     @Test public void testCustomProperties() throws IOException {
+        final String fileName = "custom property.xlsx";
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("办公室", "24F");
         properties.put("记录日期", new Timestamp(System.currentTimeMillis()));
@@ -711,9 +740,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             .markAsReadOnly()
             .putCustomProperties(properties)     // <- 设置多组属性
             .putCustomProperty("追加属性", "abc") // <- 设置单组属性
-            .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve("custom property.xlsx"));
+            .addSheet(new ListSheet<>(ListObjectSheetTest.Item.randomTestData())).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("custom property.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             CustomProperties customProperties = reader.getCustomProperties();
             for (Map.Entry<String, Object> entry : properties.entrySet()) {
                 Object expect = entry.getValue(), val = customProperties.get(entry.getKey());
@@ -734,6 +763,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void testMergeWrap() throws IOException {
+        final String fileName = "MergeWrap.xlsx";
         List<Dimension> mergeList = new ArrayList<>();
         List<Object[]> data = new ArrayList<>();
         // Row 1
@@ -814,11 +844,11 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                         super.writeString(cell, row, col);
                     }
                 }))
-            .writeTo(defaultTestPath.resolve("MergeWrap.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
     }
 
     @Test public void testBestSpeedWrite() throws IOException {
-        String fileName = "test best speed object.xlsx";
+        final String fileName = "test best speed object.xlsx";
         List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData();
         new Workbook()
             .bestSpeed()
@@ -1116,12 +1146,13 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test public void hyperlinkTest() throws IOException {
+        final String fileName = "超连接测试.xlsx";
         List<Item> list = new ArrayList<>();
         list.add(new Item("京东", "https://www.jd.com"));
         list.add(new Item("天猫", "https://www.tmall.com"));
         list.add(new Item("淘宝", "https://www.taobao.com"));
 
-        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve("超连接测试.xlsx"));
+        new Workbook().setAutoSize(true).addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve(fileName));
     }
 
     public static class Item {
@@ -1138,12 +1169,13 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     }
 
     @Test  public void multipleEnumReversionTest() throws IOException {
+        final String fileName = "multipleEnumReversion.xlsx";
         List<MultipleEnumReversionModel> list = MultipleEnumReversionModel.testData();
         new Workbook()
                 .addSheet(new ListSheet<>(list))
-                .writeTo(defaultTestPath.resolve("multipleEnumReversion.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("multipleEnumReversion.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<MultipleEnumReversionModel> readList = reader.sheet(0).dataRows().map(row -> row.to(MultipleEnumReversionModel.class)).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
 

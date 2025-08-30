@@ -869,12 +869,13 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testIgnoreSupperMethod() throws IOException {
+        final String fileName = "忽略父类属性.xlsx";
         new Workbook()
             .setWaterMark(WaterMark.of(author))
             .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0))))
-            .writeTo(defaultTestPath.resolve("忽略父类属性.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("忽略父类属性.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Optional<ExtStudent> opt = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::dataRows)
                 .map(row -> row.too(ExtStudent.class)).findAny();
             assertTrue(opt.isPresent());
@@ -939,6 +940,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testSpecifyCore() throws IOException {
+        final String fileName = "Specify Core.xlsx";
         Core core = new Core();
         core.setCreator("一名光荣的测试人员");
         core.setTitle("空白文件");
@@ -951,9 +953,9 @@ public class ListObjectSheetTest extends WorkbookTest {
         core.setLastModifiedBy("TTT");
         new Workbook().setCore(core)
             .addSheet(new ListSheet<>(Collections.singletonList(new NotSharedObject(getRandomString()))))
-                .writeTo(defaultTestPath.resolve("Specify Core.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Specify Core.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             AppInfo info = reader.getAppInfo();
             assertEquals(core.getCreator(), info.getCreator());
             assertEquals(core.getTitle(), info.getTitle());
@@ -967,6 +969,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testLarge() throws IOException {
+        final String fileName = "large07.xlsx";
         new Workbook().forceExport().addSheet(new ListSheet<ExcelReaderTest.LargeData>() {
             private int i = 0, n;
 
@@ -1006,9 +1009,9 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
                 return list;
             }
-        }).writeTo(defaultTestPath.resolve("large07.xlsx"));
+        }).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large07.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
             assertEquals(Dimension.of("A1:Y50001"), sheet.getDimension());
             int i = 0;
@@ -1210,13 +1213,14 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testBasicType() throws IOException {
+        final String fileName = "Integer array.xlsx";
         List<Integer> list = new ArrayList<>(35);
         for (int i = 0; i < 35; i++) list.add(i);
         new Workbook()
             .addSheet(new ListSheet<>(list))
-            .writeTo(defaultTestPath.resolve("Integer array.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Integer array.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Integer[] array = reader.sheets().flatMap(org.ttzero.excel.reader.Sheet::rows).map(row -> row.getInt(0)).toArray(Integer[]::new);
             assertEquals(array.length, list.size());
             for (int i = 0; i < array.length; i++) {
@@ -1226,10 +1230,11 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testUnDisplayChar() throws Throwable {
+        final String fileName = "UnDisplayChar.xlsx";
         List<Character> list = IntStream.range(0, 32).mapToObj(e -> (char)e).collect(Collectors.toList());
-        new Workbook().addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve("UnDisplayChar.xlsx"));
+        new Workbook().addSheet(new ListSheet<>(list)).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("UnDisplayChar.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Character> subList = reader.sheet(0).rows().map(row -> row.getChar(0)).collect(Collectors.toList());
 
             assertEquals(subList.size(), list.size());
@@ -1245,12 +1250,13 @@ public class ListObjectSheetTest extends WorkbookTest {
     }
 
     @Test public void testEmojiChar() throws IOException {
+        final String fileName = "Emoji char.xlsx";
         List<String> list = Arrays.asList("😂", "abc😍(●'◡'●)cz");
         new Workbook()
             .addSheet(new ListSheet<>(list).setColumns(new ListSheet.EntryColumn()))
-            .writeTo(defaultTestPath.resolve("Emoji char.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Emoji char.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<String> subList = reader.sheet(0).rows().map(row -> row.getString(0)).collect(Collectors.toList());
 
             assertEquals(subList.size(), list.size());

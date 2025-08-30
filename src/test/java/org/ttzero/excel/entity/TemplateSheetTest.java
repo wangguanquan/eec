@@ -141,6 +141,7 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testTemplate() throws IOException {
+        final String fileName = "fill inputstream template with map.xlsx";
         Map<String, Object> map = new HashMap<>();
         map.put("name", author);
         map.put("score", random.nextInt(90) + 10);
@@ -150,9 +151,9 @@ public class TemplateSheetTest extends WorkbookTest {
         new Workbook()
             .addSheet(new TemplateSheet(Files.newInputStream(testResourceRoot().resolve("template.xlsx")))
                 .setData(map))
-            .writeTo(defaultTestPath.resolve("fill inputstream template with map.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("fill inputstream template with map.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             for (Iterator<Row> it = reader.sheet(0).iterator(); it.hasNext(); ) {
                 Row row = it.next();
                 switch (row.getRowNum()) {
@@ -451,13 +452,14 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testDefaultFormatOnDateCell() throws IOException {
+        final String fileName = "defaultFormatOnDateCell.xlsx";
         Map<String, Object> data = new HashMap<>();
         data.put("channel", new Timestamp(System.currentTimeMillis()));
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx")).setData(data))
-            .writeTo(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Row row = reader.sheet(0).header(1).iterator().next();
             int styleIndex = row.getCellStyle(0);
             NumFmt numFmt = reader.getStyles().getNumFmt(styleIndex);

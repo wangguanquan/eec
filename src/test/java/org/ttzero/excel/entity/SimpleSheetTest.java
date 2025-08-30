@@ -267,7 +267,7 @@ public class SimpleSheetTest extends WorkbookTest {
                 return list;
             }
             return null;
-        }).setStartRowIndex(5, false)).writeTo(defaultTestPath.resolve(fileName));
+        }).setStartCoordinate(5)).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).iterator();

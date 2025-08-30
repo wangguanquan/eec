@@ -53,7 +53,7 @@ public class ValidationTest extends WorkbookTest {
         final String fileName = "Validation Test.xlsx";
         new Workbook()
             .addSheet(new ListSheet<>(Arrays.asList("北京", "天津", "上海"))
-                .setStartRowIndex(10, false)
+                .setStartCoordinate(10)
                 .putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
             .writeTo(defaultTestPath.resolve(fileName));
     }

@@ -661,6 +661,7 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
     }
 
     @Test public void testTypes() throws SQLException, IOException {
+        final String fileName = "test types.xlsx";
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement("select * from types_test");
@@ -668,11 +669,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         ) {
             new Workbook()
                 .addSheet(new ResultSetSheet(rs))
-                .writeTo(defaultTestPath.resolve("test types.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement("select * from types_test");
             ResultSet rs1 = ps1.executeQuery();
-            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test types.xlsx"))) {
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
                 org.ttzero.excel.reader.Sheet sheet = reader.sheet(0);
                 Iterator<Row> iter = sheet.iterator();
                 assertTrue(iter.hasNext());

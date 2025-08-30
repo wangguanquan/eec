@@ -61,13 +61,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
+        final String fileName = "Repeat Columns Annotation.xlsx";
         List<RepeatableEntry> list = RepeatableEntry.randomTestData();
         new Workbook().setWaterMark(WaterMark.of("勿外传"))
             .setAutoSize(true)
             .addSheet(new ListSheet<>(list))
-            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry> readList = reader.sheet(0).header(1, 4).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
@@ -94,6 +95,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testPagingRepeatAnnotations() throws IOException {
+        final String fileName = "Repeat Paging Columns Annotation.xlsx";
         List<RepeatableEntry> expectList = RepeatableEntry.randomTestData(10000);
         Workbook workbook = new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>(expectList).setSheetWriter(new XMLWorksheetWriter() {
@@ -102,16 +104,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     return 500;
                 }
             }));
-        workbook.writeTo(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"));
+        workbook.writeTo(defaultTestPath.resolve(fileName));
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Paging Columns Annotation.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<RepeatableEntry> list = reader.sheet(i).header(1, 4).bind(RepeatableEntry.class).rows().map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
                 if (i < len - 1) assertEquals(list.size(), rowLimit);
-                else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                else assertEquals(expectList.size() - (long) rowLimit * (len - 1), list.size());
                 for (RepeatableEntry o : list) {
                     RepeatableEntry expect = expectList.get(a++);
                     assertEquals(expect, o);
@@ -121,6 +123,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn() throws IOException {
+        final String fileName = "Multi specify columns 2.xlsx";
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", expectList
@@ -136,9 +139,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     return new Font("宋体", 12, Color.RED).bold();
                 }
             }
-            )).writeTo(defaultTestPath.resolve("Multi specify columns 2.xlsx"));
+            )).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 2.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet = reader.sheet(0);
             assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
@@ -165,15 +168,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiOrderColumnSpecifyOnColumn3() throws IOException {
+        final String fileName = "Multi specify columns 3.xlsx";
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name"))
                 , new Column("成绩", "score")
-            )).writeTo(defaultTestPath.resolve("Multi specify columns 3.xlsx"));
+            )).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Multi specify columns 3.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet = reader.sheet(0);
             assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
@@ -189,7 +193,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testResultSet() throws SQLException, IOException {
-        String fileName = "Multi ResultSet columns 2.xlsx",
+        final String fileName = "Multi ResultSet columns 2.xlsx",
             sql = "select id, name, age, create_date, update_date from student order by age";
 
         try (Connection con = getConnection()) {
@@ -235,7 +239,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiHeaderAndSpecifyColIndex() throws SQLException, IOException {
-        String fileName = "Multi Header And Specify Col-index.xlsx",
+        final String fileName = "Multi Header And Specify Col-index.xlsx",
             sql = "select id, name, age, create_date, update_date from student limit 10";
         try (Connection con = getConnection()) {
             new Workbook().setAutoSize(true)
@@ -280,12 +284,13 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testRepeatAnnotations2() throws IOException {
+        final String fileName = "Repeat Columns Annotation2.xlsx";
         List<RepeatableEntry> list = RepeatableEntry.randomTestData();
         new Workbook()
             .addSheet(new ListSheet<>(list))
-            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation2.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry> readList = reader.sheet(0).header(2, 4).bind(RepeatableEntry.class).rows()
                 .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
 
@@ -328,12 +333,13 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testRepeatAnnotations3() throws IOException {
+        final String fileName = "Repeat Columns Annotation3.xlsx";
         List<RepeatableEntry3> list = RepeatableEntry3.randomTestData();
         new Workbook()
             .addSheet(new ListSheet<>(list))
-            .writeTo(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns Annotation3.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry3> readList;
 
             // header row 4
@@ -371,15 +377,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideCol() throws IOException {
+        final String fileName = "Auto Size And Hide Column.xlsx";
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", expectList
                 , new Column().addSubColumn(new ListSheet.EntryColumn("共用表头")).addSubColumn(new Column("学号", "id").setHeaderComment(new Comment("abc", "content")))
                 , new ListSheet.EntryColumn("共用表头").addSubColumn(new Column("姓名", "name").setColIndex(1000).hide())
                 , new Column("成绩", "score")
-            )).writeTo(defaultTestPath.resolve("Auto Size And Hide Column.xlsx"));
+            )).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet = reader.sheet(0);
             assertEquals("期末成绩", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
@@ -395,6 +402,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testAutoSizeAndHideColPaging() throws IOException {
+        final String fileName = "Auto Size And Hide Column Paging.xlsx";
         List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData();
         Workbook workbook = new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>("期末成绩", expectList
@@ -407,16 +415,16 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                     return 10;
                 }
             }));
-        workbook.writeTo(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"));
+        workbook.writeTo(defaultTestPath.resolve(fileName));
 
         int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Auto Size And Hide Column Paging.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
             for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                 List<Map<String, Object>> list = reader.sheet(i).header(1, 3).rows().map(Row::toMap).collect(Collectors.toList());
                 if (i < len - 1) assertEquals(list.size(), rowLimit);
-                else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                else assertEquals(expectList.size() - (long) rowLimit * (len - 1), list.size());
                 for (Map<String, Object> o : list) {
                     ListObjectSheetTest.Student expect = expectList.get(a++);
                     assertEquals(expect.getId(), Integer.parseInt(o.get("共用表头:学号").toString()));
@@ -428,6 +436,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMapRepeatHeader() throws IOException {
+        final String fileName = "Map Repeat Header.xlsx";
         List<Map<String, Object>> expectList = new ArrayList<>();
         new Workbook()
             .addSheet(new ListMapSheet<Object>("Map"
@@ -458,9 +467,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                       return new ArrayList<>(a);
                   }
               }
-            ).writeTo(defaultTestPath.resolve("Map Repeat Header.xlsx"));
+            ).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Map Repeat Header.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet = reader.sheet(0);
             assertEquals("Map", sheet.getName());
             List<Map<String, Object>> list = sheet.header(1, 2).rows().map(Row::toMap).collect(Collectors.toList());
@@ -483,13 +492,14 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testRepeatColumnFromN() throws IOException {
+        final String fileName = "Repeat Columns From 7.xlsx";
         List<RepeatableEntry4> list = RepeatableEntry4.randomTestData();
         int startRowIndex = 7;
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(startRowIndex))
-            .writeTo(defaultTestPath.resolve("Repeat Columns From 7.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(startRowIndex))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns From 7.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
                 .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
 
@@ -515,13 +525,14 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testRepeatColumnFromStayAtA1() throws IOException {
+        final String fileName = "Repeat Columns From 7 Stay at A1.xlsx";
         List<RepeatableEntry4> list = RepeatableEntry4.randomTestData();
         int startRowIndex = 7;
         new Workbook().setAutoSize(true)
-            .addSheet(new ListSheet<>(list).setStartRowIndex(startRowIndex, false))
-            .writeTo(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"));
+            .addSheet(new ListSheet<>(list).setStartCoordinate(startRowIndex))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat Columns From 7 Stay at A1.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry4> readList = reader.sheet(0).header(startRowIndex, startRowIndex + 1).bind(RepeatableEntry4.class).rows()
                 .map(row -> (RepeatableEntry4) row.get()).collect(Collectors.toList());
 
@@ -547,12 +558,13 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testRepeat2AddressHeaders() throws IOException {
+        final String fileName = "Repeat 2 Address Headers.xlsx";
         List<RepeatableEntry5> list = RepeatableEntry5.randomTestData(20);
         new Workbook().setAutoSize(true)
             .addSheet(new ListSheet<>(list))
-            .writeTo(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Repeat 2 Address Headers.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<RepeatableEntry5> readList = reader.sheet(0).header(1, 2).rows().map(row -> row.to(RepeatableEntry5.class)).collect(Collectors.toList());
 
             assertEquals(list.size(), readList.size());
@@ -580,6 +592,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     }
 
     @Test public void testMultiHeaderAndStyles() throws IOException {
+        final String fileName = "multiheader-multistyles.xlsx";
         Workbook workbook = new Workbook();
         Styles styles = workbook.getStyles();
         Font fontYahei20Red = new Font("微软雅黑", 20, Color.RED);
@@ -598,9 +611,9 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             .addSubColumn(new Column("header2").setHeaderStyle(styles.addFont(fontYahei16Black) | styles.addFill(fillGrey) | borderIndex | Horizontals.CENTER))
             .addSubColumn(new Column("header3").setHeaderStyle(styles.addFont(fontYahei20Red) | styles.addFill(fillGrey) | borderIndex | Horizontals.CENTER)).setWidth(30)));
 
-        workbook.writeTo(defaultTestPath.resolve("multiheader-multistyles.xlsx"));
+        workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("multiheader-multistyles.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             // Global styles
             Styles style = reader.getStyles();
             Iterator<Row> iter = reader.sheet(0).iterator();

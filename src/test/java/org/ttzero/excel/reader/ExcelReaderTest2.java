@@ -167,6 +167,7 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testForceImport() throws IOException {
+        final String fileName = "Force Import.xlsx";
         Map<String, Object> data1 = new HashMap<>();
         data1.put("id", 1);
         data1.put("name", "abc");
@@ -176,9 +177,9 @@ public class ExcelReaderTest2 {
         data2.put("name", "xyz");
         new Workbook()
             .addSheet(new ListMapSheet<>().setData(Arrays.asList(data1, data2)))
-            .writeTo(defaultTestPath.resolve("Force Import.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Force Import.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<U> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
             assertEquals(list.size(), 2);
             assertEquals("1: abc", list.get(0).toString());
@@ -187,6 +188,7 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testUpperCaseRead() throws IOException {
+        final String fileName = "Upper case Reader test.xlsx";
         Map<String, Object> data1 = new HashMap<>();
         data1.put("ID", 1);
         data1.put("NAME", "abc");
@@ -197,9 +199,9 @@ public class ExcelReaderTest2 {
 
         new Workbook()
             .addSheet(new ListMapSheet<>(Arrays.asList(data1, data2)))
-            .writeTo(defaultTestPath.resolve("Upper case Reader test.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Upper case Reader test.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<U> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
             assertEquals(list.size(), 2);
             assertEquals("0: null", list.get(0).toString());
@@ -214,6 +216,7 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testCamelCaseRead() throws IOException {
+        final String fileName = "Underline case Reader test.xlsx";
         Map<String, Object> data1 = new HashMap<>();
         data1.put("USER_ID", 1);
         data1.put("USER_NAME", "abc");
@@ -224,9 +227,9 @@ public class ExcelReaderTest2 {
 
         new Workbook()
             .addSheet(new ListMapSheet<>(Arrays.asList(data1, data2)))
-            .writeTo(defaultTestPath.resolve("Underline case Reader test.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Underline case Reader test.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<User> list = reader.sheet(0).forceImport().dataRows().map(row -> row.to(User.class)).collect(Collectors.toList());
             assertEquals(list.size(), 2);
             assertEquals("0: null", list.get(0).toString());
@@ -241,9 +244,10 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testEmptyBindObj() throws IOException {
-        new Workbook().addSheet(new ListSheet<>()).writeTo(defaultTestPath.resolve("empty.xlsx"));
+        final String fileName = "empty.xlsx";
+        new Workbook().addSheet(new ListSheet<>()).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("empty.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet = reader.sheet(0);
             List<U> list = sheet.header(1, 2).bind(U.class).rows().map(row -> (U) row.get()).collect(Collectors.toList());
             assertTrue(list.isEmpty());
@@ -258,6 +262,7 @@ public class ExcelReaderTest2 {
 
     @Ignore
     @Test public void test200w() throws IOException {
+        final String fileName = "200w.xlsx";
         final int row_len = 2_000_000;
         // 0: 写入数据总行数
         // 1: nv大于1w的行数
@@ -270,13 +275,13 @@ public class ExcelReaderTest2 {
                 if (i < row_len) {
                     list = E.data();
                     expect[0] += list.size();
-                    expect[1] += list.stream().filter(e -> e.nv > 10000).count();
+                    expect[1] += (int) list.stream().filter(e -> e.nv > 10000).count();
                 }
                 return list;
             }))
-            .writeTo(defaultTestPath.resolve("200w.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("200w.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             long count = reader.sheets().flatMap(Sheet::dataRows).count();
             assertEquals(count, expect[0]);
             long count1w = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.getInt(0)).filter(i -> i > 10000).count();
@@ -285,13 +290,14 @@ public class ExcelReaderTest2 {
     }
 
     @Test public void testEntryMissKey() throws IOException {
+        final String fileName = "test entry miss key.xlsx";
         List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData(10);
         new Workbook().addSheet(new ListSheet<ListObjectSheetTest.Item>(
                 new Column("id"), new Column("name"))
                 .setData(expectList))
-            .writeTo(defaultTestPath.resolve("test entry miss key.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test entry miss key.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<ListObjectSheetTest.Item> list = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
             assertTrue(listEquals(list, expectList));
         }

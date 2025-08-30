@@ -188,6 +188,7 @@ public class CsvToExcelTest extends WorkbookTest {
     }
 
     @Test public void testWriterCharsetGBK() throws IOException {
+        final String fileName = "write-with-gbk.xlsx";
         String[] expectList = {"中文", "123"};
         Path distPath = getOutputTestPath().resolve("write-with-gbk.csv");
         try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, Charset.forName("GBK"))) {
@@ -204,9 +205,9 @@ public class CsvToExcelTest extends WorkbookTest {
         }
 
         // CSV to Excel
-        new Workbook().addSheet(new CSVSheet(distPath).setCharset(Charset.forName("GBK")).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-gbk.xlsx"));
+        new Workbook().addSheet(new CSVSheet(distPath).setCharset(Charset.forName("GBK")).ignoreHeader()).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-gbk.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
             assertTrue(iter.hasNext());
             Row row = iter.next();
@@ -217,6 +218,7 @@ public class CsvToExcelTest extends WorkbookTest {
     }
 
     @Test public void testUTF8BOM() throws IOException {
+        final String fileName = "write-with-utf8-bom.xlsx";
         String[] expectList = {"中文", "123"};
         Path distPath = getOutputTestPath().resolve("write-with-utf8-bom.csv");
         try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, StandardCharsets.UTF_8).writeWithBom()) {
@@ -240,9 +242,9 @@ public class CsvToExcelTest extends WorkbookTest {
         }
 
         // CSV to Excel
-        new Workbook().addSheet(new CSVSheet(distPath).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-utf8-bom.xlsx"));
+        new Workbook().addSheet(new CSVSheet(distPath).ignoreHeader()).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-utf8-bom.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
             assertTrue(iter.hasNext());
             Row row = iter.next();
@@ -253,6 +255,7 @@ public class CsvToExcelTest extends WorkbookTest {
     }
 
     @Test public void testUTF16BEBOM() throws IOException {
+        final String fileName = "write-with-utf16BE-bom.xlsx";
         String[] expectList = {"中文", "123"};
         Path distPath = getOutputTestPath().resolve("write-with-utf16BE-bom.csv");
         try (CSVUtil.Writer writer = CSVUtil.newWriter(distPath, StandardCharsets.UTF_16BE).writeWithBom()) {
@@ -276,9 +279,9 @@ public class CsvToExcelTest extends WorkbookTest {
         }
 
         // CSV to Excel
-        new Workbook().addSheet(new CSVSheet(distPath).setCharset(StandardCharsets.UTF_16BE).ignoreHeader()).writeTo(defaultTestPath.resolve("write-with-utf16BE-bom.xlsx"));
+        new Workbook().addSheet(new CSVSheet(distPath).setCharset(StandardCharsets.UTF_16BE).ignoreHeader()).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("write-with-utf16BE-bom.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).rows().iterator();
             assertTrue(iter.hasNext());
             Row row = iter.next();
@@ -290,6 +293,7 @@ public class CsvToExcelTest extends WorkbookTest {
 
     @Ignore
     @Test public void testIah94s() throws IOException {
+        final String fileName = "3343494.xlsx";
         try (CSVUtil.Writer writer = CSVUtil.newWriter(defaultTestPath.resolve("3343494.csv"))) {
             writer.write("ID");
             writer.write("NAME");
@@ -306,10 +310,10 @@ public class CsvToExcelTest extends WorkbookTest {
 
         new Workbook()
                 .addSheet(new CSVSheet(defaultTestPath.resolve("3343494.csv")))
-                .writeTo(defaultTestPath.resolve("3343494.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
         AtomicInteger oi = new AtomicInteger(0);
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("3343494.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             boolean noneMatch = reader.sheets().flatMap(Sheet::dataRows).noneMatch(row -> {
                 int i = oi.getAndIncrement();
                 return row.getInt(0) == i && ("ab" + i).equals(row.getString(1));
