@@ -103,7 +103,7 @@ public class Column {
     /**
      * 表格头的样式索引, -1表示未设置
      */
-    public int headerStyleIndex = -1, globalStyleIndex = -1;;
+    public int headerStyleIndex = -1, globalStyleIndex = -1;
     /**
      * 列宽，表头行高
      */

@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -754,4 +755,24 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testSpecifyCoordinateWrite() throws SQLException, IOException {
+        final String fileName = "test specify coordinate D4 ResultSheet.xlsx";
+        try (
+            Connection con = getConnection();
+            PreparedStatement ps = con.prepareStatement("select * from types_test");
+            ResultSet rs = ps.executeQuery()
+        ) {
+            new Workbook()
+                .addSheet(new ResultSetSheet(rs).setStartCoordinate("D4"))
+                .writeTo(defaultTestPath.resolve(fileName));
+        }
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            org.ttzero.excel.reader.Row firstRow = iter.next();
+            assertNotNull(firstRow);
+            assertEquals(firstRow.getRowNum(), 4);
+            assertEquals(firstRow.getFirstColumnIndex(), 3);
+        }
+    }
 }

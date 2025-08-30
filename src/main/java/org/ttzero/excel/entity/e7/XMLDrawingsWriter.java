@@ -121,6 +121,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     public void writeTo(Path root) throws IOException { }
 
     static final String[] ANCHOR_PROPERTY = {"twoCell", "oneCell", "absolute"};
+    static final short[] DEFAULT_PADDING = {0, 0, 0, 0};
 
     @Override
     public void drawing(Picture picture) throws IOException {
@@ -134,6 +135,13 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             bw.write("<xdr:twoCellAnchor editAs=\"");
             bw.write(ANCHOR_PROPERTY[editAs]);
             bw.write("\">");
+        }
+
+        if (picture.padding == null) {
+            picture.padding = DEFAULT_PADDING;
+        }
+        else if (picture.padding.length < 4) {
+            picture.padding = Arrays.copyOf(picture.padding, 4);
         }
 
         // From
