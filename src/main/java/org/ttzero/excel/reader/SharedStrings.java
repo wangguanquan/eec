@@ -701,8 +701,7 @@ public class SharedStrings implements Closeable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max
-                , (total > 0 ? (total - max) * 100.0 / total : 0));
+            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max, Math.max(total - max, 0) * 100.0 / total);
             LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
