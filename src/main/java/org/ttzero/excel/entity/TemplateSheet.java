@@ -17,7 +17,6 @@
 
 package org.ttzero.excel.entity;
 
-import org.slf4j.Logger;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.ColorIndex;
