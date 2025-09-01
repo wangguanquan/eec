@@ -21,6 +21,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.Closeable;
@@ -158,7 +159,7 @@ public interface IWorkbookWriter extends Storable, Closeable {
                     } else {
                         pomPath = targetPath.getParent().resolve("pom.xml");
                         // load workbook.xml
-                        SAXReader reader = SAXReader.createDefault();
+                        SAXReader reader = SAXReaderUtil.createDefault();
                         Document document;
                         try {
                             document = reader.read(Files.newInputStream(pomPath));

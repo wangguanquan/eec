@@ -27,6 +27,7 @@ import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.util.ExtBufferedWriter;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -254,7 +255,7 @@ public class Comments implements Storable, Closeable {
     public static Map<Long, Comment> parseComments(InputStream commentEntry, InputStream vmlEntry) throws IOException {
         // FIXME 目前使用dom4j解析，如果批注较多时耗时和内存将增大增
         if (commentEntry == null) return Collections.emptyMap();
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         List<Element> comments = null;
         try {
             Document document = reader.read(commentEntry);

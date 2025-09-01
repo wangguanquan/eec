@@ -522,7 +522,8 @@ public class Border implements Cloneable {
         if (ele == null) {
             return new ArrayList<>();
         }
-        return ele.elements().stream().map(Border::parseBorderTag).collect(Collectors.toList());
+        List<Element> elements = ele.elements();
+        return elements.stream().map(Border::parseBorderTag).collect(Collectors.toList());
     }
 
     static Border parseBorderTag(Element tag) {

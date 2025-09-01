@@ -30,6 +30,7 @@ import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.validation.Validation;
 
@@ -435,7 +436,7 @@ public class XMLSheet implements Sheet {
             String fileName = path.substring(i + 1);
             ZipEntry entry = getEntry(zipFile, "xl/worksheets/_rels/" + fileName + ".rels");
             if (entry != null) {
-                SAXReader reader = SAXReader.createDefault();
+                SAXReader reader = SAXReaderUtil.createDefault();
                 try {
                     Document document = reader.read(zipFile.getInputStream(entry));
                     List<Element> list = document.getRootElement().elements();
@@ -1266,7 +1267,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 
     /* Parse `calcChain` */
     static long[][] parseCalcChain(InputStream is) {
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Element calcChain;
         try {
             calcChain = reader.read(is).getRootElement();
