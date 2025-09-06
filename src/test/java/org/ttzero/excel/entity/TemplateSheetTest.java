@@ -97,6 +97,44 @@ public class TemplateSheetTest extends WorkbookTest {
             }
         }
         workbook.writeTo(getOutputTestPath().resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            {
+                FullSheet number2ExcelSheet1 = reader.sheet("Number2Excel$Sheet1").asFullSheet();
+                assertNotNull(number2ExcelSheet1);
+                Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row row3 = iter.next();
+                assertEquals("8", row3.getString(1));
+                assertEquals("(A3+A4)+1", row3.getFormula(1));
+                assertEquals("55", row3.getString(2));
+                assertEquals("SUM(A1:A10)", row3.getFormula(2));
+                assertEquals("C3/0", row3.getFormula(3));
+            }
+
+            {
+                FullSheet number2ExcelSheet3 = reader.sheet("Number2Excel$Sheet3").asFullSheet();
+                Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext()); iter.next();
+                assertTrue(iter.hasNext());
+                org.ttzero.excel.reader.Row row13 = iter.next();
+                assertEquals("1", row13.getString(1));
+                assertEquals("B11", row13.getFormula(1));
+            }
+        }
     }
 
     @Test public void testSimpleTemplate() throws IOException {

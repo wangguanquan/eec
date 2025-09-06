@@ -209,11 +209,11 @@ public class XMLRow extends Row {
                 for (; cb[cursor] != '"'; cursor++) ;
                 if ((n = cursor - a) == 1) {
                     t = cb[a]; // s, n, b
-                } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
-                    t = FUNCTION; // function string
                 } else if (n == 9 && cb[a] == 'i' && cb[a + 1] == 'n'
                     && cb[a + 2] == 'l' && cb[a + 6] == 'S' && cb[a + 8] == 'r') {
                     t = INLINESTR; // inlineStr
+                } else if (n == 3 && cb[a] == 's' && cb[a + 1] == 't' && cb[a + 2] == 'r') {
+                    t = FUNCTION; // function string
                 }
                 // -> Other unknown case
             }
@@ -565,7 +565,7 @@ class XMLFullRow extends XMLRow {
      */
     protected void subParseCellValue(Cell cell) {
         // Parse calc
-        if (cell.f) parseCalcFunc(cell);
+        parseCalcFunc(cell);
 
         // Parse value
         super.parseCellValue(cell);
