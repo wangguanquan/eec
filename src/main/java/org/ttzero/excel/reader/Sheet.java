@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -443,23 +443,23 @@ public interface Sheet extends Closeable {
      */
     Sheet asSheet();
 
-    /**
-     * 将工作表转为{@code CalcSheet}以解析单元格公式
-     *
-     * @return {@link CalcSheet}
-     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code CalcSheet}所有功能
-     */
-    @Deprecated
-    CalcSheet asCalcSheet();
-
-    /**
-     * 将工作表转为{@code MergeSheet}，它将复制合并单元格的首坐标值到合并范围内的其它单元格中
-     *
-     * @return {@link MergeSheet}
-     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code MergeSheet}所有功能
-     */
-    @Deprecated
-    MergeSheet asMergeSheet();
+//    /**
+//     * 将工作表转为{@code CalcSheet}以解析单元格公式
+//     *
+//     * @return {@link CalcSheet}
+//     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code CalcSheet}所有功能
+//     */
+//    @Deprecated
+//    CalcSheet asCalcSheet();
+//
+//    /**
+//     * 将工作表转为{@code MergeSheet}，它将复制合并单元格的首坐标值到合并范围内的其它单元格中
+//     *
+//     * @return {@link MergeSheet}
+//     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code MergeSheet}所有功能
+//     */
+//    @Deprecated
+//    MergeSheet asMergeSheet();
 
     /**
      * 将工作表转为{@code FullSheet}支持全属性读取
