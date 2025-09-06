@@ -33,7 +33,7 @@ import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
-import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.Watermark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
@@ -384,8 +384,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
             }
 
-            // Add water marker
-            WaterMark wm = sheet.getWaterMark();
+            // Add watermark
+            Watermark wm = sheet.getWatermark();
             if (wm != null && wm.canWrite()) {
                 contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
             }
@@ -432,10 +432,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     @Override
     public void close() throws IOException {
         for (Sheet sheet : workbook.getSheets()) {
-            if (sheet != null && sheet.getWaterMark() != null)
-                sheet.getWaterMark().delete();
+            if (sheet != null && sheet.getWatermark() != null)
+                sheet.getWatermark().delete();
         }
-        if (workbook.getWaterMark() != null) workbook.getWaterMark().delete() ; // Delete template image
+        if (workbook.getWatermark() != null) workbook.getWatermark().delete() ; // Delete template image
         workbook.getSharedStrings().close();
     }
 

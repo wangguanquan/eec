@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 水印
      */
-    protected WaterMark waterMark;
+    protected Watermark watermark;
     /**
      * 关系管理器
      */
@@ -322,8 +322,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns 表头信息
      */
     public Sheet(final Column... columns) {
-        this.columns = columns;
-        relManager = new RelManager();
+        this(null, columns);
     }
 
     /**
@@ -333,21 +332,23 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param columns 表头信息
      */
     public Sheet(String name, final Column... columns) {
-        this(name, null, columns);
+        this.name = name;
+        this.columns = columns;
+        relManager = new RelManager();
     }
 
     /**
      * 实例化工作表并指定工作表名称，水印和表头信息
      *
      * @param name      工作表名称
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
+     * @deprecated 使用场景极少，后续版本将删除
      */
-    public Sheet(String name, WaterMark waterMark, final Column... columns) {
-        this.name = name;
-        this.columns = columns;
-        this.waterMark = waterMark;
-        relManager = new RelManager();
+    @Deprecated
+    public Sheet(String name, Watermark watermark, final Column... columns) {
+        this(name, columns);
+        this.watermark = watermark;
     }
 
     /**
@@ -989,21 +990,31 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 获取水印
      *
-     * @return 水印对象 {@link WaterMark}
+     * @return 水印对象 {@link Watermark}
      */
-    public WaterMark getWaterMark() {
-        return waterMark;
+    public Watermark getWatermark() {
+        return watermark;
     }
 
     /**
      * 设置水印，优先级高于Workbook中的全局水印
      *
-     * @param waterMark 水印对象 {@link WaterMark}
+     * @param watermark 水印对象 {@link Watermark}
      * @return 当前工作表
      */
-    public Sheet setWaterMark(WaterMark waterMark) {
-        this.waterMark = waterMark;
+    public Sheet setWatermark(Watermark watermark) {
+        this.watermark = watermark;
         return this;
+    }
+
+    @Deprecated
+    public Watermark getWaterMark() {
+        return getWatermark();
+    }
+
+    @Deprecated
+    public Sheet setWaterMark(Watermark watermark) {
+        return setWatermark(watermark);
     }
 
     /**

@@ -1018,7 +1018,7 @@ public class TemplateSheet extends Sheet {
                 this.pictures = pictures.size() > 1 || !pictures.get(0).isBackground() ? new ArrayList<>(pictures.size()) : null;
                 for (Drawings.Picture p : pictures) {
                     if (FileUtil.exists(p.getLocalPath())) {
-                        if (p.isBackground()) setWaterMark(WaterMark.of(p.getLocalPath()));
+                        if (p.isBackground()) setWatermark(Watermark.of(p.getLocalPath()));
                         else this.pictures.add(p);
                     }
                 }

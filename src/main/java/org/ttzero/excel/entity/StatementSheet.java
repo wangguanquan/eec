@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,11 +94,13 @@ public class StatementSheet extends ResultSetSheet {
      * 实例化工作表并指定工作表名称，水印和表头信息
      *
      * @param name      工作表名称
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
+     * @deprecated 使用场景极少，后续版本将删除
      */
-    public StatementSheet(String name, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
+    @Deprecated
+    public StatementSheet(String name, Watermark watermark, final Column... columns) {
+        super(name, watermark, columns);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,11 +137,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testStringWaterMark() throws IOException {
-        String fileName = "object string water mark.xlsx";
+    @Test public void testStringWatermark() throws IOException {
+        String fileName = "object string watermark.xlsx";
         List<Item> expectList = Item.randomTestData();
         new Workbook()
-            .setWaterMark(WaterMark.of("SECRET"))
+            .setWatermark(Watermark.of("SECRET"))
             .addSheet(new ListSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
@@ -159,11 +159,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testLocalPicWaterMark() throws IOException {
-        String fileName = "object local pic water mark.xlsx";
+    @Test public void testLocalPicWatermark() throws IOException {
+        String fileName = "object local pic watermark.xlsx";
         List<Item> expectList = Item.randomTestData();
         new Workbook()
-            .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
+            .setWatermark(Watermark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(new ListSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
@@ -184,11 +184,11 @@ public class ListObjectSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testStreamWaterMark() throws IOException {
-        String fileName = "object input stream water mark.xlsx";
+    @Test public void testStreamWatermark() throws IOException {
+        String fileName = "object input stream watermark.xlsx";
         List<Item> expectList = Item.randomTestData();
         new Workbook()
-            .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
+            .setWatermark(Watermark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(new ListSheet<>(expectList))
             .writeTo(defaultTestPath.resolve(fileName));
 
@@ -508,10 +508,10 @@ public class ListObjectSheetTest extends WorkbookTest {
         List<Item> expectList = Item.randomTestData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListSheet<Item>("Item", WaterMark.of(author)
+            .addSheet(new ListSheet<Item>("Item"
                 , new Column("ID", "id")
                 , new Column("NAME", "name"))
-                .setData(expectList))
+                .setData(expectList).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -619,9 +619,8 @@ public class ListObjectSheetTest extends WorkbookTest {
         new Workbook()
             .setAutoSize(true)
             .addSheet(new ListSheet<>(expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -642,9 +641,8 @@ public class ListObjectSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new ListSheet<>("ITEM"
                 , expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -872,7 +870,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test public void testIgnoreSupperMethod() throws IOException {
         final String fileName = "忽略父类属性.xlsx";
         new Workbook()
-            .setWaterMark(WaterMark.of(author))
+            .setWatermark(Watermark.of(author))
             .addSheet(new ListSheet<Student>("重写方法注解", Collections.singletonList(new ExtStudent(9527, author, 0))))
             .writeTo(defaultTestPath.resolve(fileName));
 

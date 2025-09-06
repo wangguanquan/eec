@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,11 @@
 
 package org.ttzero.excel.entity;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.ttzero.excel.util.FileSignatures;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -38,11 +41,15 @@ import java.nio.file.StandardCopyOption;
  *
  * @author guanquan.wang at 2018-01-26 15:23
  */
-public class WaterMark {
+public class Watermark {
+    /**
+     * LOGGER
+     */
+    private final static Logger LOGGER = LoggerFactory.getLogger(Watermark.class);
     /**
      * 水印图片临时路径
      */
-    private final Path imagePath;
+    private Path imagePath;
     /**
      * 标记是否为临时创建，文本和InputStream流时为true
      */
@@ -50,16 +57,18 @@ public class WaterMark {
     /**
      * 水印图片签名
      */
-    private final FileSignatures.Signature signature;
+    private FileSignatures.Signature signature;
+    /**
+     * 水印文本
+     */
+    private String txt;
     /**
      * 使用一段文本创建水印
      *
      * @param word 一段有意义的文本
      */
-    public WaterMark(String word) {
-        imagePath = createWaterMark(word);
-        // 水印由内部制作所以这里不需要检查签名
-        signature = new FileSignatures.Signature("png", FileSignatures.whitelist.getOrDefault("png", "image/png"), 510, 300);
+    public Watermark(String word) {
+        this.txt = word;
     }
 
     /**
@@ -67,9 +76,8 @@ public class WaterMark {
      *
      * @param imagePath 图片的本地文件
      */
-    public WaterMark(Path imagePath) {
+    public Watermark(Path imagePath) {
         this.imagePath = imagePath;
-        signature = FileSignatures.test(imagePath);
     }
 
     /**
@@ -78,10 +86,9 @@ public class WaterMark {
      * @param inputStream 图片流
      * @throws IOException 读取流异常
      */
-    public WaterMark(InputStream inputStream) throws IOException {
+    public Watermark(InputStream inputStream) throws IOException {
         imagePath = createTemp();
         Files.copy(inputStream, imagePath, StandardCopyOption.REPLACE_EXISTING);
-        signature = FileSignatures.test(imagePath);
     }
 
     /**
@@ -90,6 +97,7 @@ public class WaterMark {
      * @return 水印图片临时路径，
      */
     public Path get() {
+        init();
         // 非白名单图片格式返回null
         return canWrite() ? imagePath : null;
     }
@@ -100,29 +108,29 @@ public class WaterMark {
      * @param mark 文本
      * @return 水印对象
      */
-    public static WaterMark of(String mark) {
-        return new WaterMark(mark);
+    public static Watermark of(String mark) {
+        return new Watermark(mark);
     }
 
     /**
      * 使用本地图片创建水印
      *
      * @param path 图片的本地文件
-     * @return 水印对象WaterMark
+     * @return 水印对象Watermark
      */
-    public static WaterMark of(Path path) {
-        return new WaterMark(path);
+    public static Watermark of(Path path) {
+        return new Watermark(path);
     }
 
     /**
      * 使用图片流创建水印，可以下载远程图片创建水印
      *
      * @param is 图片流
-     * @return 水印对象WaterMark
+     * @return 水印对象Watermark
      * @throws IOException 读取流异常
      */
-    public static WaterMark of(InputStream is) throws IOException {
-        return new WaterMark(is);
+    public static Watermark of(InputStream is) throws IOException {
+        return new Watermark(is);
     }
 
     /**
@@ -131,7 +139,7 @@ public class WaterMark {
      * @param watermark 一段有意义的文本
      * @return the temp image path
      */
-    private Path createWaterMark(String watermark) {
+    private Path createWatermark(String watermark) {
         try {
             Path temp = createTemp();
             int width = 510;
@@ -159,8 +167,10 @@ public class WaterMark {
             ImageIO.write(bi, "png", temp.toFile());
             return temp;
         } catch (IOException e) {
-            throw new ExcelWriteException("创建水印失败.", e);
+            // Ignore
+            LOGGER.error("Create watermark error.", e);
         }
+        return null;
     }
 
     /**
@@ -171,7 +181,7 @@ public class WaterMark {
      */
     private Path createTemp() throws IOException {
         temp = true;
-        return Files.createTempFile("waterMark", "png");
+        return Files.createTempFile("eec+watermark", "png");
     }
 
     /**
@@ -190,6 +200,7 @@ public class WaterMark {
      * @return 水印图片后缀
      */
     public String getSuffix() {
+        init();
         return "." + signature.extension;
     }
 
@@ -199,6 +210,7 @@ public class WaterMark {
      * @return Content-type
      */
     public String getContentType() {
+        init();
         return signature.contentType;
     }
 
@@ -208,6 +220,15 @@ public class WaterMark {
      * @return true: 资源可信任输出到Excel
      */
     public boolean canWrite() {
+        init();
         return signature.isTrusted();
+    }
+
+    private void init() {
+        if (signature == null) {
+            if (imagePath == null && StringUtil.isNotEmpty(txt)) imagePath = createWatermark(txt);
+            if (imagePath != null && signature == null) signature = FileSignatures.test(imagePath);
+            if (signature == null) signature = new FileSignatures.Signature(null, "image/unknown");
+        }
     }
 }

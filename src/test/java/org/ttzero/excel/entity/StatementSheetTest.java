@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -581,8 +581,8 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 sql = "select id, name, age, create_date, update_date from student limit 10";
 
             new Workbook()
-                .addSheet(new StatementSheet("Student", WaterMark.of(author))
-                    .setStatement(con.prepareStatement(sql)))
+                .addSheet(new StatementSheet("Student")
+                    .setStatement(con.prepareStatement(sql)).setWatermark(Watermark.of(author)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps = con.prepareStatement(sql);
@@ -627,11 +627,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
                 sql = "select id, name, age, create_date, update_date from student limit 10";
 
             new Workbook()
-                .addSheet(new StatementSheet("Student", WaterMark.of(author)
+                .addSheet(new StatementSheet("Student"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class))
-                    .setStatement(con.prepareStatement(sql)))
+                    .setStatement(con.prepareStatement(sql)).setWatermark(Watermark.of(author)))
                 .writeTo(defaultTestPath.resolve(fileName).toFile());
 
             PreparedStatement ps = con.prepareStatement(sql);
@@ -669,7 +669,7 @@ public class StatementSheetTest extends SQLWorkbookTest {
 
             new Workbook()
                 .addSheet(new StatementSheet(con, sql)
-                    .setWaterMark(WaterMark.of("TEST"))
+                    .setWatermark(Watermark.of("TEST"))
                     .cancelZebraLine()
                 )
                 .writeTo(defaultTestPath.resolve(fileName));

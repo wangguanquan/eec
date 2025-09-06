@@ -100,7 +100,7 @@ public class Workbook implements Storable {
     /**
      * 水印
      */
-    private WaterMark waterMark;
+    private Watermark watermark;
     /**
      * 记录工作表几数
      */
@@ -288,23 +288,33 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 获取水印{@link WaterMark}
+     * 获取水印{@link Watermark}
      *
      * @return 水印
      */
-    public WaterMark getWaterMark() {
-        return waterMark;
+    public Watermark getWatermark() {
+        return watermark;
     }
 
     /**
-     * 设置水印{@link WaterMark}，可以使用{@link WaterMark#of}静态方法创建
+     * 设置水印{@link Watermark}，可以使用{@link Watermark#of}静态方法创建
      *
-     * @param waterMark 水印
+     * @param watermark 水印
      * @return 当前工作薄
      */
-    public Workbook setWaterMark(WaterMark waterMark) {
-        this.waterMark = waterMark;
+    public Workbook setWatermark(Watermark watermark) {
+        this.watermark = watermark;
         return this;
+    }
+
+    @Deprecated
+    public Watermark getWaterMark() {
+        return getWatermark();
+    }
+
+    @Deprecated
+    public Workbook setWaterMark(Watermark watermark) {
+        return setWatermark(watermark);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.MultiHeaderColumnsTest;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.TooManyColumnsException;
-import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.Watermark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.entity.WorkbookTest;
 import org.ttzero.excel.entity.style.Fill;
@@ -170,7 +170,7 @@ public class ListObjectSheetTest extends WorkbookTest {
     @Test
     public void testStyleConversion1() throws IOException {
         new Workbook()
-            .setWaterMark(WaterMark.of(author))
+            .setWatermark(Watermark.of(author))
             .addSheet(new ListSheet<>("期末成绩", Student.randomTestData()
                     , new Column("学号", "id")
                     , new Column("姓名", "name")

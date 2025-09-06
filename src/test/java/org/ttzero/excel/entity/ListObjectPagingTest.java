@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,11 +94,11 @@ public class ListObjectPagingTest extends WorkbookTest {
         }
     }
 
-    @Test public void testStringWaterMark() throws IOException {
-        String fileName = "paging string water mark.xlsx";
+    @Test public void testStringWatermark() throws IOException {
+        String fileName = "paging string watermark.xlsx";
         List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData();
         Workbook workbook = new Workbook()
-            .setWaterMark(WaterMark.of("SECRET"))
+            .setWatermark(Watermark.of("SECRET"))
             .addSheet(new ListSheet<>(expectList))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
@@ -125,11 +125,11 @@ public class ListObjectPagingTest extends WorkbookTest {
         }
     }
 
-    @Test public void testLocalPicWaterMark() throws IOException {
-        String fileName = "paging local pic water mark.xlsx";
+    @Test public void testLocalPicWatermark() throws IOException {
+        String fileName = "paging local pic watermark.xlsx";
         List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData();
         Workbook workbook = new Workbook()
-            .setWaterMark(WaterMark.of(testResourceRoot().resolve("mark.png")))
+            .setWatermark(Watermark.of(testResourceRoot().resolve("mark.png")))
             .addSheet(new ListSheet<>(expectList))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
@@ -156,11 +156,11 @@ public class ListObjectPagingTest extends WorkbookTest {
         }
     }
 
-    @Test public void testStreamWaterMark() throws IOException {
-        String fileName = "paging input stream water mark.xlsx";
+    @Test public void testStreamWatermark() throws IOException {
+        String fileName = "paging input stream watermark.xlsx";
         List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData();
         Workbook workbook = new Workbook()
-            .setWaterMark(WaterMark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
+            .setWatermark(Watermark.of(getClass().getClassLoader().getResourceAsStream("mark.png")))
             .addSheet(new ListSheet<>(expectList))
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));

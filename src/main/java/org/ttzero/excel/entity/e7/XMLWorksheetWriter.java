@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
-import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.Watermark;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -1458,10 +1458,15 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // 背景图片
-        writeWaterMark();
+        writeWatermark();
 
         // 扩展节点
         writeExtList(extList);
+    }
+
+    @Deprecated
+    protected void writeWaterMark() throws IOException {
+        writeWatermark();
     }
 
     /**
@@ -1469,18 +1474,18 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @throws IOException 无权限或磁盘空间不足
      */
-    protected void writeWaterMark() throws IOException {
-        WaterMark waterMark = sheet.getWaterMark();
-        if (waterMark == null || !waterMark.canWrite()) {
-            waterMark = sheet.getWorkbook().getWaterMark();
-            sheet.setWaterMark(waterMark);
+    protected void writeWatermark() throws IOException {
+        Watermark watermark = sheet.getWatermark();
+        if (watermark == null || !watermark.canWrite()) {
+            watermark = sheet.getWorkbook().getWatermark();
+            sheet.setWatermark(watermark);
         }
-        if (waterMark != null && waterMark.canWrite()) {
+        if (watermark != null && watermark.canWrite()) {
             Path media = workSheetPath.getParent().resolve("media");
             if (!exists(media)) Files.createDirectory(media);
-            Path image = media.resolve("image" + sheet.getWorkbook().incrementMediaCounter() + waterMark.getSuffix());
+            Path image = media.resolve("image" + sheet.getWorkbook().incrementMediaCounter() + watermark.getSuffix());
 
-            Files.copy(waterMark.get(), image);
+            Files.copy(watermark.get(), image);
             Relationship r = new Relationship("../media/" + image.getFileName(), Const.Relationship.IMAGE);
             sheet.addRel(r);
 

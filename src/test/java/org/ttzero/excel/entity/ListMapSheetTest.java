@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -360,7 +360,7 @@ public class ListMapSheetTest extends WorkbookTest {
         List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet<>("Map", WaterMark.of(author)
+            .addSheet(new ListMapSheet<>("Map"
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -376,7 +376,7 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("LocalDate", "ldv", LocalDate.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Column("LocalTime", "ltv", LocalTime.class))
-                .setData(expectList))
+                .setData(expectList).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -463,9 +463,8 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook()
             .setAutoSize(true)
             .addSheet(new ListMapSheet<>(expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -493,9 +492,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new ListMapSheet<>("MAP"
                 , expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id", int.class)
-                , new Column("NAME", "name", String.class)))
+                , new Column("NAME", "name", String.class)).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {

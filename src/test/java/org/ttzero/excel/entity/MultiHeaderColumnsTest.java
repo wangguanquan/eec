@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
     @Test public void testRepeatAnnotations() throws IOException {
         final String fileName = "Repeat Columns Annotation.xlsx";
         List<RepeatableEntry> list = RepeatableEntry.randomTestData();
-        new Workbook().setWaterMark(WaterMark.of("勿外传"))
+        new Workbook().setWatermark(Watermark.of("勿外传"))
             .setAutoSize(true)
             .addSheet(new ListSheet<>(list))
             .writeTo(defaultTestPath.resolve(fileName));

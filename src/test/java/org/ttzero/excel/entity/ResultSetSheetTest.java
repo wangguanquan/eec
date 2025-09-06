@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -284,13 +284,13 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook()
-                .addSheet(new ResultSetSheet("Student", WaterMark.of(author)
+                .addSheet(new ResultSetSheet("Student"
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                     , new Column("CREATE_DATE", Timestamp.class)
                     , new Column("UPDATE_DATE", Timestamp.class)
-                ).setResultSet(rs))
+                ).setResultSet(rs).setWatermark(Watermark.of(author)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement(sql);
@@ -510,13 +510,13 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook()
-                .addSheet(new ResultSetSheet(rs, WaterMark.of(author)
+                .addSheet(new ResultSetSheet(rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                     , new Column("CREATE_DATE", Timestamp.class)
                     , new Column("UPDATE_DATE", Timestamp.class)
-                ))
+                ).setWatermark(Watermark.of(author)))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement(sql);
@@ -561,13 +561,13 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook()
-                .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
+                .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", int.class)
                     , new Column("NAME", String.class)
                     , new Column("AGE", int.class)
                     , new Column("CREATE_DATE", Timestamp.class)
                     , new Column("UPDATE_DATE", Timestamp.class)
-                ))
+                )).setWatermark(Watermark.of(author))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement(sql);
@@ -612,13 +612,13 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
             ResultSet rs = ps.executeQuery()
         ) {
             new Workbook("test ResultSet different type from metadata", author)
-                .addSheet(new ResultSetSheet("Student", rs, WaterMark.of(author)
+                .addSheet(new ResultSetSheet("Student", rs
                     , new Column("ID", String.class)  // Integer in database
                     , new Column("NAME", String.class)
                     , new Column("AGE", String.class) // // Integer in database
                     , new Column("CREATE_DATE", String.class)
                     , new Column("UPDATE_DATE", String.class)
-                ))
+                )).setWatermark(Watermark.of(author))
                 .writeTo(defaultTestPath.resolve(fileName));
 
             PreparedStatement ps1 = con.prepareStatement(sql);
