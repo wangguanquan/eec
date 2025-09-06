@@ -586,6 +586,7 @@ class XMLFullRow extends XMLRow {
      * @param cell current {@link Cell}
      */
     void parseCalcFunc(Cell cell) {
+        if (cell.t == UNALLOCATED) return;
         int _cursor = cursor, a = getF(cell);
         // Reset the formula flag
         cell.f = a < cursor || cell.si >= 0;
