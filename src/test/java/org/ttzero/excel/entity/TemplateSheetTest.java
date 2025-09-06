@@ -56,6 +56,7 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
@@ -100,39 +101,108 @@ public class TemplateSheetTest extends WorkbookTest {
 
         try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
             {
-                FullSheet number2ExcelSheet1 = reader.sheet("Number2Excel$Sheet1").asFullSheet();
+                FullSheet number2ExcelSheet1 = reader.sheet("Number2Excel.xlsx$Sheet1").asFullSheet();
                 assertNotNull(number2ExcelSheet1);
-                Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext());
-                org.ttzero.excel.reader.Row row3 = iter.next();
-                assertEquals("8", row3.getString(1));
-                assertEquals("(A3+A4)+1", row3.getFormula(1));
-                assertEquals("55", row3.getString(2));
-                assertEquals("SUM(A1:A10)", row3.getFormula(2));
-                assertEquals("C3/0", row3.getFormula(3));
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 3:
+                            assertEquals("8", row.getString(1));
+                            assertEquals("(A3+A4)+1", row.getFormula(1));
+                            assertEquals("55", row.getString(2));
+                            assertEquals("SUM(A1:A10)", row.getFormula(2));
+                            assertEquals("C3/0", row.getFormula(3));
+                            break;
+                        case 11:
+                            assertEquals("11", row.getString(0));
+                            assertEquals("12", row.getString(1));
+                            assertEquals("A11+1", row.getFormula(1));
+                            assertEquals("B11+1", row.getFormula(2));
+                            assertEquals("C11+1", row.getFormula(3));
+                            assertEquals("D11+1", row.getFormula(4));
+                            assertEquals("E11+1", row.getFormula(5));
+                            assertEquals("F11+1", row.getFormula(6));
+                            assertEquals("G11+1", row.getFormula(7));
+                            assertEquals("H11+1", row.getFormula(8));
+                            assertEquals("I11+1", row.getFormula(9));
+                            break;
+                        default:
+                    }
+                }
             }
 
             {
-                FullSheet number2ExcelSheet3 = reader.sheet("Number2Excel$Sheet3").asFullSheet();
-                Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext()); iter.next();
-                assertTrue(iter.hasNext());
-                org.ttzero.excel.reader.Row row13 = iter.next();
-                assertEquals("1", row13.getString(1));
-                assertEquals("B11", row13.getFormula(1));
+                FullSheet number2ExcelSheet3 = reader.sheet("Number2Excel.xlsx$Sheet3").asFullSheet();
+                assertNotNull(number2ExcelSheet3);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 13:
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            break;
+                        case 17:
+                            assertNull(row.getString(0));
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            assertEquals("0", row.getString(2));
+                            assertEquals("C11", row.getFormula(2));
+                            break;
+                        default:
+                    }
+                }
+            }
+
+            {
+                FullSheet number2ExcelSheet1 = reader.sheet("formula.xlsx$Sheet1").asFullSheet();
+                assertNotNull(number2ExcelSheet1);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 3:
+                            assertEquals("8", row.getString(1));
+                            assertEquals("(A3+A4)+1", row.getFormula(1));
+                            assertEquals("55", row.getString(2));
+                            assertEquals("SUM(A1:A10)", row.getFormula(2));
+                            break;
+                        case 11:
+                            assertEquals("11", row.getString(0));
+                            assertEquals("12", row.getString(1));
+                            assertEquals("A11+1", row.getFormula(1));
+                            assertEquals("B11+1", row.getFormula(2));
+                            assertEquals("C11+1", row.getFormula(3));
+                            assertEquals("D11+1", row.getFormula(4));
+                            assertEquals("E11+1", row.getFormula(5));
+                            assertEquals("F11+1", row.getFormula(6));
+                            assertEquals("G11+1", row.getFormula(7));
+                            assertEquals("H11+1", row.getFormula(8));
+                            assertEquals("I11+1", row.getFormula(9));
+                            break;
+                        default:
+                    }
+                }
+            }
+
+            {
+                FullSheet number2ExcelSheet3 = reader.sheet("formula.xlsx$Sheet3").asFullSheet();
+                assertNotNull(number2ExcelSheet3);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 13:
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            break;
+                        case 17:
+                            assertNull(row.getString(0));
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            assertEquals("0", row.getString(2));
+                            assertEquals("C11", row.getFormula(2));
+                            break;
+                        default:
+                    }
+                }
             }
         }
     }
