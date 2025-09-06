@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static org.ttzero.excel.util.FileUtil.exists;
-import static org.ttzero.excel.util.StringUtil.indexOf;
 
 /**
  * 工作薄输出协议，负责协调所有部件输出并组装所有零散的文件
@@ -76,7 +76,9 @@ public interface IWorkbookWriter extends Storable, Closeable {
      * @param file 目标文件
      * @throws IOException if I/O error occur
      */
-    void writeTo(File file) throws IOException;
+    default void writeTo(File file) throws IOException {
+        writeTo(file.toPath());
+    }
 
     /**
      * 获取工作表输出协议
@@ -86,6 +88,11 @@ public interface IWorkbookWriter extends Storable, Closeable {
      */
     IWorksheetWriter getWorksheetWriter(Sheet sheet);
 
+    @Deprecated
+    default Path reMarkPath(Path source, Path target, String defaultName) throws IOException {
+        return moveToPath(source, target, defaultName);
+    }
+
     /**
      * 移动文件到指定位置，如果已存在相同文件名则会在文件名后追回{@code （n）}以区分，
      * {@code n}从1开始如果已存在{@code （n）}则新文件名为{@code （n + 1）}
@@ -93,45 +100,47 @@ public interface IWorkbookWriter extends Storable, Closeable {
      * <p>例：目标文件夹已存在{@code a.xlsx}和{@code b（5）.xlsx}两个文件，添加一个名为{@code a.xlsx}的文件
      * 因为{@code a.xlsx}已存在所以新文件另存为{@code a（1）.xlsx}，添加一个名为{@code b.xlsx}的文件则新文件另存为{@code b（6）.xlsx}</p>
      *
-     * @param src      源文件
-     * @param rootPath 目标文件夹
-     * @param fileName 目标文件名
+     * @param source      源文件
+     * @param target      目标文件夹
+     * @param defaultName 目标文件名
      * @return 另存为目标文件绝对路径
      * @throws IOException if I/O error occur
      */
-    default Path reMarkPath(Path src, Path rootPath, String fileName) throws IOException {
-        // If the file exists, add the subscript after the file name.
-        String suffix = getSuffix();
-        Path o = rootPath.resolve(fileName + suffix);
-        if (exists(o)) {
-            final String fname = fileName;
-            Path parent = o.getParent();
+    default Path moveToPath(Path source, Path target, String defaultName) throws IOException {
+        final String suffix = getSuffix();
+        final boolean writeToFile = target.getFileName().toString().indexOf('.') > 0;
+        Path out;
+        if (writeToFile) {
+            String fileName = target.getFileName().toString();
+            if (!fileName.endsWith(suffix)) {
+                fileName = fileName + suffix;
+                out = target.getParent().resolve(fileName);
+            } else out = target;
+        } else out = target.resolve(defaultName + suffix);
+
+        // 只指定文件夹时需判断文件名是否已存在，存在时添加编号导出
+        if (!writeToFile && exists(out)) {
+            Path parent = out.getParent();
             if (parent != null && exists(parent)) {
-                String[] os = parent.toFile().list((dir, name) ->
-                    new File(dir, name).isFile()
-                        && name.startsWith(fname)
-                        && name.endsWith(suffix)
-                );
-                String new_name;
-                if (os != null) {
-                    int len = os.length, n;
-                    do {
-                        new_name = fname + " (" + len++ + ")" + suffix;
-                        n = indexOf(os, new_name);
-                    } while (n > -1);
-                } else {
-                    new_name = fname + suffix;
+                final String matchPrefix = defaultName + " (", matchSuffix = ")" + suffix;
+                long len = 1L;
+                try (Stream<Path> pathStream = Files.list(parent)) {
+                    len += pathStream.filter(p -> p.toFile().isFile() && p.getFileName().toString().startsWith(matchPrefix) && p.getFileName().toString().endsWith(matchSuffix)).count();
+                } catch (Exception ex) {
+                    // Ignore
                 }
-                o = parent.resolve(new_name);
-            } else {
-                // Rename to
-                Files.move(src, o, StandardCopyOption.REPLACE_EXISTING);
-                return o;
+                String new_name;
+                do {
+                    new_name = matchPrefix + len++ + matchSuffix;
+                } while (Files.exists(parent.resolve(new_name)));
+                out = parent.resolve(new_name);
             }
         }
+        Path parent = out.getParent();
+        if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
         // Rename to xlsx
-        Files.move(src, o);
-        return o;
+        Files.move(source, out, StandardCopyOption.REPLACE_EXISTING);
+        return out;
     }
 
     /**

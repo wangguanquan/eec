@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -88,29 +87,24 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        Path path = createTemp();
-        Files.copy(path, os);
-        cleanTmp(path);
-    }
-
-    /**
-     * Write to file
-     *
-     * @param file the storage file
-     * @throws IOException         if io error occur
-     */
-    @Override
-    public void writeTo(File file) throws IOException {
-        Path path = createTemp();
-        FileUtil.cp(path, file);
-        cleanTmp(path);
+        Path path = null;
+        try {
+            path = createTemp();
+            Files.copy(path, os);
+        } finally {
+            if (path != null) cleanTmp(path);
+        }
     }
 
     @Override
     public void writeTo(Path root) throws IOException {
-        Path path = createTemp();
-        reMarkPath(path, root);
-        cleanTmp(path);
+        Path path = null;
+        try {
+            path = createTemp();
+            moveToPath(path, root);
+        } finally {
+            if (path != null) cleanTmp(path);
+        }
     }
 
     /**
@@ -132,13 +126,14 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    protected void reMarkPath(Path src, Path path) throws IOException {
-        String name;
-        if (StringUtil.isEmpty(name = workbook.getName())) {
-            name = "新建文件";
-        }
+    @Deprecated
+    protected void reMarkPath(Path source, Path target) throws IOException {
+        moveToPath(source, target);
+    }
 
-        Path resultPath = reMarkPath(src, path, name);
+    protected void moveToPath(Path source, Path target) throws IOException {
+        String name = StringUtil.isEmpty(workbook.getName()) ? "新建文件" : workbook.getName();
+        Path resultPath = moveToPath(source, target, name);
         LOGGER.debug("Write completed. {}", resultPath);
     }
 

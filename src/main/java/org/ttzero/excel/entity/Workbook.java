@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.manager.docProps.CustomProperties;
-import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -32,14 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.zip.Deflater;
 
-import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * 一个{@code Workbook}工作薄实例即表示一个Excel文件，它包含一个或多个{@link Sheet}工作表，
@@ -663,20 +660,6 @@ public class Workbook implements Storable {
     @Override
     public void writeTo(Path path) throws IOException {
         checkAndInitWriter();
-        if (!exists(path)) {
-            String name = path.getFileName().toString();
-            // write to file
-            if (name.indexOf('.') > 0) {
-                Path parent = path.getParent();
-                if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
-                writeTo(path.toFile());
-                return;
-                // write to directory
-            } else FileUtil.mkdir(path);
-        } else if (!Files.isDirectory(path)) {
-            writeTo(path.toFile());
-            return;
-        }
         try {
             workbookWriter.writeTo(path);
         } finally {
@@ -721,18 +704,9 @@ public class Workbook implements Storable {
      *
      * @param file                 Excel保存位置
      * @throws IOException         I/O操作异常
-     * @throws ExcelWriteException 其它运行时异常
      */
-    public void writeTo(File file) throws IOException, ExcelWriteException {
-        checkAndInitWriter();
-        if (file.getParent() != null && !file.getParentFile().exists()) {
-            FileUtil.mkdir(file.toPath().getParent());
-        }
-        try {
-            workbookWriter.writeTo(file);
-        } finally {
-            workbookWriter.close();
-        }
+    public void writeTo(File file) throws IOException {
+        writeTo(file.toPath());
     }
 
     /**
