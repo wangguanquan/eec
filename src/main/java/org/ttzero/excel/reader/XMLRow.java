@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -371,119 +371,125 @@ public class XMLRow extends Row {
         cursor = e;
     }
 
-    XMLCalcRow asCalcRow() {
-        return !(this instanceof XMLCalcRow) ? new XMLCalcRow(this) : (XMLCalcRow) this;
-    }
-
-    XMLMergeRow asMergeRow() {
-        return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
-    }
+//    @Deprecated
+//    XMLCalcRow asCalcRow() {
+//        return !(this instanceof XMLCalcRow) ? new XMLCalcRow(this) : (XMLCalcRow) this;
+//    }
+//
+//    @Deprecated
+//    XMLMergeRow asMergeRow() {
+//        return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
+//    }
 
     XMLFullRow asFullRow() {
         return this.getClass() != XMLFullRow.class ? new XMLFullRow(this) : (XMLFullRow) this;
     }
 }
 
-/**
- * Cell with Calc
- */
-class XMLCalcRow extends XMLFullRow {
-
-    XMLCalcRow(XMLRow row) {
-        super(row);
-    }
-
-    /**
-     * Loop parse cell
-     */
-    @Override
-    protected void parseCells() {
-        cursor = searchSpan();
-        for (; cb[cursor++] != '>'; ) ;
-        unknownLength = lc < 0;
-
-        // Parse formula if exists and can parse
-        if (hasCalcFunc) {
-            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
-        }
-
-        // Parse cell value
-        for (Cell cell; (cell = nextCell()) != null; subParseCellValue(cell)) ;
-    }
-
-    /**
-     * Parse cell value
-     *
-     * @param cell current {@link Cell}
-     */
-    @Override
-    protected void subParseCellValue(Cell cell) {
-        // Parse calc
-        parseCalcFunc(cell);
-
-        // Parse value
-        super.parseCellValue(cell);
-    }
-
-}
-
-/**
- * Copy value on merge cells
- */
-class XMLMergeRow extends XMLFullRow {
-
-    XMLMergeRow(XMLRow row) {
-        super(row);
-    }
-
-    /**
-     * Loop parse cell
-     */
-    @Override
-    protected void parseCells() {
-        cursor = searchSpan();
-        for (; cb[cursor++] != '>'; ) ;
-        unknownLength = lc < 0;
-
-        // Parse cell value
-        int i = 1, r = getRowNum();
-        for (Cell cell; (cell = nextCell()) != null; ) {
-            if (cell.i > i) for (; i < cell.i; i++) subParseCellValue(cells[i - 1]);
-            subParseCellValue(cell);
-            i++;
-        }
-
-        /*
-         Some tools handle merged cells that ignore all cells
-          in the merged range except for the first one,
-          so compatibility is required here for cells that are outside the spans range
-         */
-        for (; mergeCells.test(r, i); i++) {
-            if (lc < i) {
-                // Give a new cells
-                if (cells.length < i) cells = copyCells(i);
-                lc = i;
-            }
-            subParseCellValue(cells[i - 1]);
-        }
-    }
-
-
-    /**
-     * Parse cell value
-     *
-     * @param cell current {@link Cell}
-     */
-    @Override
-    protected void subParseCellValue(Cell cell) {
-
-        // Parse value
-        super.parseCellValue(cell);
-
-        // Setting/copy value if merged
-        mergedFunc.accept(getRowNum(), cell);
-    }
-}
+///**
+// * Cell with Calc
+// * @deprecated 使用 {@link XMLFullRow}代替,即将删除
+// */
+//@Deprecated
+//class XMLCalcRow extends XMLFullRow {
+//
+//    XMLCalcRow(XMLRow row) {
+//        super(row);
+//    }
+//
+//    /**
+//     * Loop parse cell
+//     */
+//    @Override
+//    protected void parseCells() {
+//        cursor = searchSpan();
+//        for (; cb[cursor++] != '>'; ) ;
+//        unknownLength = lc < 0;
+//
+//        // Parse formula if exists and can parse
+//        if (hasCalcFunc) {
+//            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
+//        }
+//
+//        // Parse cell value
+//        for (Cell cell; (cell = nextCell()) != null; subParseCellValue(cell)) ;
+//    }
+//
+//    /**
+//     * Parse cell value
+//     *
+//     * @param cell current {@link Cell}
+//     */
+//    @Override
+//    protected void subParseCellValue(Cell cell) {
+//        // Parse calc
+//        parseCalcFunc(cell);
+//
+//        // Parse value
+//        super.parseCellValue(cell);
+//    }
+//
+//}
+//
+///**
+// * Copy value on merge cells
+// * @deprecated 使用 {@link XMLFullRow}代替,即将删除
+// */
+//@Deprecated
+//class XMLMergeRow extends XMLFullRow {
+//
+//    XMLMergeRow(XMLRow row) {
+//        super(row);
+//    }
+//
+//    /**
+//     * Loop parse cell
+//     */
+//    @Override
+//    protected void parseCells() {
+//        cursor = searchSpan();
+//        for (; cb[cursor++] != '>'; ) ;
+//        unknownLength = lc < 0;
+//
+//        // Parse cell value
+//        int i = 1, r = getRowNum();
+//        for (Cell cell; (cell = nextCell()) != null; ) {
+//            if (cell.i > i) for (; i < cell.i; i++) subParseCellValue(cells[i - 1]);
+//            subParseCellValue(cell);
+//            i++;
+//        }
+//
+//        /*
+//         Some tools handle merged cells that ignore all cells
+//          in the merged range except for the first one,
+//          so compatibility is required here for cells that are outside the spans range
+//         */
+//        for (; mergeCells.test(r, i); i++) {
+//            if (lc < i) {
+//                // Give a new cells
+//                if (cells.length < i) cells = copyCells(i);
+//                lc = i;
+//            }
+//            subParseCellValue(cells[i - 1]);
+//        }
+//    }
+//
+//
+//    /**
+//     * Parse cell value
+//     *
+//     * @param cell current {@link Cell}
+//     */
+//    @Override
+//    protected void subParseCellValue(Cell cell) {
+//
+//        // Parse value
+//        super.parseCellValue(cell);
+//
+//        // Setting/copy value if merged
+//        mergedFunc.accept(getRowNum(), cell);
+//    }
+//}
 
 /**
  * Copy value on merge cells
