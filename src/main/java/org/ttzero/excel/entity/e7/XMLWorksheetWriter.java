@@ -1093,14 +1093,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // If fixed width or media cell
             if (k == 2 || hc.getColumnType() == 1) {
                 double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
-                hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+                hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, RoundingMode.HALF_UP).doubleValue();
                 continue;
             }
             double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
             double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
             if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
             if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
-            hc.width = BigDecimal.valueOf(width).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+            hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();
         }
 
         if (bw != null) {
