@@ -745,22 +745,6 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 初始化，创建全局样式和字符串共享区
-     * @deprecated 不需要主动初始化，后续将删除
-     */
-    @Deprecated
-    protected void init() {
-        // 创建全局字符串共享区
-        if (sst == null) {
-            sst = new SharedStrings();
-        }
-        // 创建全局样式
-        if (styles == null) {
-            styles = Styles.create();
-        }
-    }
-
-    /**
      * 检查并创建工作薄协议{@link IWorkbookWriter}
      */
     protected void checkAndInitWriter() {
