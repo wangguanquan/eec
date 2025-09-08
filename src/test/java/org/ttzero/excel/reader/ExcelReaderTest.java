@@ -437,9 +437,14 @@ public class ExcelReaderTest {
 
     @Test public void testAllType() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("all type.xlsx"))) {
-            reader.sheets().flatMap(Sheet::dataRows)
-                .map(row -> row.too(ListObjectSheetTest.AllType.class))
-                .forEach(Print::println);
+            reader.sheet(0).saveAsCSV(getOutputTestPath().resolve("all type.csv"));
+        }
+
+        try (CSVUtil.Reader reader = CSVUtil.newReader(getOutputTestPath().resolve("all type.csv"))) {
+            List<String[]> list = reader.stream().collect(Collectors.toList());
+            assertEquals(list.size(), 12);
+            assertEquals(list.get(8)[14], "00:00:00"); // #409 Excel转CSV对时间类型的兼容处理
+            assertEquals(list.get(11)[14], "17:22:00");
         }
     }
 
