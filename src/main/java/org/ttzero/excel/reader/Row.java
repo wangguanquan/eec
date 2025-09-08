@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,16 @@ public class Row {
      */
     public int getRowNum() {
         return index;
+    }
+
+    /**
+     * 获取行索引，从0开始
+     *
+     * @return 行索引，{@code -1}表示未知
+     */
+    public int getRowIndex() {
+        int r = getRowNum();
+        return r >= 1 ? r - 1 : -1;
     }
 
     /**
