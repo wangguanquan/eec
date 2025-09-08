@@ -257,16 +257,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     }
 
     /**
-     * @param root 根目录路径
-     * @throws IOException 如果写入过程中发生I/O错误
-     * @deprecated Rename to {@link #writeWorkbook(Path)}
-     */
-    @Deprecated
-    protected void writeSelf(Path root) throws IOException {
-        writeWorkbook(root);
-    }
-
-    /**
      * 将工作簿写入到指定路径
      *
      * @param root 根目录路径

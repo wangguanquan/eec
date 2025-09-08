@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -201,17 +201,6 @@ public class RowBlock implements Iterator<Row> {
      */
     public Row get(int position) {
         return rows[position];
-    }
-
-    /**
-     * 本批次共装填了多少数据
-     *
-     * @return 本批次装填个数
-     * @deprecated 使用 {@link #limit()}方法代替
-     */
-    @Deprecated
-    public int size() {
-        return limit();
     }
 
     /**

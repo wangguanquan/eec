@@ -1133,18 +1133,6 @@ public class Styles implements Storable {
     }
 
     /**
-     * Fast test cell value is data/time value
-     *
-     * @param styleIndex the style index
-     * @return true if the style content data format
-     * @deprecated Replace with {@link  #isDate(int)}
-     */
-    @Deprecated
-    public boolean fastTestDateFmt(int styleIndex) {
-        return dateFmtCache != null && dateFmtCache.contains(styleIndex);
-    }
-
-    /**
      * Append a date format back into cache
      *
      * @param xf the XFRecord id
