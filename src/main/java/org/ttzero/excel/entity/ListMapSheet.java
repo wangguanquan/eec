@@ -259,7 +259,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
         if (existsMergeCells != null) {
             Grid grid = GridFactory.create(existsMergeCells);
             for (Column col : columns) {
-                if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
+                if (StringUtil.isEmpty(col.key) && grid.test(1, col.getColNum())) {
                     Column next = col.next;
                     for (; next != null && StringUtil.isEmpty(next.key); next = next.next) ;
                     if (next != null) col.key = next.key; // Keep the key to get the value

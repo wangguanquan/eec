@@ -456,7 +456,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
             for (int j = 0, c = 0; j < columns.length; j++) {
                 Column hc = columnsArray[j][i];
-                cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key);
+                cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getColNum()) && !isFirstMergedCell(mergeCells, i + 1, hc.getColNum()) ? null : hc.key);
                 cell.xf = hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex();
                 writeString(cell, row, c++);
             }
@@ -465,7 +465,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             for (int j = 0; j < columns.length; j++) {
                 Column hc = columnsArray[j][i];
                 if (hc.headerComment != null) {
-                    sheet.createComments().addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
+                    sheet.createComments().addComment(toCoordinate(row, hc.getColNum()), hc.headerComment);
                 }
             }
             bw.write("</row>");
@@ -560,9 +560,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         if (this.columns.length > 0) {
             bw.write("\" spans=\"");
-            bw.writeInt(this.columns[0].realColIndex);
+            bw.writeInt(this.columns[0].getColNum());
             bw.write(':');
-            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+            bw.writeInt(this.columns[this.columns.length - 1].getColNum());
         } else {
             bw.write("\" spans=\"1:");
             bw.writeInt(columns);
@@ -598,9 +598,9 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
         else if (this.columns.length > 0) {
             bw.write("\" spans=\"");
-            bw.writeInt(this.columns[0].realColIndex);
+            bw.writeInt(this.columns[0].getColNum());
             bw.write(':');
-            bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+            bw.writeInt(this.columns[this.columns.length - 1].getColNum());
         }
         // 隐藏行
         if (row.isHidden()) bw.write("\" hidden=\"1");
@@ -636,7 +636,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      *
      * @param cell 单元格
      * @param row 行号
-     * @param col 列下标，不等同于列号，实际列号通过{@link Column#getRealColIndex}获取
+     * @param col 列下标，不等同于列号，列号通过{@link Column#getColNum()}获取
      * @throws IOException 出现输出异常
      */
     protected void writeCell(Cell cell, int row, int col) throws IOException {
@@ -682,7 +682,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeString(Cell cell, int row, int col) throws IOException {
         Column hc = getColumn(col);
         bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
+        bw.write(int2Col(hc.getColNum()));
         bw.writeInt(row);
 
         String s = cell.stringVal;
@@ -741,7 +741,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeNumeric(Cell cell, int row, int col) throws IOException {
         Column hc = getColumn(col);
         bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
+        bw.write(int2Col(hc.getColNum()));
         bw.writeInt(row);
         if (cell.xf > 0) {
             bw.write("\" s=\"");
@@ -798,7 +798,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeBool(Cell cell, int row, int col) throws IOException {
         Column hc = getColumn(col);
         bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
+        bw.write(int2Col(hc.getColNum()));
         bw.writeInt(row);
         bw.write("\" t=\"b");
         if (cell.xf > 0) {
@@ -833,7 +833,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeChar(Cell cell, int row, int col) throws IOException {
         Column hc = getColumn(col);
         bw.write("<c r=\"");
-        bw.write(int2Col(hc.getRealColIndex()));
+        bw.write(int2Col(hc.getColNum()));
         bw.writeInt(row);
         if (cell.xf > 0) {
             bw.write("\" s=\"");
@@ -879,7 +879,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Border border = styles.getBorder(style);
         if (fill != null && fill.getPatternType() != PatternType.none || border != null && border.isEffectiveBorder() || cell.f) {
             bw.write("<c r=\"");
-            bw.write(int2Col(getColumn(col).getRealColIndex()));
+            bw.write(int2Col(getColumn(col).getColNum()));
             bw.writeInt(row);
             bw.write("\" s=\"");
             bw.writeInt(cell.xf);
@@ -1182,7 +1182,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     protected void writeDimension() throws IOException {
         bw.append("<dimension ref=\"");
-        if (columns.length > 0) bw.write(int2Col(columns[0].getRealColIndex()));
+        if (columns.length > 0) bw.write(int2Col(columns[0].getColNum()));
         else bw.write('A');
         bw.writeInt(startHeaderRow);
         int n = 11, size = totalRows > 0 ? totalRows : sheet.size(); // fill 11 space
@@ -1190,7 +1190,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write(':');
             n--;
             Column hc = columns[columns.length - 1];
-            char[] col = int2Col(hc.getRealColIndex());
+            char[] col = int2Col(hc.getColNum());
             bw.write(col);
             n -= col.length;
             size = includeAutoWidth || sheet.getNonHeader() == 1 ? size + startRow - 1 : size + startRow + columns[0].subColumnSize() - 1;
@@ -1263,7 +1263,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Move the head row to the top
         else if (sheet.isScrollToVisibleArea() && startHeaderRow > 1) {
             bw.write(" topLeftCell=\"");
-            char[] cols = int2Col(columns[0].realColIndex);
+            char[] cols = int2Col(columns[0].getColNum());
             bw.write(cols);
             bw.writeInt(startHeaderRow);
             bw.write("\">");
@@ -1336,14 +1336,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     Column col = columns[i], pCol = columns[i - 1];
                     String width = col.width >= 0.0000001D ? new BigDecimal(col.width).setScale(2, RoundingMode.HALF_UP).toString() : defaultWidth;
                     boolean lastColumn = i == columns.length - 1;
-                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getRealColIndex() - pCol.getRealColIndex() > 1 || fCol.globalStyleIndex != col.globalStyleIndex) {
-                        writeCol(fWidth, fCol.getRealColIndex(), pCol.realColIndex, fillSpace, fCol.globalStyleIndex, fCol.isHide());
+                    if (fCol.getAutoSize() == 1 || col.getAutoSize() == 1 || !width.equals(fWidth) || col.isHide() != fCol.isHide() || col.getColNum() - pCol.getColNum() > 1 || fCol.globalStyleIndex != col.globalStyleIndex) {
+                        writeCol(fWidth, fCol.getColNum(), pCol.getColNum(), fillSpace, fCol.globalStyleIndex, fCol.isHide());
                         fWidth = width;
                         fCol = col;
                     }
-                    if (lastColumn) writeCol(width, fCol.getRealColIndex(), col.realColIndex, fillSpace, fCol.globalStyleIndex, col.isHide());
+                    if (lastColumn) writeCol(width, fCol.getColNum(), col.getColNum(), fillSpace, fCol.globalStyleIndex, col.isHide());
                 }
-            } else writeCol(fWidth, fCol.getRealColIndex(), fCol.getRealColIndex(), fillSpace, fCol.globalStyleIndex, fCol.isHide());
+            } else writeCol(fWidth, fCol.getColNum(), fCol.getColNum(), fillSpace, fCol.globalStyleIndex, fCol.isHide());
             bw.write("</cols>");
         }
     }
@@ -1802,7 +1802,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Column hc = index < columns.length ? columns[index] : null;
         if (hc == null) {
             hc = Column.UNALLOCATED_COLUMN;
-            hc.realColIndex = index + sheet.getStartColNum();
+            hc.colNum = index + sheet.getStartColNum();
         }
         return hc;
     }

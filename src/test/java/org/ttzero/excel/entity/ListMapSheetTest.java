@@ -945,7 +945,7 @@ public class ListMapSheetTest extends WorkbookTest {
                         if (!existsKeys.contains(k)) {
                             Column col = new Column(k, k), pre = columns[columns.length - 1].getTail(); // <- 需要判断NPE
                             col.colIndex = pre.colIndex + 1;
-                            col.realColIndex = pre.realColIndex + 1;
+                            col.colNum = pre.getColNum() + 1;
                             col.styles = getWorkbook().getStyles();
                             // 扩容并追加到末尾
                             columns = Arrays.copyOf(columns, columns.length + 1);

@@ -942,22 +942,22 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 计算列的实际下标，Excel下标从1开始，计算后的值将重置{@link Column#realColIndex}属性，
+     * 计算列的实际行号，Excel行号从1开始，计算后的值将重置{@link Column#getColNum()}属性，
      * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
         int startColNum = getStartColNum();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
-            hc.realColIndex = hc.colIndex;
-            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
-                hc.realColIndex = columns[i - 1].realColIndex + 1;
-            else if (hc.realColIndex <= i) hc.realColIndex = i + startColNum;
-            else hc.realColIndex = hc.colIndex + startColNum;
+            hc.colNum = hc.colIndex;
+            if (i > 0 && columns[i - 1].colNum >= hc.colNum)
+                hc.colNum = columns[i - 1].colNum + 1;
+            else if (hc.colNum <= i) hc.colNum = i + startColNum;
+            else hc.colNum = hc.colIndex + startColNum;
 
             if (hc.prev != null) {
                 for (Column col = hc.prev; col != null; col = col.prev)
-                    col.realColIndex = hc.realColIndex;
+                    col.colNum = hc.colNum;
             }
         }
     }
@@ -1387,7 +1387,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns.length > 0 ? columns[columns.length - 1].getRealColIndex() : 0
+        int a = columns.length > 0 ? columns[columns.length - 1].getColNum() : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
@@ -1630,7 +1630,7 @@ public abstract class Sheet implements Cloneable, Storable {
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
                     Column sub = new Column().setColIndex(col.colIndex);
-                    sub.realColIndex = col.realColIndex;
+                    sub.colNum = col.colNum;
                     col.addSubColumn(sub);
                 }
             }
@@ -1695,7 +1695,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
             // Add merged cells
             if (fc < lc || fr < lr) {
-                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].realColIndex, y - fr, (short) array[y - fr - 1 + lc * y].realColIndex));
+                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].getColNum(), y - fr, (short) array[y - fr - 1 + lc * y].getColNum()));
                 _tmpCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
                 // Reset
                 fc = lc; fr = lr;

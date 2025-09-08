@@ -602,7 +602,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 super.calculateRealColIndex();
                 // 将上面设置的特殊列号改到尾列
                 columns[columns.length - 1].getTail().colIndex = columns[columns.length - 2].getTail().colIndex + 1;
-                columns[columns.length - 1].getTail().realColIndex = columns[columns.length - 2].getTail().realColIndex + 1;
+                columns[columns.length - 1].getTail().colNum = columns[columns.length - 2].getTail().getColNum() + 1;
             }
 
             // 将树结构降维，如果由level区分等级则不需要这一步
@@ -654,9 +654,9 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 }
                 if (this.columns.length > 0) {
                     bw.write("\" spans=\"");
-                    bw.writeInt(this.columns[0].realColIndex);
+                    bw.writeInt(this.columns[0].getColNum());
                     bw.write(':');
-                    bw.writeInt(this.columns[this.columns.length - 1].realColIndex);
+                    bw.writeInt(this.columns[this.columns.length - 1].getColNum());
                 } else {
                     bw.write("\" spans=\"1:");
                     bw.writeInt(columns);
@@ -692,7 +692,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     String name;
                     for (int j = 0, c = 0; j < realColumnLen; j++) {
                         Column hc = columnsArray[j][i];
-                        cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getRealColIndex()) && !isFirstMergedCell(mergeCells, i + 1, hc.getRealColIndex()) ? null : hc.key);
+                        cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getColNum()) && !isFirstMergedCell(mergeCells, i + 1, hc.getColNum()) ? null : hc.key);
                         cell.xf = hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex();
                         writeString(cell, row, c++);
                     }
@@ -701,7 +701,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     for (int j = 0; j < realColumnLen; j++) {
                         Column hc = columnsArray[j][i];
                         if (hc.headerComment != null) {
-                            sheet.createComments().addComment(toCoordinate(row, hc.getRealColIndex()), hc.headerComment);
+                            sheet.createComments().addComment(toCoordinate(row, hc.getColNum()), hc.headerComment);
                         }
                     }
                     bw.write("</row>");
@@ -997,7 +997,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         protected void tileColumns() {
             if (tile == 1) return;
 
-            int x = columns.length, y = x * tile, t = columns[columns.length - 1].getRealColIndex();
+            int x = columns.length, y = x * tile, t = columns[columns.length - 1].getColNum();
             // Bound check
             if (y > Const.Limit.MAX_COLUMNS_ON_SHEET)
                 throw new TooManyColumnsException(y, Const.Limit.MAX_COLUMNS_ON_SHEET);
@@ -1006,7 +1006,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             for (int i = 0; i < y; i++) {
                 // 第一个对象的表头不需要复制
                 Column col = i < x ? columns[i] : new Column(columns[i % x]).addSubColumn(new Column());
-                col.realColIndex = columns[i % x].realColIndex + t * (i / x);
+                col.colNum = columns[i % x].getColNum() + t * (i / x);
                 _columns[i] = col;
 
                 // 替换拣货单上的日期
@@ -1028,8 +1028,8 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         @Override
         protected void writeRow(Row row) throws IOException {
             Cell[] cells = row.getCells();
-            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].realColIndex / tile, y = row.getIndex() % tile;
-            if (y == 0) startRow(r - startRow, columns[columns.length - 1].realColIndex, -1D);
+            int len = cells.length, r = row.getIndex() / tile + startRow, c = columns[columns.length - 1].getColNum() / tile, y = row.getIndex() % tile;
+            if (y == 0) startRow(r - startRow, columns[columns.length - 1].getColNum(), -1D);
 
             // 循环写单元格
             for (int i = row.fc; i < row.lc; i++) writeCell(cells[i], r, i + c * y);

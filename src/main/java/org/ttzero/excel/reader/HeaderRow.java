@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -285,8 +285,8 @@ public class HeaderRow extends Row {
             for (Column c : columns) {
                 Column[] sub = c.toArray();
                 for (int j = sub.length - 1, t; j >= 0; j--) {
-                    if (mergedGrid.test(t = sub.length - j, c.realColIndex) && isTopRow(mergeCells, t, c.realColIndex)) {
-                        Cell cell = new Cell((short) c.realColIndex);
+                    if (mergedGrid.test(t = sub.length - j, c.getColNum()) && isTopRow(mergeCells, t, c.getColNum())) {
+                        Cell cell = new Cell((short) c.getColNum());
                         if (StringUtil.isNotEmpty(sub[j].getName())) cell.setString(sub[j].getName());
                         else cell.t = Cell.EMPTY_TAG;
                         mergedGrid.merge(t, cell);
@@ -311,7 +311,7 @@ public class HeaderRow extends Row {
 
             if (c.colIndex < 0) {
                 c.colIndex = getIndex(c.name);
-                c.realColIndex = c.colIndex + 1;
+                c.colNum = c.colIndex + 1;
             }
         }
 

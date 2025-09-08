@@ -147,9 +147,9 @@ public class Column {
      */
     public Column tail;
     /**
-     * 实际列索引，它与Excel列号对应，该值通过内部计算而来，请不要在外部修改
+     * 实际列号，它与Excel列号对应，该值通过内部计算而来，请不要在外部修改
      */
-    public int realColIndex;
+    public int colNum;
     /**
      * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
      *
@@ -397,8 +397,8 @@ public class Column {
         this.border = other.border;
         this.fill = other.fill;
         this.colIndex = other.colIndex;
+        this.colNum = other.colNum;
         this.option = other.option;
-        this.realColIndex = other.realColIndex;
         if (other.cellStyle != null) setCellStyle(other.cellStyle);
         if (other.headerStyle != null) setHeaderStyle(other.headerStyle);
         int i;
@@ -868,9 +868,20 @@ public class Column {
      * 获取列在Excel中的实际位置（从{@code A}开始）
      *
      * @return 列在Excel中的实际位置
+     * @deprecated 重命名 {@link #getColNum()}
      */
+    @Deprecated
     public int getRealColIndex() {
-        return realColIndex;
+        return colNum;
+    }
+
+    /**
+     * 获取列在Excel中的实际位置（从{@code A}开始）
+     *
+     * @return 列在Excel中的实际位置
+     */
+    public int getColNum() {
+        return colNum;
     }
 
     /**
