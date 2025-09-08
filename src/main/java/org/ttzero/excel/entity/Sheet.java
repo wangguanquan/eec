@@ -946,14 +946,14 @@ public abstract class Sheet implements Cloneable, Storable {
      * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
-        int startColIndex = getStartColNum();
+        int startColNum = getStartColNum();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
             hc.realColIndex = hc.colIndex;
             if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
                 hc.realColIndex = columns[i - 1].realColIndex + 1;
-            else if (hc.realColIndex <= i) hc.realColIndex = i + startColIndex;
-            else hc.realColIndex = hc.colIndex + startColIndex;
+            else if (hc.realColIndex <= i) hc.realColIndex = i + startColNum;
+            else hc.realColIndex = hc.colIndex + startColNum;
 
             if (hc.prev != null) {
                 for (Column col = hc.prev; col != null; col = col.prev)

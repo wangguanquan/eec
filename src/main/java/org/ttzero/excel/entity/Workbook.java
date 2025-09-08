@@ -307,11 +307,24 @@ public class Workbook implements Storable {
         return this;
     }
 
+    /**
+     * 获取水印{@link Watermark}
+     *
+     * @return 水印
+     * @deprecated 重命名为 {@link #getWatermark()}
+     */
     @Deprecated
     public Watermark getWaterMark() {
         return getWatermark();
     }
 
+    /**
+     * 设置水印{@link Watermark}，可以使用{@link Watermark#of}静态方法创建
+     *
+     * @param watermark 水印
+     * @return 当前工作薄
+     * @deprecated 重命名为 {@link #setWatermark(Watermark)}
+     */
     @Deprecated
     public Workbook setWaterMark(Watermark watermark) {
         return setWatermark(watermark);

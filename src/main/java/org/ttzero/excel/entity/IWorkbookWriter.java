@@ -129,16 +129,16 @@ public interface IWorkbookWriter extends Storable, Closeable {
                 } catch (Exception ex) {
                     // Ignore
                 }
-                String new_name;
+                String newName;
                 do {
-                    new_name = matchPrefix + len++ + matchSuffix;
-                } while (Files.exists(parent.resolve(new_name)));
-                out = parent.resolve(new_name);
+                    newName = matchPrefix + len++ + matchSuffix;
+                } while (Files.exists(parent.resolve(newName)));
+                out = parent.resolve(newName);
             }
         }
         Path parent = out.getParent();
         if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
-        // Rename to xlsx
+        // Replace if existing
         Files.move(source, out, StandardCopyOption.REPLACE_EXISTING);
         return out;
     }

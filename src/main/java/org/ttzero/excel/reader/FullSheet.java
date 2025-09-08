@@ -31,6 +31,19 @@ import java.util.Map;
  */
 public interface FullSheet extends Sheet {
     /**
+     * 获取抽象的合并表格，通过表格快速判断某个坐标是否为合并单元格的一部分
+     *
+     * @return merged {@link Grid}
+     */
+    Grid getMergeGrid();
+
+    /**
+     * 获取所有合并单元格的合并范围
+     *
+     * @return 如果存在合并单元格则返回所有合并单元格的范围，否则返回{@code null}
+     */
+    List<Dimension> getMergeCells();
+    /**
      * 复制合并单元格的值
      *
      * <p>通常合并单元格的值保存在左上角第一个单元格中其余单元格的值为{@code null}，如果要读取这类合并单元的值就需要特殊处理，
@@ -105,17 +118,4 @@ public interface FullSheet extends Sheet {
      * @return key: 行列值 {@code col & 0x7FFF | ((long) row) << 16}, value: 批注
      */
     Map<Long, Comment> getComments();
-    /**
-     * 获取抽象的合并表格，通过表格快速判断某个坐标是否为合并单元格的一部分
-     *
-     * @return merged {@link Grid}
-     */
-    Grid getMergeGrid();
-
-    /**
-     * 获取所有合并单元格的合并范围
-     *
-     * @return 如果存在合并单元格则返回所有合并单元格的范围，否则返回{@code null}
-     */
-    List<Dimension> getMergeCells();
 }
