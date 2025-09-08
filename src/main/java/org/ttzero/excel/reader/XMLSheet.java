@@ -84,7 +84,7 @@ public class XMLSheet implements Sheet {
         this.eof = sheet.eof;
         this.heof = sheet.heof;
         this.mark = sheet.mark;
-        this.sRow = (sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class) && !eof ? createRow().init(sst, styles, startRow) : sheet.sRow;
+        this.sRow = (sheet.sRow == null || sheet.sRow.getClass() != XMLRow.class) && !eof ? createRow().init(sst, styles) : sheet.sRow;
         this.lastRowMark = sheet.lastRowMark;
         this.hrf = sheet.hrf;
         this.hrl = sheet.hrl;
@@ -107,6 +107,10 @@ public class XMLSheet implements Sheet {
      * The {@link Styles}
      */
     protected Styles styles;
+    /**
+     * @deprecated 未使用，下个版本删除
+     */
+    @Deprecated
     protected int startRow = -1; // row index of data
     protected HeaderRow header;
     // state hidden
@@ -251,7 +255,9 @@ public class XMLSheet implements Sheet {
      * The index of first used row
      *
      * @return the index
+     * @deprecated 无效方法后续删除
      */
+    @Deprecated
     public int getFirstRow() {
         return startRow;
     }
@@ -342,7 +348,7 @@ public class XMLSheet implements Sheet {
                     Row r = new Row() { };
                     r.fc = row.fc;
                     r.lc = row.lc;
-                    r.index = row.getRowNum();
+                    r.rowNum = r.index = row.getRowNum(); // 兼容处理，后续删除index
                     r.sst = row.sst;
                     r.cells = row.copyCells();
                     rows[i++] = r;
@@ -492,7 +498,7 @@ public class XMLSheet implements Sheet {
 
             // Empty sheet
             if (length <= 0) eof = true;
-            if (!eof) sRow = createRow().init(sst, styles, this.startRow > 0 ? this.startRow : 1);
+            if (!eof) sRow = createRow().init(sst, styles);
 
             LOGGER.debug("eof: {}, mark: {}", eof, mark);
             if (dimension != null) LOGGER.debug("Dimension-Range: {}", dimension);
@@ -749,7 +755,7 @@ public class XMLSheet implements Sheet {
             header = null;
             if (sRow != null) {
                 sRow.fc = 0;
-                sRow.index = sRow.lc = -1;
+                sRow.rowNum = sRow.index = sRow.lc = -1; // 兼容处理，后续删除index
                 sRow.from = sRow.to;
             }
             // Close the opening reader
@@ -878,7 +884,7 @@ public class XMLSheet implements Sheet {
     }
 
     protected Row createHeader(char[] cb, int start, int n) {
-        return createRow().init(sst, styles, startRow > 0 ? startRow : 1).with(cb, start, n);
+        return createRow().init(sst, styles).with(cb, start, n);
     }
 
     @Override

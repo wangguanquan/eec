@@ -84,7 +84,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
+    @Deprecated
     protected int index = -1;
+    /**
+     * 行号（从1开始）
+     */
+    protected int rowNum = -1;
     // Index to first column (zero base, inclusive)
     protected int fc = 0;
     // Index to last column (zero base, exclusive)
@@ -113,7 +118,7 @@ public class Row {
      * @return 行号
      */
     public int getRowNum() {
-        return index;
+        return rowNum;
     }
 
     /**

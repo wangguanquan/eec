@@ -46,6 +46,10 @@ import static org.ttzero.excel.util.StringUtil.swap;
  * @author guanquan.wang on 2018-09-22
  */
 public class XMLRow extends Row {
+    /**
+     * @deprecated 未使用，下个版本删除
+     */
+    @Deprecated
     protected int startRow;
 
     /**
@@ -55,20 +59,29 @@ public class XMLRow extends Row {
      */
     @Override
     public int getRowNum() {
-        if (index == -1) searchRowNum();
-        // The first row index is one
-        return index;
+        if (rowNum == -1) searchRowNum();
+        // The first row number is one
+        return rowNum;
     }
 
-    @SuppressWarnings("unused")
-    public XMLRow() {
-        this.startRow = 1;
+    public XMLRow() { }
+
+    public XMLRow(SharedStrings sst, Styles styles) {
+        init(sst, styles);
     }
 
+    public XMLRow init(SharedStrings sst, Styles styles) {
+        this.sst = sst;
+        this.styles = styles;
+        return this;
+    }
+
+    @Deprecated
     public XMLRow(SharedStrings sst, Styles styles, int startRow) {
         init(sst, styles, startRow);
     }
 
+    @Deprecated
     public XMLRow init(SharedStrings sst, Styles styles, int startRow) {
         this.sst = sst;
         this.styles = styles;
@@ -88,7 +101,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.index = this.lc = -1;
+        this.rowNum = this.index = this.lc = -1; // 兼容处理，后续删除index
         parseCells();
         return this;
     }
@@ -100,7 +113,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.index = -1;
+        this.rowNum = this.index = -1;
         this.fc = this.lc = -1;
         return this;
     }
@@ -113,7 +126,7 @@ public class XMLRow extends Row {
                 a = _f += 4;
                 for (; cb[_f] != '"' && _f < to; _f++) ;
                 if (_f > a) {
-                    index = toInt(cb, a, _f);
+                    rowNum = index = toInt(cb, a, _f); // 兼容处理，后续删除index
                 }
                 break;
             }
@@ -141,7 +154,7 @@ public class XMLRow extends Row {
             }
         }
         if (hr != null && lc < hr.lc) lc = hr.lc;
-        if (fc <= 0 || fc >= lc) fc = this.startRow;
+        if (fc <= 0 || fc >= lc) fc = 1;
         fc = fc - 1; // zero base
         if (cells == null || lc > cells.length) {
             cells = new Cell[lc > 0 ? lc : 100]; // default array length 100
