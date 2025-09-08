@@ -288,7 +288,7 @@ public class SimpleSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void t() throws IOException {
+    @Test public void testMultipleTable() throws IOException {
         List<Object> rows = new ArrayList<>();
         List<ListObjectSheetTest.Student> students1, students2;
         students1 = new ArrayList<>(ListObjectSheetTest.Student.randomTestData(3));
@@ -330,7 +330,7 @@ public class SimpleSheetTest extends WorkbookTest {
                 }
                 cell.xf = xf;
             }
-        }).putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells)).writeTo(defaultTestPath.resolve("1.xlsx"));
+        }).putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells)).writeTo(defaultTestPath.resolve("testMultipleTable.xlsx"));
     }
 
     @Test public void testSpecifyCoordinateWrite() throws IOException {
