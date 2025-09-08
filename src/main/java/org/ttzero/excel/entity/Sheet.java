@@ -680,7 +680,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param startRowNum 起始行号（从1开始）
      * @return 当前工作表
-     * @deprecated 使用 {@link #setStartCoordinate(int)}替代
+     * @deprecated 方法名容易引起误解,使用 {@link #setStartCoordinate(int)}替代
      */
     @Deprecated
     public Sheet setStartRowIndex(int startRowNum) {
@@ -696,7 +696,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param startRowNum       起始行号（从1开始）
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
-     * @deprecated 使用 {@link #setStartCoordinate(int, boolean)}替代
+     * @deprecated 方法名容易引起误解, 使用 {@link #setStartCoordinate(int, boolean)}替代
      */
     @Deprecated
     public Sheet setStartRowIndex(int startRowNum, boolean scrollToVisibleArea) {
