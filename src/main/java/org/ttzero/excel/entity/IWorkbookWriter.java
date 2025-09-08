@@ -35,7 +35,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Properties;
-import java.util.stream.Stream;
 
 import static org.ttzero.excel.util.FileUtil.exists;
 
@@ -117,40 +116,11 @@ public interface IWorkbookWriter extends Storable, Closeable {
      * @throws IOException if I/O error occur
      */
     default Path moveToPath(Path source, Path target, String defaultName) throws IOException {
-        final String suffix = getSuffix();
-        final boolean writeToFile = target.getFileName().toString().indexOf('.') > 0;
-        Path out;
-        if (writeToFile) {
-            String fileName = target.getFileName().toString();
-            if (!fileName.endsWith(suffix)) {
-                fileName = fileName + suffix;
-                out = target.getParent().resolve(fileName);
-            } else out = target;
-        } else out = target.resolve(defaultName + suffix);
-
-        // 只指定文件夹时需判断文件名是否已存在，存在时添加编号导出
-        if (!writeToFile && exists(out)) {
-            Path parent = out.getParent();
-            if (parent != null && exists(parent)) {
-                final String matchPrefix = defaultName + " (", matchSuffix = ")" + suffix;
-                long len = 1L;
-                try (Stream<Path> pathStream = Files.list(parent)) {
-                    len += pathStream.filter(p -> p.toFile().isFile() && p.getFileName().toString().startsWith(matchPrefix) && p.getFileName().toString().endsWith(matchSuffix)).count();
-                } catch (Exception ex) {
-                    // Ignore
-                }
-                String newName;
-                do {
-                    newName = matchPrefix + len++ + matchSuffix;
-                } while (Files.exists(parent.resolve(newName)));
-                out = parent.resolve(newName);
-            }
-        }
-        Path parent = out.getParent();
+        Path outPath = FileUtil.getTargetPath(target, defaultName, getSuffix()), parent = outPath.getParent();
         if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
         // Replace if existing
-        Files.move(source, out, StandardCopyOption.REPLACE_EXISTING);
-        return out;
+        Files.move(source, outPath, StandardCopyOption.REPLACE_EXISTING);
+        return outPath;
     }
 
     /**

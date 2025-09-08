@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * File operation util.
@@ -400,5 +401,49 @@ public class FileUtil {
             LOGGER.warn("Check " + path, e);
             return false;
         }
+    }
+
+    /**
+     * 获取目标路径，如果已存在相同文件名则会在文件名后追回{@code （n）}以区分，
+     * {@code n}从1开始如果已存在{@code （n）}则新文件名为{@code （n + 1）}
+     *
+     * <p>例：目标文件夹已存在{@code a.xlsx}和{@code b（5）.xlsx}两个文件，添加一个名为{@code a.xlsx}的文件
+     * 因为{@code a.xlsx}已存在所以新文件另存为{@code a（1）.xlsx}，添加一个名为{@code b.xlsx}的文件则新文件另存为{@code b（6）.xlsx}</p>
+     *
+     * @param targetPath 目标路径，可以是文件或文件夹
+     * @param fileName 不带后缀的文件名
+     * @param suffix 文件后缀，如{@code .xlsx}
+     * @return 实际的目标路径
+     */
+    public static Path getTargetPath(Path targetPath, String fileName, String suffix) {
+        final boolean writeToFile = targetPath.getFileName().toString().indexOf('.') > 0;
+        Path out;
+        if (writeToFile) {
+            String targetName = targetPath.getFileName().toString();
+            if (!targetName.endsWith(suffix)) {
+                targetName = targetName + suffix;
+                out = targetPath.getParent().resolve(targetName);
+            } else out = targetPath;
+        } else out = targetPath.resolve(fileName + suffix);
+
+        // 只指定文件夹时需判断文件名是否已存在，存在时添加编号导出
+        if (!writeToFile && exists(out)) {
+            Path parent = out.getParent();
+            if (parent != null && exists(parent)) {
+                final String matchPrefix = fileName + " (", matchSuffix = ")" + suffix;
+                long len = 1L;
+                try (Stream<Path> pathStream = Files.list(parent)) {
+                    len += pathStream.filter(p -> p.toFile().isFile() && p.getFileName().toString().startsWith(matchPrefix) && p.getFileName().toString().endsWith(matchSuffix)).count();
+                } catch (Exception ex) {
+                    // Ignore
+                }
+                String newName;
+                do {
+                    newName = matchPrefix + len++ + matchSuffix;
+                } while (Files.exists(parent.resolve(newName)));
+                out = parent.resolve(newName);
+            }
+        }
+        return out;
     }
 }

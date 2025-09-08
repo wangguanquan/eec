@@ -51,7 +51,6 @@ import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
-import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * 用于读的工作表，为了性能本工具将读和写分开设计它们具有完全不同的方法，
@@ -281,15 +280,10 @@ public interface Sheet extends Closeable {
      * @throws IOException 读写异常
      */
     default void saveAsCSV(Path path, Charset charset) throws IOException {
-        // Create path if not exists
-        if (!exists(path)) {
-            FileUtil.mkdir(path);
-        }
-        if (Files.isDirectory(path)) {
-            path = path.resolve(getName() + Const.Suffix.CSV);
-        }
+        Path outPath = FileUtil.getTargetPath(path, getName(), Const.Suffix.CSV), parent = outPath.getParent();
+        if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
 
-        saveAsCSV(Files.newOutputStream(path), charset);
+        saveAsCSV(Files.newOutputStream(outPath), charset);
     }
 
     /**
