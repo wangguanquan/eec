@@ -59,8 +59,7 @@ public class XMLRow extends Row {
      */
     @Override
     public int getRowNum() {
-        if (rowNum == -1) searchRowNum();
-        // The first row number is one
+        if (rowNum == -1) rowNum = index = searchRowNum();
         return rowNum;
     }
 
@@ -78,15 +77,12 @@ public class XMLRow extends Row {
 
     @Deprecated
     public XMLRow(SharedStrings sst, Styles styles, int startRow) {
-        init(sst, styles, startRow);
+        init(sst, styles);
     }
 
     @Deprecated
     public XMLRow init(SharedStrings sst, Styles styles, int startRow) {
-        this.sst = sst;
-        this.styles = styles;
-        this.startRow = startRow;
-        return this;
+        return init(sst, styles);
     }
 
     /////////////////////////unsafe////////////////////////
@@ -113,24 +109,25 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNum = this.index = -1;
+        this.rowNum = this.index = -1; // 兼容处理，后续删除index
         this.fc = this.lc = -1;
         return this;
     }
 
-    private void searchRowNum() {
-        if (from >= to || cb == null) return;
+    protected int searchRowNum() {
+        if (from >= to || cb == null) return -1;
         int _f = from + 4, a; // skip '<row'
         for (; cb[_f] != '>' && _f < to; _f++) {
             if (cb[_f] <= ' ' && cb[_f + 1] == 'r' && cb[_f + 2] == '=') {
                 a = _f += 4;
                 for (; cb[_f] != '"' && _f < to; _f++) ;
                 if (_f > a) {
-                    rowNum = index = toInt(cb, a, _f); // 兼容处理，后续删除index
+                    return toInt(cb, a, _f); // 兼容处理，后续删除index
                 }
                 break;
             }
         }
+        return -1;
     }
 
     protected int searchSpan() {
@@ -522,7 +519,6 @@ class XMLFullRow extends XMLRow {
     XMLFullRow(XMLRow row) {
         this.sst = row.sst;
         this.styles = row.styles;
-        this.startRow = row.startRow;
     }
 
     @Override
