@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2024, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2024, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,7 @@ import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
@@ -97,6 +98,113 @@ public class TemplateSheetTest extends WorkbookTest {
             }
         }
         workbook.writeTo(getOutputTestPath().resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(getOutputTestPath().resolve(fileName))) {
+            {
+                FullSheet number2ExcelSheet1 = reader.sheet("Number2Excel.xlsx$Sheet1").asFullSheet();
+                assertNotNull(number2ExcelSheet1);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 3:
+                            assertEquals("8", row.getString(1));
+                            assertEquals("(A3+A4)+1", row.getFormula(1));
+                            assertEquals("55", row.getString(2));
+                            assertEquals("SUM(A1:A10)", row.getFormula(2));
+                            assertEquals("C3/0", row.getFormula(3));
+                            break;
+                        case 11:
+                            assertEquals("11", row.getString(0));
+                            assertEquals("12", row.getString(1));
+                            assertEquals("A11+1", row.getFormula(1));
+                            assertEquals("B11+1", row.getFormula(2));
+                            assertEquals("C11+1", row.getFormula(3));
+                            assertEquals("D11+1", row.getFormula(4));
+                            assertEquals("E11+1", row.getFormula(5));
+                            assertEquals("F11+1", row.getFormula(6));
+                            assertEquals("G11+1", row.getFormula(7));
+                            assertEquals("H11+1", row.getFormula(8));
+                            assertEquals("I11+1", row.getFormula(9));
+                            break;
+                        default:
+                    }
+                }
+            }
+
+            {
+                FullSheet number2ExcelSheet3 = reader.sheet("Number2Excel.xlsx$Sheet3").asFullSheet();
+                assertNotNull(number2ExcelSheet3);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 13:
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            break;
+                        case 17:
+                            assertNull(row.getString(0));
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            assertEquals("0", row.getString(2));
+                            assertEquals("C11", row.getFormula(2));
+                            break;
+                        default:
+                    }
+                }
+            }
+
+            {
+                FullSheet number2ExcelSheet1 = reader.sheet("formula.xlsx$Sheet1").asFullSheet();
+                assertNotNull(number2ExcelSheet1);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet1.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 3:
+                            assertEquals("8", row.getString(1));
+                            assertEquals("(A3+A4)+1", row.getFormula(1));
+                            assertEquals("55", row.getString(2));
+                            assertEquals("SUM(A1:A10)", row.getFormula(2));
+                            break;
+                        case 11:
+                            assertEquals("11", row.getString(0));
+                            assertEquals("12", row.getString(1));
+                            assertEquals("A11+1", row.getFormula(1));
+                            assertEquals("B11+1", row.getFormula(2));
+                            assertEquals("C11+1", row.getFormula(3));
+                            assertEquals("D11+1", row.getFormula(4));
+                            assertEquals("E11+1", row.getFormula(5));
+                            assertEquals("F11+1", row.getFormula(6));
+                            assertEquals("G11+1", row.getFormula(7));
+                            assertEquals("H11+1", row.getFormula(8));
+                            assertEquals("I11+1", row.getFormula(9));
+                            break;
+                        default:
+                    }
+                }
+            }
+
+            {
+                FullSheet number2ExcelSheet3 = reader.sheet("formula.xlsx$Sheet3").asFullSheet();
+                assertNotNull(number2ExcelSheet3);
+                for (Iterator<org.ttzero.excel.reader.Row> iter = number2ExcelSheet3.iterator(); iter.hasNext();) {
+                    org.ttzero.excel.reader.Row row = iter.next();
+                    switch (row.getRowNum()) {
+                        case 13:
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            break;
+                        case 17:
+                            assertNull(row.getString(0));
+                            assertEquals("1", row.getString(1));
+                            assertEquals("B11", row.getFormula(1));
+                            assertEquals("0", row.getString(2));
+                            assertEquals("C11", row.getFormula(2));
+                            break;
+                        default:
+                    }
+                }
+            }
+        }
     }
 
     @Test public void testSimpleTemplate() throws IOException {
@@ -141,6 +249,7 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testTemplate() throws IOException {
+        final String fileName = "fill inputstream template with map.xlsx";
         Map<String, Object> map = new HashMap<>();
         map.put("name", author);
         map.put("score", random.nextInt(90) + 10);
@@ -150,9 +259,9 @@ public class TemplateSheetTest extends WorkbookTest {
         new Workbook()
             .addSheet(new TemplateSheet(Files.newInputStream(testResourceRoot().resolve("template.xlsx")))
                 .setData(map))
-            .writeTo(defaultTestPath.resolve("fill inputstream template with map.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("fill inputstream template with map.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             for (Iterator<Row> it = reader.sheet(0).iterator(); it.hasNext(); ) {
                 Row row = it.next();
                 switch (row.getRowNum()) {
@@ -303,7 +412,7 @@ public class TemplateSheetTest extends WorkbookTest {
 
     @Test public void testFillListObject() throws IOException {
         final String fileName = "fill list object.xlsx";
-        List<YzOrderEntity> expectList = YzOrderEntity.randomData();
+        List<YzOrderEntity> expectList = YzOrderEntity.mock(2);
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "混合命名空间")
                     .setData(YzEntity.mock())
@@ -451,13 +560,14 @@ public class TemplateSheetTest extends WorkbookTest {
     }
 
     @Test public void testDefaultFormatOnDateCell() throws IOException {
+        final String fileName = "defaultFormatOnDateCell.xlsx";
         Map<String, Object> data = new HashMap<>();
         data.put("channel", new Timestamp(System.currentTimeMillis()));
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx")).setData(data))
-            .writeTo(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("defaultFormatOnDateCell.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Row row = reader.sheet(0).header(1).iterator().next();
             int styleIndex = row.getCellStyle(0);
             NumFmt numFmt = reader.getStyles().getNumFmt(styleIndex);
@@ -519,7 +629,7 @@ public class TemplateSheetTest extends WorkbookTest {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
         List<Dimension> mergeCells = sheet.getMergeCells();
-        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3L);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
             mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);
@@ -570,7 +680,7 @@ public class TemplateSheetTest extends WorkbookTest {
         Iterator<org.ttzero.excel.reader.Row> iter = sheet.header(6, 7).iterator();
 
         List<Dimension> mergeCells = sheet.getMergeCells();
-        assertEquals(mergeCells.size(), 26 + expectList.size() * 3);
+        assertEquals(mergeCells.size(), 26 + expectList.size() * 3L);
         Map<Long, Dimension> mergeCellMap = new HashMap<>(mergeCells.size());
         for (Dimension dim : mergeCells) {
             mergeCellMap.put(TemplateSheet.dimensionKey(dim.firstRow - 1, dim.firstColumn - 1), dim);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.manager.docProps.CustomProperties;
-import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -32,14 +31,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.zip.Deflater;
 
-import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * 一个{@code Workbook}工作薄实例即表示一个Excel文件，它包含一个或多个{@link Sheet}工作表，
@@ -103,7 +100,7 @@ public class Workbook implements Storable {
     /**
      * 水印
      */
-    private WaterMark waterMark;
+    private Watermark watermark;
     /**
      * 记录工作表几数
      */
@@ -192,7 +189,7 @@ public class Workbook implements Storable {
      * 创建一个工作薄并指定名称和作者
      *
      * @param name    工作薄名
-     * @param creator 作者，默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名.
+     * @param creator 作者
      */
     public Workbook(String name, String creator) {
         this.name = name;
@@ -293,23 +290,46 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 获取水印{@link WaterMark}
+     * 获取水印{@link Watermark}
      *
      * @return 水印
      */
-    public WaterMark getWaterMark() {
-        return waterMark;
+    public Watermark getWatermark() {
+        return watermark;
     }
 
     /**
-     * 设置水印{@link WaterMark}，可以使用{@link WaterMark#of}静态方法创建
+     * 设置水印{@link Watermark}，可以使用{@link Watermark#of}静态方法创建
      *
-     * @param waterMark 水印
+     * @param watermark 水印
      * @return 当前工作薄
      */
-    public Workbook setWaterMark(WaterMark waterMark) {
-        this.waterMark = waterMark;
+    public Workbook setWatermark(Watermark watermark) {
+        this.watermark = watermark;
         return this;
+    }
+
+    /**
+     * 获取水印{@link Watermark}
+     *
+     * @return 水印
+     * @deprecated 重命名为 {@link #getWatermark()}
+     */
+    @Deprecated
+    public Watermark getWaterMark() {
+        return getWatermark();
+    }
+
+    /**
+     * 设置水印{@link Watermark}，可以使用{@link Watermark#of}静态方法创建
+     *
+     * @param watermark 水印
+     * @return 当前工作薄
+     * @deprecated 重命名为 {@link #setWatermark(Watermark)}
+     */
+    @Deprecated
+    public Workbook setWaterMark(Watermark watermark) {
+        return setWatermark(watermark);
     }
 
     /**
@@ -380,11 +400,7 @@ public class Workbook implements Storable {
     /**
      * 设置作者
      *
-     * <p>默认使用{@code System.getProperty("user.name")}命令获取系统当前登录用户名，这通常不是一个好主意。
-     * 应用程序一般发布在容器或云服务器上，获取系统登录用户名是没有意义的。如果不想设置它并默认设置系统登录用户名，
-     * 可以将其设置为空字符串("")。</p>
-     *
-     * <p>后续会去掉获取系统登录用户名的逻辑以防止信息泄露</P>
+     * <p>设置作者后可以通过查看文件属性来查看作者</p>
      *
      * @param creator 作者
      * @return 当前工作薄
@@ -670,20 +686,6 @@ public class Workbook implements Storable {
     @Override
     public void writeTo(Path path) throws IOException {
         checkAndInitWriter();
-        if (!exists(path)) {
-            String name = path.getFileName().toString();
-            // write to file
-            if (name.indexOf('.') > 0) {
-                Path parent = path.getParent();
-                if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
-                writeTo(path.toFile());
-                return;
-                // write to directory
-            } else FileUtil.mkdir(path);
-        } else if (!Files.isDirectory(path)) {
-            writeTo(path.toFile());
-            return;
-        }
         try {
             workbookWriter.writeTo(path);
         } finally {
@@ -728,18 +730,9 @@ public class Workbook implements Storable {
      *
      * @param file                 Excel保存位置
      * @throws IOException         I/O操作异常
-     * @throws ExcelWriteException 其它运行时异常
      */
-    public void writeTo(File file) throws IOException, ExcelWriteException {
-        checkAndInitWriter();
-        if (file.getParent() != null && !file.getParentFile().exists()) {
-            FileUtil.mkdir(file.toPath().getParent());
-        }
-        try {
-            workbookWriter.writeTo(file);
-        } finally {
-            workbookWriter.close();
-        }
+    public void writeTo(File file) throws IOException {
+        writeTo(file.toPath());
     }
 
     /**
@@ -752,22 +745,6 @@ public class Workbook implements Storable {
         this.workbookWriter = workbookWriter;
         this.workbookWriter.setWorkbook(this);
         return this;
-    }
-
-    /**
-     * 初始化，创建全局样式和字符串共享区
-     * @deprecated 不需要主动初始化，后续将删除
-     */
-    @Deprecated
-    protected void init() {
-        // 创建全局字符串共享区
-        if (sst == null) {
-            sst = new SharedStrings();
-        }
-        // 创建全局样式
-        if (styles == null) {
-            styles = Styles.create();
-        }
     }
 
     /**

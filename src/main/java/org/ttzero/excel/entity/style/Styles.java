@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -297,7 +298,7 @@ public class Styles implements Storable {
      */
     public static Styles load(InputStream is) {
         // load styles.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(is);
@@ -1129,18 +1130,6 @@ public class Styles implements Storable {
             return n >= 0 ? numFmts.get(n) : null;
         }
         return fmt.getId() == id ? fmt : null;
-    }
-
-    /**
-     * Fast test cell value is data/time value
-     *
-     * @param styleIndex the style index
-     * @return true if the style content data format
-     * @deprecated Replace with {@link  #isDate(int)}
-     */
-    @Deprecated
-    public boolean fastTestDateFmt(int styleIndex) {
-        return dateFmtCache != null && dateFmtCache.contains(styleIndex);
     }
 
     /**

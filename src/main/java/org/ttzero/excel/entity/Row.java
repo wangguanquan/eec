@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public class Row {
     public Cell[] calloc(int n) {
         malloc(n);
         for (int i = 0; i < n; i++) {
-            cells[i] = new Cell();
+            cells[i] = new Cell(i);
         }
         return cells;
     }
@@ -88,9 +88,8 @@ public class Row {
      * @return 单元格数组
      */
     public Cell[] realloc(int n) {
-        if (lc < n) {
-            calloc(n);
-        }
+        if (cells == null || cells.length < n) calloc(n);
+        lc = n;
         return cells;
     }
 

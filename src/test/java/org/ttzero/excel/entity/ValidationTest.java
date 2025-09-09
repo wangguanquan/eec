@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class ValidationTest extends WorkbookTest {
         final String fileName = "Validation Test.xlsx";
         new Workbook()
             .addSheet(new ListSheet<>(Arrays.asList("北京", "天津", "上海"))
-                .setStartRowIndex(10, false)
+                .setStartCoordinate(10)
                 .putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
             .writeTo(defaultTestPath.resolve(fileName));
     }

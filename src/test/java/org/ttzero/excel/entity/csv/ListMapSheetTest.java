@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,6 +144,7 @@ public class ListMapSheetTest extends WorkbookTest {
     @Test public void testConstructor6() throws IOException {
         new Workbook()
             .addSheet(new ListMapSheet<>("Map", createAllTypeData(10)))
+            .saveAsCSV()
             .writeTo(getOutputTestPath().resolve("test list map sheet Constructor6.csv"));
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,6 @@ import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalTime;
 import static org.ttzero.excel.util.DateUtil.toTimestamp;
-import static org.ttzero.excel.util.FileUtil.exists;
 
 /**
  * 用于读的工作表，为了性能本工具将读和写分开设计它们具有完全不同的方法，
@@ -281,15 +280,10 @@ public interface Sheet extends Closeable {
      * @throws IOException 读写异常
      */
     default void saveAsCSV(Path path, Charset charset) throws IOException {
-        // Create path if not exists
-        if (!exists(path)) {
-            FileUtil.mkdir(path);
-        }
-        if (Files.isDirectory(path)) {
-            path = path.resolve(getName() + Const.Suffix.CSV);
-        }
+        Path outPath = FileUtil.getTargetPath(path, getName(), Const.Suffix.CSV), parent = outPath.getParent();
+        if (parent != null && !Files.exists(parent)) FileUtil.mkdir(parent);
 
-        saveAsCSV(Files.newOutputStream(path), charset);
+        saveAsCSV(Files.newOutputStream(outPath), charset);
     }
 
     /**
@@ -444,22 +438,27 @@ public interface Sheet extends Closeable {
     Sheet asSheet();
 
     /**
-     * 将工作表转为{@code CalcSheet}以解析单元格公式
+     * 将工作表转为{@code CalcSheet}，只方法仅做为兼容老版本，实际返回{@code FullSheet}
      *
      * @return {@link CalcSheet}
      * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code CalcSheet}所有功能
      */
     @Deprecated
-    CalcSheet asCalcSheet();
+    default CalcSheet asCalcSheet() {
+        return (CalcSheet) asFullSheet();
+    }
 
     /**
-     * 将工作表转为{@code MergeSheet}，它将复制合并单元格的首坐标值到合并范围内的其它单元格中
+     * 将工作表转为{@code MergeSheet}，只方法仅做为兼容老版本，实际返回{@code FullSheet}
      *
      * @return {@link MergeSheet}
      * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code MergeSheet}所有功能
      */
     @Deprecated
-    MergeSheet asMergeSheet();
+    default MergeSheet asMergeSheet() {
+        FullSheet sheet = asFullSheet().copyOnMerged();
+        return (MergeSheet) sheet;
+    }
 
     /**
      * 将工作表转为{@code FullSheet}支持全属性读取

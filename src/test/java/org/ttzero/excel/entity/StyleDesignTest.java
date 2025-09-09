@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,11 +52,12 @@ import static org.junit.Assert.assertTrue;
 public class StyleDesignTest extends WorkbookTest {
 
     @Test public void testStyleDesign() throws IOException {
+        final String fileName = "标识行样式.xlsx";
         new Workbook()
             .addSheet(new ListSheet<>("期末成绩", DesignStudent.randomTestData()))
-            .writeTo(defaultTestPath.resolve("标识行样式.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             reader.sheet(0).header(1).bind(DesignStudent.class).rows().forEach(row -> {
                 Styles styles = row.getStyles();
                 DesignStudent o = row.get();
@@ -90,11 +91,12 @@ public class StyleDesignTest extends WorkbookTest {
     }
 
     @Test public void testStyleDesign1() throws IOException {
+        final String fileName = "标识行样式1.xlsx";
         ListSheet<ListObjectSheetTest.Item> itemListSheet = new ListSheet<>("序列数", ListObjectSheetTest.Item.randomTestData());
         itemListSheet.setStyleProcessor(rainbowStyle);
-        new Workbook().addSheet(itemListSheet).writeTo(defaultTestPath.resolve("标识行样式1.xlsx"));
+        new Workbook().addSheet(itemListSheet).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式1.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             reader.sheet(0).header(1).bind(ListObjectSheetTest.Item.class).rows().forEach(row -> {
                 Styles styles = row.getStyles();
                 ListObjectSheetTest.Item item = row.get();
@@ -118,6 +120,7 @@ public class StyleDesignTest extends WorkbookTest {
     }
 
     @Test public void testStyleDesign2() throws IOException {
+        final String fileName = "标识行样式2.xlsx";
         new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()).setStyleProcessor((item, style, sst) -> {
                 if (item != null && item.getId() < 10) {
@@ -125,9 +128,9 @@ public class StyleDesignTest extends WorkbookTest {
                 }
                 return style;
             }))
-            .writeTo(defaultTestPath.resolve("标识行样式2.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式2.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             reader.sheet(0).header(1).bind(DesignStudent.class).rows().forEach(row -> {
                 Styles styles = row.getStyles();
                 DesignStudent item = row.get();
@@ -152,14 +155,15 @@ public class StyleDesignTest extends WorkbookTest {
     }
 
     @Test public void testStyleDesignSpecifyColumns() throws IOException {
+        final String fileName = "标识行样式3.xlsx";
         new Workbook()
             .addSheet(new ListSheet<>("序列数", DesignStudent.randomTestData()
                 , new Column("姓名", "name").setWrapText(true).setStyleProcessor((n, s, sst) -> sst.modifyHorizontal(s, Horizontals.CENTER))
                 , new Column("数学成绩", "score").setWidth(12D)
                 , new Column("备注", "toString").setWidth(25.32D).setWrapText(true)
-            )).writeTo(defaultTestPath.resolve("标识行样式3.xlsx"));
+            )).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("标识行样式3.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             reader.sheet(0).header(1).rows().forEach(row -> {
                 Styles styles = row.getStyles();
                 int c0 = row.getCellStyle(0), c2 = row.getCellStyle(2);
@@ -171,6 +175,7 @@ public class StyleDesignTest extends WorkbookTest {
     }
 
     @Test public void testMergedCells() throws IOException {
+        final String fileName = "Merged Cells.xlsx";
         List<E> list = new ArrayList<>();
         list.add(new E("暗月月", "男", "1", "数学", "3", 30, "教育a", "教育b"));
         list.add(new E("暗月月", "男", "2", "语文", "1", 30, "教育a", "教育c"));
@@ -217,9 +222,9 @@ public class StyleDesignTest extends WorkbookTest {
             , new Column("教育").addSubColumn(new Column("教育2", "jy2")))
             .setStyleProcessor(new GroupStyleProcessor<>())
             .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells))
-            .writeTo(defaultTestPath.resolve("Merged Cells.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Merged Cells.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             // Normal reader
             List<Map<String, Object>> readList = reader.sheet(0).header(1, 2).rows().map(org.ttzero.excel.reader.Row::toMap).collect(Collectors.toList());
             List<String> expected = Arrays.asList("{姓名=暗月月, 性别=男, 证书:编号=1, 证书:类型=数学, 证书:等级=3, 年龄=30, 教育:教育1=教育a, 教育:教育2=教育b}",
@@ -407,7 +412,7 @@ public class StyleDesignTest extends WorkbookTest {
         public static List<ListObjectSheetTest.Student> randomTestData(int pageNo, int limit) {
             List<ListObjectSheetTest.Student> list = new ArrayList<>(limit);
             for (int i = pageNo * limit, n = i + limit, k; i < n; i++) {
-                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? new String(new char[]{(char) ('a' + k)}) : getRandomString(), random.nextInt(50) + 50);
+                ListObjectSheetTest.Student e = new DesignStudent(i, (k = random.nextInt(10)) < 3 ? String.valueOf((char) ('a' + k)) : getRandomString(), random.nextInt(50) + 50);
                 list.add(e);
             }
             return list;

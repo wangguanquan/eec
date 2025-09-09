@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,12 +49,13 @@ import static org.junit.Assert.assertTrue;
 public class ReportDesignTest extends WorkbookTest {
 
     @Test public void testMergedCells() throws IOException {
+        final String fileName = "Group Style Processor.xlsx";
         List<E> list = testData();
         new Workbook().cancelZebraLine().setAutoSize(true)
             .addSheet(new ListSheet<>(list, createColumns()).setStyleProcessor(new GroupStyleProcessor<>()).hideGridLines())
-            .writeTo(defaultTestPath.resolve("Group Style Processor.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Group Style Processor.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> expectList = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
 
             assertEquals(expectList.size(), list.size());
@@ -124,6 +125,7 @@ public class ReportDesignTest extends WorkbookTest {
     }
 
     @Test public void testMergedCells1() throws IOException {
+        final String fileName = "Report Design.xlsx";
         List<E> list = testData();
         // 用于保存合并单元格
         List<Dimension> mergeCells = new ArrayList<>();
@@ -189,9 +191,9 @@ public class ReportDesignTest extends WorkbookTest {
         new Workbook().cancelZebraLine().setAutoSize(true)
             .addSheet(new ListSheet<>(list, createColumns())
                 .setStyleProcessor(new GroupStyleProcessor2<>())
-                .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath.resolve("Report Design.xlsx"));
+                .putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells).hideGridLines()).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Report Design.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Dimension> mergeCells1 = sheet.getMergeCells();
 

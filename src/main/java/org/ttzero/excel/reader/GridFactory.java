@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,7 @@ public class GridFactory {
         }
 
         Dimension range = new Dimension(fr, fc, lr, lc);
-        int r = lr - fr + 1
-            , c = lc - fc + 1;
-
+        int r = lr - fr + 1, c = lc - fc + 1;
         n = r * c;
 
         Grid grid = c <= 64 && r < 1 << 15 ? new Grid.FastGrid(range)

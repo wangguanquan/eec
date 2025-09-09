@@ -18,9 +18,17 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
@@ -36,6 +44,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
@@ -47,6 +56,7 @@ public class SimpleSheetTest extends WorkbookTest {
     @Test public void testConstructor1() throws IOException {
         String fileName = "test simple sheet Constructor1.xlsx";
         new Workbook()
+            .setAutoSize(true)
             .addSheet(new SimpleSheet<>(getSimpleDataRows()))
             .writeTo(defaultTestPath.resolve(fileName));
 
@@ -86,10 +96,10 @@ public class SimpleSheetTest extends WorkbookTest {
         String fileName = "test simple sheet Constructor4.xlsx";
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new SimpleSheet<>("Item", WaterMark.of(author)
+            .addSheet(new SimpleSheet<>("Item"
                 , new Column("ID", "id").setFont(new Font("华文行楷", 24, Color.BLUE))
                 , new Column("NAME", "name").setFont(new Font("微软雅黑", 18)))
-                .setData(getSimpleDataRows()))
+                .setData(getSimpleDataRows()).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -122,9 +132,8 @@ public class SimpleSheetTest extends WorkbookTest {
         new Workbook()
             .setAutoSize(true)
             .addSheet(new SimpleSheet<>(getSimpleDataRows()
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -138,9 +147,8 @@ public class SimpleSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new SimpleSheet<>("ITEM"
                 , getSimpleDataRows()
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -257,7 +265,7 @@ public class SimpleSheetTest extends WorkbookTest {
                 return list;
             }
             return null;
-        }).setStartRowIndex(5, false)).writeTo(defaultTestPath.resolve(fileName));
+        }).setStartCoordinate(5)).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Iterator<Row> iter = reader.sheet(0).iterator();
@@ -276,6 +284,71 @@ public class SimpleSheetTest extends WorkbookTest {
                 assertEquals(row.getInt(0), sub.get(0));
                 assertEquals(row.getString(1), sub.get(1));
                 assertEquals(row.getTimestamp(2).getTime() / 1000, ((Timestamp) sub.get(2)).getTime() / 1000);
+            }
+        }
+    }
+
+    @Test public void testMultipleTable() throws IOException {
+        List<Object> rows = new ArrayList<>();
+        List<ListObjectSheetTest.Student> students1, students2;
+        students1 = new ArrayList<>(ListObjectSheetTest.Student.randomTestData(3));
+        students2 = new ArrayList<>(ListObjectSheetTest.Student.randomTestData(3));
+        List<Dimension> mergeCells = new ArrayList<>();
+        // 循环添加多个对象
+        rows.add(new Object[]{"班级1"});
+        mergeCells.add(new Dimension(1, (short) 1, 1, (short) 2));
+        rows.add(new Object[]{"学号", "姓名"});
+        for (ListObjectSheetTest.Student e : students1) {
+            rows.add(new Object[]{e.getId(), e.getName()});
+        }
+        rows.add(new Object[]{});
+        rows.add(new Object[]{"班级2"});
+        int row = students1.size() + 4;
+        mergeCells.add(new Dimension(row, (short) 1, row, (short) 2));
+        rows.add(new Object[]{"学号", "姓名"});
+        for (ListObjectSheetTest.Student e : students2) {
+            rows.add(new Object[]{e.getId(), e.getName()});
+        }
+
+        new Workbook().addSheet(new SimpleSheet<>(rows, new Column().autoSize(), new Column().setWidth(20)).setCellValueAndStyle(new XMLCellValueAndStyle() {
+            @Override
+            public void reset(org.ttzero.excel.entity.Row row, Cell cell, Object e, Column hc) {
+                // 将值转输出需要的统一格式
+                setCellValue(row, cell, e, hc, hc.getClazz(), hc.getConversion() != null);
+                // 可以根据行号和列号
+                int xf;
+                if (row.index == 0) {
+                    int style = 0;
+                    Styles styles = hc.styles;
+                    style = styles.modifyFont(style, new Font("宋体", 13));
+                    style = styles.modifyFill(style, new Fill(PatternType.solid, Color.pink));
+                    style = styles.modifyBorder(style, new Border(BorderStyle.THIN, Color.orange));
+                    style = styles.modifyHorizontal(style, Horizontals.CENTER);
+                    xf = styles.of(style);
+                } else {
+                    xf = getStyleIndex(row, hc, e);
+                }
+                cell.xf = xf;
+            }
+        }).putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells)).writeTo(defaultTestPath.resolve("testMultipleTable.xlsx"));
+    }
+
+    @Test public void testSpecifyCoordinateWrite() throws IOException {
+        final String fileName = "test specify coordinate D4 SimpleSheet.xlsx";
+        List<Object> expectList = getSimpleDataRows();
+        new Workbook().setAutoSize(true)
+            .addSheet(new SimpleSheet<>(expectList).setStartCoordinate("D4"))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            org.ttzero.excel.reader.Row firstRow = iter.next();
+            assertNotNull(firstRow);
+            assertEquals(firstRow.getRowNum(), 4);
+//            assertEquals(firstRow.getFirstColumnIndex(), 3);
+            System.out.println(firstRow);
+            for (; iter.hasNext();) {
+                System.out.println(iter.next());
             }
         }
     }

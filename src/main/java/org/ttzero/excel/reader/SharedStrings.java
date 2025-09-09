@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,14 +278,12 @@ public class SharedStrings implements Closeable {
         if (length <= 0) return status = 0;
 
         String line = new String(cb, 0, Math.min(256, length));
-        // Microsoft Excel
         String uniqueCount = " uniqueCount=";
         int index = line.indexOf(uniqueCount)
             , end = index > 0 ? line.indexOf('"', index += (uniqueCount.length() + 1)) : -1;
         if (end > 0) {
             off = Integer.parseInt(line.substring(index, end));
         }
-        // WPS
         else {
             String count = " count=";
             index = line.indexOf(count);
@@ -641,6 +639,7 @@ public class SharedStrings implements Closeable {
                 else if (n == 3 && cb[idx_38 + 1] == 'a' && cb[idx_38 + 2] == 'm' && cb[idx_38 + 3] == 'p') buf[offset++] = '&';
                 else if (n == 4 && cb[idx_38 + 1] == 'n' && cb[idx_38 + 2] == 'b' && cb[idx_38 + 3] == 's' && cb[idx_38 + 4] == 'p') buf[offset++] = ' ';
                 else if (n == 4 && cb[idx_38 + 1] == 'q' && cb[idx_38 + 2] == 'u' && cb[idx_38 + 3] == 'o' && cb[idx_38 + 4] == 't') buf[offset++] = '"';
+                else if (n == 4 && cb[idx_38 + 1] == 'a' && cb[idx_38 + 2] == 'p' && cb[idx_38 + 3] == 'o' && cb[idx_38 + 4] == 's') buf[offset++] = '\'';
                 else {
                     System.arraycopy(cb, idx_38, buf, offset, n = idx_59 - idx_38 + 1);
                     offset += n;
@@ -700,9 +699,7 @@ public class SharedStrings implements Closeable {
     public void close() throws IOException {
         if (reader != null) {
             // Debug hit rate
-            LOGGER.debug("Count: {}， uniqueCount: {}， Repetition rate: {}%", total, max
-                , (total > 0 ? (total - max) * 100.0 / total : 0));
-            LOGGER.debug("Forward: {}, Backward: {}, SST: {}, Hot: {}, Tester: {Resize: {}, Size: {}}"
+            LOGGER.debug("Count:{}, Forward:{}, Backward:{}, SST:{}, Hot:{}, Tester:{Resize:{}, Size:{}}", max
                 , total_forward, total_backward, total_sst, total_hot
                 , tester != null ? tester.analysis() : 0, tester != null ? tester.size() : 0);
             reader.close();

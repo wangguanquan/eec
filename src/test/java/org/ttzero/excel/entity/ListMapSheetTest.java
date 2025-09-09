@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -360,7 +360,7 @@ public class ListMapSheetTest extends WorkbookTest {
         List<Map<String, Object>> expectList = createAllTypeData(10);
         new Workbook()
             .setAutoSize(true)
-            .addSheet(new ListMapSheet<>("Map", WaterMark.of(author)
+            .addSheet(new ListMapSheet<>("Map"
                 , new Column("boolean", "bv", boolean.class)
                 , new Column("char", "cv", char.class)
                 , new Column("short", "sv", short.class)
@@ -376,7 +376,7 @@ public class ListMapSheetTest extends WorkbookTest {
                 , new Column("LocalDate", "ldv", LocalDate.class)
                 , new Column("LocalDateTime", "ldtv", LocalDateTime.class)
                 , new Column("LocalTime", "ltv", LocalTime.class))
-                .setData(expectList))
+                .setData(expectList).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -463,9 +463,8 @@ public class ListMapSheetTest extends WorkbookTest {
         new Workbook()
             .setAutoSize(true)
             .addSheet(new ListMapSheet<>(expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id")
-                , new Column("NAME", "name")))
+                , new Column("NAME", "name")).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -493,9 +492,8 @@ public class ListMapSheetTest extends WorkbookTest {
             .setAutoSize(true)
             .addSheet(new ListMapSheet<>("MAP"
                 , expectList
-                , WaterMark.of(author)
                 , new Column("ID", "id", int.class)
-                , new Column("NAME", "name", String.class)))
+                , new Column("NAME", "name", String.class)).setWatermark(Watermark.of(author)))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -747,6 +745,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testLargeColumns() throws IOException {
+        final String fileName = "large map.xlsx";
         int len = 1436;
         List<Map<String, Object>> expectList = new ArrayList<>(len);
         for (int i = 0; i < len; i++) {
@@ -757,9 +756,9 @@ public class ListMapSheetTest extends WorkbookTest {
             expectList.add(map);
         }
 
-        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve("large map.xlsx"));
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("large map.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> list = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), list.size());
             for (int i = 0; i < len; i++) {
@@ -770,12 +769,13 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowWrite() throws IOException {
+        final String fileName = "test specify row 5 ListMapSheet.xlsx";
         List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet<>(list).setStartRowIndex(5))
-            .writeTo(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"));
+            .addSheet(new ListMapSheet<>(list).setStartCoordinate(5, true))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 ListMapSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
@@ -785,13 +785,14 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
-    @Test public void testSpecifyRowStayA1Write() throws IOException {
+    @Test public void testSpecifyStartCellC5Write() throws IOException {
+        final String fileName = "test specify start cell C5 ListMapSheet.xlsx";
         List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
-            .addSheet(new ListMapSheet<>(list).setStartRowIndex(5, false))
-            .writeTo(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"));
+            .addSheet(new ListMapSheet<>(list).setStartCoordinate(5, 3))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row 5 stay A1 ListMapSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
@@ -802,15 +803,16 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowAndColWrite() throws IOException {
+        final String fileName = "test specify row and col ListMapSheet.xlsx";
         List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListMapSheet<>(list
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
-                .setStartRowIndex(5))
-            .writeTo(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"));
+                .setStartCoordinate(5))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and col ListMapSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
@@ -823,15 +825,16 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testSpecifyRowAndColStayA1Write() throws IOException {
+        final String fileName = "test specify row and cel stay A1 ListMapSheet.xlsx";
         List<Map<String, Object>> list = createTestData(10);
         new Workbook().setAutoSize(true)
             .addSheet(new ListMapSheet<>(list
                 , new Column("id").setColIndex(3)
                 , new Column("name").setColIndex(4))
-                .setStartRowIndex(5, false))
-            .writeTo(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"));
+                .setStartCoordinate(5, false))
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test specify row and cel stay A1 ListMapSheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> readList = reader.sheet(0).header(5).rows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(list.size(), readList.size());
             for (int i = 0, len = list.size(); i < len; i++) {
@@ -884,6 +887,7 @@ public class ListMapSheetTest extends WorkbookTest {
     }
 
     @Test public void testMultiTypeStoreInSameKey() throws IOException {
+        final String fileName = "testMultiTypeStoreInSameKey.xlsx";
         List<Map<String, Object>> expectList = new ArrayList<>();
         expectList.add(new HashMap<String, Object>(){{
             put("a", "abc");
@@ -893,9 +897,9 @@ public class ListMapSheetTest extends WorkbookTest {
             put("b", "abc");
         }});
 
-        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"));
+        new Workbook().addSheet(new ListMapSheet<>(expectList)).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("testMultiTypeStoreInSameKey.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Map<String, Object>> result = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
             assertEquals(expectList.size(), result.size());
         }
@@ -941,7 +945,7 @@ public class ListMapSheetTest extends WorkbookTest {
                         if (!existsKeys.contains(k)) {
                             Column col = new Column(k, k), pre = columns[columns.length - 1].getTail(); // <- 需要判断NPE
                             col.colIndex = pre.colIndex + 1;
-                            col.realColIndex = pre.realColIndex + 1;
+                            col.colNum = pre.getColNum() + 1;
                             col.styles = getWorkbook().getStyles();
                             // 扩容并追加到末尾
                             columns = Arrays.copyOf(columns, columns.length + 1);

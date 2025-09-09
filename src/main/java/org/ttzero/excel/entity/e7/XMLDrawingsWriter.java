@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,6 +121,7 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
     public void writeTo(Path root) throws IOException { }
 
     static final String[] ANCHOR_PROPERTY = {"twoCell", "oneCell", "absolute"};
+    static final short[] DEFAULT_PADDING = {0, 0, 0, 0};
 
     @Override
     public void drawing(Picture picture) throws IOException {
@@ -135,6 +136,9 @@ public class XMLDrawingsWriter implements IDrawingsWriter {
             bw.write(ANCHOR_PROPERTY[editAs]);
             bw.write("\">");
         }
+
+        if (picture.padding == null) picture.padding = DEFAULT_PADDING;
+        else if (picture.padding.length < 4) picture.padding = Arrays.copyOf(picture.padding, 4);
 
         // From
         bw.write("<xdr:from><xdr:col>");

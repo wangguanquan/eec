@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -335,9 +335,9 @@ public class IndexSharedStringTable extends SharedStringTable {
             position = buffer.getLong();
             channel.position(pos);
             buffer.clear();
-
-            // Read from buffer
-        } else {
+        }
+        // Read from buffer
+        else {
             int _pos = buffer.position();
             buffer.flip();
             if (buffer.hasRemaining()) {

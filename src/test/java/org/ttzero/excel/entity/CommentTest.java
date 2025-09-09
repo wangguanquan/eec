@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2020, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,7 @@ public class CommentTest extends WorkbookTest {
     }
 
     @Test public void testBodyComments() throws IOException {
+        final String fileName = "Body批注测试.xlsx";
         List<Stock> list = new ArrayList<>();
         list.add(new Stock(60, StockHealth.HEALTHY));
         list.add(new Stock(40, StockHealth.NORMAL));
@@ -120,9 +121,9 @@ public class CommentTest extends WorkbookTest {
         // B4单元格添加批注
         comments.addComment(4, 2, new Comment("库存不足", "低于警戒线13%,请尽快添加库存").setValueFont(yh10));
         workbook.addSheet(listSheet);
-        workbook.writeTo(defaultTestPath.resolve("Body批注测试.xlsx"));
+        workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Body批注测试.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Map<Long, Comment> commentMap = reader.sheet(0).asFullSheet().getComments();
             Comment A1 = commentMap.get(1L << 16 | 1);
             assertNotNull(A1);

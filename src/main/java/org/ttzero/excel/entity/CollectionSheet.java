@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,11 +58,11 @@
 //     * Constructor worksheet
 //     *
 //     * @param name the worksheet name
-//     * @param waterMark the {@link WaterMark}
+//     * @param watermark the {@link watermark}
 //     * @param columns the {@link Column}
 //     */
-//    public CollectionSheet(String name, WaterMark waterMark, final Column... columns) {
-//        super(name, waterMark, columns);
+//    public CollectionSheet(String name, Watermark watermark, final Column... columns) {
+//        super(name, watermark, columns);
 //    }
 //
 //    public CollectionSheet<T> setData(final Collection<T> data) {

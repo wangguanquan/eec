@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,13 +78,13 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * 实例化工作表并指定工作表名称，水印和表头信息
      *
      * @param name      工作表名称
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ListMapSheet(String name, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
+    public ListMapSheet(String name, Watermark watermark, final Column... columns) {
+        super(name, watermark, columns);
     }
 
     /**
@@ -131,13 +131,13 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * 实例化工作表并添加导出数据和表头信息
      *
      * @param data      需要导出的数据
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ListMapSheet(List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
-        super(data, waterMark, columns);
+    public ListMapSheet(List<Map<String, T>> data, Watermark watermark, final Column... columns) {
+        super(data, watermark, columns);
     }
 
     /**
@@ -145,13 +145,14 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      *
      * @param name      工作表名
      * @param data      需要导出的数据
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ListMapSheet(String name, List<Map<String, T>> data, WaterMark waterMark, final Column... columns) {
-        super(name, data, waterMark, columns);
+    public ListMapSheet(String name, List<Map<String, T>> data, Watermark watermark, final Column... columns) {
+        super(name, watermark, columns);
+        setData(data);
     }
 
     /**
@@ -219,7 +220,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
         if (existsMergeCells != null) {
             Grid grid = GridFactory.create(existsMergeCells);
             for (Column col : columns) {
-                if (StringUtil.isEmpty(col.key) && grid.test(1, col.realColIndex)) {
+                if (StringUtil.isEmpty(col.key) && grid.test(1, col.getColNum())) {
                     Column next = col.next;
                     for (; next != null && StringUtil.isEmpty(next.key); next = next.next) ;
                     if (next != null) col.key = next.key; // Keep the key to get the value

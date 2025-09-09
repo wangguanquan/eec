@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import org.ttzero.excel.manager.docProps.Core;
 import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.io.Closeable;
@@ -373,7 +374,7 @@ public class ExcelReader implements Closeable {
             if (temp != null) FileUtil.rm(temp);
             throw new ExcelReadException("The file format is incorrect or corrupted. [[Content_Types].xml]");
         }
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(zipFile.getInputStream(entry));
@@ -459,7 +460,7 @@ public class ExcelReader implements Closeable {
 //        appInfo = getGeneralInfo();
 
         // load workbook.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
 
         // Load SharedString
@@ -648,7 +649,7 @@ public class ExcelReader implements Closeable {
      */
     protected AppInfo getGeneralInfo() {
         // load app.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         App app = null;
         Core core = null;
         ZipEntry entry = getEntry("docProps/app.xml");
@@ -849,7 +850,7 @@ public class ExcelReader implements Closeable {
         if (entry == null) return null;
         Document document = null;
         // Load custom.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         try {
             document = reader.read(zipFile.getInputStream(entry));
         } catch (DocumentException | IOException e) {

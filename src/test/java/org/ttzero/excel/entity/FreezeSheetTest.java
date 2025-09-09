@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2022, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,7 +144,7 @@ public class FreezeSheetTest extends WorkbookTest {
         String fileName = "Freeze Panes Row2 Column2 From Row4.xlsx";
         List<ListObjectSheetTest.AllType> expectList = ListObjectSheetTest.AllType.randomTestData();
         new Workbook()
-            .addSheet(new ListSheet<>(expectList).setStartRowIndex(4)
+            .addSheet(new ListSheet<>(expectList).setStartCoordinate(4, true)
                 .putExtProp(Const.ExtendPropertyKey.FREEZE, Panes.row(4)))
             .writeTo(defaultTestPath.resolve(fileName));
 

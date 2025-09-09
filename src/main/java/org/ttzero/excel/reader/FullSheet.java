@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,20 @@ import java.util.Map;
  *
  * @author guanquan.wang at 2023-12-02 15:31
  */
-public interface FullSheet extends MergeSheet, CalcSheet {
+public interface FullSheet extends Sheet {
+    /**
+     * 获取抽象的合并表格，通过表格快速判断某个坐标是否为合并单元格的一部分
+     *
+     * @return merged {@link Grid}
+     */
+    Grid getMergeGrid();
+
+    /**
+     * 获取所有合并单元格的合并范围
+     *
+     * @return 如果存在合并单元格则返回所有合并单元格的范围，否则返回{@code null}
+     */
+    List<Dimension> getMergeCells();
     /**
      * 复制合并单元格的值
      *

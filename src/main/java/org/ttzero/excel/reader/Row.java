@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,6 @@ import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.reader.Cell.TIME;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED;
 import static org.ttzero.excel.reader.Cell.UNALLOCATED_CELL;
-import static org.ttzero.excel.util.DateUtil.toDate;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 import static org.ttzero.excel.util.DateUtil.toLocalDate;
 import static org.ttzero.excel.util.DateUtil.toLocalDateTime;
@@ -84,7 +83,12 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 public class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     // Index to row
+    @Deprecated
     protected int index = -1;
+    /**
+     * 行号（从1开始）
+     */
+    protected int rowNum = -1;
     // Index to first column (zero base, inclusive)
     protected int fc = 0;
     // Index to last column (zero base, exclusive)
@@ -113,7 +117,17 @@ public class Row {
      * @return 行号
      */
     public int getRowNum() {
-        return index;
+        return rowNum;
+    }
+
+    /**
+     * 获取行索引，从0开始
+     *
+     * @return 行索引，{@code -1}表示未知
+     */
+    public int getRowIndex() {
+        int r = getRowNum();
+        return r >= 1 ? r - 1 : -1;
     }
 
     /**
@@ -222,13 +236,13 @@ public class Row {
     /**
      * 获取单元格{@link Cell}，获取到单元格后可用于后续取值或样式
      *
-     * @param i 单元格列索引
+     * @param columnIndex 单元格列索引
      * @return 单元格 {@link Cell}
      * @throws IndexOutOfBoundsException 单元络索引为负数时抛此异常
      */
-    public Cell getCell(int i) {
-        rangeCheck(i);
-        return i < lc ? cells[i] : UNALLOCATED_CELL;
+    public Cell getCell(int columnIndex) {
+        rangeCheck(columnIndex);
+        return columnIndex < lc ? cells[columnIndex] : UNALLOCATED_CELL;
     }
 
     /**
@@ -766,16 +780,8 @@ public class Row {
      * @return 单元格有值时强转为{@code java.util.Date}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Date getDate(Cell c) {
-        Date date;
-        switch (c.t) {
-            case NUMERIC    : date = toDate(c.intVal);                  break;
-            case DECIMAL    : date = toDate(c.decimal.doubleValue());   break;
-            case DOUBLE     : date = toDate(c.doubleVal);               break;
-            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : date = isNotBlank(c.stringVal) ? toDate(c.stringVal.trim()) : null; break;
-            default         : date = null;
-        }
-        return date;
+        Timestamp ts = getTimestamp(c);
+        return ts != null ? new java.util.Date(ts.getTime()) : null;
     }
 
     /**
@@ -807,16 +813,8 @@ public class Row {
      * @return 单元格有值时强转为{@code java.sql.Timestamp}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public Timestamp getTimestamp(Cell c) {
-        Timestamp ts;
-        switch (c.t) {
-            case NUMERIC    : ts = toTimestamp(c.intVal);                break;
-            case DECIMAL    : ts = toTimestamp(c.decimal.doubleValue()); break;
-            case DOUBLE     : ts = toTimestamp(c.doubleVal);             break;
-            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : ts = isNotBlank(c.stringVal) ? toTimestamp(c.stringVal.trim()) : null; break;
-            default         : ts = null;
-        }
-        return ts;
+        LocalDateTime ts = getLocalDateTime(c);
+        return ts != null ? Timestamp.valueOf(ts) : null;
     }
 
     /**
@@ -846,15 +844,8 @@ public class Row {
      * @return 单元格有值时强转为{@code java.sql.Time}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public java.sql.Time getTime(Cell c) {
-        java.sql.Time t;
-        switch (c.t) {
-            case DECIMAL    : t = toTime(c.decimal.doubleValue());                          break;
-            case DOUBLE     : t = toTime(c.doubleVal);                                      break;
-            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : t = isNotBlank(c.stringVal) ? toTime(c.stringVal.trim()) : null; break;
-            default         : t = null;
-        }
-        return t;
+        LocalTime t = getLocalTime(c);
+        return t != null ? java.sql.Time.valueOf(t) : null;
     }
 
     /**
@@ -927,16 +918,8 @@ public class Row {
      * @return 单元格有值时强转为{@code LocalDate}否则返回{@code null}，此接口可能抛{@code NumberFormatException}异常
      */
     public LocalDate getLocalDate(Cell c) {
-        LocalDate ld;
-        switch (c.t) {
-            case NUMERIC    : ld = toLocalDate(c.intVal);                   break;
-            case DECIMAL    : ld = toLocalDate(c.decimal.intValue());       break;
-            case DOUBLE     : ld = toLocalDate((int) c.doubleVal);          break;
-            case SST        : if (c.stringVal == null) c.setString(sst.get(c.intVal)); // @Mark:=>There is no missing `break`, this is normal logic here
-            case INLINESTR  : ld = isNotBlank(c.stringVal) ? toTimestamp(c.stringVal.trim()).toLocalDateTime().toLocalDate() : null; break;
-            default         : ld = null;
-        }
-        return ld;
+        LocalDateTime ldt = getLocalDateTime(c);
+        return ldt != null ? ldt.toLocalDate() : null;
     }
 
     /**

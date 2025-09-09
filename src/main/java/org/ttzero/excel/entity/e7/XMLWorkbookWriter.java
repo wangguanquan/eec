@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
-import org.ttzero.excel.entity.WaterMark;
+import org.ttzero.excel.entity.Watermark;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.RelManager;
@@ -44,7 +44,6 @@ import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -114,23 +113,24 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        Path zip = createTemp();
-        reMarkPath(zip, path);
-        FileUtil.rm(zip);
+        Path zip = null;
+        try {
+            zip = createTemp();
+            moveToPath(zip, path);
+        } finally {
+            if (zip != null) FileUtil.rm(zip);
+        }
     }
 
     @Override
     public void writeTo(OutputStream os) throws IOException {
-        Path zip = createTemp();
-        Files.copy(zip, os);
-        FileUtil.rm(zip);
-    }
-
-    @Override
-    public void writeTo(File file) throws IOException {
-        Path zip = createTemp();
-        FileUtil.cp(zip, file);
-        FileUtil.rm(zip);
+        Path zip = null;
+        try {
+            zip = createTemp();
+            Files.copy(zip, os);
+        } finally {
+            if (zip != null) FileUtil.rm(zip);
+        }
     }
 
 
@@ -168,11 +168,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
         relManager.add(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
-
-//        WaterMark waterMark;
-//        if ((waterMark = workbook.getWaterMark()) != null && waterMark.canWrite()) {
-//            contentType.add(new ContentType.Default(waterMark.getContentType(), waterMark.getSuffix().substring(1)));
-//        }
 
         // workbook.xml
         writeWorkbook(root);
@@ -234,12 +229,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     protected void writeCore(Path root) throws IOException {
         Core core = workbook.getCore() != null ? workbook.getCore() : new Core();
-        if (StringUtil.isEmpty(core.getCreator())) {
-            if (workbook.getCreator() != null) {
-                core.setCreator(workbook.getCreator());
-            } else {
-                core.setCreator(System.getProperty("user.name"));
-            }
+        if (StringUtil.isEmpty(core.getCreator()) && StringUtil.isNotEmpty(workbook.getCreator())) {
+            core.setCreator(workbook.getCreator());
         }
         if (StringUtil.isEmpty(core.getTitle())) core.setTitle(workbook.getName());
         if (core.getCreated() == null) core.setCreated(new Date());
@@ -263,16 +254,6 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             workbook.addContentType(new ContentType.Override(Const.ContentType.CUSTOM, "/docProps/custom.xml"))
                 .addContentTypeRel(new Relationship("docProps/custom.xml", Const.Relationship.CUSTOM));
         }
-    }
-
-    /**
-     * @param root 根目录路径
-     * @throws IOException 如果写入过程中发生I/O错误
-     * @deprecated Rename to {@link #writeWorkbook(Path)}
-     */
-    @Deprecated
-    protected void writeSelf(Path root) throws IOException {
-        writeWorkbook(root);
     }
 
     /**
@@ -393,8 +374,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
                 contentType.add(new ContentType.Default(Const.ContentType.VMLDRAWING, "vml"));
             }
 
-            // Add water marker
-            WaterMark wm = sheet.getWaterMark();
+            // Add watermark
+            Watermark wm = sheet.getWatermark();
             if (wm != null && wm.canWrite()) {
                 contentType.add(new ContentType.Default(wm.getContentType(), wm.getSuffix().substring(1)));
             }
@@ -427,23 +408,24 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    protected void reMarkPath(Path zip, Path path) throws IOException {
-        String name;
-        if (StringUtil.isEmpty(name = workbook.getName())) {
-            name = "新建文件";
-        }
+    @Deprecated
+    protected void reMarkPath(Path source, Path target) throws IOException {
+        moveToPath(source, target);
+    }
 
-        Path resultPath = reMarkPath(zip, path, name);
+    protected void moveToPath(Path source, Path target) throws IOException {
+        String name = StringUtil.isEmpty(workbook.getName()) ? "新建文件" : workbook.getName();
+        Path resultPath = moveToPath(source, target, name);
         LOGGER.debug("Write completed. {}", resultPath);
     }
 
     @Override
     public void close() throws IOException {
         for (Sheet sheet : workbook.getSheets()) {
-            if (sheet != null && sheet.getWaterMark() != null)
-                sheet.getWaterMark().delete();
+            if (sheet != null && sheet.getWatermark() != null)
+                sheet.getWatermark().delete();
         }
-        if (workbook.getWaterMark() != null) workbook.getWaterMark().delete() ; // Delete template image
+        if (workbook.getWatermark() != null) workbook.getWatermark().delete() ; // Delete template image
         workbook.getSharedStrings().close();
     }
 

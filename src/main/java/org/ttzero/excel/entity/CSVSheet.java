@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,10 @@ public class CSVSheet extends Sheet {
      * csv文件路径
      */
     protected Path path;
+    /**
+     * csv Reader
+     */
+    protected CSVUtil.Reader reader;
     /**
      * csv行迭代器，配合工作表输出协议获取数据可以极大降低内存消耗
      */
@@ -158,10 +162,9 @@ public class CSVSheet extends Sheet {
     public void close() throws IOException {
         // 最后一个Sheet关闭CSV流
         if (shouldClose) {
-            iterator.close();
-            if (shouldClean) {
-                FileUtil.rm_rf(path);
-            }
+            if (iterator != null) iterator.close();
+            if (reader != null) reader.close();
+            if (shouldClean) FileUtil.rm_rf(path);
         }
         super.close();
     }
@@ -169,7 +172,8 @@ public class CSVSheet extends Sheet {
     // Create CSV iterator
     private void init() throws IOException {
         assert path != null && exists(path);
-        iterator = CSVUtil.newReader(path, delimiter, charset).sharedIterator();
+        reader = CSVUtil.newReader(path, delimiter, charset);
+        iterator = reader.sharedIterator();
     }
 
     /**

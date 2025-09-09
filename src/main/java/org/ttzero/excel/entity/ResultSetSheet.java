@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,13 +110,13 @@ public class ResultSetSheet extends Sheet {
      * 实例化工作表并指定工作表名称，水印和表头信息
      *
      * @param name      工作表名称
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ResultSetSheet(String name, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
+    public ResultSetSheet(String name, Watermark watermark, final Column... columns) {
+        super(name, watermark, columns);
     }
 
     /**
@@ -164,13 +164,13 @@ public class ResultSetSheet extends Sheet {
      * 实例化工作表并指定数据源{@code ResultSet}、水印和表头信息
      *
      * @param rs        数据源{@code ResultSet}
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ResultSetSheet(ResultSet rs, WaterMark waterMark, final Column... columns) {
-        this(null, rs, waterMark, columns);
+    public ResultSetSheet(ResultSet rs, Watermark watermark, final Column... columns) {
+        this(null, rs, watermark, columns);
     }
 
     /**
@@ -178,13 +178,13 @@ public class ResultSetSheet extends Sheet {
      *
      * @param name      工作表名
      * @param rs        数据源{@code ResultSet}
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public ResultSetSheet(String name, ResultSet rs, WaterMark waterMark, final Column... columns) {
-        super(name, waterMark, columns);
+    public ResultSetSheet(String name, ResultSet rs, Watermark watermark, final Column... columns) {
+        super(name, watermark, columns);
         this.rs = rs;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -763,7 +763,8 @@ public class Font implements Cloneable {
         if (ele == null) {
             return new ArrayList<>();
         }
-        return ele.elements().stream().map(Font::parseFontTag).collect(Collectors.toList());
+        List<Element> elements = ele.elements();
+        return elements.stream().map(Font::parseFontTag).collect(Collectors.toList());
     }
 
     /**

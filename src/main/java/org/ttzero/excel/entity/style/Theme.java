@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.manager.TopNS;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
@@ -51,7 +52,7 @@ public class Theme {
     public static Theme load(InputStream is) {
         Theme self = new Theme();
         // load theme1.xml
-        SAXReader reader = SAXReader.createDefault();
+        SAXReader reader = SAXReaderUtil.createDefault();
         Document document;
         try {
             document = reader.read(is);

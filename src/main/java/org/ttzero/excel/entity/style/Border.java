@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2018, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -522,7 +522,8 @@ public class Border implements Cloneable {
         if (ele == null) {
             return new ArrayList<>();
         }
-        return ele.elements().stream().map(Border::parseBorderTag).collect(Collectors.toList());
+        List<Element> elements = ele.elements();
+        return elements.stream().map(Border::parseBorderTag).collect(Collectors.toList());
     }
 
     static Border parseBorderTag(Element tag) {
@@ -552,6 +553,7 @@ public class Border implements Cloneable {
     protected void writeProperties(Element element, SubBorder subBorder) {
         if (subBorder != null && subBorder.style != BorderStyle.NONE) {
             element.addAttribute("style", subBorder.style.getName());
+            if (subBorder.color == null) return;
             Element colorEle = element.element("color");
             if (colorEle == null) colorEle = element.addElement("color");
             int index;

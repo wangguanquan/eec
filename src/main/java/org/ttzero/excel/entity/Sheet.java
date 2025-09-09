@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.ttzero.excel.manager.Const.ROW_BLOCK_SIZE;
+import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 import static org.ttzero.excel.util.StringUtil.isEmpty;
@@ -119,7 +120,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 水印
      */
-    protected WaterMark waterMark;
+    protected Watermark watermark;
     /**
      * 关系管理器
      */
@@ -224,9 +225,9 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     protected Double rowHeight;
     /**
-     * 指定起始行，默认从第1行开始，不同行java中的下标这里是指行号，也就是打开excel左侧看到的行号从1开始
+     * 指定起始行列，高48位保存Row，低16位保存Col(zero base)
      */
-    protected int startRowIndex = 1;
+    protected long startCoordinate;
     /**
      * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
@@ -333,21 +334,21 @@ public abstract class Sheet implements Cloneable, Storable {
     public Sheet(String name, final Column... columns) {
         this.name = name;
         this.columns = columns;
-        this.relManager = new RelManager();
+        relManager = new RelManager();
     }
 
     /**
      * 实例化工作表并指定工作表名称，水印和表头信息
      *
      * @param name      工作表名称
-     * @param waterMark 水印
+     * @param watermark 水印
      * @param columns   表头信息
-     * @deprecated 极少使用后续将删除
+     * @deprecated 使用场景极少，后续版本将删除
      */
     @Deprecated
-    public Sheet(String name, WaterMark waterMark, final Column... columns) {
+    public Sheet(String name, Watermark watermark, final Column... columns) {
         this(name, columns);
-        this.waterMark = waterMark;
+        this.watermark = watermark;
     }
 
     /**
@@ -637,9 +638,31 @@ public abstract class Sheet implements Cloneable, Storable {
      * 此行号将决定从哪一行开始写数据
      *
      * @return 起始行号
+     * @deprecated 方法名容易引起误解，使用{@link #getStartRowNum()} 替换
      */
+    @Deprecated
     public int getStartRowIndex() {
-        return Math.abs(startRowIndex);
+        return getStartRowNum();
+    }
+
+    /**
+     * 获取工作表的起始行号(从1开始)，这里是行号也就是打开Excel左侧看到的行号，
+     * 此行号将决定从哪一行开始写数据
+     *
+     * @return 起始行号
+     */
+    public int getStartRowNum() {
+        return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) >>> 16) : 1;
+    }
+
+    /**
+     * 获取工作表的起始列号(从1开始)，这里是行号也就是打开Excel顶部看到的列号(A)，
+     * 此列号将决定从哪一列开始写数据
+     *
+     * @return 起始列号
+     */
+    public int getStartColNum() {
+        return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) & 0x7FFF) : 1;
     }
 
     /**
@@ -649,35 +672,114 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return {@code true}将首行首列滚动到左上角第一个位置，否则{@code A1}将为左上角第一个位置
      */
     public boolean isScrollToVisibleArea() {
-        return startRowIndex > 0;
+        return startCoordinate > 0;
     }
 
     /**
      * 指定起始行并将该行自动滚到窗口左上角，行号必须大于0
      *
-     * @param startRowIndex 起始行号（从1开始）
+     * @param startRowNum 起始行号（从1开始）
      * @return 当前工作表
+     * @deprecated 方法名容易引起误解,使用 {@link #setStartCoordinate(int)}替代
      */
-    public Sheet setStartRowIndex(int startRowIndex) {
-        return setStartRowIndex(startRowIndex, true);
+    @Deprecated
+    public Sheet setStartRowIndex(int startRowNum) {
+        return setStartRowIndex(startRowNum, false);
     }
 
     /**
      * 指定起始行并设置是否将该行滚动到窗口左上角，行号必须大于0
      *
-     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=0}则打开文件时{@code StartRowIndex}
+     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
      * 将会显示在窗口的第一行</p>
      *
-     * @param startRowIndex       起始行号（从1开始）
+     * @param startRowNum       起始行号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
+     * @deprecated 方法名容易引起误解, 使用 {@link #setStartCoordinate(int, boolean)}替代
+     */
+    @Deprecated
+    public Sheet setStartRowIndex(int startRowNum, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowNum, 1, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始坐标
+     *
+     * @param coordinate 单元格位置字符串 {@code A1}
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(String coordinate) {
+        return setStartCoordinate(coordinate, false);
+    }
+
+    /**
+     * 指定起始坐标
+     *
+     * @param coordinate 单元格位置字符串 {@code A1}
      * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
      * @return 当前工作表
      */
-    public Sheet setStartRowIndex(int startRowIndex, boolean scrollToVisibleArea) {
-        if (startRowIndex <= 0)
-            throw new IndexOutOfBoundsException("The start row index must be greater than 0, current = " + startRowIndex);
-        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowIndex)
-            throw new IndexOutOfBoundsException("The start row index must be less than row-limit, current(" + startRowIndex + ") >= limit(" + sheetWriter.getRowLimit() + ")");
-        this.startRowIndex = scrollToVisibleArea ? startRowIndex : -startRowIndex;
+    public Sheet setStartCoordinate(String coordinate, boolean scrollToVisibleArea) {
+        long f = coordinateToLong(coordinate);
+        return setStartCoordinate((int) (f >> 16), (int) f & 0x7FFF, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始行，行号必须大于0
+     *
+     * @param startRowNum 起始行号（从1开始）
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowNum) {
+        return setStartCoordinate(startRowNum, 1, false);
+    }
+
+    /**
+     * 指定起始行，行号必须大于0
+     *
+     * @param startRowNum 起始行号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowNum, boolean scrollToVisibleArea) {
+        return setStartCoordinate(startRowNum, 1, scrollToVisibleArea);
+    }
+
+    /**
+     * 指定起始行号和列号，行号必须大于0
+     *
+     * @param startRowNum 起始行号（从1开始）
+     * @param startColNum 起始列号（从1开始）
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowNum, int startColNum) {
+        return setStartCoordinate(startRowNum, startColNum, false);
+    }
+
+    /**
+     * 指定起始行号和列号，行号必须大于0
+     *
+     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
+     * 将会显示在窗口的第一行</p>
+     *
+     * @param startRowNum       起始行号（从1开始）
+     * @param startColNum       起始列号（从1开始）
+     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
+     * @return 当前工作表
+     */
+    public Sheet setStartCoordinate(int startRowNum, int startColNum, boolean scrollToVisibleArea) {
+        if (startRowNum <= 0)
+            throw new IndexOutOfBoundsException("The start row num must be greater than 0, current = " + startRowNum);
+        if (sheetWriter != null && sheetWriter.getRowLimit() <= startRowNum)
+            throw new IndexOutOfBoundsException("The start row num must be less than row-limit, current(" + startRowNum + ") >= limit(" + sheetWriter.getRowLimit() + ")");
+        if (startColNum <= 0)
+            throw new IndexOutOfBoundsException("The start col num must be greater than 0, current = " + startColNum);
+        if (sheetWriter != null && sheetWriter.getColumnLimit() <= startColNum)
+            throw new IndexOutOfBoundsException("The start col num must be less than col-limit, current(" + startColNum + ") >= limit(" + sheetWriter.getColumnLimit() + ")");
+
+        long coordinate = ((long) startRowNum) << 16 | (startColNum & 0x7FFF);
+        this.startCoordinate = scrollToVisibleArea ? coordinate : -coordinate;
         return this;
     }
 
@@ -840,21 +942,22 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 计算列的实际下标，Excel下标从1开始，计算后的值将重置{@link Column#realColIndex}属性，
+     * 计算列的实际行号，Excel行号从1开始，计算后的值将重置{@link Column#getColNum()}属性，
      * 该属性将最终输出到Excel文件{@code col}属性中
      */
     protected void calculateRealColIndex() {
+        int startColNum = getStartColNum();
         for (int i = 0; i < columns.length; i++) {
             Column hc = columns[i].getTail();
-            hc.realColIndex = hc.colIndex;
-            if (i > 0 && columns[i - 1].realColIndex >= hc.realColIndex)
-                hc.realColIndex = columns[i - 1].realColIndex + 1;
-            else if (hc.realColIndex <= i) hc.realColIndex = i + 1;
-            else hc.realColIndex = hc.colIndex + 1;
+            hc.colNum = hc.colIndex;
+            if (i > 0 && columns[i - 1].colNum >= hc.colNum)
+                hc.colNum = columns[i - 1].colNum + 1;
+            else if (hc.colNum <= i) hc.colNum = i + startColNum;
+            else hc.colNum = hc.colIndex + startColNum;
 
             if (hc.prev != null) {
                 for (Column col = hc.prev; col != null; col = col.prev)
-                    col.realColIndex = hc.realColIndex;
+                    col.colNum = hc.colNum;
             }
         }
     }
@@ -887,21 +990,31 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 获取水印
      *
-     * @return 水印对象 {@link WaterMark}
+     * @return 水印对象 {@link Watermark}
      */
-    public WaterMark getWaterMark() {
-        return waterMark;
+    public Watermark getWatermark() {
+        return watermark;
     }
 
     /**
      * 设置水印，优先级高于Workbook中的全局水印
      *
-     * @param waterMark 水印对象 {@link WaterMark}
+     * @param watermark 水印对象 {@link Watermark}
      * @return 当前工作表
      */
-    public Sheet setWaterMark(WaterMark waterMark) {
-        this.waterMark = waterMark;
+    public Sheet setWatermark(Watermark watermark) {
+        this.watermark = watermark;
         return this;
+    }
+
+    @Deprecated
+    public Watermark getWaterMark() {
+        return getWatermark();
+    }
+
+    @Deprecated
+    public Sheet setWaterMark(Watermark watermark) {
+        return setWatermark(watermark);
     }
 
     /**
@@ -1274,7 +1387,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * Check the limit of columns
      */
     public void checkColumnLimit() {
-        int a = columns.length > 0 ? columns[columns.length - 1].getRealColIndex() : 0
+        int a = columns.length > 0 ? columns[columns.length - 1].getColNum() : 0
             , b = sheetWriter.getColumnLimit();
         if (a > b) {
             throw new TooManyColumnsException(a, b);
@@ -1325,7 +1438,7 @@ public abstract class Sheet implements Cloneable, Storable {
         char[] c;
         char A = 'A';
         if (n <= 26) {
-            c = cache[0];
+            c = tmpBuf[0];
             c[0] = (char) (n - 1 + A);
         } else if (n <= 702) {
             int t = n / 26, w = n % 26;
@@ -1333,7 +1446,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 t--;
                 w = 26;
             }
-            c = cache[1];
+            c = tmpBuf[1];
             c[0] = (char) (t - 1 + A);
             c[1] = (char) (w - 1 + A);
         } else {
@@ -1346,7 +1459,7 @@ public abstract class Sheet implements Cloneable, Storable {
                 t--;
                 m += 26;
             }
-            c = cache[2];
+            c = tmpBuf[2];
             c[0] = (char) (t - 1 + A);
             c[1] = (char) (m - 1 + A);
             c[2] = (char) (w - 1 + A);
@@ -1354,7 +1467,7 @@ public abstract class Sheet implements Cloneable, Storable {
         return c;
     }
 
-    private static final char[][] cache = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
+    private static final char[][] tmpBuf = new char[][]{ {65}, {65, 65}, {65, 65, 65} };
 
     /**
      * 将行列坐标转换为 Excel 样式的单元格地址
@@ -1396,7 +1509,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 数据行上限
      */
     protected int getRowLimit() {
-        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowIndex() + 1);
+        return rowLimit > 0 ? rowLimit : (rowLimit = sheetWriter.getRowLimit() - (nonHeader == 1 || columns.length == 0 ? 0 : columns[0].subColumnSize()) - getStartRowNum() + 1);
     }
 
     /**
@@ -1517,7 +1630,7 @@ public abstract class Sheet implements Cloneable, Storable {
             if (lenArray[i] < maxSubColumnSize) {
                 for (int k = lenArray[i]; k < maxSubColumnSize; k++) {
                     Column sub = new Column().setColIndex(col.colIndex);
-                    sub.realColIndex = col.realColIndex;
+                    sub.colNum = col.colNum;
                     col.addSubColumn(sub);
                 }
             }
@@ -1582,7 +1695,7 @@ public abstract class Sheet implements Cloneable, Storable {
             }
             // Add merged cells
             if (fc < lc || fr < lr) {
-                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].realColIndex, y - fr, (short) array[y - fr - 1 + lc * y].realColIndex));
+                mergeCells.add(new Dimension(y - lr, (short) array[y - lr - 1 + fc * y].getColNum(), y - fr, (short) array[y - fr - 1 + lc * y].getColNum()));
                 _tmpCells.add(new Dimension(y - lr, (short) (fc + 1), y - fr, (short) (lc + 1)));
                 // Reset
                 fc = lc; fr = lr;
@@ -1617,10 +1730,10 @@ public abstract class Sheet implements Cloneable, Storable {
                 lastCol.headerComment = headerComment;
             }
 
-            if (getStartRowIndex() > 1) {
+            if (getStartRowNum() > 1) {
                 List<Dimension> tmp = new ArrayList<>();
                 for (Dimension dim : mergeCells) {
-                    tmp.add(new Dimension(dim.firstRow + getStartRowIndex() - 1, dim.firstColumn, dim.lastRow + getStartRowIndex() - 1, dim.lastColumn));
+                    tmp.add(new Dimension(dim.firstRow + getStartRowNum() - 1, dim.firstColumn, dim.lastRow + getStartRowNum() - 1, dim.lastColumn));
                 }
                 mergeCells = tmp;
             }

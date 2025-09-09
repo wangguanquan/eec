@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,16 +46,16 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
 
     @Test public void testMultiWorksheet() throws IOException {
         List<Map<String, Object>> sheet1Data = ListMapSheetTest.createTestData(), sheet2Data = ListMapSheetTest.createAllTypeData();
-
+        final String fileName = "test multi worksheet.xlsx";
         new Workbook()
                 .setAutoSize(true)
                 // The first worksheet
                 .addSheet(new ListMapSheet<>("E", sheet1Data))
                 // The other worksheet
                 .addSheet(new ListMapSheet<>("All type", sheet2Data))
-                .writeTo(defaultTestPath.resolve("test multi worksheet.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test multi worksheet.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             Sheet sheet0 = reader.sheet(0);
             assertEquals("E", sheet0.getName());
             Iterator<org.ttzero.excel.reader.Row> iter = sheet0.iterator();
@@ -91,6 +91,7 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
         List<ListObjectSheetTest.Item> sheet2Data = ListObjectSheetTest.Item.randomTestData();
         String sql3 = "select id, name, age from student", sql5 = "select id, name, age from student order by age limit 10";
         List<ListObjectSheetTest.Student> sheet5Data = new ArrayList<>();
+        final String fileName = "test multi dataSource worksheet.xlsx";
         try (
             Connection con = getConnection();
             PreparedStatement ps = con.prepareStatement(sql5);
@@ -134,9 +135,9 @@ public class MultiWorksheetTest extends SQLWorkbookTest {
                         return sub;
                     }
                 })
-                .writeTo(defaultTestPath.resolve("test multi dataSource worksheet.xlsx"));
+                .writeTo(defaultTestPath.resolve(fileName));
 
-            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test multi dataSource worksheet.xlsx"))) {
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
                 assertEquals(reader.getSheetCount(), 6);
 
                 // Sheet 0

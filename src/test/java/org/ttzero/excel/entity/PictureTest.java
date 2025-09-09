@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -67,14 +68,16 @@ import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
  */
 public class PictureTest extends WorkbookTest {
     @Test public void testExportPicture() throws IOException {
+        final String fileName = "Picture test (Path).xlsx";
         List<Path> expectList = getLocalImages();
         new Workbook()
             .addSheet(new ListSheet<>(expectList).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Picture test (Path).xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Path).xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -87,14 +90,16 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureUseFile() throws IOException {
+        final String fileName = "Picture test (File).xlsx";
         List<Path> expectList = getLocalImages();
         new Workbook()
             .addSheet(new ListSheet<>(expectList.stream().map(Path::toFile).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Picture test (File).xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (File).xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -107,21 +112,22 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureUseByteArray() throws IOException {
+        final String fileName = "Picture test (Byte array).xlsx";
         List<Path> expectList = getLocalImages();
         new Workbook()
             .addSheet(new ListSheet<>(expectList.stream().map(e -> {
                 try {
                     return Files.readAllBytes(e);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    return null;
                 }
-                return null;
             }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Picture test (Byte array).xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Byte array).xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -134,6 +140,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureUseBuffer() throws IOException {
+        final String fileName = "Picture test (Buffer).xlsx";
         List<Path> expectList = getLocalImages();
         new Workbook()
             .addSheet(new ListSheet<>(expectList.stream().map(e -> {
@@ -146,11 +153,12 @@ public class PictureTest extends WorkbookTest {
                     return null;
                 }
             }).collect(Collectors.toList())).setColumns(new Column().writeAsMedia().setWidth(20)).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Picture test (Buffer).xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (Buffer).xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -163,6 +171,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureUseStream() throws IOException {
+        final String fileName = "Picture test (InputStream).xlsx";
         List<Path> expectList = getLocalImages();
         List<InputStream> inputStreams = expectList.stream().map(p -> {
             try {
@@ -174,11 +183,12 @@ public class PictureTest extends WorkbookTest {
 
         new Workbook().addSheet(new ListSheet<>(inputStreams)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Picture test (InputStream).xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Picture test (InputStream).xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i);
                 Drawings.Picture pic = list.get(i);
@@ -191,15 +201,16 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testBase64Image() throws IOException {
+        final String fileName = "Base64 image.xlsx";
         String base64Image = "R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
         Sheet sheet = new ListSheet<>(Collections.singletonList("data:image/gif;base64," + base64Image));
         Comments comments = sheet.createComments();
         comments.addComment("A1", new Comment("123"));
         new Workbook().addSheet(sheet
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Base64 image.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Base64 image.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
             assertEquals(list.size(), 1);
             Drawings.Picture pic = list.get(0);
@@ -214,14 +225,16 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testSyncRemoteImage() throws IOException {
+        final String fileName = "Sync download remote image.xlsx";
         List<String> expectList = getRemoteUrls();
         new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("Sync download remote image.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Sync download remote image.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -234,6 +247,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testSyncRemoteImageUseOkHTTP() throws IOException {
+        final String fileName = "sync download remote image use OkHttp.xlsx";
         List<String> expectList = getRemoteUrls();
         new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
@@ -253,11 +267,12 @@ public class PictureTest extends WorkbookTest {
                         Print.println("down load from ftp server");
                     }
                 }
-            })).writeTo(defaultTestPath.resolve("sync download remote image use OkHttp.xlsx"));
+            })).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("sync download remote image use OkHttp.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -270,6 +285,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testAsyncRemoteImage() throws IOException {
+        final String fileName = "Async download remote image.xlsx";
         List<String> expectList = getRemoteUrls();
         new Workbook().addSheet(new ListSheet<>(expectList)
             .setColumns(new Column().setWidth(20).writeAsMedia()).setRowHeight(100)
@@ -301,11 +317,12 @@ public class PictureTest extends WorkbookTest {
                     }
                 });
             }
-        })).writeTo(defaultTestPath.resolve("Async download remote image.xlsx"));
+        })).writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Async download remote image.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i));
@@ -318,14 +335,16 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureAnnotation() throws IOException {
+        final String fileName = "test Picture annotation.xlsx";
         List<Pic> expectList = Pic.randomTestData();
         new Workbook()
             .addSheet(new ListSheet<>(expectList).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("test Picture annotation.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture annotation.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i).pic);
@@ -345,15 +364,17 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureAutoSize() throws IOException {
+        final String fileName = "test Picture auto-size.xlsx";
         List<Pic> expectList = Pic.randomTestData();
         new Workbook()
             .setAutoSize(true)
             .addSheet(new ListSheet<>(expectList).setRowHeight(100))
-            .writeTo(defaultTestPath.resolve("test Picture auto-size.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Drawings.Picture pic = list.get(i);
                 byte[] expectBytes = getRemoteData(expectList.get(i).pic);
@@ -373,6 +394,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testPresetPictureEffects() throws IOException {
+        final String fileName = "Preset Picture Effects.xlsx";
         List<Pic2> expectList = Pic2.randomTestData();
         new Workbook()
             .addSheet(new ListSheet<>(expectList).setRowHeight(217.5).autoSize().setSheetWriter(new XMLWorksheetWriter() {
@@ -416,11 +438,12 @@ public class PictureTest extends WorkbookTest {
                     picCache.put(path.toString(), picName);
                 }
             }))
-            .writeTo(defaultTestPath.resolve("Preset Picture Effects.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("Preset Picture Effects.xlsx"))) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             List<Drawings.Picture> list = reader.sheet(0).listPictures();
-            assertEquals(expectList.size(), list != null ? list.size() : 0);
+            assertNotNull(list);
+            assertEquals(expectList.size(), list.size());
             for (int i = 0; i < expectList.size(); i++) {
                 Path expectPath = expectList.get(i).pic;
                 Drawings.Picture pic = list.get(i);
@@ -442,6 +465,7 @@ public class PictureTest extends WorkbookTest {
     }
 
     @Test public void testExportPictureAutoSizePaging() throws IOException {
+        final String fileName = "test Picture auto-size paging.xlsx";
         List<Path> expectList = new ArrayList<>(256);
         for (int i = 0; i < 5; i++, expectList.addAll(getLocalImages()));
 
@@ -454,17 +478,17 @@ public class PictureTest extends WorkbookTest {
                         return 16;
                     }
                 }))
-            .writeTo(defaultTestPath.resolve("test Picture auto-size paging.xlsx"));
+            .writeTo(defaultTestPath.resolve(fileName));
 
         int count = expectList.size(), rowLimit = worksheetWriter.getRowLimit();
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve("test Picture auto-size paging.xlsx"))) {
-            if (expectList.size() > 0) {
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            if (!expectList.isEmpty()) {
                 assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 
                 for (int i = 0, len = reader.getSheetCount(), a = 0; i < len; i++) {
                     List<Drawings.Picture> list = reader.sheet(i).listPictures();
                     if (i < len - 1) assertEquals(list.size(), rowLimit);
-                    else assertEquals(expectList.size() - rowLimit * (len - 1), list.size());
+                    else assertEquals(expectList.size() - (long) rowLimit * (len - 1), list.size());
                     for (int j = 0; j < list.size(); j++) {
                         Path expectPath = expectList.get(a++);
                         Drawings.Picture pic = list.get(j);
@@ -514,16 +538,20 @@ public class PictureTest extends WorkbookTest {
     static List<Path> getLocalImages() throws IOException {
         Path picturesPath = Paths.get(System.getProperty("user.home"), "Pictures");
         if (!Files.exists(picturesPath)) return Collections.emptyList();
-        return Files.list(picturesPath).filter(p -> {
-            String name = p.getFileName().toString();
-            return !Files.isDirectory(p) && (name.endsWith(".png")
-                || name.endsWith(".jpg") || name.endsWith(".webp")
-                || name.endsWith(".wmf") || name.endsWith(".tif")
-                || name.endsWith(".tiff") || name.endsWith(".gif")
-                || name.endsWith(".jpeg") || name.endsWith(".ico")
-                || name.endsWith(".emf") || name.endsWith(".bmp")
-            );
-        }).collect(Collectors.toList());
+        List<Path> pictureList;
+        try (Stream<Path> paths = Files.list(picturesPath)) {
+            pictureList = paths.filter(p -> {
+                String name = p.getFileName().toString();
+                return !Files.isDirectory(p) && (name.endsWith(".png")
+                    || name.endsWith(".jpg") || name.endsWith(".webp")
+                    || name.endsWith(".wmf") || name.endsWith(".tif")
+                    || name.endsWith(".tiff") || name.endsWith(".gif")
+                    || name.endsWith(".jpeg") || name.endsWith(".ico")
+                    || name.endsWith(".emf") || name.endsWith(".bmp")
+                );
+            }).collect(Collectors.toList());
+        }
+        return pictureList;
     }
 
     static List<String> getRemoteUrls() {

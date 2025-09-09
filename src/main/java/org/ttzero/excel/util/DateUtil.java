@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,17 +83,6 @@ public class DateUtil {
             .toFormatter();
     }
 
-    /**
-     * 将日期{@code date}格式化为{@code yyyy-MM-dd HH:mm:ss}
-     *
-     * @param date 待转换日期
-     * @return {@code yyyy-MM-dd HH:mm:ss}格式字符串
-     * @deprecated 使用 {@link #toDateTimeString(Date)} 替代
-     */
-    @Deprecated
-    public static String toString(Date date) {
-        return toDateTimeString(date);
-    }
     /**
      * 将日期{@code date}格式化为{@code yyyy-MM-dd HH:mm:ss}
      *
