@@ -313,6 +313,17 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.25 (2025-09-09)
+-------------
+- 读取文件时增加单引号转义处理(#438)
+- 移除获取系统用户名做为默认创建人的逻辑以避免信息泄漏
+- 支持使用setStartCoordinate来指定表格的输出起始坐标
+- 修复自动分页后globalStyleIndex全局样式丢失问题(#442)
+- 修复TemplateSheet列表只有2行数据且表格下方有合并单元格时造成样式混乱的问题(#450)
+- 修复某些情况因单元格未重置长度导致超出下标的单元格被输出的问题
+- 修复某些情况下CSV读取行结束判断问题导致两行合并为一行的问题
+- 修复某些情况下无法读取公式的问题
+
 Version 0.5.24 (2025-06-04)
 -------------
 - 修复某种情况下读取文件抛OOM异常(#435)
@@ -334,20 +345,10 @@ Version 0.5.22 (2025-02-23)
 - 优化读取图片，过滤隐藏、重复节点(#414)
 - 模板工作表增加默认日期格式化
 
-Version 0.5.21 (2024-12-24)
--------------
-- 提升Excel转CSV时对时间类型的兼容性(#409)
-- Excel转CSV时保持Excel中的空行位置
-- 提升添加批注的便利性并开放批注的字体属性
-- 模板导出支持File和Buffer图片类型
-- 修复CSVSheet默认分割符设置为0x0的过失问题
-- 修复导出批注数量超过57344时抛异常的BUG(#404)
-- Converter方法增强，入参由String改为Row和Cell方便扩展
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.24-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.25-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
