@@ -962,7 +962,6 @@ public class ListMapSheetTest extends WorkbookTest {
                     Object e = !isNull ? rowDate.get(hc.key) : null;
                     // Clear cells
                     Cell cell = cells[i];
-                    cell.clear();
 
                     cellValueAndStyle.reset(row, cell, e, hc);
                 }

@@ -327,10 +327,6 @@ public class SimpleSheet<T> extends ListSheet<T> {
         int len = !isNull ? type == 1 ? sub.size() : Array.getLength(rowData) : 0;
         Cell[] cells = row.realloc(len);
         for (int i = 0; i < len; i++) {
-            // Clear cells
-            Cell cell = cells[i];
-            cell.clear();
-
             Object e = null;
             Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
             // 根据下标取数
@@ -339,6 +335,7 @@ public class SimpleSheet<T> extends ListSheet<T> {
                 else e = Array.get(rowData, i);
             }
             column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
+            Cell cell = cells[i];
             resetCellValueAndStyle(row, cell, rowData, e, column);
             // 日期类型添加默认format
             if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {

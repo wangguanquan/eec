@@ -1156,10 +1156,6 @@ public class ListSheet<T> extends Sheet {
         boolean isNull = rowData == null;
         try {
             for (int i = 0; i < len; i++) {
-                // Clear cells
-                Cell cell = cells[i];
-                cell.clear();
-
                 Object e;
                 EntryColumn column = (EntryColumn) columns[i];
                 /*
@@ -1176,6 +1172,7 @@ public class ListSheet<T> extends Sheet {
                     else e = rowData;
                 }
 
+                Cell cell = cells[i];
                 resetCellValueAndStyle(row, cell, rowData, e, column);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {

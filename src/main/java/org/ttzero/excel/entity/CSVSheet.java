@@ -192,13 +192,9 @@ public class CSVSheet extends Sheet {
             for (int i = 0; i < len; i++) {
                 Column hc = columns[i];
 
-                // clear cells
                 Cell cell = cells[i];
-                cell.clear();
-
                 cell.setString(csvRow[i]);
                 cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
-//                cellValueAndStyle.reset(rows, cell, csvRow[i], hc);
             }
         }
 

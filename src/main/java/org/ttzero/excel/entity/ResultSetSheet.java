@@ -255,11 +255,6 @@ public class ResultSetSheet extends Sheet {
                 Cell[] cells = row.realloc(len);
                 for (int i = 1; i <= len; i++) {
                     SQLColumn hc = (SQLColumn) columns[i - 1];
-
-                    // clear cells
-                    Cell cell = cells[i - 1];
-                    cell.clear();
-
                     Object e;
                     if (hc.ri > 0) {
                         switch (hc.sqlType) {
@@ -286,6 +281,7 @@ public class ResultSetSheet extends Sheet {
                         if (rs.wasNull()) e = null;
                     } else e = null;
 
+                    Cell cell = cells[i - 1];
                     cellValueAndStyle.reset(row, cell, e, hc);
                     if (hasGlobalStyleProcessor) {
                         cellValueAndStyle.setStyleDesign(rs, cell, hc, getStyleProcessor());

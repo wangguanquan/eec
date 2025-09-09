@@ -242,15 +242,12 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
             T e = rowData != null ? rowData.get(hc.key) : null;
-            // Clear cells
-            Cell cell = cells[i];
-            cell.clear();
-
             // Reset value type
             if (e != null && e.getClass() != hc.getClazz()) {
                 hc.setClazz(e.getClass());
             }
 
+            Cell cell = cells[i];
             resetCellValueAndStyle(row, cell, rowData, e, hc);
         }
     }
