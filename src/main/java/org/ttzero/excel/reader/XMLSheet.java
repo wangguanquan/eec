@@ -1033,7 +1033,7 @@ public class XMLSheet implements Sheet {
 /**
  * A sub {@link XMLSheet} to parse all attributes
  */
-class XMLFullSheet extends XMLSheet implements FullSheet {
+class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet {
     long[] calc; // Array of formula
     boolean ready, tailPared;
     // A merge cells grid
