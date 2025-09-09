@@ -425,6 +425,55 @@ public class ExcelReaderTest2 {
         }
     }
 
+    @Test public void testCalcSheet() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
+            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+                Map<Long, String> formulasMap = FormulasLoader.load(testResourceRoot().resolve("expect/formula$" + sheet.getName() + "$formulas.txt"));
+                Iterator<Row> it = sheet.iterator();
+                while (it.hasNext()) {
+                    Row row = it.next();
+
+                    for (int start = row.getFirstColumnIndex(), end = row.getLastColumnIndex(); start < end; start++) {
+                        String formula = formulasMap.get(((long) row.getRowNum()) << 16 | (start + 1));
+                        assertTrue(formula == null || formula.equals(row.getFormula(start)));
+                    }
+                }
+            });
+        }
+    }
+
+    @Test public void testMergeSheet() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("fracture merged.xlsx"))) {
+            MergeSheet sheet = reader.sheet(0).asMergeSheet();
+            List<Dimension> mergeCells = sheet.getMergeCells();
+            assertEquals(mergeCells.size(), 17);
+            assertTrue(mergeCells.contains(Dimension.of("A1:A2")));
+            assertTrue(mergeCells.contains(Dimension.of("B1:B2")));
+            assertTrue(mergeCells.contains(Dimension.of("C1:C2")));
+            assertTrue(mergeCells.contains(Dimension.of("D1:D2")));
+            assertTrue(mergeCells.contains(Dimension.of("E1:E2")));
+            assertTrue(mergeCells.contains(Dimension.of("F1:F2")));
+            assertTrue(mergeCells.contains(Dimension.of("G1:G2")));
+            assertTrue(mergeCells.contains(Dimension.of("H1:I1")));
+            assertTrue(mergeCells.contains(Dimension.of("J1:K1")));
+            assertTrue(mergeCells.contains(Dimension.of("L1:M1")));
+            assertTrue(mergeCells.contains(Dimension.of("N1:O1")));
+            assertTrue(mergeCells.contains(Dimension.of("P1:Q1")));
+            assertTrue(mergeCells.contains(Dimension.of("R1:S1")));
+            assertTrue(mergeCells.contains(Dimension.of("T1:U1")));
+            assertTrue(mergeCells.contains(Dimension.of("V1:W1")));
+            assertTrue(mergeCells.contains(Dimension.of("X1:Y1")));
+            assertTrue(mergeCells.contains(Dimension.of("Z1:AA1")));
+            Iterator<Row> iter = sheet.iterator();
+            assertTrue(iter.hasNext());
+            Row row0 = iter.next();
+            assertEquals(row0.toString(), "姓名 | 二级机构名称 | 三级机构名称 | 四级机构名称 | 参与次数 | 日均参与率(%) | 日均得分 | 2021-07-01 | 2021-07-01 | 2021-07-02 | 2021-07-02 | 2021-07-03 | 2021-07-03 | 2021-07-04 | 2021-07-04 | 2021-07-05 | 2021-07-05 | 2021-07-06 | 2021-07-06 | 2021-07-07 | 2021-07-07 | 2021-07-08 | 2021-07-08 | 2021-07-09 | 2021-07-09 | 2021-07-10 | 2021-07-10");
+            assertTrue(iter.hasNext());
+            Row row1 = iter.next();
+            assertEquals(row1.toString(), "姓名 | 二级机构名称 | 三级机构名称 | 四级机构名称 | 参与次数 | 日均参与率(%) | 日均得分 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长");
+        }
+    }
+
     public static <T> boolean listEquals(List<T> list, List<T> expectList) {
         if (list == expectList) return true;
         if (list == null || expectList == null) return false;

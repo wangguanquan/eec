@@ -19,7 +19,7 @@ package org.ttzero.excel.reader;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -96,7 +96,7 @@ public class MultiHeaderReaderTest {
                 if (row.getRowNum() == 3) {
                     assertEquals(row.getString("姓名"), "张三1");
                     assertEquals((int) row.getInt("参与次数"), 7);
-                    assertEquals(row.getDecimal("日均得分").setScale(2, BigDecimal.ROUND_HALF_DOWN).toString(), "41.43");
+                    assertEquals(row.getDecimal("日均得分").setScale(2, RoundingMode.HALF_UP).toString(), "41.43");
                     assertEquals((int) row.getInt("2021-07-01:得分"), 30);
                     assertEquals((int) row.getInt("2021-07-01:考试时长"), 19);
                     assertNull(row.getInt("2021-07-04:得分"));

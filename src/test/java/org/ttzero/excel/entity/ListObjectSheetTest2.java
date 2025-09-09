@@ -1314,11 +1314,13 @@ public class ListObjectSheetTest2 extends WorkbookTest {
     @Test public void testSpecifyCoordinateWrite() throws IOException {
         final String fileName = "test specify coordinate D4 ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
-        new Workbook().setAutoSize(true)
+        new Workbook().setCreator(author)
+            .setAutoSize(true)
             .addSheet(new ListSheet<>(list).setStartCoordinate("D4"))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(author, reader.getAppInfo().getCreator());
             Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
             org.ttzero.excel.reader.Row firstRow = iter.next();
             assertNotNull(firstRow);
