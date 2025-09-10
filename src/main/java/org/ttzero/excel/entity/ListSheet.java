@@ -501,7 +501,7 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
                     EntryColumn column = createColumn(method);
                     // Force export
                     if (column == null && forceExport) {
-                        column = new EntryColumn(gs, EMPTY, false);
+                        column = new EntryColumn(gs, EMPTY);
                     }
                     if (column != null) {
                         EntryColumn tail = (EntryColumn) column.getTail();
@@ -525,7 +525,7 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
                 EntryColumn column = createColumn(field);
                 // Force export
                 if (column == null && forceExport) {
-                    column = new EntryColumn(gs, EMPTY, false);
+                    column = new EntryColumn(gs, EMPTY);
                 }
                 if (column != null) {
                     list.add(column);
@@ -680,7 +680,7 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
 
         MediaColumn mediaColumn = ao.getAnnotation(MediaColumn.class);
         if (mediaColumn != null) {
-            if (root == null) root = new EntryColumn(" ", EMPTY, false);
+            if (root == null) root = new EntryColumn(" ", EMPTY);
             Column tail = root.getTail();
             tail.writeAsMedia();
             if (mediaColumn.presetEffect() != PresetPictureEffect.None) {
@@ -703,7 +703,8 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
      */
     protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
         if (ec == null) return null;
-        EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+        EntryColumn column = new EntryColumn(ec.value(), EMPTY);
+        column.setShare(ec.share());
         // Number format
         if (isNotEmpty(ec.format())) {
             column.setNumFmt(ec.format());
@@ -1235,39 +1236,39 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
         public EntryColumn(String name, String key, ConversionProcessor processor) {
             super(name, key, processor);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, boolean share) {
             super(name, clazz, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, boolean share) {
             super(name, key, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
             super(name, clazz, processor, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, Class<?> clazz, ConversionProcessor processor) {
             super(name, key, clazz, processor);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, ConversionProcessor processor, boolean share) {
             super(name, key, processor, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, int cellStyle) {
             super(name, clazz, cellStyle);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, int cellStyle) {
             super(name, key, cellStyle);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, int cellStyle, boolean share) {
             super(name, clazz, cellStyle, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, int cellStyle, boolean share) {
             super(name, key, cellStyle, share);
         }
