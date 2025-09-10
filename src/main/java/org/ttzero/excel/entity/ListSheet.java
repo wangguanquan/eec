@@ -114,7 +114,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @see ListMapSheet
  * @see SimpleSheet
  */
-public class ListSheet<T> extends Sheet {
+public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
     /**
      * 临时存放数据
      */
@@ -1086,19 +1086,22 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * 写行数据，必须在{@code PUSH}模式下使用，否则抛NPE异常
+     * 写行数据，必须在{@code PUSH}模式下使用
      *
      * <p>注意：由于外部拿不到自动分页创建的新工作表，所以{@code PUSH}模式将不支持自动分页，
      * 超出数据上限将直接抛{@link IndexOutOfBoundsException}异常</p>
      *
      * @param data 行数据
-     * @return 当前工作表
+     * @return 已写入的总数据行（不包含表头）
      * @throws IOException if I/O error occur.
      */
-    public ListSheet<T> writeData(List<T> data) throws IOException {
+    public int writeData(List<T> data) throws IOException {
+        if (sheetWriter == null) {
+            throw new IOException("Before writing data, worksheet must be added to the workbook.");
+        }
         // Write row-block
         sheetWriter.writeData(fillRowBlock(data));
-        return this;
+        return rows;
     }
 
     /**
@@ -1136,6 +1139,7 @@ public class ListSheet<T> extends Sheet {
      * @param toIndex 读取数据的结束下标（不包含）
      */
     protected void resetRowBlock(List<T> data, int fromIndex, int toIndex) {
+        if (data == null || fromIndex >= data.size()) return;
         for (; fromIndex < toIndex; rows++, fromIndex++) {
             Row row = rowBlock.next();
             row.index = rows;
@@ -1153,27 +1157,19 @@ public class ListSheet<T> extends Sheet {
     protected void resetRowData(Row row, T rowData) {
         int len = columns.length;
         Cell[] cells = row.realloc(len);
-        boolean isNull = rowData == null;
+        boolean nonNull = rowData != null;
         try {
             for (int i = 0; i < len; i++) {
-                Object e;
+                Object e = null;
                 EntryColumn column = (EntryColumn) columns[i];
-                /*
-                The default processing of null values still retains the row style.
-                If you don't want any style and value, you can change it to {@code continue}
-                 */
-                if (column.isIgnoreValue() || isNull)
-                    e = null;
-                else {
-                    if (column.getMethod() != null)
-                        e = column.getMethod().invoke(rowData);
-                    else if (column.getField() != null)
-                        e = column.getField().get(rowData);
+                // Collect cell value
+                if (nonNull && !column.isIgnoreValue()) {
+                    if (column.getMethod() != null) e = column.getMethod().invoke(rowData);
+                    else if (column.getField() != null) e = column.getField().get(rowData);
                     else e = rowData;
                 }
-
-                Cell cell = cells[i];
-                resetCellValueAndStyle(row, cell, rowData, e, column);
+                // Setting cell value and style
+                resetCellValueAndStyle(row, cells[i], rowData, e, column);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ExcelWriteException(e);
@@ -1181,7 +1177,7 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
-     * 重置单元格数据
+     * 重置单元格数据和样式
      *
      * @param row Excel行
      * @param cell Excel单元格

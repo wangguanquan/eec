@@ -88,6 +88,16 @@ public interface IWorkbookWriter extends Storable, Closeable {
     IWorksheetWriter getWorksheetWriter(Sheet sheet);
 
     /**
+     * 导入前的准备工作
+     *
+     * @return 临时文件路径
+     * @throws IOException if I/O error occur
+     */
+    default Path writeBefore() throws IOException {
+        return null;
+    }
+
+    /**
      * 移动文件到指定位置
      *
      * @param source      源文件

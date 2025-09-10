@@ -19,7 +19,9 @@ package org.ttzero.excel.entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
+import org.ttzero.excel.entity.e7.XMLZebraLineCellValueAndStyle;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
@@ -34,6 +36,7 @@ import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -1273,7 +1276,8 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 写入的数据行数，-1表示不确定
      */
     public int size() {
-        return !shouldClose ? rows : -1;
+//        return !shouldClose ? rows : -1;
+        return rows;
     }
 
     /**
@@ -1743,6 +1747,42 @@ public abstract class Sheet implements Cloneable, Storable {
             if (existsMergeCells != null && !existsMergeCells.isEmpty()) existsMergeCells.addAll(mergeCells);
             else putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
         }
+    }
+
+    /**
+     * 准备导出所需要的参数和组件
+     *
+     * @return 当前工作表
+     */
+    public Sheet forWrite() {
+        // Set default worksheet name
+        if (StringUtil.isEmpty(getName())) {
+            setName("Sheet" + getId());
+        }
+        if (getSheetWriter() == null && workbook.getWorkbookWriter() != null) {
+            setSheetWriter(workbook.getWorkbookWriter().getWorksheetWriter(this));
+        }
+        if (workbook.isAutoSize() && getAutoSize() == 0) {
+            autoSize();
+        }
+        if (workbook.getZebraFill() != null && getZebraFillStyle() < 0) {
+            setZebraLine(getZebraFill());
+        }
+        // Set cell value and style processor
+        if (getCellValueAndStyle() == null) {
+            int zebraFillStyle = getZebraFillStyle();
+            ICellValueAndStyle cvas = zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
+            setCellValueAndStyle(cvas);
+        }
+        // Force export all fields
+        if (workbook.getForceExport() > getForceExport() && ListSheet.class.isAssignableFrom(getClass())) {
+            ((ListSheet<?>) this).forceExport();
+        }
+        // Merge Progress window
+        if (workbook.getProgressConsumer() != null && getProgressConsumer() == null) {
+            onProgress(getProgressConsumer());
+        }
+        return this;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

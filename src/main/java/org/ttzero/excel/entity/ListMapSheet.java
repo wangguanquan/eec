@@ -239,16 +239,16 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     protected void resetRowData(Row row, Map<String, T> rowData) {
         int len = columns.length;
         Cell[] cells = row.realloc(len);
+        boolean nonNull = rowData != null;
         for (int i = 0; i < len; i++) {
             Column hc = columns[i];
-            T e = rowData != null ? rowData.get(hc.key) : null;
-            // Reset value type
-            if (e != null && e.getClass() != hc.getClazz()) {
-                hc.setClazz(e.getClass());
+            T e = null;
+            if (nonNull) {
+                e = rowData.get(hc.key);
+                // Reset value type
+                if (e != null && e.getClass() != hc.getClazz()) hc.setClazz(e.getClass());
             }
-
-            Cell cell = cells[i];
-            resetCellValueAndStyle(row, cell, rowData, e, hc);
+            resetCellValueAndStyle(row, cells[i], rowData, e, hc);
         }
     }
 }

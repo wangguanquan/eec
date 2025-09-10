@@ -133,7 +133,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * If there are any auto-width columns
      */
-    protected boolean includeAutoWidth;
+    protected boolean includeAutoWidth, ready;
     /**
      * Picture and Chart Support
      */
@@ -169,7 +169,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     @Override
     public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        Path sheetPath = initWriter(path);
+        initWriter(path);
 
         // Get the first block
         RowBlock rowBlock = supplier.get();
@@ -200,17 +200,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
-
-        // write end
-        writeAfter(totalRows);
-
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-
-        // Resize if include auto-width column
-        if (includeAutoWidth) {
-            resizeColumnWidth(sheetPath.toFile(), totalRows);
-        }
     }
 
     /**
@@ -221,7 +210,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        Path sheetPath = initWriter(path);
+        initWriter(path);
 
         // Get the first block
         RowBlock rowBlock = sheet.nextBlock();
@@ -256,17 +245,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         totalRows = rowBlock.getTotal();
-
-        // write end
-        writeAfter(totalRows);
-
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-
-        // Resize if include auto-width column
-        if (includeAutoWidth) {
-            resizeColumnWidth(sheetPath.toFile(), totalRows);
-        }
     }
 
     protected Path initWriter(Path root) throws IOException {
@@ -276,6 +254,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
+        // Already initialized
+        if (ready) return sheetPath;
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
@@ -302,6 +282,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
 
         LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
+        ready = true;
         return sheetPath;
     }
 
@@ -349,6 +330,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         e.sheetDataReady = 0;
         e.totalRows = 0;
         e.drawingsWriter = null;
+        e.ready = false;
+        e.bw = null;
         return copy;
     }
 
@@ -514,11 +497,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
     @Override
     public void writeData(RowBlock rowBlock) throws IOException {
-        // TODO writer init
+        if (!ready) {
+            Path path = sheet.getWorkbook().getWorkbookWriter().writeBefore();
+            // Init
+            initWriter(path.resolve("xl"));
+            // write before
+            writeBefore();
+            // Write body data
+            beforeSheetData(sheet.getNonHeader() == 1);
+        }
 
         if (progressConsumer == null) writeRowBlock(rowBlock);
         else writeRowBlockFireProgress(rowBlock);
 
+        totalRows = rowBlock.getTotal();
     }
 
     /**
@@ -1148,8 +1140,22 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Release resources
      */
     @Override
-    public void close() {
-        FileUtil.close(bw);
+    public void close() throws IOException {
+        if (bw != null) {
+            // write end
+            writeAfter(totalRows);
+
+            // Resize if include auto-width column
+            if (includeAutoWidth) {
+                resizeColumnWidth(workSheetPath.resolve(sheet.getFileName()).toFile(), totalRows);
+            }
+
+            FileUtil.close(bw);
+            bw = null;
+        }
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
+
         // Close drawing writer
         FileUtil.close(drawingsWriter);
     }

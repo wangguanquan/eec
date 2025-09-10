@@ -318,28 +318,27 @@ public class SimpleSheet<T> extends ListSheet<T> {
      */
     @Override
     protected void resetRowData(Row row, T rowData) {
-        if (type == 3) {
-            super.resetRowData(row, rowData);
-            return;
-        }
-        boolean isNull = rowData == null;
-        List sub = !isNull && type == 1 ? (List) rowData : null;
-        int len = !isNull ? type == 1 ? sub.size() : Array.getLength(rowData) : 0;
-        Cell[] cells = row.realloc(len);
-        for (int i = 0; i < len; i++) {
-            Object e = null;
-            Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
-            // 根据下标取数
-            if (!column.isIgnoreValue()) {
-                if (type == 1) e = sub.get(i);
-                else e = Array.get(rowData, i);
-            }
-            column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
-            Cell cell = cells[i];
-            resetCellValueAndStyle(row, cell, rowData, e, column);
-            // 日期类型添加默认format
-            if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
-                datetimeCell(workbook.getStyles(), cell);
+        if (type == 3) super.resetRowData(row, rowData);
+        else {
+            boolean nonNull = rowData != null;
+            List sub = nonNull && type == 1 ? (List) rowData : null;
+            int len = nonNull ? (type == 1 ? sub.size() : Array.getLength(rowData)) : 0;
+            Cell[] cells = row.realloc(len);
+            for (int i = 0; i < len; i++) {
+                Object e = null;
+                Column column = i < columns.length ? columns[i] : UNALLOCATED_COLUMN;
+                // 根据下标取数
+                if (!column.isIgnoreValue()) {
+                    if (type == 1) e = sub.get(i);
+                    else e = Array.get(rowData, i);
+                }
+                column.clazz = null; // 无法确定纵向类型完全一致所以这里将缓存的类型清除
+                Cell cell = cells[i];
+                resetCellValueAndStyle(row, cell, rowData, e, column);
+                // 日期类型添加默认format
+                if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
+                    datetimeCell(workbook.getStyles(), cell);
+                }
             }
         }
     }

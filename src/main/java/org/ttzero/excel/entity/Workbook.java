@@ -162,7 +162,6 @@ public class Workbook implements Storable {
      * 31, 1 | 自适应列宽 1位, 1: auto-size 0: fixed-size
      * 30, 1 | 强制导出 1位, 1: 强制导出全字段
      * 29, 4 | 压缩等级 4位, 0-9 数字越小压缩效果越好耗时越长
-     * 25, 1 | 模式 1位, 0: PULL 1：PUSH
      * </pre></blockquote>
      */
     protected int option;
@@ -496,6 +495,22 @@ public class Workbook implements Storable {
     }
 
     /**
+     * 添加一个工作表{@link Sheet}，新添加的工作表总是排在队列最后，
+     * 可以使用{@link #insertSheet}插入到指定位置
+     *
+     * @param sheet 工作表
+     */
+    public void addPushSheet(Sheet sheet) {
+        addSheet(sheet);
+        // PUSH MODEL
+        if (IPushModelSheet.class.isAssignableFrom(sheet.getClass())) {
+            if (sheet.getId() <= 0) sheet.setId(size + 1);
+            // TODO sheet.id如何处理，前面有自动分页时id无法确定
+            sheet.forWrite();
+        }
+    }
+
+    /**
      * 在指定下标插入一个工作表{@link Sheet}
      *
      * @param index 指定工作表插入的位置（从0开始）
@@ -503,6 +518,7 @@ public class Workbook implements Storable {
      * @return 当前工作薄
      */
     public Workbook insertSheet(int index, Sheet sheet) {
+        if (index > size) throw new ArrayIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         ensureCapacityInternal();
         int _size = size;
         if (sheets[index] != null) {
@@ -542,9 +558,6 @@ public class Workbook implements Storable {
 
     /**
      * 获取指定位置的工作表
-     *
-     * <p>如果使用{@link #insertSheet}方法插入了一个较大的下标，调用此方法可能返回null值。
-     * 例如在下标为100的位置插入了一个工作表，获取第90位的工作薄将返回一个null值。</p>
      *
      * @param index 工作表在队列中的位置（从0开始）
      * @return 指定位置的工作表 {@link Sheet}
@@ -752,8 +765,6 @@ public class Workbook implements Storable {
      */
     protected void checkAndInitWriter() {
         if (workbookWriter == null) {
-//            // 初始化
-//            init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
     }
@@ -901,17 +912,5 @@ public class Workbook implements Storable {
      */
     public int getCompressionLevel() {
         return Math.min(Math.max((option >>> 2) & 15, 0), 9);
-    }
-
-    /**
-     * PUSH模式，数据主动推到工作表
-     *
-     * @return 当前工作表
-     */
-    public Workbook pushMode() {
-        this.option |= (1 << 6);
-        // Initialization
-        checkAndInitWriter();
-        return this;
     }
 }

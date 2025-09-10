@@ -23,11 +23,10 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ttzero.excel.entity.ListSheet;
+import org.ttzero.excel.entity.IPushModelSheet;
 import org.ttzero.excel.manager.TopNS;
 import org.ttzero.excel.entity.Comments;
 import org.ttzero.excel.entity.ExcelWriteException;
-import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Relationship;
@@ -68,6 +67,10 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
     protected Workbook workbook;
     protected final RelManager relManager;
+    /**
+     * 临时文件路径
+     */
+    protected Path tmpPath;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();
@@ -325,42 +328,20 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         ContentType contentType = workbook.getContentType();
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            sheet.setId(i + 1);
-            // default worksheet name
-            if (StringUtil.isEmpty(sheet.getName())) {
-                sheet.setName("Sheet" + sheet.getId());
-            }
-            if (sheet.getSheetWriter() == null) {
-                sheet.setSheetWriter(getWorksheetWriter(sheet));
-            }
-            if (workbook.isAutoSize() && sheet.getAutoSize() == 0) {
-                sheet.autoSize();
-            }
-            if (workbook.getZebraFill() != null && sheet.getZebraFillStyle() < 0) {
-                sheet.setZebraLine(workbook.getZebraFill());
-            }
-            // Set cell value and style processor
-            if (sheet.getCellValueAndStyle() == null) {
-                int zebraFillStyle = sheet.getZebraFillStyle();
-                ICellValueAndStyle cvas = zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
-                sheet.setCellValueAndStyle(cvas);
-            }
-
-            // Force export all fields
-            if (workbook.getForceExport() > sheet.getForceExport() && ListSheet.class.isAssignableFrom(sheet.getClass())) {
-                ((ListSheet<?>) sheet).forceExport();
-            }
-
-            // Merge Progress window
-            if (workbook.getProgressConsumer() != null && sheet.getProgressConsumer() == null) {
-                sheet.onProgress(workbook.getProgressConsumer());
-            }
-
-            try {
-                // Write to desk
-                sheet.writeTo(root);
-            } finally {
+            // Ignore push model sheet
+            if (IPushModelSheet.class.isAssignableFrom(sheet.getClass()) && sheet.size() > 0) {
                 sheet.close();
+            } else {
+                sheet.setId(i + 1);
+                // Collect properties
+                sheet.forWrite();
+
+                try {
+                    // Write to desk
+                    sheet.writeTo(root);
+                } finally {
+                    sheet.close();
+                }
             }
 
             // Add content-type
@@ -382,30 +363,32 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    protected Path createTemp() throws IOException, ExcelWriteException {
-        Path root = null;
-        try {
-            root = FileUtil.mktmp(Const.EEC_PREFIX);
-            LOGGER.debug("Create temporary folder {}", root);
+    @Override
+    public Path writeBefore() throws IOException {
+        if (tmpPath == null) {
+            tmpPath = FileUtil.mktmp(Const.EEC_PREFIX);
+            LOGGER.debug("Create temporary folder {}", tmpPath);
 
-            Path xl = Files.createDirectory(root.resolve("xl"));
-
-            // Write worksheet data one by one
-            writeWorksheets(xl);
-
-            // Write SharedString, Styles and workbook.xml
-            writeGlobalAttribute(xl);
-            LOGGER.debug("All sheets have completed writing, starting to compression ...");
-
-            // Zip compress
-            Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
-            LOGGER.debug("Compression completed. {}", zipFile);
-
-            return zipFile;
-        } finally {
-            // Remove temp path
-            if (root != null) FileUtil.rm_rf(root);
+            Files.createDirectory(tmpPath.resolve("xl"));
         }
+        return tmpPath;
+    }
+
+    protected Path createTemp() throws IOException, ExcelWriteException {
+        Path tmpPath = writeBefore();
+
+        Path xl = tmpPath.resolve("xl");
+        // Write worksheet data one by one
+        writeWorksheets(xl);
+
+        // Write SharedString, Styles and workbook.xml
+        writeGlobalAttribute(xl);
+        LOGGER.debug("All sheets have completed writing, starting to compression ...");
+
+        // Zip compress
+        Path zipFile = ZipUtil.zipExcludeRoot(tmpPath, workbook.getCompressionLevel(), tmpPath);
+        LOGGER.debug("Compression completed. {}", zipFile);
+        return zipFile;
     }
 
     @Deprecated
@@ -427,6 +410,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         }
         if (workbook.getWatermark() != null) workbook.getWatermark().delete() ; // Delete template image
         workbook.getSharedStrings().close();
+        if (tmpPath != null) FileUtil.rm_rf(tmpPath);
     }
 
     // --- Customize worksheet writer
