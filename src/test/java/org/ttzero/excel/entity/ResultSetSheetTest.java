@@ -37,6 +37,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -142,10 +143,11 @@ public class ResultSetSheetTest extends SQLWorkbookTest {
         }
     }
 
-    @Test(expected = ExcelWriteException.class) public void testConstructor1() throws IOException {
-        new Workbook("test ResultSet sheet Constructor1", author)
+    @Test public void testConstructor1() {
+        assertThrows(ExcelWriteException.class, () ->
+            new Workbook("test ResultSet sheet Constructor1", author)
                 .addSheet(new ResultSetSheet())
-                .writeTo(defaultTestPath);
+                .writeTo(defaultTestPath));
     }
 
     @Test public void testConstructor2() throws SQLException, IOException {

@@ -1332,4 +1332,55 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 assertEquals(list.get(i), readList.get(i));
         }
     }
+
+    @Test public void testPushModel() throws IOException {
+        final String fileName = "push model list sheet.xlsx";
+        Workbook workbook = new Workbook();
+
+        ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
+        workbook.addPushSheet(sheet); // 添加进workbook
+
+        List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            List<ListObjectSheetTest.Item> sub = ListObjectSheetTest.Item.randomTestData();
+            expectList.addAll(sub);
+            sheet.writeData(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assertEquals(readList.size(), expectList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Item expect = expectList.get(i), e = readList.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
+    @Test public void testPushModelAutoSize() throws IOException {
+        final String fileName = "push model list sheet auto-size.xlsx";
+        Workbook workbook = new Workbook();
+        workbook.setAutoSize(true);
+
+        ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
+        workbook.addPushSheet(sheet); // 添加进workbook
+
+        List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            List<ListObjectSheetTest.Item> sub = ListObjectSheetTest.Item.randomTestData();
+            expectList.addAll(sub);
+            sheet.writeData(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<ListObjectSheetTest.Item> readList = reader.sheet(0).dataRows().map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+            assertEquals(readList.size(), expectList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                ListObjectSheetTest.Item expect = expectList.get(i), e = readList.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
 }
