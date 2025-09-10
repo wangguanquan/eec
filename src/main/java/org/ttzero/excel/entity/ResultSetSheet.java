@@ -220,6 +220,10 @@ public class ResultSetSheet extends Sheet {
         if (styleProcessor != null) return styleProcessor;
         @SuppressWarnings("unchecked")
         StyleProcessor<ResultSet> fromExtProp = (StyleProcessor<ResultSet>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        if (fromExtProp == null || StyleProcessor.None.class.isAssignableFrom(fromExtProp.getClass())) {
+            extPropMark &= ~2; // Ignore
+            if (fromExtProp == null) fromExtProp = (o, style, sst) -> style;
+        }
         return this.styleProcessor = fromExtProp;
     }
 

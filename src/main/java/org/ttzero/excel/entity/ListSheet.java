@@ -165,6 +165,10 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
         if (styleProcessor != null) return styleProcessor;
         @SuppressWarnings("unchecked")
         StyleProcessor<T> fromExtProp = (StyleProcessor<T>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        if (fromExtProp == null || StyleProcessor.None.class.isAssignableFrom(fromExtProp.getClass())) {
+            extPropMark &= ~2; // Ignore
+            if (fromExtProp == null) fromExtProp = (o, style, sst) -> style;
+        }
         return this.styleProcessor = fromExtProp;
     }
 
