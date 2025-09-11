@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.e7;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.entity.Watermark;
@@ -272,16 +273,13 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
 
-//        // Fire progress event
-//        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
-
         // Relationship
         if (relManager == null) relManager = sheet.getRelManager();
 
         if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
 
-        LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
         ready = true;
+        LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
         return sheetPath;
     }
 
@@ -510,6 +508,17 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         else writeRowBlockFireProgress(rowBlock);
 
         totalRows = rowBlock.getTotal();
+    }
+
+    /**
+     * 返回数据样式转换器
+     *
+     * @return 如果有斑马线则返回 {@link XMLZebraLineCellValueAndStyle}否则返回{@link XMLCellValueAndStyle}
+     */
+    @Override
+    public ICellValueAndStyle getCellValueAndStyle() {
+        int zebraFillStyle = sheet.getZebraFillStyle();
+        return zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
     }
 
     /**

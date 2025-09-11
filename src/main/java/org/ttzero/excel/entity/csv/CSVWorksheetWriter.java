@@ -303,4 +303,14 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         this.charset = charset;
         return this;
     }
+
+    /**
+     * 返回CSV数据样式转换器，该转换器将所有数据转为字符器格式并忽略所有样式
+     *
+     * @return {@link ICellValueAndStyle}
+     */
+    @Override
+    public ICellValueAndStyle getCellValueAndStyle() {
+        return new CSVCellValueAndStyle();
+    }
 }

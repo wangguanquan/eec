@@ -19,9 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
-import org.ttzero.excel.entity.e7.XMLZebraLineCellValueAndStyle;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
@@ -1770,9 +1768,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         // Set cell value and style processor
         if (getCellValueAndStyle() == null) {
-            int zebraFillStyle = getZebraFillStyle();
-            ICellValueAndStyle cvas = zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
-            setCellValueAndStyle(cvas);
+            setCellValueAndStyle(getSheetWriter().getCellValueAndStyle());
         }
         // Force export all fields
         if (workbook.getForceExport() > getForceExport() && ListSheet.class.isAssignableFrom(getClass())) {
