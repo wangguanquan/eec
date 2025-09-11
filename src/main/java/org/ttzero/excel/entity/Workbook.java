@@ -495,19 +495,22 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 添加一个工作表{@link Sheet}，新添加的工作表总是排在队列最后，
-     * 可以使用{@link #insertSheet}插入到指定位置
+     * 添加一个工作表{@link Sheet}并启用{@code PUSH}模式，该模式下可以主动推数据到工作表并直接写入文件
+     *
+     * <p>注意：只有实现{@link IPushModelSheet}才能启用PUSH模式，启用PUSH模式后可以通过{@link IPushModelSheet#writeData}
+     * 来写工作表数据，写数据的同时会直接落盘而不是在调用{@link #writeTo(File)}后再获取数据写文件</p>
      *
      * @param sheet 工作表
+     * @return 当前工作薄
      */
-    public void addPushSheet(Sheet sheet) {
+    public Workbook addSheetWithPushModel(Sheet sheet) {
         addSheet(sheet);
         // PUSH MODEL
         if (IPushModelSheet.class.isAssignableFrom(sheet.getClass())) {
             if (sheet.getId() <= 0) sheet.setId(size + 1);
-            // TODO sheet.id如何处理，前面有自动分页时id无法确定
             sheet.forWrite();
         }
+        return this;
     }
 
     /**
@@ -528,6 +531,7 @@ public class Workbook implements Storable {
             }
         }
         sheets[index] = sheet;
+        // TODO 如果当前位置后面有PUSH MODEL则需要重新计算sheet.id
         sheet.setId(index + 1);
         sheet.setWorkbook(this);
         size++;

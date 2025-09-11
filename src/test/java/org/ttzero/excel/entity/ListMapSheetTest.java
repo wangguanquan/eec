@@ -910,7 +910,7 @@ public class ListMapSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook();
 
         ListMapSheet<Object> sheet = new ListMapSheet<>();
-        workbook.addPushSheet(sheet); // 添加进workbook
+        workbook.addSheetWithPushModel(sheet); // 添加进workbook
 
         List<Map<String, Object>> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -936,7 +936,7 @@ public class ListMapSheetTest extends WorkbookTest {
         workbook.setAutoSize(true);
 
         ListMapSheet<Object> sheet = new ListMapSheet<>();
-        workbook.addPushSheet(sheet); // 添加进workbook
+        workbook.addSheetWithPushModel(sheet); // 添加进workbook
 
         List<Map<String, Object>> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {

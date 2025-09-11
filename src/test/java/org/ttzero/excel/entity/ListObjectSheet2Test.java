@@ -17,6 +17,7 @@
 
 package org.ttzero.excel.entity;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.Hyperlink;
@@ -78,7 +79,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
 /**
  * @author guanquan.wang at 2023-04-04 22:38
  */
-public class ListObjectSheetTest2 extends WorkbookTest {
+public class ListObjectSheet2Test extends WorkbookTest {
     @Test public void testSpecifyStartCoordinateA4VisWrite() throws IOException {
         final String fileName = "test specify start coordinate A4 vis ListSheet.xlsx";
         List<ListObjectSheetTest.Item> list = ListObjectSheetTest.Item.randomTestData();
@@ -1338,7 +1339,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         Workbook workbook = new Workbook();
 
         ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
-        workbook.addPushSheet(sheet); // 添加进workbook
+        workbook.addSheetWithPushModel(sheet); // 添加进workbook
 
         List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -1364,7 +1365,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
         workbook.setAutoSize(true);
 
         ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
-        workbook.addPushSheet(sheet); // 添加进workbook
+        workbook.addSheetWithPushModel(sheet); // 添加进workbook
 
         List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -1379,6 +1380,121 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             assertEquals(readList.size(), expectList.size());
             for (int i = 0, len = expectList.size(); i < len; i++) {
                 ListObjectSheetTest.Item expect = expectList.get(i), e = readList.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
+    @Ignore
+    @Test public void test200w() throws IOException {
+        final String fileName = "200w.xlsx";
+        final int rowLen = 2_000_000;
+        // 0: 写入数据总行数
+        // 1: nv大于1w的行数
+        final int[] expect = { 0, 0 };
+        new Workbook()
+            .bestSpeed()
+            .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
+            .addSheet(new ListSheet<E>().setData((i, lastOne) -> {
+                List<E> list = null;
+                if (i < rowLen) {
+                    list = E.data();
+                    expect[0] += list.size();
+                    expect[1] += (int) list.stream().filter(e -> e.nv > 10000).count();
+                }
+                return list;
+            }))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            long count = reader.sheets().flatMap(Sheet::dataRows).count();
+            assertEquals(count, expect[0]);
+            long count1w = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.getInt(0)).filter(i -> i > 10000).count();
+            assertEquals(count1w, expect[1]);
+        }
+    }
+
+    @Ignore
+    @Test public void testPushModel104w() throws IOException {
+        final String fileName = "push model 104w.xlsx";
+        final int rowLen = Const.Limit.MAX_ROWS_ON_SHEET;
+        // 0: 写入数据总行数
+        // 1: nv大于1w的行数
+        final int[] expect = { 1, 0 }; // 包含表头，所以这里起始为1
+        Workbook workbook = new Workbook().bestSpeed()
+            .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows));
+        ListSheet<E> sheet = new ListSheet<>();
+        workbook.addSheetWithPushModel(sheet);
+        while (expect[0] < rowLen) {
+            List<E> list = E.data();
+            if (expect[0] + list.size() > rowLen) {
+                list = list.subList(0, rowLen - expect[0]);
+            }
+            expect[0] += list.size();
+            expect[1] += (int) list.stream().filter(e -> e.nv > 10000).count();
+            sheet.writeData(list);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            long count = reader.sheets().flatMap(Sheet::dataRows).count();
+            assertEquals(count, expect[0] - 1); // 去掉表头
+            long count1w = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.getInt(0)).filter(i -> i > 10000).count();
+            assertEquals(count1w, expect[1]);
+        }
+    }
+
+    public static class E {
+        @ExcelColumn
+        private int nv;
+        @ExcelColumn
+        private String str;
+
+        public static List<E> data() {
+            List<E> list = new ArrayList<>(1000);
+            for (int i = 0; i < 1000; i++) {
+                E e = new E();
+                list.add(e);
+                e.nv = random.nextInt();
+                e.str = getRandomString();
+            }
+            return list;
+        }
+
+        @Override
+        public int hashCode() {
+            return str != null ? str.hashCode() ^ nv : nv;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            boolean r = this == o;
+            if (!r && o instanceof E) {
+                E other = (E) o;
+                r = nv == other.nv && Objects.equals(str, other.str);
+            }
+            return r;
+        }
+    }
+
+    @Test public void testPushSheetUsePullWrite() throws IOException {
+        String fileName = "testPushSheetUsePullWrite.xlsx";
+        List<E> expectList = new ArrayList<>(10000);
+        new Workbook()
+            .bestSpeed()
+            .addSheetWithPushModel(new ListSheet<E>().setData((i, e) -> {
+                List<E> sub = i < 10000 ? E.data() : null;
+                if (sub != null) expectList.addAll(sub);
+                return sub;
+            }))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.sheet(0).getDimension(), Dimension.of("A1:B10001")); // 加上表头
+            List<E> list =  reader.sheet(0).dataRows().map(row -> row.to(E.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), list.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                E expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
         }

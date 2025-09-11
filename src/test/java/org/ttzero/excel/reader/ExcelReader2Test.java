@@ -17,9 +17,7 @@
 
 package org.ttzero.excel.reader;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.Comment;
 import org.ttzero.excel.entity.ListMapSheet;
@@ -37,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,8 +48,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.WorkbookTest.defaultTestPath;
-import static org.ttzero.excel.entity.WorkbookTest.getRandomString;
-import static org.ttzero.excel.entity.WorkbookTest.random;
 import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 import static org.ttzero.excel.reader.ExcelReader.coordinateToLong;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
@@ -60,7 +55,7 @@ import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 /**
  * @author guanquan.wang at 2023-01-06 09:32
  */
-public class ExcelReaderTest2 {
+public class ExcelReader2Test {
     @Test public void testIsBlank() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#150.xlsx"))) {
             reader.sheet(0).rows().forEach(row -> {
@@ -257,35 +252,6 @@ public class ExcelReaderTest2 {
 
             list = sheet.reset().dataRows().map(row -> row.to(U.class)).collect(Collectors.toList());
             assertTrue(list.isEmpty());
-        }
-    }
-
-    @Ignore
-    @Test public void test200w() throws IOException {
-        final String fileName = "200w.xlsx";
-        final int row_len = 2_000_000;
-        // 0: 写入数据总行数
-        // 1: nv大于1w的行数
-        final int[] expect = { 0, 0 };
-        new Workbook()
-            .bestSpeed()
-            .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows))
-            .addSheet(new ListSheet<E>().setData((i, lastOne) -> {
-                List<E> list = null;
-                if (i < row_len) {
-                    list = E.data();
-                    expect[0] += list.size();
-                    expect[1] += (int) list.stream().filter(e -> e.nv > 10000).count();
-                }
-                return list;
-            }))
-            .writeTo(defaultTestPath.resolve(fileName));
-
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            long count = reader.sheets().flatMap(Sheet::dataRows).count();
-            assertEquals(count, expect[0]);
-            long count1w = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.getInt(0)).filter(i -> i > 10000).count();
-            assertEquals(count1w, expect[1]);
         }
     }
 
@@ -509,25 +475,6 @@ public class ExcelReaderTest2 {
         public String toString() {
             return userId + ": " + userName;
         }
-    }
-
-    public static class E {
-        @ExcelColumn
-        private int nv;
-        @ExcelColumn
-        private String str;
-
-        public static List<E> data() {
-            List<E> list = new ArrayList<>(1000);
-            for (int i = 0; i < 1000; i++) {
-                E e = new E();
-                list.add(e);
-                e.nv = random.nextInt();
-                e.str = getRandomString();
-            }
-            return list;
-        }
-
     }
 
     public static class A {

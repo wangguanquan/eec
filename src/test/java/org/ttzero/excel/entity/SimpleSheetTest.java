@@ -359,7 +359,7 @@ public class SimpleSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook();
 
         SimpleSheet<Object> sheet = new SimpleSheet<>();
-        workbook.addPushSheet(sheet); // 添加进workbook
+        workbook.addSheetWithPushModel(sheet); // 添加进workbook
 
         Date now = new Date();
         List<Object> expectList = new ArrayList<>();
