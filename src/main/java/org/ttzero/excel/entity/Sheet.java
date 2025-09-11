@@ -1766,7 +1766,7 @@ public abstract class Sheet implements Cloneable, Storable {
             autoSize();
         }
         if (workbook.getZebraFill() != null && getZebraFillStyle() < 0) {
-            setZebraLine(getZebraFill());
+            setZebraLine(workbook.getZebraFill());
         }
         // Set cell value and style processor
         if (getCellValueAndStyle() == null) {
@@ -1780,7 +1780,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         // Merge Progress window
         if (workbook.getProgressConsumer() != null && getProgressConsumer() == null) {
-            onProgress(getProgressConsumer());
+            onProgress(workbook.getProgressConsumer());
         }
         return this;
     }
