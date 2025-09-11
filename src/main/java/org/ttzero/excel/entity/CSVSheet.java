@@ -182,20 +182,13 @@ public class CSVSheet extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        int len = columns.length, n = 0, limit = getRowLimit();
+        int n = 0, limit = getRowLimit();
         boolean hasNext = true;
         for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && (hasNext = iterator.hasNext()); rows++) {
             Row row = rowBlock.next();
             row.index = rows;
-            Cell[] cells = row.realloc(len);
-            String[] csvRow = iterator.next();
-            for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
-
-                Cell cell = cells[i];
-                cell.setString(csvRow[i]);
-                cell.xf = cellValueAndStyle.getStyleIndex(row, hc, csvRow[i]);
-            }
+            row.height = getRowHeight();
+            resetRowData(row, iterator.next());
         }
 
         // Paging
@@ -259,5 +252,33 @@ public class CSVSheet extends Sheet {
     public CSVSheet setDelimiter(char delimiter) {
         this.delimiter = delimiter;
         return this;
+    }
+
+    /**
+     * 重置单行数据
+     *
+     * @param row Excel行
+     * @param rowData 行数据
+     */
+    protected void resetRowData(Row row, String[] rowData) {
+        int len = Math.min(columns.length, rowData.length);
+        Cell[] cells = row.realloc(len);
+        for (int i = 0; i < len; i++) {
+            resetCellValueAndStyle(row, cells[i], rowData, rowData[i], columns[i]);
+        }
+    }
+
+    /**
+     * 重置单元格数据和样式
+     *
+     * @param row Excel行
+     * @param cell Excel单元格
+     * @param rowData 行数据
+     * @param cellData 单元格数据
+     * @param column 单列表头
+     */
+    protected void resetCellValueAndStyle(Row row, Cell cell, String[] rowData, String cellData, Column column) {
+        cell.setString(cellData);
+        cell.xf = cellValueAndStyle.getStyleIndex(row, column, cellData);
     }
 }

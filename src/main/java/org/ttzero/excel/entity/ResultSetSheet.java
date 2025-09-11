@@ -249,48 +249,14 @@ public class ResultSetSheet extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        int len = columns.length, n = 0, limit = getRowLimit();
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2, hasNext = true;
+        int n = 0, limit = getRowLimit();
+        boolean hasNext = true;
         try {
             for (int rbs = rowBlock.capacity(); n++ < rbs && rows < limit && (hasNext = rs.next()); rows++) {
                 Row row = rowBlock.next();
                 row.index = rows;
                 row.height = getRowHeight();
-                Cell[] cells = row.realloc(len);
-                for (int i = 1; i <= len; i++) {
-                    SQLColumn hc = (SQLColumn) columns[i - 1];
-                    Object e;
-                    if (hc.ri > 0) {
-                        switch (hc.sqlType) {
-                            case VARCHAR:
-                            case CHAR:
-                            case LONGVARCHAR:
-                            case NULL:            e = rs.getString(hc.ri);     break;
-                            case INTEGER:         e = rs.getInt(hc.ri);        break;
-                            case TINYINT:
-                            case SMALLINT:        e = rs.getShort(hc.ri);      break;
-                            case DATE:            e = rs.getDate(hc.ri);       break;
-                            case TIMESTAMP:       e = rs.getTimestamp(hc.ri);  break;
-                            case NUMERIC:
-                            case DECIMAL:         e = rs.getBigDecimal(hc.ri); break;
-                            case BIGINT:          e = rs.getLong(hc.ri);       break;
-                            case REAL:
-                            case FLOAT:
-                            case DOUBLE:          e = rs.getDouble(hc.ri);     break;
-                            case BIT:             e = rs.getBoolean(hc.ri);    break;
-                            case TIME:            e = rs.getTime(hc.ri);       break;
-                            default:              e = rs.getObject(hc.ri);     break;
-                        }
-                        // Clear value if NULL
-                        if (rs.wasNull()) e = null;
-                    } else e = null;
-
-                    Cell cell = cells[i - 1];
-                    cellValueAndStyle.reset(row, cell, e, hc);
-                    if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(rs, cell, hc, getStyleProcessor());
-                    }
-                }
+                resetRowData(row, rs);
             }
         } catch (SQLException e) {
             throw new ExcelWriteException(e);
@@ -304,6 +270,49 @@ public class ResultSetSheet extends Sheet {
             copy.shouldClose = true;
             workbook.insertSheet(id, copy);
         } else if (!hasNext) rowBlock.markEOF();
+    }
+
+    /**
+     * 重置单行数据
+     *
+     * @param row Excel行
+     * @param rs ResultSet
+     * @throws SQLException 执行SQL异常
+     */
+    protected void resetRowData(Row row, ResultSet rs) throws SQLException {
+        int len = columns.length;
+        Cell[] cells = row.realloc(len);
+        for (int i = 1; i <= len; i++) {
+            SQLColumn hc = (SQLColumn) columns[i - 1];
+            Object e = null;
+            if (hc.ri > 0) {
+                switch (hc.sqlType) {
+                    case VARCHAR:
+                    case CHAR:
+                    case LONGVARCHAR:
+                    case NULL:            e = rs.getString(hc.ri);     break;
+                    case INTEGER:         e = rs.getInt(hc.ri);        break;
+                    case TINYINT:
+                    case SMALLINT:        e = rs.getShort(hc.ri);      break;
+                    case DATE:            e = rs.getDate(hc.ri);       break;
+                    case TIMESTAMP:       e = rs.getTimestamp(hc.ri);  break;
+                    case NUMERIC:
+                    case DECIMAL:         e = rs.getBigDecimal(hc.ri); break;
+                    case BIGINT:          e = rs.getLong(hc.ri);       break;
+                    case REAL:
+                    case FLOAT:
+                    case DOUBLE:          e = rs.getDouble(hc.ri);     break;
+                    case BIT:             e = rs.getBoolean(hc.ri);    break;
+                    case TIME:            e = rs.getTime(hc.ri);       break;
+                    default:              e = rs.getObject(hc.ri);     break;
+                }
+                // Clear value if NULL
+                if (rs.wasNull()) e = null;
+            }
+
+            // Setting cell value and style
+            resetCellValueAndStyle(row, cells[i - 1], rs, e, hc);
+        }
     }
 
     /**
@@ -411,6 +420,22 @@ public class ResultSetSheet extends Sheet {
             default:        clazz = Object.class;
         }
         return clazz;
+    }
+
+    /**
+     * 重置单元格数据和样式
+     *
+     * @param row Excel行
+     * @param cell Excel单元格
+     * @param rowData 行数据
+     * @param cellData 单元格数据
+     * @param column 单列表头
+     */
+    protected void resetCellValueAndStyle(Row row, Cell cell, ResultSet rowData, Object cellData, Column column) {
+        cellValueAndStyle.reset(row, cell, cellData, column);
+        if ((extPropMark & 2) == 2) {
+            cellValueAndStyle.setStyleDesign(rowData, cell, column, getStyleProcessor());
+        }
     }
 
     /**
