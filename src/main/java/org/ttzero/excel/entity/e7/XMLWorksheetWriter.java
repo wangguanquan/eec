@@ -76,7 +76,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
@@ -161,46 +160,46 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         this.relManager = sheet != null ? sheet.getRelManager() : null;
     }
 
-    /**
-     * Write a row block
-     *
-     * @param supplier a row-block supplier
-     * @throws IOException if I/O error occur
-     */
-    @Override
-    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        initWriter(path);
-
-        // Get the first block
-        RowBlock rowBlock = supplier.get();
-
-        // write before
-        writeBefore();
-
-        // Write body data
-        beforeSheetData(sheet.getNonHeader() == 1);
-
-        if (rowBlock != null && rowBlock.hasNext()) {
-            if (progressConsumer == null) {
-                do {
-                    // write row-block data
-                    writeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            } else {
-                do {
-                    // write row-block data and fire progress event
-                    writeRowBlockFireProgress(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-                if (rowBlock != null && rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
-            }
-        }
-
-        totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
-    }
+//    /**
+//     * Write a row block
+//     *
+//     * @param supplier a row-block supplier
+//     * @throws IOException if I/O error occur
+//     */
+//    @Override
+//    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+//        initWriter(path);
+//
+//        // Get the first block
+//        RowBlock rowBlock = supplier.get();
+//
+//        // write before
+//        writeBefore();
+//
+//        // Write body data
+//        beforeSheetData(sheet.getNonHeader() == 1);
+//
+//        if (rowBlock != null && rowBlock.hasNext()) {
+//            if (progressConsumer == null) {
+//                do {
+//                    // write row-block data
+//                    writeRowBlock(rowBlock);
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                } while ((rowBlock = supplier.get()) != null);
+//            } else {
+//                do {
+//                    // write row-block data and fire progress event
+//                    writeRowBlockFireProgress(rowBlock);
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                } while ((rowBlock = supplier.get()) != null);
+//                if (rowBlock != null && rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
+//            }
+//        }
+//
+//        totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
+//    }
 
     /**
      * Write a row block

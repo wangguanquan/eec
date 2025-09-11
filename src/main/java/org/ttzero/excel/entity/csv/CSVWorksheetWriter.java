@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -110,40 +109,40 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         return this;
     }
 
-    @Override
-    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        Path workSheetPath = initWriter(path);
-        // Get the first block
-        RowBlock rowBlock = supplier.get();
-
-        // write before
-        writeBefore();
-
-        if (rowBlock != null && rowBlock.hasNext()) {
-            if (progressConsumer == null) {
-                do {
-                    // write row-block data
-                    writeRow(rowBlock.next());
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            } else {
-                Row row;
-                do {
-                    row = rowBlock.next();
-                    // write row-block data
-                    writeRow(row);
-                    // Fire progress
-                    if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-                progressConsumer.accept(sheet, row.getIndex());
-            }
-        }
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-    }
+//    @Override
+//    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+//        Path workSheetPath = initWriter(path);
+//        // Get the first block
+//        RowBlock rowBlock = supplier.get();
+//
+//        // write before
+//        writeBefore();
+//
+//        if (rowBlock != null && rowBlock.hasNext()) {
+//            if (progressConsumer == null) {
+//                do {
+//                    // write row-block data
+//                    writeRow(rowBlock.next());
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                } while ((rowBlock = supplier.get()) != null);
+//            } else {
+//                Row row;
+//                do {
+//                    row = rowBlock.next();
+//                    // write row-block data
+//                    writeRow(row);
+//                    // Fire progress
+//                    if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
+//                    // end of row
+//                    if (rowBlock.isEOF()) break;
+//                } while ((rowBlock = supplier.get()) != null);
+//                progressConsumer.accept(sheet, row.getIndex());
+//            }
+//        }
+//        // Write some final info
+//        sheet.afterSheetAccess(workSheetPath);
+//    }
 
     @Override
     public IWorksheetWriter setWorksheet(Sheet sheet) {

@@ -61,7 +61,9 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * @param supplier 数据提供方
      * @throws IOException if I/O error occur
      */
-    void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException;
+    default void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 设置工作表
