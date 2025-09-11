@@ -1119,7 +1119,7 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
         // Check bound
         if (data == null || data.isEmpty()) return rowBlock;
         if (rows + data.size() > sheetWriter.getRowLimit())
-            throw new IndexOutOfBoundsException("Max rows:" + sheetWriter.getRowLimit() + ", current:" + rows + data.size());
+            throw new IndexOutOfBoundsException("Max rows:" + sheetWriter.getRowLimit() + ", current:" + (rows + data.size()));
         // Initialization header columns
         if (!headerReady) {
             this.data = data;
