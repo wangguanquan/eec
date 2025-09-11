@@ -1085,23 +1085,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
-        // There has no column to reset width
-        if (columns.length <= 0 || rows <= 0) return;
-        // Collect column width
-        for (int i = 0; i < columns.length; i++) {
-            Column hc = columns[i];
-            int k = hc.getAutoSize();
-            // If fixed width or media cell
-            if (k == 2 || hc.getColumnType() == 1) {
-                double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
-                hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, RoundingMode.HALF_UP).doubleValue();
-                continue;
+        if (includeAutoWidth) {
+            // There has no column to reset width
+            if (columns.length <= 0 || rows <= 0) return;
+            // Collect column width
+            for (int i = 0; i < columns.length; i++) {
+                Column hc = columns[i];
+                int k = hc.getAutoSize();
+                // If fixed width or media cell
+                if (k == 2 || hc.getColumnType() == 1) {
+                    double width = hc.width >= 0.0D ? hc.width : sheet.getDefaultWidth();
+                    hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                    continue;
+                }
+                double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
+                double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
+                if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
+                if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
+                hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();
             }
-            double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
-            double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
-            if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
-            if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
-            hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();
         }
 
         if (bw != null) {
@@ -1113,11 +1115,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
-//        {
-//            @Override protected boolean hasMedia() {
-//                return false;
-//            }
-//        };
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
@@ -1146,9 +1143,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             writeAfter(totalRows);
 
             // Resize if include auto-width column
-            if (includeAutoWidth) {
-                resizeColumnWidth(workSheetPath.resolve(sheet.getFileName()).toFile(), totalRows);
-            }
+            resizeColumnWidth(workSheetPath.resolve(sheet.getFileName()).toFile(), totalRows);
 
             FileUtil.close(bw);
             bw = null;
@@ -1200,7 +1195,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (columns.length > 0) bw.write(int2Col(columns[0].getColNum()));
         else bw.write('A');
         bw.writeInt(startHeaderRow);
-        int n = 11, size = totalRows > 0 ? totalRows : sheet.size(); // fill 11 space
+        int n = 11, size = totalRows; // fill 11 space
         if (size > 0 && columns.length > 0) {
             bw.write(':');
             n--;
@@ -1208,7 +1203,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getColNum());
             bw.write(col);
             n -= col.length;
-            size = includeAutoWidth || sheet.getNonHeader() == 1 ? size + startRow - 1 : size + startRow + columns[0].subColumnSize() - 1;
+            size = size + startRow - 1;
             bw.writeInt(size > getRowLimit() ? getRowLimit() : size);
             n -= stringSize(size);
         }
