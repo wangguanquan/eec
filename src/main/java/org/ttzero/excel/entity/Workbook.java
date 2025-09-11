@@ -507,7 +507,7 @@ public class Workbook implements Storable {
         addSheet(sheet);
         // PUSH MODEL
         if (IPushModelSheet.class.isAssignableFrom(sheet.getClass())) {
-            if (sheet.getId() <= 0) sheet.setId(size + 1);
+            if (sheet.getId() <= 0) sheet.setId(size);
             sheet.forWrite();
         }
         return this;

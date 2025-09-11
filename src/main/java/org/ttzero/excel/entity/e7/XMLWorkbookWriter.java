@@ -122,6 +122,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             moveToPath(zip, path);
         } finally {
             if (zip != null) FileUtil.rm(zip);
+            close();
         }
     }
 
@@ -133,6 +134,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
             Files.copy(zip, os);
         } finally {
             if (zip != null) FileUtil.rm(zip);
+            close();
         }
     }
 
@@ -328,11 +330,13 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         ContentType contentType = workbook.getContentType();
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            // Ignore push model sheet
+            // Push model
             if (IPushModelSheet.class.isAssignableFrom(sheet.getClass()) && sheet.size() > 0) {
                 sheet.close();
-            } else {
-                sheet.setId(i + 1);
+            }
+            // Pull model
+            else {
+                if (sheet.getId() <= 0) sheet.setId(i + 1);
                 // Collect properties
                 sheet.forWrite();
 
