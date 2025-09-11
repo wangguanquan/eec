@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ import static org.ttzero.excel.util.DateUtil.toDateString;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
+ * CSV数据样式转换器，该转换器将所有数据转为字符器格式并忽略所有样式
+ *
  * @author guanquan.wang at 2019-09-25 11:46
  */
 public class CSVCellValueAndStyle implements ICellValueAndStyle {
