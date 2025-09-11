@@ -19,9 +19,9 @@ package org.ttzero.excel.entity.csv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.IPushModelSheet;
 import org.ttzero.excel.entity.IWorkbookWriter;
 import org.ttzero.excel.entity.IWorksheetWriter;
-import org.ttzero.excel.entity.ListSheet;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.entity.Workbook;
 import org.ttzero.excel.manager.Const;
@@ -46,12 +46,22 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
      */
     protected Logger LOGGER = LoggerFactory.getLogger(getClass());
     protected Workbook workbook;
-    // The csv suffix
+    /**
+     * 单个文件时后缀为{@code csv}，多个文件时将多个csv归档为{@code zip}包
+     */
     private String suffix = Const.Suffix.CSV;
-    // Write BOM header
+    /**
+     * Write BOM header
+     */
     protected boolean withBom;
-    // Charset 默认UTF-8
+    /**
+     * Charset 默认UTF-8
+     */
     protected Charset charset;
+    /**
+     * 临时文件路径
+     */
+    protected Path tmpPath;
 
     public CSVWorkbookWriter() { }
 
@@ -92,7 +102,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             path = createTemp();
             Files.copy(path, os);
         } finally {
-            if (path != null) cleanTmp(path);
+            if (path != null) FileUtil.rm(path);
+            close();
         }
     }
 
@@ -103,26 +114,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             path = createTemp();
             moveToPath(path, root);
         } finally {
-            if (path != null) cleanTmp(path);
-        }
-    }
-
-    /**
-     * Clean tmp folders
-     *
-     * @param path the tmp path
-     */
-    private void cleanTmp(Path path) {
-        int i = 0;
-        for (Path sub : path) {
-            i++;
-            if (sub.toString().startsWith(Const.EEC_PREFIX)) {
-                break;
-            }
-        }
-        if (i < path.getNameCount()) {
-            FileUtil.rm_rf(path.getRoot().resolve(path.subpath(0, i)).toFile(), true);
-            LOGGER.debug("Clean up temporary files");
+            if (path != null) FileUtil.rm(path);
+            close();
         }
     }
 
@@ -137,59 +130,55 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         LOGGER.debug("Write completed. {}", resultPath);
     }
 
+    @Override
+    public Path writeBefore() throws IOException {
+        if (tmpPath == null) {
+            tmpPath = FileUtil.mktmp(Const.EEC_PREFIX);
+            LOGGER.debug("Create temporary folder {}", tmpPath);
+        }
+        return tmpPath;
+    }
+
     // Create csv file
     protected Path createTemp() throws IOException, ExcelWriteException {
-        Sheet[] sheets = workbook.getSheets();
-        for (int i = 0; i < sheets.length; i++) {
-            Sheet sheet = sheets[i];
-            IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
-            sheet.setSheetWriter(worksheetWriter);
-            sheet.setId(i + 1);
-            // default worksheet name
-            if (StringUtil.isEmpty(sheet.getName())) {
-                sheet.setName("Sheet" + (i + 1));
+        Path root = writeBefore();
+        // Write worksheet data one by one
+        for (int i = 0; i < workbook.getSize(); i++) {
+            Sheet sheet = workbook.getSheetAt(i);
+            // Push model
+            if (IPushModelSheet.class.isAssignableFrom(sheet.getClass()) && sheet.size() > 0) {
+                sheet.close();
             }
-            // Set cell value and style processor
-            sheet.setCellValueAndStyle(new CSVCellValueAndStyle());
+            // Pull model
+            else {
+                if (sheet.getId() <= 0) sheet.setId(i + 1);
+                // Collect properties
+                sheet.forWrite();
 
-            // Force export all fields
-            if (workbook.getForceExport() > sheet.getForceExport() && ListSheet.class.isAssignableFrom(sheet.getClass())) {
-                ((ListSheet<?>) sheet).forceExport();
+                try {
+                    // Write to desk
+                    sheet.writeTo(root);
+                } finally {
+                    sheet.close();
+                }
             }
         }
-        LOGGER.debug("Sheet initialization completed.");
 
-        Path root = null;
-        try {
-            root = FileUtil.mktmp(Const.EEC_PREFIX);
-            LOGGER.debug("Create temporary folder {}", root);
-
-            // Write worksheet data one by one
-            for (int i = 0; i < workbook.getSize(); i++) {
-                Sheet e = workbook.getSheetAt(i);
-                e.writeTo(root);
-                e.close();
-            }
-
-            // Zip compress if multi worksheet occur
-            if (workbook.getSize() > 1) {
-                suffix = Const.Suffix.ZIP;
-                Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
-                LOGGER.debug("Compression completed. {}", zipFile);
-                FileUtil.rm_rf(root.toFile(), true);
-                return zipFile;
-            } else {
-                return root.resolve(workbook.getSheetAt(0).getName() + Const.Suffix.CSV);
-            }
-        } catch (IOException | ExcelWriteException e) {
-            // remove temp path
-            if (root != null) FileUtil.rm_rf(root);
-            throw e;
+        // Zip compress if multi worksheet occur
+        if (workbook.getSize() > 1) {
+            suffix = Const.Suffix.ZIP;
+            Path zipFile = ZipUtil.zipExcludeRoot(root, workbook.getCompressionLevel(), root);
+            LOGGER.debug("Compression completed. {}", zipFile);
+            return zipFile;
+        } else {
+            return root.resolve(workbook.getSheetAt(0).getName() + Const.Suffix.CSV);
         }
     }
 
     @Override
-    public void close() { }
+    public void close() {
+        if (tmpPath != null) FileUtil.rm_rf(tmpPath);
+    }
 
     /**
      * 设置字符集
