@@ -102,9 +102,9 @@ public class Workbook implements Storable {
      */
     private Watermark watermark;
     /**
-     * 记录工作表几数
+     * 记录工作表个数
      */
-    private int size;
+    private int size, maxId; // 记录最大ID
     /**
      * 作者，未指定时将默认取当前系统登录名
      */
@@ -490,6 +490,7 @@ public class Workbook implements Storable {
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
         sheet.setWorkbook(this);
+        sheet.id = ++maxId;
         sheets[size++] = sheet;
         return this;
     }
@@ -507,7 +508,6 @@ public class Workbook implements Storable {
         addSheet(sheet);
         // PUSH MODEL
         if (IPushModelSheet.class.isAssignableFrom(sheet.getClass())) {
-            if (sheet.getId() <= 0) sheet.setId(size);
             sheet.forWrite();
         }
         return this;
@@ -527,13 +527,11 @@ public class Workbook implements Storable {
         if (sheets[index] != null) {
             for (; _size > index; _size--) {
                 sheets[_size] = sheets[_size - 1];
-                sheets[_size].setId(sheets[_size].getId() + 1);
             }
         }
         sheets[index] = sheet;
-        // TODO 如果当前位置后面有PUSH MODEL则需要重新计算sheet.id
-        sheet.setId(index + 1);
         sheet.setWorkbook(this);
+        sheet.id = ++maxId;
         size++;
         return this;
     }
@@ -553,7 +551,6 @@ public class Workbook implements Storable {
         } else {
             for (; index < size - 1; index++) {
                 sheets[index] = sheets[index + 1];
-                sheets[index].setId(sheets[index].getId() - 1);
             }
         }
         size--;

@@ -1376,6 +1376,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         if (copy != null) {
             copy.copyCount = ++copyCount;
+            copy.id = 0;
             copy.name = getCopySheetName();
             copy.relManager = relManager.deepClone();
             copy.sheetWriter = sheetWriter.clone().setWorksheet(copy);

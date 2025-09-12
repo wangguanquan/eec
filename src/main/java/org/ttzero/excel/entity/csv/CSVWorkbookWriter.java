@@ -151,11 +151,9 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
             }
             // Pull model
             else {
-                if (sheet.getId() <= 0) sheet.setId(i + 1);
-                // Collect properties
-                sheet.forWrite();
-
                 try {
+                    // Collect properties
+                    sheet.forWrite();
                     // Write to desk
                     sheet.writeTo(root);
                 } finally {
