@@ -398,7 +398,7 @@ public class ListObjectPagingTest extends WorkbookTest {
                 // 学生Sheet页数据验证
                 org.ttzero.excel.reader.Sheet sheet0 = reader.sheet("学生");
                 assertEquals("学生", sheet0.getName());
-                List<ListObjectSheetTest.Student> studentList = sheet0.dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());;
+                List<ListObjectSheetTest.Student> studentList = sheet0.dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
                 assertEquals(studentList.size(), expectStudentList.size());
                 for (int i = 0, len = studentList.size(); i < len; i++) {
                     ListObjectSheetTest.Student expect = expectStudentList.get(i), e = studentList.get(i);
