@@ -496,24 +496,6 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 添加一个工作表{@link Sheet}并启用{@code PUSH}模式，该模式下可以主动推数据到工作表并直接写入文件
-     *
-     * <p>注意：只有实现{@link IPushModelSheet}才能启用PUSH模式，启用PUSH模式后可以通过{@link IPushModelSheet#writeData}
-     * 来写工作表数据，写数据的同时会直接落盘而不是在调用{@link #writeTo(File)}后再获取数据写文件</p>
-     *
-     * @param sheet 工作表
-     * @return 当前工作薄
-     */
-    public Workbook addSheetWithPushModel(Sheet sheet) {
-        addSheet(sheet);
-        // PUSH MODEL
-        if (IPushModelSheet.class.isAssignableFrom(sheet.getClass())) {
-            sheet.forWrite();
-        }
-        return this;
-    }
-
-    /**
      * 在指定下标插入一个工作表{@link Sheet}
      *
      * @param index 指定工作表插入的位置（从0开始）

@@ -1101,9 +1101,10 @@ public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
      * @throws IOException if I/O error occur.
      */
     public int writeData(List<T> data) throws IOException {
-        if (sheetWriter == null) {
+        if (workbook == null)
             throw new IOException("Before writing data, worksheet must be added to the workbook.");
-        }
+        // Initialization
+        if (!headerReady) forWrite();
         // Write row-block
         sheetWriter.writeData(fillRowBlock(data));
         return rows;
