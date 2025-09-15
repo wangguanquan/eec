@@ -52,7 +52,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
-import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
+import static org.ttzero.excel.reader.ExcelReader2Test.listEquals;
 import static org.ttzero.excel.util.DateUtil.toDateString;
 import static org.ttzero.excel.util.StringUtil.swap;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;

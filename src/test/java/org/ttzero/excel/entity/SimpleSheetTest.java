@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -350,6 +351,42 @@ public class SimpleSheetTest extends WorkbookTest {
             for (; iter.hasNext();) {
                 System.out.println(iter.next());
             }
+        }
+    }
+
+    @Test public void testPushModel() throws IOException {
+        final String fileName = "push model simple sheet.xlsx";
+        Workbook workbook = new Workbook();
+
+        SimpleSheet<Object> sheet = new SimpleSheet<>();
+        workbook.addSheet(sheet); // 添加进workbook
+
+        Date now = new Date();
+        List<Object> expectList = new ArrayList<>();
+        expectList.add(new String[]{"列1", "列2", "列3"});
+        expectList.add(new int[]{1, 2, 3, 4});
+        expectList.add(new Object[]{5, now, 7, null, "字母", 9, 10.1243});
+
+        for (int i = 0; i < expectList.size(); i++) {
+            sheet.writeData(Collections.singletonList(expectList.get(i)));
+        }
+
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Iterator<org.ttzero.excel.reader.Row> iter = reader.sheet(0).iterator();
+            assertTrue(iter.hasNext());
+            org.ttzero.excel.reader.Row row = iter.next();
+            assertEquals("列1 | 列2 | 列3", row.toString());
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            assertEquals("1 | 2 | 3 | 4", row.toString());
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+            // 时间忽略毫秒值，所以这里特殊处理
+            assertEquals("5 | " + toDateTimeString(now) + " | 7 | null | 字母 | 9 | 10.1243", row.toString());
         }
     }
 

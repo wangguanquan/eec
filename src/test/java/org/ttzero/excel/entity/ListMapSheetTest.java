@@ -670,12 +670,12 @@ public class ListMapSheetTest extends WorkbookTest {
 
     @Test public void testOverLargeOrderColumn() {
         assertThrows(TooManyColumnsException.class, () ->
-            new Workbook("test list map sheet Constructor8", author)
+            new Workbook()
                 .setAutoSize(true)
                 .addSheet(new ListMapSheet<>("MAP", createTestData(10)
                     , new Column("ID", "id", int.class).setColIndex(9999999)
                     , new Column("NAME", "name", String.class)))
-                .writeTo(defaultTestPath)
+                .writeTo(defaultTestPath.resolve("testOverLargeOrderColumn.xlsx"))
         );
     }
 
@@ -905,6 +905,57 @@ public class ListMapSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testPushModel() throws IOException {
+        final String fileName = "push model list map sheet.xlsx";
+        Workbook workbook = new Workbook();
+
+        ListMapSheet<Object> sheet = new ListMapSheet<>();
+        workbook.addSheet(sheet); // 添加进workbook
+
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            List<Map<String, Object>> sub = createTestData();
+            expectList.addAll(sub);
+            sheet.writeData(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Map<String, Object>> readList = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(readList.size(), expectList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, Object> expect = expectList.get(i), e = readList.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
+    @Test public void testPushModelAutoSize() throws IOException {
+        final String fileName = "push model list map sheet auto-size.xlsx";
+        Workbook workbook = new Workbook();
+        workbook.setAutoSize(true);
+
+        ListMapSheet<Object> sheet = new ListMapSheet<>();
+        workbook.addSheet(sheet); // 添加进workbook
+
+        List<Map<String, Object>> expectList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            List<Map<String, Object>> sub = createTestData();
+            expectList.addAll(sub);
+            sheet.writeData(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<Map<String, Object>> readList = reader.sheet(0).dataRows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(readList.size(), expectList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Map<String, Object> expect = expectList.get(i), e = readList.get(i);
+                assertEquals(expect, e);
+            }
+        }
+    }
+
     static List<Map<String, Object>> getRows(int page) {
         if (page > 127 - 67) return null;
         List<Map<String, Object>> rows = new ArrayList<>();//模拟hbase中的数据，这里查询了hbase
@@ -962,7 +1013,6 @@ public class ListMapSheetTest extends WorkbookTest {
                     Object e = !isNull ? rowDate.get(hc.key) : null;
                     // Clear cells
                     Cell cell = cells[i];
-                    cell.clear();
 
                     cellValueAndStyle.reset(row, cell, e, hc);
                 }
@@ -984,7 +1034,7 @@ public class ListMapSheetTest extends WorkbookTest {
         }
 
         @Override
-        public void close() {
+        public void close() throws IOException {
             super.close();
 
             XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);

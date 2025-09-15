@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.csv;
 
 import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
+import org.ttzero.excel.entity.CSVSheet;
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.CustomColIndexTest;
 import org.ttzero.excel.entity.CustomizeDataSourceSheet;
@@ -38,14 +39,17 @@ import org.ttzero.excel.entity.ListObjectSheetTest.BoxAllType;
 import org.ttzero.excel.entity.ListObjectSheetTest.ExtItem;
 import org.ttzero.excel.entity.ListObjectSheetTest.NoColumnAnnotation;
 import org.ttzero.excel.entity.ListObjectSheetTest.NoColumnAnnotation2;
+import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.util.CSVUtil;
 
 import java.awt.Color;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 import static org.junit.Assert.assertEquals;
@@ -359,5 +363,33 @@ public class ListObjectSheetTest extends WorkbookTest {
                 }
             })
             .writeTo(getOutputTestPath().resolve("test object with specify delimiter.csv"));
+    }
+
+    @Test public void testPushModel() throws IOException {
+        final String fileName = "push model list sheet.csv";
+        List<Item> expectList = new ArrayList<>();
+        Workbook workbook = new Workbook().saveAsCSV(); // <- 直接写为CSV格式
+
+        ListSheet<Item> sheet = new ListSheet<>();
+        workbook.addSheet(sheet); // 添加进workbook
+
+        for (int i = 0; i < 10; i++) {
+            List<Item> sub = Item.randomTestData();
+            expectList.addAll(sub);
+            sheet.writeData(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        // CSV 转 Excel
+        new Workbook().addSheet(new CSVSheet(defaultTestPath.resolve(fileName))).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName + ".xlsx"))) {
+            List<Item> list = reader.sheet(0).dataRows().map(row -> row.to(Item.class)).collect(Collectors.toList());
+            assertEquals(list.size(), expectList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                Item expect = expectList.get(i), e = list.get(i);
+                assertEquals(expect, e);
+            }
+        }
     }
 }

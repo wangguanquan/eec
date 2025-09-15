@@ -89,6 +89,7 @@ public class Row {
      */
     public Cell[] realloc(int n) {
         if (cells == null || cells.length < n) calloc(n);
+        else for (int i = 0; i < n; cells[i++].clear());
         lc = n;
         return cells;
     }

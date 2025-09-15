@@ -586,8 +586,6 @@ public class TemplateSheet extends Sheet {
 
             for (int i = 0; i < len; i++) {
                 Cell cell = cells[i], cell0 = row0.getCell(i);
-                // Clear cells
-                cell.clear();
 
                 // 复制样式
                 cell.xf = styleMap.getOrDefault(cell0.xf, 0);

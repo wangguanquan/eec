@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package org.ttzero.excel.entity;
+
+import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -60,8 +62,12 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * @param path     保存位置
      * @param supplier 数据提供方
      * @throws IOException if I/O error occur
+     * @deprecated 未使用，即将移除
      */
-    void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException;
+    @Deprecated
+    default void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 设置工作表
@@ -92,6 +98,23 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * @throws IOException if I/O error occur
      */
     default void writePicture(Picture picture) throws IOException { }
+
+    /**
+     * 写行数据
+     *
+     * @param rowBlock 行块
+     * @throws IOException if I/O error occur
+     */
+    void writeData(RowBlock rowBlock) throws IOException;
+
+    /**
+     * 获取数据样式转换器，可以根据不同输出协议制定转换器
+     *
+     * @return 数据样式转换器
+     */
+    default ICellValueAndStyle getCellValueAndStyle() {
+        return new XMLCellValueAndStyle();
+    }
 
     /**
      * 判断是否为{@link java.util.Date}类型

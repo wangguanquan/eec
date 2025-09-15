@@ -599,7 +599,6 @@ public class TemplateSheetTest extends WorkbookTest {
                     // 从supplier中获取sheet
                     Sheet sheet = sheetSupplier.get();
                     if (sheet == null) break;
-                    sheet.setId(i);
                     if (StringUtil.isEmpty(sheet.getName())) {
                         sheet.setName("Sheet" + i);
                     }
@@ -610,7 +609,7 @@ public class TemplateSheetTest extends WorkbookTest {
                     sheet.close();
 
                     // 放入空的Sheet用于占位
-                    workbook.addSheet(new ListSheet<>(sheet.getName()).setId(sheet.getId()));
+                    workbook.addSheet(new ListSheet<>(sheet.getName()));
                 }
 
                 writeGlobalAttribute(xl);

@@ -38,6 +38,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -490,10 +491,11 @@ public class StatementSheetTest extends SQLWorkbookTest {
     }
 
 
-    @Test(expected = ExcelWriteException.class) public void testConstructor9() throws IOException {
-        new Workbook("test statement sheet Constructor9")
-            .addSheet(new StatementSheet())
-            .writeTo(defaultTestPath);
+    @Test public void testConstructor9() {
+        assertThrows(ExcelWriteException.class, () ->
+            new Workbook("test statement sheet Constructor9")
+                .addSheet(new StatementSheet())
+                .writeTo(defaultTestPath));
     }
 
     @Test public void testConstructor10() throws SQLException, IOException {

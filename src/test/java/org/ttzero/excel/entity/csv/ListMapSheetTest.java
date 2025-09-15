@@ -220,4 +220,18 @@ public class ListMapSheetTest extends WorkbookTest {
             .saveAsCSV()
             .writeTo(getOutputTestPath().resolve("test map null value.csv"));
     }
+
+    @Test public void testPushModel() throws IOException {
+        final String fileName = "push model list map sheet.csv";
+        Workbook workbook = new Workbook().saveAsCSV(); // <- 直接写为CSV格式
+
+        ListMapSheet<Object> sheet = new ListMapSheet<>();
+        workbook.addSheet(sheet); // 添加进workbook
+
+        for (int i = 0; i < 10; i++) {
+            sheet.writeData(createAllTypeData(100));
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+    }
 }
