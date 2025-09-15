@@ -226,7 +226,7 @@ public class ListMapSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook().saveAsCSV(); // <- 直接写为CSV格式
 
         ListMapSheet<Object> sheet = new ListMapSheet<>();
-        workbook.addSheetWithPushModel(sheet); // 添加进workbook
+        workbook.addSheet(sheet); // 添加进workbook
 
         for (int i = 0; i < 10; i++) {
             sheet.writeData(createAllTypeData(100));

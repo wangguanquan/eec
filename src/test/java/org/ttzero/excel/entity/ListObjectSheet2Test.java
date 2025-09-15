@@ -1339,7 +1339,7 @@ public class ListObjectSheet2Test extends WorkbookTest {
         Workbook workbook = new Workbook();
 
         ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
-        workbook.addSheetWithPushModel(sheet); // 添加进workbook
+        workbook.addSheet(sheet); // 添加进workbook
 
         List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -1365,7 +1365,7 @@ public class ListObjectSheet2Test extends WorkbookTest {
         workbook.setAutoSize(true);
 
         ListSheet<ListObjectSheetTest.Item> sheet = new ListSheet<>();
-        workbook.addSheetWithPushModel(sheet); // 添加进workbook
+        workbook.addSheet(sheet); // 添加进workbook
 
         List<ListObjectSheetTest.Item> expectList = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -1424,7 +1424,7 @@ public class ListObjectSheet2Test extends WorkbookTest {
         Workbook workbook = new Workbook().bestSpeed()
             .onProgress((sheet, rows) -> System.out.println(sheet.getName() + " 已写入: " + rows));
         ListSheet<E> sheet = new ListSheet<>();
-        workbook.addSheetWithPushModel(sheet);
+        workbook.addSheet(sheet);
         while (expect[0] < rowLen) {
             List<E> list = E.data();
             if (expect[0] + list.size() > rowLen) {
@@ -1482,7 +1482,7 @@ public class ListObjectSheet2Test extends WorkbookTest {
         List<E> expectList = new ArrayList<>(10000);
         new Workbook()
             .bestSpeed()
-            .addSheetWithPushModel(new ListSheet<E>().setData((i, e) -> {
+            .addSheet(new ListSheet<E>().setData((i, e) -> {
                 List<E> sub = i < 10000 ? E.data() : null;
                 if (sub != null) expectList.addAll(sub);
                 return sub;

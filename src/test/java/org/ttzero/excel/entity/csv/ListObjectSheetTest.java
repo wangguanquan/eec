@@ -371,7 +371,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         Workbook workbook = new Workbook().saveAsCSV(); // <- 直接写为CSV格式
 
         ListSheet<Item> sheet = new ListSheet<>();
-        workbook.addSheetWithPushModel(sheet); // 添加进workbook
+        workbook.addSheet(sheet); // 添加进workbook
 
         for (int i = 0; i < 10; i++) {
             List<Item> sub = Item.randomTestData();

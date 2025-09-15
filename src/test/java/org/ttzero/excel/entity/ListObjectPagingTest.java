@@ -377,8 +377,8 @@ public class ListObjectPagingTest extends WorkbookTest {
                     return 256;
                 }
             }))
-            .addSheetWithPushModel(pushListSheet = new ListSheet<>("PUSH MODEL"))
-            .addSheetWithPushModel(new EmptySheet("EMPTY"));
+            .addSheet(pushListSheet = new ListSheet<>("PUSH MODEL"))
+            .addSheet(new EmptySheet("EMPTY"));
 
         List<ListObjectSheet2Test.E> expectPushList = new ArrayList<>();
         // PUSH数据
