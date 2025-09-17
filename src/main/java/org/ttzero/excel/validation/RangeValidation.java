@@ -29,54 +29,53 @@ import org.ttzero.excel.reader.Dimension;
  * @see WholeValidation
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
-public abstract class Tuple2Validation<V1, V2> extends Validation {
-    public V1 v1;
-    public V2 v2;
+public abstract class RangeValidation<T> extends Validation {
+    public T v1, v2;
 
-    public Tuple2Validation<V1, V2> equal(V1 v1) {
+    public RangeValidation<T> equal(T v1) {
         this.operator = Operator.equal;
         this.v1 = v1;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> nowEqual(V1 v1) {
+    public RangeValidation<T> nowEqual(T v1) {
         this.operator = Operator.notEqual;
         this.v1 = v1;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> greaterThan(V1 v1) {
+    public RangeValidation<T> greaterThan(T v1) {
         this.operator = Operator.greaterThan;
         this.v1 = v1;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> greaterThanOrEqual(V1 v1) {
+    public RangeValidation<T> greaterThanOrEqual(T v1) {
         this.operator = Operator.greaterThanOrEqual;
         this.v1 = v1;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> lessThan(V2 v2) {
+    public RangeValidation<T> lessThan(T v2) {
         this.operator = Operator.lessThan;
         this.v2 = v2;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> lessThanOrEqual(V2 v2) {
+    public RangeValidation<T> lessThanOrEqual(T v2) {
         this.operator = Operator.lessThanOrEqual;
         this.v2 = v2;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> between(V1 v1, V2 v2) {
+    public RangeValidation<T> between(T v1, T v2) {
         this.operator = Operator.between;
         this.v1 = v1;
         this.v2 = v2;
         return this;
     }
 
-    public Tuple2Validation<V1, V2> notBetween(V1 v1, V2 v2) {
+    public RangeValidation<T> notBetween(T v1, T v2) {
         this.operator = Operator.notBetween;
         this.v1 = v1;
         this.v2 = v2;
@@ -101,7 +100,7 @@ public abstract class Tuple2Validation<V1, V2> extends Validation {
             case lessThanOrEqual: v = ext && b2 ? "<x14:formula1><xm:f>" + otherSheetName + ":" + ((Dimension) v2).toReferer() + " </xm:f></x14:formula1>" : "<formula1>" + v2 + "</formula1>"; break;
             default: v = ext ? "<x14:formula1><xm:f>" + otherSheetName + ":" + ((Dimension) v1).toReferer() + " </xm:f></x14:formula1><x14:formula2><xm:f>" + otherSheetName + ":" + ((Dimension) v2).toReferer() + " </xm:f></x14:formula2>": "<formula1>" + v1 + "</formula1><formula2>" + v2 + "</formula2>"; break;
         }
-        if (ext) v += "<xm:sqref>"+ sqref +"</xm:sqref>";
+        if (ext) v += "<xm:sqref>"+ getSqrefStr() +"</xm:sqref>";
         return v;
     }
 }

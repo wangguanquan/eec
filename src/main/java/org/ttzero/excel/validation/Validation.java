@@ -51,6 +51,14 @@ public abstract class Validation {
      */
     public String otherSheetName;
     /**
+     * 引用其它可选序列的坐标
+     */
+    public Dimension referer;
+    /**
+     * 提示
+     */
+    public String prompt;
+    /**
      * 数据校验类型
      *
      * @return 数据验类型，包含 {@code list}序列, {@code whole}整数, {@code date}日期, {@code time}时间, {@code textLength}文本长度
@@ -78,6 +86,15 @@ public abstract class Validation {
         return this;
     }
 
+    public Validation setPrompt(String prompt) {
+        this.prompt = prompt;
+        return this;
+    }
+
+    protected String getSqrefStr() {
+        return sqref != null ? sqref.toString() : "";
+    }
+
     @Override
     public String toString() {
         return "<" + (isExtension() ? "x14:" : "" ) + "dataValidation type=\"" + getType()
@@ -85,7 +102,8 @@ public abstract class Validation {
             + "\" allowBlank=\"" + (allowBlank ? 1 : 0)
             + "\" showInputMessage=\"" + (showInputMessage ? 1 : 0)
             + "\" showErrorMessage=\"" + (showErrorMessage ? 1 : 0)
-            + (isExtension() ? "\">" : "\" sqref=\"" + sqref + "\">")
+            + (StringUtil.isEmpty(prompt) ? "" : "\" prompt=\"" + StringUtil.escapeString(prompt))
+            + (isExtension() ? "\">" : "\" sqref=\"" + getSqrefStr() + "\">")
             + validationFormula()
             + "</" + (isExtension() ? "x14:" : "" ) + "dataValidation>";
     }

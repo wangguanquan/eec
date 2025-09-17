@@ -22,7 +22,7 @@ package org.ttzero.excel.validation;
  *
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
-public class TextLengthValidation extends Tuple2Validation<Integer, Integer> {
+public class TextLengthValidation extends RangeValidation<Integer> {
     @Override
     public String getType() {
         return "textLength";

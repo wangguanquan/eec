@@ -65,9 +65,22 @@ public class App extends XmlEntity {
      * 工作表名集合
      */
     private List<String> titlesOfParts;
+    /**
+     * 命名范围集合
+     */
+    private List<String> definedNames;
 
+    public void setDefinedNames(List<String> definedNames) {
+        this.definedNames = definedNames;
+    }
+
+    @Deprecated
     public void setTitlePards(List<String> list) {
-        titlesOfParts = list;
+        setTitlesOfParts(list);
+    }
+
+    public void setTitlesOfParts(List<String> titlesOfParts) {
+        this.titlesOfParts = titlesOfParts;
     }
 
     public void setApplication(String application) {
@@ -145,14 +158,24 @@ public class App extends XmlEntity {
         rootElement.addElement("LinksUpToDate").addText(Boolean.toString(linksUpToDate));
         rootElement.addElement("SharedDoc").addText(Boolean.toString(sharedDoc));
         rootElement.addElement("HyperlinksChanged").addText(Boolean.toString(hyperlinksChanged));
+        final boolean hasDefinedName = definedNames != null && !definedNames.isEmpty();
+        Element hpVector = rootElement.addElement("HeadingPairs").addElement(QName.get("vector", namespaceMap.get("vt")));
+        hpVector.addAttribute("size", hasDefinedName ? "4" : "2").addAttribute("baseType", "variant");
+        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText("工作表");
+        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("i4", namespaceMap.get("vt"))).addText(Integer.toString(titlesOfParts.size()));
+        if (hasDefinedName) {
+            hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText("命名范围");
+            hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("i4", namespaceMap.get("vt"))).addText(Integer.toString(definedNames.size()));
+        }
         Element titleVector = rootElement.addElement("TitlesOfParts").addElement(QName.get("vector", namespaceMap.get("vt")));
-        titleVector.addAttribute("size", Integer.toString(titlesOfParts.size())).addAttribute("baseType", "lpstr");
+        titleVector.addAttribute("size", Integer.toString((hasDefinedName ? definedNames.size() : 0) + titlesOfParts.size())).addAttribute("baseType", "lpstr");
         for (String title : titlesOfParts) {
             titleVector.addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText(title);
         }
-        Element hpVector = rootElement.addElement("HeadingPairs").addElement(QName.get("vector", namespaceMap.get("vt")));
-        hpVector.addAttribute("size", "2").addAttribute("baseType", "variant");
-        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText("工作表");
-        hpVector.addElement(QName.get("variant", namespaceMap.get("vt"))).addElement(QName.get("i4", namespaceMap.get("vt"))).addText(Integer.toString(titlesOfParts.size()));
+        if (hasDefinedName) {
+            for (String dn : definedNames) {
+                titleVector.addElement(QName.get("lpstr", namespaceMap.get("vt"))).addText(dn);
+            }
+        }
     }
 }

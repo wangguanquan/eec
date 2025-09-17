@@ -18,9 +18,12 @@
 package org.ttzero.excel.validation;
 
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.util.StringUtil;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,9 +37,17 @@ public class ListValidation<T> extends Validation {
      */
     public List<T> options;
     /**
-     * 引用其它可选序列的坐标
+     * 级联序列坐标
      */
-    public Dimension referer;
+    public List<Dimension> sqrefList;
+    /**
+     * 级联序列
+     */
+    public List<CascadeList<T>> cascadeList;
+    /**
+     * 级联INDIRECT函数
+     */
+    public String indirect;
 
     public ListValidation<T> in(List<T> options) {
         this.options = options;
@@ -60,23 +71,70 @@ public class ListValidation<T> extends Validation {
         return this;
     }
 
+    public static <T> ListValidation<T> in(Dimension sqref, List<T> options) {
+        ListValidation<T> lv = new ListValidation<>();
+        lv.sqref = sqref;
+        lv.options = options;
+        return lv;
+    }
+
+    public ListValidation<T> addCascadeList(Dimension sqref, Map<T, List<T>> subList) {
+        if (this.cascadeList == null) {
+            this.cascadeList = new ArrayList<>();
+        }
+        this.cascadeList.add(new CascadeList<>(sqref, subList));
+        return this;
+    }
+
+    public CascadeList<T> getCascadeList(int level) {
+        return level >= 1 && level <= getCascadeSize() ? cascadeList.get(level - 1) : null;
+    }
+
+    public int getCascadeSize() {
+        return cascadeList != null ? cascadeList.size() : 0;
+    }
+
     @Override
     public String getType() {
         return "list";
     }
 
     @Override
+    protected String getSqrefStr() {
+        if (sqrefList != null && !sqrefList.isEmpty()) {
+            StringBuilder buf = new StringBuilder(sqrefList.get(0).toString());
+            for (int i = 1; i < sqrefList.size(); i++) {
+                buf.append(' ').append(sqrefList.get(i));
+            }
+            return buf.toString();
+        }
+        return super.getSqrefStr();
+    }
+
+    @Override
     public String validationFormula() {
         String val;
         if (isExtension()) {
-            val = "<x14:formula1><xm:f>" + otherSheetName + "!" + referer.toReferer() + "</xm:f></x14:formula1><xm:sqref>" + sqref + "</xm:sqref>";
+            val = "<x14:formula1><xm:f>" + otherSheetName + "!" + referer.toReferer() + "</xm:f></x14:formula1><xm:sqref>" + getSqrefStr() + "</xm:sqref>";
         } else if (options != null) {
-            val = "<formula1>\"" + options.stream().map(String::valueOf).collect(Collectors.joining(",")) + "\"</formula1>";
+            val = "<formula1>\"" + options.stream().map(String::valueOf).map(StringUtil::escapeString).collect(Collectors.joining(",")) + "\"</formula1>";
         } else if (referer != null) {
             val = "<formula1>" + referer.toReferer() + "</formula1>";
+        } else if (StringUtil.isNotEmpty(indirect)) {
+            val = "<formula1>INDIRECT(" + indirect + ")</formula1>";
         } else {
             val = "<formula1>\"\"</formula1>";
         }
         return val;
+    }
+
+    public static class CascadeList<T> {
+        public Map<T, List<T>> options;
+        public Dimension sqref;
+
+        CascadeList(Dimension sqref, Map<T, List<T>> options) {
+            this.options = options;
+            this.sqref = sqref;
+        }
     }
 }

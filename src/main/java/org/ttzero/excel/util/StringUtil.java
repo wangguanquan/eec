@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 
 package org.ttzero.excel.util;
+
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * 字符串工具类，提供一些简单的静态方法
@@ -266,5 +269,32 @@ public class StringUtil {
             }
         }
         return -1;
+    }
+
+    // XML转义使用
+    private static StringWriter sw;
+    private static ExtBufferedWriter writer;
+
+    /**
+     * XML转义
+     *
+     * @param txt 原字符串
+     * @return 转义后的字符串
+     */
+    public static String escapeString(String txt) {
+        if (isEmpty(txt)) return txt;
+        if (sw != null) sw.getBuffer().setLength(0);
+        else {
+            sw = new StringWriter();
+            writer = new ExtBufferedWriter(sw);
+        }
+        try {
+            writer.escapeWrite(txt);
+            writer.flush();
+            txt = sw.toString();
+        } catch (IOException e) {
+            // Ignore
+        }
+        return txt;
     }
 }

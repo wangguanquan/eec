@@ -28,7 +28,7 @@ import java.util.Date;
  *
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
-public class DateValidation extends Tuple2Validation<Integer, Integer> {
+public class DateValidation extends RangeValidation<Integer> {
     public DateValidation between(Date from, Date to) {
         if (from != null) v1 = DateUtil.toDateValue(from);
         if (to != null) v2 = DateUtil.toDateValue(to);
