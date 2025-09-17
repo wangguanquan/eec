@@ -213,10 +213,9 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         app.setAppVersion(pom.getProperty("version"));
 
         int size = workbook.getSize();
-
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Sheet sheet = workbook.getSheetAt(i);
+            Sheet sheet = workbook.getSheet(i);
             titleParts.add(sheet.getName());
             relManager.add(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
         }
@@ -303,17 +302,15 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // sheets
         Element sheetEle = rootElement.addElement("sheets");
         for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheetInfo = workbook.getSheetAt(i);
+            Sheet sheet = workbook.getSheet(i);
             Element st = sheetEle.addElement("sheet")
-                .addAttribute("sheetId", String.valueOf(sheetInfo.getId()))
-                .addAttribute("name", sheetInfo.getName());
-            if (sheetInfo.isHidden()) {
+                .addAttribute("sheetId", String.valueOf(sheet.getId()))
+                .addAttribute("name", sheet.getName());
+            if (sheet.isHidden()) {
                 st.addAttribute("state", "hidden");
             }
-            Relationship rs = relManager.getByTarget("worksheets/sheet" + sheetInfo.getId() + Const.Suffix.XML);
-            if (rs != null) {
-                st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
-            }
+            Relationship rs = relManager.add(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
+            st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
         }
 
         Document doc = factory.createDocument(rootElement);
@@ -324,7 +321,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         LOGGER.debug("Start to write Sheet.");
         ContentType contentType = workbook.getContentType();
         for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheet = workbook.getSheetAt(i);
+            Sheet sheet = workbook.getSheet(i);
             sheet.setId(i + 1);
             // default worksheet name
             if (StringUtil.isEmpty(sheet.getName())) {
@@ -421,7 +418,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     @Override
     public void close() throws IOException {
-        for (Sheet sheet : workbook.getSheets()) {
+        for (int i = 0; i < workbook.getSize(); i++) {
+            Sheet sheet = workbook.getSheet(i);
             if (sheet != null && sheet.getWatermark() != null)
                 sheet.getWatermark().delete();
         }

@@ -546,8 +546,24 @@ public class Workbook implements Storable {
      * @param index 工作表在队列中的位置（从0开始）
      * @return 指定位置的工作表 {@link Sheet}
      * @throws IndexOutOfBoundsException 如果下标为负数或者超过工作薄队列长度
+     * @deprecated 使用 {@link #getSheet(int)}代替
      */
+    @Deprecated
     public Sheet getSheetAt(int index) {
+        return getSheet(index);
+    }
+
+    /**
+     * 获取指定位置的工作表
+     *
+     * <p>如果使用{@link #insertSheet}方法插入了一个较大的下标，调用此方法可能返回null值。
+     * 例如在下标为100的位置插入了一个工作表，获取第90位的工作薄将返回一个null值。</p>
+     *
+     * @param index 工作表在队列中的位置（从0开始）
+     * @return 指定位置的工作表 {@link Sheet}
+     * @throws IndexOutOfBoundsException 如果下标为负数或者超过工作薄队列长度
+     */
+    public Sheet getSheet(int index) {
         if (index < 0 || index >= size)
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         return sheets[index];

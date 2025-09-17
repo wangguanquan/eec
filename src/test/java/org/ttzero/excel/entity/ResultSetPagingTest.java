@@ -61,7 +61,7 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             rs.close();
             ps.close();
 
-            int rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+            int rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit();
 
             ps = con.prepareStatement("select count(*) from student");
             rs = ps.executeQuery();
@@ -127,7 +127,7 @@ public class ResultSetPagingTest extends SQLWorkbookTest {
             rs.close();
             ps.close();
 
-            int rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+            int rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit();
 
             ps = con.prepareStatement("select count(*) from student");
             rs = ps.executeQuery();

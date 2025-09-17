@@ -139,9 +139,8 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
 
     // Create csv file
     protected Path createTemp() throws IOException, ExcelWriteException {
-        Sheet[] sheets = workbook.getSheets();
-        for (int i = 0; i < sheets.length; i++) {
-            Sheet sheet = sheets[i];
+        for (int i = 0; i < workbook.getSize(); i++) {
+            Sheet sheet = workbook.getSheet(i);
             IWorksheetWriter worksheetWriter = getWorksheetWriter(sheet);
             sheet.setSheetWriter(worksheetWriter);
             sheet.setId(i + 1);
@@ -166,7 +165,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
 
             // Write worksheet data one by one
             for (int i = 0; i < workbook.getSize(); i++) {
-                Sheet e = workbook.getSheetAt(i);
+                Sheet e = workbook.getSheet(i);
                 e.writeTo(root);
                 e.close();
             }
@@ -179,7 +178,7 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
                 FileUtil.rm_rf(root.toFile(), true);
                 return zipFile;
             } else {
-                return root.resolve(workbook.getSheetAt(0).getName() + Const.Suffix.CSV);
+                return root.resolve(workbook.getSheet(0).getName() + Const.Suffix.CSV);
             }
         } catch (IOException | ExcelWriteException e) {
             // remove temp path

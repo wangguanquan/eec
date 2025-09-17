@@ -1188,7 +1188,7 @@ public class ListObjectSheetTest extends WorkbookTest {
         String fileName = "clear style.xlsx";
         Workbook workbook = new Workbook(fileName).addSheet(new ListSheet<>(Item.randomTestData()));
 
-        Sheet sheet = workbook.getSheetAt(0);
+        Sheet sheet = workbook.getSheet(0);
         sheet.cancelZebraLine();  // Clear odd style
         int headStyle = sheet.defaultHeadStyle();
         sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));

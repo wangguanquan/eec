@@ -106,7 +106,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             }));
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
+        int count = expectList.size(), rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit() - 4; // 4 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
@@ -417,7 +417,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
             }));
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
+        int count = expectList.size(), rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit() - 3; // 3 header rows
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit));
 

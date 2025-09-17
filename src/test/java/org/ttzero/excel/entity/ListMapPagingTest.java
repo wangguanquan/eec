@@ -42,7 +42,7 @@ public class ListMapPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
@@ -68,7 +68,7 @@ public class ListMapPagingTest extends WorkbookTest {
             .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
-        int count = expectList.size(), rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
+        int count = expectList.size(), rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit();
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             assertEquals(reader.getSheetCount(), (count % (rowLimit - 1) > 0 ? count / (rowLimit - 1) + 1 : count / (rowLimit - 1))); // Include header row
 
