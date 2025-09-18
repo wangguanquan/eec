@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
  * {@code 1}行{@code 1}列表示为{@code A1}以此类推，当列到达{@code Z}之后就由两位字母联合组成，
  * {@code Z}的下一列表示为{@code AA}，同理{@code ZZ}列的下一列表示为{@code AAA}</p>
  *
- *
  * <p>范围值包含两个坐标，例{@code A1:B5}它表示从1行1列到5行2列的范围，如果起始坐标和结束坐标一样
  * 也就是压缩到一个单元格可以简写为起始坐标{@code A1:A1}被记为{@code A1}。如果冒号后面未指定坐标时
  * 默认表示到最大行，例{@code A1:}表示整个A列，从A1到A列最后一行单元格，范围与Excel版本相关</p>
@@ -46,24 +45,26 @@ public class Dimension {
     /**
      * 起始行号 (one base)
      */
-    public final int firstRow;
+    public int firstRow;
     /**
      * 末尾行号 (one base)
      */
-    public final int lastRow;
+    public int lastRow;
     /**
      * 起始列号 (one base)
      */
-    public final short firstColumn;
+    public short firstColumn;
     /**
      * 末尾列号 (one base)
      */
-    public final short lastColumn;
+    public short lastColumn;
     /**
      * 宽 = 末尾列-起始列+1
      * 高 = 末尾行-起始行+1
+     * @deprecated 坐标可修改后 {@code width}和 {@code height}需要实时计算
      */
-    public final int width, height;
+    @Deprecated
+    public int width, height;
 
     /**
      * 创建一个范围值， 起始和结束相同
@@ -162,7 +163,7 @@ public class Dimension {
      * @return 宽度
      */
     public int getWidth() {
-        return width;
+        return lastColumn - firstColumn + 1;
     }
 
     /**
@@ -171,7 +172,7 @@ public class Dimension {
      * @return 高度
      */
     public int getHeight() {
-        return height;
+        return lastRow - firstRow + 1;
     }
 
     @Override
