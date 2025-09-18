@@ -653,13 +653,13 @@ public class TemplateSheetTest extends WorkbookTest {
             // 判断是否带合并
             Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 2);
+            assertEquals(mergeCell.getWidth(), 2);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 3);
+            assertEquals(mergeCell.getWidth(), 3);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 5);
+            assertEquals(mergeCell.getWidth(), 5);
         }
         // 跳过2行
         assertTrue(iter.next().isBlank());
@@ -670,10 +670,10 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(row.getString(0), "合计");
         Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 6);
+        assertEquals(mergeCell.getWidth(), 6);
         mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 5);
+        assertEquals(mergeCell.getWidth(), 5);
     }
 
     static void assertListMap(FullSheet sheet, List<Map<String, Object>> expectList) {
@@ -704,13 +704,13 @@ public class TemplateSheetTest extends WorkbookTest {
             // 判断是否带合并
             Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 2);
+            assertEquals(mergeCell.getWidth(), 2);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 3);
+            assertEquals(mergeCell.getWidth(), 3);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 5);
+            assertEquals(mergeCell.getWidth(), 5);
         }
         // 跳过2行
         assertTrue(iter.next().isBlank());
@@ -721,10 +721,10 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(row.getString(0), "合计");
         Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 6);
+        assertEquals(mergeCell.getWidth(), 6);
         mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 5);
+        assertEquals(mergeCell.getWidth(), 5);
     }
 
     public static class YzEntity {

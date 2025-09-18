@@ -878,7 +878,7 @@ public class XMLSheet implements Sheet {
             for (; offset < end && cb[offset] != '"'; offset++);
             if (offset < end && offset > i) {
                 Dimension dim = Dimension.of(new String(cb, i, offset - i));
-                if (dim.width > 1 || dim.height > 1) this.dimension = dim;
+                if (dim.getWidth() > 1 || dim.getHeight() > 1) this.dimension = dim;
             }
         }
     }
@@ -1358,7 +1358,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
                     case "dimension":
                         String ref = e.attributeValue("ref");
                         Dimension dim;
-                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).width > 1 || dim.height > 1)) {
+                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).getWidth() > 1 || dim.getHeight() > 1)) {
                             dimension = dim;
                         }
                         break;
