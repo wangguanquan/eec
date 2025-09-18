@@ -224,6 +224,30 @@ public class Dimension {
         return r >= firstRow && r <= lastRow && c >= firstColumn && c <= lastColumn;
     }
 
+    /**
+     * 垂直移动，小于{@code 0}向上移动，否则向下移动
+     *
+     * @param row 移动的行数
+     */
+    public void verticalMove(int row) {
+        if (firstRow + row <= 0)
+            throw new IllegalArgumentException("Row number out of bound,current:" + (firstRow + row));
+        firstRow += row;
+        lastRow += row;
+    }
+
+    /**
+     * 水平移动，小于{@code 0}向左移动，否则向右移动
+     *
+     * @param col 移动的列数
+     */
+    public void horizontalsMove(int col) {
+        if (firstColumn + col <= 0)
+            throw new IllegalArgumentException("Col number out of bound,current:" + (firstColumn + col));
+        firstColumn += col;
+        lastColumn += col;
+    }
+
     @Override
     public int hashCode() {
         return ((firstColumn << 24) | lastColumn) ^ ((firstRow << 24) | lastRow);

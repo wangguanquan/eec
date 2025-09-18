@@ -672,7 +672,7 @@ public class TemplateSheet extends Sheet {
             for (int i = row0.getFirstColumnIndex(); i < len; i++) {
                 if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
                     Dimension sqref = pn.validation.sqref;
-                    pn.validation.sqref = new Dimension(sqref.firstRow, sqref.firstColumn, sqref.lastRow + pn.v, sqref.firstColumn);
+                    sqref.lastRow += pn.v;
                 }
             }
             pi++;
@@ -680,8 +680,7 @@ public class TemplateSheet extends Sheet {
         }
         // 过滤行列重算
         if (afr == row0.getRowNum() && (e = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER)) instanceof Dimension) {
-            Dimension autoFilter = (Dimension) e;
-            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, new Dimension(autoFilter.firstRow + row.getIndex() - afr + 1, autoFilter.firstColumn, autoFilter.getLastRow() + row.getIndex() - afr + 1, autoFilter.lastColumn));
+            ((Dimension) e).verticalMove(row.getIndex() - afr + 1);
             afr = -1;
         }
         rowIterator.commit();
@@ -1135,7 +1134,7 @@ public class TemplateSheet extends Sheet {
         if (mergeCells0 != null) {
             Dimension mc = mergeCells0.get(dimensionKey(pn.row - 1, pn.col));
             // FIXME 目前只支持单行合并
-            if (mc != null && mc.height == 1) pn.m = mc.width - 1;
+            if (mc != null && mc.getHeight() == 1) pn.m = mc.getWidth() - 1;
         }
 
         // 处理内置函数
