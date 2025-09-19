@@ -20,6 +20,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1142,8 +1144,8 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
     }
 
     /*
-    Parse `mergeCells` tag
-    TODO parse dataValidation
+    FIXME 简化，头和尾使用DOM4J解析，降低复杂度
+    Parse `mergeCells`,`dataValidation`,`autoFilter` tag
      */
     void parseTails() {
         List<Dimension> mergeCells = new ArrayList<>();
@@ -1233,15 +1235,38 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
                                     && buf[i + 4] == 'V' && buf[i + 5] == 'a' && buf[i + 6] == 'l' && buf[i + 7] == 'i'
                                     && buf[i + 8] == 'd' && buf[i + 9] == 'a' && buf[i + 10] == 't' && buf[i + 11] == 'i'
                                     && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] == 's' && (buf[i + 15] <= ' ' || buf[i + 15] == '/')) {
-                                        i += 16;
-                                        // TODO
+                                    if (buf[i + 15] == '/' && buf[i + 16] == '>') i += 17;
+                                    else {
+                                        int j = i + 16, k = j + 1, _len = len - 19;
+                                        for (; k < _len && (buf[k] != '<' || buf[k + 1] != '/' || buf[k + 2] != 'd'
+                                            || buf[k + 3] != 'a' || buf[k + 4] != 't' || buf[k + 5] != 'a' || buf[k + 6] != 'V' || buf[k + 7] != 'a'
+                                            || buf[k + 8] != 'l' || buf[k + 9] != 'i' || buf[k + 10] != 'd' || buf[k + 11] != 'a' || buf[k + 12] != 't'
+                                            || buf[k + 13] != 'i' || buf[k + 14] != 'o' || buf[k + 15] != 'n' || buf[k + 16] != 's' || buf[k + 17] != '>'); k++);
+                                        // Get it
+                                        if (k < _len) {
+                                            String s = new String(buf, i - 1, k - i + 19, StandardCharsets.UTF_8);
+                                            subElement(s.toCharArray(), 0, s.length());
+                                        } else {
+                                            // TODO
+                                        }
+                                    }
                                 }
                                 break;
                             // extLst
                             case 'e':
                                 if (len >= 20 && buf[i + 1] == 'x' && buf[i + 2] == 't' && buf[i + 3] == 'L' && buf[i + 4] == 's' && buf[i + 5] == 't' && buf[i + 6] == '>') {
-                                    i += 7;
-                                    // TODO
+                                    int j = i + 7, k = j + 1, _len = len - 9;
+                                    for (; k < _len && (buf[k] != '<' || buf[k + 1] != '/' || buf[k + 2] != 'e'
+                                        || buf[k + 3] != 'x' || buf[k + 4] != 't' || buf[k + 5] != 'L' || buf[k + 6] != 's'
+                                        || buf[k + 7] != 't' || buf[k + 8] != '>'); k++)
+                                        ;
+                                    // Get it
+                                    if (k < _len) {
+                                        String s = new String(buf, i - 1, k - i + 10, StandardCharsets.UTF_8);
+                                        subElement(s.toCharArray(), 0, s.length());
+                                    } else {
+                                        // TODO
+                                    }
                                 }
                                 break;
                             // legacyDrawing
@@ -1349,7 +1374,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
         String v = new String(cb, offset, n);
         // 去掉不必要的命名空间
         v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
-        Element e = null;
+        Element e;
         if (cb[offset + n - 2] == '/') {
             try {
                 Document doc = DocumentHelper.parseText(v);
@@ -1387,7 +1412,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
                             this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
                         break;
                 }
-            } catch (DocumentException ex) {
+            } catch (Exception ex) {
                 LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         } else if (v.startsWith("<sheetView") && v.charAt(10) <= ' ') {
@@ -1395,20 +1420,44 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
             System.arraycopy(cb, offset, ncb, 0, n);
             ncb[n - 1] = '/'; ncb[n] = '>';
             try {
-                Document doc = DocumentHelper.parseText(new String(ncb, 0, n + 1));
-                e = doc.getRootElement();
-            } catch (DocumentException ex) {
+                e = DocumentHelper.parseText(new String(ncb, 0, n + 1)).getRootElement();
+                String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
+                if ("0".equals(showGridLines)) this.showGridLines = 0;
+                if (StringUtil.isNotEmpty(zoomScale)) {
+                    this.zoomScale = Integer.parseInt(zoomScale.trim());
+                }
+            } catch (Exception ex) {
+                LOGGER.warn("Parse header tag [{}] failed.", v, ex);
+            }
+        } else if (v.startsWith("<dataValidations")) {
+            try {
+                e = DocumentHelper.parseText(v).getRootElement();
+                List<Validation> list = Validation.domToValidation(e);
+                if (list != null) {
+                    if (validations == null) validations = new ArrayList<>();
+                    validations.addAll(list);
+                }
+            }  catch (Exception ex) {
                 LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         }
-
-        if (e != null && e.getName().equals("sheetView")) {
-            String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
-            if ("0".equals(showGridLines)) this.showGridLines = 0;
-            if (StringUtil.isNotEmpty(zoomScale)) {
-                try {
-                    this.zoomScale = Integer.parseInt(zoomScale.trim());
-                } catch (NumberFormatException ex) { }
+        else if (v.startsWith("<extLst")) {
+            try {
+                e = DocumentHelper.parseText(v).getRootElement();
+                List<Element> extList = e.elements();
+                if (extList != null) {
+                    Namespace x14 = Namespace.get("x14", Const.NAMESPACE.X14);
+                    for (Element sub : extList) {
+                        Element dataValidations = sub.element(QName.get("dataValidations", x14));
+                        List<Validation> list;
+                        if (dataValidations != null && (list = Validation.domToValidation(dataValidations)) != null) {
+                            if (validations == null) validations = new ArrayList<>();
+                            validations.addAll(list);
+                        }
+                    }
+                }
+            }  catch (Exception ex) {
+                LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         }
     }
@@ -1432,7 +1481,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
 
     @Override
     public Dimension getFilter() {
-        // 如果filter为则且未解析则重新解析
+        // 如果filter为NULL且未解析则重新解析
         if (filter == null && !tailPared) parseTails();
         return filter;
     }
@@ -1479,5 +1528,11 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
             if (comments == null) comments = Collections.emptyMap();
         }
         return comments;
+    }
+
+    @Override
+    public List<Validation> getValidations() {
+        if (validations == null && !tailPared) parseTails();
+        return validations;
     }
 }
