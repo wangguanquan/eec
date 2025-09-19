@@ -27,4 +27,9 @@ public class WholeValidation extends RangeValidation<Long> {
     public String getType() {
         return "whole";
     }
+
+    @Override
+    protected Long parseTxtValue(String txt) {
+        return Long.valueOf(txt);
+    }
 }

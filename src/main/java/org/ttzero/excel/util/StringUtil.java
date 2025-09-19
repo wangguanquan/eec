@@ -297,4 +297,20 @@ public class StringUtil {
         }
         return txt;
     }
+
+    /**
+     * 简单判断字符串是否全为阿拉伯数字（半角0-9）
+     *
+     * <p>Note: 与{@code org.apache.commons.lang3.StringUtils#isNumeric(CharSequence)} 不同之处在于本方法仅判断全为半角阿拉位数字时返回true</p>
+     *
+     * @param s string
+     * @return true: 全为半角阿拉伯数字
+     */
+    public static boolean isArabicNumerals(String s) {
+        int n = s != null ? s.length() : 0, i;
+        if (n < 1 || (i = s.charAt(0)) != '-' && !(i >= '0' && i <= '9')) return false;
+        i = 1;
+        for (char c; i < n && (c = s.charAt(i)) >= '0' && c <= '9'; i++);
+        return i == n;
+    }
 }

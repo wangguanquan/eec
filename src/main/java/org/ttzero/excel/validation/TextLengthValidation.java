@@ -27,4 +27,9 @@ public class TextLengthValidation extends RangeValidation<Integer> {
     public String getType() {
         return "textLength";
     }
+
+    @Override
+    protected Integer parseTxtValue(String txt) {
+        return Integer.valueOf(txt);
+    }
 }

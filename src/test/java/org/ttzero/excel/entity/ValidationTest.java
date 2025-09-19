@@ -19,7 +19,10 @@ package org.ttzero.excel.entity;
 
 import org.junit.Test;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.reader.Dimension;
+import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.validation.DateValidation;
 import org.ttzero.excel.validation.ListValidation;
@@ -31,7 +34,11 @@ import java.io.IOException;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 /**
@@ -41,15 +48,15 @@ public class ValidationTest extends WorkbookTest {
     @Test public void testValidation() throws IOException {
         List<Validation> expectValidations = new ArrayList<>();
         // 下拉框选择“男”，“女”
-        expectValidations.add(new ListValidation<>().in("未知", "男", "女").dimension(Dimension.of("A1")).setPrompt("未输入时默认\"未知\""));
+        expectValidations.add(new ListValidation<>().in("未知", "男", "女").dimension(Dimension.of("A1")).prompt("未输入时默认\"未知\""));
         // B1:E1 单元格只能输入大于1的数
-        expectValidations.add(new WholeValidation().greaterThan(1L).dimension(Dimension.of("B1:E1")).setPrompt("只能输入>1的数"));
+        expectValidations.add(new WholeValidation().greaterThan(1L).dimension(Dimension.of("B1:E1")).prompt("只能输入>1的数"));
         // 限制日期在2022年
-        expectValidations.add(new DateValidation().between("2022-01-01", "2022-12-31").dimension(Dimension.of("A2")).setPrompt("只能输入\"2022-01-01\"~\"2022-12-31\""));
+        expectValidations.add(new DateValidation().between("2022-01-01", "2022-12-31").dimension(Dimension.of("A2")).prompt("只能输入\"2022-01-01\"~\"2022-12-31\""));
         // 限制时间小于下午6点（因为此时下班...）
         expectValidations.add(new TimeValidation().lessThan(DateUtil.toTimeValue(Time.valueOf("18:00:00"))).dimension(Dimension.of("B2")));
         // 引用
-        expectValidations.add(new ListValidation<>().in(Dimension.of("A10:A12")).dimension(Dimension.of("D5")));
+        expectValidations.add(new ListValidation<>().referer(new CrossDimension(Dimension.of("A10:A12"))).dimension(Dimension.of("D5")));
 
         expectValidations.add(ListValidation.in(Dimension.of("H2"), Arrays.asList("A省", "B省", "D省"))
             .addCascadeList(Dimension.of("I2:"), new LinkedHashMap<String, List<String>>(){{
@@ -76,6 +83,12 @@ public class ValidationTest extends WorkbookTest {
                 .setStartCoordinate(10)
                 .putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
             .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            List<Validation> validations = sheet.getValidations();
+            assertEquals(validations.size(), expectValidations.size());
+        }
     }
 
     @Test public void testValidationExtension() throws IOException {
@@ -87,5 +100,18 @@ public class ValidationTest extends WorkbookTest {
             .addSheet(new ListSheet<>().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
             .addSheet(new ListSheet<>(Arrays.asList("未知","男","女")))
             .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            List<Validation> validations = sheet.getValidations();
+            assertEquals(validations.size(), expectValidations.size());
+            Validation val = validations.get(0), expect = expectValidations.get(0);
+            assertEquals(val.getType(), expect.getType());
+            assertEquals(val.referer, expect.referer);
+            assertEquals(val.sqrefList.size(), expect.sqrefList.size());
+            for (Dimension sqref : val.sqrefList) {
+                assertTrue(expect.sqrefList.contains(sqref));
+            }
+        }
     }
 }

@@ -671,8 +671,9 @@ public class TemplateSheet extends Sheet {
         if (rowIterator.hasFillCell) {
             for (int i = row0.getFirstColumnIndex(); i < len; i++) {
                 if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
-                    Dimension sqref = pn.validation.sqref;
-                    sqref.lastRow += pn.v;
+                    for (Dimension sqref : pn.validation.sqrefList) {
+                        sqref.lastRow += pn.v;
+                    }
                 }
             }
             pi++;
@@ -1045,6 +1046,12 @@ public class TemplateSheet extends Sheet {
                     col.globalStyleIndex = newXf;
                 }
             }
+        }
+
+        // TODO 数据验证
+        List<Validation> validations = originalSheet.getValidations();
+        if (validations != null && !validations.isEmpty()) {
+
         }
 
         return len;

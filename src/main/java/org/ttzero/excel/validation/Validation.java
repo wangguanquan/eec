@@ -17,8 +17,18 @@
 
 package org.ttzero.excel.validation;
 
+import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.StringUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 数据验证
@@ -26,6 +36,10 @@ import org.ttzero.excel.util.StringUtil;
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
 public abstract class Validation {
+    /**
+     * LOGGER
+     */
+    static final Logger LOGGER = LoggerFactory.getLogger(Validation.class);
     /**
      * 允许为空
      */
@@ -39,21 +53,17 @@ public abstract class Validation {
      */
     public boolean showErrorMessage = true;
     /**
-     * 作用范围
+     * 作用范围（支持多个范围值）
      */
-    public Dimension sqref;
+    public List<Dimension> sqrefList = new ArrayList<>();
     /**
      * 操作符，不指定时默认between
      */
     public Operator operator;
     /**
-     * 引用工作表名
+     * 引用其它工作表维度
      */
-    public String otherSheetName;
-    /**
-     * 引用其它可选序列的坐标
-     */
-    public Dimension referer;
+    public CrossDimension referer;
     /**
      * 提示
      */
@@ -78,21 +88,51 @@ public abstract class Validation {
      * @return {@code true} 扩展节点
      */
     public boolean isExtension() {
-        return StringUtil.isNotEmpty(otherSheetName);
+        return referer != null && referer.isCrossSheet();
     }
 
+    /**
+     * 设置作用域
+     *
+     * @param sqref 作用域
+     * @return 当前数据验证
+     */
     public Validation dimension(Dimension sqref) {
-        this.sqref = sqref;
+        if (!sqrefList.contains(sqref)) sqrefList.add(sqref);
         return this;
     }
 
-    public Validation setPrompt(String prompt) {
+    /**
+     * 提示提示
+     *
+     * @param prompt 提示词
+     * @return 当前数据验证
+     */
+    public Validation prompt(String prompt) {
         this.prompt = prompt;
         return this;
     }
 
+    /**
+     * 设置跨工作表维度引用
+     *
+     * @param referer 跨工作表维度引用
+     * @return 当前数据验证
+     */
+    public Validation referer(CrossDimension referer) {
+        this.referer = referer;
+        return this;
+    }
+
     protected String getSqrefStr() {
-        return sqref != null ? sqref.toString() : "";
+        if (sqrefList != null && !sqrefList.isEmpty()) {
+            StringBuilder buf = new StringBuilder(sqrefList.get(0).toString());
+            for (int i = 1; i < sqrefList.size(); i++) {
+                buf.append(' ').append(sqrefList.get(i));
+            }
+            return buf.toString();
+        }
+        return StringUtil.EMPTY;
     }
 
     @Override
@@ -106,6 +146,70 @@ public abstract class Validation {
             + (isExtension() ? "\">" : "\" sqref=\"" + getSqrefStr() + "\">")
             + validationFormula()
             + "</" + (isExtension() ? "x14:" : "" ) + "dataValidation>";
+    }
+
+    protected void parseAttribute(Element e, boolean isExt) {
+        this.allowBlank = "1".equals(e.attributeValue("allowBlank"));
+        this.showInputMessage = "1".equals(e.attributeValue("showInputMessage"));
+        this.showErrorMessage = "1".equals(e.attributeValue("showErrorMessage"));
+        this.prompt = e.attributeValue("prompt");
+        String tmp = isExt ? e.elementText("sqref") : e.attributeValue("sqref");
+        if (StringUtil.isNotEmpty(tmp)) {
+            this.sqrefList.addAll(Arrays.stream(tmp.split(" ")).filter(StringUtil::isNotEmpty).map(Dimension::of).collect(Collectors.toList()));
+        }
+        tmp = e.attributeValue("operator");
+        if (StringUtil.isNotEmpty(tmp)) this.operator = Validation.Operator.valueOf(tmp);
+    }
+
+    public static List<Validation> domToValidation(Element e) {
+        List<Element> sub =  e.elements("dataValidation");
+        if (sub == null || sub.isEmpty()) return null;
+        final boolean isExt = Const.NAMESPACE.X14.equals(e.getNamespace().getURI());
+        List<Validation> validations = new ArrayList<>(sub.size());
+        for (Element o : sub) {
+            String type = o.attributeValue("type");
+            Validation val = null;
+            if (type != null) {
+                switch (type) {
+                    case "list"      : val = new ListValidation<String>(); break;
+                    case "time"      : val = new TimeValidation();         break;
+                    case "date"      : val = new DateValidation();         break;
+                    case "textLength": val = new TextLengthValidation();   break;
+                    case "whole"     : val = new WholeValidation();        break;
+                    default:
+                }
+            }
+            if (val != null) {
+                val.parseAttribute(o, isExt);
+                validations.add(val);
+            }
+        }
+        return validations;
+    }
+
+    /**
+     * 检查节点类型
+     *
+     * @param txt 文本
+     * @return 0:无 1:字符串 2:坐标 3:跨工作表坐标 4:公式 5:数字
+     */
+    static int testValueType(String txt) {
+        if (StringUtil.isEmpty(txt)) return 0;
+        int t, len = txt.length();
+        if (len >= 2 && txt.charAt(0) == '"' && txt.charAt(len - 1) == '"') t = 1;
+        else if (StringUtil.isArabicNumerals(txt)) t = 5;
+        else if (txt.indexOf('(') > 0 && txt.charAt(len - 1) == ')') t = 4;
+        else {
+            int i = txt.indexOf('!');
+            String r = i > 0 && i < len - 2 ? txt.substring(i + 1) : txt;
+            try {
+                Dimension.of(r.replace("$", ""));
+                t = i > 0 ? 3 : 2;
+            } catch (Exception e) {
+                t = 1;
+            }
+        }
+        return t;
     }
 
     public enum Operator {

@@ -30,8 +30,8 @@ import java.util.Date;
  */
 public class DateValidation extends RangeValidation<Integer> {
     public DateValidation between(Date from, Date to) {
-        if (from != null) v1 = DateUtil.toDateValue(from);
-        if (to != null) v2 = DateUtil.toDateValue(to);
+        if (from != null) v1 = RangeVal.of(DateUtil.toDateValue(from));
+        if (to != null) v2 = RangeVal.of(DateUtil.toDateValue(to));
         return this;
     }
 
@@ -42,9 +42,9 @@ public class DateValidation extends RangeValidation<Integer> {
      */
     public DateValidation between(String from, String to) {
         if (StringUtil.isNotEmpty(from))
-            v1 = DateUtil.toDateValue(DateUtil.dateFormat.get().parse(from.substring(0, Math.min(from.length(), 10)), new ParsePosition(0)));
+            v1 = RangeVal.of(DateUtil.toDateValue(DateUtil.dateFormat.get().parse(from.substring(0, Math.min(from.length(), 10)), new ParsePosition(0))));
         if (StringUtil.isNotEmpty(to))
-            v2 = DateUtil.toDateValue(DateUtil.dateFormat.get().parse(to.substring(0, Math.min(to.length(), 10)), new ParsePosition(0)));
+            v2 = RangeVal.of(DateUtil.toDateValue(DateUtil.dateFormat.get().parse(to.substring(0, Math.min(to.length(), 10)), new ParsePosition(0))));
         return this;
     }
 
@@ -53,4 +53,8 @@ public class DateValidation extends RangeValidation<Integer> {
         return "date";
     }
 
+    @Override
+    protected Integer parseTxtValue(String txt) {
+        return Integer.valueOf(txt);
+    }
 }

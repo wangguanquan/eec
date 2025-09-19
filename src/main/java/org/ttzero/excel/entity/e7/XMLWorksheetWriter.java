@@ -39,6 +39,7 @@ import org.ttzero.excel.entity.RowBlock;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
@@ -1494,15 +1495,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             final int cascadeSize = lv.getCascadeSize();
             // 级联序列
             if (cascadeSize > 0) {
-                // 最多支持3级联动
+                // 最多支持5级联动
                 if (cascadeSize > 4) throw new UnsupportedOperationException("最多支持5级联动");
                 if (definedNames == null) definedNames = new LinkedHashMap<>();
                 List<String> options = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
                 rows.add(options);
                 // 修改当前Validation为引用
                 lv.options = null;
-                lv.otherSheetName = refSheetName;
-                lv.referer = new Dimension(rows.size(), (short) 1, rows.size(), (short) options.size());
+                lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) options.size()));
 
                 List<Dimension> sqrefs = new ArrayList<>();
                 for (int i = 0; i < cascadeSize; i++) {
@@ -1524,7 +1524,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 // 新增一个INDIRECT
                 ListValidation<String> newRlv = new ListValidation<>();
                 newRlv.sqrefList = sqrefs;
-                newRlv.indirect = Sheet.toCoordinate(lv.sqref.firstRow, lv.sqref.firstColumn);
+                newRlv.indirect = Sheet.toCoordinate(lv.sqrefList.get(0).firstRow, lv.sqrefList.get(0).firstColumn);
                 if (dynamicValidations == null) dynamicValidations = new ArrayList<>();
                 dynamicValidations.add(newRlv);
             }
@@ -1532,9 +1532,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             else if (lv.options != null && !lv.options.isEmpty()) {
                 List<String> dataRows = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
                 rows.add(dataRows);
-                lv.referer = new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size());
-                lv.otherSheetName = refSheetName;
                 lv.options = null;
+                lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size()));
             }
         }
 

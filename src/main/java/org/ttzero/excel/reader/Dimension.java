@@ -27,7 +27,7 @@ import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
- * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
+ * 维度，它包含起始和结束坐标，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
  *
  * <p>Excel的列由{@code A-Z}大写字母组成，行由{@code 1,2,3}数字组成，每个坐标都由列+行组成
  * {@code 1}行{@code 1}列表示为{@code A1}以此类推，当列到达{@code Z}之后就由两位字母联合组成，
