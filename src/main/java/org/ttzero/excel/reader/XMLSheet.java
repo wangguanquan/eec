@@ -340,7 +340,7 @@ public class XMLSheet implements Sheet {
             int i = 0, lc = -1;
             boolean changeLc = false;
             for (Row row = nextRow(); row != null; row = nextRow()) {
-                if (row.getRowNum() >= fromRowNum) {
+                if (row.getRowNum() >= fromRowNum && row.getRowNum() <= toRowNum) {
                     if (row.lc > lc) {
                         lc = row.lc;
                         if (i > 0) changeLc = true;
@@ -374,14 +374,22 @@ public class XMLSheet implements Sheet {
                     mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
                 }
 
-                headerRow = new HeaderRow().with(mergeCells, rows).setOptions(option << 16 >>> 16);
-            } else headerRow = new HeaderRow().setOptions(option << 16 >>> 16);
+                headerRow = new HeaderRow().with(mergeCells, i == rows.length ? rows : Arrays.copyOf(rows, i)).setOptions(option << 16 >>> 16);
+            } else {
+                headerRow = HeaderRow.emptyHeader().setOptions(option << 16 >>> 16);
+                useCurrentRow = true;
+            }
         }
         // Single row
         else {
             Row row = nextRow();
-            for (; row != null && row.getRowNum() < fromRowNum; row = nextRow());
-            headerRow = row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
+            if (fromRowNum >= row.getRowNum()) {
+                for (; row != null && row.getRowNum() < fromRowNum; row = nextRow()) ;
+                headerRow = row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
+            } else {
+                headerRow = HeaderRow.emptyHeader().setOptions(option << 16 >>> 16);
+                useCurrentRow = true;
+            }
         }
         // Reset metas
         headerRow.styles = styles;

@@ -118,7 +118,7 @@ public class HeaderRow extends Row {
     public HeaderRow with(List<Dimension> mergeCells, int headRows, Row ... rows) {
         this.headRows = headRows;
         Row row = rows[rows.length - 1];
-        if (row == null) return new HeaderRow();
+        if (row == null) return HeaderRow.emptyHeader();
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
         // Extends from row
@@ -166,6 +166,14 @@ public class HeaderRow extends Row {
             }
         }
         return this;
+    }
+
+    public static HeaderRow emptyHeader() {
+        HeaderRow hr = new HeaderRow();
+        hr.fc = hr.lc = 0;
+        hr.names = new String[0];
+        hr.mapping = new HashMap<>();
+        return hr;
     }
 
     public final boolean is(Class<?> clazz) {
@@ -409,9 +417,16 @@ public class HeaderRow extends Row {
 
     @Override
     public String toString() {
-        return String.join(" | ", names);
+        return names != null ? String.join(" | ", names) : null;
     }
 
+    /**
+     * markdown string
+     *
+     * @return markdown string
+     * @deprecated 未使用，后续删除
+     */
+    @Deprecated
     public String toMarkdownString() {
         StringJoiner joiner = new StringJoiner(" | ");
         StringBuilder buf = new StringBuilder();
@@ -448,6 +463,14 @@ public class HeaderRow extends Row {
         return buf.toString();
     }
 
+    /**
+     * 简单计算文本长度
+     *
+     * @param name 标题
+     * @return 文本长度
+     * @deprecated 未使用，后续删除
+     */
+    @Deprecated
     protected int simpleTestLength(String name) {
         if (name == null) return 4;
         char[] chars = name.toCharArray();
