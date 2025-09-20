@@ -214,7 +214,7 @@ public class ExcelReaderTest {
 
     @Test public void testToObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            List<Entry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Entry.class)).collect(Collectors.toList());
+            List<Entry> list = reader.sheet(0).dataRows().map(row -> row.to(Entry.class)).collect(Collectors.toList());
             Path expectPath = testResourceRoot().resolve("expect/1$Object测试.txt");
             List<String[]> expectList = CSVUtil.read(expectPath);
             assertEquals(expectList.size() - 1, list.size());
@@ -233,7 +233,7 @@ public class ExcelReaderTest {
 
     @Test public void testToAnnotationObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            List<AnnotationEntry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(AnnotationEntry.class)).collect(Collectors.toList());
+            List<AnnotationEntry> list = reader.sheet(0).dataRows().map(row -> row.to(AnnotationEntry.class)).collect(Collectors.toList());
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/1$Object测试.txt"));
             assertEquals(expectList.size() - 1, list.size());
             for (int i = 0, len = list.size(); i < len; i++) {
