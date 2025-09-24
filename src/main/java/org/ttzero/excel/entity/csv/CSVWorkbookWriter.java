@@ -145,20 +145,15 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         // Write worksheet data one by one
         for (int i = 0; i < workbook.getSize(); i++) {
             Sheet sheet = workbook.getSheetAt(i);
-            // Push model
-            if (IPushModelSheet.class.isAssignableFrom(sheet.getClass()) && sheet.size() > 0) {
-                sheet.close();
-            }
-            // Pull model
-            else {
-                try {
+            try {
+                if (!IPushModelSheet.class.isAssignableFrom(sheet.getClass()) || sheet.size() <= 0) {
                     // Collect properties
                     sheet.forWrite();
                     // Write to desk
                     sheet.writeTo(root);
-                } finally {
-                    sheet.close();
                 }
+            } finally {
+                sheet.close();
             }
         }
 
