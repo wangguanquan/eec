@@ -438,29 +438,6 @@ public interface Sheet extends Closeable {
     Sheet asSheet();
 
     /**
-     * 将工作表转为{@code CalcSheet}，只方法仅做为兼容老版本，实际返回{@code FullSheet}
-     *
-     * @return {@link CalcSheet}
-     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code CalcSheet}所有功能
-     */
-    @Deprecated
-    default CalcSheet asCalcSheet() {
-        return (CalcSheet) asFullSheet();
-    }
-
-    /**
-     * 将工作表转为{@code MergeSheet}，只方法仅做为兼容老版本，实际返回{@code FullSheet}
-     *
-     * @return {@link MergeSheet}
-     * @deprecated 使用 {@link #asFullSheet()} 替换，{@code FullSheet}包含{@code MergeSheet}所有功能
-     */
-    @Deprecated
-    default MergeSheet asMergeSheet() {
-        FullSheet sheet = asFullSheet().copyOnMerged();
-        return (MergeSheet) sheet;
-    }
-
-    /**
      * 将工作表转为{@code FullSheet}支持全属性读取
      *
      * @return {@link FullSheet}
