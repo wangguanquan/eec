@@ -394,7 +394,7 @@ public class ExcelReader2Test {
 
     @Test public void testCalcSheet() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("formula.xlsx"))) {
-            reader.sheets().map(Sheet::asCalcSheet).forEach(sheet -> {
+            reader.sheets().map(Sheet::asFullSheet).forEach(sheet -> {
                 Map<Long, String> formulasMap = FormulasLoader.load(testResourceRoot().resolve("expect/formula$" + sheet.getName() + "$formulas.txt"));
                 Iterator<Row> it = sheet.iterator();
                 while (it.hasNext()) {
@@ -411,7 +411,7 @@ public class ExcelReader2Test {
 
     @Test public void testMergeSheet() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("fracture merged.xlsx"))) {
-            MergeSheet sheet = reader.sheet(0).asMergeSheet();
+            FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Dimension> mergeCells = sheet.getMergeCells();
             assertEquals(mergeCells.size(), 17);
             assertTrue(mergeCells.contains(Dimension.of("A1:A2")));
