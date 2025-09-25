@@ -531,6 +531,24 @@ public class ExcelReaderTest2 {
         }
     }
 
+    @Test public void testLastColumnIndex() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
+            int[] expect = {0, 1, 0, 2, 0, 1, 0, 6, 6, 6};
+            for (Iterator<Row> iter = reader.sheet(0).iterator(); iter.hasNext(); ) {
+                Row row = iter.next();
+                assertEquals(expect[row.getRowNum()], row.getLastColumnIndex());
+            }
+        }
+
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
+            int[] expect = {0, 27, 24, 5};
+            for (Iterator<Row> iter = reader.sheet(0).iterator(); iter.hasNext(); ) {
+                Row row = iter.next();
+                assertEquals(expect[row.getRowNum()], row.getLastColumnIndex());
+            }
+        }
+    }
+
     public static <T> boolean listEquals(List<T> list, List<T> expectList) {
         if (list == expectList) return true;
         if (list == null || expectList == null) return false;
