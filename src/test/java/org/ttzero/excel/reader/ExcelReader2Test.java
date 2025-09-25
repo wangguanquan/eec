@@ -34,6 +34,7 @@ import org.ttzero.excel.util.StringUtil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -437,6 +438,80 @@ public class ExcelReader2Test {
             assertTrue(iter.hasNext());
             Row row1 = iter.next();
             assertEquals(row1.toString(), "姓名 | 二级机构名称 | 三级机构名称 | 四级机构名称 | 参与次数 | 日均参与率(%) | 日均得分 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长 | 得分 | 考试时长");
+        }
+    }
+
+    @Test public void testReadHeader() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
+            Sheet sheet = reader.sheet("header rows test");
+            Iterator<Row> iter = sheet.header(1).iterator();
+            Row headerRow = sheet.getHeader();
+            assertTrue(headerRow.isBlank());
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "渠道ID | 游戏 | 账号 | 注册时间 | 是否满30级 | VIP");
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "4 | 极品飞车 | XuSu2gFg32 | 2018-11-21 | true | F");
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "8 | 怪物世界 | kxwWgaB | 2018-11-21 | true | N");
+
+            sheet.reset();
+            iter = sheet.header(1, 2).iterator();
+            headerRow = sheet.getHeader();
+            assertTrue(headerRow.isBlank());
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "渠道ID | 游戏 | 账号 | 注册时间 | 是否满30级 | VIP");
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "4 | 极品飞车 | XuSu2gFg32 | 2018-11-21 | true | F");
+            assertTrue(iter.hasNext());
+            assertEquals(iter.next().toString(), "8 | 怪物世界 | kxwWgaB | 2018-11-21 | true | N");
+
+            sheet.reset();
+            List<Map<String, Object>> list = sheet.header(3).rows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(2, list.size());
+            Map<String, Object> row1 = list.get(0);
+            assertEquals(row1.get("渠道ID"), 4);
+            assertEquals(row1.get("游戏"), "极品飞车");
+            assertEquals(row1.get("账号"), "XuSu2gFg32");
+            assertEquals(row1.get("注册时间"), Timestamp.valueOf(LocalDate.of(2018, 11, 21).atStartOfDay()));
+            assertEquals(row1.get("是否满30级"), true);
+            assertEquals(row1.get("VIP"), "F");
+
+            Map<String, Object> row2 = list.get(1);
+            assertEquals(row2.get("渠道ID"), 8);
+            assertEquals(row2.get("游戏"), "怪物世界");
+            assertEquals(row2.get("账号"), "kxwWgaB");
+            assertEquals(row2.get("注册时间"), Timestamp.valueOf(LocalDate.of(2018, 11, 21).atStartOfDay()));
+            assertEquals(row2.get("是否满30级"), true);
+            assertEquals(row2.get("VIP"), "N");
+
+            sheet.reset();
+            list = sheet.header(3, 4).rows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(1, list.size());
+            Map<String, Object> row3 = list.get(0);
+            assertEquals(row3.get("渠道ID:4"), 8);
+            assertEquals(row3.get("游戏:极品飞车"), "怪物世界");
+            assertEquals(row3.get("账号:XuSu2gFg32"), "kxwWgaB");
+            assertEquals(row3.get("注册时间:43425"), Timestamp.valueOf(LocalDate.of(2018, 11, 21).atStartOfDay()));
+            assertEquals(row3.get("是否满30级:true"), true);
+            assertEquals(row3.get("VIP:F"), "N");
+        }
+    }
+
+    @Test public void testLastColumnIndex() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#175.xlsx"))) {
+            int[] expect = {0, 1, 0, 2, 0, 1, 0, 6, 6, 6};
+            for (Iterator<Row> iter = reader.sheet(0).iterator(); iter.hasNext(); ) {
+                Row row = iter.next();
+                assertEquals(expect[row.getRowNum()], row.getLastColumnIndex());
+            }
+        }
+
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("#354.xlsx"))) {
+            int[] expect = {0, 27, 24, 5};
+            for (Iterator<Row> iter = reader.sheet(0).iterator(); iter.hasNext(); ) {
+                Row row = iter.next();
+                assertEquals(expect[row.getRowNum()], row.getLastColumnIndex());
+            }
         }
     }
 
