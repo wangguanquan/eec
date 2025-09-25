@@ -1097,8 +1097,9 @@ class XMLFullSheet extends XMLSheet implements FullSheet, CalcSheet, MergeSheet 
         if (calc != null) ((XMLFullRow) sRow).setCalcFun(this::findCalc);
 
         // 默认不复制合并单元格的值
-        if (((option >> 17) & 1) == 1 && getMergeGrid() != null) ((XMLFullRow) sRow).setCopyValueFunc(getMergeGrid(), mergeGrid::merge);
-        else ((XMLFullRow) sRow).setCopyValueFunc(new Grid.FastGrid(Dimension.of("A1")), (row, cells) -> { });
+        Grid grid = getMergeGrid();
+        final boolean gridNotNull = grid != null;
+        ((XMLFullRow) sRow).setCopyValueFunc(gridNotNull ? grid : new Grid.FastGrid(Dimension.of("A1")), gridNotNull && ((option >> 17) & 1) == 1 ? mergeGrid::merge : (row, cells) -> { });
 
         ready = true;
 

@@ -240,7 +240,8 @@ public class XMLRow extends Row {
         // The style index
         cell.xf = xf;
         cell.t = t;
-        if (lc < i) lc = i;
+//        if (lc < i)
+        lc = i;
 
         return cell;
     }
@@ -293,7 +294,7 @@ public class XMLRow extends Row {
     /**
      * Found text tag range
      *
-     * Code like this {@code <is><t>cell value</t></is>}
+     * <p>Code like this {@code <is><t>cell value</t></is>}</p>
      *
      * @return the end index of string value
      */
@@ -304,7 +305,7 @@ public class XMLRow extends Row {
     /**
      * Found value tag range
      *
-     * Code like this {@code <v>0</v>}
+     * <p>Code like this {@code <v>0</v>}</p>
      *
      * @return the end index of int value
      */
@@ -510,7 +511,7 @@ class XMLFullRow extends XMLRow {
     // InterfaceFunction
     MergeValueFunc mergedFunc;
     // A merge cells grid
-    Grid mergeCells;
+    Grid mergeGrid;
     // height，只有当customHeight为1时height才会有值
     Double height;
     // 是否隐藏
@@ -547,7 +548,7 @@ class XMLFullRow extends XMLRow {
 
         // Parse formula if exists and can parse
         if (hasCalcFunc) {
-            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
+            calcFun.accept(getRowNum(), cells, lc > fc ? lc - fc : -1);
         }
 
         // Parse cell value
@@ -563,7 +564,7 @@ class XMLFullRow extends XMLRow {
           in the merged range except for the first one,
           so compatibility is required here for cells that are outside the spans range
          */
-        for (; mergeCells.test(r, i); i++) {
+        for (; mergeGrid.test(r, i); i++) {
             if (lc < i) {
                 // Give a new cells
                 if (cells.length < i) cells = copyCells(i);
@@ -619,7 +620,7 @@ class XMLFullRow extends XMLRow {
 
     /**
      * Found the Function tag range
-     * Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f>
+     * <p>Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f></p>
      *
      * @param cell current {@link Cell}
      * @return the end index of function value
@@ -717,8 +718,8 @@ class XMLFullRow extends XMLRow {
         }
     }
 
-    XMLFullRow setCopyValueFunc(Grid mergeCells, MergeValueFunc mergedFunc) {
-        this.mergeCells = mergeCells;
+    XMLFullRow setCopyValueFunc(Grid mergeGrid, MergeValueFunc mergedFunc) {
+        this.mergeGrid = mergeGrid;
         this.mergedFunc = mergedFunc;
         return this;
     }
