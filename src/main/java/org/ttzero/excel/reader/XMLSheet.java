@@ -315,6 +315,7 @@ public class XMLSheet implements Sheet {
                 header = row instanceof HeaderRow ? (HeaderRow) row : row.asHeader();
                 header.setOptions(option << 16 >>> 16);
                 sRow.setHeader(header);
+                if (hrl > 0) useCurrentRow = sRow.getRowNum() > hrl;
             }
         } else if (hrl > 0 && hrl > sRow.getRowNum()) {
             for (Row row = nextRow(); row != null && row.getRowNum() < hrl; row = nextRow()) ;
@@ -372,22 +373,19 @@ public class XMLSheet implements Sheet {
                 if (mergeCells != null) {
                     mergeCells = mergeCells.stream().filter(dim -> dim.firstRow < toRowNum || dim.lastRow > fromRowNum).collect(Collectors.toList());
                 }
-
                 headerRow = new HeaderRow().with(mergeCells, i == rows.length ? rows : Arrays.copyOf(rows, i)).setOptions(option << 16 >>> 16);
             } else {
                 headerRow = HeaderRow.emptyHeader().setOptions(option << 16 >>> 16);
-                useCurrentRow = true;
             }
         }
         // Single row
         else {
             Row row = nextRow();
-            if (fromRowNum >= row.getRowNum()) {
+            if (row != null && fromRowNum >= row.getRowNum()) {
                 for (; row != null && row.getRowNum() < fromRowNum; row = nextRow()) ;
                 headerRow = row != null ? new HeaderRow().with(row).setOptions(option << 16 >>> 16) : new HeaderRow().setOptions(option << 16 >>> 16);
             } else {
                 headerRow = HeaderRow.emptyHeader().setOptions(option << 16 >>> 16);
-                useCurrentRow = true;
             }
         }
         // Reset metas
