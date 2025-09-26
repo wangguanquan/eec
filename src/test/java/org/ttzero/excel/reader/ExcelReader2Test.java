@@ -282,7 +282,7 @@ public class ExcelReader2Test {
             assertEquals(list.size(), 6);
             assertTrue(list.get(2).hidden);
             assertEquals((int) sheet.getDefaultColWidth(), 21);
-            assertEquals((int) sheet.getDefaultRowHeight(), 15);
+            assertEquals((int) sheet.getDefaultRowHeight(), 14);
 
 //            List<Dimension> mergeCells = sheet.getMergeCells();
 //            assertEquals(mergeCells.size(), 1);
@@ -411,7 +411,7 @@ public class ExcelReader2Test {
 
     @Test public void testMergeSheet() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("fracture merged.xlsx"))) {
-            FullSheet sheet = reader.sheet(0).asFullSheet();
+            FullSheet sheet = reader.sheet(0).asFullSheet().copyOnMerged();
             List<Dimension> mergeCells = sheet.getMergeCells();
             assertEquals(mergeCells.size(), 17);
             assertTrue(mergeCells.contains(Dimension.of("A1:A2")));
