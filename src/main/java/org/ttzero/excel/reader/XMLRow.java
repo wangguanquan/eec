@@ -47,19 +47,13 @@ import static org.ttzero.excel.util.StringUtil.swap;
  */
 public class XMLRow extends Row {
     /**
-     * @deprecated 未使用，下个版本删除
-     */
-    @Deprecated
-    protected int startRow;
-
-    /**
      * The number of row. (one base)
      *
      * @return int value
      */
     @Override
     public int getRowNum() {
-        if (rowNum == -1) rowNum = index = searchRowNum();
+        if (rowNum == -1) rowNum = searchRowNum();
         return rowNum;
     }
 
@@ -97,7 +91,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNum = this.index = this.lc = -1; // 兼容处理，后续删除index
+        this.rowNum = this.lc = -1;
         parseCells();
         return this;
     }
@@ -109,7 +103,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNum = this.index = -1; // 兼容处理，后续删除index
+        this.rowNum = -1;
         this.fc = this.lc = -1;
         return this;
     }

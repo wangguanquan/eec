@@ -82,9 +82,6 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  */
 public class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    // Index to row
-    @Deprecated
-    protected int index = -1;
     /**
      * 行号（从1开始）
      */

@@ -888,17 +888,6 @@ public class Column {
      * 获取列在Excel中的实际位置（从{@code A}开始）
      *
      * @return 列在Excel中的实际位置
-     * @deprecated 方法名容易引起误解, 重命名 {@link #getColNum()}
-     */
-    @Deprecated
-    public int getRealColIndex() {
-        return colNum;
-    }
-
-    /**
-     * 获取列在Excel中的实际位置（从{@code A}开始）
-     *
-     * @return 列在Excel中的实际位置
      */
     public int getColNum() {
         return colNum;

@@ -91,18 +91,6 @@ public class SimpleSheet<T> extends ListSheet<T> {
         super(name, columns);
     }
     /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public SimpleSheet(String name, Watermark watermark, Column... columns) {
-        super(name, watermark, columns);
-    }
-    /**
      * 实例化工作表并指定初始数据
      *
      * @param data 初始数据
@@ -137,31 +125,6 @@ public class SimpleSheet<T> extends ListSheet<T> {
      */
     public SimpleSheet(String name, List<T> data, Column... columns) {
         super(name, data, columns);
-    }
-    /**
-     * 实例化工作表并指定初始数据、水印和表头
-     *
-     * @param data      初始数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public SimpleSheet(List<T> data, Watermark watermark, Column... columns) {
-        super(data, watermark, columns);
-    }
-    /**
-     * 实例化工作表并指定工作表名称、初始数据、水印和表头
-     *
-     * @param name      工作表名称
-     * @param data      初始数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public SimpleSheet(String name, List<T> data, Watermark watermark, Column... columns) {
-        super(name, data, watermark, columns);
     }
 
     /**

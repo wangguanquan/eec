@@ -124,7 +124,7 @@ public class HeaderRow extends Row {
         // Extends from row
         this.fc = row.fc;
         this.lc = row.lc;
-        this.rowNum = this.index = row.rowNum; // 兼容处理，后续删除index
+        this.rowNum = row.rowNum;
         this.cells = new Cell[this.names.length];
         for (int i = 0; i < row.fc; i++) {
             this.cells[i] = new Cell(i);

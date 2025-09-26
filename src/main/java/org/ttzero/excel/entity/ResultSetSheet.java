@@ -107,19 +107,6 @@ public class ResultSetSheet extends Sheet {
     }
 
     /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ResultSetSheet(String name, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
-    }
-
-    /**
      * 实例化工作表并指定数据源{@code ResultSet}
      *
      * @param rs 数据源{@code ResultSet}
@@ -146,7 +133,7 @@ public class ResultSetSheet extends Sheet {
      * @param columns 表头信息
      */
     public ResultSetSheet(ResultSet rs, final Column... columns) {
-        this(null, rs, null, columns);
+        this(null, rs, columns);
     }
 
     /**
@@ -157,35 +144,9 @@ public class ResultSetSheet extends Sheet {
      * @param columns 表头信息
      */
     public ResultSetSheet(String name, ResultSet rs, final Column... columns) {
-        this(name, rs, null, columns);
-    }
-
-    /**
-     * 实例化工作表并指定数据源{@code ResultSet}、水印和表头信息
-     *
-     * @param rs        数据源{@code ResultSet}
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ResultSetSheet(ResultSet rs, Watermark watermark, final Column... columns) {
-        this(null, rs, watermark, columns);
-    }
-
-    /**
-     * 实例化工作表并指定工作表名、数据源{@code ResultSet}、水印和表头信息
-     *
-     * @param name      工作表名
-     * @param rs        数据源{@code ResultSet}
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ResultSetSheet(String name, ResultSet rs, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
+        this.name = name;
         this.rs = rs;
+        this.columns = columns;
     }
 
     /**

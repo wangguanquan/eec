@@ -71,7 +71,6 @@ public class XMLSheet implements Sheet {
         this.sst = sheet.sst;
         this.styles = sheet.styles;
         this.id = sheet.id;
-        this.startRow = sheet.startRow;
         this.header = sheet.header;
         this.hidden = sheet.hidden;
         this.useCurrentRow = sheet.useCurrentRow;
@@ -106,11 +105,7 @@ public class XMLSheet implements Sheet {
      * The {@link Styles}
      */
     protected Styles styles;
-    /**
-     * @deprecated 未使用，下个版本删除
-     */
-    @Deprecated
-    protected int startRow = -1; // row index of data
+
     protected HeaderRow header;
     // state hidden
     protected boolean hidden, useCurrentRow;
@@ -251,17 +246,6 @@ public class XMLSheet implements Sheet {
     }
 
     /**
-     * The index of first used row
-     *
-     * @return the index
-     * @deprecated 无效方法后续删除
-     */
-    @Deprecated
-    public int getFirstRow() {
-        return startRow;
-    }
-
-    /**
      * Test Worksheet is hidden
      *
      * @return true: if current sheet is hidden
@@ -348,7 +332,7 @@ public class XMLSheet implements Sheet {
                     Row r = new Row() { };
                     r.fc = row.fc;
                     r.lc = row.lc;
-                    r.rowNum = r.index = row.getRowNum(); // 兼容处理，后续删除index
+                    r.rowNum = row.getRowNum();
                     r.sst = row.sst;
                     r.cells = row.copyCells();
                     rows[i++] = r;
@@ -760,7 +744,7 @@ public class XMLSheet implements Sheet {
             header = null;
             if (sRow != null) {
                 sRow.fc = 0;
-                sRow.rowNum = sRow.index = sRow.lc = -1; // 兼容处理，后续删除index
+                sRow.rowNum = sRow.lc = -1;
                 sRow.from = sRow.to;
             }
             // Close the opening reader

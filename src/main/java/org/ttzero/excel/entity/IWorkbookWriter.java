@@ -98,21 +98,6 @@ public interface IWorkbookWriter extends Storable, Closeable {
     }
 
     /**
-     * 移动文件到指定位置
-     *
-     * @param source      源文件
-     * @param target      目标文件夹
-     * @param defaultName 目标文件名
-     * @return 另存为目标文件绝对路径
-     * @throws IOException if I/O error occur
-     * @deprecated 重命名为 {@link #moveToPath(Path, Path, String)}
-     */
-    @Deprecated
-    default Path reMarkPath(Path source, Path target, String defaultName) throws IOException {
-        return moveToPath(source, target, defaultName);
-    }
-
-    /**
      * 移动文件到指定位置，如果已存在相同文件名则会在文件名后追回{@code （n）}以区分，
      * {@code n}从1开始如果已存在{@code （n）}则新文件名为{@code （n + 1）}
      *

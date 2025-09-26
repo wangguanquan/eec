@@ -119,11 +119,6 @@ public class CSVWorkbookWriter implements IWorkbookWriter {
         }
     }
 
-    @Deprecated
-    protected void reMarkPath(Path source, Path target) throws IOException {
-        moveToPath(source, target);
-    }
-
     protected void moveToPath(Path source, Path target) throws IOException {
         String name = StringUtil.isEmpty(workbook.getName()) ? "新建文件" : workbook.getName();
         Path resultPath = moveToPath(source, target, name);

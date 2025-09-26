@@ -118,7 +118,7 @@ import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
  * row1.put("age", 26);
  * row1.put("sex", "男");
  * row1.put("pic", Paths.get("./images/head.png"));
- * row1.put("jumpUrl", "https://jianli.com/zhangsan");
+ * row1.put("jumpUrl", "{@code https://jianli.com/zhangsan}");
  * data.add(row1);
  *
  *  new Workbook("内置函数测试")
