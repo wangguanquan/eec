@@ -385,13 +385,6 @@ public class SharedStrings implements Closeable {
             && offset_backward + limit_backward > index;
     }
 
-//    // Check the current index if out of bound
-//    private void checkBound(int index) {
-//        if (index < 0 || max > -1 && max <= index) {
-//            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + max);
-//        }
-//    }
-
     // Check the current index has been loaded twice
     private boolean test(int index) {
         return status == 4 && tester.test(index);

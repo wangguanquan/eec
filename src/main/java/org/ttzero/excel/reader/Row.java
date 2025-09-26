@@ -1184,8 +1184,7 @@ public class Row {
             }
             return t;
         }
-//        else return (T) this;
-        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
+        throw new ExcelReadException("The object is not bound. Use the `Sheet#bind` method to bind object first");
     }
 
     /**
@@ -1205,8 +1204,7 @@ public class Row {
             }
             return t;
         }
-//        else return (T) this;
-        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
+        throw new ExcelReadException("The object is not bound. Use the `Sheet#bind` method to bind object first");
     }
     /////////////////////////////To object//////////////////////////////////
 
