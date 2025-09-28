@@ -347,7 +347,7 @@ public class Workbook implements Storable {
      * @return 强制导出时返回1，其它情况返回0
      */
     public int getForceExport() {
-        return option >>> 1 & 1;
+        return (option >>> 1) & 1;
     }
 
     /**

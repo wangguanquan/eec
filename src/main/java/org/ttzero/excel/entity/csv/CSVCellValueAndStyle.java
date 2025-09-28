@@ -46,7 +46,7 @@ import static org.ttzero.excel.util.DateUtil.toDateString;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
 
 /**
- * CSV数据样式转换器，该转换器将所有数据转为字符器格式并忽略所有样式
+ * CSV数据样式转换器，该转换器将所有数据转为字符串格式并忽略所有样式
  *
  * @author guanquan.wang at 2019-09-25 11:46
  */

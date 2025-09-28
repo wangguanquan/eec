@@ -21,8 +21,10 @@ import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.function.Supplier;
 
 /**
  * 工作表输出协议，负责将工作表{@link Sheet}格式化输出，它会循环调用{@link Sheet#nextBlock}
@@ -53,6 +55,19 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * @return 列最大上限值
      */
     int getColumnLimit();
+
+    /**
+     * 数据输出到指定位置
+     *
+     * @param path     保存位置
+     * @param supplier 数据提供方
+     * @throws IOException if I/O error occur
+     * @deprecated 未使用，即将移除
+     */
+    @Deprecated
+    default void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 设置工作表
