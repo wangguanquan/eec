@@ -156,7 +156,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * 判断是否为{@code short}或{@link Short}类型
      *
      * @param clazz the class
-     * @return boolean value
+     * @return bool
      */
     static boolean isShort(Class<?> clazz) {
         return clazz == short.class || clazz == Short.class;
@@ -186,7 +186,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * 判断是否为双精度浮点类型
      *
      * @param clazz the type
-     * @return boolean value
+     * @return bool
      */
     static boolean isDouble(Class<?> clazz) {
         return clazz == double.class || clazz == Double.class;
@@ -266,7 +266,7 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
      * 判断是否为{@link java.time.LocalTime}类型
      *
      * @param clazz the type
-     * @return 御前
+     * @return bool
      */
     static boolean isLocalTime(Class<?> clazz) {
         return clazz == java.time.LocalTime.class;
