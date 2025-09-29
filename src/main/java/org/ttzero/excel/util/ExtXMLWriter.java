@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,28 +48,14 @@ public class ExtXMLWriter extends XMLWriter {
     @Override
     protected void writeDeclaration() throws IOException {
         OutputFormat format = getOutputFormat();
-        String encoding = format.getEncoding();
 
         // Only print of declaration is not suppressed
         if (!format.isSuppressDeclaration()) {
-            // Assume 1.0 version
-            if (encoding.equals("UTF8")) {
-                writer.write("<?xml version=\"1.0\"");
-
-                if (!format.isOmitEncoding()) {
-                    writer.write(" encoding=\"UTF-8\"");
-                }
-
-                writer.write(" standalone=\"yes\"?>");
-            } else {
-                writer.write("<?xml version=\"1.0\"");
-
-                if (!format.isOmitEncoding()) {
-                    writer.write(" encoding=\"" + encoding + "\"");
-                }
-
-                writer.write(" standalone=\"yes\"?>");
+            writer.write("<?xml version=\"1.0");
+            if (!format.isOmitEncoding()) {
+                writer.write("\" encoding=\"" + (StringUtil.isNotEmpty(format.getEncoding()) ? format.getEncoding() : "UTF-8"));
             }
+            writer.write("\" standalone=\"yes\"?>");
 
             if (format.isNewLineAfterDeclaration()) {
                 println();
