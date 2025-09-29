@@ -1,9 +1,9 @@
-Version 0.5.26
+Version 0.5.26 (2025-09-29)
 -------------
 - 支持PUSH模式主动写数据（目前只有继承于ListSheet的类支持）
-- 修复指定表头行之前有空行时会自动跳过空行取第一个非空行做为表头(#456)
+- 修复指定表头行之前有空行时会自动跳过空行取第一个非空行做为表头的问题(#456)
 - 优化Row#lastColumnIndex计算逻辑，调整后将不再自动对齐(#454)
-- 删除CalcSheet和MergeSheet，统一使用FullSheet
+- 删除CalcSheet和MergeSheet
 
 Version 0.5.25 (2025-09-09)
 -------------

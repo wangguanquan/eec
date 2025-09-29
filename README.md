@@ -70,7 +70,7 @@ rows.add(new Object[] {5, new Date(), 7, null, "字母", 9, 10.1243});
 
 new Workbook()
     .addSheet(new SimpleSheet<>(rows)) // 添加一个简单工作表
-    .writeTo(Paths.get("f:/excel")); // 导出到F:/excel目录下
+    .writeTo(Paths.get("F:/excel")); // 导出到F:/excel目录下
 ```
 
 ![simple_sheet](images/simple_sheet.png)
@@ -95,10 +95,56 @@ new Workbook("一年级学生表")
     .addSheet(new ListSheet<>("学生信息", students))
 
     // 指定输出位置，如果做文件导出可以直接输出到`respone.getOutputStream()`
-    .writeTo(Paths.get("f:/excel"));
+    .writeTo(Paths.get("F:/excel"));
 ```
 
-#### 3. 动态样式
+#### 3. 分批写数据
+数据量较大时一次取出可能造成OOM，此时就需要分批写数据以降低内存消耗，EEC支持`PULL`和`PUSH`两种模式写数据
+
+- PULL模式
+
+`PULL`模式由WorksheetWriter触发`more`方法取数，写入数据超过单个Worksheet上限将自动分裂一个新的Worksheet并将数据写到新的Worksheet中
+
+```java
+new Workbook()
+    .addSheet(new ListSheet<Item>() {
+        @Override
+        public List<Item> more() {
+            return service.scrollQuery(); // <- 滚动查询数据
+        }
+    })
+    .writeTo(Paths.get("F:/excel/item-export.xlsx"));
+```
+
+- PUSH模式
+
+`PUSH`模式由外部主动向Worksheet推数据，实现`IPushModelSheet`接口的Worksheet支持直接写数据
+
+```java
+Workbook workbook = new Workbook();
+// 如果要设置额外的属性则需要在写数据前设置，否则不生效
+workbook.setAutoSize(true);
+workbook.setWatermark(Watermark.of("Hello EEC"));
+// 实例化一个ListSheet
+ListSheet<Item> sheet = new ListSheet<>();
+// 添加进workbook后才能写数据
+workbook.addSheet(sheet);
+
+ItemQueryVO queryVO = new ItemQueryVO();
+// 每页100条
+queryVO.setPageSize(100);
+for (int i = 0; ;) {
+    queryVO.setPage(++i);
+    // 分页查询
+    List<Item> sub = service.pageQuery(queryVO);
+    if (sub != null && !sub.isEmpty()) sheet.writeData(sub); // <- 直接写数据
+    else break; // EOF
+}
+// 指定Excel输出位置
+workbook.writeTo(Paths.get("F:/excel/item-export.xlsx"));
+```
+
+#### 4. 动态样式
 
 动态样式和数据转换都是使用`@FunctionalInterface`实现，通常用于**突出或高亮**显示一些重要的单元格或行，下面展示如何将低下60分的成绩输出为"不合格"并将整行标为橙色
 
@@ -110,12 +156,12 @@ new Workbook("2021小五班期未考试成绩")
          , new Column("成绩", "score", int.class, n -> (int) n < 60 ? "不合格" : n)
     ).setStyleProcessor((o, style, sst) -> 
             o.getScore() < 60 ? sst.modifyFill(style, new Fill(PatternType.solid, Color.orange)) : style)
-    ).writeTo(Paths.get("f:/excel"));
+    ).writeTo(Paths.get("F:/excel"));
 ```
 
 ![期未成绩](images/dynamic_style.png)
 
-#### 4. 支持模板导出
+#### 5. 支持模板导出
 
 TemplateSheet工作表支持xls和xlsx模板格式，使用模板工作表可以**合并多个Excel文件**也可以和其它工作表混用，关于模板工作表请参考[3-模板导出](https://github.com/wangguanquan/eec/wiki/3-%E6%A8%A1%E6%9D%BF%E5%AF%BC%E5%87%BA)
 
@@ -130,10 +176,10 @@ new Workbook()
         .setData(Entity.mock()) // 设置对象 对应占位符${*}
         // 分片拉取数据 对应占位符${list.*}
         .setData("list", (i,lastOne) -> scrollQuery(i > 0 ? ((Product)lastOne).getId() : 0))
-    ).writeTo(Paths.get("f:/excel"));
+    ).writeTo(Paths.get("F:/excel"));
 ```
 
-#### 5. 自适应列宽更精准
+#### 6. 自适应列宽更精准
 
 ```java
 // 测试类
@@ -151,11 +197,11 @@ public static class WidthTestItem {
 new Workbook("Auto Width Test")
     .setAutoSize(true) // <- 自适应列宽
     .addSheet(new ListSheet<>(randomTestData()))
-    .writeTo(Paths.get("f:/excel"));
+    .writeTo(Paths.get("F:/excel"));
 ```
 ![自动列宽](./images/auto-width.png)
 
-#### 6. 支持多级表头
+#### 7. 支持多级表头
 
 EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列将自动合并
 
@@ -189,14 +235,14 @@ EEC使用多个ExcelColumn注解来实现多级表头，名称一样的行或列
 ```
 ![多行表头](./images/multi-headers.png)
 
-#### 7. 报表轻松制作
+#### 8. 报表轻松制作
 
 现在使用普通的ListSheet就可以导出漂亮的报表。示例请跳转到 [WIKI](https://github.com/wangguanquan/eec/wiki/%E6%8A%A5%E8%A1%A8%E7%B1%BB%E5%AF%BC%E5%87%BA%E6%A0%B7%E5%BC%8F%E7%A4%BA%E4%BE%8B)
 
 ![报表1](./images/report1.png)
 ![报表2](images/report3.png)
 
-#### 8. 支持28种预设图片样式
+#### 9. 支持28种预设图片样式
 
 导出图片时添加内置样式使其更美观，关于图片样式请参考[1-导出Excel#导出图片](https://github.com/wangguanquan/eec/wiki/1-%E5%AF%BC%E5%87%BAExcel#%E5%AF%BC%E5%87%BA%E5%9B%BE%E7%89%87)
 
@@ -296,15 +342,15 @@ pom.xml添加如下依赖，添加好后即完成了xls的兼容，是的！你�
 new Workbook()
     .addSheet(createTestData())
     .saveAsCSV() // 指定输出格式为csv
-    .writeTo(Paths.get("d:\\abc.csv"));
+    .writeTo(Paths.get("F:/excel/abc.csv"));
 
 // CSV转Excel
 new Workbook()
     .addSheet(new CSVSheet(Paths.get("d:\\abc.csv"))) // 添加CSVSheet并指定csv路径
-    .writeTo(Paths.get("d:\\abc.xlsx"));
+    .writeTo(Paths.get("F:/excel/abc.xlsx"));
     
 // Excel转CSV
-try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
+try (ExcelReader reader = ExcelReader.read(Paths.get("F:/excel/abc.xlsx"))) {
     // 读取Excel使用saveAsCSV保存为CSV格式
     reader.sheet(0).saveAsCSV(Paths.get("./"));
 } catch (IOException e) {
@@ -313,6 +359,13 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("d:\\abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.26 (2025-09-29)
+-------------
+- 支持PUSH模式主动写数据（目前只有继承于ListSheet的类支持）
+- 修复指定表头行之前有空行时会自动跳过空行取第一个非空行做为表头的问题(#456)
+- 优化Row#lastColumnIndex计算逻辑，调整后将不再自动对齐(#454)
+- 删除CalcSheet和MergeSheet
+
 Version 0.5.25 (2025-09-09)
 -------------
 - 读取文件时增加单引号转义处理(#438)
@@ -337,18 +390,10 @@ Version 0.5.23 (2025-05-06)
 - 模板工作表新增useOriginalSheetName方法使导出的文件保持源Sheet名
 - Dimension#of方法新增特性，冒号后面无坐标时表示列尾
 
-Version 0.5.22 (2025-02-23)
--------------
-- 开放性能模式提升导出速度
-- 支持读取批注，xls暂不支持(#418)
-- 支持跨工作表引用Validation(#420)
-- 优化读取图片，过滤隐藏、重复节点(#414)
-- 模板工作表增加默认日期格式化
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.25-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.26-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
