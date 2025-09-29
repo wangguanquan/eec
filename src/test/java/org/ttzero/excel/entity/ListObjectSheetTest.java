@@ -1190,9 +1190,8 @@ public class ListObjectSheetTest extends WorkbookTest {
 
         Sheet sheet = workbook.getSheetAt(0);
         sheet.cancelZebraLine();  // Clear odd style
-        int headStyle = sheet.defaultHeadStyle();
-        sheet.setHeadStyle(Styles.clearFill(headStyle) & Styles.clearFont(headStyle));
-        sheet.setHeadStyle(sheet.getHeadStyle() | workbook.getStyles().addFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK)));
+        sheet.setHeaderFont(new Font("宋体", 11, Font.Style.BOLD, Color.BLACK));
+        sheet.setHeaderFill(new Fill(PatternType.none));
         workbook.writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {

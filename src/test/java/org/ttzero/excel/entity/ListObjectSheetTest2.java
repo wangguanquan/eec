@@ -71,6 +71,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.ttzero.excel.entity.Sheet.toCoordinate;
+import static org.ttzero.excel.entity.style.Fill.NONE_FILL;
 import static org.ttzero.excel.reader.Cell.INLINESTR;
 import static org.ttzero.excel.reader.Cell.SST;
 import static org.ttzero.excel.util.StringUtil.isNotEmpty;
@@ -672,7 +673,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
             @Override
             protected int writeHeaderRow() throws IOException {
                 // Write header
-                int rowIndex = 0, subColumnSize = columns[0].subColumnSize(), defaultStyleIndex = sheet.defaultHeadStyleIndex();
+                int rowIndex = 0, subColumnSize = columns[0].subColumnSize();
                 int realColumnLen = isTreeStyle ? columns.length - 1 : columns.length;
                 Column[][] columnsArray = new Column[realColumnLen][];
                 for (int i = 0; i < realColumnLen; i++) {
@@ -693,7 +694,7 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                     for (int j = 0, c = 0; j < realColumnLen; j++) {
                         Column hc = columnsArray[j][i];
                         cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getColNum()) && !isFirstMergedCell(mergeCells, i + 1, hc.getColNum()) ? null : hc.key);
-                        cell.xf = hc.getHeaderStyleIndex() == -1 ? defaultStyleIndex : hc.getHeaderStyleIndex();
+                        cell.xf = hc.getHeaderStyleIndex();
                         writeString(cell, row, c++);
                     }
 
@@ -863,6 +864,25 @@ public class ListObjectSheetTest2 extends WorkbookTest {
                 ListObjectSheetTest.Item expect = expectList.get(i), e = list.get(i);
                 assertEquals(expect, e);
             }
+        }
+    }
+
+    @Test public void testColumnHeaderStyle() throws IOException {
+        String fileName = "testColumnHeaderStyle.xlsx";
+        new Workbook().addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+            , new Column("NAME", "name").setHeaderFill(NONE_FILL)
+            , new Column("SCORE", "score").setHeaderFont(new Font("微软雅黑", 20))
+        )).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int cell0Style = headerRow.getCellStyle(0);
+            assertEquals(styles.getFont(cell0Style), new Font("宋体", 12, Font.Style.BOLD));
+            assertEquals(styles.getFill(cell0Style), NONE_FILL);
+            int cell1Style = headerRow.getCellStyle(1);
+            assertEquals(styles.getFont(cell1Style), new Font("微软雅黑", 20));
+            assertEquals(styles.getFill(cell1Style), new Fill(Styles.toColor("#E9EAEC")));
         }
     }
 

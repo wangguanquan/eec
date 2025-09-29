@@ -37,6 +37,10 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  */
 public class Fill implements Cloneable {
     final static Logger LOGGER = LoggerFactory.getLogger(Fill.class);
+    /**
+     * None Fill
+     */
+    public static final Fill NONE_FILL = new Fill(PatternType.none);
     private PatternType patternType;
     private Color bgColor, fgColor;
 
@@ -278,8 +282,7 @@ public class Fill implements Cloneable {
     }
 
     @Override public String toString() {
-        if (patternType == null || patternType == PatternType.none) return "<fill><patternFill patternType=\"none\"/></fill>";
-        StringBuilder buf = new StringBuilder("<fill><patternFill patternType=\"").append(patternType).append("\">");
+        StringBuilder buf = new StringBuilder("<fill><patternFill patternType=\"").append(patternType != null ? patternType : PatternType.solid).append("\">");
         int index;
         if (fgColor != null) {
             if (fgColor instanceof BuildInColor)

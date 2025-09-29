@@ -119,6 +119,9 @@ public class HeaderRow extends Row {
         this.headRows = headRows;
         Row row = rows[rows.length - 1];
         if (row == null) return new HeaderRow();
+        sst = row.sst;
+        styles = row.styles;
+        sharedCalc = row.sharedCalc;
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
         // Extends from row

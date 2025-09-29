@@ -133,10 +133,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * 表头批注
      */
     protected Comments comments;
-    /**
-     * 自适应列宽标记，优先级从小到大为 0: 未设置 1: 自适应列宽 2: 固定宽度
-     */
-    protected int autoSize;
+//    /**
+//     * 自适应列宽标记，优先级从小到大为 0: 未设置 1: 自适应列宽 2: 固定宽度
+//     */
+//    protected int autoSize;
     /**
      * 默认列宽
      */
@@ -145,17 +145,21 @@ public abstract class Sheet implements Cloneable, Storable {
      * 统计已写入数据行数，不包含表头
      */
     protected int rows;
-    /**
-     * 标记是否“隐藏”
-     */
-    protected boolean hidden;
+//    /**
+//     * 标记是否“隐藏”
+//     */
+//    protected boolean hidden;
     /**
      * 兜底的表头样式索引，优先级低Column独立设置的样式
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     protected int headStyleIndex = -1;
     /**
      * 统一的表头样式，优先级低Column独立设置的样式
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     protected int headStyle;
     /**
      * 斑马线样式索引
@@ -212,10 +216,10 @@ public abstract class Sheet implements Cloneable, Storable {
      * 扩展参数的位标志。如果存在扩展参数则相应的位为1，低16位由系统占用
      */
     protected int extPropMark;
-    /**
-     * 是否显示"网格线"，默认显示
-     */
-    protected Boolean showGridLines;
+//    /**
+//     * 是否显示"网格线"，默认显示
+//     */
+//    protected Boolean showGridLines;
     /**
      * 指定表头行高
      */
@@ -232,6 +236,37 @@ public abstract class Sheet implements Cloneable, Storable {
      * 导出进度窗口，默认情况下RowBlock每刷新一次就会更新一次进度，也就是每32行通知一次
      */
     protected BiConsumer<Sheet, Integer> progressConsumer;
+    /**
+     * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
+     *
+     * <blockquote><pre>
+     *  Bit  | Contents
+     * ------+---------
+     * 31, 2 | 自适应列宽标记 2位，优先级从小到大为 0: 未设置 1: 自适应列宽 2: 固定宽度
+     * 29, 1 | 单元格隐藏标记位 1位, 0:显示 1：隐藏
+     * 28, 1 | 网格线隐藏标记位 1位, 0:显示 1：隐藏
+     * 27, 1 | 表头自动换行 1位
+     * 26, 2 | 表头垂直对齐 2位
+     * 24, 3 | 表头水平对齐 3位
+     * </pre></blockquote>
+     */
+    protected int option;
+    /**
+     * 表头单元格字体
+     */
+    protected Font headerFont;
+    /**
+     * 表头单元格填充
+     */
+    protected Fill headerFill;
+    /**
+     * 表头单元格边框
+     */
+    protected Border headerBorder;
+    /**
+     * 表头格式化
+     */
+    protected NumFmt headerNumFmt;
     /**
      * 获取工作表ID，与当前工作表在工作薄中的下标一致，一般与其它资源关联使用
      *
@@ -392,7 +427,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet autoSize() {
-        this.autoSize = 1;
+        this.option |= 1;
         return this;
     }
 
@@ -402,7 +437,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 1: 自适应列宽 2: 固定宽度
      */
     public int getAutoSize() {
-        return autoSize;
+        return option & 2;
     }
 
     /**
@@ -411,7 +446,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return true：自适应列宽
      */
     public boolean isAutoSize() {
-        return autoSize == 1;
+        return getAutoSize() == 1;
     }
 
     /**
@@ -420,7 +455,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet fixedSize() {
-        this.autoSize = 2;
+        this.option |= 2;
         return this;
     }
 
@@ -439,7 +474,7 @@ public abstract class Sheet implements Cloneable, Storable {
             LOGGER.warn("Maximum width is {}, current is {}", Const.Limit.COLUMN_WIDTH, width);
             width = Const.Limit.COLUMN_WIDTH;
         }
-        this.autoSize = 2;
+        fixedSize();
         this.width = width;
         if (headerReady) {
             for (org.ttzero.excel.entity.Column hc : columns) {
@@ -568,16 +603,30 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return true: 显示 false: 不显示
      */
     public boolean isShowGridLines() {
-        return showGridLines == null || showGridLines;
+        return ((option >>> 3) & 1) == 0;
+    }
+
+    /**
+     * 是否显示“网格线”
+     *
+     * @param showGridLines true: 显示 false: 不显示
+     * @return 当前工作表
+     */
+    public Sheet setShowGridLines(boolean showGridLines) {
+        if (showGridLines) this.option &= ~(1 << 3);
+        else this.option |= (1 << 3);
+        return this;
     }
 
     /**
      * 设置显示“网格线”
      *
      * @return 当前工作表
+     * @deprecated 使用 {@link #setShowGridLines(boolean)}替代
      */
+    @Deprecated
     public Sheet showGridLines() {
-        this.showGridLines = true;
+        this.option &= ~(1 << 3);
         return this;
     }
 
@@ -587,7 +636,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet hideGridLines() {
-        this.showGridLines = false;
+        this.option |= (1 << 3);
         return this;
     }
 
@@ -880,15 +929,30 @@ public abstract class Sheet implements Cloneable, Storable {
     protected void resetCommonProperties(Column[] columns) {
         for (Column column : columns) {
             if (column == null) continue;
-            if (column.styles == null) column.styles = workbook.getStyles();
-            if (column.next != null) {
-                for (Column col = column.next; col != null; col = col.next)
-                    col.styles = workbook.getStyles();
-            }
+            Column col = column;
+            do {
+                if (col.styles == null) col.styles = workbook.getStyles();
+                // 表头未指定特殊样式时合并工作表设置的样式
+                if (col.nonCustomHeaderStyle()) {
+                    // 兼容处理-后续删除
+                    if (headStyle != 0) col.setHeaderStyle(headStyle);
+                    if (headStyleIndex > -1) col.headerStyleIndex = headStyleIndex;
+                    // 合并样式
+                    if (headerFont != null) col.setHeaderFont(headerFont);
+                    if (headerFill != null) col.setHeaderFill(headerFill);
+                    if (headerBorder != null) col.setHeaderBorder(headerBorder);
+                    if (headerNumFmt != null) col.setHeaderNumFmt(headerNumFmt);
+                    int v = ((option >>> 6) & 3) << Styles.INDEX_VERTICAL;
+                    if (v > 0) col.setHeaderVertical(v);
+                    int h = ((option >>> 8) & 7) << Styles.INDEX_HORIZONTAL;
+                    if (h > 0) col.setHeaderHorizontal(h);
+                    if (((option >>> 5) & 1) == 1) col.setWrapText(true);
+                }
+            } while ((col = col.next) != null);
 
             // Column width
-            if (column.getAutoSize() == 0 && autoSize > 0) {
-                column.option |= autoSize << 1;
+            if (column.getAutoSize() == 0 && isAutoSize()) {
+                column.option |= getAutoSize() << 1;
             }
         }
     }
@@ -1023,7 +1087,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return true: 隐藏, false: 显示
      */
     public boolean isHidden() {
-        return hidden;
+        return ((option >> 2) & 1) == 1;
     }
 
     /**
@@ -1032,7 +1096,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet hidden() {
-        this.hidden = true;
+        this.option &= ~(1 << 2);
         return this;
     }
 
@@ -1137,7 +1201,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param fill   填充色
      * @param border 边框
      * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
+     * @deprecated 使用独立的 {@link  #setHeaderFont}, {@link #setHeaderFill(Fill)} 等方法代替
      */
     @Deprecated
     public Sheet setHeadStyle(Font font, Fill fill, Border border) {
@@ -1153,7 +1217,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param vertical   垂直对齐
      * @param horizontal 水平对齐
      * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
+     * @deprecated  @deprecated 使用独立的 {@link  #setHeaderFont}, {@link #setHeaderFill(Fill)} 等方法代替
      */
     @Deprecated
     public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
@@ -1170,19 +1234,11 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param vertical   垂直对齐
      * @param horizontal 水平对齐
      * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
+     * @deprecated  @deprecated 使用独立的 {@link  #setHeaderFont}, {@link #setHeaderFill(Fill)} 等方法代替
      */
     @Deprecated
     public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-        Styles styles = workbook.getStyles();
-        headStyle = (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-            | (font != null ? styles.addFont(font) : 0)
-            | (fill != null ? styles.addFill(fill) : 0)
-            | (border != null ? styles.addBorder(border) : 0)
-            | vertical
-            | horizontal;
-        headStyleIndex = styles.of(headStyle);
-        return this;
+        return setHeaderFont(font).setHeaderFill(fill).setHeaderNumFmt(numFmt).setHeaderBorder(border).setHeaderVertical(vertical).setHeaderHorizontal(horizontal);
     }
 
     /**
@@ -1190,10 +1246,11 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param style 样式值，0表示默认样式
      * @return 当前工作表
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public Sheet setHeadStyle(int style) {
         headStyle = style;
-        headStyleIndex = workbook.getStyles().of(style);
         return this;
     }
 
@@ -1202,10 +1259,11 @@ public abstract class Sheet implements Cloneable, Storable {
      *
      * @param styleIndex 样式索引，索引从0开始，负数表示未设置样式
      * @return 当前工作表
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public Sheet setHeadStyleIndex(int styleIndex) {
         headStyleIndex = styleIndex;
-        headStyle = workbook.getStyles().getStyleByIndex(styleIndex);
         return this;
     }
 
@@ -1213,7 +1271,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * 获取统一的表头样式值
      *
      * @return 样式值，0表示默认样式
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public int getHeadStyle() {
         return headStyle;
     }
@@ -1222,9 +1282,11 @@ public abstract class Sheet implements Cloneable, Storable {
      * 获取统一的表头样式索引
      *
      * @return 样式索引，索引从0开始，负数表示未设置样式
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public int getHeadStyleIndex() {
-        return headStyleIndex;
+        return headStyleIndex == -1 && headStyle != 0 ? (headStyleIndex = workbook.getStyles().of(headStyle)) : -1;
     }
 
     /**
@@ -1233,12 +1295,14 @@ public abstract class Sheet implements Cloneable, Storable {
      * @param fontColor   文字颜色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
      * @param fillBgColor 充填色，可以使用{@link java.awt.Color}中定义的颜色名或者Hex值
      * @return 样式值
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public int buildHeadStyle(String fontColor, String fillBgColor) {
         Styles styles = workbook.getStyles();
         return styles.addFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(fontColor)))
                 | styles.addFill(Fill.parse(fillBgColor))
-                | styles.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)))
+                | styles.addBorder(new Border(BorderStyle.THIN))
                 | Verticals.CENTER
                 | Horizontals.CENTER;
     }
@@ -1247,7 +1311,9 @@ public abstract class Sheet implements Cloneable, Storable {
      * 获取默认的表头样式值
      *
      * @return 样式值
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public int defaultHeadStyle() {
         return headStyle != 0 ? headStyle : (headStyle = this.buildHeadStyle("black", "#E9EAEC"));
     }
@@ -1256,12 +1322,95 @@ public abstract class Sheet implements Cloneable, Storable {
      * 获取默认的表头样式索引
      *
      * @return 样式索引
+     * @deprecated 表头样式移到 {@link Column}中
      */
+    @Deprecated
     public int defaultHeadStyleIndex() {
         if (headStyleIndex == -1) {
             setHeadStyle(this.buildHeadStyle("black", "#E9EAEC"));
         }
         return headStyleIndex;
+    }
+
+    // ================================ 表头样式 ================================
+    /**
+     * 设置表头列统一“字体”样式
+     *
+     * @param font 字体
+     * @return 当前工作表
+     */
+    public Sheet setHeaderFont(Font font) {
+        this.headerFont = font;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“填充”样式
+     *
+     * @param fill 填充
+     * @return 当前工作表
+     */
+    public Sheet setHeaderFill(Fill fill) {
+        this.headerFill = fill;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“边框”样式
+     *
+     * @param border 边框
+     * @return 当前工作表
+     */
+    public Sheet setHeaderBorder(Border border) {
+        this.headerBorder = border;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“垂直对齐”样式
+     *
+     * @param vertical 垂直对齐，参考值{@link Verticals}
+     * @return 当前工作表
+     */
+    public Sheet setHeaderVertical(int vertical) {
+        option = (option & ~(3 << 6)) | (((vertical >> Styles.INDEX_VERTICAL) & 3) << 6);
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“水平对齐”样式
+     *
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @return 当前工作表
+     */
+    public Sheet setHeaderHorizontal(int horizontal) {
+        option = (option & ~(7 << 8)) | (((horizontal >> Styles.INDEX_HORIZONTAL) & 7) << 8);
+        return this;
+    }
+
+    /**
+     * 设置表头行“自动折行”
+     *
+     * <p>折行触发条件：一是当长度超过列宽时折行，二是包含回车符时折行</p>
+     *
+     * @param wrapText 自动折行
+     * @return 当前工作表
+     */
+    public Sheet setHeaderWrapText(boolean wrapText) {
+        if (wrapText) this.option |= (1 << 5);
+        else this.option &= ~(1 << 5);
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“格式化”样式
+     *
+     * @param numFmt 格式化{@link NumFmt}
+     * @return 当前工作表
+     */
+    public Sheet setHeaderNumFmt(NumFmt numFmt) {
+        this.headerNumFmt = numFmt;
+        return this;
     }
 
     /**

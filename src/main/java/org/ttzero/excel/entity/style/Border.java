@@ -50,6 +50,24 @@ public class Border implements Cloneable {
 
     /**
      * 实例化上-下-左-右四个方位的边框样式
+     *
+     * @param style 边框样式
+     */
+    public Border(BorderStyle style) {
+        this(style, defaultColor);
+    }
+
+    /**
+     * 实例化上-下-左-右四个方位的边框样式
+     *
+     * @param color 边框颜色
+     */
+    public Border(Color color) {
+        this(BorderStyle.THIN, color);
+    }
+
+    /**
+     * 实例化上-下-左-右四个方位的边框样式
      * 
      * @param style 边框样式
      * @param color 边框颜色

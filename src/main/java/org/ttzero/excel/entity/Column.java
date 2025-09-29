@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.ttzero.excel.drawing.Effect;
 import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.ColorIndex;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
@@ -121,10 +122,6 @@ public class Column {
      */
     public Comment headerComment, cellComment;
     /**
-     * 表格体格式化，自定义格式化可以覆写方法{@link NumFmt#calcNumWidth(double, Font)}调整计算
-     */
-    public NumFmt numFmt;
-    /**
      * 列索引，从0开始的数字，0对应Excel的{@code 'A'}列以此类推，-1表示未设置
      */
     public int colIndex = -1;
@@ -161,9 +158,12 @@ public class Column {
      * 28, 1 | 忽略导出值 1位, 仅导出表头
      * 27, 1 | 隐藏列 1位
      * 26, 1 | 共享字符串 1位
-     * 25, 2 | 列类型, 0: 默认导出为文本 1: 导出为图片 2: 超链接
-     * 23, 2 | 垂直对齐
-     * 21, 3 | 水平对齐
+     * 25, 2 | 列类型 2位, 0: 默认导出为文本 1: 导出为图片 2: 超链接
+     * 23, 2 | 垂直对齐 2位
+     * 21, 3 | 水平对齐 3位
+     * 18, 1 | 表头自动换行 1位
+     * 17, 2 | 表头垂直对齐 2位
+     * 15, 3 | 表头水平对齐 3位
      * </pre></blockquote>
      */
     protected int option;
@@ -174,15 +174,19 @@ public class Column {
     /**
      * 单元格字体
      */
-    public Font font;
+    public Font font, headerFont;
     /**
      * 单元格填充
      */
-    public Fill fill;
+    public Fill fill, headerFill;
     /**
      * 单元格边框
      */
-    public Border border;
+    public Border border, headerBorder;
+    /**
+     * 表格体格式化，自定义格式化可以覆写方法{@link NumFmt#calcNumWidth(double, Font)}调整计算
+     */
+    public NumFmt numFmt, headerNumFmt;
     /**
      * 实例化列信息
      */
@@ -406,6 +410,10 @@ public class Column {
         if ((i = other.getCellStyleIndex()) > 0) this.cellStyleIndex = i;
         this.effect = other.effect;
         this.globalStyleIndex = other.globalStyleIndex;
+        this.headerNumFmt = other.headerNumFmt;
+        this.headerFont = other.headerFont;
+        this.headerBorder = other.headerBorder;
+        this.headerFill = other.headerFill;
         return this;
     }
 
@@ -583,7 +591,7 @@ public class Column {
      * @return 单元格样式索引，未设置样式时返回{@code -1}
      */
     public int getCellStyleIndex() {
-        return cellStyleIndex >= 0 ? cellStyleIndex : (cellStyleIndex = styles != null && cellStyle != null ? styles.of(cellStyle) : -1);
+        return cellStyleIndex >= 0 ? cellStyleIndex : styles != null ? (cellStyleIndex = styles.of(getCellStyle())) : -1;
     }
 
     /**
@@ -592,9 +600,132 @@ public class Column {
      * @return 表头单元格样式索引，未设置样式时返回{@code -1}
      */
     public int getHeaderStyleIndex() {
-        return headerStyleIndex >= 0 ? headerStyleIndex : (headerStyleIndex = styles != null && headerStyle != null ? styles.of(headerStyle) : -1);
+        return headerStyleIndex >= 0 ? headerStyleIndex : styles != null ? (headerStyleIndex = styles.of(getHeaderStyle())) : -1;
     }
 
+    // ================================ 表头样式 ================================
+    /**
+     * 设置表头列统一“字体”样式
+     *
+     * @param font 字体
+     * @return 当前列
+     */
+    public Column setHeaderFont(Font font) {
+        this.headerFont = font;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“填充”样式
+     *
+     * @param fill 填充
+     * @return 当前列
+     */
+    public Column setHeaderFill(Fill fill) {
+        this.headerFill = fill;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“边框”样式
+     *
+     * @param border 边框
+     * @return 当前列
+     */
+    public Column setHeaderBorder(Border border) {
+        this.headerBorder = border;
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“垂直对齐”样式
+     *
+     * @param vertical 垂直对齐，参考值{@link Verticals}
+     * @return 当前列
+     */
+    public Column setHeaderVertical(int vertical) {
+        option = (option & ~(3 << 14)) | (((vertical >> Styles.INDEX_VERTICAL) & 3) << 14);
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“水平对齐”样式
+     *
+     * @param horizontal 水平对齐,参考值{@link Horizontals}
+     * @return 当前列
+     */
+    public Column setHeaderHorizontal(int horizontal) {
+        option = (option & ~(7 << 16)) | (((horizontal >> Styles.INDEX_HORIZONTAL) & 7) << 16);
+        return this;
+    }
+
+    /**
+     * 设置表头行“自动折行”
+     *
+     * <p>折行触发条件：一是当长度超过列宽时折行，二是包含回车符时折行</p>
+     *
+     * @param wrapText 自动折行
+     * @return 当前列
+     */
+    public Column setHeaderWrapText(boolean wrapText) {
+        if (wrapText) this.option |= (1 << 13);
+        else this.option &= ~(1 << 13);
+        return this;
+    }
+
+    /**
+     * 设置表头列统一“格式化”样式
+     *
+     * @param numFmt 格式化{@link NumFmt}
+     * @return 当前列
+     */
+    public Column setHeaderNumFmt(NumFmt numFmt) {
+        this.headerNumFmt = numFmt;
+        return this;
+    }
+
+    /**
+     * 检查是否有自定义表头样式，任意设置一项即表示有设置
+     *
+     * @return {@code true} 有设置自定义样式
+     */
+    public boolean nonCustomHeaderStyle() {
+        return headerStyle == null && headerStyleIndex == -1
+            && headerFont == null && headerFill == null && headerBorder == null && headerNumFmt == null
+            && ((option >>> 14) & 3) == 0 && ((option >>> 16) & 7) == 0 && ((option >> 13) & 1) == 0;
+    }
+
+    /**
+     * 获取表头单元格样式值，导出过程中通常只计算一次通用样式，计算完后值将保存在{@code headerStyle}中，
+     * 默认样式做为底色外部设置的“字体”，“填充”等样式将覆盖默认样式，
+     *
+     * @return 样式值
+     */
+    public int getHeaderStyle() {
+        if (headerStyle != null) return headerStyle;
+        // 获取默认样式
+        int style = defaultHeadStyle();
+
+        // 重置"字体"
+        if (headerFont != null) style = styles.modifyFont(style, headerFont);
+        // 重置“格式化”
+        if (headerNumFmt != null) style = styles.modifyNumFmt(style, headerNumFmt);
+        // 重置“边框”
+        if (headerBorder != null) style = styles.modifyBorder(style, headerBorder);
+        // 重置“填充”
+        if (headerFill != null) style = styles.modifyFill(style, headerFill);
+        // 重置“垂直对齐”
+        int v = ((option >>> 14) & 3) << Styles.INDEX_VERTICAL;
+        if (v > 0) style = styles.modifyVertical(style, v);
+        // 重置“水平对齐”
+        int h = ((option >>> 16) & 7) << Styles.INDEX_HORIZONTAL;
+        if (h > 0) style = styles.modifyHorizontal(style, h);
+        // 重置“自动折行”
+        headerStyle = style | ((option >> 13) & 1);
+        return headerStyle;
+    }
+
+    // ================================ 表行样式 ================================
     /**
      * 设置当前列统一“字体”样式
      *
@@ -651,6 +782,20 @@ public class Column {
     }
 
     /**
+     * 设置“自动折行”
+     *
+     * <p>折行触发条件：一是当长度超过列宽时折行，二是包含回车符时折行</p>
+     *
+     * @param wrapText 自动折行
+     * @return 当前列
+     */
+    public Column setWrapText(boolean wrapText) {
+        if (wrapText) this.option |= 1;
+        else this.option = option >>> 1 << 1;
+        return this;
+    }
+
+    /**
      * 设置共享字符串标记，当此标记为{@code true}时单元格的字符串将独立保存在共享区
      *
      * @param share true: 共享, false: 内嵌
@@ -667,7 +812,9 @@ public class Column {
      *
      * @param code 格式化串
      * @return 当前列
+     * @deprecated 使用 {@link #setNumFmt(NumFmt)} 代替
      */
+    @Deprecated
     public Column setNumFmt(String code) {
         this.numFmt = new NumFmt(code);
         return this;
@@ -758,11 +905,8 @@ public class Column {
         int h = ((option >>> 10) & 7) << Styles.INDEX_HORIZONTAL;
         if (h > 0) style = styles.modifyHorizontal(style, h);
         // 重置“自动折行”
-        style |= (option & 1);
-
-        // 保存样式
-        setCellStyle(style);
-        return style;
+        cellStyle = style | (option & 1);
+        return cellStyle;
     }
 
     /**
@@ -781,20 +925,6 @@ public class Column {
      */
     public Column ignoreValue() {
         this.option |= 1 << 3;
-        return this;
-    }
-
-    /**
-     * 设置“自动折行”
-     *
-     * <p>折行触发条件：一是当长度超过列宽时折行，二是包含回车符时折行</p>
-     *
-     * @param wrapText 自动折行
-     * @return 当前列
-     */
-    public Column setWrapText(boolean wrapText) {
-        if (wrapText) this.option |= 1;
-        else this.option = option >>> 1 << 1;
         return this;
     }
 
@@ -1010,5 +1140,18 @@ public class Column {
     public Column writeAsHyperlink() {
         this.option = this.option & ~(3 << 6) | (2 << 6);
         return this;
+    }
+
+    /**
+     * 获取默认的表头样式
+     *
+     * @return 样式索引
+     */
+    public int defaultHeadStyle() {
+        return styles.addFont(new Font("宋体", 12, Font.Style.BOLD))
+            | styles.addFill(new Fill(Styles.toColor("#E9EAEC")))
+            | styles.addBorder(new Border(BorderStyle.THIN))
+            | Verticals.CENTER
+            | Horizontals.CENTER;
     }
 }

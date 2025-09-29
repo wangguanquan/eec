@@ -321,7 +321,7 @@ public class StyleDesignTest extends WorkbookTest {
                 List<Border> borders = (List<Border>) borderField.get(styles);
                 if (borders != null && borders.size() > 1) {
                     Border border = borders.get(1);
-                    border.setBorder(BorderStyle.THIN, new Color(191, 191, 191));
+                    border.setBorder(BorderStyle.THIN);
                 }
 
                 Field fontField = Styles.class.getDeclaredField("fonts");

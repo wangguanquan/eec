@@ -11,6 +11,7 @@ import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.Row;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -138,9 +139,9 @@ public class HeaderStyleTest extends WorkbookTest {
                 Fill fill = styles.getFill(style);
                 assertEquals(fill.getPatternType(), PatternType.solid);
                 if (i < row.getLastColumnIndex() - 1) {
-                    assertEquals(fill.getFgColor(), Styles.toColor("#ffff00"));
+                    assertEquals(fill.getFgColor(), Color.YELLOW);
                 } else {
-                    assertEquals(styles.getFont(style).getColor(), Styles.toColor("blue"));
+                    assertEquals(styles.getFont(style).getColor(), Color.BLUE);
                     assertEquals(fill.getFgColor(), Styles.toColor("#E9EAEC"));
                 }
             }

@@ -190,8 +190,8 @@ public class Styles implements Storable {
         self.addFill(new Fill(PatternType.gray125));
 
         self.borders = new ArrayList<>();
-        self.addBorder(Border.parse("none"));
-        self.addBorder(new Border(BorderStyle.THIN, new Color(191, 191, 191)));
+        self.addBorder(new Border());
+        self.addBorder(new Border(BorderStyle.THIN));
 
         // cellXfs
         self.of(0); // General

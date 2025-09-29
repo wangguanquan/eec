@@ -97,6 +97,10 @@ public class Font implements Cloneable {
         this(name, size, Style.PLAIN, color);
     }
 
+    public Font(String name, int size, int style) {
+        this(name, size, style, Color.BLACK);
+    }
+
     public Font(String name, int size, int style, Color color) {
         this.style = style;
         this.size = checkAndCrop(size * 10);
@@ -112,6 +116,10 @@ public class Font implements Cloneable {
 
     public Font(String name, double size, Color color) {
         this(name, size, Style.PLAIN, color);
+    }
+
+    public Font(String name, double size, int style) {
+        this(name, size, style, Color.BLACK);
     }
 
     public Font(String name, double size, int style, Color color) {

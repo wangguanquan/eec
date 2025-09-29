@@ -997,10 +997,10 @@ public class TemplateSheet extends Sheet {
         }
 
         // 是否显示网格线
-        this.showGridLines = originalSheet.isShowGridLines();
+        this.setShowGridLines(originalSheet.isShowGridLines());
 
         // 是否隐藏
-        this.hidden = originalSheet.isHidden();
+        if (originalSheet.isHidden()) this.hidden();
 
         // 预置列宽
         double defaultColWidth = originalSheet.getDefaultColWidth(), defaultRowHeight = originalSheet.getDefaultRowHeight();

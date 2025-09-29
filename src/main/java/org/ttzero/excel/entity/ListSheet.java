@@ -26,6 +26,13 @@ import org.ttzero.excel.annotation.IgnoreExport;
 import org.ttzero.excel.annotation.MediaColumn;
 import org.ttzero.excel.annotation.StyleDesign;
 import org.ttzero.excel.drawing.PresetPictureEffect;
+import org.ttzero.excel.entity.style.Border;
+import org.ttzero.excel.entity.style.BorderStyle;
+import org.ttzero.excel.entity.style.Fill;
+import org.ttzero.excel.entity.style.Font;
+import org.ttzero.excel.entity.style.Horizontals;
+import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.processor.ConversionProcessor;
 import org.ttzero.excel.processor.Converter;
@@ -662,7 +669,7 @@ public class ListSheet<T> extends Sheet {
                 }
 
                 // Attach header style
-                if (hc.getHeaderStyleIndex() == -1) {
+                if (hc.nonCustomHeaderStyle()) {
                     buildHeaderStyle(ec.method, ec.field, hc);
                 }
                 // Attach header comment
@@ -782,15 +789,13 @@ public class ListSheet<T> extends Sheet {
      * @param column 需要添加样式的表头
      */
     protected void buildHeaderStyle(AccessibleObject main, AccessibleObject sub, Column column) {
-        HeaderStyle hs = null;
-        if (main != null) {
-            hs = main.getAnnotation(HeaderStyle.class);
-        }
-        if (hs == null && sub != null) {
-            hs = sub.getAnnotation(HeaderStyle.class);
-        }
+        HeaderStyle hs = main != null ? main.getAnnotation(HeaderStyle.class) : null;
+        if (hs == null && sub != null) hs = sub.getAnnotation(HeaderStyle.class);
         if (hs != null) {
-            column.setHeaderStyle(this.buildHeadStyle(hs.fontColor(), hs.fillFgColor()));
+            column.setHeaderFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(hs.fontColor())))
+                .setHeaderFill(Fill.parse(hs.fillFgColor()))
+                .setHeaderBorder(new Border(BorderStyle.THIN))
+                .setHeaderHorizontal(Horizontals.CENTER).setHeaderVertical(Verticals.CENTER);
         }
     }
 
@@ -831,14 +836,15 @@ public class ListSheet<T> extends Sheet {
      */
     protected void mergeGlobalSetting(Class<?> clazz) {
         HeaderStyle headerStyle = clazz.getDeclaredAnnotation(HeaderStyle.class);
-        int style = 0;
         if (headerStyle != null) {
-            style = buildHeadStyle(headerStyle.fontColor(), headerStyle.fillFgColor());
-        }
-        for (Column column : columns) {
-            // 如果字段未独立设置样式则使用方法上的样式
-            if (style > 0 && column.getHeaderStyleIndex() == -1 && column.headerStyle == null)
-                column.setHeaderStyle(style);
+            for (Column column : columns) {
+                // 如果字段未独立设置样式则使用方法上的样式
+                if (column.nonCustomHeaderStyle()) {
+                    column.setHeaderFont(new Font("宋体", 12, Font.Style.BOLD, Styles.toColor(headerStyle.fontColor())))
+                        .setHeaderFill(Fill.parse(headerStyle.fillFgColor())).setHeaderBorder(new Border(BorderStyle.THIN))
+                        .setHeaderVertical(Verticals.CENTER).setHeaderHorizontal(Horizontals.CENTER);
+                }
+            }
         }
 
         // Parse the global style processor
