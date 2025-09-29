@@ -100,12 +100,14 @@ public interface IWorksheetWriter extends Closeable, Cloneable, Storable {
     default void writePicture(Picture picture) throws IOException { }
 
     /**
-     * 写行数据
+     * PUSH模式推行数据
      *
      * @param rowBlock 行块
      * @throws IOException if I/O error occur
      */
-    void writeData(RowBlock rowBlock) throws IOException;
+    default void writeData(RowBlock rowBlock) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 获取数据样式转换器，可以根据不同输出协议制定转换器
