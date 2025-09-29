@@ -91,19 +91,6 @@ public class StatementSheet extends ResultSetSheet {
     }
 
     /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public StatementSheet(String name, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
-    }
-
-    /**
      * 实例化工作表
      *
      * @param con 数据库连接 {@code Connection}

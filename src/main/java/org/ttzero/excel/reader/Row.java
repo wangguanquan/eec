@@ -82,9 +82,6 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  */
 public class Row {
     protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-    // Index to row
-    @Deprecated
-    protected int index = -1;
     /**
      * 行号（从1开始）
      */
@@ -101,6 +98,7 @@ public class Row {
     protected SharedStrings sst;
     // The header row
     protected HeaderRow hr;
+    @Deprecated
     protected boolean unknownLength;
 
     // Cache formulas
@@ -1065,10 +1063,10 @@ public class Row {
     /**
      * 获取单元格的数据类型
      *
-     * <p>注意：这里仅是一个近似的类型，因为从原始文件中只能获取到{@code numeric}，{@code string}，
-     * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型会根据数字大小和格式重新设置类型，
+     * <p>注意：这里仅是一个近似的类型，从原始文件中只能获取到{@code numeric}，{@code string}，
+     * {@code boolean}三种类型。在解析到原始类型之后对于{@code numeric}类型进行处理，根据数字大小和格式重新设置类型，
      * 比如小于{@code 0x7fffffff}的值为{@code int}，超过这个范围时为{@code long}，如果带日期格式化则为{@code date}类型，
-     * 小数也是同样处理，有日期格式化为{@code data}类型否则为{@code decimal}类型</p>
+     * 浮点数，有日期格式为{@code data}类型否则为{@code decimal}类型</p>
      *
      * @param c 单元格{@link Cell}
      * @return 单元格的数据类型 {@link CellType}
@@ -1186,8 +1184,7 @@ public class Row {
             }
             return t;
         }
-//        else return (T) this;
-        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
+        throw new ExcelReadException("The object is not bound. Use the `Sheet#bind` method to bind object first");
     }
 
     /**
@@ -1207,8 +1204,7 @@ public class Row {
             }
             return t;
         }
-//        else return (T) this;
-        throw new ExcelReadException("It can only be used after binding with method `Sheet#bind`");
+        throw new ExcelReadException("The object is not bound. Use the `Sheet#bind` method to bind object first");
     }
     /////////////////////////////To object//////////////////////////////////
 

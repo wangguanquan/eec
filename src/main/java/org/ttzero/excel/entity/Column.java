@@ -204,7 +204,7 @@ public class Column {
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      */
     public Column(String name, Class<?> clazz) {
-        this(name, clazz, false);
+        this(name, null, clazz);
     }
 
     /**
@@ -214,7 +214,8 @@ public class Column {
      * @param key  取值使用的关键字对应Java对象字段名或者Map的Key
      */
     public Column(String name, String key) {
-        this(name, key, false);
+        this.name = name;
+        this.key = key;
     }
 
     /**
@@ -225,7 +226,8 @@ public class Column {
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      */
     public Column(String name, String key, Class<?> clazz) {
-        this(name, key, false);
+        this.name = name;
+        this.key = key;
         this.clazz = clazz;
     }
 
@@ -237,7 +239,8 @@ public class Column {
      * @param processor 输出转换器，动态转换状态值或枚举值为文本
      */
     public Column(String name, Class<?> clazz, ConversionProcessor processor) {
-        this(name, clazz, processor, false);
+        this(name, clazz);
+        this.processor = processor;
     }
 
     /**
@@ -248,7 +251,8 @@ public class Column {
      * @param processor 输出转换器，动态转换状态值或枚举值为文本
      */
     public Column(String name, String key, ConversionProcessor processor) {
-        this(name, key, processor, false);
+        this(name, key);
+        this.processor = processor;
     }
 
     /**
@@ -257,10 +261,11 @@ public class Column {
      * @param name  列名，列名对应Excel表头
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, Class<?> clazz, boolean share) {
-        this.name = name;
-        this.clazz = clazz;
+        this(name, clazz);
         setShare(share);
     }
 
@@ -270,10 +275,11 @@ public class Column {
      * @param name  列名，列名对应Excel表头
      * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, String key, boolean share) {
-        this.name = name;
-        this.key = key;
+        this(name, key);
         setShare(share);
     }
 
@@ -284,7 +290,9 @@ public class Column {
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      * @param processor 输出转换器，动态转换状态值或枚举值为文本
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
         this(name, clazz, share);
         this.processor = processor;
@@ -297,7 +305,9 @@ public class Column {
      * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      * @param processor 输出转换器，动态转换状态值或枚举值为文本
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, String key, Class<?> clazz, ConversionProcessor processor) {
         this(name, key, clazz);
         this.processor = processor;
@@ -310,7 +320,9 @@ public class Column {
      * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
      * @param processor 输出转换器，动态转换状态值或枚举值为文本
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, String key, ConversionProcessor processor, boolean share) {
         this(name, key, share);
         this.processor = processor;
@@ -322,7 +334,9 @@ public class Column {
      * @param name  列名，列名对应Excel表头
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, Class<?> clazz, int cellStyle) {
         this(name, clazz, cellStyle, true);
     }
@@ -333,7 +347,9 @@ public class Column {
      * @param name  列名，列名对应Excel表头
      * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
      * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, String key, int cellStyle) {
         this(name, key, cellStyle, true);
     }
@@ -345,7 +361,9 @@ public class Column {
      * @param clazz 数据类型，影响单元格对齐默认字符串左对齐、数字右对齐、日期居中
      * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, Class<?> clazz, int cellStyle, boolean share) {
         this(name, clazz, share);
         this.cellStyle = cellStyle;
@@ -358,7 +376,9 @@ public class Column {
      * @param key   取值使用的关键字对应Java对象字段名、Map的Key或者SQL中select语句包含的字段
      * @param cellStyle 样式值，样式值由背景，边框，字体等进行“或”运算而来
      * @param share 是否将值放到字符串共享区
+     * @deprecated 使用场景极少，后续版本将删除
      */
+    @Deprecated
     public Column(String name, String key, int cellStyle, boolean share) {
         this(name, key, share);
         this.cellStyle = cellStyle;
@@ -862,17 +882,6 @@ public class Column {
             e = e.next;
         }
         return dist;
-    }
-
-    /**
-     * 获取列在Excel中的实际位置（从{@code A}开始）
-     *
-     * @return 列在Excel中的实际位置
-     * @deprecated 方法名容易引起误解, 重命名 {@link #getColNum()}
-     */
-    @Deprecated
-    public int getRealColIndex() {
-        return colNum;
     }
 
     /**

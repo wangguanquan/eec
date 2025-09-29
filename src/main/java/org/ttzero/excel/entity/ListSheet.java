@@ -114,7 +114,7 @@ import static org.ttzero.excel.util.StringUtil.isNotEmpty;
  * @see ListMapSheet
  * @see SimpleSheet
  */
-public class ListSheet<T> extends Sheet {
+public class ListSheet<T> extends Sheet implements IPushModelSheet<T> {
     /**
      * 临时存放数据
      */
@@ -165,6 +165,10 @@ public class ListSheet<T> extends Sheet {
         if (styleProcessor != null) return styleProcessor;
         @SuppressWarnings("unchecked")
         StyleProcessor<T> fromExtProp = (StyleProcessor<T>) getExtPropValue(Const.ExtendPropertyKey.STYLE_DESIGN);
+        if (fromExtProp == null || StyleProcessor.None.class.isAssignableFrom(fromExtProp.getClass())) {
+            extPropMark &= ~2; // Ignore
+            if (fromExtProp == null) fromExtProp = (o, style, sst) -> style;
+        }
         return this.styleProcessor = fromExtProp;
     }
 
@@ -201,19 +205,6 @@ public class ListSheet<T> extends Sheet {
      */
     public ListSheet(String name, final Column... columns) {
         super(name, columns);
-    }
-
-    /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListSheet(String name, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
     }
 
     /**
@@ -255,34 +246,6 @@ public class ListSheet<T> extends Sheet {
      */
     public ListSheet(String name, List<T> data, final Column... columns) {
         super(name, columns);
-        setData(data);
-    }
-
-    /**
-     * 实例化工作表并指定初始数据、水印和表头
-     *
-     * @param data      初始数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListSheet(List<T> data, Watermark watermark, final Column... columns) {
-        this(null, data, watermark, columns);
-    }
-
-    /**
-     * 实例化工作表并指定工作表名称、初始数据、水印和表头
-     *
-     * @param name      工作表名称
-     * @param data      初始数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListSheet(String name, List<T> data, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
         setData(data);
     }
 
@@ -381,51 +344,9 @@ public class ListSheet<T> extends Sheet {
      */
     @Override
     protected void resetBlockData() {
-        if (!eof && left() < rowBlock.capacity()) {
-            append();
-        }
-
-        // Find the end index of row-block
-        int end = getEndIndex(), len = columns.length;
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
-        try {
-            for (; start < end; rows++, start++) {
-                Row row = rowBlock.next();
-                row.index = rows;
-                Cell[] cells = row.realloc(len);
-                T o = data.get(start);
-                boolean isNull = o == null;
-                for (int i = 0; i < len; i++) {
-                    // Clear cells
-                    Cell cell = cells[i];
-                    cell.clear();
-
-                    Object e;
-                    EntryColumn column = (EntryColumn) columns[i];
-                    /*
-                    The default processing of null values still retains the row style.
-                    If you don't want any style and value, you can change it to {@code continue}
-                     */
-                    if (column.isIgnoreValue() || isNull)
-                        e = null;
-                    else {
-                        if (column.getMethod() != null)
-                            e = column.getMethod().invoke(o);
-                        else if (column.getField() != null)
-                            e = column.getField().get(o);
-                        else e = o;
-                    }
-
-                    cellValueAndStyle.reset(row, cell, e, column);
-                    if (hasGlobalStyleProcessor) {
-                        cellValueAndStyle.setStyleDesign(o, cell, column, getStyleProcessor());
-                    }
-                }
-                row.height = getRowHeight();
-            }
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new ExcelWriteException(e);
-        }
+        if (!eof && left() < rowBlock.capacity()) append();
+        // 填充行块
+        resetRowBlock(data, start, start = getEndIndex());
     }
 
     /**
@@ -543,7 +464,7 @@ public class ListSheet<T> extends Sheet {
                     EntryColumn column = createColumn(method);
                     // Force export
                     if (column == null && forceExport) {
-                        column = new EntryColumn(gs, EMPTY, false);
+                        column = new EntryColumn(gs, EMPTY);
                     }
                     if (column != null) {
                         EntryColumn tail = (EntryColumn) column.getTail();
@@ -567,7 +488,7 @@ public class ListSheet<T> extends Sheet {
                 EntryColumn column = createColumn(field);
                 // Force export
                 if (column == null && forceExport) {
-                    column = new EntryColumn(gs, EMPTY, false);
+                    column = new EntryColumn(gs, EMPTY);
                 }
                 if (column != null) {
                     list.add(column);
@@ -722,7 +643,7 @@ public class ListSheet<T> extends Sheet {
 
         MediaColumn mediaColumn = ao.getAnnotation(MediaColumn.class);
         if (mediaColumn != null) {
-            if (root == null) root = new EntryColumn(" ", EMPTY, false);
+            if (root == null) root = new EntryColumn(" ", EMPTY);
             Column tail = root.getTail();
             tail.writeAsMedia();
             if (mediaColumn.presetEffect() != PresetPictureEffect.None) {
@@ -745,7 +666,8 @@ public class ListSheet<T> extends Sheet {
      */
     protected EntryColumn createColumnByAnnotation(ExcelColumn ec) {
         if (ec == null) return null;
-        EntryColumn column = new EntryColumn(ec.value(), EMPTY, ec.share());
+        EntryColumn column = new EntryColumn(ec.value(), EMPTY);
+        column.setShare(ec.share());
         // Number format
         if (isNotEmpty(ec.format())) {
             column.setNumFmt(ec.format());
@@ -1128,6 +1050,114 @@ public class ListSheet<T> extends Sheet {
     }
 
     /**
+     * 写行数据，必须在{@code PUSH}模式下使用
+     *
+     * <p>注意：由于外部拿不到自动分页创建的新工作表，所以{@code PUSH}模式将不支持自动分页，
+     * 超出数据上限将直接抛{@link IndexOutOfBoundsException}异常</p>
+     *
+     * @param data 行数据
+     * @return 已写入的总数据行（不包含表头）
+     * @throws IOException if I/O error occur.
+     */
+    public int writeData(List<T> data) throws IOException {
+        if (workbook == null)
+            throw new IOException("Before writing data, worksheet must be added to the workbook.");
+        // Initialization
+        if (!headerReady) forWrite();
+        // Write row-block
+        sheetWriter.writeData(fillRowBlock(data));
+        return rows;
+    }
+
+    /**
+     * 将外部数据转为标准的行块
+     *
+     * @param data 外部数据
+     * @return 行块
+     */
+    protected RowBlock fillRowBlock(List<T> data) {
+        // Check bound
+        if (data == null || data.isEmpty()) return rowBlock;
+        if (rows + data.size() > sheetWriter.getRowLimit())
+            throw new IndexOutOfBoundsException("Max rows:" + sheetWriter.getRowLimit() + ", current:" + (rows + data.size()));
+        // Initialization header columns
+        if (!headerReady) {
+            this.data = data;
+            getAndSortHeaderColumns();
+            this.data = null;
+
+            if (rowBlock == null) rowBlock = new RowBlock(Math.max(getRowBlockSize(), data.size()));
+        }
+        // Resize row-block if
+        else if (rowBlock.capacity() < data.size()) rowBlock = new RowBlock(data.size());
+        else rowBlock.clear();
+
+        resetRowBlock(data, 0, data.size());
+        return rowBlock.flip();
+    }
+
+    /**
+     * 将外部数据转为标准的行块
+     *
+     * @param data 外部数据
+     * @param fromIndex 读取数据的起始下标（包含）
+     * @param toIndex 读取数据的结束下标（不包含）
+     */
+    protected void resetRowBlock(List<T> data, int fromIndex, int toIndex) {
+        if (data == null || fromIndex >= data.size()) return;
+        for (; fromIndex < toIndex; rows++, fromIndex++) {
+            Row row = rowBlock.next();
+            row.index = rows;
+            row.height = getRowHeight(); // 这里放到for循环内部获取行高，子类可以根据行号来动态设置行高
+            resetRowData(row, data.get(fromIndex));
+        }
+    }
+
+    /**
+     * 重置单行数据
+     *
+     * @param row Excel行
+     * @param rowData 行数据
+     */
+    protected void resetRowData(Row row, T rowData) {
+        int len = columns.length;
+        Cell[] cells = row.realloc(len);
+        boolean nonNull = rowData != null;
+        try {
+            for (int i = 0; i < len; i++) {
+                Object e = null;
+                EntryColumn column = (EntryColumn) columns[i];
+                // Collect cell value
+                if (nonNull && !column.isIgnoreValue()) {
+                    if (column.getMethod() != null) e = column.getMethod().invoke(rowData);
+                    else if (column.getField() != null) e = column.getField().get(rowData);
+                    else e = rowData;
+                }
+                // Setting cell value and style
+                resetCellValueAndStyle(row, cells[i], rowData, e, column);
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new ExcelWriteException(e);
+        }
+    }
+
+    /**
+     * 重置单元格数据和样式
+     *
+     * @param row Excel行
+     * @param cell Excel单元格
+     * @param rowData 行数据
+     * @param cellData 单元格数据
+     * @param column 单列表头
+     */
+    protected void resetCellValueAndStyle(Row row, Cell cell, T rowData, Object cellData, Column column) {
+        cellValueAndStyle.reset(row, cell, cellData, column);
+        if ((extPropMark & 2) == 2) {
+            cellValueAndStyle.setStyleDesign(rowData, cell, column, getStyleProcessor());
+        }
+    }
+
+    /**
      * {@code ListSheet}独有的列对象，除了{@link Column}包含的信息外，它还保存当列对应的字段和方法，
      * 后续会通过这两个属性进行反射获取对象中的值，优先通过get方法获取，如果找不到get方法则直接
      * 使用{@link Field}获取值
@@ -1170,39 +1200,39 @@ public class ListSheet<T> extends Sheet {
         public EntryColumn(String name, String key, ConversionProcessor processor) {
             super(name, key, processor);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, boolean share) {
             super(name, clazz, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, boolean share) {
             super(name, key, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, ConversionProcessor processor, boolean share) {
             super(name, clazz, processor, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, Class<?> clazz, ConversionProcessor processor) {
             super(name, key, clazz, processor);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, ConversionProcessor processor, boolean share) {
             super(name, key, processor, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, int cellStyle) {
             super(name, clazz, cellStyle);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, int cellStyle) {
             super(name, key, cellStyle);
         }
-
+        @Deprecated
         public EntryColumn(String name, Class<?> clazz, int cellStyle, boolean share) {
             super(name, clazz, cellStyle, share);
         }
-
+        @Deprecated
         public EntryColumn(String name, String key, int cellStyle, boolean share) {
             super(name, key, cellStyle, share);
         }

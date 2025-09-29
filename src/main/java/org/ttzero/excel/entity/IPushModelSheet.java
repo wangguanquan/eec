@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
+ * Copyright (c) 2017-2025, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,23 @@
  */
 
 
-package org.ttzero.excel.reader;
+package org.ttzero.excel.entity;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
- * 支持解析公式的工作表，可以通过{@link #asCalcSheet}将普通工作表转为{@code CalcSheet}
+ * 标记支持推送模式的Worksheet
  *
- * @author guanquan.wang at 2020-01-11 11:36
- * @deprecated 使用 {@link FullSheet}代替，{@code FullSheet}包含{@code CalcSheet}所有功能
+ * @author guanquan.wang at 2025-09-10 10:30
  */
-@Deprecated
-public interface CalcSheet extends Sheet { }
+public interface IPushModelSheet<T> {
+    /**
+     * 写数据，{@code PUSH}模式下数据将直接被写到文件中
+     *
+     * @param data 待写入的数据
+     * @return 已写入的总数据行，不包含表头
+     * @throws IOException if I/O error occur.
+     */
+    int writeData(List<T> data) throws IOException;
+}

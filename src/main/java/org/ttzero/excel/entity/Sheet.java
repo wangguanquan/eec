@@ -25,7 +25,6 @@ import org.ttzero.excel.entity.style.BorderStyle;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
-import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.entity.style.Verticals;
@@ -34,6 +33,7 @@ import org.ttzero.excel.manager.RelManager;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.StringUtil;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -313,7 +313,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public Sheet(String name) {
         this.name = name;
-        relManager = new RelManager();
+        this.relManager = new RelManager();
     }
 
     /**
@@ -335,20 +335,6 @@ public abstract class Sheet implements Cloneable, Storable {
         this.name = name;
         this.columns = columns;
         relManager = new RelManager();
-    }
-
-    /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public Sheet(String name, Watermark watermark, final Column... columns) {
-        this(name, columns);
-        this.watermark = watermark;
     }
 
     /**
@@ -638,18 +624,6 @@ public abstract class Sheet implements Cloneable, Storable {
      * 此行号将决定从哪一行开始写数据
      *
      * @return 起始行号
-     * @deprecated 方法名容易引起误解，使用{@link #getStartRowNum()} 替换
-     */
-    @Deprecated
-    public int getStartRowIndex() {
-        return getStartRowNum();
-    }
-
-    /**
-     * 获取工作表的起始行号(从1开始)，这里是行号也就是打开Excel左侧看到的行号，
-     * 此行号将决定从哪一行开始写数据
-     *
-     * @return 起始行号
      */
     public int getStartRowNum() {
         return startCoordinate != 0 ? (int) (Math.abs(startCoordinate) >>> 16) : 1;
@@ -673,34 +647,6 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     public boolean isScrollToVisibleArea() {
         return startCoordinate > 0;
-    }
-
-    /**
-     * 指定起始行并将该行自动滚到窗口左上角，行号必须大于0
-     *
-     * @param startRowNum 起始行号（从1开始）
-     * @return 当前工作表
-     * @deprecated 方法名容易引起误解,使用 {@link #setStartCoordinate(int)}替代
-     */
-    @Deprecated
-    public Sheet setStartRowIndex(int startRowNum) {
-        return setStartRowIndex(startRowNum, false);
-    }
-
-    /**
-     * 指定起始行并设置是否将该行滚动到窗口左上角，行号必须大于0
-     *
-     * <p>默认情况下左上角一定是{@code A1}，如果{@code scrollToVisibleArea=true}则打开文件时{@code StartRowIndex}
-     * 将会显示在窗口的第一行</p>
-     *
-     * @param startRowNum       起始行号（从1开始）
-     * @param scrollToVisibleArea 是否滚动起始行到窗口左上角
-     * @return 当前工作表
-     * @deprecated 方法名容易引起误解, 使用 {@link #setStartCoordinate(int, boolean)}替代
-     */
-    @Deprecated
-    public Sheet setStartRowIndex(int startRowNum, boolean scrollToVisibleArea) {
-        return setStartCoordinate(startRowNum, 1, scrollToVisibleArea);
     }
 
     /**
@@ -1007,16 +953,6 @@ public abstract class Sheet implements Cloneable, Storable {
         return this;
     }
 
-    @Deprecated
-    public Watermark getWaterMark() {
-        return getWatermark();
-    }
-
-    @Deprecated
-    public Sheet setWaterMark(Watermark watermark) {
-        return setWatermark(watermark);
-    }
-
     /**
      * 工作表是否隐藏
      *
@@ -1131,61 +1067,6 @@ public abstract class Sheet implements Cloneable, Storable {
     }
 
     /**
-     * 设置统一的表头样式
-     *
-     * @param font   字体
-     * @param fill   填充色
-     * @param border 边框
-     * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
-     */
-    @Deprecated
-    public Sheet setHeadStyle(Font font, Fill fill, Border border) {
-        return setHeadStyle(null, font, fill, border, Verticals.CENTER, Horizontals.CENTER);
-    }
-
-    /**
-     * 设置统一的表头样式
-     *
-     * @param font       字体
-     * @param fill       填充色
-     * @param border     边框
-     * @param vertical   垂直对齐
-     * @param horizontal 水平对齐
-     * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
-     */
-    @Deprecated
-    public Sheet setHeadStyle(Font font, Fill fill, Border border, int vertical, int horizontal) {
-        return setHeadStyle(null, font, fill, border, vertical, horizontal);
-    }
-
-    /**
-     * 设置统一的表头样式
-     *
-     * @param numFmt     格式化
-     * @param font       字体
-     * @param fill       填充色
-     * @param border     边框
-     * @param vertical   垂直对齐
-     * @param horizontal 水平对齐
-     * @return 当前工作表
-     * @deprecated 可能因为Style未初始化出现 {@code NPE}，目前最可靠的只有{@link #setHeadStyle(int)}
-     */
-    @Deprecated
-    public Sheet setHeadStyle(NumFmt numFmt, Font font, Fill fill, Border border, int vertical, int horizontal) {
-        Styles styles = workbook.getStyles();
-        headStyle = (numFmt != null ? styles.addNumFmt(numFmt) : 0)
-            | (font != null ? styles.addFont(font) : 0)
-            | (fill != null ? styles.addFill(fill) : 0)
-            | (border != null ? styles.addBorder(border) : 0)
-            | vertical
-            | horizontal;
-        headStyleIndex = styles.of(headStyle);
-        return this;
-    }
-
-    /**
      * 设置统一的表头样式值
      *
      * @param style 样式值，0表示默认样式
@@ -1273,7 +1154,8 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 写入的数据行数，-1表示不确定
      */
     public int size() {
-        return !shouldClose ? rows : -1;
+//        return !shouldClose ? rows : -1;
+        return rows;
     }
 
     /**
@@ -1374,6 +1256,7 @@ public abstract class Sheet implements Cloneable, Storable {
         }
         if (copy != null) {
             copy.copyCount = ++copyCount;
+            copy.id = 0;
             copy.name = getCopySheetName();
             copy.relManager = relManager.deepClone();
             copy.sheetWriter = sheetWriter.clone().setWorksheet(copy);
@@ -1743,6 +1626,40 @@ public abstract class Sheet implements Cloneable, Storable {
             if (existsMergeCells != null && !existsMergeCells.isEmpty()) existsMergeCells.addAll(mergeCells);
             else putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
         }
+    }
+
+    /**
+     * 准备导出所需要的参数和组件
+     *
+     * @return 当前工作表
+     */
+    public Sheet forWrite() {
+        // Set default worksheet name
+        if (StringUtil.isEmpty(getName())) {
+            setName("Sheet" + getId());
+        }
+        if (getSheetWriter() == null && workbook.getWorkbookWriter() != null) {
+            setSheetWriter(workbook.getWorkbookWriter().getWorksheetWriter(this));
+        }
+        if (workbook.isAutoSize() && getAutoSize() == 0) {
+            autoSize();
+        }
+        if (workbook.getZebraFill() != null && getZebraFillStyle() < 0) {
+            setZebraLine(workbook.getZebraFill());
+        }
+        // Set cell value and style processor
+        if (getCellValueAndStyle() == null) {
+            setCellValueAndStyle(getSheetWriter().getCellValueAndStyle());
+        }
+        // Force export all fields
+        if (workbook.getForceExport() > getForceExport() && ListSheet.class.isAssignableFrom(getClass())) {
+            ((ListSheet<?>) this).forceExport();
+        }
+        // Merge Progress window
+        if (workbook.getProgressConsumer() != null && getProgressConsumer() == null) {
+            onProgress(workbook.getProgressConsumer());
+        }
+        return this;
     }
 
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\

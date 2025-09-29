@@ -102,13 +102,9 @@ public class Workbook implements Storable {
      */
     private Watermark watermark;
     /**
-     * 记录工作表几数
+     * 记录工作表个数
      */
-    private int size;
-    /**
-     * 全局自适应列宽标识
-     */
-    private boolean autoSize;
+    private int size, maxId; // 记录最大ID
     /**
      * 作者，未指定时将默认取当前系统登录名
      */
@@ -142,10 +138,6 @@ public class Workbook implements Storable {
      */
     private IWorkbookWriter workbookWriter;
     /**
-     * 强制导出，绕过安全限制导出全字段
-     */
-    private int forceExport;
-    /**
      * 全局ContentType
      */
     private final ContentType contentType;
@@ -162,9 +154,17 @@ public class Workbook implements Storable {
      */
     private CustomProperties customProperties;
     /**
-     * 压缩等级 {@code 0-9}，数字越小压缩效果越好耗时越长
+     * 标志位集合，保存一些简单的标志位以节省空间，对应的位点说明如下
+     *
+     * <blockquote><pre>
+     *  Bit  | Contents
+     * ------+---------
+     * 31, 1 | 自适应列宽 1位, 1: auto-size 0: fixed-size
+     * 30, 1 | 强制导出 1位, 1: 强制导出全字段
+     * 29, 4 | 压缩等级 4位, 0-9 数字越小压缩效果越好耗时越长
+     * </pre></blockquote>
      */
-    private int compressionLevel = 5;
+    protected int option;
 
     /**
      * 创建一个未命名工作薄
@@ -193,6 +193,7 @@ public class Workbook implements Storable {
     public Workbook(String name, String creator) {
         this.name = name;
         this.creator = creator;
+        this.option |= (5 << 2); // 默认压缩等级5
         sheets = new Sheet[3]; // Create three worksheet
         contentType = new ContentType();
     }
@@ -308,36 +309,14 @@ public class Workbook implements Storable {
     }
 
     /**
-     * 获取水印{@link Watermark}
-     *
-     * @return 水印
-     * @deprecated 重命名为 {@link #getWatermark()}
-     */
-    @Deprecated
-    public Watermark getWaterMark() {
-        return getWatermark();
-    }
-
-    /**
-     * 设置水印{@link Watermark}，可以使用{@link Watermark#of}静态方法创建
-     *
-     * @param watermark 水印
-     * @return 当前工作薄
-     * @deprecated 重命名为 {@link #setWatermark(Watermark)}
-     */
-    @Deprecated
-    public Workbook setWaterMark(Watermark watermark) {
-        return setWatermark(watermark);
-    }
-
-    /**
      * 设置全局自适应列宽
      *
      * @param autoSize true: 自适应宽度，false：固定宽度（默认）
      * @return 当前工作薄
      */
     public Workbook setAutoSize(boolean autoSize) {
-        this.autoSize = autoSize;
+        if (autoSize) option |= 1;
+        else option = option >>> 1 << 1;
         return this;
     }
 
@@ -347,18 +326,18 @@ public class Workbook implements Storable {
      * @return true: 自适应宽度，false：固定宽度
      */
     public boolean isAutoSize() {
-        return autoSize;
+        return (option & 1) == 1;
     }
 
     /**
      * 强制导出
-     * 
+     *
      * <p>注意：设置此标记后将无视安全规则导出Java对象中的所有字段，请根据实际情况谨慎使用</p>
      *
      * @return 当前工作薄
      */
     public Workbook forceExport() {
-        this.forceExport = 1;
+        this.option |= 1 << 1;
         return this;
     }
 
@@ -368,7 +347,7 @@ public class Workbook implements Storable {
      * @return 强制导出时返回1，其它情况返回0
      */
     public int getForceExport() {
-        return forceExport;
+        return (option >>> 1) & 1;
     }
 
     /**
@@ -488,6 +467,7 @@ public class Workbook implements Storable {
     public Workbook addSheet(Sheet sheet) {
         ensureCapacityInternal();
         sheet.setWorkbook(this);
+        sheet.id = ++maxId;
         sheets[size++] = sheet;
         return this;
     }
@@ -500,17 +480,17 @@ public class Workbook implements Storable {
      * @return 当前工作薄
      */
     public Workbook insertSheet(int index, Sheet sheet) {
+        if (index > size) throw new ArrayIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         ensureCapacityInternal();
         int _size = size;
         if (sheets[index] != null) {
             for (; _size > index; _size--) {
                 sheets[_size] = sheets[_size - 1];
-                sheets[_size].setId(sheets[_size].getId() + 1);
             }
         }
         sheets[index] = sheet;
-        sheet.setId(index + 1);
         sheet.setWorkbook(this);
+        sheet.id = ++maxId;
         size++;
         return this;
     }
@@ -530,7 +510,6 @@ public class Workbook implements Storable {
         } else {
             for (; index < size - 1; index++) {
                 sheets[index] = sheets[index + 1];
-                sheets[index].setId(sheets[index].getId() - 1);
             }
         }
         size--;
@@ -539,9 +518,6 @@ public class Workbook implements Storable {
 
     /**
      * 获取指定位置的工作表
-     *
-     * <p>如果使用{@link #insertSheet}方法插入了一个较大的下标，调用此方法可能返回null值。
-     * 例如在下标为100的位置插入了一个工作表，获取第90位的工作薄将返回一个null值。</p>
      *
      * @param index 工作表在队列中的位置（从0开始）
      * @return 指定位置的工作表 {@link Sheet}
@@ -765,8 +741,6 @@ public class Workbook implements Storable {
      */
     protected void checkAndInitWriter() {
         if (workbookWriter == null) {
-//            // 初始化
-//            init();
             workbookWriter = new XMLWorkbookWriter(this);
         }
     }
@@ -903,7 +877,7 @@ public class Workbook implements Storable {
      * @return 当前工作表
      */
     public Workbook bestSpeed() {
-        this.compressionLevel = Deflater.BEST_SPEED;
+        this.option |= (Deflater.BEST_SPEED << 2);
         return this;
     }
 
@@ -913,6 +887,6 @@ public class Workbook implements Storable {
      * @return 压缩等级
      */
     public int getCompressionLevel() {
-        return Math.min(Math.max(compressionLevel, 0), 9);
+        return Math.min(Math.max((option >>> 2) & 15, 0), 9);
     }
 }

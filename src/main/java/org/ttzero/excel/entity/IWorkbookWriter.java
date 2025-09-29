@@ -88,18 +88,13 @@ public interface IWorkbookWriter extends Storable, Closeable {
     IWorksheetWriter getWorksheetWriter(Sheet sheet);
 
     /**
-     * 移动文件到指定位置
+     * 导入前的准备工作
      *
-     * @param source      源文件
-     * @param target      目标文件夹
-     * @param defaultName 目标文件名
-     * @return 另存为目标文件绝对路径
+     * @return 临时文件路径
      * @throws IOException if I/O error occur
-     * @deprecated 重命名为 {@link #moveToPath(Path, Path, String)}
      */
-    @Deprecated
-    default Path reMarkPath(Path source, Path target, String defaultName) throws IOException {
-        return moveToPath(source, target, defaultName);
+    default Path writeBefore() throws IOException {
+        return null;
     }
 
     /**

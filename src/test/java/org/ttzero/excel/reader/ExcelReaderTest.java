@@ -52,7 +52,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
 import static org.ttzero.excel.Print.println;
 import static org.ttzero.excel.entity.WorkbookTest.getOutputTestPath;
-import static org.ttzero.excel.reader.ExcelReaderTest2.listEquals;
+import static org.ttzero.excel.reader.ExcelReader2Test.listEquals;
 import static org.ttzero.excel.util.DateUtil.toDateString;
 import static org.ttzero.excel.util.StringUtil.swap;
 import static org.ttzero.excel.util.DateUtil.toDateTimeString;
@@ -214,7 +214,7 @@ public class ExcelReaderTest {
 
     @Test public void testToObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            List<Entry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(Entry.class)).collect(Collectors.toList());
+            List<Entry> list = reader.sheet(0).dataRows().map(row -> row.to(Entry.class)).collect(Collectors.toList());
             Path expectPath = testResourceRoot().resolve("expect/1$Object测试.txt");
             List<String[]> expectList = CSVUtil.read(expectPath);
             assertEquals(expectList.size() - 1, list.size());
@@ -233,7 +233,7 @@ public class ExcelReaderTest {
 
     @Test public void testToAnnotationObject() throws IOException {
         try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("1.xlsx"))) {
-            List<AnnotationEntry> list = reader.sheets().flatMap(Sheet::dataRows).map(row -> row.to(AnnotationEntry.class)).collect(Collectors.toList());
+            List<AnnotationEntry> list = reader.sheet(0).dataRows().map(row -> row.to(AnnotationEntry.class)).collect(Collectors.toList());
             List<String[]> expectList = CSVUtil.read(testResourceRoot().resolve("expect/1$Object测试.txt"));
             assertEquals(expectList.size() - 1, list.size());
             for (int i = 0, len = list.size(); i < len; i++) {
