@@ -44,7 +44,7 @@ public class StatementPagingTest extends SQLWorkbookTest {
                 .setWorkbookWriter(new ReLimitXMLWorkbookWriter());
             workbook.writeTo(defaultTestPath.resolve(fileName));
 
-            int rowLimit = workbook.getSheet(0).getSheetWriter().getRowLimit();
+            int rowLimit = workbook.getSheetAt(0).getSheetWriter().getRowLimit();
 
             PreparedStatement ps = con.prepareStatement("select count(*) from student");
             ResultSet rs = ps.executeQuery();

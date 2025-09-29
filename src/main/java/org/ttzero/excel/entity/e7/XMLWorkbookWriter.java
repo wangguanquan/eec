@@ -217,7 +217,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         int size = workbook.getSize();
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            Sheet sheet = workbook.getSheet(i);
+            Sheet sheet = workbook.getSheetAt(i);
             titleParts.add(sheet.getName());
         }
         app.setTitlesOfParts(titleParts);
@@ -285,7 +285,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // sheets
         Element sheetEle = rootElement.addElement("sheets");
         for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheet = workbook.getSheet(i);
+            Sheet sheet = workbook.getSheetAt(i);
             Element st = sheetEle.addElement("sheet")
                 .addAttribute("sheetId", String.valueOf(sheet.getId()))
                 .addAttribute("name", sheet.getName());
@@ -392,7 +392,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     @Override
     public void close() throws IOException {
         for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheet = workbook.getSheet(i);
+            Sheet sheet = workbook.getSheetAt(i);
             if (sheet != null && sheet.getWatermark() != null)
                 sheet.getWatermark().delete();
         }
