@@ -1665,8 +1665,7 @@ public abstract class Sheet implements Cloneable, Storable {
     ////////////////////////////Abstract function\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     /**
-     * 你需要覆写本方法获取行数据并将Java对象或自定义行数据通过{@link ICellValueAndStyle#reset}转换器将数据转换为输出协议允许的结构，
-     * {@code ICellValueAndStyle#reset}方法除转换数据外还添单元格样式
+     * 覆写本方法获取行数据并将Java对象或自定义行数据通过{@link ICellValueAndStyle#reset}转换器将数据转换为输出协议允许的结构和样式
      */
     protected abstract void resetBlockData();
 }
