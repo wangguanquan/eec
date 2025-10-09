@@ -98,8 +98,6 @@ public class Row {
     protected SharedStrings sst;
     // The header row
     protected HeaderRow hr;
-    @Deprecated
-    protected boolean unknownLength;
 
     // Cache formulas
     protected PreCalc[] sharedCalc;
