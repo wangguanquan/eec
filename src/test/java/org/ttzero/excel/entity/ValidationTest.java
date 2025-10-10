@@ -25,12 +25,14 @@ import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.util.DateUtil;
 import org.ttzero.excel.validation.DateValidation;
+import org.ttzero.excel.validation.DecimalValidation;
 import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.TimeValidation;
 import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.validation.WholeValidation;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +40,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.ttzero.excel.reader.ExcelReaderTest.testResourceRoot;
 
 
 /**
@@ -112,6 +116,29 @@ public class ValidationTest extends WorkbookTest {
             for (Dimension sqref : val.sqrefList) {
                 assertTrue(expect.sqrefList.contains(sqref));
             }
+        }
+    }
+
+    @Test public void testTailElements() throws IOException {
+        try (ExcelReader reader = ExcelReader.read(testResourceRoot().resolve("template2.xlsx"))) {
+            FullSheet sheet = reader.sheet(2).asFullSheet();
+            List<Dimension> mergeCells = sheet.getMergeCells();
+            assertNotNull(mergeCells);
+            assertEquals(mergeCells.size(), 3);
+            assertTrue(mergeCells.contains(Dimension.of("E2:F11")));
+            assertTrue(mergeCells.contains(Dimension.of("G2:N2")));
+            assertTrue(mergeCells.contains(Dimension.of("E12:F12")));
+            List<Validation> validations = sheet.getValidations();
+            assertNotNull(validations);
+            assertEquals(validations.size(), 15);
+            Validation validation0 = validations.get(0), expectValidation0 = new ListValidation<>().in("自营德国海外仓","美国自营海外仓").dimension(Dimension.of("D14"));
+            assertEquals(validation0.toString(), expectValidation0.toString());
+            Validation validation1 = validations.get(1), expectValidation1 = new ListValidation<>().in(Dimension.of("F10:F12")).dimension(Dimension.of("F12:F13"));
+            assertEquals(validation1.toString(), expectValidation1.toString());
+            Validation validation9 = validations.get(9), expectValidation9 = new DecimalValidation().between(new BigDecimal("0.00001"), new BigDecimal("99999")).error("警告","只能填数字", Validation.ErrorStyle.warning).dimension(Dimension.of("L1"));
+            assertEquals(validation9.toString(), expectValidation9.toString());
+            Validation validation11 = validations.get(11), expectValidation11 = new WholeValidation().between(1L, 11111111L).dimension(Dimension.of("J1"));
+            assertEquals(validation11.toString(), expectValidation11.toString());
         }
     }
 }
