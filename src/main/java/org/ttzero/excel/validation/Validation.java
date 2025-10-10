@@ -176,6 +176,7 @@ public abstract class Validation {
                     case "date"      : val = new DateValidation();         break;
                     case "textLength": val = new TextLengthValidation();   break;
                     case "whole"     : val = new WholeValidation();        break;
+                    case "decimal"   : val = new DecimalValidation();      break;
                     default:
                 }
             }
