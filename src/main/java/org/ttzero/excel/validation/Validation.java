@@ -30,6 +30,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.ttzero.excel.reader.Row.testNumberType;
+
 /**
  * 数据验证
  *
@@ -65,9 +67,17 @@ public abstract class Validation {
      */
     public CrossDimension referer;
     /**
-     * 提示
+     * 提示, 提示的标题
      */
-    public String prompt;
+    public String prompt, promptTitle;
+    /**
+     * 错误消息, 错误警报的标题, 数据验证的错误警报样式
+     */
+    public String error, errorTitle;
+    /**
+     * 错误警报样式(stop:提供"取消/重试"选项，必须修改正确才能离开单元格，warning:提供"是/否"选项，information:只提供"确定"按钮)
+     */
+    public ErrorStyle errorStyle;
     /**
      * 数据校验类型
      *
@@ -109,6 +119,18 @@ public abstract class Validation {
      * @return 当前数据验证
      */
     public Validation prompt(String prompt) {
+        return prompt(null, prompt);
+    }
+
+    /**
+     * 提示提示和标题
+     *
+     * @param promptTitle 提示词标题
+     * @param prompt 提示词
+     * @return 当前数据验证
+     */
+    public Validation prompt(String promptTitle, String prompt) {
+        this.promptTitle = promptTitle;
         this.prompt = prompt;
         return this;
     }
@@ -121,6 +143,55 @@ public abstract class Validation {
      */
     public Validation referer(CrossDimension referer) {
         this.referer = referer;
+        return this;
+    }
+
+    /**
+     * 设置数据校验NG时提示错误消息
+     *
+     * @param error 错误消息
+     * @return 当前数据验证
+     */
+    public Validation error(String error) {
+        return error(null, error);
+    }
+
+    /**
+     * 设置数据校验NG时提示错误消息
+     *
+     * @param error 错误消息
+     * @param errorStyle 错误警报样式
+     * @return 当前数据验证
+     */
+    public Validation error(String error, ErrorStyle errorStyle) {
+        return error(null, error, errorStyle);
+    }
+
+    /**
+     * 设置数据校验NG时提示错误消息和标题
+     *
+     * @param errorTitle 错误警报的标题
+     * @param error 错误消息
+     * @return 当前数据验证
+     */
+    public Validation error(String errorTitle, String error) {
+        this.errorTitle = errorTitle;
+        this.error = error;
+        return this;
+    }
+
+    /**
+     * 设置数据校验NG时提示错误消息和标题
+     *
+     * @param errorTitle 错误警报的标题
+     * @param error 错误消息
+     * @param errorStyle 错误警报样式
+     * @return 当前数据验证
+     */
+    public Validation error(String errorTitle, String error, ErrorStyle errorStyle) {
+        this.errorTitle = errorTitle;
+        this.error = error;
+        this.errorStyle = errorStyle;
         return this;
     }
 
@@ -138,10 +209,14 @@ public abstract class Validation {
     @Override
     public String toString() {
         return "<" + (isExtension() ? "x14:" : "" ) + "dataValidation type=\"" + getType()
+            + (errorStyle == null || errorStyle == ErrorStyle.stop ? "" : "\" errorStyle=\"" + errorStyle)
             + (operator == null || operator == Operator.between ? "" : "\" operator=\"" + operator)
             + "\" allowBlank=\"" + (allowBlank ? 1 : 0)
             + "\" showInputMessage=\"" + (showInputMessage ? 1 : 0)
             + "\" showErrorMessage=\"" + (showErrorMessage ? 1 : 0)
+            + (StringUtil.isEmpty(errorTitle) ? "" : "\" errorTitle=\"" + StringUtil.escapeString(errorTitle))
+            + (StringUtil.isEmpty(error) ? "" : "\" error=\"" + StringUtil.escapeString(error))
+            + (StringUtil.isEmpty(promptTitle) ? "" : "\" promptTitle=\"" + StringUtil.escapeString(promptTitle))
             + (StringUtil.isEmpty(prompt) ? "" : "\" prompt=\"" + StringUtil.escapeString(prompt))
             + (isExtension() ? "\">" : "\" sqref=\"" + getSqrefStr() + "\">")
             + validationFormula()
@@ -153,12 +228,22 @@ public abstract class Validation {
         this.showInputMessage = "1".equals(e.attributeValue("showInputMessage"));
         this.showErrorMessage = "1".equals(e.attributeValue("showErrorMessage"));
         this.prompt = e.attributeValue("prompt");
+        this.errorTitle = e.attributeValue("errorTitle");
+        this.error = e.attributeValue("error");
         String tmp = isExt ? e.elementText("sqref") : e.attributeValue("sqref");
         if (StringUtil.isNotEmpty(tmp)) {
             this.sqrefList.addAll(Arrays.stream(tmp.split(" ")).filter(StringUtil::isNotEmpty).map(Dimension::of).collect(Collectors.toList()));
         }
         tmp = e.attributeValue("operator");
         if (StringUtil.isNotEmpty(tmp)) this.operator = Validation.Operator.valueOf(tmp);
+        tmp = e.attributeValue("errorStyle");
+        if (StringUtil.isNotEmpty(tmp)) {
+            try {
+                this.errorStyle = ErrorStyle.valueOf(tmp);
+            } catch (Exception ex) {
+                // Ignore
+            }
+        }
     }
 
     public static List<Validation> domToValidation(Element e) {
@@ -198,7 +283,7 @@ public abstract class Validation {
         if (StringUtil.isEmpty(txt)) return 0;
         int t, len = txt.length();
         if (len >= 2 && txt.charAt(0) == '"' && txt.charAt(len - 1) == '"') t = 1;
-        else if (StringUtil.isArabicNumerals(txt)) t = 5;
+        else if (testNumberType(txt.toCharArray(), 0, txt.length()) > 0) t = 5;
         else if (txt.indexOf('(') > 0 && txt.charAt(len - 1) == ')') t = 4;
         else {
             int i = txt.indexOf('!');
@@ -215,5 +300,9 @@ public abstract class Validation {
 
     public enum Operator {
         between, notBetween, equal, notEqual, greaterThan, lessThan, greaterThanOrEqual, lessThanOrEqual
+    }
+
+    public enum ErrorStyle {
+        stop, warning, information
     }
 }
