@@ -279,7 +279,7 @@ public abstract class Validation {
      * @param txt 文本
      * @return 0:无 1:字符串 2:坐标 3:跨工作表坐标 4:公式 5:数字
      */
-    static int testValueType(String txt) {
+    public static int testValueType(String txt) {
         if (StringUtil.isEmpty(txt)) return 0;
         int t, len = txt.length();
         if (len >= 2 && txt.charAt(0) == '"' && txt.charAt(len - 1) == '"') t = 1;

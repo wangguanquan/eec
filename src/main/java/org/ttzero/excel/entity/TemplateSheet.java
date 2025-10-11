@@ -17,6 +17,8 @@
 
 package org.ttzero.excel.entity;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
 import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.ColorIndex;
@@ -25,7 +27,9 @@ import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.NumFmt;
 import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.util.FileUtil;
+import org.ttzero.excel.util.SAXReaderUtil;
 import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
@@ -43,12 +47,14 @@ import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -219,6 +225,14 @@ public class TemplateSheet extends Sheet {
      * Key: 坐标 Value：批注
      */
     protected Map<Long, Comment> comments0;
+    /**
+     * 缓存源文件数据验证
+     */
+    protected List<Validation> validations0;
+    /**
+     * Delete the temp file if close buffer
+     */
+    protected boolean shouldDelete;
     /**
      * 实例化模板工作表，默认以第一个工作表做为模板
      *
@@ -534,8 +548,17 @@ public class TemplateSheet extends Sheet {
      */
     protected int init() throws IOException {
         // 实例化ExcelReader
+        if (templateStream != null) {
+            templatePath = Files.createTempFile("eec-", null);
+            if (templatePath == null) throw new IOException("Create temp directory error. Please check your permission");
+            OutputStream os = Files.newOutputStream(templatePath);
+            FileUtil.cp(templateStream, os);
+            FileUtil.close(os);
+            FileUtil.close(templateStream);
+            templateStream = null;
+            shouldDelete = true;
+        }
         if (templatePath != null) reader = ExcelReader.read(templatePath);
-        else if (templateStream != null) reader = ExcelReader.read(templateStream);
 
         // 查找源工作表
         org.ttzero.excel.reader.Sheet[] sheets = reader.all();
@@ -810,11 +833,15 @@ public class TemplateSheet extends Sheet {
 
         // 添加合并
         if (mergeCells != null) putExtProp(Const.ExtendPropertyKey.MERGE_CELLS, mergeCells);
-        // TODO 重置过滤位置
-        Object o = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
-        if (o instanceof Dimension) {
-            Dimension autoFilter = (Dimension) o;
-            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+//        // TODO 重置过滤位置
+//        Object o = getExtPropValue(Const.ExtendPropertyKey.AUTO_FILTER);
+//        if (o instanceof Dimension) {
+//            Dimension autoFilter = (Dimension) o;
+//            putExtProp(Const.ExtendPropertyKey.AUTO_FILTER, autoFilter);
+//        }
+        // 数据验证
+        if (validations0 != null && !validations0.isEmpty()) {
+            putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations0);
         }
     }
 
@@ -829,6 +856,7 @@ public class TemplateSheet extends Sheet {
             templateStream.close();
             templateStream = null;
         }
+        if (shouldDelete) FileUtil.rm(templatePath);
         rowIterator = null;
         namespaceMapper = null;
     }
@@ -1046,10 +1074,49 @@ public class TemplateSheet extends Sheet {
             }
         }
 
-        // TODO 数据验证
+        // 数据验证
         List<Validation> validations = originalSheet.getValidations();
         if (validations != null && !validations.isEmpty()) {
-
+            // 引用其它工作表时修改工作表名
+            Map<String, String> refererSheetMap = new HashMap<>();
+            for (Validation val : validations) {
+                if (val.referer != null && val.referer.isCrossSheet()) {
+                    val.referer.sheetName = refererSheetMap.computeIfAbsent(val.referer.sheetName, k -> "__Sheet" + getId() + "_valid_" + (System.currentTimeMillis() % 1000));
+                }
+            }
+            if (!refererSheetMap.isEmpty()) {
+                // 动态添加引用工作表
+                for (Map.Entry<String, String> entry : refererSheetMap.entrySet()) {
+                    workbook.addSheet(new TemplateSheet(templatePath, entry.getKey()).setName(entry.getValue()).hidden());
+                }
+                if (shouldDelete) {
+                    shouldDelete = false; // 有引用其它工作表时不删除源文件放在最后一个Worksheet删除
+                    ((TemplateSheet) workbook.getSheetAt(workbook.getSize() - 1)).shouldDelete = true;
+                }
+                // 读取defined_name
+                try {
+                    Document document = SAXReaderUtil.createDefault().read(reader.getEntryStream("xl/workbook.xml"));
+                    Element definedNameEl = document.getRootElement().element("definedNames");
+                    if (definedNameEl != null) {
+                        List<Element> sub = definedNameEl.elements();
+                        Map<String, String> definedNames = new HashMap<>(sub.size());
+                        for (Element e : sub) {
+                            String txt = e.getTextTrim();
+                            int vt = Validation.testValueType(txt);
+                            CrossDimension cd;
+                            if (vt == 3 && (cd = CrossDimension.of(txt)).isCrossSheet() && refererSheetMap.containsKey(cd.sheetName)) {
+                               cd.sheetName = refererSheetMap.get(cd.sheetName); // 替换为新的Sheet名
+                               definedNames.put(e.attributeValue("name"), cd.toString());
+                            }
+                        }
+                        if (!definedNames.isEmpty()) putExtProp(Const.ExtendPropertyKey.DEFINED_NAME, definedNames);
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("Read definedName error.", ex);
+                }
+            }
+            if (validations0 == null) validations0 = validations;
+            else validations0.addAll(validations);
         }
 
         return len;
@@ -1155,12 +1222,14 @@ public class TemplateSheet extends Sheet {
                 if (vw != null && vw.option == 4) {
                     // TODO 读取源文件中的数据验证
                     pn.validation = new ListValidation<>().in(vw.list).dimension(new Dimension(pn.row, (short) (pn.col + 1)));
-                    Object o = getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
-                    List<Validation> validations;
-                    if (o instanceof List) validations = (List) o;
-                    else putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations = new ArrayList<>());
-                    // 数据校验
-                    validations.add(pn.validation);
+//                    Object o = getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
+//                    List<Validation> validations;
+//                    if (o instanceof List) validations = (List) o;
+//                    else putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations = new ArrayList<>());
+//                    // 数据校验
+//                    validations.add(pn.validation);
+                    if (validations0 == null) validations0 = new ArrayList<>();
+                    validations0.add(pn.validation);
                 }
             }
         }

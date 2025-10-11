@@ -1515,10 +1515,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         // 将数据添加到最后一个sheet页，并设置隐藏
-        if (!rows.isEmpty()) {
-            sheet.getWorkbook().addSheet(new SimpleSheet<>(refSheetName, rows).hidden());
-            sheet.putExtProp(Const.ExtendPropertyKey.DEFINED_NAME, definedNames);
-        }
+        if (!rows.isEmpty()) sheet.getWorkbook().addSheet(new SimpleSheet<>(refSheetName, rows).hidden());
+        if (definedNames != null && !definedNames.isEmpty()) sheet.putExtProp(Const.ExtendPropertyKey.DEFINED_NAME, definedNames);
         // 增加动态追加的Validation
         if (dynamicValidations != null) validations.addAll(dynamicValidations);
         return validations;
