@@ -74,11 +74,6 @@ public class App extends XmlEntity {
         this.definedNames = definedNames;
     }
 
-    @Deprecated
-    public void setTitlePards(List<String> list) {
-        setTitlesOfParts(list);
-    }
-
     public void setTitlesOfParts(List<String> titlesOfParts) {
         this.titlesOfParts = titlesOfParts;
     }
