@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -61,25 +62,6 @@ public class ValidationTest extends WorkbookTest {
         expectValidations.add(new TimeValidation().lessThan(DateUtil.toTimeValue(Time.valueOf("18:00:00"))).dimension(Dimension.of("B2")));
         // 引用
         expectValidations.add(new ListValidation<>().referer(new CrossDimension(Dimension.of("A10:A12"))).dimension(Dimension.of("D5")));
-
-        expectValidations.add(ListValidation.in(Dimension.of("H2"), Arrays.asList("A省", "B省", "D省"))
-            .addCascadeList(Dimension.of("I2:"), new LinkedHashMap<String, List<String>>(){{
-                put("A省", Arrays.asList("A1市", "A2市", "A3市"));
-                put("B省", Arrays.asList("B1市", "B2市", "B3市", "B4市"));
-                put("D省", Arrays.asList("D1市", "D2市"));
-            }})
-            .addCascadeList(Dimension.of("J2:"), new LinkedHashMap<String, List<String>>(){{
-                put("A1市", Arrays.asList("A1市-1", "A1市-2", "A1市-3"));
-                put("A2市", Arrays.asList("A2市-1", "A2市-2", "A2市-3", "A2市-4", "A2市-5"));
-                put("A3市", Arrays.asList("A3区-1", "A3区-2"));
-                put("B1市", Arrays.asList("B1市-1", "B1市-2"));
-                put("B2市", Arrays.asList("B2市-1", "B2市-2", "B2市-3"));
-                put("B3市", Arrays.asList("B3市-1", "B3市-2", "B3市-3", "B3市-4"));
-                put("B4市", Arrays.asList("B4市-1", "B4市-2"));
-                put("D1市", Arrays.asList("D1市-1", "D1市-2"));
-                put("D2市", Arrays.asList("D2市-1", "D2市-2", "D2市-3", "D2市-4"));
-            }})
-        );
 
         final String fileName = "Validation Test.xlsx";
         new Workbook()
@@ -139,6 +121,38 @@ public class ValidationTest extends WorkbookTest {
             assertEquals(validation9.toString(), expectValidation9.toString());
             Validation validation11 = validations.get(11), expectValidation11 = new WholeValidation().between(1L, 11111111L).dimension(Dimension.of("J1"));
             assertEquals(validation11.toString(), expectValidation11.toString());
+        }
+    }
+
+    @Test public void testCascadeList() throws IOException {
+        List<Validation> expectValidations = new ArrayList<>();
+        expectValidations.add(ListValidation.in(Dimension.of("A2:"), Arrays.asList("A省", "B省", "D省"))
+            .addCascadeList(Dimension.of("B2:"), new LinkedHashMap<String, List<String>>(){{
+                put("A省", Arrays.asList("A1市", "A2市", "A3市"));
+                put("B省", Arrays.asList("B1市", "B2市", "B3市", "B4市"));
+                put("D省", Arrays.asList("D1市", "D2市"));
+            }})
+            .addCascadeList(Dimension.of("C2:"), new LinkedHashMap<String, List<String>>(){{
+                put("A1市", Arrays.asList("A1市-1", "A1市-2", "A1市-3"));
+                put("A2市", Arrays.asList("A2市-1", "A2市-2", "A2市-3", "A2市-4", "A2市-5"));
+                put("A3市", Arrays.asList("A3区-1", "A3区-2"));
+                put("B1市", Arrays.asList("B1市-1", "B1市-2"));
+                put("B2市", Arrays.asList("B2市-1", "B2市-2", "B2市-3"));
+                put("B3市", Arrays.asList("B3市-1", "B3市-2", "B3市-3", "B3市-4"));
+                put("B4市", Arrays.asList("B4市-1", "B4市-2"));
+                put("D1市", Arrays.asList("D1市-1", "D1市-2"));
+                put("D2市", Arrays.asList("D2市-1", "D2市-2", "D2市-3", "D2市-4"));
+            }})
+        );
+        final String fileName = "Validation CascadeList Test.xlsx";
+        new Workbook()
+            .addSheet(new SimpleSheet<>(Collections.singletonList(Arrays.asList("省份","市区","市镇"))).putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            List<Validation> validations = sheet.getValidations();
+            System.out.println();
         }
     }
 }
