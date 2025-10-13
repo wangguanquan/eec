@@ -29,6 +29,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
@@ -36,6 +37,8 @@ import org.ttzero.excel.reader.Row;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
+import org.ttzero.excel.validation.ListValidation;
+import org.ttzero.excel.validation.Validation;
 
 import java.io.File;
 import java.io.IOException;
@@ -575,6 +578,35 @@ public class TemplateSheetTest extends WorkbookTest {
             Map<String, Object> map = row.toMap();
             assertEquals(map.get("渠道").getClass(), Timestamp.class);
             assertEquals(((Timestamp) map.get("渠道")).getTime() / 1000, ((Timestamp)data.get("channel")).getTime() / 1000);
+        }
+    }
+
+    @Test public void testCopyCascadeList() throws IOException {
+        final String fileName = "Copy CascadeList test.xlsx";
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "级联下拉")
+                .setData("@list:sex", Arrays.asList("未知","男","女"))
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            List<Validation> validations = sheet.getValidations();
+            assertNotNull(validations);
+            assertEquals(validations.size(), 4);
+            Validation validation0 = validations.get(0);
+            ListValidation<String> expectValidation0 = new ListValidation<>();
+            expectValidation0.dimension(Dimension.of("B2:C1048576"));
+            expectValidation0.indirect = "A2";
+            assertEquals(validation0.toString(), expectValidation0.toString());
+
+            org.ttzero.excel.reader.Sheet[] allSheet = reader.all();
+            String sheetName2 = allSheet[allSheet.length - 2].getName(), sheetName3 = allSheet[allSheet.length - 1].getName();
+            Validation validation1 = validations.get(1), expectValidation1 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).prompt("输入姓别").dimension(Dimension.of("E2"));
+            assertEquals(validation1.toString(), expectValidation1.toString());
+            Validation validation2 = validations.get(2), expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName2, Dimension.of("A1:C1"))).dimension(Dimension.of("A2:"));
+            assertEquals(validation2.toString(), expectValidation2.toString());
+            Validation validation3 = validations.get(3), expectValidation3 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A2:C2"))).dimension(Dimension.of("F2:F3"));
+            assertEquals(validation3.toString(), expectValidation3.toString());
         }
     }
 
