@@ -152,7 +152,8 @@ public class ValidationTest extends WorkbookTest {
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Validation> validations = sheet.getValidations();
-            System.out.println();
+            assertNotNull(validations);
+            assertEquals(validations.size(), 2);
         }
     }
 }
