@@ -227,25 +227,23 @@ public class Dimension {
     /**
      * 垂直移动，小于{@code 0}向上移动，否则向下移动
      *
-     * @param row 移动的行数
+     * @param moveRows 移动的行数
      */
-    public void verticalMove(int row) {
-        if (firstRow + row <= 0)
-            throw new IllegalArgumentException("Row number out of bound,current:" + (firstRow + row));
-        firstRow += row;
-        lastRow += row;
+    public void verticalMove(int moveRows) {
+        int rows = lastRow + moveRows > Const.Limit.MAX_ROWS_ON_SHEET ? Const.Limit.MAX_ROWS_ON_SHEET - lastRow : moveRows;
+        firstRow += rows;
+        lastRow += rows;
     }
 
     /**
      * 水平移动，小于{@code 0}向左移动，否则向右移动
      *
-     * @param col 移动的列数
+     * @param moveCols 移动的列数
      */
-    public void horizontalsMove(int col) {
-        if (firstColumn + col <= 0)
-            throw new IllegalArgumentException("Col number out of bound,current:" + (firstColumn + col));
-        firstColumn += col;
-        lastColumn += col;
+    public void horizontalsMove(int moveCols) {
+        short cols = (short) (lastColumn + moveCols > Const.Limit.MAX_COLUMNS_ON_SHEET ? Const.Limit.MAX_COLUMNS_ON_SHEET - lastColumn : moveCols);
+        firstColumn += cols;
+        lastColumn += cols;
     }
 
     @Override
