@@ -1111,7 +1111,7 @@ public class TemplateSheet extends Sheet {
             Map<String, String> refererSheetMap = new HashMap<>();
             for (Validation val : validations) {
                 if (val.referer != null && val.referer.isCrossSheet()) {
-                    val.referer.sheetName = refererSheetMap.computeIfAbsent(val.referer.sheetName, k -> "__Sheet" + getId() + "_valid_" + (System.currentTimeMillis() % 1000));
+                    val.referer.sheetName = refererSheetMap.computeIfAbsent(val.referer.sheetName, k -> "__St" + getId() + "_val" + (System.currentTimeMillis() % 1000));
                 }
             }
             if (!refererSheetMap.isEmpty()) {

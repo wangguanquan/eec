@@ -1464,7 +1464,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         Map<String, String> definedNames = null;
         List<Validation> dynamicValidations = null;
         // 保证Worksheet名称不超过31个字符
-        final String refSheetName = "__Sheet" + sheet.getId() + "_valid_" + (System.currentTimeMillis() % 1000);
+        final String refSheetName = "__St" + sheet.getId() + "_val" + (System.currentTimeMillis() % 1000);
         for (Validation val : validations) {
             if (!(val instanceof ListValidation)) continue;
             @SuppressWarnings("unchecked")
