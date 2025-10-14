@@ -230,9 +230,10 @@ public class Dimension {
      * @param moveRows 移动的行数
      */
     public void verticalMove(int moveRows) {
-        int rows = lastRow + moveRows > Const.Limit.MAX_ROWS_ON_SHEET ? Const.Limit.MAX_ROWS_ON_SHEET - lastRow : moveRows;
-        firstRow += rows;
-        lastRow += rows;
+        if (firstRow + moveRows > Const.Limit.MAX_ROWS_ON_SHEET || firstRow + moveRows <= 0)
+            throw new IllegalArgumentException("Row number out of bound,current:" + (firstRow + moveRows));
+        firstRow += moveRows;
+        lastRow += Math.min(moveRows, Const.Limit.MAX_ROWS_ON_SHEET - lastRow);
     }
 
     /**
@@ -241,9 +242,10 @@ public class Dimension {
      * @param moveCols 移动的列数
      */
     public void horizontalsMove(int moveCols) {
-        short cols = (short) (lastColumn + moveCols > Const.Limit.MAX_COLUMNS_ON_SHEET ? Const.Limit.MAX_COLUMNS_ON_SHEET - lastColumn : moveCols);
-        firstColumn += cols;
-        lastColumn += cols;
+        if (firstColumn + moveCols > Const.Limit.MAX_COLUMNS_ON_SHEET || firstColumn + moveCols <= 0)
+            throw new IllegalArgumentException("Col number out of bound,current:" + (firstColumn + moveCols));
+        firstColumn += (short) moveCols;
+        lastColumn += (short) Math.min(moveCols, Const.Limit.MAX_COLUMNS_ON_SHEET - lastColumn);
     }
 
     @Override

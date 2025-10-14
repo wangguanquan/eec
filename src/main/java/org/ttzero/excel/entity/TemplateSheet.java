@@ -143,6 +143,10 @@ import static org.ttzero.excel.util.ReflectUtil.readMethodsMap;
  */
 public class TemplateSheet extends Sheet {
     /**
+     * 未实例化的列，可用于在写超出预知范围外的列
+     */
+    protected static final Column UNALLOCATED_COLUMN = new Column();
+    /**
      * 内置单元格类型-超链接样式
      */
     public static final String HYPERLINK_KEY = "@link:";
@@ -591,75 +595,86 @@ public class TemplateSheet extends Sheet {
 
     @Override
     protected void resetBlockData() {
-        Dimension mergeCell;
-        PreCell pn;
-        Comment comment;
-        Column emptyColumn = new Column();
-        for (int rbs = rowBlock.capacity(), n = 0, limit = sheetWriter.getRowLimit(), len; n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
+        for (int rbs = rowBlock.capacity(), n = 0, limit = sheetWriter.getRowLimit(); n++ < rbs && rows < limit && rowIterator.hasNext(); ) {
             Row row = rowBlock.next();
             org.ttzero.excel.reader.Row row0 = rowIterator.next();
             row.index = rows = rowIterator.rows - 1;
             row.height = row0.getHeight();
             row.hidden = row0.isHidden();
-            // 空行特殊处理（lc-fc=-1)
-            len = Math.max(row0.getLastColumnIndex(), 0);
-            Cell[] cells = row.realloc(len);
-            // 预处理
-            if (row0.getRowNum() == pf && !rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi], namespaceMapper);
 
-            for (int i = 0; i < len; i++) {
-                Cell cell = cells[i], cell0 = row0.getCell(i);
+            // 重置单行数据
+            resetRowData(row0, row);
+        }
+    }
 
-                // 复制样式
-                cell.xf = styleMap.getOrDefault(cell0.xf, 0);
-                if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
+    /**
+     * 重置单行数据
+     *
+     * @param row0 源行
+     * @param row  目标行
+     */
+    protected void resetRowData(org.ttzero.excel.reader.Row row0, Row row) {
+        Dimension mergeCell;
+        PreCell pn;
+        Comment comment;
+        // 空行特殊处理（lc-fc=-1)
+        int len = Math.max(row0.getLastColumnIndex(), 0);
+        Cell[] cells = row.realloc(len);
+        // 预处理
+        if (row0.getRowNum() == pf && !rowIterator.hasFillCell) rowIterator.withPreNodes(preCells[pi], namespaceMapper);
 
-                boolean fillCell = false;
-                // 复制数据
-                switch (row0.getCellType(cell0)) {
-                    case STRING:
-                        if (rowIterator.hasFillCell && (pn = rowIterator.preNodes[i]) != null) {
-                            fillCell = true;
-                            fillValue(row, cell, pn, emptyColumn);
+        for (int i = 0; i < len; i++) {
+            Cell cell = cells[i], cell0 = row0.getCell(i);
 
-                            // 处理单行合并单元格
-                            if (pn.m != null) {
-                                // 正数为行合并 负数为列合并
-                                if (pn.m > 0) mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + 1, (short) (i + pn.m + 1)));
-                                else mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + ~pn.m, (short) (i + 1)));
-                            }
-                        } else cell.setString(row0.getString(cell0));
-                        break;
-                        // FIXME 范围外的数据不需要复制，要继续向后走
-                    case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
-                    case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
-                    case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
-                    case DOUBLE:  cell.setDouble(row0.getDouble(cell0));                                break;
-                    case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
-                    case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
-                    case BLANK:   cell.emptyTag();                                                      break;
-                    default:
-                }
+            // 复制样式
+            cell.xf = styleMap.getOrDefault(cell0.xf, 0);
+            if (cell.h) cell.xf = hyperlinkStyle(workbook.getStyles(), cell.xf);
 
-                if (!writeAsExcel) continue;
+            boolean fillCell = false;
+            // 复制数据
+            switch (row0.getCellType(cell0)) {
+                case STRING:
+                    if (rowIterator.hasFillCell && (pn = rowIterator.preNodes[i]) != null) {
+                        fillCell = true;
+                        fillValue(row, cell, pn, UNALLOCATED_COLUMN);
 
-                // TODO 复制公式（不是简单的复制，需重新计算位置）
-                if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
-
-                long k = dimensionKey(row0.getRowNum() - 1, i);
-                // 合并单元格重新计算位置
-                if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
-                    int r = rows - row0.getRowNum() + 1;
-                    mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
-                }
-                if (comments0 != null && (comment = comments0.get(k)) != null) {
-                    createComments().addComment(rows + 1, i + 1, comment);
-                }
+                        // 处理单行合并单元格
+                        if (pn.m != null) {
+                            // 正数为行合并 负数为列合并
+                            if (pn.m > 0) mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + 1, (short) (i + pn.m + 1)));
+                            else mergeCells.add(new Dimension(rows + 1, (short) (i + 1), rows + ~pn.m, (short) (i + 1)));
+                        }
+                    } else cell.setString(row0.getString(cell0));
+                    break;
+                // FIXME 范围外的数据不需要复制，要继续向后走
+                case LONG:    cell.setLong(row0.getLong(cell0));                                    break;
+                case INTEGER: cell.setInt(row0.getInt(cell0));                                      break;
+                case DECIMAL: cell.setDecimal(row0.getDecimal(cell0));                              break;
+                case DOUBLE:  cell.setDouble(row0.getDouble(cell0));                                break;
+                case DATE:    cell.setDateTime(DateUtil.toDateTimeValue(row0.getTimestamp(cell0))); break;
+                case BOOLEAN: cell.setBool(row0.getBoolean(cell0));                                 break;
+                case BLANK:   cell.emptyTag();                                                      break;
+                default:
             }
 
-            // 写入一行数据末尾处理
-            rowEnd(row0, row);
+            if (!writeAsExcel) continue;
+
+            // TODO 复制公式（不是简单的复制，需重新计算位置）
+            if (row0.hasFormula(cell0)) cell.setFormula(row0.getFormula(cell0));
+
+            long k = dimensionKey(row0.getRowNum() - 1, i);
+            // 合并单元格重新计算位置
+            if (!fillCell && mergeCells0 != null && (mergeCell = mergeCells0.get(k)) != null) {
+                int r = rows - row0.getRowNum() + 1;
+                mergeCells.add(new Dimension(mergeCell.firstRow + r, mergeCell.firstColumn, mergeCell.lastRow + r, mergeCell.lastColumn));
+            }
+            if (comments0 != null && (comment = comments0.get(k)) != null) {
+                createComments().addComment(rows + 1, i + 1, comment);
+            }
         }
+
+        // 写入一行数据末尾处理
+        rowEnd(row0, row);
     }
 
     protected void rowEnd(org.ttzero.excel.reader.Row row0, Row row) {
@@ -669,7 +684,7 @@ public class TemplateSheet extends Sheet {
             for (String vwKey : rowIterator.consumerNamespaces) {
                 ValueWrapper vw = namespaceMapper.get(vwKey);
                 if (++vw.i < vw.list.size()) consumerEnd = false;
-                    // 加载更多数据
+                // 加载更多数据
                 else if (vw.supplier != null) {
                     List list = vw.supplier.apply(vw.size, !vw.list.isEmpty() ? vw.list.get(vw.list.size() - 1) : null);
                     if (list != null && !list.isEmpty()) {
@@ -681,7 +696,7 @@ public class TemplateSheet extends Sheet {
                 } else vw.option = -1;
             }
         }
-        // Rrk
+        // Ark
         if (consumerEnd) rowCommit(row0, row);
     }
 
@@ -689,6 +704,21 @@ public class TemplateSheet extends Sheet {
         PreCell pn;
         Object e;
         int len = Math.max(row0.getLastColumnIndex(), 0);
+        if (rowIterator.newRow && validations0 != null && row.getIndex() > row0.getRowNum()) {
+            for (Validation val : validations0) {
+                for (Dimension sqref : val.sqrefList) {
+                    if (sqref.firstRow == row0.getRowNum()) {
+                        sqref.verticalMove(row.getIndex() - row0.getRowNum() + 1);
+                        ListValidation lv;
+                        if (val instanceof ListValidation && StringUtil.isNotEmpty((lv = (ListValidation) val).indirect)) {
+                            Dimension dim = Dimension.of(lv.indirect);
+                            dim.verticalMove(row.getIndex() - row0.getRowNum() + 1);
+                            lv.indirect = dim.toString();
+                        }
+                    }
+                }
+            }
+        }
         if (rowIterator.hasFillCell) {
             for (int i = row0.getFirstColumnIndex(); i < len; i++) {
                 if ((pn = rowIterator.preNodes[i]) != null && pn.validation != null) {
@@ -759,6 +789,7 @@ public class TemplateSheet extends Sheet {
             int type = pn.nodes[0].getType();
             if (e != null) {
                 Class<?> clazz = e.getClass();
+                emptyColumn.setClazz(clazz);
                 switch (type) {
                     // Hyperlink
                     case 1: if (isString(clazz)) cell.setHyperlink(e.toString()); break;
@@ -779,7 +810,6 @@ public class TemplateSheet extends Sheet {
                         }
                         break;
                     default:
-                        emptyColumn.setClazz(clazz);
                         cellValueAndStyle.setCellValue(row, cell, e, emptyColumn, clazz, false);
                         // 日期类型添加默认format
                         if (cell.t == Cell.DATETIME || cell.t == Cell.DATE || cell.t == Cell.TIME) {
@@ -1220,14 +1250,7 @@ public class TemplateSheet extends Sheet {
                 else node.val = node.val.substring(pLen);
                 ValueWrapper vw = namespaceMapper.get(innerFormulaStr);
                 if (vw != null && vw.option == 4) {
-                    // TODO 读取源文件中的数据验证
                     pn.validation = new ListValidation<>().in(vw.list).dimension(new Dimension(pn.row, (short) (pn.col + 1)));
-//                    Object o = getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
-//                    List<Validation> validations;
-//                    if (o instanceof List) validations = (List) o;
-//                    else putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, validations = new ArrayList<>());
-//                    // 数据校验
-//                    validations.add(pn.validation);
                     if (validations0 == null) validations0 = new ArrayList<>();
                     validations0.add(pn.validation);
                 }
@@ -1327,7 +1350,7 @@ public class TemplateSheet extends Sheet {
         public org.ttzero.excel.reader.Row current;
         public int rows;
         public PreCell[] preNodes;
-        public boolean hasFillCell;
+        public boolean hasFillCell, newRow;
         public Set<String> consumerNamespaces = new HashSet<>();
 
         public CommitRowSetIterator(RowSetIterator iterator) {
@@ -1341,14 +1364,16 @@ public class TemplateSheet extends Sheet {
 
         @Override
         public org.ttzero.excel.reader.Row next() {
-            org.ttzero.excel.reader.Row row = current != null ? current : (current = iterator.next());
+            newRow = current == null;
+            org.ttzero.excel.reader.Row row = newRow ? (current = iterator.next()) : current;
             rows = Math.max(row.getRowNum(), rows + 1);
             return row;
         }
 
         public void withPreNodes(PreCell[] preNodes, Map<String, ValueWrapper> namespaceMapper) {
-            int len = current.getLastColumnIndex(), len0 = preNodes[preNodes.length - 1].col + 1;
-            this.preNodes = new PreCell[Math.max(len, len0)];
+            int len = current.getLastColumnIndex(), len0 = preNodes[preNodes.length - 1].col + 1, size = Math.max(len, len0);
+            if (this.preNodes == null || this.preNodes.length < size) this.preNodes = new PreCell[size];
+            else for (int i = 0; i < size; this.preNodes[i++] = null);
             for (PreCell p : preNodes) this.preNodes[p.col] = p;
             hasFillCell = true;
 
