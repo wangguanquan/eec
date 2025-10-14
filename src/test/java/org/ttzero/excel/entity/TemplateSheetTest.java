@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
@@ -56,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -583,29 +585,40 @@ public class TemplateSheetTest extends WorkbookTest {
 
     @Test public void testCopyCascadeList() throws IOException {
         final String fileName = "Copy CascadeList test.xlsx";
+        List<GameEntry> expectList = GameEntry.random();
         new Workbook()
             .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "级联下拉")
                 .setData("@list:sex", Arrays.asList("未知","男","女"))
+                .setData(expectList)
             ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
             FullSheet sheet = reader.sheet(0).asFullSheet();
+            final int listLastRowNum = expectList.size() + 1;
+            List<GameEntry> readList = sheet.dataRows().filter(row -> row.getRowNum() <= listLastRowNum).map(row -> row.to(GameEntry.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), readList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                GameEntry entry = readList.get(i), expectEntry = expectList.get(i);
+                assertEquals(entry, expectEntry);
+            }
+
             List<Validation> validations = sheet.getValidations();
             assertNotNull(validations);
             assertEquals(validations.size(), 4);
             Validation validation0 = validations.get(0);
             ListValidation<String> expectValidation0 = new ListValidation<>();
-            expectValidation0.dimension(Dimension.of("B2:C1048576"));
-            expectValidation0.indirect = "A2";
+            int verticalMove = expectList.size() + 5;
+            expectValidation0.dimension(Dimension.of("B" + verticalMove + ":C1048576"));
+            expectValidation0.indirect = "A" + verticalMove;
             assertEquals(validation0.toString(), expectValidation0.toString());
 
             org.ttzero.excel.reader.Sheet[] allSheet = reader.all();
             String sheetName2 = allSheet[allSheet.length - 2].getName(), sheetName3 = allSheet[allSheet.length - 1].getName();
-            Validation validation1 = validations.get(1), expectValidation1 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).prompt("输入姓别").dimension(Dimension.of("E2"));
+            Validation validation1 = validations.get(1), expectValidation1 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).prompt("输入姓别").dimension(Dimension.of("E" + verticalMove));
             assertEquals(validation1.toString(), expectValidation1.toString());
-            Validation validation2 = validations.get(2), expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName2, Dimension.of("A1:C1"))).dimension(Dimension.of("A2:"));
+            Validation validation2 = validations.get(2), expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName2, Dimension.of("A1:C1"))).dimension(Dimension.of("A" + verticalMove + ":"));
             assertEquals(validation2.toString(), expectValidation2.toString());
-            Validation validation3 = validations.get(3), expectValidation3 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A2:C2"))).dimension(Dimension.of("F2:F3"));
+            Validation validation3 = validations.get(3), expectValidation3 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A2:C2"))).dimension(Dimension.of("F"+verticalMove+":F"+(verticalMove+1)));
             assertEquals(validation3.toString(), expectValidation3.toString());
         }
     }
@@ -913,9 +926,17 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
     public static class GameEntry {
+        @ExcelColumn("渠道")
         Integer channel;
-        String game, account, vip;
+        @ExcelColumn("游戏")
+        String game;
+        @ExcelColumn("账号")
+        String account;
+        @ExcelColumn("VIP")
+        String vip;
+        @ExcelColumn("注册时间")
         java.util.Date date;
+        @ExcelColumn("是否满30级")
         Boolean isAdult;
 
         public static List<GameEntry> random() {
