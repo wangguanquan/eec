@@ -1505,12 +1505,14 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                 if (dynamicValidations == null) dynamicValidations = new ArrayList<>();
                 dynamicValidations.add(newRlv);
             }
-            // 将直接写文本转为引用
+            // 如果文本长度超过250则转为引用
             else if (lv.options != null && !lv.options.isEmpty()) {
                 List<String> dataRows = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
-                rows.add(dataRows);
-                lv.options = null;
-                lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size()));
+                if (dataRows.stream().anyMatch(s -> s.length() > 250)) {
+                    rows.add(dataRows);
+                    lv.options = null;
+                    lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size()));
+                }
             }
         }
 
