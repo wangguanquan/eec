@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.e7;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
 import org.ttzero.excel.entity.Watermark;
@@ -76,7 +77,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.ttzero.excel.entity.Sheet.int2Col;
@@ -133,7 +133,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * If there are any auto-width columns
      */
-    protected boolean includeAutoWidth;
+    protected boolean includeAutoWidth, ready;
     /**
      * Picture and Chart Support
      */
@@ -164,64 +164,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     /**
      * Write a row block
      *
-     * @param supplier a row-block supplier
-     * @throws IOException if I/O error occur
-     */
-    @Override
-    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        Path sheetPath = initWriter(path);
-
-        // Get the first block
-        RowBlock rowBlock = supplier.get();
-
-        // write before
-        writeBefore();
-
-        // Write body data
-        beforeSheetData(sheet.getNonHeader() == 1);
-
-        if (rowBlock != null && rowBlock.hasNext()) {
-            if (progressConsumer == null) {
-                do {
-                    // write row-block data
-                    writeRowBlock(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            } else {
-                do {
-                    // write row-block data and fire progress event
-                    writeRowBlockFireProgress(rowBlock);
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-                if (rowBlock != null && rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
-            }
-        }
-
-        totalRows = rowBlock != null ? rowBlock.getTotal() : 0;
-
-        // write end
-        writeAfter(totalRows);
-
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-
-        // Resize if include auto-width column
-        if (includeAutoWidth) {
-            resizeColumnWidth(sheetPath.toFile(), totalRows);
-        }
-    }
-
-    /**
-     * Write a row block
-     *
      * @param path the storage path
      * @throws IOException if I/O error occur
      */
     @Override
     public void writeTo(Path path) throws IOException {
-        Path sheetPath = initWriter(path);
+        initWriter(path);
 
         // Get the first block
         RowBlock rowBlock = sheet.nextBlock();
@@ -256,17 +204,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         totalRows = rowBlock.getTotal();
-
-        // write end
-        writeAfter(totalRows);
-
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-
-        // Resize if include auto-width column
-        if (includeAutoWidth) {
-            resizeColumnWidth(sheetPath.toFile(), totalRows);
-        }
     }
 
     protected Path initWriter(Path root) throws IOException {
@@ -276,6 +213,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         Path sheetPath = workSheetPath.resolve(sheet.getFileName());
+        // Already initialized
+        if (ready) return sheetPath;
 
         this.bw = new ExtBufferedWriter(Files.newBufferedWriter(sheetPath, StandardCharsets.UTF_8));
 
@@ -293,14 +232,12 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
 
-//        // Fire progress event
-//        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
-
         // Relationship
         if (relManager == null) relManager = sheet.getRelManager();
 
         if (hyperlinkMap == null) hyperlinkMap = new HashMap<>();
 
+        ready = true;
         LOGGER.debug("{} WorksheetWriter initialization completed.", sheet.getName());
         return sheetPath;
     }
@@ -349,6 +286,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         e.sheetDataReady = 0;
         e.totalRows = 0;
         e.drawingsWriter = null;
+        e.ready = false;
+        e.bw = null;
         return copy;
     }
 
@@ -510,6 +449,35 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             bw.write("</worksheet>");
         }
         LOGGER.debug("Sheet [{}] writing completed, total rows: {}", sheet.getName(), total);
+    }
+
+    @Override
+    public void writeData(RowBlock rowBlock) throws IOException {
+        if (!ready) {
+            Path path = sheet.getWorkbook().getWorkbookWriter().writeBefore();
+            // Init
+            initWriter(path.resolve("xl"));
+            // write before
+            writeBefore();
+            // Write body data
+            beforeSheetData(sheet.getNonHeader() == 1);
+        }
+
+        if (progressConsumer == null) writeRowBlock(rowBlock);
+        else writeRowBlockFireProgress(rowBlock);
+
+        totalRows = rowBlock.getTotal();
+    }
+
+    /**
+     * 返回数据样式转换器
+     *
+     * @return 如果有斑马线则返回 {@link XMLZebraLineCellValueAndStyle}否则返回{@link XMLCellValueAndStyle}
+     */
+    @Override
+    public ICellValueAndStyle getCellValueAndStyle() {
+        int zebraFillStyle = sheet.getZebraFillStyle();
+        return zebraFillStyle > 0 ? new XMLZebraLineCellValueAndStyle(zebraFillStyle) : new XMLCellValueAndStyle();
     }
 
     /**
@@ -1084,23 +1052,25 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * @throws IOException if I/O error occur
      */
     protected void resizeColumnWidth(File path, int rows) throws IOException {
-        // There has no column to reset width
-        if (columns.length <= 0 || rows <= 0) return;
-        // Collect column width
-        for (int i = 0; i < columns.length; i++) {
-            Column hc = columns[i];
-            int k = hc.getAutoSize();
-            // If fixed width or media cell
-            if (k == 2 || hc.getColumnType() == 1) {
-                double width = hc.width >= 0.0D ? hc.width: sheet.getDefaultWidth();
-                hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, RoundingMode.HALF_UP).doubleValue();
-                continue;
+        if (includeAutoWidth) {
+            // There has no column to reset width
+            if (columns.length <= 0 || rows <= 0) return;
+            // Collect column width
+            for (int i = 0; i < columns.length; i++) {
+                Column hc = columns[i];
+                int k = hc.getAutoSize();
+                // If fixed width or media cell
+                if (k == 2 || hc.getColumnType() == 1) {
+                    double width = hc.width >= 0.0D ? hc.width : sheet.getDefaultWidth();
+                    hc.width = BigDecimal.valueOf(Math.min(width + 0.65D, Const.Limit.COLUMN_WIDTH)).setScale(2, RoundingMode.HALF_UP).doubleValue();
+                    continue;
+                }
+                double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
+                double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
+                if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
+                if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
+                hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();
             }
-            double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
-            double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex()), len)) + 1.86D;
-            if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
-            if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
-            hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();
         }
 
         if (bw != null) {
@@ -1112,11 +1082,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         }
 
         XMLWorksheetWriter _writer = new XMLWorksheetWriter(sheet);
-//        {
-//            @Override protected boolean hasMedia() {
-//                return false;
-//            }
-//        };
         _writer.totalRows = totalRows;
         _writer.startRow = startRow;
         _writer.startHeaderRow = startHeaderRow;
@@ -1139,8 +1104,20 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
      * Release resources
      */
     @Override
-    public void close() {
-        FileUtil.close(bw);
+    public void close() throws IOException {
+        if (bw != null) {
+            // write end
+            writeAfter(totalRows);
+
+            // Resize if include auto-width column
+            resizeColumnWidth(workSheetPath.resolve(sheet.getFileName()).toFile(), totalRows);
+
+            FileUtil.close(bw);
+            bw = null;
+        }
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
+
         // Close drawing writer
         FileUtil.close(drawingsWriter);
     }
@@ -1185,7 +1162,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         if (columns.length > 0) bw.write(int2Col(columns[0].getColNum()));
         else bw.write('A');
         bw.writeInt(startHeaderRow);
-        int n = 11, size = totalRows > 0 ? totalRows : sheet.size(); // fill 11 space
+        int n = 11, size = totalRows; // fill 11 space
         if (size > 0 && columns.length > 0) {
             bw.write(':');
             n--;
@@ -1193,7 +1170,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             char[] col = int2Col(hc.getColNum());
             bw.write(col);
             n -= col.length;
-            size = includeAutoWidth || sheet.getNonHeader() == 1 ? size + startRow - 1 : size + startRow + columns[0].subColumnSize() - 1;
+            size = size + startRow - 1;
             bw.writeInt(size > getRowLimit() ? getRowLimit() : size);
             n -= stringSize(size);
         }
@@ -1462,11 +1439,6 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
 
         // 扩展节点
         writeExtList(extList);
-    }
-
-    @Deprecated
-    protected void writeWaterMark() throws IOException {
-        writeWatermark();
     }
 
     /**

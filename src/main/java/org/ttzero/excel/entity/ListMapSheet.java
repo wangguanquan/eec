@@ -75,25 +75,12 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     }
 
     /**
-     * 实例化工作表并指定工作表名称，水印和表头信息
-     *
-     * @param name      工作表名称
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListMapSheet(String name, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
-    }
-
-    /**
      * 实例化工作表并添加导出数据
      *
      * @param data 需要导出的数据
      */
     public ListMapSheet(List<Map<String, T>> data) {
-        this(null, data);
+        super(data);
     }
 
     /**
@@ -103,8 +90,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param data 需要导出的数据
      */
     public ListMapSheet(String name, List<Map<String, T>> data) {
-        super(name);
-        setData(data);
+        super(name, data);
     }
 
     /**
@@ -114,7 +100,7 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param columns 表头信息
      */
     public ListMapSheet(List<Map<String, T>> data, final Column... columns) {
-        this(null, data, columns);
+        super(data, columns);
     }
 
     /**
@@ -125,74 +111,8 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
      * @param columns 表头信息
      */
     public ListMapSheet(String name, List<Map<String, T>> data, final Column... columns) {
-        super(name, columns);
-        setData(data);
+        super(name, data, columns);
     }
-
-    /**
-     * 实例化工作表并添加导出数据和表头信息
-     *
-     * @param data      需要导出的数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListMapSheet(List<Map<String, T>> data, Watermark watermark, final Column... columns) {
-        this(null, data, watermark, columns);
-    }
-
-    /**
-     * 实例化指定名称工作表并添加导出数据和表头信息
-     *
-     * @param name      工作表名
-     * @param data      需要导出的数据
-     * @param watermark 水印
-     * @param columns   表头信息
-     * @deprecated 使用场景极少，后续版本将删除
-     */
-    @Deprecated
-    public ListMapSheet(String name, List<Map<String, T>> data, Watermark watermark, final Column... columns) {
-        super(name, watermark, columns);
-        setData(data);
-    }
-
-    /**
-     * 重置{@code RowBlock}行块数据
-     */
-    @Override
-    protected void resetBlockData() {
-        if (!eof && left() < rowBlock.capacity()) {
-            append();
-        }
-        int end = getEndIndex(), len = columns.length;
-        boolean hasGlobalStyleProcessor = (extPropMark & 2) == 2;
-        for (; start < end; rows++, start++) {
-            Row row = rowBlock.next();
-            row.index = rows;
-            row.height = getRowHeight();
-            Cell[] cells = row.realloc(len);
-            Map<String, T> rowDate = data.get(start);
-            for (int i = 0; i < len; i++) {
-                Column hc = columns[i];
-                T e = rowDate != null ? rowDate.get(hc.key) : null;
-                // Clear cells
-                Cell cell = cells[i];
-                cell.clear();
-
-                // Reset value type
-                if (e != null && e.getClass() != hc.getClazz()) {
-                    hc.setClazz(e.getClass());
-                }
-
-                cellValueAndStyle.reset(row, cell, e, hc);
-                if (hasGlobalStyleProcessor) {
-                    cellValueAndStyle.setStyleDesign(rowDate, cell, hc, getStyleProcessor());
-                }
-            }
-        }
-    }
-
 
     /**
      * 获取表头信息，未指定{@code Columns}时默认以第1个非{@code null}的Map值做为参考，将该map中所有key做为表头
@@ -269,19 +189,25 @@ public class ListMapSheet<T> extends ListSheet<Map<String, T>> {
     }
 
     /**
-     * 获取下一段{@link RowBlock}行块数据，工作表输出协议通过此方法循环获取行数据并落盘，
-     * 行块被设计为一个滑行窗口，下游输出协议只能获取一个窗口的数据默认包含32行。
+     * 重置单行数据
      *
-     * @return 行块
+     * @param row Excel行
+     * @param rowData 行数据
      */
     @Override
-    public RowBlock nextBlock() {
-        // clear first
-        rowBlock.clear();
-
-        // As default as force export
-        resetBlockData();
-
-        return rowBlock.flip();
+    protected void resetRowData(Row row, Map<String, T> rowData) {
+        int len = columns.length;
+        Cell[] cells = row.realloc(len);
+        boolean nonNull = rowData != null;
+        for (int i = 0; i < len; i++) {
+            Column hc = columns[i];
+            T e = null;
+            if (nonNull) {
+                e = rowData.get(hc.key);
+                // Reset value type
+                if (e != null && e.getClass() != hc.getClazz()) hc.setClazz(e.getClass());
+            }
+            resetCellValueAndStyle(row, cells[i], rowData, e, hc);
+        }
     }
 }

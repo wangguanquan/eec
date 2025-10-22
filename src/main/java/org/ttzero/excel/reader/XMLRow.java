@@ -47,19 +47,13 @@ import static org.ttzero.excel.util.StringUtil.swap;
  */
 public class XMLRow extends Row {
     /**
-     * @deprecated 未使用，下个版本删除
-     */
-    @Deprecated
-    protected int startRow;
-
-    /**
      * The number of row. (one base)
      *
      * @return int value
      */
     @Override
     public int getRowNum() {
-        if (rowNum == -1) rowNum = index = searchRowNum();
+        if (rowNum == -1) rowNum = searchRowNum();
         return rowNum;
     }
 
@@ -97,7 +91,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNum = this.index = this.lc = -1; // 兼容处理，后续删除index
+        this.rowNum = this.lc = -1;
         parseCells();
         return this;
     }
@@ -109,7 +103,7 @@ public class XMLRow extends Row {
         this.from = from;
         this.to = from + size;
         this.cursor = from;
-        this.rowNum = this.index = -1; // 兼容处理，后续删除index
+        this.rowNum = -1;
         this.fc = this.lc = -1;
         return this;
     }
@@ -240,7 +234,8 @@ public class XMLRow extends Row {
         // The style index
         cell.xf = xf;
         cell.t = t;
-        if (lc < i) lc = i;
+//        if (lc < i)
+        lc = i;
 
         return cell;
     }
@@ -254,11 +249,6 @@ public class XMLRow extends Row {
         }
         return _n ? -n : n;
     }
-
-//    protected static double toDouble(char[] cb, int a, int b) {
-//        return Double.parseDouble(new String(cb, a, b - a));
-//    }
-
 
     /* Found specify target  */
     protected int get(char c) {
@@ -293,7 +283,7 @@ public class XMLRow extends Row {
     /**
      * Found text tag range
      *
-     * Code like this {@code <is><t>cell value</t></is>}
+     * <p>Code like this {@code <is><t>cell value</t></is>}</p>
      *
      * @return the end index of string value
      */
@@ -304,7 +294,7 @@ public class XMLRow extends Row {
     /**
      * Found value tag range
      *
-     * Code like this {@code <v>0</v>}
+     * <p>Code like this {@code <v>0</v>}</p>
      *
      * @return the end index of int value
      */
@@ -381,125 +371,10 @@ public class XMLRow extends Row {
         cursor = e;
     }
 
-//    @Deprecated
-//    XMLCalcRow asCalcRow() {
-//        return !(this instanceof XMLCalcRow) ? new XMLCalcRow(this) : (XMLCalcRow) this;
-//    }
-//
-//    @Deprecated
-//    XMLMergeRow asMergeRow() {
-//        return !(this instanceof XMLMergeRow) ? new XMLMergeRow(this) : (XMLMergeRow) this;
-//    }
-
     XMLFullRow asFullRow() {
         return this.getClass() != XMLFullRow.class ? new XMLFullRow(this) : (XMLFullRow) this;
     }
 }
-
-///**
-// * Cell with Calc
-// * @deprecated 使用 {@link XMLFullRow}代替,即将删除
-// */
-//@Deprecated
-//class XMLCalcRow extends XMLFullRow {
-//
-//    XMLCalcRow(XMLRow row) {
-//        super(row);
-//    }
-//
-//    /**
-//     * Loop parse cell
-//     */
-//    @Override
-//    protected void parseCells() {
-//        cursor = searchSpan();
-//        for (; cb[cursor++] != '>'; ) ;
-//        unknownLength = lc < 0;
-//
-//        // Parse formula if exists and can parse
-//        if (hasCalcFunc) {
-//            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
-//        }
-//
-//        // Parse cell value
-//        for (Cell cell; (cell = nextCell()) != null; subParseCellValue(cell)) ;
-//    }
-//
-//    /**
-//     * Parse cell value
-//     *
-//     * @param cell current {@link Cell}
-//     */
-//    @Override
-//    protected void subParseCellValue(Cell cell) {
-//        // Parse calc
-//        parseCalcFunc(cell);
-//
-//        // Parse value
-//        super.parseCellValue(cell);
-//    }
-//
-//}
-//
-///**
-// * Copy value on merge cells
-// * @deprecated 使用 {@link XMLFullRow}代替,即将删除
-// */
-//@Deprecated
-//class XMLMergeRow extends XMLFullRow {
-//
-//    XMLMergeRow(XMLRow row) {
-//        super(row);
-//    }
-//
-//    /**
-//     * Loop parse cell
-//     */
-//    @Override
-//    protected void parseCells() {
-//        cursor = searchSpan();
-//        for (; cb[cursor++] != '>'; ) ;
-//        unknownLength = lc < 0;
-//
-//        // Parse cell value
-//        int i = 1, r = getRowNum();
-//        for (Cell cell; (cell = nextCell()) != null; ) {
-//            if (cell.i > i) for (; i < cell.i; i++) subParseCellValue(cells[i - 1]);
-//            subParseCellValue(cell);
-//            i++;
-//        }
-//
-//        /*
-//         Some tools handle merged cells that ignore all cells
-//          in the merged range except for the first one,
-//          so compatibility is required here for cells that are outside the spans range
-//         */
-//        for (; mergeCells.test(r, i); i++) {
-//            if (lc < i) {
-//                // Give a new cells
-//                if (cells.length < i) cells = copyCells(i);
-//                lc = i;
-//            }
-//            subParseCellValue(cells[i - 1]);
-//        }
-//    }
-//
-//
-//    /**
-//     * Parse cell value
-//     *
-//     * @param cell current {@link Cell}
-//     */
-//    @Override
-//    protected void subParseCellValue(Cell cell) {
-//
-//        // Parse value
-//        super.parseCellValue(cell);
-//
-//        // Setting/copy value if merged
-//        mergedFunc.accept(getRowNum(), cell);
-//    }
-//}
 
 /**
  * Copy value on merge cells
@@ -510,7 +385,7 @@ class XMLFullRow extends XMLRow {
     // InterfaceFunction
     MergeValueFunc mergedFunc;
     // A merge cells grid
-    Grid mergeCells;
+    Grid mergeGrid;
     // height，只有当customHeight为1时height才会有值
     Double height;
     // 是否隐藏
@@ -547,7 +422,7 @@ class XMLFullRow extends XMLRow {
 
         // Parse formula if exists and can parse
         if (hasCalcFunc) {
-            calcFun.accept(getRowNum(), cells, !unknownLength ? lc - fc : -1);
+            calcFun.accept(getRowNum(), cells, lc > fc ? lc - fc : -1);
         }
 
         // Parse cell value
@@ -563,7 +438,7 @@ class XMLFullRow extends XMLRow {
           in the merged range except for the first one,
           so compatibility is required here for cells that are outside the spans range
          */
-        for (; mergeCells.test(r, i); i++) {
+        for (; mergeGrid.test(r, i); i++) {
             if (lc < i) {
                 // Give a new cells
                 if (cells.length < i) cells = copyCells(i);
@@ -619,7 +494,7 @@ class XMLFullRow extends XMLRow {
 
     /**
      * Found the Function tag range
-     * Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f>
+     * <p>Code like this {@code <f t="shared" ref="B1:B10" si="0">SUM(A1:A10)</f></p>
      *
      * @param cell current {@link Cell}
      * @return the end index of function value
@@ -717,8 +592,8 @@ class XMLFullRow extends XMLRow {
         }
     }
 
-    XMLFullRow setCopyValueFunc(Grid mergeCells, MergeValueFunc mergedFunc) {
-        this.mergeCells = mergeCells;
+    XMLFullRow setCopyValueFunc(Grid mergeGrid, MergeValueFunc mergedFunc) {
+        this.mergeGrid = mergeGrid;
         this.mergedFunc = mergedFunc;
         return this;
     }

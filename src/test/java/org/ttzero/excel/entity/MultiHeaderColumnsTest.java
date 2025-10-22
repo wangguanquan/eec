@@ -697,6 +697,48 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
         }
     }
 
+    @Test public void testPushModelRepeatAnnotations() throws IOException {
+        final String fileName = "Push Model Repeat Columns Annotation.xlsx";
+        List<RepeatableEntry> list = new ArrayList<>();
+        Workbook workbook = new Workbook().setWatermark(Watermark.of("勿外传"))
+            .setAutoSize(true);
+        ListSheet<RepeatableEntry> listSheet = new ListSheet<>();
+        workbook.addSheet(listSheet);
+
+        // Write data
+        for (int i = 0; i < 5; i++) {
+            List<RepeatableEntry> sub = RepeatableEntry.randomTestData();
+            listSheet.writeData(sub);
+            list.addAll(sub);
+        }
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            List<RepeatableEntry> readList = reader.sheet(0).header(1, 4).bind(RepeatableEntry.class).rows()
+                .map(row -> (RepeatableEntry) row.get()).collect(Collectors.toList());
+
+            assertEquals(list.size(), readList.size());
+            for (int i = 0, len = list.size(); i < len; i++)
+                assertEquals(list.get(i), readList.get(i));
+
+
+            // Row to Map
+            List<Map<String, Object>> mapList = reader.sheet(0).header(1, 4).rows().map(Row::toMap).collect(Collectors.toList());
+            assertEquals(list.size(), mapList.size());
+            for (int i = 0, len = list.size(); i < len; i++) {
+                Map<String, Object> sub = mapList.get(i);
+                RepeatableEntry src = list.get(i);
+
+                assertEquals(sub.get("TOP:K:订单号"), src.orderNo);
+                assertEquals(sub.get("TOP:K:A:收件人"), src.recipient);
+                assertEquals(sub.get("TOP:收件地址:A:省"), src.province);
+                assertEquals(sub.get("TOP:收件地址:A:市"), src.city);
+                assertEquals(sub.get("TOP:收件地址:B:区"), src.area);
+                assertEquals(sub.get("TOP:收件地址:B:详细地址"), src.detail);
+            }
+        }
+    }
+
     public static final String[] provinces = {"江苏省", "湖北省", "浙江省", "广东省"};
     public static final String[][] cities = {{"南京市", "苏州市", "无锡市", "徐州市"}
         , {"武汉市", "黄冈市", "黄石市", "孝感市", "宜昌市"}

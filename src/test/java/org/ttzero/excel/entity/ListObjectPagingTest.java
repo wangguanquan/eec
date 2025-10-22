@@ -17,9 +17,11 @@
 package org.ttzero.excel.entity;
 
 import org.junit.Test;
+import org.ttzero.excel.entity.e7.XMLWorksheetWriter;
 import org.ttzero.excel.entity.style.Fill;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.Drawings;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.HeaderRow;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -355,6 +358,78 @@ public class ListObjectPagingTest extends WorkbookTest {
                 assertEquals(firstRow.getRowNum(), 4);
                 assertEquals(firstRow.getFirstColumnIndex(), 3);
             });
+        }
+    }
+
+    @Test public void testPushModelSheet() throws IOException {
+        String fileName = "test push model paging.xlsx";
+        List<ListObjectSheetTest.Item> expectList = ListObjectSheetTest.Item.randomTestData(1024);
+        List<ListObjectSheetTest.Student> expectStudentList = ListObjectSheetTest.Student.randomTestData();
+
+        // PUSH MODEL 工作表
+        ListSheet<ListObjectSheet2Test.E> pushListSheet;
+
+        Workbook workbook = new Workbook()
+            .addSheet(new ListSheet<>("学生", expectStudentList))
+            .addSheet(new ListSheet<>("Item", expectList).setSheetWriter(new XMLWorksheetWriter() {
+                @Override
+                public int getRowLimit() {
+                    return 256;
+                }
+            }))
+            .addSheet(pushListSheet = new ListSheet<>("PUSH MODEL"))
+            .addSheet(new EmptySheet("EMPTY"));
+
+        List<ListObjectSheet2Test.E> expectPushList = new ArrayList<>();
+        // PUSH数据
+        for (int i = 0; i < 10; i++) {
+            List<ListObjectSheet2Test.E> sub = ListObjectSheet2Test.E.data();
+            expectPushList.addAll(sub);
+            pushListSheet.writeData(sub);
+        }
+
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        int count = expectList.size(), rowLimit = workbook.getSheet("Item").getSheetWriter().getRowLimit() - 1; // 1 header row
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            assertEquals(reader.getSheetCount(), (count % rowLimit > 0 ? count / rowLimit + 1 : count / rowLimit) + 3);
+
+            {
+                // 学生Sheet页数据验证
+                org.ttzero.excel.reader.Sheet sheet0 = reader.sheet("学生");
+                assertEquals("学生", sheet0.getName());
+                List<ListObjectSheetTest.Student> studentList = sheet0.dataRows().map(row -> row.to(ListObjectSheetTest.Student.class)).collect(Collectors.toList());
+                assertEquals(studentList.size(), expectStudentList.size());
+                for (int i = 0, len = studentList.size(); i < len; i++) {
+                    ListObjectSheetTest.Student expect = expectStudentList.get(i), e = studentList.get(i);
+                    expect.setId(0); // ID not exported
+                    assertEquals(e, expect);
+                }
+            }
+
+            {
+                // Item分页数据验证
+                List<ListObjectSheetTest.Item> itemList = reader.sheets().filter(s -> s.getName().startsWith("Item")).flatMap(Sheet::dataRows).map(row -> row.to(ListObjectSheetTest.Item.class)).collect(Collectors.toList());
+                assertEquals(itemList.size(), expectList.size());
+                for (int i = 0, len = itemList.size(); i < len; i++) {
+                    assertEquals(itemList.get(i), expectList.get(i));
+                }
+            }
+
+            {
+                // PUSH MODEL数据验证
+                List<ListObjectSheet2Test.E> pushList = reader.sheet("PUSH MODEL").dataRows().map(row -> row.to(ListObjectSheet2Test.E.class)).collect(Collectors.toList());
+                assertEquals(pushList.size(), expectPushList.size());
+                for (int i = 0, len = pushList.size(); i < len; i++) {
+                    assertEquals(pushList.get(i), expectPushList.get(i));
+                }
+            }
+
+            {
+                // EMPTY验证
+                org.ttzero.excel.reader.Sheet sheet = reader.sheet("EMPTY");
+                assertEquals(Dimension.of("A1"), sheet.getDimension());
+            }
         }
     }
 }

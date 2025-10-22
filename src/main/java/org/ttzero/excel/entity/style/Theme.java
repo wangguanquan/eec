@@ -167,6 +167,7 @@ public class Theme {
             this.color = color;
         }
 
+        @Override
         public String toString() {
             if (color == null) return tag;
             int r = color.getRed(), g = color.getGreen(), b = color.getBlue();

@@ -575,14 +575,6 @@ public class ExcelReader implements Closeable {
      * @return Sheet extends XMLSheet
      */
     protected Sheet sheetFactory() {
-//        XMLSheet sheet;
-//        switch (option) {
-//            case VALUE_AND_CALC: sheet = new XMLSheet().asCalcSheet(); break;
-//            case COPY_ON_MERGED: sheet = new XMLSheet().asMergeSheet(); break;
-//            case VALUE_AND_CALC|COPY_ON_MERGED: sheet = new XMLSheet().asFullSheet(); break;
-//            default            : sheet = new XMLSheet();
-//        }
-//        return sheet;
         return new XMLSheet();
     }
 

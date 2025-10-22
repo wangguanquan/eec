@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.ttzero.excel.entity.csv;
 
 import org.ttzero.excel.entity.Column;
 import org.ttzero.excel.entity.ExcelWriteException;
+import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IWorksheetWriter;
 import org.ttzero.excel.entity.Row;
 import org.ttzero.excel.entity.RowBlock;
@@ -30,7 +31,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import static org.ttzero.excel.reader.Cell.BOOL;
 import static org.ttzero.excel.reader.Cell.CHARACTER;
@@ -60,13 +60,17 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
      */
     protected BiConsumer<Sheet, Integer> progressConsumer;
     // Write BOM header
-    protected boolean withBom;
+    protected boolean withBom, ready;
     // Charset 默认UTF-8
     protected Charset charset;
     /**
      * Delimiter char
      */
     protected char delimiter = ',';
+    /**
+     * 临时路径
+     */
+    protected Path workSheetPath;
 
     public CSVWorksheetWriter() { }
 
@@ -111,41 +115,6 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     }
 
     @Override
-    public void writeTo(Path path, Supplier<RowBlock> supplier) throws IOException {
-        Path workSheetPath = initWriter(path);
-        // Get the first block
-        RowBlock rowBlock = supplier.get();
-
-        // write before
-        writeBefore();
-
-        if (rowBlock != null && rowBlock.hasNext()) {
-            if (progressConsumer == null) {
-                do {
-                    // write row-block data
-                    writeRow(rowBlock.next());
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-            } else {
-                Row row;
-                do {
-                    row = rowBlock.next();
-                    // write row-block data
-                    writeRow(row);
-                    // Fire progress
-                    if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
-                    // end of row
-                    if (rowBlock.isEOF()) break;
-                } while ((rowBlock = supplier.get()) != null);
-                progressConsumer.accept(sheet, row.getIndex());
-            }
-        }
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
-    }
-
-    @Override
     public IWorksheetWriter setWorksheet(Sheet sheet) {
         this.sheet = sheet;
         return this;
@@ -166,16 +135,30 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         return Const.Suffix.CSV;
     }
 
+    @Override
+    public void writeData(RowBlock rowBlock) throws IOException {
+        if (!ready) {
+            Path path = sheet.getWorkbook().getWorkbookWriter().writeBefore();
+            initWriter(path);
+            // write before
+            writeBefore();
+        }
+
+        if (progressConsumer == null) writeRowBlock(rowBlock);
+        else writeRowBlockFireProgress(rowBlock);
+    }
 
     @Override
     public void close() throws IOException {
-        if (writer != null)
-            writer.close();
+        // Write some final info
+        sheet.afterSheetAccess(workSheetPath);
+        ready = false;
+        if (writer != null) writer.close();
     }
 
     @Override
     public void writeTo(Path root) throws IOException {
-        Path workSheetPath = initWriter(root);
+        initWriter(root);
         // Get the first block
         RowBlock rowBlock = sheet.nextBlock();
 
@@ -186,22 +169,16 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
             if (progressConsumer == null) {
                 for (; ; ) {
                     // write row-block data
-                    for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
+                    writeRowBlock(rowBlock);
                     // end of row
                     if (rowBlock.isEOF()) break;
                     // Get the next block
                     rowBlock = sheet.nextBlock();
                 }
             } else {
-                Row row;
                 for (; ; ) {
                     // write row-block data and fire progress event
-                    while (rowBlock.hasNext()) {
-                        row = rowBlock.next();
-                        writeRow(row);
-                        // Fire progress
-                        if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
-                    }
+                    writeRowBlockFireProgress(rowBlock);
                     // end of row
                     if (rowBlock.isEOF()) break;
                     // Get the next block
@@ -210,12 +187,12 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
                 if (rowBlock.lastRow() != null) progressConsumer.accept(sheet, rowBlock.lastRow().getIndex());
             }
         }
-        // Write some final info
-        sheet.afterSheetAccess(workSheetPath);
     }
 
     protected Path initWriter(Path root) throws IOException {
-        Path workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
+        this.workSheetPath = root.resolve(sheet.getName() + Const.Suffix.CSV);
+        // Already initialized
+        if (ready) return workSheetPath;
         if (charset == null) {
             writer = CSVUtil.newWriter(workSheetPath, delimiter);
             if (withBom) writer.writeWithBom();
@@ -227,10 +204,7 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
         }
         // Init progress window
         progressConsumer = sheet.getProgressConsumer();
-
-//        // Fire progress event
-//        if (progressConsumer != null) progressConsumer.accept(sheet, 0);
-
+        ready = true;
         return workSheetPath;
     }
 
@@ -258,6 +232,32 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
                 }
                 writer.newLine();
             }
+        }
+    }
+
+    /**
+     * Write a row-block
+     *
+     * @param rowBlock the row-block
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeRowBlock(RowBlock rowBlock) throws IOException {
+        for (; rowBlock.hasNext(); writeRow(rowBlock.next())) ;
+    }
+
+    /**
+     * Write a row-block and fire progress event
+     *
+     * @param rowBlock the row-block
+     * @throws IOException if I/O error occur.
+     */
+    protected void writeRowBlockFireProgress(RowBlock rowBlock) throws IOException {
+        Row row;
+        while (rowBlock.hasNext()) {
+            row = rowBlock.next();
+            writeRow(row);
+            // Fire progress
+            if (row.getIndex() % 1_000 == 0) progressConsumer.accept(sheet, row.getIndex());
         }
     }
 
@@ -297,5 +297,15 @@ public class CSVWorksheetWriter implements IWorksheetWriter {
     public CSVWorksheetWriter setCharset(Charset charset) {
         this.charset = charset;
         return this;
+    }
+
+    /**
+     * 返回CSV数据样式转换器，该转换器将所有数据转为字符器格式并忽略所有样式
+     *
+     * @return {@link ICellValueAndStyle}
+     */
+    @Override
+    public ICellValueAndStyle getCellValueAndStyle() {
+        return new CSVCellValueAndStyle();
     }
 }

@@ -118,16 +118,16 @@ public class HeaderRow extends Row {
     public HeaderRow with(List<Dimension> mergeCells, int headRows, Row ... rows) {
         this.headRows = headRows;
         Row row = rows[rows.length - 1];
-        if (row == null) return new HeaderRow();
-        sst = row.sst;
-        styles = row.styles;
-        sharedCalc = row.sharedCalc;
+        if (row == null) return HeaderRow.emptyHeader();
+        this.sst = row.sst;
+        this.styles = row.styles;
+        this.sharedCalc = row.sharedCalc;
         this.names = new String[row.lc];
         this.mapping = new HashMap<>();
         // Extends from row
         this.fc = row.fc;
         this.lc = row.lc;
-        this.rowNum = this.index = row.rowNum; // 兼容处理，后续删除index
+        this.rowNum = row.rowNum;
         this.cells = new Cell[this.names.length];
         for (int i = 0; i < row.fc; i++) {
             this.cells[i] = new Cell(i);
@@ -169,6 +169,14 @@ public class HeaderRow extends Row {
             }
         }
         return this;
+    }
+
+    public static HeaderRow emptyHeader() {
+        HeaderRow hr = new HeaderRow();
+        hr.fc = hr.lc = 0;
+        hr.names = new String[0];
+        hr.mapping = new HashMap<>();
+        return hr;
     }
 
     public final boolean is(Class<?> clazz) {
@@ -412,9 +420,16 @@ public class HeaderRow extends Row {
 
     @Override
     public String toString() {
-        return String.join(" | ", names);
+        return names != null ? String.join(" | ", names) : null;
     }
 
+    /**
+     * markdown string
+     *
+     * @return markdown string
+     * @deprecated 未使用，后续删除
+     */
+    @Deprecated
     public String toMarkdownString() {
         StringJoiner joiner = new StringJoiner(" | ");
         StringBuilder buf = new StringBuilder();
@@ -451,6 +466,14 @@ public class HeaderRow extends Row {
         return buf.toString();
     }
 
+    /**
+     * 简单计算文本长度
+     *
+     * @param name 标题
+     * @return 文本长度
+     * @deprecated 未使用，后续删除
+     */
+    @Deprecated
     protected int simpleTestLength(String name) {
         if (name == null) return 4;
         char[] chars = name.toCharArray();

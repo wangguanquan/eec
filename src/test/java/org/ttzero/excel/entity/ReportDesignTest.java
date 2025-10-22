@@ -166,9 +166,11 @@ public class ReportDesignTest extends WorkbookTest {
 
             // 累计
             summary.num += e.num;
+            summary.outNum += e.outNum;
             summary.totalAmount = summary.totalAmount.add(e.totalAmount);
 
             allSummary.num += e.num;
+            allSummary.outNum += e.outNum;
             allSummary.totalAmount = allSummary.totalAmount.add(e.totalAmount);
 
             i++;
@@ -354,6 +356,7 @@ public class ReportDesignTest extends WorkbookTest {
             if (u.isSummary()) {
                 Font font = sst.getFont(style).clone();
                 font.bold();
+                font.setColor(Color.RED);
                 style = sst.modifyFont(style, font);
             } else if (u.groupBy() != null && !group.equals(u.groupBy())) {
                 group = u.groupBy();
