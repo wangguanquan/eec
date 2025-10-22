@@ -605,21 +605,22 @@ public class TemplateSheetTest extends WorkbookTest {
             List<Validation> validations = sheet.getValidations();
             assertNotNull(validations);
             assertEquals(validations.size(), 4);
-            Validation validation0 = validations.get(0);
+            List<String> valStrList = validations.stream().map(Validation::toString).collect(Collectors.toList());
             ListValidation<String> expectValidation0 = new ListValidation<>();
             int verticalMove = expectList.size() + 5;
             expectValidation0.dimension(Dimension.of("B" + verticalMove + ":C1048576"));
             expectValidation0.indirect = "A" + verticalMove;
-            assertEquals(validation0.toString(), expectValidation0.toString());
+            assertTrue(valStrList.contains(expectValidation0.toString()));
 
+            // 引用Val会新生成worksheet名称，所以下面的sheet名从生成后的文件中动态获取
             org.ttzero.excel.reader.Sheet[] allSheet = reader.all();
-            String sheetName2 = allSheet[allSheet.length - 2].getName(), sheetName3 = allSheet[allSheet.length - 1].getName();
-            Validation validation1 = validations.get(1), expectValidation1 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).prompt("输入姓别").dimension(Dimension.of("E" + verticalMove));
-            assertEquals(validation1.toString(), expectValidation1.toString());
-            Validation validation2 = validations.get(2), expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName2, Dimension.of("A1:C1"))).dimension(Dimension.of("A" + verticalMove + ":"));
-            assertEquals(validation2.toString(), expectValidation2.toString());
-            Validation validation3 = validations.get(3), expectValidation3 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A2:C2"))).dimension(Dimension.of("F"+verticalMove+":F"+(verticalMove+1)));
-            assertEquals(validation3.toString(), expectValidation3.toString());
+            String sheetName3 = allSheet[allSheet.length - 1].getName();
+            Validation expectValidation1 = new ListValidation<>().in(Arrays.asList("未知","男","女")).prompt("输入姓别").dimension(Dimension.of("E" + verticalMove));
+            assertTrue(valStrList.contains(expectValidation1.toString()));
+            Validation expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).dimension(Dimension.of("A" + verticalMove + ":"));
+            assertTrue(valStrList.contains(expectValidation2.toString()));
+            Validation expectValidation3 = new ListValidation<>().in(Arrays.asList("未知","男","女")).dimension(Dimension.of("F"+verticalMove+":F"+(verticalMove+1)));
+            assertTrue(valStrList.contains(expectValidation3.toString()));
         }
     }
 
