@@ -1508,7 +1508,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             // 如果文本长度超过250则转为引用
             else if (lv.options != null && !lv.options.isEmpty()) {
                 List<String> dataRows = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
-                if (dataRows.stream().anyMatch(s -> s.length() > 250)) {
+                if (dataRows.stream().map(String::length).reduce(0, Integer::sum) + dataRows.size() > 250) {
                     rows.add(dataRows);
                     lv.options = null;
                     lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size()));
