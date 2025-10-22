@@ -76,6 +76,10 @@ public class ValidationTest extends WorkbookTest {
             FullSheet sheet = reader.sheet(0).asFullSheet();
             List<Validation> validations = sheet.getValidations();
             assertEquals(validations.size(), expectValidations.size());
+            for (int i = 0; i < validations.size(); i++) {
+                Validation expectVal = expectValidations.get(i), readVal = validations.get(i);
+                assertEquals(expectVal.toString(), readVal.toString());
+            }
         }
     }
 
@@ -160,9 +164,12 @@ public class ValidationTest extends WorkbookTest {
     }
 
     @Test public void testListValidationOverSize() throws IOException {
-        List<String> addressList = Arrays.asList("东山县","南靖县","龙海区","诏安县","龙文区","平和县","漳浦县","芗城区","云霄县","华安县","长泰县","南安市","石狮市","泉港区","金门县","丰泽区","安溪县","永春县","洛江区","德化县","晋江市","鲤城区","惠安县","将乐县","沙县区","永安市","梅列区","尤溪县","建宁县","宁化县","三元区","明溪县","泰宁县","大田县","清流县","古田县","寿宁县","福安市","周宁县","蕉城区","霞浦县","福鼎市","屏南县","柘荣县","同安区","翔安区","思明区","湖里区","集美区","海沧区","仙游县","秀屿区","荔城区","城厢区","涵江区","鼓楼区","平潭县","长乐区","闽清县","福清市","连江县","晋安区","罗源县","闽侯县","仓山区","永泰县","马尾区","台江区","邵武市","建阳区","建瓯市","武夷山市","延平区","顺昌县","光泽县","政和县","浦城县","松溪县","上杭县","武平县","漳平市","新罗区","连城县","永定区","长汀县");
+        List<String> len255List = Arrays.asList("东山县","南靖县","龙海区","诏安县","龙文区","平和县","漳浦县","芗城区","云霄县","华安县","长泰县","南安市","石狮市","泉港区","金门县","丰泽区","安溪县","永春县","洛江区","德化县","晋江市","鲤城区","惠安县","将乐县","沙县区","永安市","梅列区","尤溪县","建宁县","宁化县","三元区","明溪县","泰宁县","大田县","清流县","古田县","寿宁县","福安市","周宁县","蕉城区","霞浦县","福鼎市","屏南县","柘荣县","同安区","翔安区","思明区","湖里区","集美区","海沧区","仙游县","秀屿区","荔城区","城厢区","涵江区","鼓楼区","平潭县","长乐区","闽清县","福清市","连江县","晋安区","罗源县","闽侯县");
+        List<String> over255List = new ArrayList<>(len255List);
+        over255List.add("仓山区");
         List<Validation> expectValidations = new ArrayList<>();
-        expectValidations.add(new ListValidation<String>().in(addressList).dimension(Dimension.of("A1")).prompt("请选择地址"));
+        expectValidations.add(new ListValidation<String>().in(len255List).dimension(Dimension.of("A1")).prompt("内联选择框"));
+        expectValidations.add(new ListValidation<String>().in(over255List).dimension(Dimension.of("D1")).prompt("引用选择框"));
         final String fileName = "list oversize Test .xlsx";
         new Workbook()
             .addSheet(new ListSheet<>().putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
@@ -175,20 +182,23 @@ public class ValidationTest extends WorkbookTest {
             assertEquals(validations.size(), expectValidations.size());
 
             org.ttzero.excel.reader.Sheet sheet2 = reader.sheet(1);
+            // 内联选择
+            assertEquals(validations.get(0).toString(), expectValidations.get(0).toString());
+
             // 判断是否为引用
-            Validation expectVal = new ListValidation<>().dimension(Dimension.of("A1")).prompt("请选择地址").referer(new CrossDimension(sheet2.getName(), new Dimension(1, (short) 1, 1, (short) addressList.size())));
-            assertEquals(validations.get(0).toString(), expectVal.toString());
+            Validation expectVal2 = new ListValidation<>().dimension(Dimension.of("D1")).prompt("引用选择框").referer(new CrossDimension(sheet2.getName(), new Dimension(1, (short) 1, 1, (short) over255List.size())));
+            assertEquals(validations.get(1).toString(), expectVal2.toString());
 
             // 判断选项内容和顺序
             Iterator<Row> iter = sheet2.iterator();
             assertTrue(iter.hasNext());
             Row row0 = iter.next();
-            assertTrue(addressList.size() >= row0.getLastColumnIndex());
+            assertTrue(over255List.size() >= row0.getLastColumnIndex());
             int i = 0;
             for (; i < row0.getLastColumnIndex(); i++) {
-                assertEquals(addressList.get(i), row0.getString(i));
+                assertEquals(over255List.get(i), row0.getString(i));
             }
-            assertEquals(addressList.size(), i);
+            assertEquals(over255List.size(), i);
         }
     }
 }
