@@ -29,6 +29,7 @@ import org.ttzero.excel.entity.style.Font;
 import org.ttzero.excel.entity.style.Horizontals;
 import org.ttzero.excel.entity.style.PatternType;
 import org.ttzero.excel.entity.style.Styles;
+import org.ttzero.excel.entity.style.Verticals;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.docProps.CustomProperties;
 import org.ttzero.excel.processor.Converter;
@@ -884,6 +885,25 @@ public class ListObjectSheet2Test extends WorkbookTest {
             int cell1Style = headerRow.getCellStyle(1);
             assertEquals(styles.getFont(cell1Style), new Font("微软雅黑", 20));
             assertEquals(styles.getFill(cell1Style), new Fill(Styles.toColor("#E9EAEC")));
+        }
+    }
+
+    @Test public void testColumnHeaderStyle2() throws IOException {
+        String fileName = "testColumnHeaderStyle2.xlsx";
+        new Workbook().addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData())
+            .setHeaderFont(new Font("微软雅黑", 18, Font.Style.BOLD))
+            .setHeaderHorizontal(Horizontals.CENTER)
+            .setHeaderVertical(Verticals.CENTER)
+        ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int cell0Style = headerRow.getCellStyle(0);
+            assertEquals(new Font("微软雅黑", 18, Font.Style.BOLD), styles.getFont(cell0Style));
+            assertEquals(NONE_FILL, styles.getFill(cell0Style));
+            assertEquals(Horizontals.CENTER, styles.getHorizontal(cell0Style));
+            assertEquals(Verticals.CENTER, styles.getVertical(cell0Style));
         }
     }
 
