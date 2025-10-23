@@ -892,8 +892,8 @@ public class ListObjectSheet2Test extends WorkbookTest {
         String fileName = "testColumnHeaderStyle2.xlsx";
         new Workbook().addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData())
             .setHeaderFont(new Font("微软雅黑", 18, Font.Style.BOLD))
-            .setHeaderHorizontal(Horizontals.CENTER)
-            .setHeaderVertical(Verticals.CENTER)
+            .setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM)
         ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -902,8 +902,8 @@ public class ListObjectSheet2Test extends WorkbookTest {
             int cell0Style = headerRow.getCellStyle(0);
             assertEquals(new Font("微软雅黑", 18, Font.Style.BOLD), styles.getFont(cell0Style));
             assertEquals(NONE_FILL, styles.getFill(cell0Style));
-            assertEquals(Horizontals.CENTER, styles.getHorizontal(cell0Style));
-            assertEquals(Verticals.CENTER, styles.getVertical(cell0Style));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(cell0Style));
+            assertEquals(Verticals.BOTTOM, styles.getVertical(cell0Style));
         }
     }
 
