@@ -37,7 +37,7 @@ import static org.ttzero.excel.entity.style.Styles.getAttr;
  */
 public class Border implements Cloneable {
 
-    private static final Color defaultColor = new Color(51, 51, 51); // #333333
+    private static final Color defaultBorderColor = new Color(191, 191, 191); // #BFBFBF
 
     private final SubBorder[] borders;
 
@@ -54,7 +54,7 @@ public class Border implements Cloneable {
      * @param style 边框样式
      */
     public Border(BorderStyle style) {
-        this(style, defaultColor);
+        this(style, defaultBorderColor);
     }
 
     /**
@@ -84,7 +84,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setBorderTop(BorderStyle style) {
-        borders[2] = new SubBorder(style, defaultColor);
+        borders[2] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -95,7 +95,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setBorderRight(BorderStyle style) {
-        borders[1] = new SubBorder(style, defaultColor);
+        borders[1] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -106,7 +106,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setBorderBottom(BorderStyle style) {
-        borders[3] = new SubBorder(style, defaultColor);
+        borders[3] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -117,7 +117,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setBorderLeft(BorderStyle style) {
-        borders[0] = new SubBorder(style, defaultColor);
+        borders[0] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -128,7 +128,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setDiagonalDown(BorderStyle style) {
-        borders[4] = new SubBorder(style, defaultColor);
+        borders[4] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -139,7 +139,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setDiagonalUp(BorderStyle style) {
-        borders[5] = new SubBorder(style, defaultColor);
+        borders[5] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
@@ -150,7 +150,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setBorder(BorderStyle style) {
-        borders[0] = new SubBorder(style, defaultColor);
+        borders[0] = new SubBorder(style, defaultBorderColor);
         borders[1] = borders[2] = borders[3] = borders[0];
         return this;
     }
@@ -163,7 +163,7 @@ public class Border implements Cloneable {
      * @return 当前边框
      */
     public Border setDiagonal(BorderStyle style) {
-        borders[4] = new SubBorder(style, defaultColor);
+        borders[4] = new SubBorder(style, defaultBorderColor);
         borders[5] = borders[4];
         return this;
     }
@@ -269,7 +269,7 @@ public class Border implements Cloneable {
     }
 
     Border setBorder(int index, BorderStyle style) {
-        borders[index] = new SubBorder(style, defaultColor);
+        borders[index] = new SubBorder(style, defaultBorderColor);
         return this;
     }
 
