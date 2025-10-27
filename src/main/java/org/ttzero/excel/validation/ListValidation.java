@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 序列验证，限定单元格的值只能在序列中选择
+ * 序列验证，限定单元格的值只能在序列中选择，当可选序列值文本合计长度超过255时将转为引用序列
  *
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
