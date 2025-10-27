@@ -139,20 +139,76 @@ public class ValidationTest extends WorkbookTest {
                 put("D省", Arrays.asList("D1市", "D2市"));
             }})
             .addCascadeList(Dimension.of("C2:"), new LinkedHashMap<String, List<String>>(){{
-                put("A1市", Arrays.asList("A1市-1", "A1市-2", "A1市-3"));
-                put("A2市", Arrays.asList("A2市-1", "A2市-2", "A2市-3", "A2市-4", "A2市-5"));
-                put("A3市", Arrays.asList("A3区-1", "A3区-2"));
-                put("B1市", Arrays.asList("B1市-1", "B1市-2"));
-                put("B2市", Arrays.asList("B2市-1", "B2市-2", "B2市-3"));
-                put("B3市", Arrays.asList("B3市-1", "B3市-2", "B3市-3", "B3市-4"));
-                put("B4市", Arrays.asList("B4市-1", "B4市-2"));
-                put("D1市", Arrays.asList("D1市-1", "D1市-2"));
-                put("D2市", Arrays.asList("D2市-1", "D2市-2", "D2市-3", "D2市-4"));
+                put("A1市", Arrays.asList("A1市_1", "A1市_2", "A1市_3"));
+                put("A2市", Arrays.asList("A2市_1", "A2市_2", "A2市_3", "A2市_4", "A2市_5"));
+                put("A3市", Arrays.asList("A3区_1", "A3区_2"));
+                put("B1市", Arrays.asList("B1市_1", "B1市_2"));
+                put("B2市", Arrays.asList("B2市_1", "B2市_2", "B2市_3"));
+                put("B3市", Arrays.asList("B3市_1", "B3市_2", "B3市_3", "B3市_4"));
+                put("B4市", Arrays.asList("B4市_1", "B4市_2"));
+                put("D1市", Arrays.asList("D1市_1", "D1市_2"));
+                put("D2市", Arrays.asList("D2市_1", "D2市_2", "D2市_3", "D2市_4"));
             }})
-        );
+            .addCascadeList(Dimension.of("D2:"), new LinkedHashMap<String, List<String>>() {{
+                put("A1市_1", Arrays.asList("A1市_1_1", "A1市_1_2"));
+                put("A1市_2", Arrays.asList("A1市_2_1", "A1市_2_2"));
+                put("A1市_3", Arrays.asList("A1市_3_1", "A1市_3_2"));
+                put("A2市_1", Arrays.asList("A2市_1_1", "A2市_1_2"));
+                put("A2市_2", Arrays.asList("A2市_2_1", "A2市_2_2"));
+                put("A2市_3", Arrays.asList("A2市_3_1", "A2市_3_2"));
+                put("A2市_4", Arrays.asList("A2市_4_1", "A2市_4_2"));
+                put("A2市_5", Arrays.asList("A2市_5_1", "A2市_5_2"));
+                put("A3区_1", Arrays.asList("A3区_1_1", "A3区_1_2"));
+                put("A3区_2", Arrays.asList("A3区_2_1", "A3区_2_2"));
+                put("B1市_1", Arrays.asList("B1市_1_1", "B1市_1_2"));
+                put("B1市_2", Arrays.asList("B1市_2_1", "B1市_2_2"));
+                put("B2市_1", Arrays.asList("B2市_1_1", "B2市_1_2"));
+                put("B2市_2", Arrays.asList("B2市_2_1", "B2市_2_2"));
+                put("B2市_3", Arrays.asList("B2市_3_1", "B2市_3_2"));
+                put("B3市_1", Arrays.asList("B3市_1_1", "B3市_1_2"));
+                put("B3市_2", Arrays.asList("B3市_2_1", "B3市_2_2"));
+                put("B3市_3", Arrays.asList("B3市_3_1", "B3市_3_2"));
+                put("B3市_4", Arrays.asList("B3市_4_1", "B3市_4_2"));
+                put("B4市_1", Arrays.asList("B4市_1_1", "B4市_1_2"));
+                put("B4市_2", Arrays.asList("B4市_2_1", "B4市_2_2"));
+                put("D1市_1", Arrays.asList("D1市_1_1", "D1市_1_2"));
+                put("D1市_2", Arrays.asList("D1市_2_1", "D1市_2_2"));
+                put("D2市_1", Arrays.asList("D2市_1_1", "D2市_1_2"));
+                put("D2市_2", Arrays.asList("D2市_2_1", "D2市_2_2"));
+                put("D2市_3", Arrays.asList("D2市_3_1", "D2市_3_2"));
+                put("D2市_4", Arrays.asList("D2市_4_1", "D2市_4_2"));
+            }})
+            .addCascadeList(Dimension.of("E2:"), new LinkedHashMap<String, List<String>>() {{
+                put("A1市_1_1", Arrays.asList("A1市_1_1_1", "A1市_1_1_2", "其它"));
+                put("A1市_1_2", Arrays.asList("A1市_1_2_1", "A1市_1_2_2", "其它"));
+                put("A1市_2_1", Arrays.asList("A1市_2_1_1", "A1市_2_1_2", "其它"));
+                put("A1市_2_2", Arrays.asList("A1市_2_2_1", "A1市_2_2_2", "其它"));
+                put("A1市_3_1", Arrays.asList("A1市_3_1_1", "A1市_3_1_2", "其它"));
+                put("A1市_3_2", Arrays.asList("A1市_3_2_1", "A1市_3_2_2", "其它"));
+                put("A2市_1_1", Arrays.asList("A2市_1_1_1", "A2市_1_1_2", "其它"));
+                put("A2市_1_2", Arrays.asList("A2市_1_2_1", "A2市_1_2_2", "其它"));
+                put("A2市_2_1", Arrays.asList("A2市_2_1_1", "A2市_2_1_2", "其它"));
+                put("A2市_2_2", Arrays.asList("A2市_2_2_1", "A2市_2_2_2", "其它"));
+                put("A2市_3_1", Arrays.asList("A2市_3_1_1", "A2市_3_1_2", "其它"));
+                put("A2市_3_2", Arrays.asList("A2市_3_2_1", "A2市_3_2_2", "其它"));
+                put("A2市_4_1", Arrays.asList("A2市_4_1_1", "A2市_4_1_2", "其它"));
+                put("A2市_4_2", Arrays.asList("A2市_4_2_1", "A2市_4_2_2", "其它"));
+                put("A2市_5_1", Arrays.asList("A2市_5_1_1", "A2市_5_1_2", "其它"));
+                put("A2市_5_2", Arrays.asList("A2市_5_2_1", "A2市_5_2_2", "其它"));
+                put("A3区_1_1", Arrays.asList("A3区_1_1_1", "A3区_1_1_2", "其它"));
+                put("A3区_1_2", Arrays.asList("A3区_1_2_1", "A3区_1_2_2", "其它"));
+                put("A3区_2_1", Arrays.asList("A3区_2_1_1", "A3区_2_1_2", "其它"));
+                put("A3区_2_2", Arrays.asList("A3区_2_2_1", "A3区_2_2_2", "其它"));
+                put("B1市_1_1", Arrays.asList("B1市_1_1_1", "B1市_1_1_2", "其它"));
+                put("B1市_1_2", Arrays.asList("B1市_1_2_1", "B1市_1_2_2", "其它"));
+                put("B1市_2_1", Arrays.asList("B1市_2_1_1", "B1市_2_1_2", "其它"));
+                put("B1市_2_2", Arrays.asList("B1市_2_2_1", "B1市_2_2_2", "其它"));
+                put("B2市_1_1", Arrays.asList("B2市_1_1_1", "B2市_1_1_2", "其它"));
+            }}
+        ));
         final String fileName = "Validation CascadeList Test.xlsx";
         new Workbook()
-            .addSheet(new SimpleSheet<>(Collections.singletonList(Arrays.asList("省份","市区","市镇"))).putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
+            .addSheet(new SimpleSheet<>(Collections.singletonList(Arrays.asList("省份", "市区", "市镇", "乡村", "门牌"))).putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
             .writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
@@ -199,6 +255,13 @@ public class ValidationTest extends WorkbookTest {
                 assertEquals(over255List.get(i), row0.getString(i));
             }
             assertEquals(over255List.size(), i);
+        }
+    }
+
+    @Test public void t() {
+        List<String> list = Arrays.asList("A1市_1_1", "A1市_1_2","A1市_2_1", "A1市_2_2","A1市_3_1", "A1市_3_2","A2市_1_1", "A2市_1_2","A2市_2_1", "A2市_2_2","A2市_3_1", "A2市_3_2","A2市_4_1", "A2市_4_2","A2市_5_1", "A2市_5_2","A3区_1_1", "A3区_1_2","A3区_2_1", "A3区_2_2","B1市_1_1", "B1市_1_2","B1市_2_1", "B1市_2_2","B2市_1_1", "B2市_1_2","B2市_2_1", "B2市_2_2","B2市_3_1", "B2市_3_2","B3市_1_1", "B3市_1_2","B3市_2_1", "B3市_2_2","B3市_3_1", "B3市_3_2","B3市_4_1", "B3市_4_2","B4市_1_1", "B4市_1_2","B4市_2_1", "B4市_2_2","D1市_1_1", "D1市_1_2","D1市_2_1", "D1市_2_2","D2市_1_1", "D2市_1_2","D2市_2_1", "D2市_2_2","D2市_3_1", "D2市_3_2","D2市_4_1", "D2市_4_2");
+        for (String k : list) {
+            System.out.println("put(\""+k+"\", Arrays.asList(\""+k+"_1\", \""+k+"_2\", \"其它\"));");
         }
     }
 }
