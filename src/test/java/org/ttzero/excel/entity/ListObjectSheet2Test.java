@@ -894,6 +894,7 @@ public class ListObjectSheet2Test extends WorkbookTest {
             .setHeaderFont(new Font("微软雅黑", 18, Font.Style.BOLD))
             .setHeaderHorizontal(Horizontals.RIGHT)
             .setHeaderVertical(Verticals.BOTTOM)
+            .setHeaderRowHeight(28)
         ).writeTo(defaultTestPath.resolve(fileName));
 
         try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
