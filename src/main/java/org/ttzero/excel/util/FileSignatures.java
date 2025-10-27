@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,6 +126,7 @@ public class FileSignatures {
         buffer.position(0);
         t0 = buffer.getInt();
 
+        int left, top, right, bottom;
         byte v;
         switch (t0) {
             // Maybe PNG
@@ -165,7 +166,10 @@ public class FileSignatures {
                 extension = "emf";
                 buffer.getInt(); // Ignore
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
-                int left = buffer.getInt(), top = buffer.getInt(), right = buffer.getInt(), bottom = buffer.getInt();
+                left = buffer.getInt();
+                top = buffer.getInt();
+                right = buffer.getInt();
+                bottom = buffer.getInt();
                 width  = Math.max(0, right - left + 1);
                 height = Math.max(0, bottom - top + 1);
                 break;
@@ -190,28 +194,19 @@ public class FileSignatures {
                 extension = "webp";
                 buffer.order(ByteOrder.LITTLE_ENDIAN);
                 // Chunk Size
-                int size = buffer.getInt()
-                    , x = 0x50424557; // ascii: webp
+                int size = buffer.getInt(), x = 0x50424557; // ascii: webp
                 if (buffer.getInt() == x) {
                     int chunkType = buffer.getInt(), blockSize = buffer.getInt();
                     switch (chunkType) {
                         // VP8
                         case 0x20385056:
                             int tmp = buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16;
-//                            key_frame = tmp & 0x1;
-//                            version = (tmp >> 1) & 0x7;
-//                            show_frame = (tmp >> 4) & 0x1;
-//                            first_part_size = (tmp >> 5) & 0x7FFFF;
-                            // show_frame flag (0 when current frame is not for display,1 when current frame is for display).
-//                            if ((tmp & 1) == 1) {
-//                                byte version = (byte) ((tmp >> 1) & 0x7);
-                                // Ignore others...
+                            // Ignore others...
                             tmp = buffer.get() & 0xFF | (buffer.get() & 0xFF) << 8 | (buffer.get() & 0xFF) << 16;
                             if (tmp == 0x2a019d) {
                                 width  = buffer.getShort() & 0x3FFF;
                                 height = buffer.getShort() & 0x3FFF;
                             }
-//                            }
                             break;
                         // VP8X
                         case 0x58385056:
