@@ -122,7 +122,7 @@ public class HeaderRow extends Row {
         this.sst = row.sst;
         this.styles = row.styles;
         this.sharedCalc = row.sharedCalc;
-        this.names = new String[row.lc];
+        this.names = new String[Math.max(0, row.lc)];
         this.mapping = new HashMap<>();
         // Extends from row
         this.fc = row.fc;
