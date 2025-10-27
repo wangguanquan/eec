@@ -28,16 +28,16 @@ import java.util.Date;
  *
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
-public class TimeValidation extends Tuple2Validation<Double, Double> {
+public class TimeValidation extends RangeValidation<Double> {
     public TimeValidation between(Date from, Date to) {
-        if (from != null) v1 = DateUtil.toTimeValue(from);
-        if (to != null) v2 = DateUtil.toTimeValue(to);
+        if (from != null) v1 = RangeVal.of(DateUtil.toTimeValue(from));
+        if (to != null) v2 = RangeVal.of(DateUtil.toTimeValue(to));
         return this;
     }
 
     public TimeValidation between(Time from, Time to) {
-        if (from != null) v1 = DateUtil.toTimeValue(from);
-        if (to != null) v2 = DateUtil.toTimeValue(to);
+        if (from != null) v1 = RangeVal.of(DateUtil.toTimeValue(from));
+        if (to != null) v2 = RangeVal.of(DateUtil.toTimeValue(to));
         return this;
     }
 
@@ -47,13 +47,18 @@ public class TimeValidation extends Tuple2Validation<Double, Double> {
      * @return DateValidation
      */
     public TimeValidation between(String from, String to) {
-        if (StringUtil.isNotEmpty(from)) v1 = DateUtil.toTimeValue(Time.valueOf(from));
-        if (StringUtil.isNotEmpty(to)) v2 = DateUtil.toTimeValue(Time.valueOf(to));
+        if (StringUtil.isNotEmpty(from)) v1 = RangeVal.of(DateUtil.toTimeValue(Time.valueOf(from)));
+        if (StringUtil.isNotEmpty(to)) v2 = RangeVal.of(DateUtil.toTimeValue(Time.valueOf(to)));
         return this;
     }
 
     @Override
     public String getType() {
         return "time";
+    }
+
+    @Override
+    protected Double parseTxtValue(String txt) {
+        return Double.valueOf(txt);
     }
 }

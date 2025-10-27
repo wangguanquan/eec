@@ -19,6 +19,7 @@ package org.ttzero.excel.reader;
 
 import org.ttzero.excel.entity.Comment;
 import org.ttzero.excel.entity.Panes;
+import org.ttzero.excel.validation.Validation;
 
 import java.util.List;
 import java.util.Map;
@@ -118,4 +119,11 @@ public interface FullSheet extends Sheet {
      * @return key: 行列值 {@code col & 0x7FFF | ((long) row) << 16}, value: 批注
      */
     Map<Long, Comment> getComments();
+
+    /**
+     * 获取数据验证
+     *
+     * @return 数据验证列表，无数据验证时返回{@code null}
+     */
+    List<Validation> getValidations();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2020, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -451,7 +451,7 @@ public interface Grid {
             if (val != null) {
                 int n = --val.entry.n;
                 // Insert entry ahead
-                if (n > 0 && val != head && val.entry.dim.width > 1) {
+                if (n > 0 && val != head && val.entry.dim.getWidth() > 1) {
                     bf.next = val.next;
                     val.next = head;
                     head = val;

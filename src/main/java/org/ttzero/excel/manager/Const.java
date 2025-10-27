@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ public interface Const {
     /**
      * Open xml schema
      */
-    String SCHEMA_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+    String SCHEMA_MAIN = NAMESPACE.MAIN;
     /**
      * Xml declaration
      */
@@ -195,5 +195,28 @@ public interface Const {
          * Zoom Scale(5-position)
          */
         String ZOOM_SCALE = "zoom_scale";
+        /**
+         * Defined Name(6-position)
+         */
+        String DEFINED_NAME = "defined_name";
+    }
+
+    interface NAMESPACE {
+        /**
+         * Open xml schema
+         */
+        String MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        /**
+         * Ext x14
+         */
+        String X14 = "http://schemas.microsoft.com/office/spreadsheetml/2009/9/main";
+        /**
+         * Ext x14ac
+         */
+        String X14AC = "http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac";
+        /**
+         * XM
+         */
+        String XM = "http://schemas.microsoft.com/office/excel/2006/main";
     }
 }

@@ -50,7 +50,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.ttzero.excel.util.FileUtil.exists;
@@ -71,6 +73,7 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      * 临时文件路径
      */
     protected Path tmpPath;
+    protected Map<String, String> definedNames;
 
     public XMLWorkbookWriter() {
         relManager = new RelManager();
@@ -142,13 +145,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
     // --- PRIVATE FUNCTIONS
 
     protected void writeGlobalAttribute(Path root) throws IOException {
-
-        // Content type
-        ContentType contentType = workbook.getContentType();
-        contentType.add(new ContentType.Default(Const.ContentType.RELATIONSHIP, "rels"));
-        contentType.add(new ContentType.Default(Const.ContentType.XML, "xml"));
-        contentType.add(new ContentType.Override(Const.ContentType.WORKBOOK, "/xl/workbook.xml"));
-        contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
+        // workbook.xml
+        writeWorkbook(root);
 
         // Write app
         writeApp(root);
@@ -159,31 +157,35 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // Write custom properties
         writeCustomProperties(root);
 
-        Path themeP = root.resolve("theme");
-        if (!exists(themeP)) {
-            Files.createDirectory(themeP);
+        Path themePath = root.resolve("theme");
+        if (!exists(themePath)) {
+            Files.createDirectory(themePath);
         }
         try {
             InputStream theme = getClass().getClassLoader().getResourceAsStream("template/theme1.xml");
             if (theme != null) {
-                Files.copy(theme, themeP.resolve("theme1.xml"));
+                Files.copy(theme, themePath.resolve("theme1.xml"));
             }
         } catch (IOException e) {
             // Nothing
         }
+
+        // Content type
+        ContentType contentType = workbook.getContentType();
+        contentType.add(new ContentType.Default(Const.ContentType.RELATIONSHIP, "rels"));
+        contentType.add(new ContentType.Default(Const.ContentType.XML, "xml"));
+        contentType.add(new ContentType.Override(Const.ContentType.WORKBOOK, "/xl/workbook.xml"));
+        contentType.addRel(new Relationship("xl/workbook.xml", Const.Relationship.OFFICE_DOCUMENT));
         relManager.add(new Relationship("theme/theme1.xml", Const.Relationship.THEME));
         contentType.add(new ContentType.Override(Const.ContentType.THEME, "/xl/theme/theme1.xml"));
 
-        // workbook.xml
-        writeWorkbook(root);
-
-        // styles
+        // Styles
         workbook.getStyles().writeTo(root.resolve("styles.xml"));
-        // style relationship
+        // Style relationship
         relManager.add(new Relationship("styles.xml", Const.Relationship.STYLE));
         contentType.add(new ContentType.Override(Const.ContentType.STYLE, "/xl/styles.xml"));
 
-        // share string
+        // Share string
         try (SharedStrings sst = workbook.getSharedStrings()) {
             sst.writeTo(root);
         }
@@ -193,13 +195,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // write content type
         contentType.writeTo(root.getParent());
 
-        TopNS topNS = getClass().getAnnotation(TopNS.class);
-        String name;
-        if (topNS != null) {
-            name = topNS.value();
-        } else name = "workbook";
         // Relationship
-        relManager.write(root, name + Const.Suffix.XML);
+        relManager.write(root, "workbook" + Const.Suffix.XML);
     }
 
     protected void writeApp(Path root) throws IOException {
@@ -218,14 +215,16 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         app.setAppVersion(pom.getProperty("version"));
 
         int size = workbook.getSize();
-
         List<String> titleParts = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
             Sheet sheet = workbook.getSheetAt(i);
             titleParts.add(sheet.getName());
-            relManager.add(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
         }
-        app.setTitlePards(titleParts);
+        app.setTitlesOfParts(titleParts);
+
+        if (definedNames != null && !definedNames.isEmpty()) {
+            app.setDefinedNames(new ArrayList<>(definedNames.keySet()));
+        }
 
         app.writeTo(root.getParent().resolve("docProps/app.xml"));
         workbook.addContentType(new ContentType.Override(Const.ContentType.APP, "/docProps/app.xml"))
@@ -268,34 +267,12 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
      * @throws IOException 如果写入过程中发生I/O错误
      */
     protected void writeWorkbook(Path root) throws IOException {
-        DocumentFactory factory = DocumentFactory.getInstance();
-        //use the factory to create a root element
-        Element rootElement = null;
-        //use the factory to create a new document with the previously created root element
-        String[] prefixs = null, uris = null;
-        String rootName = null;
         TopNS topNs = getClass().getAnnotation(TopNS.class);
-        boolean hasTopNs = (topNs != null);
-        if (hasTopNs) {
-            prefixs = topNs.prefix();
-            uris = topNs.uri();
-            rootName = topNs.value();
-            for (int i = 0; i < prefixs.length; i++) {
-                if (prefixs[i].isEmpty()) {
-                    rootElement = factory.createElement(rootName, uris[i]);
-                    break;
-                }
-            }
-        }
-        if (rootElement == null) {
-            if (hasTopNs) {
-                rootElement = factory.createElement(rootName);
-            } else {
-                LOGGER.error("Workbook missing necessary information.");
-                return;
-            }
-        }
-
+        if (topNs == null) throw new IOException("Miss top namespace.");
+        DocumentFactory factory = DocumentFactory.getInstance();
+        String[] prefixs = topNs.prefix(), uris = topNs.uri();
+        String rootName = topNs.value();
+        Element rootElement = factory.createElement(rootName, uris[0]);
         if (prefixs.length > 0) {
             for (int i = 0; i < prefixs.length; i++) {
                 rootElement.add(Namespace.get(prefixs[i], uris[i]));
@@ -308,16 +285,34 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
         // sheets
         Element sheetEle = rootElement.addElement("sheets");
         for (int i = 0; i < workbook.getSize(); i++) {
-            Sheet sheetInfo = workbook.getSheetAt(i);
+            Sheet sheet = workbook.getSheetAt(i);
             Element st = sheetEle.addElement("sheet")
-                .addAttribute("sheetId", String.valueOf(sheetInfo.getId()))
-                .addAttribute("name", sheetInfo.getName());
-            if (sheetInfo.isHidden()) {
+                .addAttribute("sheetId", String.valueOf(sheet.getId()))
+                .addAttribute("name", sheet.getName());
+            if (sheet.isHidden()) {
                 st.addAttribute("state", "hidden");
             }
-            Relationship rs = relManager.getByTarget("worksheets/sheet" + sheetInfo.getId() + Const.Suffix.XML);
-            if (rs != null) {
-                st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
+            Relationship rs = relManager.add(new Relationship("worksheets/sheet" + sheet.getId() + Const.Suffix.XML, Const.Relationship.SHEET));
+            st.addAttribute(QName.get("id", Namespace.get("r", uris[StringUtil.indexOf(prefixs, "r")])), rs.getId());
+
+            @SuppressWarnings("unchecked")
+            Map<String, String> names = (Map<String, String>) sheet.getExtPropValue(Const.ExtendPropertyKey.DEFINED_NAME);
+            if (names != null && !names.isEmpty()) {
+                for (Map.Entry<String, String> entry : names.entrySet()) {
+                    if (StringUtil.isNotEmpty(entry.getKey()) && StringUtil.isNotEmpty(entry.getValue())) {
+                        // Defined name buffer
+                        if (definedNames == null) definedNames = new HashMap<>();
+                        definedNames.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        }
+
+        // Write defined name
+        if (definedNames != null && !definedNames.isEmpty()) {
+            Element definedNameNode = rootElement.addElement("definedNames");
+            for (Map.Entry<String, String> entry : definedNames.entrySet()) {
+                definedNameNode.addElement("definedName").addAttribute("name", entry.getKey()).addText(entry.getValue());
             }
         }
 
@@ -396,7 +391,8 @@ public class XMLWorkbookWriter implements IWorkbookWriter {
 
     @Override
     public void close() throws IOException {
-        for (Sheet sheet : workbook.getSheets()) {
+        for (int i = 0; i < workbook.getSize(); i++) {
+            Sheet sheet = workbook.getSheetAt(i);
             if (sheet != null && sheet.getWatermark() != null)
                 sheet.getWatermark().delete();
         }

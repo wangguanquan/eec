@@ -20,6 +20,8 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.Namespace;
+import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -460,10 +462,12 @@ public class XMLSheet implements Sheet {
     protected char[] cb; // buffer
     protected int nChar, length;
     protected boolean eof = false, heof = false; // OPTIONS = false
+    // Header position
     protected long mark;
 
     // Shared row data, Record the current row
     protected XMLRow sRow;
+    // Last row position
     protected long lastRowMark;
 
     /**
@@ -867,7 +871,7 @@ public class XMLSheet implements Sheet {
             for (; offset < end && cb[offset] != '"'; offset++);
             if (offset < end && offset > i) {
                 Dimension dim = Dimension.of(new String(cb, i, offset - i));
-                if (dim.width > 1 || dim.height > 1) this.dimension = dim;
+                if (dim.getWidth() > 1 || dim.getHeight() > 1) this.dimension = dim;
             }
         }
     }
@@ -1040,26 +1044,28 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
     }
 
     /*
-    Parse `mergeCells` tag
-    TODO parse dataValidation
+    简化，头和尾使用DOM4J解析，降低复杂度
+    Parse `mergeCells`,`dataValidation`,`autoFilter` tag
      */
     void parseTails() {
-        List<Dimension> mergeCells = new ArrayList<>();
+        long size = entry.getSize();
         try (InputStream is = zipFile.getInputStream(entry)) {
+            int n, offset = 0, limit = 1 << 14, i = 0, len = 0, k;
+            byte[] buf = new byte[limit];
+            long readByte = 0;
             // Skips specified number of bytes of uncompressed data.
             if (lastRowMark > 0L) is.skip(lastRowMark);
-
-            int n, offset = 0, limit = 1 << 14, i, len;
-            byte[] buf = new byte[limit];
             while ((n = is.read(buf, offset, limit - offset)) > 0) {
+                readByte += n;
                 if ((len = n + offset) < 11) {
                     offset = len;
                     continue;
                 }
-                i = 0; n = len - 12;
-//                for (; i < n && (buf[i] != '<' || ((buf[i + 1] != 'm' || buf[i + 5] != 'e') && (buf[i + 1] != 'a' || buf[i + 5] != 'F') && (buf[i + 1] != 'd' || buf[i + 5] != 'V'))); i++) ;
-                for (; i < n && (buf[i] != '<' || buf[i + 1] != '/' || buf[i + 2] != 's' || buf[i + 3] != 'h' || buf[i + 4] != 'e' || buf[i + 5] != 'e' || buf[i + 6] != 't'
-                    || buf[i + 7] != 'D' || buf[i + 8] != 'a' || buf[i + 9] != 't' || buf[i + 10] != 'a' || buf[i + 11] != '>'); i++) ;
+                i = 0;
+                n = len - 12;
+                for (; i < n && (buf[i] != '<' || buf[i + 1] != '/' && buf[i + 1] != 's' || buf[i + 2] != 's' && buf[i + 2] != 'h' || buf[i + 3] != 'h' && buf[i + 3] != 'e' || buf[i + 4] != 'e' || buf[i + 5] != 'e' && buf[i + 5] != 't' || buf[i + 6] != 't' && buf[i + 6] != 'D'
+                    || buf[i + 7] != 'D' && buf[i + 7] != 'a' || buf[i + 8] != 'a' && buf[i + 8] != 't' || buf[i + 9] != 't' && buf[i + 9] != 'a' || buf[i + 10] != 'a' && buf[i + 10] != '/' || buf[i + 11] != '>'); i++)
+                    ;
                 // Compact
                 if (i >= n) {
                     if (buf[i] == '<') {
@@ -1082,89 +1088,29 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                 }
 
                 if (len < 11) return;
-                do {
-                    for (; ;) {
-                        for (; i < len && buf[i] != '<'; i++) ;
-                        if (i == len) {
-                            offset = i = 0;
-                            break;
-                        }
-                        int nChar = ++i;
-                        for (; nChar < len && buf[nChar] != '>'; nChar++) ;
-                        if (nChar == len) {
-                            System.arraycopy(buf, i - 1, buf, 0, offset = len - i + 1);
-                            i = 0;
-                            break;
-                        }
-                        int length = nChar - i;
-
-                        switch (buf[i]) {
-                            // autoFilter
-                            case 'a':
-                                if (length >= 20 && buf[i + 1] == 'u' && buf[i + 2] == 't' && buf[i + 3] == 'o'
-                                    && buf[i + 4] == 'F' && buf[i + 5] == 'i' && buf[i + 6] == 'l' && buf[i + 7] == 't'
-                                    && buf[i + 8] == 'e' && buf[i + 9] == 'r' && buf[i + 10] <= ' ') {
-                                    i += 11;
-                                    for (int k = nChar - 8; i < k && (buf[i] != 'r' || buf[i + 1] != 'e'
-                                        || buf[i + 2] != 'f' || buf[i + 3] != '=' || buf[i + 4] != '"'); i++) ;
-                                    int a = i += 5;
-                                    for (; i < nChar && buf[i] != '"'; i++) ;
-                                    if (i > a) filter = Dimension.of(new String(buf, a, i - a, StandardCharsets.US_ASCII));
-                                }
-                                break;
-                            // mergeCells
-                            case 'm':
-                                if (length >= 20 && buf[i + 1] == 'e' && buf[i + 2] == 'r' && buf[i + 3] == 'g'
-                                    && buf[i + 4] == 'e' && buf[i + 5] == 'C' && buf[i + 6] == 'e' && buf[i + 7] == 'l'
-                                    && buf[i + 8] == 'l' && buf[i + 9] <= ' ') {
-                                    i += 10;
-                                    for (int k = nChar - 8; i < k && (buf[i] != 'r' || buf[i + 1] != 'e'
-                                        || buf[i + 2] != 'f' || buf[i + 3] != '=' || buf[i + 4] != '"'); i++) ;
-                                    int a = i += 5;
-                                    for (; i < nChar && buf[i] != '"'; i++) ;
-                                    if (i > a) mergeCells.add(Dimension.of(new String(buf, a, i - a, StandardCharsets.US_ASCII)));
-                                }
-                                break;
-                            // dataValidations
-                            case 'd':
-                                if (len >= 35 && buf[i + 1] == 'a' && buf[i + 2] == 't' && buf[i + 3] == 'a'
-                                    && buf[i + 4] == 'V' && buf[i + 5] == 'a' && buf[i + 6] == 'l' && buf[i + 7] == 'i'
-                                    && buf[i + 8] == 'd' && buf[i + 9] == 'a' && buf[i + 10] == 't' && buf[i + 11] == 'i'
-                                    && buf[i + 12] == 'o' && buf[i + 13] == 'n' && buf[i + 14] == 's' && (buf[i + 15] <= ' ' || buf[i + 15] == '/')) {
-                                        i += 16;
-                                        // TODO
-                                }
-                                break;
-                            // extLst
-                            case 'e':
-                                if (len >= 20 && buf[i + 1] == 'x' && buf[i + 2] == 't' && buf[i + 3] == 'L' && buf[i + 4] == 's' && buf[i + 5] == 't' && buf[i + 6] == '>') {
-                                    i += 7;
-                                    // TODO
-                                }
-                                break;
-                            // legacyDrawing
-                            case 'l':
-                                if (len >= 25 && buf[i + 1] == 'e' && buf[i + 2] == 'g' && buf[i + 3] == 'a'
-                                    && buf[i + 4] == 'c' && buf[i + 5] == 'y' && buf[i + 6] == 'D' && buf[i + 7] == 'r'
-                                    && buf[i + 8] == 'a' && buf[i + 9] == 'w' && buf[i + 10] == 'i' && buf[i + 11] == 'n'
-                                    && buf[i + 12] == 'g' && buf[i + 13] <= ' ') {
-                                    i += 13;
-                                    for (int k = nChar - 8; i < k && buf[i] != 'r' && buf[i + 1] != ':'
-                                        && buf[i + 2] != 'i' && buf[i + 3] != 'd' && buf[i + 4] != '=' && buf[i + 5] != '"'; i++) ;
-                                    int a = i += 6;
-                                    for (; i < nChar && buf[i] != '"'; i++) ;
-                                    if (i > a) legacyDrawing = new String(buf, a, i - a, StandardCharsets.US_ASCII);
-                                }
-                                break;
-                        }
-                    }
-                } while ((len = is.read(buf, offset, limit - offset)) > 0 && (len += offset) > 0);
+                else break;
             }
-        } catch (IOException e) {
+
+            long remain = size - (readByte - len + i);
+            byte[] h = "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\" xmlns:xr=\"http://schemas.microsoft.com/office/spreadsheetml/2014/revision\">".getBytes(StandardCharsets.UTF_8);
+            k = h.length;
+            byte[] bytes = new byte[(int) remain + k];
+            System.arraycopy(h, 0, bytes, 0, k);
+            i += 12;
+            do {
+                if (len > 0) {
+                    System.arraycopy(buf, i, bytes, k, len - i);
+                    k += len - i;
+                }
+                i = 0;
+            } while ((len = is.read(buf, 0, limit)) > 0);
+            Document doc = DocumentHelper.parseText(new String(bytes, 0, k, StandardCharsets.UTF_8));
+            // 解析尾部元素
+            tailElements(doc.getRootElement());
+        } catch (Exception e) {
             // Ignore error
             LOGGER.warn("", e);
         }
-        this.mergeCells = mergeCells;
         tailPared = true;
     }
 
@@ -1238,7 +1184,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 
     @Override
     public List<Dimension> getMergeCells() {
-        if (mergeCells == null) parseTails();
+        if (!tailPared) parseTails();
         return mergeCells != null && !mergeCells.isEmpty() ? mergeCells : null;
     }
 
@@ -1247,7 +1193,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
         String v = new String(cb, offset, n);
         // 去掉不必要的命名空间
         v = v.replace("x14ac:", "").replace("r:", "").replace("mc:", "");
-        Element e = null;
+        Element e;
         if (cb[offset + n - 2] == '/') {
             try {
                 Document doc = DocumentHelper.parseText(v);
@@ -1256,7 +1202,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                     case "dimension":
                         String ref = e.attributeValue("ref");
                         Dimension dim;
-                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).width > 1 || dim.height > 1)) {
+                        if (StringUtil.isNotEmpty(ref) && ((dim = Dimension.of(ref)).getWidth() > 1 || dim.getHeight() > 1)) {
                             dimension = dim;
                         }
                         break;
@@ -1285,7 +1231,7 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
                             this.defaultRowHeight = Double.parseDouble(defaultRowHeight);
                         break;
                 }
-            } catch (DocumentException ex) {
+            } catch (Exception ex) {
                 LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         } else if (v.startsWith("<sheetView") && v.charAt(10) <= ' ') {
@@ -1293,22 +1239,52 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
             System.arraycopy(cb, offset, ncb, 0, n);
             ncb[n - 1] = '/'; ncb[n] = '>';
             try {
-                Document doc = DocumentHelper.parseText(new String(ncb, 0, n + 1));
-                e = doc.getRootElement();
-            } catch (DocumentException ex) {
+                e = DocumentHelper.parseText(new String(ncb, 0, n + 1)).getRootElement();
+                String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
+                if ("0".equals(showGridLines)) this.showGridLines = 0;
+                if (StringUtil.isNotEmpty(zoomScale)) {
+                    this.zoomScale = Integer.parseInt(zoomScale.trim());
+                }
+            } catch (Exception ex) {
                 LOGGER.warn("Parse header tag [{}] failed.", v, ex);
             }
         }
+    }
 
-        if (e != null && e.getName().equals("sheetView")) {
-            String showGridLines = e.attributeValue("showGridLines"), zoomScale = e.attributeValue("zoomScale");
-            if ("0".equals(showGridLines)) this.showGridLines = 0;
-            if (StringUtil.isNotEmpty(zoomScale)) {
-                try {
-                    this.zoomScale = Integer.parseInt(zoomScale.trim());
-                } catch (NumberFormatException ex) { }
+    protected void tailElements(Element tail) {
+        // mergeCells
+        Element mergeCellEl = tail.element("mergeCells");
+        List<Element> mergeCell = mergeCellEl != null ? mergeCellEl.elements() : null;
+        if (mergeCell != null && !mergeCell.isEmpty()) mergeCells = mergeCell.stream().map(m -> Dimension.of(m.attributeValue("ref"))).collect(Collectors.toList());
+        // autoFilter
+        Element autoFilterEl = tail.element("autoFilter");
+        if (autoFilterEl != null) filter = Dimension.of(autoFilterEl.attributeValue("ref"));
+        // dataValidations
+        Element dataValidationEl = tail.element("dataValidations");
+        if (dataValidationEl != null) {
+            List<Validation> list = Validation.domToValidation(dataValidationEl);
+            if (list != null) {
+                if (validations == null) validations = new ArrayList<>();
+                validations.addAll(list);
             }
         }
+        // extLst
+        Element extLstEl = tail.element("extLst");
+        List<Element> extList = extLstEl != null ? extLstEl.elements() : null;
+        if (extList != null && !extList.isEmpty()) {
+            Namespace x14 = Namespace.get("x14", Const.NAMESPACE.X14);
+            for (Element sub : extList) {
+                Element dataValidations = sub.element(QName.get("dataValidations", x14));
+                List<Validation> list;
+                if (dataValidations != null && (list = Validation.domToValidation(dataValidations)) != null) {
+                    if (validations == null) validations = new ArrayList<>();
+                    validations.addAll(list);
+                }
+            }
+        }
+        // legacyDrawing
+        Element legacyDrawingEl = tail.element("legacyDrawing");
+        if (legacyDrawingEl != null) legacyDrawing = legacyDrawingEl.attributeValue("id");
     }
 
     @Override
@@ -1330,8 +1306,8 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
 
     @Override
     public Dimension getFilter() {
-        // 如果filter为则且未解析则重新解析
-        if (filter == null && !tailPared) parseTails();
+        // 如果filter为NULL且未解析则重新解析
+        if (!tailPared) parseTails();
         return filter;
     }
 
@@ -1377,5 +1353,11 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
             if (comments == null) comments = Collections.emptyMap();
         }
         return comments;
+    }
+
+    @Override
+    public List<Validation> getValidations() {
+        if (!tailPared) parseTails();
+        return validations;
     }
 }

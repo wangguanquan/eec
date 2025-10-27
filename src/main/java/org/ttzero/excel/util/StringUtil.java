@@ -16,6 +16,9 @@
 
 package org.ttzero.excel.util;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 /**
  * 字符串工具类，提供一些简单的静态方法
  *
@@ -266,5 +269,48 @@ public class StringUtil {
             }
         }
         return -1;
+    }
+
+    // XML转义使用
+    private static StringWriter sw;
+    private static ExtBufferedWriter writer;
+
+    /**
+     * XML转义
+     *
+     * @param txt 原字符串
+     * @return 转义后的字符串
+     */
+    public static String escapeString(String txt) {
+        if (isEmpty(txt)) return txt;
+        if (sw != null) sw.getBuffer().setLength(0);
+        else {
+            sw = new StringWriter();
+            writer = new ExtBufferedWriter(sw);
+        }
+        try {
+            writer.escapeWrite(txt);
+            writer.flush();
+            txt = sw.toString();
+        } catch (IOException e) {
+            // Ignore
+        }
+        return txt;
+    }
+
+    /**
+     * 简单判断字符串是否全为阿拉伯数字（半角0-9）
+     *
+     * <p>Note: 与{@code org.apache.commons.lang3.StringUtils#isNumeric(CharSequence)} 不同之处在于本方法仅判断全为半角阿拉位数字时返回true</p>
+     *
+     * @param s string
+     * @return true: 全为半角阿拉伯数字
+     */
+    public static boolean isArabicNumerals(String s) {
+        int n = s != null ? s.length() : 0, i;
+        if (n < 1 || (i = s.charAt(0)) != '-' && !(i >= '0' && i <= '9')) return false;
+        i = 1;
+        for (char c; i < n && (c = s.charAt(i)) >= '0' && c <= '9'; i++);
+        return i == n;
     }
 }

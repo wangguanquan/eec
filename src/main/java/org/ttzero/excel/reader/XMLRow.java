@@ -164,7 +164,6 @@ public class XMLRow extends Row {
     protected void parseCells() {
         cursor = searchSpan();
         for (; cb[cursor++] != '>'; ) ;
-        unknownLength = lc < 0;
 
         // Parse cell value
         for (Cell cell; (cell = nextCell()) != null; parseCellValue(cell)) ;
@@ -418,7 +417,6 @@ class XMLFullRow extends XMLRow {
         hidden = false; // 重置隐藏
         cursor = searchSpan0();
         for (; cb[cursor++] != '>'; ) ;
-        unknownLength = lc < 0;
 
         // Parse formula if exists and can parse
         if (hasCalcFunc) {
@@ -625,7 +623,7 @@ class XMLFullRow extends XMLRow {
             else if (cb[i] <= ' ' && cb[i + 1] == 'h' && cb[i + 2] == 'i' && cb[i + 3] == 'd'
                 && cb[i + 4] == 'd' && cb[i + 5] == 'e' && cb[i + 6] == 'n' && (cb[i + 7] == '=' || cb[i + 7] <= ' ')) {
                 i += 9;
-                if (cb[i] == '1') hidden = true;
+                hidden = cb[i] == '1';
             }
         }
 //        if (cht == 1 && ht != null) height = ht;

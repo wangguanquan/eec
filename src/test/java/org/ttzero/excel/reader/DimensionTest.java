@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2021, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ public class DimensionTest {
         assertEquals(d.firstRow, 1);
         assertEquals(d.lastColumn, 1);
         assertEquals(d.lastRow, 1);
-        assertEquals(d.width, 1);
-        assertEquals(d.height, 1);
+        assertEquals(d.getWidth(), 1);
+        assertEquals(d.getHeight(), 1);
 
         assertEquals(d.toReferer(), "$A$1");
     }
@@ -43,8 +43,8 @@ public class DimensionTest {
         assertEquals(d.firstRow, 3);
         assertEquals(d.lastColumn, 2);
         assertEquals(d.lastRow, 1048576);
-        assertEquals(d.width, 1);
-        assertEquals(d.height, 1048574);
+        assertEquals(d.getWidth(), 1);
+        assertEquals(d.getHeight(), 1048574);
 
         assertEquals(d.toReferer(), "$B$3:$B$1048576");
     }
@@ -55,8 +55,8 @@ public class DimensionTest {
         assertEquals(d.firstRow, 1);
         assertEquals(d.lastColumn, 3);
         assertEquals(d.lastRow, 2);
-        assertEquals(d.width, 3);
-        assertEquals(d.height, 2);
+        assertEquals(d.getWidth(), 3);
+        assertEquals(d.getHeight(), 2);
 
         assertEquals(d.toReferer(), "$A$1:$C$2");
     }
@@ -67,8 +67,8 @@ public class DimensionTest {
         assertEquals(d.firstRow, 103);
         assertEquals(d.lastColumn, 2107);
         assertEquals(d.lastRow, 63335);
-        assertEquals(d.width, 2056);
-        assertEquals(d.height, 63233);
+        assertEquals(d.getWidth(), 2056);
+        assertEquals(d.getHeight(), 63233);
 
         assertEquals(d.toReferer(), "$AZ$103:$CCA$63335");
     }

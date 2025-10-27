@@ -19,6 +19,7 @@ package org.ttzero.excel.entity;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.entity.e7.XMLCellValueAndStyle;
 import org.ttzero.excel.entity.e7.XMLWorkbookWriter;
 import org.ttzero.excel.entity.style.Fill;
@@ -29,6 +30,7 @@ import org.ttzero.excel.entity.style.Styles;
 import org.ttzero.excel.manager.Const;
 import org.ttzero.excel.manager.ExcelType;
 import org.ttzero.excel.reader.Cell;
+import org.ttzero.excel.reader.CrossDimension;
 import org.ttzero.excel.reader.Dimension;
 import org.ttzero.excel.reader.ExcelReader;
 import org.ttzero.excel.reader.FullSheet;
@@ -36,6 +38,8 @@ import org.ttzero.excel.reader.Row;
 import org.ttzero.excel.util.FileUtil;
 import org.ttzero.excel.util.StringUtil;
 import org.ttzero.excel.util.ZipUtil;
+import org.ttzero.excel.validation.ListValidation;
+import org.ttzero.excel.validation.Validation;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -578,6 +583,47 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
 
+    @Test public void testCopyCascadeList() throws IOException {
+        final String fileName = "Copy CascadeList test.xlsx";
+        List<GameEntry> expectList = GameEntry.random();
+        new Workbook()
+            .addSheet(new TemplateSheet(testResourceRoot().resolve("template2.xlsx"), "级联下拉")
+                .setData("@list:sex", Arrays.asList("未知","男","女"))
+                .setData(expectList)
+            ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            final int listLastRowNum = expectList.size() + 1;
+            List<GameEntry> readList = sheet.dataRows().filter(row -> row.getRowNum() <= listLastRowNum).map(row -> row.to(GameEntry.class)).collect(Collectors.toList());
+            assertEquals(expectList.size(), readList.size());
+            for (int i = 0, len = expectList.size(); i < len; i++) {
+                GameEntry entry = readList.get(i), expectEntry = expectList.get(i);
+                assertEquals(entry, expectEntry);
+            }
+
+            List<Validation> validations = sheet.getValidations();
+            assertNotNull(validations);
+            assertEquals(validations.size(), 4);
+            List<String> valStrList = validations.stream().map(Validation::toString).collect(Collectors.toList());
+            ListValidation<String> expectValidation0 = new ListValidation<>();
+            int verticalMove = expectList.size() + 5;
+            expectValidation0.dimension(Dimension.of("B" + verticalMove + ":C1048576"));
+            expectValidation0.indirect = "A" + verticalMove;
+            assertTrue(valStrList.contains(expectValidation0.toString()));
+
+            // 引用Val会新生成worksheet名称，所以下面的sheet名从生成后的文件中动态获取
+            org.ttzero.excel.reader.Sheet[] allSheet = reader.all();
+            String sheetName3 = allSheet[allSheet.length - 1].getName();
+            Validation expectValidation1 = new ListValidation<>().in(Arrays.asList("未知","男","女")).prompt("输入姓别").dimension(Dimension.of("E" + verticalMove));
+            assertTrue(valStrList.contains(expectValidation1.toString()));
+            Validation expectValidation2 = new ListValidation<>().referer(new CrossDimension(sheetName3, Dimension.of("A1:C1"))).dimension(Dimension.of("A" + verticalMove + ":"));
+            assertTrue(valStrList.contains(expectValidation2.toString()));
+            Validation expectValidation3 = new ListValidation<>().in(Arrays.asList("未知","男","女")).dimension(Dimension.of("F"+verticalMove+":F"+(verticalMove+1)));
+            assertTrue(valStrList.contains(expectValidation3.toString()));
+        }
+    }
+
     public static class SupplierXMLWorkbookWriter extends XMLWorkbookWriter {
         private final Supplier<Sheet> sheetSupplier;
 
@@ -652,13 +698,13 @@ public class TemplateSheetTest extends WorkbookTest {
             // 判断是否带合并
             Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 2);
+            assertEquals(mergeCell.getWidth(), 2);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 3);
+            assertEquals(mergeCell.getWidth(), 3);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 5);
+            assertEquals(mergeCell.getWidth(), 5);
         }
         // 跳过2行
         assertTrue(iter.next().isBlank());
@@ -669,10 +715,10 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(row.getString(0), "合计");
         Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 6);
+        assertEquals(mergeCell.getWidth(), 6);
         mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 5);
+        assertEquals(mergeCell.getWidth(), 5);
     }
 
     static void assertListMap(FullSheet sheet, List<Map<String, Object>> expectList) {
@@ -703,13 +749,13 @@ public class TemplateSheetTest extends WorkbookTest {
             // 判断是否带合并
             Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 1));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 2);
+            assertEquals(mergeCell.getWidth(), 2);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 3));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 3);
+            assertEquals(mergeCell.getWidth(), 3);
             mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
             assertNotNull(mergeCell);
-            assertEquals(mergeCell.width, 5);
+            assertEquals(mergeCell.getWidth(), 5);
         }
         // 跳过2行
         assertTrue(iter.next().isBlank());
@@ -720,10 +766,10 @@ public class TemplateSheetTest extends WorkbookTest {
         assertEquals(row.getString(0), "合计");
         Dimension mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 0));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 6);
+        assertEquals(mergeCell.getWidth(), 6);
         mergeCell = mergeCellMap.get(TemplateSheet.dimensionKey(row.getRowNum() - 1, 12));
         assertNotNull(mergeCell);
-        assertEquals(mergeCell.width, 5);
+        assertEquals(mergeCell.getWidth(), 5);
     }
 
     public static class YzEntity {
@@ -881,9 +927,17 @@ public class TemplateSheetTest extends WorkbookTest {
         }
     }
     public static class GameEntry {
+        @ExcelColumn("渠道")
         Integer channel;
-        String game, account, vip;
+        @ExcelColumn("游戏")
+        String game;
+        @ExcelColumn("账号")
+        String account;
+        @ExcelColumn("VIP")
+        String vip;
+        @ExcelColumn("注册时间")
         java.util.Date date;
+        @ExcelColumn("是否满30级")
         Boolean isAdult;
 
         public static List<GameEntry> random() {
