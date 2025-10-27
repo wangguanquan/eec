@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ public class ZipUtil {
      */
     public static Path zipExcludeRoot(Path destPath, int compressionLevel, Path... srcPath) throws IOException {
         if (!destPath.toString().endsWith(Const.Suffix.ZIP)) {
-            destPath = Paths.get(destPath.toString() + Const.Suffix.ZIP);
+            destPath = Paths.get(destPath + Const.Suffix.ZIP);
         }
         if (!exists(destPath.getParent())) {
             FileUtil.mkdir(destPath.getParent());
