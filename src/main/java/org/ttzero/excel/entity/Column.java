@@ -724,24 +724,26 @@ public class Column {
     public int getHeaderStyle() {
         if (headerStyle != null) return headerStyle;
         // 获取默认样式
-        int style = defaultHeadStyle();
-
-        // 重置"字体"
-        if (headerFont != null) style = styles.modifyFont(style, headerFont);
-        // 重置“格式化”
-        if (headerNumFmt != null) style = styles.modifyNumFmt(style, headerNumFmt);
-        // 重置“边框”
-        if (headerBorder != null) style = styles.modifyBorder(style, headerBorder);
-        // 重置“填充”
-        if (headerFill != null) style = styles.modifyFill(style, headerFill);
-        // 重置“垂直对齐”
-        int v = ((option >>> 14) & 3) << Styles.INDEX_VERTICAL;
-        if (v > 0) style = styles.modifyVertical(style, v);
-        // 重置“水平对齐”
-        int h = ((option >>> 16) & 7) << Styles.INDEX_HORIZONTAL;
-        if (h > 0) style = styles.modifyHorizontal(style, h);
-        // 重置“自动折行”
-        headerStyle = style | ((option >> 13) & 1);
+        if (nonCustomHeaderStyle()) headerStyle = defaultHeadStyle();
+        else {
+            int style = 0;
+            // 重置"字体"
+            if (headerFont != null) style = styles.modifyFont(style, headerFont);
+            // 重置“格式化”
+            if (headerNumFmt != null) style = styles.modifyNumFmt(style, headerNumFmt);
+            // 重置“边框”
+            if (headerBorder != null) style = styles.modifyBorder(style, headerBorder);
+            // 重置“填充”
+            if (headerFill != null) style = styles.modifyFill(style, headerFill);
+            // 重置“垂直对齐”
+            int v = ((option >>> 14) & 3) << Styles.INDEX_VERTICAL;
+            if (v > 0) style = styles.modifyVertical(style, v);
+            // 重置“水平对齐”
+            int h = ((option >>> 16) & 7) << Styles.INDEX_HORIZONTAL;
+            if (h > 0) style = styles.modifyHorizontal(style, h);
+            // 重置“自动折行”
+            headerStyle = style | ((option >> 13) & 1);
+        }
         return headerStyle;
     }
 
