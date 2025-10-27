@@ -1,3 +1,9 @@
+Version 0.5.27
+-------------
+- 支持级联下拉框(#444)
+- 优化Validation内容超过255时打开文件异常的问题
+- TemplateSheet支持复制Validation
+
 Version 0.5.26 (2025-09-29)
 -------------
 - 支持PUSH模式主动写数据（目前只有继承于ListSheet的类支持）
