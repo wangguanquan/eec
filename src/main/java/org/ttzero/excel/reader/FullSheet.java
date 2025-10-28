@@ -125,5 +125,7 @@ public interface FullSheet extends Sheet {
      *
      * @return 数据验证列表，无数据验证时返回{@code null}
      */
-    List<Validation> getValidations();
+    default List<Validation> getValidations() {
+        return null;
+    }
 }
