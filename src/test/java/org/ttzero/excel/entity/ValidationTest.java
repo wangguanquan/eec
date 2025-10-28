@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -206,16 +207,34 @@ public class ValidationTest extends WorkbookTest {
                 put("B2市_1_1", Arrays.asList("B2市_1_1_1", "B2市_1_1_2", "其它"));
             }}
         ));
-        final String fileName = "Validation CascadeList Test.xlsx";
+        final String[] fileNames = { "Validation CascadeList Test.xlsx", "Validation CascadeList Test.xlsx_copy.xlsx"};
         new Workbook()
             .addSheet(new SimpleSheet<>(Collections.singletonList(Arrays.asList("省份", "市区", "市镇", "乡村", "门牌"))).putExtProp(Const.ExtendPropertyKey.DATA_VALIDATION, expectValidations))
-            .writeTo(defaultTestPath.resolve(fileName));
+            .writeTo(defaultTestPath.resolve(fileNames[0]));
 
-        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
-            FullSheet sheet = reader.sheet(0).asFullSheet();
-            List<Validation> validations = sheet.getValidations();
-            assertNotNull(validations);
-            assertEquals(validations.size(), 2);
+        // Test TemplateSheet
+        new Workbook()
+            .addSheet(new TemplateSheet(defaultTestPath.resolve(fileNames[0])))
+            .writeTo(defaultTestPath.resolve(fileNames[1]));
+
+        for (String fileName : fileNames) {
+            try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+                FullSheet sheet = reader.sheet(0).asFullSheet();
+                List<Validation> validations = sheet.getValidations();
+                assertNotNull(validations);
+                assertEquals(validations.size(), 2);
+
+                List<String> valStr = validations.stream().map(Validation::toString).collect(Collectors.toList());
+                ListValidation<String> expectVal1 = new ListValidation<>();
+                expectVal1.sqrefList = Arrays.asList(Dimension.of("B2:"), Dimension.of("C2:"), Dimension.of("D2:"), Dimension.of("E2:"));
+                expectVal1.indirect = "A2";
+                assertTrue(valStr.contains(expectVal1.toString()));
+
+                ListValidation<String> expectVal2 = new ListValidation<>();
+                expectVal2.referer = new CrossDimension(reader.sheet(1).getName(), Dimension.of("A1:C1"));
+                expectVal2.sqrefList = Collections.singletonList(Dimension.of("A2:"));
+                assertTrue(valStr.contains(expectVal2.toString()));
+            }
         }
     }
 
