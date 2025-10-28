@@ -38,8 +38,8 @@ import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -134,12 +134,12 @@ public class ValidationTest extends WorkbookTest {
     @Test public void testCascadeList() throws IOException {
         List<Validation> expectValidations = new ArrayList<>();
         expectValidations.add(ListValidation.in(Dimension.of("A2:"), Arrays.asList("A省", "B省", "D省"))
-            .addCascadeList(Dimension.of("B2:"), new LinkedHashMap<String, List<String>>(){{
+            .addCascadeList(Dimension.of("B2:"), new HashMap<String, List<String>>(){{
                 put("A省", Arrays.asList("A1市", "A2市", "A3市"));
                 put("B省", Arrays.asList("B1市", "B2市", "B3市", "B4市"));
                 put("D省", Arrays.asList("D1市", "D2市"));
             }})
-            .addCascadeList(Dimension.of("C2:"), new LinkedHashMap<String, List<String>>(){{
+            .addCascadeList(Dimension.of("C2:"), new HashMap<String, List<String>>(){{
                 put("A1市", Arrays.asList("A1市_1", "A1市_2", "A1市_3"));
                 put("A2市", Arrays.asList("A2市_1", "A2市_2", "A2市_3", "A2市_4", "A2市_5"));
                 put("A3市", Arrays.asList("A3区_1", "A3区_2"));
@@ -150,7 +150,7 @@ public class ValidationTest extends WorkbookTest {
                 put("D1市", Arrays.asList("D1市_1", "D1市_2"));
                 put("D2市", Arrays.asList("D2市_1", "D2市_2", "D2市_3", "D2市_4"));
             }})
-            .addCascadeList(Dimension.of("D2:"), new LinkedHashMap<String, List<String>>() {{
+            .addCascadeList(Dimension.of("D2:"), new HashMap<String, List<String>>() {{
                 put("A1市_1", Arrays.asList("A1市_1_1", "A1市_1_2"));
                 put("A1市_2", Arrays.asList("A1市_2_1", "A1市_2_2"));
                 put("A1市_3", Arrays.asList("A1市_3_1", "A1市_3_2"));
@@ -179,7 +179,7 @@ public class ValidationTest extends WorkbookTest {
                 put("D2市_3", Arrays.asList("D2市_3_1", "D2市_3_2"));
                 put("D2市_4", Arrays.asList("D2市_4_1", "D2市_4_2"));
             }})
-            .addCascadeList(Dimension.of("E2:"), new LinkedHashMap<String, List<String>>() {{
+            .addCascadeList(Dimension.of("E2:"), new HashMap<String, List<String>>() {{
                 put("A1市_1_1", Arrays.asList("A1市_1_1_1", "A1市_1_1_2", "其它"));
                 put("A1市_1_2", Arrays.asList("A1市_1_2_1", "A1市_1_2_2", "其它"));
                 put("A1市_2_1", Arrays.asList("A1市_2_1_1", "A1市_2_1_2", "其它"));
@@ -277,10 +277,4 @@ public class ValidationTest extends WorkbookTest {
         }
     }
 
-    @Test public void t() {
-        List<String> list = Arrays.asList("A1市_1_1", "A1市_1_2","A1市_2_1", "A1市_2_2","A1市_3_1", "A1市_3_2","A2市_1_1", "A2市_1_2","A2市_2_1", "A2市_2_2","A2市_3_1", "A2市_3_2","A2市_4_1", "A2市_4_2","A2市_5_1", "A2市_5_2","A3区_1_1", "A3区_1_2","A3区_2_1", "A3区_2_2","B1市_1_1", "B1市_1_2","B1市_2_1", "B1市_2_2","B2市_1_1", "B2市_1_2","B2市_2_1", "B2市_2_2","B2市_3_1", "B2市_3_2","B3市_1_1", "B3市_1_2","B3市_2_1", "B3市_2_2","B3市_3_1", "B3市_3_2","B3市_4_1", "B3市_4_2","B4市_1_1", "B4市_1_2","B4市_2_1", "B4市_2_2","D1市_1_1", "D1市_1_2","D1市_2_1", "D1市_2_2","D2市_1_1", "D2市_1_2","D2市_2_1", "D2市_2_2","D2市_3_1", "D2市_3_2","D2市_4_1", "D2市_4_2");
-        for (String k : list) {
-            System.out.println("put(\""+k+"\", Arrays.asList(\""+k+"_1\", \""+k+"_2\", \"其它\"));");
-        }
-    }
 }
