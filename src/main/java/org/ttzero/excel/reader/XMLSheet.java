@@ -1139,10 +1139,11 @@ class XMLFullSheet extends XMLSheet implements FullSheet {
             }
             if (isNotEmpty(r)) {
                 if (n < i) {
+                    int _n = n;
                     n <<= 1;
                     indices = Arrays.copyOf(indices, n);
                     long[][] _array = new long[n][];
-                    for (int j = 0; j < n; j++) _array[j] = array[j]; // Do not copy hear.
+                    for (int j = 0; j < _n; j++) _array[j] = array[j]; // Do not copy hear.
                     array = _array;
                 }
                 long[] sub = array[i - 1];
