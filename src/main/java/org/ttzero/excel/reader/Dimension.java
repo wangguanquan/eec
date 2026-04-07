@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, guanquan.wang@yandex.com All Rights Reserved.
+ * Copyright (c) 2017-2019, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,11 @@ import static org.ttzero.excel.util.ExtBufferedWriter.getChars;
 import static org.ttzero.excel.util.ExtBufferedWriter.stringSize;
 
 /**
- * 范围，它包含起始到结束行列值，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
+ * 维度，它包含起始和结束坐标，应用于合并单元格时指定单元格范围和指定工作表的有效范围，
  *
  * <p>Excel的列由{@code A-Z}大写字母组成，行由{@code 1,2,3}数字组成，每个坐标都由列+行组成
  * {@code 1}行{@code 1}列表示为{@code A1}以此类推，当列到达{@code Z}之后就由两位字母联合组成，
  * {@code Z}的下一列表示为{@code AA}，同理{@code ZZ}列的下一列表示为{@code AAA}</p>
- *
  *
  * <p>范围值包含两个坐标，例{@code A1:B5}它表示从1行1列到5行2列的范围，如果起始坐标和结束坐标一样
  * 也就是压缩到一个单元格可以简写为起始坐标{@code A1:A1}被记为{@code A1}。如果冒号后面未指定坐标时
@@ -46,24 +45,26 @@ public class Dimension {
     /**
      * 起始行号 (one base)
      */
-    public final int firstRow;
+    public int firstRow;
     /**
      * 末尾行号 (one base)
      */
-    public final int lastRow;
+    public int lastRow;
     /**
      * 起始列号 (one base)
      */
-    public final short firstColumn;
+    public short firstColumn;
     /**
      * 末尾列号 (one base)
      */
-    public final short lastColumn;
+    public short lastColumn;
     /**
      * 宽 = 末尾列-起始列+1
      * 高 = 末尾行-起始行+1
+     * @deprecated 坐标可修改后 {@code width}和 {@code height}需要实时计算
      */
-    public final int width, height;
+    @Deprecated
+    public int width, height;
 
     /**
      * 创建一个范围值， 起始和结束相同
@@ -162,7 +163,7 @@ public class Dimension {
      * @return 宽度
      */
     public int getWidth() {
-        return width;
+        return lastColumn - firstColumn + 1;
     }
 
     /**
@@ -171,7 +172,7 @@ public class Dimension {
      * @return 高度
      */
     public int getHeight() {
-        return height;
+        return lastRow - firstRow + 1;
     }
 
     @Override
@@ -221,6 +222,30 @@ public class Dimension {
      */
     public boolean checkRange(int r, int c) {
         return r >= firstRow && r <= lastRow && c >= firstColumn && c <= lastColumn;
+    }
+
+    /**
+     * 垂直移动，小于{@code 0}向上移动，否则向下移动
+     *
+     * @param moveRows 移动的行数
+     */
+    public void verticalMove(int moveRows) {
+        if (firstRow + moveRows > Const.Limit.MAX_ROWS_ON_SHEET || firstRow + moveRows <= 0)
+            throw new IllegalArgumentException("Row number out of bound,current:" + (firstRow + moveRows));
+        firstRow += moveRows;
+        lastRow += Math.min(moveRows, Const.Limit.MAX_ROWS_ON_SHEET - lastRow);
+    }
+
+    /**
+     * 水平移动，小于{@code 0}向左移动，否则向右移动
+     *
+     * @param moveCols 移动的列数
+     */
+    public void horizontalsMove(int moveCols) {
+        if (firstColumn + moveCols > Const.Limit.MAX_COLUMNS_ON_SHEET || firstColumn + moveCols <= 0)
+            throw new IllegalArgumentException("Col number out of bound,current:" + (firstColumn + moveCols));
+        firstColumn += (short) moveCols;
+        lastColumn += (short) Math.min(moveCols, Const.Limit.MAX_COLUMNS_ON_SHEET - lastColumn);
     }
 
     @Override

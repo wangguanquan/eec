@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2023, guanquan.wang@hotmail.com All Rights Reserved.
+ * Copyright (c) 2017-2025, guanquan.wang@hotmail.com All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,21 @@
 
 package org.ttzero.excel.validation;
 
+import java.math.BigDecimal;
+
 /**
- * 文本长度验证
+ * 小数验证
  *
- * @author guanquan.wang at 2022-08-17 20:05:42
+ * @author guanquan.wang on 2025-10-10
  */
-public class TextLengthValidation extends RangeValidation<Integer> {
+public class DecimalValidation extends RangeValidation<BigDecimal> {
     @Override
     public String getType() {
-        return "textLength";
+        return "decimal";
     }
 
     @Override
-    protected Integer parseTxtValue(String txt) {
-        return Integer.valueOf(txt);
+    protected BigDecimal parseTxtValue(String txt) {
+        return new BigDecimal(txt);
     }
 }

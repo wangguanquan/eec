@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.ttzero.excel.entity.ICellValueAndStyle;
 import org.ttzero.excel.entity.IDrawingsWriter;
 import org.ttzero.excel.entity.Picture;
+import org.ttzero.excel.entity.SimpleSheet;
 import org.ttzero.excel.entity.Watermark;
 import org.ttzero.excel.entity.style.Border;
 import org.ttzero.excel.entity.style.Fill;
@@ -39,6 +40,8 @@ import org.ttzero.excel.entity.RowBlock;
 import org.ttzero.excel.entity.SharedStrings;
 import org.ttzero.excel.entity.Sheet;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.CrossDimension;
+import org.ttzero.excel.validation.ListValidation;
 import org.ttzero.excel.validation.Validation;
 import org.ttzero.excel.reader.Cell;
 import org.ttzero.excel.reader.Dimension;
@@ -74,8 +77,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -1377,6 +1382,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
         List<Validation> validations = (List<Validation>) sheet.getExtPropValue(Const.ExtendPropertyKey.DATA_VALIDATION);
         List<Validation> extList = null;
         if (validations != null && !validations.isEmpty()) {
+            // 预处理
+            validations = pretreatmentValidation(validations);
             // Extension validation
             extList = validations.stream().filter(Validation::isExtension).collect(Collectors.toList());
             if (extList.size() < validations.size()) {
@@ -1442,6 +1449,82 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     }
 
     /**
+     * 预处理Validation
+     *
+     * <ol>
+     *     <li>1.预处理下拉的选项值，将直接的文本保存到一个隐藏工作表中并转为引用下拉，可以避免字符超长被忽略的问题</li>
+     *     <li>2.预处理级联下拉，下位值转为引用下拉并添加INDIRECT公式</li>
+     * </ol>
+     *
+     * @param validations 验证数据
+     * @return 预处理后的Validation
+     */
+    protected List<Validation> pretreatmentValidation(List<Validation> validations) {
+        List<List<String>> rows = new ArrayList<>();
+        Map<String, String> definedNames = null;
+        List<Validation> dynamicValidations = null;
+        // 保证Worksheet名称不超过31个字符
+        final String refSheetName = "__St" + sheet.getId() + "_val" + (System.currentTimeMillis() % 1000);
+        for (Validation val : validations) {
+            if (!(val instanceof ListValidation)) continue;
+            @SuppressWarnings("unchecked")
+            ListValidation<Object> lv = (ListValidation<Object>) val;
+            final int cascadeSize = lv.getCascadeSize();
+            // 级联序列
+            if (cascadeSize > 0) {
+                // 最多支持5级联动
+                if (cascadeSize > 4) throw new UnsupportedOperationException("最多支持5级联动");
+                if (definedNames == null) definedNames = new LinkedHashMap<>();
+                List<String> options = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
+                rows.add(options);
+                // 修改当前Validation为引用
+                lv.options = null;
+                lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) options.size()));
+
+                List<Dimension> sqrefs = new ArrayList<>();
+                for (int i = 0; i < cascadeSize; i++) {
+                    ListValidation.CascadeList<Object> ir = lv.getCascadeList(i + 1);
+                    Map<Object, List<Object>> sub = ir.options;
+                    for (String k : options) {
+                        List<Object> v = sub.get(k);
+                        if (v == null || v.isEmpty()) continue;
+                        List<String> dataRows = new ArrayList<>(v.size() + 1);
+                        rows.add(dataRows);
+                        dataRows.add(k);
+                        dataRows.addAll(v.stream().map(String::valueOf).collect(Collectors.toList()));
+                        definedNames.put(k, refSheetName + "!" + new Dimension(rows.size(), (short) 2, rows.size(), (short) dataRows.size()).toReferer());
+                    }
+                    options = sub.values().stream().flatMap(java.util.Collection::stream).map(String::valueOf).collect(Collectors.toList());
+                    if (ir.sqref != null) sqrefs.add(ir.sqref);
+                }
+
+                // 新增一个INDIRECT
+                ListValidation<String> newRlv = new ListValidation<>();
+                newRlv.sqrefList = sqrefs;
+                newRlv.indirect = Sheet.toCoordinate(lv.sqrefList.get(0).firstRow, lv.sqrefList.get(0).firstColumn);
+                if (dynamicValidations == null) dynamicValidations = new ArrayList<>();
+                dynamicValidations.add(newRlv);
+            }
+            // 如果文本长度超过250则转为引用
+            else if (lv.options != null && !lv.options.isEmpty()) {
+                List<String> dataRows = lv.options.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toList());
+                if (dataRows.stream().map(String::length).reduce(0, Integer::sum) + dataRows.size() > 256) {
+                    rows.add(dataRows);
+                    lv.options = null;
+                    lv.referer = new CrossDimension(refSheetName, new Dimension(rows.size(), (short) 1, rows.size(), (short) dataRows.size()));
+                }
+            }
+        }
+
+        // 将数据添加到最后一个sheet页，并设置隐藏
+        if (!rows.isEmpty()) sheet.getWorkbook().addSheet(new SimpleSheet<>(refSheetName, rows).hidden());
+        if (definedNames != null && !definedNames.isEmpty()) sheet.putExtProp(Const.ExtendPropertyKey.DEFINED_NAME, definedNames);
+        // 增加动态追加的Validation
+        if (dynamicValidations != null) validations.addAll(dynamicValidations);
+        return validations;
+    }
+
+    /**
      * 添加水印
      *
      * @throws IOException 无权限或磁盘空间不足
@@ -1476,8 +1559,8 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
     protected void writeExtList(List<Validation> extList) throws IOException {
         // 扩展节点-当前只支持数据校验
         if (extList == null || extList.isEmpty()) return;
-        bw.write("<extLst><ext xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" uri=\"{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}\">");
-        bw.write("<x14:dataValidations xmlns:xm=\"http://schemas.microsoft.com/office/excel/2006/main\" count=\"");
+        bw.write("<extLst><ext xmlns:x14=\"" + Const.NAMESPACE.X14 + "\" uri=\"{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}\">");
+        bw.write("<x14:dataValidations xmlns:xm=\"" + Const.NAMESPACE.XM + "\" count=\"");
         bw.writeInt(extList.size());
         bw.write("\">");
         for (Validation e : extList) {

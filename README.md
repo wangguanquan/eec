@@ -359,6 +359,12 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("F:/excel/abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.27 (2025-10-28)
+-------------
+- 支持级联下拉框(#444)
+- 优化Validation内容超过255时打开文件异常的问题
+- TemplateSheet支持复制Validation
+
 Version 0.5.26 (2025-09-29)
 -------------
 - 支持PUSH模式主动写数据（目前只有继承于ListSheet的类支持）
@@ -381,19 +387,10 @@ Version 0.5.24 (2025-06-04)
 -------------
 - 修复某种情况下读取文件抛OOM异常(#435)
 
-Version 0.5.23 (2025-05-06)
--------------
-- 修复读取图片时某些特殊设置造成读取异常
-- 修复某些情况下读取共享字符串异常
-- 修复指定自定义表头且指定headerRow为1时不跳过表头行的问题
-- 修复Dimension#toReferer方法计算结束坐标错误
-- 模板工作表新增useOriginalSheetName方法使导出的文件保持源Sheet名
-- Dimension#of方法新增特性，冒号后面无坐标时表示列尾
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.26-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.27-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

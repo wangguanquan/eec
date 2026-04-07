@@ -22,9 +22,14 @@ package org.ttzero.excel.validation;
  *
  * @author guanquan.wang at 2022-08-17 20:05:42
  */
-public class WholeValidation extends Tuple2Validation<Integer, Integer> {
+public class WholeValidation extends RangeValidation<Long> {
     @Override
     public String getType() {
         return "whole";
+    }
+
+    @Override
+    protected Long parseTxtValue(String txt) {
+        return Long.valueOf(txt);
     }
 }
