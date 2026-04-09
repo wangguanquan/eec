@@ -620,7 +620,24 @@ public class Column {
      * @return 表头单元格样式索引，未设置样式时返回{@code -1}
      */
     public int getHeaderStyleIndex() {
-        return headerStyleIndex >= 0 ? headerStyleIndex : styles != null ? (headerStyleIndex = styles.of(getHeaderStyle())) : -1;
+        int xf = headerStyleIndex;
+        if (xf == -1 && headerStyle != null && styles != null) {
+            xf = headerStyleIndex = styles.of(headerStyle);
+        }
+        return xf;
+    }
+
+    /**
+     * 获取表头单元格样式索引，不包含动态样式（未设置样式时将初始化默认样式）
+     *
+     * @return 表头单元格样式索引，未设置样式时返回{@code -1}
+     */
+    public int getAndInitHeaderStyleIndex() {
+        int xf = getHeaderStyleIndex();
+        if (xf == -1 && styles != null) {
+            xf = headerStyleIndex = styles.of(getHeaderStyle());
+        }
+        return xf;
     }
 
     // ================================ 表头样式 ================================

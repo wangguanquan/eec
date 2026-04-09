@@ -401,7 +401,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
             for (int j = 0, c = 0; j < columns.length; j++) {
                 Column hc = columnsArray[j][i];
                 cell.setString(isNotEmpty(hc.getName()) ? hc.getName() : mergedGrid != null && mergedGrid.test(i + 1, hc.getColNum()) && !isFirstMergedCell(mergeCells, i + 1, hc.getColNum()) ? null : hc.key);
-                cell.xf = hc.getHeaderStyleIndex();
+                cell.xf = hc.getAndInitHeaderStyleIndex();
                 writeString(cell, row, c++);
             }
 
@@ -1071,7 +1071,7 @@ public class XMLWorksheetWriter implements IWorksheetWriter {
                     continue;
                 }
                 double len = columnWidths[i] > 0 ? columnWidths[i] : sheet.getDefaultWidth();
-                double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getHeaderStyleIndex()), len)) + 1.86D;
+                double width = (sheet.getNonHeader() == 1 ? len : Math.max(stringWidth(hc.name, hc.getAndInitHeaderStyleIndex() == -1 ? sheet.defaultHeadStyleIndex() : hc.getAndInitHeaderStyleIndex()), len)) + 1.86D;
                 if (hc.width > 0.000001D) width = Math.min(width, hc.width + 0.65D);
                 if (width > Const.Limit.COLUMN_WIDTH) width = Const.Limit.COLUMN_WIDTH;
                 hc.width = BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_UP).doubleValue();

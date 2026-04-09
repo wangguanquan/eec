@@ -244,7 +244,7 @@ public abstract class Sheet implements Cloneable, Storable {
      *  Bit  | Contents
      * ------+---------
      * 31, 2 | 自适应列宽标记 2位，优先级从小到大为 0: 未设置 1: 自适应列宽 2: 固定宽度
-     * 29, 1 | 单元格隐藏标记位 1位, 0:显示 1：隐藏
+     * 29, 1 | 工作表隐藏标记位 1位, 0:显示 1：隐藏
      * 28, 1 | 网格线隐藏标记位 1位, 0:显示 1：隐藏
      * 27, 1 | 表头自动换行 1位
      * 26, 2 | 表头垂直对齐 2位
@@ -414,7 +414,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet autoSize() {
-        this.option |= 1;
+        this.option = (this.option & ~3) | 1;
         return this;
     }
 
@@ -424,7 +424,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 1: 自适应列宽 2: 固定宽度
      */
     public int getAutoSize() {
-        return option & 2;
+        return option & 3;
     }
 
     /**
@@ -442,7 +442,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet fixedSize() {
-        this.option |= 2;
+        this.option = (this.option & ~3) | 2;
         return this;
     }
 
@@ -639,7 +639,7 @@ public abstract class Sheet implements Cloneable, Storable {
     /**
      * 设置表头行高，其优化级低于{@link Column#setHeaderHeight}设置的值
      *
-     * <p>可接受负数和零，负数等价与未设置默认行高为{@code 13.5}，零效果等价于隐藏，但不能通过右建“取消隐藏”</p>
+     * <p>可接受负数和零，负数等价与未设置默认行高跟随单元格字体等内容在打开时动态表现，零效果等价于隐藏，但不能通过右建“取消隐藏”</p>
      *
      * @param headerRowHeight 指定表头行高，建议表头行高比数据行大
      * @return 当前工作表
@@ -879,26 +879,28 @@ public abstract class Sheet implements Cloneable, Storable {
             Column col = column;
             do {
                 if (col.styles == null) col.styles = workbook.getStyles();
-                // 表头未指定特殊样式时合并工作表设置的样式
-                if (col.nonCustomHeaderStyle()) {
-                    // 兼容处理-后续删除
-                    if (headStyle != 0) col.setHeaderStyle(headStyle);
-                    if (headStyleIndex > -1) col.headerStyleIndex = headStyleIndex;
-                    // 合并样式
-                    if (headerFont != null) col.setHeaderFont(headerFont);
-                    if (headerFill != null) col.setHeaderFill(headerFill);
-                    if (headerBorder != null) col.setHeaderBorder(headerBorder);
-                    if (headerNumFmt != null) col.setHeaderNumFmt(headerNumFmt);
+                // 合并工作表设置的样式，column优化级高于sheet
+                // 兼容处理-后续删除
+                if (headStyle != 0 && col.headerStyle == null) col.setHeaderStyle(headStyle);
+                if (headStyleIndex > -1 && col.headerStyleIndex == -1) col.headerStyleIndex = headStyleIndex;
+                // 合并样式
+                if (headerFont != null && col.headerFont == null) col.setHeaderFont(headerFont);
+                if (headerFill != null && col.headerFill == null) col.setHeaderFill(headerFill);
+                if (headerBorder != null && col.headerBorder == null) col.setHeaderBorder(headerBorder);
+                if (headerNumFmt != null && col.headerNumFmt == null) col.setHeaderNumFmt(headerNumFmt);
+                if (((col.option >>> 14) & 3) == 0) {
                     int v = ((option >>> 6) & 3) << Styles.INDEX_VERTICAL;
                     if (v > 0) col.setHeaderVertical(v);
+                }
+                if (((col.option >>> 16) & 7) == 0) {
                     int h = ((option >>> 8) & 7) << Styles.INDEX_HORIZONTAL;
                     if (h > 0) col.setHeaderHorizontal(h);
-                    if (((option >>> 5) & 1) == 1) col.setWrapText(true);
                 }
+                if (((option >>> 5) & 1) == 1) col.setHeaderWrapText(true);
             } while ((col = col.next) != null);
 
             // Column width
-            if (column.getAutoSize() == 0 && isAutoSize()) {
+            if (column.getAutoSize() == 0 && getAutoSize() > 0) {
                 column.option |= getAutoSize() << 1;
             }
         }
@@ -1033,7 +1035,7 @@ public abstract class Sheet implements Cloneable, Storable {
      * @return 当前工作表
      */
     public Sheet hidden() {
-        this.option &= ~(1 << 2);
+        this.option |= (1 << 2);
         return this;
     }
 
@@ -1176,7 +1178,7 @@ public abstract class Sheet implements Cloneable, Storable {
      */
     @Deprecated
     public int getHeadStyleIndex() {
-        return headStyleIndex == -1 && headStyle != 0 ? (headStyleIndex = workbook.getStyles().of(headStyle)) : -1;
+        return headStyleIndex == -1 && headStyle != 0 ? (headStyleIndex = workbook.getStyles().of(headStyle)) : headStyleIndex;
     }
 
     /**
