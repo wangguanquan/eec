@@ -161,9 +161,9 @@ public class Column {
      * 25, 2 | 列类型 2位, 0: 默认导出为文本 1: 导出为图片 2: 超链接
      * 23, 2 | 垂直对齐 2位
      * 21, 3 | 水平对齐 3位
-     * 18, 1 | 表头自动换行 1位
-     * 17, 2 | 表头垂直对齐 2位
-     * 15, 3 | 表头水平对齐 3位
+     * 20, 2 | 表头自动换行 2位, 0:未设置 1:不换行 2:换行
+     * 17, 3 | 表头垂直对齐 3位, 0:未设置 1-4:参考{@link Verticals}
+     * 13, 4 | 表头水平对齐 4位, 0:未设置 1-8:参考{@link Horizontals}
      * </pre></blockquote>
      */
     protected int option;
@@ -681,7 +681,7 @@ public class Column {
      * @return 当前列
      */
     public Column setHeaderVertical(int vertical) {
-        option = (option & ~(3 << 14)) | (((vertical >> Styles.INDEX_VERTICAL) & 3) << 14);
+        option = (option & -917505) | ((((vertical >> Styles.INDEX_VERTICAL) & 3) + 1) << 17);
         return this;
     }
 
@@ -692,7 +692,7 @@ public class Column {
      * @return 当前列
      */
     public Column setHeaderHorizontal(int horizontal) {
-        option = (option & ~(7 << 16)) | (((horizontal >> Styles.INDEX_HORIZONTAL) & 7) << 16);
+        option = (option & -122881) | ((((horizontal >> Styles.INDEX_HORIZONTAL) & 7) + 1) << 13);
         return this;
     }
 
@@ -705,8 +705,7 @@ public class Column {
      * @return 当前列
      */
     public Column setHeaderWrapText(boolean wrapText) {
-        if (wrapText) this.option |= (1 << 13);
-        else this.option &= ~(1 << 13);
+        this.option = (this.option & -3145729) | ((wrapText ? 2 : 1) << 20);
         return this;
     }
 
@@ -729,7 +728,7 @@ public class Column {
     public boolean nonCustomHeaderStyle() {
         return headerStyle == null && headerStyleIndex == -1
             && headerFont == null && headerFill == null && headerBorder == null && headerNumFmt == null
-            && ((option >>> 14) & 3) == 0 && ((option >>> 16) & 7) == 0 && ((option >> 13) & 1) == 0;
+            && ((option >>> 17) & 7) == 0 &&((option >>> 13) & 0xF) == 0 && ((option >>> 20) & 3) == 0;
     }
 
     /**
@@ -753,13 +752,14 @@ public class Column {
             // 重置“填充”
             if (headerFill != null) style = styles.modifyFill(style, headerFill);
             // 重置“垂直对齐”
-            int v = ((option >>> 14) & 3) << Styles.INDEX_VERTICAL;
-            if (v > 0) style = styles.modifyVertical(style, v);
+            int v = (option >>> 17) & 7;
+            if (v > 0) style = styles.modifyVertical(style, (v - 1) << Styles.INDEX_VERTICAL);
             // 重置“水平对齐”
-            int h = ((option >>> 16) & 7) << Styles.INDEX_HORIZONTAL;
-            if (h > 0) style = styles.modifyHorizontal(style, h);
+            int h = (option >>> 13) & 0xF;
+            if (h > 0) style = styles.modifyHorizontal(style, (h - 1) << Styles.INDEX_HORIZONTAL);
             // 重置“自动折行”
-            headerStyle = style | ((option >> 13) & 1);
+            int wrapText = (option >>> 20) & 3;
+            headerStyle = wrapText == 2 ? style | 1 : style;
         }
         return headerStyle;
     }

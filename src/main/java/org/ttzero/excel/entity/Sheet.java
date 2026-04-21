@@ -888,15 +888,15 @@ public abstract class Sheet implements Cloneable, Storable {
                 if (headerFill != null && col.headerFill == null) col.setHeaderFill(headerFill);
                 if (headerBorder != null && col.headerBorder == null) col.setHeaderBorder(headerBorder);
                 if (headerNumFmt != null && col.headerNumFmt == null) col.setHeaderNumFmt(headerNumFmt);
-                if (((col.option >>> 14) & 3) == 0) {
+                if (((col.option >>> 17) & 7) == 0) {
                     int v = ((option >>> 6) & 3) << Styles.INDEX_VERTICAL;
                     if (v > 0) col.setHeaderVertical(v);
                 }
-                if (((col.option >>> 16) & 7) == 0) {
+                if (((col.option >>> 13) & 0xF) == 0) {
                     int h = ((option >>> 8) & 7) << Styles.INDEX_HORIZONTAL;
                     if (h > 0) col.setHeaderHorizontal(h);
                 }
-                if (((option >>> 5) & 1) == 1) col.setHeaderWrapText(true);
+                if (((col.option >>> 20) & 3) == 0 && ((option >>> 5) & 1) == 1) col.setHeaderWrapText(true);
             } while ((col = col.next) != null);
 
             // Column width
