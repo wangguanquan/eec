@@ -21,7 +21,9 @@ import org.junit.Test;
 import org.ttzero.excel.annotation.ExcelColumn;
 import org.ttzero.excel.annotation.FreezePanes;
 import org.ttzero.excel.manager.Const;
+import org.ttzero.excel.reader.Col;
 import org.ttzero.excel.reader.ExcelReader;
+import org.ttzero.excel.reader.FullSheet;
 import org.ttzero.excel.reader.Row;
 
 import java.io.IOException;
@@ -32,9 +34,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -159,6 +163,31 @@ public class AutoSizeTest extends WorkbookTest {
                 assertEquals(expect.getName(), row.getString(1));
                 assertEquals((Integer) expect.getScore(), row.getInt(2));
             }
+        }
+    }
+
+    @Test public void testWorkbookAutoSizeWritesColumnWidth() throws IOException {
+        String fileName = "workbook auto-size width.xlsx";
+        List<ListObjectSheetTest.Student> expectList = ListObjectSheetTest.Student.randomTestData(2);
+        expectList.get(0).setName("这是一个用于验证全局自动列宽是否生效的超长姓名");
+        expectList.get(1).setName("另一个同样很长很长的姓名用于拉开列宽");
+
+        new Workbook()
+            .setAutoSize(true)
+            .addSheet(new ListSheet<>(expectList
+                , new Column("学号", "id").fixedSize(8)
+                , new Column("姓名", "name")
+                , new Column("成绩", "score")))
+            .writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            FullSheet sheet = reader.sheet(0).asFullSheet();
+            List<Col> cols = sheet.getCols();
+            assertNotNull(cols);
+            cols.sort(Comparator.comparingInt(a -> a.min));
+            assertEquals(3, cols.size());
+            assertTrue(cols.get(0).width <= 8.8D);
+            assertTrue(cols.get(1).width > cols.get(0).width + 5.0D);
         }
     }
 

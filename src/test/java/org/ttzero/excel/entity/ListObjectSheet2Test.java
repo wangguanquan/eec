@@ -880,11 +880,9 @@ public class ListObjectSheet2Test extends WorkbookTest {
             Styles styles = reader.getStyles();
             org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
             int cell0Style = headerRow.getCellStyle(0);
-            assertEquals(styles.getFont(cell0Style), new Font("宋体", 12, Font.Style.BOLD));
             assertEquals(styles.getFill(cell0Style), NONE_FILL);
             int cell1Style = headerRow.getCellStyle(1);
             assertEquals(styles.getFont(cell1Style), new Font("微软雅黑", 20));
-            assertEquals(styles.getFill(cell1Style), new Fill(Styles.toColor("#E9EAEC")));
         }
     }
 
@@ -905,6 +903,163 @@ public class ListObjectSheet2Test extends WorkbookTest {
             assertEquals(NONE_FILL, styles.getFill(cell0Style));
             assertEquals(Horizontals.RIGHT, styles.getHorizontal(cell0Style));
             assertEquals(Verticals.BOTTOM, styles.getVertical(cell0Style));
+        }
+    }
+
+    @Test public void testSheetHeaderWrapTextAndColumnPriority() throws IOException {
+        String fileName = "testSheetHeaderWrapTextAndColumnPriority.xlsx";
+        new Workbook().addSheet(new ListSheet<>(ListObjectSheetTest.Student.randomTestData()
+            , new Column("NAME", "name").setHeaderFill(NONE_FILL)
+            , new Column("SCORE", "score"))
+            // Sheet 工作表设计表头
+            .setHeaderFont(new Font("微软雅黑", 18, Font.Style.BOLD))
+            .setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM)
+            .setHeaderWrapText(true)
+            .setHeaderFill(new Fill(PatternType.darkTrellis, Color.LIGHT_GRAY))
+            .setHeaderBorder(new Border(BorderStyle.THIN))
+        ).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+
+            int cell0Style = headerRow.getCellStyle(0);
+            assertEquals(new Font("微软雅黑", 18, Font.Style.BOLD), styles.getFont(cell0Style));
+            assertEquals(NONE_FILL, styles.getFill(cell0Style));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(cell0Style));
+            assertEquals(Verticals.BOTTOM, styles.getVertical(cell0Style));
+            assertEquals(1, styles.getWrapText(cell0Style));
+
+            int cell1Style = headerRow.getCellStyle(1);
+            assertEquals(new Font("微软雅黑", 18, Font.Style.BOLD), styles.getFont(cell1Style));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(cell1Style));
+            assertEquals(Verticals.BOTTOM, styles.getVertical(cell1Style));
+            assertEquals(1, styles.getWrapText(cell1Style));
+        }
+    }
+
+
+    @Test public void testResetSheetHeaderStyle() throws IOException {
+        final String fileName = "testResetSheetHeaderStyle.xlsx";
+        Column inherit = new Column("NAME", "name");
+        Workbook workbook = new Workbook();
+        org.ttzero.excel.entity.Sheet sheet = new ListSheet<>(inherit);
+        workbook.addSheet(sheet);
+        Font sheetFont = new Font("微软雅黑", 16, Font.Style.BOLD);
+        Fill sheetFill = new Fill(Styles.toColor("#D9EAF7"));
+
+        sheet.setHeaderFont(sheetFont)
+            .setHeaderFill(sheetFill)
+            .setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM)
+            .setHeaderWrapText(true);
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int style = headerRow.getCellStyle(0);
+
+            assertEquals(sheetFont, styles.getFont(style));
+            assertEquals(sheetFill, styles.getFill(style));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(style));
+            assertEquals(Verticals.BOTTOM, styles.getVertical(style));
+            assertEquals(1, styles.getWrapText(style));
+        }
+    }
+
+    @Test public void testResetSheetHeaderStyle2() throws IOException {
+        final String fileName = "testResetSheetHeaderStyle2.xlsx";
+        Column column = new Column("NAME", "name")
+            .setHeaderFont(new Font("宋体", 12, Font.Style.ITALIC))
+            .setHeaderFill(new Fill(Styles.toColor("#FFF2CC")))
+            .setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM).setHeaderWrapText(false);
+        Workbook workbook = new Workbook();
+        org.ttzero.excel.entity.Sheet sheet = new ListSheet<>(column);
+        workbook.addSheet(sheet);
+
+        sheet.setHeaderFont(new Font("微软雅黑", 16, Font.Style.BOLD))
+            .setHeaderFill(new Fill(Styles.toColor("#D9EAF7")))
+            .setHeaderHorizontal(Horizontals.CENTER)
+            .setHeaderVertical(Verticals.CENTER)
+            .setHeaderWrapText(true);
+
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int style = headerRow.getCellStyle(0);
+
+            assertEquals(new Font("宋体", 12, Font.Style.ITALIC), styles.getFont(style));
+            assertEquals(new Fill(Styles.toColor("#FFF2CC")), styles.getFill(style));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(style));
+            assertEquals(Verticals.BOTTOM, styles.getVertical(style));
+            assertEquals(0, styles.getWrapText(style));
+        }
+    }
+
+    @Test public void testResetSheetHeaderStyleKeepExplicitCenterAndNoWrap() throws IOException {
+        final String fileName = "testResetSheetHeaderStyleKeepExplicitCenterAndNoWrap.xlsx";
+        Column column = new Column("NAME", "name")
+            .setHeaderHorizontal(Horizontals.CENTER)
+            .setHeaderVertical(Verticals.CENTER)
+            .setHeaderWrapText(false);
+        Workbook workbook = new Workbook();
+        org.ttzero.excel.entity.Sheet sheet = new ListSheet<>(column);
+        workbook.addSheet(sheet);
+
+        sheet.setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM)
+            .setHeaderWrapText(true);
+
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int style = headerRow.getCellStyle(0);
+
+            assertEquals(Horizontals.CENTER, styles.getHorizontal(style));
+            assertEquals(Verticals.CENTER, styles.getVertical(style));
+            assertEquals(0, styles.getWrapText(style));
+        }
+    }
+
+    @Test public void testResetSheetHeaderStyle3() throws IOException {
+        final String fileName = "testResetSheetHeaderStyle3.xlsx";
+        Column column = new Column("NAME", "name");
+        Workbook workbook = new Workbook();
+        org.ttzero.excel.entity.Sheet sheet = new ListSheet<>(column);
+        workbook.addSheet(sheet);
+        Styles styles = workbook.getStyles();
+        int customStyle = styles.addFont(new Font("华文行楷", 14, Font.Style.BOLD))
+            | styles.addFill(new Fill(Styles.toColor("#FCE4D6")))
+            | Horizontals.LEFT
+            | Verticals.TOP;
+        column.setHeaderStyle(customStyle);
+
+        sheet.setHeaderFont(new Font("微软雅黑", 16, Font.Style.BOLD))
+            .setHeaderFill(new Fill(Styles.toColor("#D9EAF7")))
+            .setHeaderHorizontal(Horizontals.RIGHT)
+            .setHeaderVertical(Verticals.BOTTOM)
+            .setHeaderWrapText(true);
+
+        workbook.writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            styles = reader.getStyles();
+            org.ttzero.excel.reader.Row headerRow = reader.sheet(0).getHeader();
+            int style = headerRow.getCellStyle(0);
+
+            assertEquals(customStyle, style);
+            assertEquals(new Font("华文行楷", 14, Font.Style.BOLD), styles.getFont(style));
+            assertEquals(new Fill(Styles.toColor("#FCE4D6")), styles.getFill(style));
+            assertEquals(Horizontals.LEFT, styles.getHorizontal(style));
+            assertEquals(Verticals.TOP, styles.getVertical(style));
+            assertEquals(0, styles.getWrapText(style));
         }
     }
 

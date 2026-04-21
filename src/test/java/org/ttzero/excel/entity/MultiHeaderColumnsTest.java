@@ -132,11 +132,7 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 , new Column("成绩", "score") {
                 @Override
                 public int getHeaderStyleIndex() {
-                    return styles.of(styles.addFont(this.getFont()) | Horizontals.CENTER);
-                }
-
-                public Font getFont() {
-                    return new Font("宋体", 12, Color.RED).bold();
+                    return styles.of(styles.addFont(new Font("宋体", 12, Color.RED).bold()) | Horizontals.CENTER);
                 }
             }
             )).writeTo(defaultTestPath.resolve(fileName));
@@ -736,6 +732,68 @@ public class MultiHeaderColumnsTest extends SQLWorkbookTest {
                 assertEquals(sub.get("TOP:收件地址:B:区"), src.area);
                 assertEquals(sub.get("TOP:收件地址:B:详细地址"), src.detail);
             }
+        }
+    }
+
+    @Test public void testMultiHeaderStyles() throws IOException {
+        final String fileName = "testMultiHeaderStyles.xlsx";
+        Font mainFont = new Font("微软雅黑", 20, Color.RED);
+        Fill mainFill = new Fill(Styles.toColor("#E9EAEC"));
+        Border mainBorder = new Border(BorderStyle.DOTTED, Color.PINK);
+        Font subFont = new Font("微软雅黑", 16);
+        Fill subFill = new Fill(Color.YELLOW);
+        Border subBorder = new Border(BorderStyle.THIN);
+        Font tripleFont = new Font("微软雅黑", 12, Color.BLUE);
+
+        new Workbook().addSheet(new ListSheet<>(
+            new Column("主表头").setHeaderFont(mainFont)
+                .setHeaderFill(mainFill)
+                .setHeaderBorder(mainBorder)
+                .setHeaderHorizontal(Horizontals.LEFT)
+                .setHeaderHeight(40)
+                .addSubColumn(new Column("次级表头").setHeaderFont(subFont)
+                    .setHeaderFill(subFill)
+                    .setHeaderBorder(subBorder)
+                    .setHeaderHorizontal(Horizontals.CENTER).setHeaderHeight(30))
+                .addSubColumn(new Column("姓名", "name").setHeaderFont(tripleFont)
+                    .setHeaderFill(mainFill)
+                    .setHeaderBorder(subBorder)
+                    .setHeaderHorizontal(Horizontals.RIGHT).setHeaderHeight(20))
+        )).writeTo(defaultTestPath.resolve(fileName));
+
+        try (ExcelReader reader = ExcelReader.read(defaultTestPath.resolve(fileName))) {
+            Styles styles = reader.getStyles();
+            Iterator<Row> iter = reader.sheet(0).asFullSheet().iterator();
+
+            assertTrue(iter.hasNext());
+            Row row = iter.next();
+
+            int xf = row.getCellStyle(0);
+            assertEquals(mainFont, styles.getFont(xf));
+            assertEquals(mainFill, styles.getFill(xf));
+            assertEquals(mainBorder, styles.getBorder(xf));
+            assertEquals(Horizontals.LEFT, styles.getHorizontal(xf));
+            assertEquals(40.0D, row.getHeight(), 0.001);
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+
+            xf = row.getCellStyle(0);
+            assertEquals(subFont, styles.getFont(xf));
+            assertEquals(subFill, styles.getFill(xf));
+            assertEquals(subBorder, styles.getBorder(xf));
+            assertEquals(Horizontals.CENTER, styles.getHorizontal(xf));
+            assertEquals(30.0D, row.getHeight(), 0.001);
+
+            assertTrue(iter.hasNext());
+            row = iter.next();
+
+            xf = row.getCellStyle(0);
+            assertEquals(tripleFont, styles.getFont(xf));
+            assertEquals(mainFill, styles.getFill(xf));
+            assertEquals(subBorder, styles.getBorder(xf));
+            assertEquals(Horizontals.RIGHT, styles.getHorizontal(xf));
+            assertEquals(20.0D, row.getHeight(), 0.001);
         }
     }
 
