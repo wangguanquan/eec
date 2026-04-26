@@ -359,6 +359,11 @@ try (ExcelReader reader = ExcelReader.read(Paths.get("F:/excel/abc.xlsx"))) {
 ```
 
 ## CHANGELOG
+Version 0.5.28 (2026-04-26)
+-------------
+- 修复FullSheet部分情况下读取公式时出现越界问题
+- 提供更丰富方法修改表头样式
+- 
 Version 0.5.27 (2025-10-28)
 -------------
 - 支持级联下拉框(#444)
@@ -383,14 +388,10 @@ Version 0.5.25 (2025-09-09)
 - 修复某些情况下CSV读取行结束判断问题导致两行合并为一行的问题
 - 修复某些情况下无法读取公式的问题
 
-Version 0.5.24 (2025-06-04)
--------------
-- 修复某种情况下读取文件抛OOM异常(#435)
-
 [更多...](./CHANGELOG)
 
 [releases]: https://github.com/wangguanquan/eec/releases
-[release-image]: http://img.shields.io/badge/release-0.5.27-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.5.28-blue.svg?style=flat
 
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
